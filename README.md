@@ -1,6 +1,6 @@
-# OPub Web
+# Data Exchange
 
-A platform to speed up the development of Open Data Dashboards. Part of the [OPub project](https://github.com/CivicDataLab/opub-mono).
+A platform to speed up the development of Open Data Exchange. Part of the [Data Exchange project](https://github.com/CivicDataLab/data-exchange.git).
 
 ## Getting Started
 
@@ -9,13 +9,13 @@ To get started, you can clone the repository and run it locally using the follow
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/CivicDataLab/opub-mono.git
+git clone https://github.com/CivicDataLab/data-exchange.git
 ```
 
 2. Install dependencies
 
 ```bash
-cd opub-mono
+cd data-exchange
 
 npm i
 ```
@@ -23,16 +23,16 @@ npm i
 3. Start the development server:
 
 ```bash
-turbo dev --filter www
+npm run dev
 ```
 
 ## Documentation
 
-OPub uses Next.js new `app` directory. For more information on how to use Next.js, refer to the [Next.js documentation](https://beta.nextjs.org/docs/getting-started).
+Data Exchange uses Next.js new `app` directory. For more information on how to use Next.js, refer to the [Next.js documentation](https://beta.nextjs.org/docs/getting-started).
 
 ## Community
 
-We use Github Discussions to discuss ideas, proposals and questions about the project. You can [head over there](https://github.com/CivicDataLab/opub-mono/discussions) to interact with the community.
+We use Github Discussions to discuss ideas, proposals and questions about the project. You can [head over there](https://github.com/CivicDataLab/data-exchange/discussions) to interact with the community.
 
 Our [Code of Conduct](../../CODE_OF_CONDUCT.md) applies to all community channels.
 
@@ -48,4 +48,4 @@ This project is licensed under the MIT license. For more information, refer to t
 
 ## Security
 
-If you believe you have found a security vulnerability in OPub, we encourage you to responsibly disclose this and not open a public issue. We will investigate all legitimate reports. Email `tech@civicdatalab.in` to disclose any security vulnerabilities.
+If you believe you have found a security vulnerability in Data Exchange, we encourage you to responsibly disclose this and not open a public issue. We will investigate all legitimate reports. Email `tech@civicdatalab.in` to disclose any security vulnerabilities.
