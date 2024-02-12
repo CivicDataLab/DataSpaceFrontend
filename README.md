@@ -1,6 +1,6 @@
 # Data Exchange
 
-A platform to speed up the development of Open Data Exchange. Part of the [Data Exchange project](https://github.com/CivicDataLab/data-exchange.git).
+A platform to speed up the development of Open Data Exchange. 
 
 ## Getting Started
 
@@ -34,13 +34,13 @@ Data Exchange uses Next.js new `app` directory. For more information on how to u
 
 We use Github Discussions to discuss ideas, proposals and questions about the project. You can [head over there](https://github.com/CivicDataLab/data-exchange/discussions) to interact with the community.
 
-Our [Code of Conduct](../../CODE_OF_CONDUCT.md) applies to all community channels.
+Our [Code of Conduct](CODE_OF_CONDUCT.md) applies to all community channels.
 
 ## Contributing
 
 Contributions to the project are welcome! To contribute, simply fork the repository, make your changes, and submit a pull request.
 
-For more information on contributing to the project, refer to the [CONTRIBUTING.md](../../CONTRIBUTING.md) file.
+For more information on contributing to the project, refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
 ## License
 
