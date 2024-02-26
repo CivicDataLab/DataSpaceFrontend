@@ -7,7 +7,7 @@ import { Avatar, Box, Icon, Text, TextField } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
 
-export function MainNav() {
+export function MainNav({ hideSearch = false }) {
   const { key, metaKey } = useKeyDetect();
   const searchRef = React.useRef<HTMLInputElement>(null);
 
@@ -24,26 +24,30 @@ export function MainNav() {
           <Box flex alignItems="center" gap="2">
             <Icon source={Icons.logo} size={24} color="success" />
             <Text variant="headingLg" as="h1">
-              OPub
+              Data Exchange
             </Text>
           </Box>
         </Link>
-        <div className="hidden w-full max-w-[578px] md:block">
-          <TextField
-            prefix={<Icon source={Icons.search} />}
-            placeholder="Search"
-            name="Search"
-            label="Search"
-            labelHidden
-            ref={searchRef}
-          />
-        </div>
-        <div className="flex shrink-0 items-center gap-4">
-          <Icon source={Icons.notification} />
-          <div>
-            <Avatar showInitials showLabel name="Helen Birjam" size="small" />
+        {!hideSearch && (
+          <div className="hidden w-full max-w-[578px] md:block">
+            <TextField
+              prefix={<Icon source={Icons.search} />}
+              placeholder="Search"
+              name="Search"
+              label="Search"
+              labelHidden
+              ref={searchRef}
+            />
           </div>
-        </div>
+        )}
+        <Link href={'/dashboard/dataset'}>
+          <div className="flex shrink-0 items-center gap-4">
+            <Icon source={Icons.notification} />
+            <div>
+              <Avatar showInitials showLabel name="Helen Birjam" size="small" />
+            </div>
+          </div>
+        </Link>
       </Box>
     </nav>
   );
