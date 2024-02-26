@@ -1,27 +1,30 @@
-'use client'
+'use client';
 
-import { LinkButton } from '@/components/Link'
-import { Icons } from '@/components/icons'
-import { Box, Icon, Text } from 'opub-ui'
-import { twMerge } from 'tailwind-merge'
+import { Box, Icon, Text } from 'opub-ui';
+import { twMerge } from 'tailwind-merge';
+
+import { Icons } from '@/components/icons';
+import { LinkButton } from '@/components/Link';
 
 export function Content() {
-	return (
-		<div className="flex flex-col items-center justify-center h-full w-full grow">
-			<div className={twMerge('flex flex-col items-center gap-4 h-100')}>
-				<Icon
-					source={Icons.addDataset}
-					color="interactive"
-					stroke={1}
-					size={80}
-				/>
-				<Text variant="headingSm" color="subdued">
-					You have not added any datasets yet.
-				</Text>
-				<Box paddingBlockStart="4">
-					<LinkButton href="/dashboard/dataset/new">Add New Dataset</LinkButton>
-				</Box>
-			</div>
-		</div>
-	)
+  return (
+    <div className="flex h-full w-full grow flex-col items-center justify-center">
+      <div className={twMerge('h-100 flex flex-col items-center gap-4')}>
+        <Icon
+          source={Icons.addDataset}
+          color="interactive"
+          stroke={1}
+          size={80}
+        />
+        <Text variant="headingSm" color="subdued">
+          You have not added any datasets yet.
+        </Text>
+        <Box paddingBlockStart="4">
+          <LinkButton href="/dashboard/dataset/2345/edit/distribution">
+            Add New Dataset
+          </LinkButton>
+        </Box>
+      </div>
+    </div>
+  );
 }

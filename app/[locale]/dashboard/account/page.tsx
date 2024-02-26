@@ -1,4 +1,5 @@
-import { InProgress } from '../components/in-progress';
+import { InProgress } from "@/components/in-progress";
+
 
 export default async function DashboardPage() {
   return (

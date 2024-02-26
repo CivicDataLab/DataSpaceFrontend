@@ -36,7 +36,7 @@ export const Page = () => {
         preFetch="/dashboard/dataset/new"
         primaryAction={{
           content: 'Add New Dataset',
-          onAction: () => router.push('/dashboard/dataset/new'),
+          onAction: () => router.push('/dashboard/dataset/2345/edit/distribution'),
         }}
       />
       <Divider />

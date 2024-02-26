@@ -9,10 +9,10 @@ export function DistributionList({
 }) {
 	return (
 		<div>
-			<Text variant="headingMd">Add Distribution</Text>
+			{/* <Text variant="headingMd">Add Distribution</Text>
 			<div className="pt-4">
 				<Divider />
-			</div>
+			</div> */}
 			<div className="py-20">
 				<NoList setPage={setPage} />
 			</div>

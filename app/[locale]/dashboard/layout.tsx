@@ -2,7 +2,8 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 
 import { DashboardLayout } from './components/dashboard-layout';
-import { MainNav } from './components/main-nav';
+import { MainNav } from '@/components/main-nav';
+
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
