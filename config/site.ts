@@ -1,10 +1,10 @@
 import { SiteConfig } from 'types';
 
 export const siteConfig: SiteConfig = {
-  name: 'OPub',
+  name: 'Data Exchange',
   description:
-    'An open source platform to speed up the development of Open Data Dashboards.',
-  url: 'https://opub-www.vercel.app',
+    'An open source platform to speed up the development of Open Data Exchanges.',
+  url: 'localhost:3000',
 };
 
 export const locales = ['en', 'hi'];
