@@ -18,13 +18,13 @@ interface Metadata {
   accessModelsCount: string;
 }
 
-const CardsListing = ({ data }: { data: Dataset }) => {
+const Cards = ({ data }: { data: Dataset }) => {
   const { datasetTitle, description, metadata, id } = data;
   return (
     <>
       <div
         className="my-7 p-7"
-        style={{ backgroundColor: 'var(--base-gray-slate-solid-2)' }}
+        style={{ backgroundColor: 'var(--base-gray-slate-solid-3)' }}
       >
         <div className="flex flex-wrap gap-8 lg:gap-8">
           <div className="lg:w-2/4">
@@ -80,4 +80,4 @@ const CardsListing = ({ data }: { data: Dataset }) => {
     </>
   );
 };
-export default CardsListing;
+export default Cards;
