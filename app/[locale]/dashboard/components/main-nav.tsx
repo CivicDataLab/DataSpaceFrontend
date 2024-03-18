@@ -66,7 +66,7 @@ export function MainNav() {
           </div>
         </Link>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-4">
           <SearchInput
             placeholder="Search"
             name="Search"
@@ -102,6 +102,13 @@ export function MainNav() {
               </div>
             }
           />
+          <div className="min-w-[102px]">
+            <Link href={'/datasets'}>
+              <Text variant="headingSm" as="h1" color={'highlight'}>
+                Dataset Listing
+              </Text>
+            </Link>
+          </div>
           {status === 'loading' ? (
             <div className="min-w-[112px]" />
           ) : (
