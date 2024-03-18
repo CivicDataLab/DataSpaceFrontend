@@ -1,16 +1,16 @@
 import { SiteConfig } from 'types';
 
 export const siteConfig: SiteConfig = {
-  name: 'OPub',
+  name: 'Data Exchange',
   description:
-    'An open source platform to speed up the development of Open Data Dashboards.',
+    'An open source platform to speed up the development of Open Data Exchanges.',
   url: 'https://data-exchange.vercel.app',
 };
 
 export const locales = ['en', 'hi'];
 
 export const gqlConfig = {
-  url: 'https://opub-backend.civicdatalab.in/graphql',
+  url: process.env.NEXT_PUBLIC_BACKEND_URL,
   headers: {
     organization: '1',
   },
