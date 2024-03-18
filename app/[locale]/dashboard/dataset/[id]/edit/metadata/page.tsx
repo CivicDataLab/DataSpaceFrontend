@@ -2,7 +2,7 @@ import { graphql } from '@/gql';
 import { Hydrate } from '@/lib';
 import { dehydrate } from '@tanstack/react-query';
 
-import { GraphQL, getQueryClient } from '@/lib/api';
+import { getQueryClient, GraphQL } from '@/lib/api';
 import styles from '../edit.module.scss';
 import { MetadataPage } from './page-layout';
 

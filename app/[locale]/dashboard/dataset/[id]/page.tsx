@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { usePRouter } from '@/hooks/use-prouter';
 
 import { testDataset } from '@/config/dashboard';
-import { InProgress } from '../../../../../components/in-progress';
+import { InProgress } from '../../components/in-progress';
 import { ActionBar } from '../components/action-bar';
 
 export default function Page({ params }: { params: { id: string } }) {
@@ -19,6 +19,7 @@ export default function Page({ params }: { params: { id: string } }) {
   if (!data) {
     notFound();
   }
+  console.log('sdasdadqwa');
 
   return (
     <div className="flex h-full flex-col">

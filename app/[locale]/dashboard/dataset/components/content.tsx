@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Icon, Text } from 'opub-ui';
+import { Icon, Text } from 'opub-ui';
 import { twMerge } from 'tailwind-merge';
 
 import { Icons } from '@/components/icons';
@@ -19,11 +19,7 @@ export function Content() {
         <Text variant="headingSm" color="subdued">
           You have not added any datasets yet.
         </Text>
-        <Box paddingBlockStart="4">
-          <LinkButton href="/dashboard/dataset/2345/edit/distribution">
-            Add New Dataset
-          </LinkButton>
-        </Box>
+        <LinkButton href="/dashboard/dataset/new">Add New Dataset</LinkButton>
       </div>
     </div>
   );

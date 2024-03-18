@@ -2,7 +2,6 @@ import React from 'react';
 import { CreateDatasetInput, PatchDatasetInput } from '@/gql/generated/graphql';
 import { PatchDataset, CreateDataset as Props } from '@/types';
 import {
-  Box,
   Checkbox,
   FormLayout,
   Icon,
@@ -37,7 +36,6 @@ export function CreateDataset({
   mutate?: (res: { dataset_data: CreateDatasetInput }) => void;
   mutatePatch?: (res: { dataset_data: PatchDatasetInput }) => void;
 }) {
-  // const [val, setVal] = React.useState<Props>();
   const defaultValue = defaultVal || defaultValBase;
 
   return (
@@ -84,9 +82,9 @@ export function CreateDataset({
             />
           </div>
         </RadioGroup>
-        <Box paddingBlockStart="8" maxWidth="656px">
+        <div className="max-w-[656px] pt-8">
           <Text variant="headingMd">Dataset Details</Text>
-          <Box paddingBlockStart="3">
+          <div className="pt-3">
             <FormLayout>
               <Input
                 name="title"
@@ -112,11 +110,11 @@ export function CreateDataset({
                 readOnly={isLoading}
               />
             </FormLayout>
-          </Box>
+          </div>
 
-          <Box paddingBlockStart="8">
+          <div className="pt-6">
             <Text variant="headingMd">Terms & Conditions</Text>
-            <Box paddingBlockStart="2">
+            <div className="pt-2">
               <Checkbox
                 name="terms"
                 required
@@ -127,9 +125,9 @@ export function CreateDataset({
                 agreement. I state that I have read and understood the terms and
                 conditions.
               </Checkbox>
-            </Box>
-          </Box>
-        </Box>
+            </div>
+          </div>
+        </div>
       </div>
     </DatasetForm>
   );

@@ -1,4 +1,4 @@
-# Data Exchange
+# Data Exchange Frontend
 
 A platform to speed up the development of Open Data Exchange. 
 

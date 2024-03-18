@@ -6,7 +6,9 @@
   border-radius: 4px;
   background: rgba(var(--card-rgb), 0.1);
   border: 1px solid rgba(var(--card-border-rgb), 0.15);
-  transition: background 200ms, border 200ms;
+  transition:
+    background 200ms,
+    border 200ms;
   display: flex;
   gap: 16px;
   align-items: center;

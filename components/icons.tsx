@@ -7,7 +7,6 @@ import {
   IconCloudUpload,
   IconDatabase,
   IconDatabaseCog,
-  IconDatabaseEdit,
   IconDatabasePlus,
   IconFilePlus,
   IconFolder,
@@ -15,9 +14,9 @@ import {
   IconLayoutSidebarLeftExpand,
   IconLink,
   IconSearch,
+  IconTerminal,
   IconTrash,
   IconUserCog,
-  IconUsers,
   // TablerIconsProps,
 } from '@tabler/icons-react';
 
@@ -25,8 +24,6 @@ export const Icons = {
   back: IconArrowLeft,
   logo: IconFolder,
   datasetSettings: IconDatabaseCog,
-  datasetEdit: IconDatabaseEdit,
-  userList: IconUsers,
   dataset: IconDatabase,
   addDataset: IconDatabasePlus,
   userSettings: IconUserCog,
@@ -42,4 +39,5 @@ export const Icons = {
   dropzone: IconCloudUpload,
   check: IconCircleCheckFilled,
   delete: IconTrash,
+  terminal: IconTerminal,
 };

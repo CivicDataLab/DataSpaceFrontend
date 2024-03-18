@@ -2,8 +2,8 @@ import { Spinner } from 'opub-ui';
 
 export function Loading() {
   return (
-    <div className="flex flex-col gap-4 h-[680px] w-full items-center justify-center text font-Medium text-600">
-      <Spinner color="text" />
+    <div className="text font-Medium flex h-[680px] w-full flex-col items-center justify-center gap-4 text-600">
+      <Spinner />
       Loading
     </div>
   );

@@ -3,8 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useKeyDetect } from '@/hooks/use-key-detect';
-import { Button, Icon, Text, Tooltip } from 'opub-ui';
+import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
+import { Icon, IconButton, Text, Tooltip } from 'opub-ui';
 
 import { SidebarNavItem } from 'types';
 import { cn } from '@/lib/utils';
@@ -16,14 +16,9 @@ interface DashboardNavProps {
 }
 export function DashboardNav({ items }: DashboardNavProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(false);
-  const { key, metaKey } = useKeyDetect();
   const path = usePathname();
 
-  React.useEffect(() => {
-    if (key === 'b' && metaKey) {
-      setIsCollapsed(!isCollapsed);
-    }
-  }, [key, metaKey]);
+  useMetaKeyPress('b', () => setIsCollapsed((e) => !e));
 
   if (items && !items.length) {
     return null;
@@ -41,19 +36,15 @@ export function DashboardNav({ items }: DashboardNavProps) {
     >
       <nav className={cn('flex flex-col gap-2')}>
         <div className="w-fit self-end">
-          <Tooltip
-            side="right"
-            content={<p>{isCollapsed ? 'Expand' : 'Collapse'} Sidebar</p>}
+          <IconButton
+            size="slim"
+            icon={sidebarIcon}
+            withTooltip
+            tooltipSide="right"
+            onClick={() => setIsCollapsed((open) => !open)}
           >
-            <Button
-              icon={<Icon source={sidebarIcon} />}
-              accessibilityLabel={`${
-                isCollapsed ? 'Expand' : 'Collapse'
-              } Sidebar`}
-              kind="tertiary"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-            />
-          </Tooltip>
+            {isCollapsed ? 'Expand' : 'Collapse'} Sidebar
+          </IconButton>
         </div>
 
         {items.map((item) => {

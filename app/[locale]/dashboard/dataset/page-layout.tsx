@@ -1,11 +1,8 @@
 'use client';
 
-import { graphql } from '@/gql';
 import { usePRouter } from '@/hooks/use-prouter';
-import { useQuery } from '@tanstack/react-query';
 import { Divider } from 'opub-ui';
 
-import { GraphQL } from '@/lib/api';
 import { ActionBar } from './components/action-bar';
 import { Content } from './components/content';
 
@@ -36,7 +33,7 @@ export const Page = () => {
         preFetch="/dashboard/dataset/new"
         primaryAction={{
           content: 'Add New Dataset',
-          onAction: () => router.push('/dashboard/dataset/2345/edit/distribution'),
+          onAction: () => router.push('/dashboard/dataset/new'),
         }}
       />
       <Divider />

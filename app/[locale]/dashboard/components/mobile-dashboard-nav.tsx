@@ -63,16 +63,16 @@ export function MobileDashboardNav({
                     href={item.disabled ? '/' : item.href}
                     onClick={() => setIsOpened(false)}
                   >
-                    <div className={twMerge('flex justify-between relative')}>
+                    <div className={twMerge('relative flex justify-between')}>
                       <span
                         className={twMerge(
-                          'bg-transparent rounded-r-1 w-[3px] h-full absolute top-0 left-0',
+                          'absolute left-0 top-0 h-full w-[3px] rounded-r-1 bg-transparent',
                           path.includes(item.href) && 'bg-decorativeIconFour'
                         )}
                       />
                       <div
                         className={twMerge(
-                          'flex items-center pl-2 w-full ml-2 rounded-1 overflow-hidden',
+                          'ml-2 flex w-full items-center overflow-hidden rounded-1 pl-2',
                           dashboardStyles.Item,
                           path.includes(item.href) && dashboardStyles.Selected
                         )}
@@ -80,7 +80,7 @@ export function MobileDashboardNav({
                         <Icon source={icon} />
                         <div
                           className={twMerge(
-                            'py-2 px-3',
+                            'px-3 py-2',
                             'whitespace-nowrap opacity-100 transition-opacity duration-300'
                           )}
                         >

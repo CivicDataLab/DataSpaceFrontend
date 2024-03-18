@@ -1,10 +1,10 @@
 module.exports = {
-  75: 'var(--font-size-75)',
-  100: 'var(--font-size-100)',
-  200: 'var(--font-size-200)',
-  300: 'var(--font-size-300)',
-  400: 'var(--font-size-400)',
-  500: 'var(--font-size-500)',
-  600: 'var(--font-size-600)',
-  700: 'var(--font-size-700)',
+  75: '0.75rem',
+  100: '0.875rem',
+  200: '1rem',
+  300: '1.25rem',
+  400: '1.5rem',
+  500: '1.75rem',
+  600: '2rem',
+  700: '2.5rem',
 };

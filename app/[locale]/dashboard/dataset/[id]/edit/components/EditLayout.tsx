@@ -25,7 +25,7 @@ interface LayoutProps {
   params: { id: string };
 }
 
-const layoutList = ['metadata', 'access', 'distribution', 'review', 'publish'];
+const layoutList = ['metadata', 'distribution', 'review', 'publish'];
 
 export function EditLayout({ children, params }: LayoutProps) {
   const { data } = useQuery([`dataset_layout_${params.id}`], () =>
@@ -46,7 +46,7 @@ export function EditLayout({ children, params }: LayoutProps) {
   return (
     <div className="mt-8 flex h-full flex-col">
       <Header id={params.id} title={data?.dataset?.title} />
-      <div className="lg:flex-column mt-4 flex flex-col">
+      <div className="mt-4 flex flex-col lg:flex-row">
         <div>
           <Navigation id={params.id} pathItem={pathItem} />
         </div>
@@ -94,31 +94,25 @@ const Header = ({ id, title }: { id: string; title?: string }) => {
 const Navigation = ({ id, pathItem }: { id: string; pathItem: string }) => {
   const links = [
     {
+      label: 'Metadata',
+      url: `/dashboard/dataset/${id}/edit/metadata`,
+      selected: pathItem === 'metadata',
+    },
+    {
       label: 'Distributions',
       url: `/dashboard/dataset/${id}/edit/distribution`,
       selected: pathItem === 'distribution',
     },
     {
-      label: 'Access Models',
-      url: `/dashboard/dataset/${id}/edit/access`,
-      selected: pathItem === 'access',
-    },
-    {
-      label: 'Metadata',
-      url: `/dashboard/dataset/${id}/edit/metadata`,
-      selected: pathItem === 'metadata',
-    },
-
-    {
       label: 'Review',
       url: `/dashboard/dataset/${id}/edit/review`,
-      disabled: false,
+      disabled: true,
       selected: pathItem === 'review',
     },
   ];
 
   return (
-    <ul className="flex max-w-[90vw] overflow-x-auto lg:max-w-[10vw] lg:overflow-x-visible">
+    <ul className="flex max-w-[90vw] overflow-x-auto lg:block lg:max-w-full lg:overflow-x-visible">
       {links.map((link) => (
         <li
           className={cn(
@@ -133,7 +127,7 @@ const Navigation = ({ id, pathItem }: { id: string; pathItem: string }) => {
               'lg:text-start',
               'hover:text-textDefault focus:text-textDefault',
               link.selected &&
-                'pointer-events-none bg-surfaceDefault text-textDefault shadow-insetButton',
+                'pointer-events-none bg-surfaceDefault text-textDefault shadow-insetBasic',
               link.disabled && 'pointer-events-none'
             )}
             href={link.url}

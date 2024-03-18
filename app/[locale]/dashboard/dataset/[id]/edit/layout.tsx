@@ -1,5 +1,6 @@
-import { EditLayout } from './components/EditLayout';
 import React from 'react';
+
+import { EditLayout } from './components/EditLayout';
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
