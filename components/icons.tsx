@@ -7,6 +7,7 @@ import {
   IconCloudUpload,
   IconDatabase,
   IconDatabaseCog,
+  IconDatabaseEdit,
   IconDatabasePlus,
   IconFilePlus,
   IconFolder,
@@ -17,6 +18,7 @@ import {
   IconTerminal,
   IconTrash,
   IconUserCog,
+  IconUsers,
   // TablerIconsProps,
 } from '@tabler/icons-react';
 
@@ -24,6 +26,8 @@ export const Icons = {
   back: IconArrowLeft,
   logo: IconFolder,
   datasetSettings: IconDatabaseCog,
+  datasetEdit: IconDatabaseEdit,
+  userList: IconUsers,
   dataset: IconDatabase,
   addDataset: IconDatabasePlus,
   userSettings: IconUserCog,
