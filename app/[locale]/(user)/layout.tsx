@@ -21,7 +21,11 @@ export default async function Layout({ children }: UserLayoutProps) {
   return (
     <div className="flex h-full grow flex-col">
       <header className="relative z-2 bg-surfaceDefault px-4 py-3 shadow-elementTopNav">
-        <MainNav hideSearch={!regEx.test(routerPath)} />
+        <MainNav
+          hideSearch={
+            !regEx.test(routerPath) || routerPath.includes('/datasets')
+          }
+        />
       </header>
       <>{children}</>
     </div>
