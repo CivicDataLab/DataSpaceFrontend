@@ -40,14 +40,28 @@ export function MainNav({ hideSearch = false }) {
             />
           </div>
         )}
-        <Link href={'/dashboard/dataset'}>
-          <div className="flex shrink-0 items-center gap-4">
-            <Icon source={Icons.notification} />
-            <div>
-              <Avatar showInitials showLabel name="Helen Birjam" size="small" />
+        <Box flex direction="row" gap="8" alignItems={'center'}>
+          <Link href=" /datasets">
+            <Box flex gap="2">
+              <Text variant="headingSm" as="h1" color={'highlight'}>
+                Dataset Listing
+              </Text>
+            </Box>
+          </Link>
+          <Link href={'/dashboard/dataset'}>
+            <div className="flex shrink-0 items-center gap-4">
+              <Icon source={Icons.notification} />
+              <div>
+                <Avatar
+                  showInitials
+                  showLabel
+                  name="Helen Birjam"
+                  size="small"
+                />
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+        </Box>
       </Box>
     </nav>
   );
