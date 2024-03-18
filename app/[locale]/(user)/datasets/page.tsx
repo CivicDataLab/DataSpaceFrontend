@@ -1,18 +1,8 @@
 import React from 'react';
-import {
-  Breadcrumbs,
-  Button,
-  SearchInput,
-  Select,
-  Sheet,
-  Text,
-  Tray,
-} from 'opub-ui';
-import { twMerge } from 'tailwind-merge';
+import { Breadcrumbs, Button, SearchInput, Select, Text, Tray } from 'opub-ui';
 
 import CardsListing from './components/CardsListing/CardsListing';
 import Filter from './components/FIlter/Filter';
-import styles from './dataset-listing.module.scss';
 
 const DatasetsListing = () => {
   const data = [
@@ -106,7 +96,7 @@ const DatasetsListing = () => {
   ];
 
   return (
-    <main className={twMerge(styles.datasetWrapper, '')}>
+    <main className="mx-5 py-5" style={{ backgroundColor: 'var(-pure-white)' }}>
       <Breadcrumbs
         crumbs={[
           {

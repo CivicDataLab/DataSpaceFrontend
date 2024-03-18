@@ -1,8 +1,6 @@
 import React from 'react';
+import Link from 'next/link';
 import { Box, Tag, Text } from 'opub-ui';
-import { twMerge } from 'tailwind-merge';
-
-import styles from './cars-listing.module.scss';
 
 interface Dataset {
   datasetTitle: string;
@@ -23,10 +21,15 @@ const CardsListing = ({ data }: { data: Dataset }) => {
   const { datasetTitle, description, metadata } = data;
   return (
     <>
-      <div className={twMerge(styles.cards, 'my-7 p-7')}>
+      <div
+        className="my-7 p-7"
+        style={{ backgroundColor: 'var(--base-gray-slate-solid-2)' }}
+      >
         <div className="flex flex-wrap gap-8 lg:gap-8">
           <div className="lg:w-2/4">
-            <Text variant="headingMd">{datasetTitle}</Text>
+            <Link href={'/datasets/detail'}>
+              <Text variant="headingMd">{datasetTitle}</Text>
+            </Link>
           </div>
           <div className="lg:w-2/5">
             <Text variant="bodySm">{description}</Text>

@@ -63,12 +63,18 @@ const Filter = () => {
     <Box>
       {filtersData.map((item, index) => (
         <div key={index}>
-          <div className={twMerge(styles.filter, 'px-3 py-1')}>
+          <div
+            className="px-3 py-1"
+            style={{ backgroundColor: 'var(--base-gray-slate-solid-11)' }}
+          >
             <Text variant="headingSm" color="onBgDefault">
               {item.title}
             </Text>
           </div>
-          <div className={twMerge(styles.options, 'p-3')}>
+          <div
+            className="p-3"
+            style={{ backgroundColor: 'var(--base-gray-slate-solid-4)' }}
+          >
             <CheckboxGroup
               name="checkbox"
               options={item.Options.map((Option) => ({
