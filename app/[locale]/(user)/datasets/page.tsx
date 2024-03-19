@@ -8,7 +8,10 @@ import { data } from './data';
 
 const DatasetsListing = () => {
   return (
-    <main className="mx-5 py-5" style={{ backgroundColor: 'var(-pure-white)' }}>
+    <main
+      className="mx-5 py-5"
+      style={{ backgroundColor: 'var(--base-pure-white)' }}
+    >
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
