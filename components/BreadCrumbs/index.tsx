@@ -15,7 +15,7 @@ interface BreadCrumbsProps {
 const BreadCrumbs: React.FC<BreadCrumbsProps> = ({ data }) => {
   return (
     <>
-      <Breadcrumb>
+      <Breadcrumb className="mx-1">
         <BreadcrumbList>
           {data.map((item, index) => (
             <React.Fragment key={index}>
