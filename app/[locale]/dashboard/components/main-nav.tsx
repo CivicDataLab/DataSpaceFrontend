@@ -24,6 +24,7 @@ import {
 } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
+import Sidebar from './sidebar';
 
 const profileLinks = [
   {
@@ -32,7 +33,7 @@ const profileLinks = [
   },
 ];
 
-export function MainNav() {
+export function MainNav({ hideSearch = false }) {
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const searchRef = React.useRef<HTMLInputElement>(null);
   const { data: session, status } = useSession();
@@ -57,52 +58,62 @@ export function MainNav() {
   return (
     <nav>
       <div className="flex items-center justify-between gap-4">
-        <Link href="/">
-          <div className="flex items-center gap-2">
-            <Icon source={Icons.logo} size={24} color="success" />
-            <Text variant="headingLg" as="h1">
-              Data Exchange
-            </Text>
+        <div className="flex gap-1">
+          <div className="lg:hidden">
+            <Sidebar />
           </div>
-        </Link>
+          <Link href="/">
+            <div className="flex items-center gap-2">
+              <Icon source={Icons.logo} size={24} color="success" />
+              <Text variant="headingLg" as="h1">
+                Data Exchange
+              </Text>
+            </div>
+          </Link>
+        </div>
 
         <div className="flex items-center gap-4">
-          <SearchInput
-            placeholder="Search"
-            name="Search"
-            className="hidden w-full max-w-[350px] md:block"
-            label="Search"
-            ref={searchRef}
-            suffix={
-              <div className="relative">
-                <Divider
-                  orientation="vertical"
-                  className="absolute left-[-4px] top-[3px] h-6"
-                />
-                <IconButton
-                  size="slim"
-                  icon={Icons.terminal}
-                  withTooltip
-                  onClick={() => setCommandOpen(true)}
-                >
-                  Command palette
-                </IconButton>
+          {!hideSearch && (
+            <SearchInput
+              placeholder="Search"
+              name="Search"
+              className="hidden h-8 w-full max-w-[350px] md:block"
+              label="Search"
+              ref={searchRef}
+              suffix={
+                <div className="relative">
+                  <Divider
+                    orientation="vertical"
+                    className="absolute left-[-4px] top-[3px] h-6"
+                  />
+                  <IconButton
+                    size="slim"
+                    icon={Icons.terminal}
+                    withTooltip
+                    onClick={() => setCommandOpen(true)}
+                  >
+                    Command palette
+                  </IconButton>
 
-                <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
-                  <CommandInput placeholder="search..." />
-                  <CommandList>
-                    <CommandEmpty>No results found</CommandEmpty>
-                    <CommandGroup heading="Suggestions">
-                      <CommandItem>Create Dataset</CommandItem>
-                      <CommandItem>Create new Organisation</CommandItem>
-                      <CommandItem>Go to profile</CommandItem>
-                    </CommandGroup>
-                  </CommandList>
-                </CommandDialog>
-              </div>
-            }
-          />
-          <div className="min-w-[102px]">
+                  <CommandDialog
+                    open={commandOpen}
+                    onOpenChange={setCommandOpen}
+                  >
+                    <CommandInput placeholder="search..." />
+                    <CommandList>
+                      <CommandEmpty>No results found</CommandEmpty>
+                      <CommandGroup heading="Suggestions">
+                        <CommandItem>Create Dataset</CommandItem>
+                        <CommandItem>Create new Organisation</CommandItem>
+                        <CommandItem>Go to profile</CommandItem>
+                      </CommandGroup>
+                    </CommandList>
+                  </CommandDialog>
+                </div>
+              }
+            />
+          )}
+          <div className="hidden min-w-[102px] lg:block">
             <Link href={'/datasets'}>
               <Text variant="headingSm" as="h1" color={'highlight'}>
                 Dataset Listing
