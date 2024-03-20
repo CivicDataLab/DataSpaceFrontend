@@ -9,7 +9,7 @@ interface UserLayoutProps {
   children?: React.ReactNode;
 }
 
-export default async function Layout({ children }: UserLayoutProps) {
+export default function Layout({ children }: UserLayoutProps) {
   const user = true; // await getCurrentUser()
   const routerPath = usePathname();
   const hideSearch = routerPath === '/' || routerPath === '/datasets';
