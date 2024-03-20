@@ -11,14 +11,17 @@ import {
   IconDatabasePlus,
   IconFilePlus,
   IconFolder,
+  IconInfoCircle,
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
   IconLink,
+  IconMenu2,
   IconSearch,
   IconTerminal,
   IconTrash,
   IconUserCog,
   IconUsers,
+  IconX,
   // TablerIconsProps,
 } from '@tabler/icons-react';
 
@@ -34,7 +37,7 @@ export const Icons = {
   arrowRight: IconArrowRight,
   search: IconSearch,
   notification: IconBellFilled,
-
+  info: IconInfoCircle,
   construction: IconBarrierBlock,
   link: IconLink,
   collapse: IconLayoutSidebarLeftCollapse,
@@ -44,4 +47,6 @@ export const Icons = {
   check: IconCircleCheckFilled,
   delete: IconTrash,
   terminal: IconTerminal,
+  cross: IconX,
+  menu: IconMenu2,
 };
