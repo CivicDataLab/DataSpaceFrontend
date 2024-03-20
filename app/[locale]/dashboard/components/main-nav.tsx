@@ -77,7 +77,7 @@ export function MainNav({ hideSearch = false }) {
             <SearchInput
               placeholder="Search"
               name="Search"
-              className="hidden w-full max-w-[350px] md:block"
+              className="hidden h-8 w-full max-w-[350px] md:block"
               label="Search"
               ref={searchRef}
               suffix={
