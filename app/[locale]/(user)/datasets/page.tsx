@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import { Button, SearchInput, Select, Text, Tray } from 'opub-ui';
 
 import BreadCrumbs from '@/components/BreadCrumbs';
@@ -7,6 +9,8 @@ import Filter from './components/FIlter/Filter';
 import { data } from './data';
 
 const DatasetsListing = () => {
+  const [open, setOpen] = useState(false);
+
   return (
     <main
       className="mx-5 py-5"
@@ -52,13 +56,20 @@ const DatasetsListing = () => {
             />
 
             <Tray
+              size="narrow"
+              open={open}
+              onOpenChange={setOpen}
               trigger={
-                <Button kind="secondary" className=" lg:hidden">
+                <Button
+                  kind="secondary"
+                  className=" lg:hidden"
+                  onClick={(e) => setOpen(true)}
+                >
                   Filter
                 </Button>
               }
             >
-              <Filter />
+              <Filter setOpen={setOpen} />
             </Tray>
           </div>
           {data.map((item, index) => (
