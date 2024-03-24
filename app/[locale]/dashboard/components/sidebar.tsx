@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button, Icon, Sheet, Text } from 'opub-ui';
-import { twMerge } from 'tailwind-merge';
 
 import { Icons } from '@/components/icons';
-import styles from './styles.module.scss';
 
 const Sidebar = () => {
   const [open, setOpen] = useState(false);
@@ -27,7 +25,7 @@ const Sidebar = () => {
             <Icon source={Icons.menu} />
           </Button>
         </Sheet.Trigger>
-        <Sheet.Content className={twMerge(styles.Sidebar, 'p-4')}>
+        <Sheet.Content className={'p-4'}>
           <div className="mb-2 flex justify-between">
             <div>
               <Text variant="headingMd" as="h1" className="px-1">
