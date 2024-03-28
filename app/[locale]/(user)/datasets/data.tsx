@@ -27,6 +27,10 @@ export const data = [
         { type: 'Restricted' },
       ],
       accessModelsCount: '8',
+      location: 'India',
+      source: 'OGD',
+      licence: 'Government Open Data License ',
+      policy: 'National Data Sharing and Accessibility Policy',
     },
   },
   {
@@ -57,7 +61,80 @@ export const data = [
         { type: 'Restricted' },
       ],
       accessModelsCount: '2',
+      location: 'India',
+      source: 'OGD',
+      licence: 'Government Open Data License ',
+      policy: 'National Data Sharing and Accessibility Policy (NDSAP)',
     },
+    resources: [
+      {
+        title: 'Telangana Budget 2020-21',
+        description:
+          'This section provides budget documents of Telangana for the year 2020-21.',
+      },
+      {
+        title: 'Telangana Budget 2021-22',
+        description:
+          'This section provides budget documents of Telangana for the year 2021-22',
+      },
+      {
+        title: 'Telangana Budget 2022-23',
+        description:
+          'This section provides budget documents of Telangana for the year 2022-23.',
+      },
+      {
+        title: 'Telangana Budget 2023-24',
+        description:
+          'This section provides budget documents of Telangana for the year 2023-24.',
+      },
+    ],
+    accessModels: [
+      {
+        title: 'Open Access model of Telangana Budget 2021-22 ',
+        description:
+          'This section provides budget documents of Telangana for the fiscal year 2021-22, offering detailed insights into financial allocations, expenditures, and revenue projections for various sectors and initiatives within the state',
+        type: 'OPEN ACCESS',
+        accessModelDescription:
+          'Open access model helps you to view data without login',
+        resource: [
+          {
+            title: 'Telangana Budget 2021-22',
+            description:
+              'This section provides budget documents of Telangana for the year 2021-22',
+          },
+        ],
+      },
+      {
+        title: 'Registered Access model of Telangana Budget 2023-24 ',
+        description:
+          'This section provides budget documents of Telangana for the fiscal year 2023-24, offering comprehensive insights into the financial allocations, expenditures, and priorities of the state government during that period.',
+        type: 'REGISTERED ACCESS',
+        accessModelDescription:
+          'Registered access model helps you to view data after login',
+        resource: [
+          {
+            title: 'Telangana Budget 2023-24',
+            description:
+              'This section provides budget documents of Telangana for the year 2023-24',
+          },
+        ],
+      },
+      {
+        title: 'Restricted Access model of Telangana Budget 2021-22 ',
+        description:
+          'This section provides budget documents of Telangana for the fiscal year 2021-22, offering comprehensive insights into the financial allocations, expenditures, and priorities of the state government during that period.',
+        type: 'RESTRICTED ACCESS',
+        accessModelDescription:
+          'Restricted access model helps you to view data after login',
+        resource: [
+          {
+            title: 'Telangana Budget 2021-22',
+            description:
+              'This section provides budget documents of Telangana for the year 2021-22',
+          },
+        ],
+      },
+    ],
   },
   {
     id: 999,
@@ -87,6 +164,10 @@ export const data = [
         { type: 'Restricted' },
       ],
       accessModelsCount: '8',
+      location: 'India',
+      source: 'OGD',
+      licence: 'Government Open Data License ',
+      policy: 'National Data Sharing and Accessibility Policy',
     },
   },
 ];
