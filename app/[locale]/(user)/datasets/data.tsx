@@ -93,7 +93,7 @@ export const data = [
         title: 'Open Access model of Telangana Budget 2021-22 ',
         description:
           'This section provides budget documents of Telangana for the fiscal year 2021-22, offering detailed insights into financial allocations, expenditures, and revenue projections for various sectors and initiatives within the state',
-        type: 'OPEN ACCESS',
+        type: 'OPEN',
         accessModelDescription:
           'Open access model helps you to view data without login',
         resource: [
@@ -108,7 +108,7 @@ export const data = [
         title: 'Registered Access model of Telangana Budget 2023-24 ',
         description:
           'This section provides budget documents of Telangana for the fiscal year 2023-24, offering comprehensive insights into the financial allocations, expenditures, and priorities of the state government during that period.',
-        type: 'REGISTERED ACCESS',
+        type: 'REGISTERED',
         accessModelDescription:
           'Registered access model helps you to view data after login',
         resource: [
@@ -123,7 +123,7 @@ export const data = [
         title: 'Restricted Access model of Telangana Budget 2021-22 ',
         description:
           'This section provides budget documents of Telangana for the fiscal year 2021-22, offering comprehensive insights into the financial allocations, expenditures, and priorities of the state government during that period.',
-        type: 'RESTRICTED ACCESS',
+        type: 'RESTRICTED',
         accessModelDescription:
           'Restricted access model helps you to view data after login',
         resource: [
