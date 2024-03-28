@@ -5,30 +5,16 @@ import {
   AccordionItem,
   AccordionTrigger,
   Button,
-  Icon,
   Text,
 } from 'opub-ui';
 
-import { Icons } from '@/components/icons';
+import CustomTags from '@/components/CustomTags';
 
 interface AccessModelProps {
   data: any;
 }
 
 const AccessModels: React.FC<AccessModelProps> = ({ data }) => {
-  const getItemBackgroundColor = (type: any) => {
-    switch (type) {
-      case 'OPEN ACCESS':
-        return 'var(--base-green-solid-7)';
-      case 'REGISTERED ACCESS':
-        return 'var(--base-amber-solid-6)';
-      case 'RESTRICTED ACCESS':
-        return 'var(--base-red-solid-7)';
-      default:
-        return '';
-    }
-  };
-
   return (
     <>
       {data.map((item: any, index: any) => (
@@ -46,20 +32,7 @@ const AccessModels: React.FC<AccessModelProps> = ({ data }) => {
             </div>
           </div>
           <div className="align-center flex flex-col justify-between gap-4 sm:flex-row">
-            <div
-              className="h-fit w-fit p-1"
-              style={{
-                backgroundColor: getItemBackgroundColor(item.type),
-                borderRadius: '4px',
-              }}
-            >
-              <div className="flex w-full gap-2 ">
-                <Icon source={Icons.access} />
-                <Text className="" variant="bodyMd">
-                  {item.type}
-                </Text>
-              </div>
-            </div>
+            <CustomTags type={item.type} icon={true} />
             <Button className="h-fit w-fit" kind="secondary">
               Download
             </Button>
