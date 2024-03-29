@@ -22,10 +22,7 @@ const Cards = ({ data }: { data: Dataset }) => {
   const { datasetTitle, description, metadata, id } = data;
   return (
     <>
-      <div
-        className="my-7 p-7"
-        style={{ backgroundColor: 'var(--base-gray-slate-solid-3)' }}
-      >
+      <div className="my-7 bg-actionSecondaryDisabled p-7">
         <div className="flex flex-wrap gap-8 lg:gap-8">
           <div className="lg:w-2/4">
             <Link href={`/datasets/${id}`}>

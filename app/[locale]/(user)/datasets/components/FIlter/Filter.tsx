@@ -80,18 +80,12 @@ const Filter: React.FC<FilterProps> = ({ setOpen }) => {
       <div className="flex flex-col">
         {filtersData.map((item, index) => (
           <div key={index}>
-            <div
-              className="px-3 py-1"
-              style={{ backgroundColor: 'var(--base-gray-slate-solid-11)' }}
-            >
+            <div className="bg-borderOnBGSubdued px-3 py-1">
               <Text variant="headingSm" color="onBgDefault">
                 {item.title}
               </Text>
             </div>
-            <div
-              className="p-3"
-              style={{ backgroundColor: 'var(--base-gray-slate-solid-4)' }}
-            >
+            <div className="bg-iconOnBGSubdued p-3">
               <CheckboxGroup
                 name="checkbox"
                 options={item.Options.map((Option) => ({
