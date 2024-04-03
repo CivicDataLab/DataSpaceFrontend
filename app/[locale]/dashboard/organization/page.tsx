@@ -33,6 +33,7 @@ export default async function Page({ params }: { params: { id: string } }) {
             <div
               id={orgItem.slug}
               className="flex flex-col items-center gap-2 text-center"
+              key={orgItem.slug}
             >
               {/* <Image src={`${NEXT_PUBLIC_BACKEND_URL}`} /> */}
 
