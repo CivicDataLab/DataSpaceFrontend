@@ -5,7 +5,7 @@ import { Text } from 'opub-ui';
 
 import { cn } from '@/lib/utils';
 
-export function DashboardHeader({ currentPath }: { currentPath: String }) {
+export function DashboardHeader({ currentPath }: { currentPath: string }) {
   const userDashboardOptions = [
     {
       label: 'User Dashboard',
