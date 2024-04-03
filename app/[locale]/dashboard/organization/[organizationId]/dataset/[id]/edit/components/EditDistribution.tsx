@@ -104,6 +104,7 @@ export function EditDistribution({
         submitRef={submitRef}
         // onChange={setVal}
       >
+        <>Test</>
         {/* <>
           <Text variant="headingMd">Add Distribution</Text>
           <div className="pt-4">
