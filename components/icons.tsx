@@ -17,6 +17,7 @@ import {
   IconLink,
   IconMenu2,
   IconSearch,
+  IconShieldCheck,
   IconTerminal,
   IconTrash,
   IconUserCog,
@@ -49,4 +50,5 @@ export const Icons = {
   terminal: IconTerminal,
   cross: IconX,
   menu: IconMenu2,
+  access: IconShieldCheck,
 };

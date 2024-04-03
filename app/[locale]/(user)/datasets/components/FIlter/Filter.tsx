@@ -1,7 +1,13 @@
 import React from 'react';
-import { CheckboxGroup, Text } from 'opub-ui';
+import { Button, CheckboxGroup, Icon, Text } from 'opub-ui';
 
-const Filter = () => {
+import { Icons } from '@/components/icons';
+
+interface FilterProps {
+  setOpen?: (isOpen: boolean) => void;
+}
+
+const Filter: React.FC<FilterProps> = ({ setOpen }) => {
   const filtersData = [
     {
       title: 'Organization',
@@ -57,33 +63,48 @@ const Filter = () => {
   ];
 
   return (
-    <div className="flex flex-col">
-      {filtersData.map((item, index) => (
-        <div key={index}>
-          <div
-            className="px-3 py-1"
-            style={{ backgroundColor: 'var(--base-gray-slate-solid-11)' }}
-          >
-            <Text variant="headingSm" color="onBgDefault">
-              {item.title}
-            </Text>
+    <>
+      {setOpen && (
+        <div className="flex justify-between">
+          <div>
+            <Text variant="headingMd">Filters</Text>
           </div>
-          <div
-            className="p-3"
-            style={{ backgroundColor: 'var(--base-gray-slate-solid-4)' }}
-          >
-            <CheckboxGroup
-              name="checkbox"
-              options={item.Options.map((Option) => ({
-                label: Option.label,
-                value: Option.value,
-              }))}
-              title={undefined}
-            />
+
+          <div className="align-center mr-2">
+            <Button onClick={(e) => setOpen(false)} kind="tertiary">
+              <Icon source={Icons.cross} size={24} color="default" />
+            </Button>
           </div>
         </div>
-      ))}
-    </div>
+      )}
+      <div className="flex flex-col">
+        {filtersData.map((item, index) => (
+          <div key={index}>
+            <div
+              className="px-3 py-1"
+              style={{ backgroundColor: 'var(--base-gray-slate-solid-11)' }}
+            >
+              <Text variant="headingSm" color="onBgDefault">
+                {item.title}
+              </Text>
+            </div>
+            <div
+              className="p-3"
+              style={{ backgroundColor: 'var(--base-gray-slate-solid-4)' }}
+            >
+              <CheckboxGroup
+                name="checkbox"
+                options={item.Options.map((Option) => ({
+                  label: Option.label,
+                  value: Option.value,
+                }))}
+                title={undefined}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 };
 

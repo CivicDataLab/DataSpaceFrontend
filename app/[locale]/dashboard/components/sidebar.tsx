@@ -25,7 +25,7 @@ const Sidebar = () => {
             <Icon source={Icons.menu} />
           </Button>
         </Sheet.Trigger>
-        <Sheet.Content className=" w-3/5  p-4">
+        <Sheet.Content className={'p-4'}>
           <div className="mb-2 flex justify-between">
             <div>
               <Text variant="headingMd" as="h1" className="px-1">
