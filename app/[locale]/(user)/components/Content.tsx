@@ -29,7 +29,7 @@ export function Content() {
         <Button
           variant="interactive"
           kind="primary"
-          url="/dashboard/dataset"
+          url="/dashboard"
           icon={<Icon source={IconShare3} color="onBgDefault" />}
         >
           <Text color="onBgDefault" variant="headingMd">
