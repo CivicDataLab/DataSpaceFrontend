@@ -1,6 +1,6 @@
 import React from 'react';
 import { graphql } from '@/gql';
-import { FileInputType, ResourceInput } from '@/gql/generated/graphql';
+// import { FileInputType, ResourceInput } from '@/gql/generated/graphql';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Button,
@@ -18,30 +18,30 @@ import { bytesToSize } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { DatasetForm } from '../../../components/dataset-form';
 
-const createResourceMutationDoc: any = graphql(`
-  mutation createResourceMutation($resource_data: ResourceInput) {
-    create_resource(resource_data: $resource_data) {
-      success
-      errors
-      resource {
-        id
-        title
-        description
-        file_details {
-          resource {
-            id
-            title
-            description
-          }
-          format
-          file
-          remote_url
-          source_file_name
-        }
-      }
-    }
-  }
-`);
+// const createResourceMutationDoc: any = graphql(`
+//   mutation createResourceMutation($resource_data: ResourceInput) {
+//     create_resource(resource_data: $resource_data) {
+//       success
+//       errors
+//       resource {
+//         id
+//         title
+//         description
+//         file_details {
+//           resource {
+//             id
+//             title
+//             description
+//           }
+//           format
+//           file
+//           remote_url
+//           source_file_name
+//         }
+//       }
+//     }
+//   }
+// `);
 
 interface Props {
   id: string;
@@ -67,17 +67,17 @@ export function EditDistribution({
   const [fileSelected, setFileSelected] = React.useState(false);
 
   const queryClient = useQueryClient();
-  const { mutate, isLoading } = useMutation(
-    (data: { resource_data: ResourceInput }) =>
-      GraphQL(createResourceMutationDoc, data),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: [`dataset_distribution_${id}`],
-        });
-      },
-    }
-  );
+  // const { mutate, isLoading } = useMutation(
+  //   (data: { resource_data: ResourceInput }) =>
+  //     GraphQL(createResourceMutationDoc, data),
+  //   {
+  //     onSuccess: () => {
+  //       queryClient.invalidateQueries({
+  //         queryKey: [`dataset_distribution_${id}`],
+  //       });
+  //     },
+  //   }
+  // );
 
   return (
     <>
@@ -85,25 +85,26 @@ export function EditDistribution({
         onSubmit={async (data: {
           title: string;
           description: string;
-          file_details: FileInputType['file'];
+          // file_details: FileInputType['file'];
+          file_details: any;
         }) => {
-          mutate({
-            resource_data: {
-              dataset: defaultVal.id,
-              status: 'DRAFT',
-              title: data.title,
-              description: data.description,
-              file_details: {
-                file: data.file_details[0],
-              },
-            },
-          });
+          // mutate({
+          //   resource_data: {
+          //     dataset: defaultVal.id,
+          //     status: 'DRAFT',
+          //     title: data.title,
+          //     description: data.description,
+          //     file_details: {
+          //       file: data.file_details[0],
+          //     },
+          //   },
+          // });
         }}
         formOptions={{ defaultValues: defaultVal }}
         submitRef={submitRef}
         // onChange={setVal}
       >
-        <>
+        {/* <>
           <Text variant="headingMd">Add Distribution</Text>
           <div className="pt-4">
             <Divider />
@@ -176,7 +177,7 @@ export function EditDistribution({
               <Button loading={isLoading}>Save & Add Another</Button>
             </div>
           </div>
-        </>
+        </> */}
       </DatasetForm>
     </>
   );
