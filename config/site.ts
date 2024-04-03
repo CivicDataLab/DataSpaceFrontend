@@ -10,7 +10,7 @@ export const siteConfig: SiteConfig = {
 export const locales = ['en', 'hi'];
 
 export const gqlConfig = {
-  url: process.env.NEXT_PUBLIC_BACKEND_URL || '',
+  url: 'https://api.datakeep.civicdays.in/api/graphql',
   headers: {
     organization: '1',
   },

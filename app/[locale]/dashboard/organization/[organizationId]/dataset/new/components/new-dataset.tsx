@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreateDatasetInput, PatchDatasetInput } from '@/gql/generated/graphql';
+// import { CreateDatasetInput, PatchDatasetInput } from '@/gql/generated/graphql';
 import { PatchDataset, CreateDataset as Props } from '@/types';
 import {
   Checkbox,
@@ -33,8 +33,10 @@ export function CreateDataset({
   defaultVal?: PatchDataset;
   submitRef: React.RefObject<HTMLButtonElement>;
   isLoading?: boolean;
-  mutate?: (res: { dataset_data: CreateDatasetInput }) => void;
-  mutatePatch?: (res: { dataset_data: PatchDatasetInput }) => void;
+  // mutate?: (res: { dataset_data: CreateDatasetInput }) => void;
+  // mutatePatch?: (res: { dataset_data: PatchDatasetInput }) => void;
+  mutate?: any;
+  mutatePatch: any;
 }) {
   const defaultValue = defaultVal || defaultValBase;
 

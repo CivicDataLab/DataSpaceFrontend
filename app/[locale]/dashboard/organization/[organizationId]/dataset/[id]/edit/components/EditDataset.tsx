@@ -9,7 +9,8 @@ export function EditDataset({
   mutate,
   isLoading,
 }: {
-  defaultVal: PatchDataset;
+  // defaultVal: PatchDataset;
+  defaultVal: any;
   submitRef: React.RefObject<HTMLButtonElement>;
   mutate: any;
   isLoading: boolean;

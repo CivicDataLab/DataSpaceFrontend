@@ -15,22 +15,12 @@ export const dashboardConfig: DashboardConfig = {
   sidebarNav: [
     {
       title: 'Dataset Accessed',
-      href: '/dashboard/datasets-accessed',
+      href: '/dashboard/user/datasets-accessed',
       icon: 'datasetSettings',
     },
     {
-      title: 'Dataset Created',
-      href: '/dashboard/dataset',
-      icon: 'datasetEdit',
-    },
-    {
-      title: 'Manage Consumers',
-      href: '/dashboard/consumers',
-      icon: 'userList',
-    },
-    {
       title: 'Profile',
-      href: '/dashboard/account',
+      href: '/dashboard/user/account',
       icon: 'userSettings',
     },
   ],

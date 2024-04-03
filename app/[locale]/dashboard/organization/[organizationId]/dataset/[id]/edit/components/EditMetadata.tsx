@@ -1,12 +1,12 @@
 import React from 'react';
-import { UpdateDatasetInput } from '@/gql/generated/graphql';
+// import { UpdateDatasetInput } from '@/gql/generated/graphql';
 import { Button, Combobox, Divider, FormLayout, Select, Text } from 'opub-ui';
 
 import { DatasetForm } from '../../../components/dataset-form';
 
-interface DefaultValues extends Omit<UpdateDatasetInput, 'geo_list'> {
-  geo_list: string[];
-}
+// interface DefaultValues extends Omit<UpdateDatasetInput, 'geo_list'> {
+//   geo_list: string[];
+// }
 
 export function EditMetadata({
   defaultVal,
@@ -15,15 +15,18 @@ export function EditMetadata({
   mutate,
 }: {
   id: string;
-  defaultVal: DefaultValues;
+  // defaultVal: DefaultValues;
+  defaultVal: any;
   submitRef: React.RefObject<HTMLButtonElement>;
   isLoading: boolean;
-  mutate: (res: { dataset_data: UpdateDatasetInput }) => void;
+  mutate: any;
+  // mutate: (res: { dataset_data: UpdateDatasetInput }) => void;
 }) {
   return (
     <>
       <DatasetForm
-        onSubmit={(value: UpdateDatasetInput) => {
+        onSubmit={(value: any) => {
+          //UpdateDatasetInput
           mutate({
             dataset_data: {
               id: defaultVal.id,

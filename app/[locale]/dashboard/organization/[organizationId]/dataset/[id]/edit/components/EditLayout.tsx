@@ -11,14 +11,14 @@ import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
-const datasetQueryDoc = graphql(`
-  query datasetQueryLayout($dataset_id: Int) {
-    dataset(dataset_id: $dataset_id) {
-      id
-      title
-    }
-  }
-`);
+// const datasetQueryDoc = graphql(`
+//   query datasetQueryLayout($dataset_id: Int) {
+//     dataset(dataset_id: $dataset_id) {
+//       id
+//       title
+//     }
+//   }
+// `);
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -28,9 +28,9 @@ interface LayoutProps {
 const layoutList = ['metadata', 'access', 'distribution', 'review', 'publish'];
 
 export function EditLayout({ children, params }: LayoutProps) {
-  const { data } = useQuery([`dataset_layout_${params.id}`], () =>
-    GraphQL(datasetQueryDoc, { dataset_id: Number(params.id) })
-  );
+  // const { data } = useQuery([`dataset_layout_${params.id}`], () =>
+  //   GraphQL(datasetQueryDoc, { dataset_id: Number(params.id) })
+  // );
 
   const pathName = usePathname();
 
@@ -45,7 +45,7 @@ export function EditLayout({ children, params }: LayoutProps) {
 
   return (
     <div className="mt-8 flex h-full flex-col">
-      <Header id={params.id} title={data?.dataset?.title} />
+      {/* <Header id={params.id} title={data?.dataset?.title} /> */}
       <div className="lg:flex-column mt-4 flex flex-col">
         <div>
           <Navigation id={params.id} pathItem={pathItem} />
