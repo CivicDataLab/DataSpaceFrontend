@@ -2,6 +2,7 @@
 
 import React from 'react';
 
+import { DashboardLayout } from './components/dashboard-layout';
 import { MainNav } from './components/main-nav';
 
 interface DashboardLayoutProps {
@@ -19,7 +20,7 @@ export default function Layout({ children }: DashboardLayoutProps) {
       >
         <MainNav />
       </header>
-      <>{children}</>
+      <DashboardLayout>{children}</DashboardLayout>
     </div>
   );
 }

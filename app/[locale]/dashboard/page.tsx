@@ -1,9 +1,11 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-
+import { InProgress } from './components/in-progress';
 
 export default function DashboardPage() {
-  const router = useRouter();
-  router.push('/dashboard/user');
+  return (
+    <div className="h-full min-h-full">
+      <InProgress />
+    </div>
+  );
 }
