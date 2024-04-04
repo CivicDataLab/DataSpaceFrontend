@@ -29,10 +29,7 @@ const DatasetDetailsPage = () => {
   ];
   return (
     <main className="mx-5 flex gap-8">
-      <div
-        className="w-full py-5 lg:w-9/12"
-        style={{ backgroundColor: 'var( --base-pure-white)' }}
-      >
+      <div className="w-full bg-surfaceDefault py-5 shadow-basicMd lg:w-9/12">
         {' '}
         <BreadCrumbs
           data={[

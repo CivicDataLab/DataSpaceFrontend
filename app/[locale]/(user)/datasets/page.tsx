@@ -12,10 +12,7 @@ const DatasetsListing = () => {
   const [open, setOpen] = useState(false);
 
   return (
-    <main
-      className="mx-5 py-5"
-      style={{ backgroundColor: 'var(--base-pure-white)' }}
-    >
+    <main className="mx-5 bg-surfaceDefault py-5">
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
