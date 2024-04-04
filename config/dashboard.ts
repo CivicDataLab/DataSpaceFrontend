@@ -15,7 +15,7 @@ export const dashboardConfig: DashboardConfig = {
   sidebarNav: [
     {
       title: 'Dataset Accessed',
-      href: '/dashboard/user/datasets-accessed',
+      href: '/dashboard/user/datasets',
       icon: 'datasetSettings',
     },
     {
