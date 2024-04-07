@@ -29,7 +29,7 @@ import Sidebar from './sidebar';
 const profileLinks = [
   {
     label: 'Dashboard',
-    href: '/dashboard',
+    href: '/dashboard/user/datasets',
   },
 ];
 
