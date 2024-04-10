@@ -10,62 +10,19 @@ const Table = () => {
   const router = useRouter();
   const [rowData, setRowData] = useState([]);
   const [totalRows, setTotalRows] = useState(0);
-  const defaultPageSize = 10; // Default page size
-  const defaultPageNumber = 1; // Default page number
   const [queryParams, setQueryParams] = useState({
-    pageSize: defaultPageSize,
-    currentPage: defaultPageNumber,
+    pageSize: 10,
+    currentPage: 1,
     paramNames: {
       pageSize: 'size',
       currentPage: 'from',
     },
   });
 
-  // Parse query parameters from URL
-  useEffect(() => {
-    const parseQueryParams = () => {
-      const query = new URLSearchParams(window.location.search);
-      const urlPageSize = query.get(queryParams.paramNames.pageSize);
-      const urlCurrentPage = query.get(queryParams.paramNames.currentPage);
-      if (urlPageSize) {
-        setQueryParams((prevParams) => ({
-          ...prevParams,
-          pageSize: Number(urlPageSize),
-        }));
-      }
-      if (urlCurrentPage) {
-        setQueryParams((prevParams) => ({
-          ...prevParams,
-          currentPage: Number(urlCurrentPage),
-        }));
-      }
-    };
-
-    parseQueryParams();
-  }, []);
-
-  // Update URL parameters whenever queryParams change
-  useEffect(() => {
-    const queryParamsString = new URLSearchParams({
-      [queryParams.paramNames.pageSize]: String(queryParams.pageSize),
-      [queryParams.paramNames.currentPage]: String(queryParams.currentPage),
-    }).toString();
-    const newUrl = `${window.location.pathname}?${queryParamsString}`;
-    router.replace(newUrl);
-  }, [queryParams, router]);
-
-  // Fetch data when queryParams change
-  useEffect(() => {
-    fetchData();
-  }, [queryParams]);
-
-  console.log(queryParams);
-
-  // Fetch data from API
-  const fetchData = async () => {
+  const fetchData = async (pageSize: number, currentPage: number) => {
     try {
       const response = await fetch(
-        `https://dev.backend.idp.civicdatalab.in/facets/?q=&${queryParams.paramNames.pageSize}=${queryParams.pageSize}&${queryParams.paramNames.currentPage}=${(queryParams.currentPage - 1) * queryParams.pageSize}`
+        `https://dev.backend.idp.civicdatalab.in/facets/?q=&${queryParams.paramNames.pageSize}=${pageSize}&${queryParams.paramNames.currentPage}=${(currentPage - 1) * pageSize}`
       );
       const data = await response.json();
       setRowData(data.hits.hits);
@@ -75,7 +32,36 @@ const Table = () => {
     }
   };
 
-  // Handle page change
+  useEffect(() => {
+    const parseQueryParamsAndFetchData = async () => {
+      const query = new URLSearchParams(window.location.search);
+      const urlPageSize = query.get(queryParams.paramNames.pageSize);
+      const urlCurrentPage = query.get(queryParams.paramNames.currentPage);
+
+      if (urlPageSize && urlCurrentPage) {
+        setQueryParams({
+          ...queryParams,
+          pageSize: Number(urlPageSize),
+          currentPage: Number(urlCurrentPage),
+        });
+
+        await fetchData(Number(urlPageSize), Number(urlCurrentPage));
+      }
+    };
+
+    parseQueryParamsAndFetchData();
+  }, []);
+
+  useEffect(() => {
+    const queryParamsString = new URLSearchParams({
+      [queryParams.paramNames.pageSize]: String(queryParams.pageSize),
+      [queryParams.paramNames.currentPage]: String(queryParams.currentPage),
+    }).toString();
+    const newUrl = `${window.location.pathname}?${queryParamsString}`;
+    router.replace(newUrl);
+    fetchData(queryParams.pageSize, queryParams.currentPage);
+  }, [queryParams, router]);
+
   const handlePageChange = (newPage: number) => {
     setQueryParams((prevParams) => ({
       ...prevParams,
@@ -83,12 +69,11 @@ const Table = () => {
     }));
   };
 
-  // Handle page size change
   const handlePageSizeChange = (newSize: number) => {
     setQueryParams({
       ...queryParams,
       pageSize: newSize,
-      currentPage: defaultPageNumber, // Reset current page to default when page size changes
+      currentPage: 1,
     });
   };
 
