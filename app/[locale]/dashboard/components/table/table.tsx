@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { DataTable } from 'opub-ui';
+import { useRouter } from 'next/navigation'; // Import useRouter from next/navigation
+import { DataTable, Text } from 'opub-ui'; // Assuming DataTable and Footer are not necessary for this demonstration
 
 import Footer from './footer';
 
 const Table = () => {
-  const router = useRouter();
+  const router = useRouter(); // Initialize useRouter hook
   const [rowData, setRowData] = useState([]);
   const [totalRows, setTotalRows] = useState(0);
   const [queryParams, setQueryParams] = useState({
@@ -19,6 +19,7 @@ const Table = () => {
     },
   });
 
+  // Fetch data function
   const fetchData = async (pageSize: number, currentPage: number) => {
     try {
       const response = await fetch(
@@ -44,8 +45,6 @@ const Table = () => {
           pageSize: Number(urlPageSize),
           currentPage: Number(urlCurrentPage),
         });
-
-        await fetchData(Number(urlPageSize), Number(urlCurrentPage));
       }
     };
 
@@ -59,8 +58,14 @@ const Table = () => {
     }).toString();
     const newUrl = `${window.location.pathname}?${queryParamsString}`;
     router.replace(newUrl);
-    fetchData(queryParams.pageSize, queryParams.currentPage);
   }, [queryParams, router]);
+
+  useEffect(() => {
+    // Fetch data when queryParams change
+    if (queryParams.pageSize && queryParams.currentPage) {
+      fetchData(queryParams.pageSize, queryParams.currentPage);
+    }
+  }, [queryParams]); // Only fetch data when queryParams change
 
   const handlePageChange = (newPage: number) => {
     setQueryParams((prevParams) => ({
@@ -76,7 +81,6 @@ const Table = () => {
       currentPage: 1,
     });
   };
-
   return (
     <div>
       <DataTable
@@ -93,6 +97,11 @@ const Table = () => {
         hideSelection={true}
         defaultRowCount={100}
       />
+      {/* {rowData.map((item: any, index) => (
+        <div key={index}>
+          <Text>{item._source.dataset_title}</Text>
+        </div>
+      ))} */}
       <Footer
         totalRows={totalRows}
         pageSize={queryParams.pageSize}
