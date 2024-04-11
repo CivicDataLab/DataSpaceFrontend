@@ -20,29 +20,33 @@ export default async function Page() {
   const router = useRouter();
 
   useEffect(() => {
-    // Parse query parameters from the URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const sizeParam = urlParams.get(queryParams.paramNames.pageSize);
-    const fromParam = urlParams.get(queryParams.paramNames.currentPage);
+    if (typeof window !== 'undefined') {
+      // Parse query parameters from the URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const sizeParam = urlParams.get(queryParams.paramNames.pageSize);
+      const fromParam = urlParams.get(queryParams.paramNames.currentPage);
 
-    // Update queryParams state with parsed values
-    if (sizeParam && fromParam) {
-      setQueryParams({
-        ...queryParams,
-        pageSize: Number(sizeParam),
-        currentPage: Number(fromParam),
-      });
+      // Update queryParams state with parsed values
+      if (sizeParam && fromParam) {
+        setQueryParams({
+          ...queryParams,
+          pageSize: Number(sizeParam),
+          currentPage: Number(fromParam),
+        });
+      }
     }
   }, [queryParams.paramNames]);
 
   useEffect(() => {
-    // Update URL when pageSize or currentPage change
-    const queryParamsString = new URLSearchParams({
-      [queryParams.paramNames.pageSize]: String(queryParams.pageSize),
-      [queryParams.paramNames.currentPage]: String(queryParams.currentPage),
-    }).toString();
-    const newUrl = `${window.location.pathname}?${queryParamsString}`;
-    router.replace(newUrl);
+    if (typeof window !== 'undefined') {
+      // Update URL when pageSize or currentPage change
+      const queryParamsString = new URLSearchParams({
+        [queryParams.paramNames.pageSize]: String(queryParams.pageSize),
+        [queryParams.paramNames.currentPage]: String(queryParams.currentPage),
+      }).toString();
+      const newUrl = `${window.location.pathname}?${queryParamsString}`;
+      router.replace(newUrl);
+    }
   }, [queryParams, router]);
 
   const handlePageChange = (newPage: number) => {
