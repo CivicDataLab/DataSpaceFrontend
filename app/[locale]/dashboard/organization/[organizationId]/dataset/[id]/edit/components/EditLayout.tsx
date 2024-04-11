@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Icon, SkeletonDisplayText, Text } from 'opub-ui';
@@ -33,6 +33,7 @@ export function EditLayout({ children, params }: LayoutProps) {
   // );
 
   const pathName = usePathname();
+  const routerParams = useParams();
 
   const pathItem = layoutList.find(function (v) {
     return pathName.indexOf(v) >= 0;
@@ -48,7 +49,11 @@ export function EditLayout({ children, params }: LayoutProps) {
       {/* <Header id={params.id} title={data?.dataset?.title} /> */}
       <div className="lg:flex-column mt-4 flex flex-col">
         <div>
-          <Navigation id={params.id} pathItem={pathItem} />
+          <Navigation
+            id={params.id}
+            pathItem={pathItem}
+            organization={routerParams.organizationId.toString()}
+          />
         </div>
         <div className="bg-surface shadow-card border-l-divider rounded-tl-none max-w-[994px] flex-grow px-6 py-4">
           {children}
@@ -91,26 +96,34 @@ const Header = ({ id, title }: { id: string; title?: string }) => {
   );
 };
 
-const Navigation = ({ id, pathItem }: { id: string; pathItem: string }) => {
+const Navigation = ({
+  id,
+  pathItem,
+  organization,
+}: {
+  id: string;
+  pathItem: string;
+  organization: string;
+}) => {
   const links = [
     {
       label: 'Distributions',
-      url: `/dashboard/dataset/${id}/edit/distribution`,
+      url: `/dashboard/organization/${organization}/dataset/${id}/edit/distribution`,
       selected: pathItem === 'distribution',
     },
     {
       label: 'Access Models',
-      url: `/dashboard/dataset/${id}/edit/access`,
+      url: `/dashboard/organization/${organization}/dataset/${id}/edit/access`,
       selected: pathItem === 'access',
     },
     {
       label: 'Metadata',
-      url: `/dashboard/dataset/${id}/edit/metadata`,
+      url: `/dashboard/organization/${organization}/dataset/${id}/edit/metadata`,
       selected: pathItem === 'metadata',
     },
     {
       label: 'Review',
-      url: `/dashboard/dataset/${id}/edit/review`,
+      url: `/dashboard/organization/${organization}/dataset/${id}/edit/review`,
       disabled: true,
       selected: pathItem === 'review',
     },
