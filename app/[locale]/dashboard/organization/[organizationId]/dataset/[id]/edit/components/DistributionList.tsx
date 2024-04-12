@@ -1,6 +1,7 @@
-import { Button, Divider, Icon, Text } from 'opub-ui';
+import { Button, ButtonGroup, Divider, Icon, Text } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
+import { LinkButton } from '@/components/Link';
 
 export function DistributionList({
   setPage,
@@ -40,7 +41,12 @@ const NoList = ({
         </Text>
       </div>
       <div className="pt-6">
-        <Button onClick={() => setPage('create')}>Add Distribution</Button>
+        <ButtonGroup>
+          <LinkButton href={`${window.location}/views`} kind="secondary">
+            Add Views
+          </LinkButton>
+          <Button onClick={() => setPage('create')}>Add Distribution</Button>
+        </ButtonGroup>
       </div>
     </div>
   );
