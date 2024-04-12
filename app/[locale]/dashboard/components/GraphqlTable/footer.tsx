@@ -53,7 +53,7 @@ const Footer: React.FC<FooterProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-end gap-8 bg-baseGraySlateSolid3 px-6 py-4">
+    <div className="flex w-auto items-center gap-8 overflow-x-auto  bg-baseGraySlateSolid3 px-4 py-2 sm:px-6 sm:py-4 md:justify-end lg:justify-end">
       <Select
         labelInline
         label="Rows: "
@@ -67,14 +67,17 @@ const Footer: React.FC<FooterProps> = ({
         }}
         name={''}
       />
-      <div>
+
+      <div className="hidden md:block lg:block">
         <Text
           noBreak
           variant="bodyMd"
         >{`Page ${currentPage} of ${totalPages}`}</Text>
       </div>
-
-      <div>
+      <div className="md:hidden lg:hidden">
+        <Text noBreak variant="bodyMd">{`${currentPage}/${totalPages}`}</Text>
+      </div>
+      <div className="flex">
         <IconButton
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
