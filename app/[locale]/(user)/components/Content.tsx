@@ -1,8 +1,10 @@
 'use client';
 
-import { IconBrandTabler, IconShare3 } from '@tabler/icons-react';
+import { IconBrandTabler } from '@tabler/icons-react';
 import { useTranslations } from 'next-intl';
 import { Button, ButtonGroup, Icon, Text } from 'opub-ui';
+
+import { Icons } from '@/components/icons';
 
 export function Content() {
   const t = useTranslations('home');
@@ -30,7 +32,7 @@ export function Content() {
           variant="interactive"
           kind="primary"
           url="/dashboard"
-          icon={<Icon source={IconShare3} color="onBgDefault" />}
+          icon={<Icon source={Icons.share} color="onBgDefault" />}
         >
           <Text color="onBgDefault" variant="headingMd">
             {t('cta')}

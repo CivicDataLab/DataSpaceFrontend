@@ -6,6 +6,7 @@ import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 
 import { GraphQL } from '@/lib/api';
+import { LinkButton } from '@/components/Link';
 import { DistributionList } from '../components/DistributionList';
 import { EditDistribution } from '../components/EditDistribution';
 
@@ -49,7 +50,9 @@ export function DistibutionPage({ params }: { params: { id: string } }) {
   return (
     <>
       {!editId && page === 'list' ? (
-        <DistributionList setPage={setPage} setEditId={setEditId} />
+        <div>
+          <DistributionList setPage={setPage} setEditId={setEditId} />
+        </div>
       ) : (
         // <EditDistribution
         //   setPage={setPage}

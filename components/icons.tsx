@@ -17,6 +17,7 @@ import {
   IconLink,
   IconMenu2,
   IconSearch,
+  IconShare3,
   IconShieldCheck,
   IconTerminal,
   IconTrash,
@@ -26,7 +27,9 @@ import {
   // TablerIconsProps,
 } from '@tabler/icons-react';
 
-export const Icons = {
+export const Icons: {
+  [key: string]: React.FC<any>;
+} = {
   back: IconArrowLeft,
   logo: IconFolder,
   datasetSettings: IconDatabaseCog,
@@ -51,4 +54,5 @@ export const Icons = {
   cross: IconX,
   menu: IconMenu2,
   access: IconShieldCheck,
+  share: IconShare3,
 };
