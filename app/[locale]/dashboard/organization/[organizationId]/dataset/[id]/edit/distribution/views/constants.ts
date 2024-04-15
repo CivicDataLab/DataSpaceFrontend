@@ -2,14 +2,16 @@
 
 export const DISTRIBUTION_VIEW_OPTIONS = [
   {
-    label: 'Table',
-    value: 'table',
+    label: 'Bar Vertical',
+    value: 'bar-vertical',
   },
   {
-    label: 'Bar Chart',
-    value: 'bar',
+    label: 'Bar Horizontal',
+    value: 'bar-horizontal',
   },
 ];
+
+export type viewOptions = 'bar-vertical' | 'bar-horizontal';
 
 export const data = [
   {
