@@ -12,7 +12,7 @@ export async function GraphQL<TResult, TVariables>(
   ...[variables]: TVariables extends Record<string, never> ? [] : [TVariables]
 ) {
   const data = await request(
-    gqlConfig.url,
+    `${process.env.NEXT_PUBLIC_BACKEND_GRAPHQL_URL}`,
     document,
     {
       ...variables,
