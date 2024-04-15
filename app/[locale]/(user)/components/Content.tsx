@@ -31,7 +31,7 @@ export function Content() {
         <Button
           variant="interactive"
           kind="primary"
-          url="/dashboard"
+          url="/dashboard/user/datasets"
           icon={<Icon source={Icons.share} color="onBgDefault" />}
         >
           <Text color="onBgDefault" variant="headingMd">
