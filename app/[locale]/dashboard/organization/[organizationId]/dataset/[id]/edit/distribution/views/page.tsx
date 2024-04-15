@@ -8,6 +8,7 @@ import {
   Dialog,
   FormLayout,
   Icon,
+  Label,
   Select,
   Switch,
   Text,
@@ -17,35 +18,21 @@ import { BarChart } from 'opub-ui/viz';
 
 import { data, DISTRIBUTION_VIEW_OPTIONS, type viewOptions } from './constants';
 
-const addedItems = [
-  {
-    name: 'View 1',
-    chart: {
-      label: 'Bar Vertical',
-      value: 'bar-vertical',
-    },
-    options: {
-      x: 'name',
-      y: 'value',
-    },
-  },
-  {
-    name: 'View 2',
-    chart: {
-      label: 'Bar Horizontal',
-      value: 'bar-horizontal',
-    },
-    options: {
-      x: 'name',
-      y: 'value',
-    },
-  },
-];
+type Item = {
+  id: number;
+  name: string;
+  chart: {
+    label: string;
+    value: viewOptions;
+  };
+  data: any;
+};
 export default function Views() {
   const [viewName, setViewName] = React.useState('');
   const [error, setError] = React.useState('');
   const [modalOpen, setModalOpen] = React.useState(false);
-  const [view, setView] = React.useState<viewOptions>('bar-vertical');
+  const [addedItems, setAddedItems] = React.useState<Item[]>([]);
+  const [viewEdit, setViewEdit] = React.useState<Item | null>(null);
 
   function handleCreateView() {
     if (!viewName) {
@@ -54,6 +41,11 @@ export default function Views() {
     }
 
     setError('');
+    setModalOpen(true);
+  }
+
+  function handleEditClick(item: Item) {
+    setViewEdit(item);
     setModalOpen(true);
   }
 
@@ -78,48 +70,26 @@ export default function Views() {
             </Button>
           }
         />
-        <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-          <Dialog.Content title="View Details">
-            <FormLayout>
-              <TextField
-                name="view-name"
-                label="Name"
-                value={viewName}
-                onChange={setViewName}
-                error={error}
-              />
-              <Select
-                name="view-type"
-                label="Type"
-                options={DISTRIBUTION_VIEW_OPTIONS}
-                value={view}
-                onChange={(e) => setView(e as viewOptions)}
-              />
-              <div className="mt-4">{getViewOptions(view, data)}</div>
-            </FormLayout>
-
-            <div className="flex justify-end gap-2">
-              <Button
-                kind="secondary"
-                onClick={() => setModalOpen(false)}
-                variant="interactive"
-              >
-                Cancel
-              </Button>
-              <Button variant="interactive">Save</Button>
-            </div>
-          </Dialog.Content>
-        </Dialog>
+        <ViewDialog
+          open={modalOpen}
+          name={viewName}
+          data={data}
+          setOpen={setModalOpen}
+          setAddedItems={setAddedItems}
+          viewData={viewEdit}
+          setViewEdit={setViewEdit}
+        />
       </div>
 
       <div className="mt-12">
-        {addedItems?.length > 0 ? (
+        {addedItems && addedItems.length > 0 ? (
           <div className="flex flex-col gap-3">
             {addedItems.map((item) => (
               <ListItem
-                label={item.name}
-                value={item.chart.label}
-                key={item.name}
+                item={item}
+                key={item.id}
+                setAddedItems={setAddedItems}
+                handleEditClick={handleEditClick}
               />
             ))}
           </div>
@@ -131,45 +101,20 @@ export default function Views() {
   );
 }
 
-const ListItem = ({ label, value }: { label: string; value: string }) => {
-  return (
-    <div className="flex items-start justify-between rounded-2 border-1 border-solid border-borderDefault bg-surfaceDefault p-6">
-      <div className="flex flex-col gap-1">
-        <Text variant="headingMd">{label}</Text>
-        <Text variant="bodyMd">{value}</Text>
-      </div>
-      <div className="flex gap-2">
-        <Button variant="interactive" size="slim" kind="secondary">
-          Edit
-        </Button>
-        <Button variant="critical" size="slim" kind="secondary">
-          Delete
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-const EmptyState = () => {
-  return (
-    <section className="flex flex-col items-center">
-      {/* @ts-expect-error fix icon component */}
-      <Icon source={IconBrackets} size={48} color="default" />
-      <Text as="h3" variant="headingXl" className="mt-4">
-        No Views Added
-      </Text>
-      <Text variant="bodyMd" className="mt-2 block">
-        Create a new view for the resource
-      </Text>
-    </section>
-  );
-};
-
 const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
   const data = props[0];
+  const chartData = props[1];
+  const setChartData = props[2];
+
   const [xAxis, setXAxis] = React.useState('');
   const [yAxis, setYAxis] = React.useState('');
   const [average, setAverage] = React.useState(false);
+
+  React.useEffect(() => {
+    setXAxis(chartData?.xAxis);
+    setYAxis(chartData?.yAxis);
+    setAverage(chartData?.average);
+  }, [chartData]);
 
   const options = React.useMemo(() => {
     const labels = data.map((item: { [x: string]: any }) => item[xAxis]);
@@ -178,6 +123,7 @@ const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
     const averageObj: {
       [x: string]: number;
     } = {};
+
     new Set(labels).forEach((label: any) => {
       const filteredValues = data
         .filter((item: { [x: string]: any }) => item[xAxis] === label)
@@ -209,22 +155,39 @@ const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex flex-wrap items-start gap-4">
         <Combobox
           name="x-axis"
           label="X Axis"
           selectedValue={xAxis}
-          onChange={setXAxis}
+          onChange={(e) => {
+            setXAxis(e);
+            setChartData((prev: any) => ({ ...prev, xAxis: e }));
+          }}
           list={Object.keys(data[0]).map((key) => ({ label: key, value: key }))}
         />
         <Combobox
           name="y-axis"
           label="Y Axis"
           selectedValue={yAxis}
-          onChange={setYAxis}
+          onChange={(e) => {
+            setYAxis(e);
+            setChartData((prev: any) => ({ ...prev, yAxis: e }));
+          }}
           list={Object.keys(data[0]).map((key) => ({ label: key, value: key }))}
         />
-        <Switch label="Average" onCheckedChange={setAverage} />
+        <Label>
+          Average
+          <div className="mt-2">
+            <Switch
+              checked={average}
+              onCheckedChange={(checked) => {
+                setAverage(checked);
+                setChartData((prev: any) => ({ ...prev, average: checked }));
+              }}
+            />
+          </div>
+        </Label>
       </div>
       <div className="mt-8">
         <Text variant="headingSm" className="mb-2 inline-block">
@@ -233,6 +196,184 @@ const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
         <BarChart options={options} />
       </div>
     </div>
+  );
+};
+
+const ViewDialog = ({
+  data,
+  open,
+  name,
+  setOpen,
+  setAddedItems,
+  viewData,
+  setViewEdit,
+}: {
+  data: any;
+  open: boolean;
+  name: string;
+  setOpen: (arg: boolean) => void;
+  setAddedItems: (arg: any) => void;
+  viewData: Item | null;
+  setViewEdit: (arg: Item | null) => void;
+}) => {
+  const [viewName, setViewName] = React.useState('');
+  const [viewChart, setViewChart] = React.useState<viewOptions>('bar-vertical');
+  const [chartData, setChartData] = React.useState<any>(null);
+  const [error, setError] = React.useState('');
+
+  React.useEffect(() => {
+    if (viewData) {
+      setViewName(viewData.name);
+      setViewChart(viewData.chart.value);
+      setChartData(viewData.data);
+    } else {
+      setViewName(name);
+      setViewChart('bar-vertical');
+      setChartData(null);
+    }
+  }, [viewData, open, name]);
+
+  return (
+    <div>
+      <Dialog
+        open={open}
+        onOpenChange={(e) => {
+          setChartData(null);
+          setOpen(e);
+
+          if (!e) {
+            setViewEdit(null);
+          }
+        }}
+      >
+        <Dialog.Content title="View Details" fullScreen>
+          <FormLayout>
+            <TextField
+              name="view-name"
+              label="Name"
+              value={viewName}
+              onChange={setViewName}
+              error={error}
+            />
+            <Select
+              name="view-type"
+              label="Type"
+              options={DISTRIBUTION_VIEW_OPTIONS}
+              value={viewChart}
+              onChange={(e) => {
+                setViewChart(e as viewOptions);
+              }}
+            />
+            <div className="mt-4">
+              {getViewOptions(viewChart, data, chartData, setChartData)}
+            </div>
+          </FormLayout>
+
+          <div className="flex justify-end gap-2">
+            <Button
+              kind="secondary"
+              onClick={() => {
+                setViewEdit(null);
+                setOpen(false);
+              }}
+              variant="interactive"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="interactive"
+              onClick={() => {
+                const newItem = {
+                  data: {
+                    ...chartData,
+                  },
+                  chart: {
+                    label:
+                      DISTRIBUTION_VIEW_OPTIONS.find(
+                        (e) => e.value === viewChart
+                      )?.label || viewChart,
+                    value: viewChart,
+                  },
+                  id: viewData ? viewData.id : Date.now(),
+                  name: viewName,
+                };
+                setViewEdit(null);
+
+                if (viewData) {
+                  setAddedItems((prev: any) =>
+                    prev.map((item: any) =>
+                      item.id === viewData.id ? newItem : item
+                    )
+                  );
+                } else {
+                  setAddedItems((prev: any) => [...prev, newItem]);
+                }
+                setViewName('');
+                setOpen(false);
+              }}
+            >
+              {viewData ? 'Update' : 'Save'}
+            </Button>
+          </div>
+        </Dialog.Content>
+      </Dialog>
+    </div>
+  );
+};
+
+const ListItem = ({
+  item,
+  setAddedItems,
+  handleEditClick,
+}: {
+  item: Item;
+  setAddedItems: (arg: any) => void;
+  handleEditClick: (arg: Item) => void;
+}) => {
+  return (
+    <div className="flex items-start justify-between rounded-2 border-1 border-solid border-borderDefault bg-surfaceDefault p-6">
+      <div className="flex flex-col gap-1">
+        <Text variant="headingMd">{item.name}</Text>
+        <Text variant="bodyMd">{item.chart.label}</Text>
+      </div>
+      <div className="flex gap-2">
+        <Button
+          variant="interactive"
+          size="slim"
+          kind="secondary"
+          onClick={() => handleEditClick(item)}
+        >
+          Edit
+        </Button>
+        <Button
+          variant="critical"
+          size="slim"
+          kind="secondary"
+          onClick={() => {
+            setAddedItems((prev: any) =>
+              prev.filter((item: any) => item.id !== item.id)
+            );
+          }}
+        >
+          Delete
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+const EmptyState = () => {
+  return (
+    <section className="flex flex-col items-center">
+      {/* @ts-expect-error fix icon component */}
+      <Icon source={IconBrackets} size={48} color="default" />
+      <Text as="h3" variant="headingXl" className="mt-4">
+        No Views Added
+      </Text>
+      <Text variant="bodyMd" className="mt-2 block">
+        Create a new view for the resource
+      </Text>
+    </section>
   );
 };
 
