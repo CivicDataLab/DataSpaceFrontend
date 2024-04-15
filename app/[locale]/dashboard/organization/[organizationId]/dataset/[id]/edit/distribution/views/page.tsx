@@ -222,14 +222,16 @@ const ViewDialog = ({
   const [error, setError] = React.useState('');
 
   React.useEffect(() => {
-    if (viewData) {
-      setViewName(viewData.name);
-      setViewChart(viewData.chart.value);
-      setChartData(viewData.data);
-    } else {
-      setViewName(name);
-      setViewChart('bar-vertical');
-      setChartData(null);
+    if (open === true) {
+      if (viewData) {
+        setViewName(viewData.name);
+        setViewChart(viewData.chart.value);
+        setChartData(viewData.data);
+      } else {
+        setViewName(name);
+        setViewChart('bar-vertical');
+        setChartData(null);
+      }
     }
   }, [viewData, open, name]);
 
