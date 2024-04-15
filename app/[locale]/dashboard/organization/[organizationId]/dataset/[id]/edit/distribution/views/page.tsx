@@ -353,7 +353,7 @@ const ListItem = ({
           kind="secondary"
           onClick={() => {
             setAddedItems((prev: any) =>
-              prev.filter((item: any) => item.id !== item.id)
+              prev.filter((prevItem: any) => prevItem.id !== item.id)
             );
           }}
         >
