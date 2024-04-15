@@ -367,7 +367,6 @@ const ListItem = ({
 const EmptyState = () => {
   return (
     <section className="flex flex-col items-center">
-      {/* @ts-expect-error fix icon component */}
       <Icon source={IconBrackets} size={48} color="default" />
       <Text as="h3" variant="headingXl" className="mt-4">
         No Views Added
