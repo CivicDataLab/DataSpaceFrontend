@@ -1,9 +1,10 @@
 import type { CodegenConfig } from '@graphql-codegen/cli';
+import { loadEnvConfig } from '@next/env';
 
-import { gqlConfig } from './site';
+loadEnvConfig(process.cwd());
 
 const config: CodegenConfig = {
-  schema: gqlConfig.url,
+  schema: process.env.BACKEND_GRAPHQL_URL,
   documents: 'app/**/*.tsx',
   ignoreNoDocuments: true,
   generates: {
