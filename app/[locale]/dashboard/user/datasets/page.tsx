@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import GraphqlTable from '../../components/GraphqlTable/graphqlTable';
 
-export default async function Page() {
+const Page = () => {
   const [rowData, setRowData] = useState([]);
   const [totalRows, setTotalRows] = useState(0);
   const [queryParams, setQueryParams] = useState({
@@ -106,4 +106,6 @@ export default async function Page() {
       />
     </div>
   );
-}
+};
+
+export default Page;
