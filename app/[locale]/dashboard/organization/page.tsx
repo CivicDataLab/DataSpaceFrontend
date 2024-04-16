@@ -1,16 +1,18 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Button, IconButton } from 'opub-ui';
+import { Button, Icon, IconButton, Text } from 'opub-ui';
 
 import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
+import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
 import { DashboardHeader } from '../components/dashboard-header';
 import styles from './../components/styles.module.scss';
 
-const Page = ({ params }: { params: { id: string } }) => {
+const Page = () => {
   const pathname = usePathname();
 
   const organizationsList = [
@@ -46,19 +48,15 @@ const Page = ({ params }: { params: { id: string } }) => {
       <div className="m-auto flex w-11/12 flex-col">
         <DashboardHeader currentPath={pathname} />
         <div className={cn(styles.Main)}>
-          <div className="flex flex-wrap gap-24 p-16">
+          <div className="flex flex-wrap  gap-24">
             {organizationsList.map((orgItem) => (
-              <div
+              <Link
+                href={`/dashboard/organization/${orgItem.slug}/dataset`}
                 id={orgItem.slug}
-                className="flex flex-col items-center gap-2 text-center"
+                className="flex h-60 w-48 flex-col items-center  gap-3 border-2 border-solid border-baseGraySlateSolid4 p-5 text-center"
                 key={orgItem.slug}
               >
-                {/* <Image src={`${NEXT_PUBLIC_BACKEND_URL}`} /> */}
-
-                <div
-                  className="border-var(--border-radius-5) h-36 w-36 rounded-3 opacity-50"
-                  style={{ backgroundColor: 'var(--base-amber-solid-7)' }}
-                >
+                <div className="border-var(--border-radius-5) h-36 w-36 rounded-3 bg-baseAmberSolid7 opacity-50">
                   <IconButton
                     size="large"
                     icon={'userSettings'}
@@ -69,8 +67,8 @@ const Page = ({ params }: { params: { id: string } }) => {
                     Organization
                   </IconButton>
                 </div>
-                <text>{orgItem.title}</text>
-                <LinkButton
+                <Text variant="headingMd">{orgItem.title}</Text>
+                {/* <LinkButton
                   href={`/dashboard/organization/${orgItem.slug}/dataset`}
                 >
                   Manage Datasets
@@ -79,9 +77,15 @@ const Page = ({ params }: { params: { id: string } }) => {
                   href={`/dashboard/organization/${orgItem.slug}/consumers`}
                 >
                   Manage Consumers
-                </LinkButton>
-              </div>
+                </LinkButton> */}
+              </Link>
             ))}
+            <div className="flex h-60 w-48 flex-col items-center justify-center gap-3 rounded-2 bg-baseGraySlateSolid6 p-4">
+              <Icon source={Icons.plus} size={40} color="success" />
+              <Text alignment="center" variant="headingMd">
+                Add New Organization
+              </Text>
+            </div>
           </div>
         </div>
       </div>
