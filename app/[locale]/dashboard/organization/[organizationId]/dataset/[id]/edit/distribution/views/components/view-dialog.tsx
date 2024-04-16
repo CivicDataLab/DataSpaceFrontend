@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Dialog, FormLayout, Select, TextField } from 'opub-ui';
+import { Button, Dialog, Form, FormLayout, Input, Select } from 'opub-ui';
 
 import { DISTRIBUTION_VIEW_OPTIONS, viewOptions } from '../constants';
 import { Bar } from './bar';
@@ -54,73 +54,93 @@ export const ViewDialog = ({
         }}
       >
         <Dialog.Content title="View Details" fullScreen>
-          <FormLayout>
-            <TextField
-              name="view-name"
-              label="Name"
-              value={viewName}
-              onChange={setViewName}
-            />
-            <Select
-              name="view-type"
-              label="Type"
-              options={DISTRIBUTION_VIEW_OPTIONS}
-              value={viewChart}
-              onChange={(e) => {
-                setViewChart(e as viewOptions);
-              }}
-            />
-            <div className="mt-4">
-              {getViewOptions(viewChart, data, chartData, setChartData)}
+          <Form
+            formOptions={{
+              defaultValues: {
+                'view-name': viewName,
+                'view-type': viewChart,
+                'x-axis': chartData?.xAxis,
+                'y-axis': chartData?.yAxis,
+                average: chartData?.average,
+              },
+            }}
+            resetValues={{
+              'view-name': '',
+              'view-type': '',
+              'x-axis': '',
+              'y-axis': '',
+              average: false,
+            }}
+            onSubmit={() => {
+              const newItem = {
+                data: {
+                  ...chartData,
+                },
+                chart: {
+                  label:
+                    DISTRIBUTION_VIEW_OPTIONS.find((e) => e.value === viewChart)
+                      ?.label || viewChart,
+                  value: viewChart,
+                },
+                id: viewData ? viewData.id : Date.now(),
+                name: viewName,
+              };
+              setViewEdit(null);
+
+              if (viewData) {
+                setAddedItems((prev: any) =>
+                  prev.map((item: any) =>
+                    item.id === viewData.id ? newItem : item
+                  )
+                );
+              } else {
+                setAddedItems((prev: any) => [...prev, newItem]);
+              }
+              setViewName('');
+              setOpen(false);
+            }}
+          >
+            <FormLayout>
+              <Input
+                name="view-name"
+                label="Name"
+                value={viewName}
+                onChange={setViewName}
+                required
+                error="View name is required"
+              />
+              <Select
+                name="view-type"
+                label="Type"
+                options={DISTRIBUTION_VIEW_OPTIONS}
+                required
+                error="View type is required"
+                value={viewChart}
+                onChange={(e) => {
+                  setViewChart(e as viewOptions);
+                }}
+              />
+              <div className="mt-4">
+                {getViewOptions(viewChart, data, chartData, setChartData)}
+              </div>
+            </FormLayout>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                kind="secondary"
+                onClick={() => {
+                  setViewEdit(null);
+                  setOpen(false);
+                }}
+                variant="interactive"
+              >
+                Cancel
+              </Button>
+              <Button variant="interactive" submit>
+                {viewData ? 'Update' : 'Save'}
+              </Button>
             </div>
-          </FormLayout>
-
-          <div className="flex justify-end gap-2">
-            <Button
-              kind="secondary"
-              onClick={() => {
-                setViewEdit(null);
-                setOpen(false);
-              }}
-              variant="interactive"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="interactive"
-              onClick={() => {
-                const newItem = {
-                  data: {
-                    ...chartData,
-                  },
-                  chart: {
-                    label:
-                      DISTRIBUTION_VIEW_OPTIONS.find(
-                        (e) => e.value === viewChart
-                      )?.label || viewChart,
-                    value: viewChart,
-                  },
-                  id: viewData ? viewData.id : Date.now(),
-                  name: viewName,
-                };
-                setViewEdit(null);
-
-                if (viewData) {
-                  setAddedItems((prev: any) =>
-                    prev.map((item: any) =>
-                      item.id === viewData.id ? newItem : item
-                    )
-                  );
-                } else {
-                  setAddedItems((prev: any) => [...prev, newItem]);
-                }
-                setViewName('');
-                setOpen(false);
-              }}
-            >
-              {viewData ? 'Update' : 'Save'}
-            </Button>
-          </div>
+          </Form>
         </Dialog.Content>
       </Dialog>
     </div>
