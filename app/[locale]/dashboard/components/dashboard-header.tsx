@@ -29,28 +29,11 @@ export function DashboardHeader({ currentPath }: { currentPath: string }) {
 
   return (
     <>
-      <div className="bg-baseGraySlateAlpha1 px-5 py-3">
-        <BreadCrumbs
-          data={[
-            { href: '/', label: 'Home' },
-            {
-              href: '/dashboard/user/datasets',
-              label: 'User Dashboard',
-            },
-            {
-              href: '#',
-              label: currentPath.includes('organization')
-                ? 'My Organizations'
-                : 'My Personal Datasets',
-            },
-          ]}
-        />
-      </div>
-      <div className="flex flex-col gap-4  px-5 py-4">
+      <div className="flex flex-col gap-4 py-6">
         <Text variant="headingLg" as="h1" className="px-1">
           User Dashboard
         </Text>
-        <div className="mt-5">
+        <div>
           <Tabs defaultValue={initialTabLabel}>
             <TabList fitted>
               {userDashboardOptions.map((item, index) => (
