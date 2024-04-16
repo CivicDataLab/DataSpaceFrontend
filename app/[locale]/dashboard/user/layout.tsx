@@ -19,7 +19,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
 
   return (
-    <div>
+    <div className="bg-surfaceDefault">
       <DashboardHeader currentPath={pathname} />
       <div
         className={cn(
