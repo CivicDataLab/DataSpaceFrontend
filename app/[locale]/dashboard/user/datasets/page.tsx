@@ -57,22 +57,22 @@ export default async function Page() {
     setQueryParams({ ...queryParams, pageSize: newSize, currentPage: 1 });
   };
 
-  const fetchData = async (pageSize: number, currentPage: number) => {
-    try {
-      const response = await fetch(
-        `https://dev.backend.idp.civicdatalab.in/facets/?q=&${queryParams.paramNames.pageSize}=${pageSize}&${queryParams.paramNames.currentPage}=${(currentPage - 1) * pageSize}`
-      );
-      const data = await response.json();
-      setRowData(data.hits.hits);
-      setTotalRows(data.hits.total.value);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
-  };
+  // const fetchData = async (pageSize: number, currentPage: number) => {
+  //   try {
+  //     const response = await fetch(
+  //       `https://dev.backend.idp.civicdatalab.in/facets/?q=&${queryParams.paramNames.pageSize}=${pageSize}&${queryParams.paramNames.currentPage}=${(currentPage - 1) * pageSize}`
+  //     );
+  //     const data = await response.json();
+  //     setRowData(data.hits.hits);
+  //     setTotalRows(data.hits.total.value);
+  //   } catch (error) {
+  //     console.error('Error fetching data:', error);
+  //   }
+  // };
 
   useEffect(() => {
     // Fetch data when queryParams change
-    fetchData(queryParams.pageSize, queryParams.currentPage);
+    // fetchData(queryParams.pageSize, queryParams.currentPage);
   }, [queryParams]); // Fetch data when queryParams change
 
   return (
@@ -82,11 +82,21 @@ export default async function Page() {
           columns: [
             {
               accessorKey: 'dataset_title',
-              header: 'dataset',
+              header: 'Dataset',
+            },
+            {
+              accessorKey: 'org_title',
+              header: 'Org',
+            },
+            {
+              accessorKey: 'org_types',
+              header: '0rg Type',
             },
           ],
           rows: rowData.map((item: any) => ({
             dataset_title: item._source.dataset_title,
+            org_title: item._source.org_title,
+            org_types: item._source.org_types,
           })),
         }}
         totalRows={totalRows}
