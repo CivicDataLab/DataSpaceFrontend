@@ -59,7 +59,7 @@ const Page = () => {
   // const fetchData = async (pageSize: number, currentPage: number) => {
   //   try {
   //     const response = await fetch(
-  //       `https://dev.backend.idp.civicdatalab.in/facets/?q=&${queryParams.paramNames.pageSize}=${pageSize}&${queryParams.paramNames.currentPage}=${(currentPage - 1) * pageSize}`
+  //       api or query
   //     );
   //     const data = await response.json();
   //     setRowData(data.hits.hits);
