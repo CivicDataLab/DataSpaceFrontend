@@ -31,11 +31,13 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
     },
   ];
 
+  const organizationId = params.organizationId;
+  
   return (
     <div
       className={cn('relative grid grow grid-cols-[8px_1fr] gap-1', 'md:flex')}
     >
-      <DashboardNav items={orgSidebarNav} />
+      <DashboardNav items={orgSidebarNav} organizationId={organizationId} />
 
       <div className="z-1 basis-2 md:hidden">
         <MobileDashboardNav
