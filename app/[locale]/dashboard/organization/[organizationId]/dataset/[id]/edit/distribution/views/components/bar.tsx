@@ -47,9 +47,26 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
       [type === 'vertical' ? 'xAxis' : 'yAxis']: {
         data: average ? Object.keys(averageObj) : labels,
         type: 'category',
+        name: xAxis,
+        nameTextStyle: {
+          align: 'right',
+          verticalAlign: 'top',
+          padding: [30, 0, 0, 0],
+        },
       },
       [type === 'vertical' ? 'yAxis' : 'xAxis']: {
         type: 'value',
+        name: yAxis,
+        nameTextStyle: {
+          align: 'right',
+          verticalAlign: 'bottom',
+          padding: [0, 0, 10, 0],
+        },
+      },
+      grid: {
+        containLabel: true,
+        left: '5px',
+        right: '5%',
       },
     };
   }, [xAxis, yAxis, data, type, average]);
@@ -95,7 +112,7 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
           </div>
         </Label>
       </div>
-      <div className="mt-8">
+      <div className="mt-8 w-full">
         <Text variant="headingSm" className="mb-2 inline-block">
           Preview
         </Text>
