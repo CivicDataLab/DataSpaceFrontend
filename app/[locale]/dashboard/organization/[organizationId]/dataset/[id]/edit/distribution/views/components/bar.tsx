@@ -58,7 +58,7 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
         type: 'value',
         name: yAxis,
         nameTextStyle: {
-          align: 'right',
+          align: 'left',
           verticalAlign: 'bottom',
           padding: [0, 0, 10, 0],
         },
@@ -66,7 +66,7 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
       grid: {
         containLabel: true,
         left: '5px',
-        right: '5%',
+        right: '20px',
       },
     };
   }, [xAxis, yAxis, data, type, average]);
