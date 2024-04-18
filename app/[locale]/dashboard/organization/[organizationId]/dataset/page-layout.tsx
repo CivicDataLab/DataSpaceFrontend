@@ -105,9 +105,9 @@ export const Page = () => {
           <Text variant="headingSm" color="subdued">
             DATASET NAME : {DATASET_INFO.title} - {DATASET_INFO.timestamp}
           </Text>
-          <Text variant="headingSm" className="flex items-center gap-1" color="interactive">
+          <Text variant="headingSm" className="flex items-center" color="interactive">
             <Icon
-              source={Icons.datasetSettings}
+              source={Icons.pencil}
               size={16}
               color="interactive"
             />
