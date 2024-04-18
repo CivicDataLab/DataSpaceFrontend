@@ -6,6 +6,7 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
   const data = props[0];
   const chartData = props[1];
   const setChartData = props[2];
+  const setOptions = props[3];
 
   const [xAxis, setXAxis] = React.useState('');
   const [yAxis, setYAxis] = React.useState('');
@@ -37,7 +38,13 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
       averageObj[label] = Math.floor(sum / filteredValues.length);
     });
 
-    return {
+    const nameTextStyle = {
+      align: 'right',
+      verticalAlign: 'top',
+      padding: [30, 0, 0, 0],
+    };
+
+    const newOption = {
       series: [
         {
           data: average ? Object.values(averageObj) : values,
@@ -48,28 +55,26 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
         data: average ? Object.keys(averageObj) : labels,
         type: 'category',
         name: xAxis,
-        nameTextStyle: {
-          align: 'right',
-          verticalAlign: 'top',
-          padding: [30, 0, 0, 0],
-        },
+        nameTextStyle: type === 'vertical' ? nameTextStyle : {},
       },
       [type === 'vertical' ? 'yAxis' : 'xAxis']: {
         type: 'value',
         name: yAxis,
-        nameTextStyle: {
-          align: 'left',
-          verticalAlign: 'bottom',
-          padding: [0, 0, 10, 0],
-        },
+        nameTextStyle: type === 'horizontal' ? nameTextStyle : {},
       },
       grid: {
         containLabel: true,
-        left: '5px',
-        right: '20px',
+        left: '5%',
+        right: '5%',
       },
     };
-  }, [xAxis, yAxis, data, type, average]);
+
+    queueMicrotask(() => {
+      setOptions(newOption);
+    });
+
+    return newOption;
+  }, [xAxis, yAxis, data, type, average, setOptions]);
 
   return (
     <div>

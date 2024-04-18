@@ -25,13 +25,14 @@ export const ViewDialog = ({
   const [viewName, setViewName] = React.useState('');
   const [viewChart, setViewChart] = React.useState<viewOptions>('bar-vertical');
   const [chartData, setChartData] = React.useState<any>(null);
+  const [options, setOptions] = React.useState<any>(null);
 
   React.useEffect(() => {
     if (open === true) {
       if (viewData) {
         setViewName(viewData.name);
         setViewChart(viewData.chart.value);
-        setChartData(viewData.data);
+        setChartData(viewData.chart.data);
       } else {
         setViewName(name);
         setViewChart('bar-vertical');
@@ -73,17 +74,18 @@ export const ViewDialog = ({
             }}
             onSubmit={() => {
               const newItem = {
-                data: {
-                  ...chartData,
-                },
                 chart: {
                   label:
                     DISTRIBUTION_VIEW_OPTIONS.find((e) => e.value === viewChart)
                       ?.label || viewChart,
                   value: viewChart,
+                  data: {
+                    ...chartData,
+                  },
                 },
                 id: viewData ? viewData.id : Date.now(),
                 name: viewName,
+                options,
               };
               setViewEdit(null);
 
@@ -121,7 +123,13 @@ export const ViewDialog = ({
                 }}
               />
               <div className="mt-4">
-                {getViewOptions(viewChart, data, chartData, setChartData)}
+                {getViewOptions(
+                  viewChart,
+                  data,
+                  chartData,
+                  setChartData,
+                  setOptions
+                )}
               </div>
             </FormLayout>
 

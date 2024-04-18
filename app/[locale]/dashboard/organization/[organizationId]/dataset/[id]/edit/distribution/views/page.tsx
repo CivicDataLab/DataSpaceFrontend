@@ -13,6 +13,7 @@ export default function Views() {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [addedItems, setAddedItems] = React.useState<Item[]>([]);
   const [viewEdit, setViewEdit] = React.useState<Item | null>(null);
+  console.log(addedItems);
 
   function handleEditClick(item: Item) {
     setViewEdit(item);
