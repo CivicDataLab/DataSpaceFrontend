@@ -31,7 +31,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   const searchRef = React.useRef<HTMLInputElement>(null);
 
   return (
-    <div className="mb-6 flex items-center justify-between gap-5 rounded-2 bg-baseBlueAlpha4 px-4 py-2">
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-5 rounded-2 bg-baseBlueAlpha4 px-4 py-2">
       {countEnabled && (
         <span className="text-gray-600">
           Showing {count} of {count} {label}
