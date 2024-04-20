@@ -3,12 +3,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Button, Icon, IconButton, Text } from 'opub-ui';
+import { Icon, Text } from 'opub-ui';
 
 import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
-import { LinkButton } from '@/components/Link';
 import { DashboardHeader } from '../components/dashboard-header';
 import styles from './../components/styles.module.scss';
 
@@ -17,7 +16,7 @@ const Page = () => {
 
   const organizationsList = [
     {
-      title: 'Organization 1',
+      title: 'Organization 1 ',
       slug: 'asjdfhasf',
     },
     {
@@ -50,25 +49,24 @@ const Page = () => {
         <div className={cn(styles.Main)}>
           <div className="flex flex-wrap  gap-24">
             {organizationsList.map((orgItem) => (
-              <Link
-                href={`/dashboard/organization/${orgItem.slug}/dataset`}
-                id={orgItem.slug}
-                className="flex h-60 w-48 flex-col items-center  gap-3 border-2 border-solid border-baseGraySlateSolid4 p-5 text-center"
+              <div
                 key={orgItem.slug}
+                className="flex  max-w-64 flex-col items-center gap-3 rounded-2 border-2 border-solid border-baseGraySlateSolid4 px-4 py-5 text-center"
               >
-                <div className="border-var(--border-radius-5) h-36 w-36 rounded-3 bg-baseAmberSolid7 opacity-50">
-                  <IconButton
-                    size="large"
-                    icon={'userSettings'}
-                    withTooltip
-                    tooltipSide="right"
-                    onClick={() => console.log(orgItem)}
-                  >
-                    Organization
-                  </IconButton>
-                </div>
-                <Text variant="headingMd">{orgItem.title}</Text>
-                {/* <LinkButton
+                <Link
+                  href={`/dashboard/organization/${orgItem.slug}/dataset`}
+                  id={orgItem.slug}
+                >
+                  <div className="border-var(--border-radius-5)  rounded-2 ">
+                    <Image
+                      src={'/obi.jpg'}
+                      width={200}
+                      height={200}
+                      alt={'Organization LOgo'}
+                    />
+                  </div>
+
+                  {/* <LinkButton
                   href={`/dashboard/organization/${orgItem.slug}/dataset`}
                 >
                   Manage Datasets
@@ -78,9 +76,13 @@ const Page = () => {
                 >
                   Manage Consumers
                 </LinkButton> */}
-              </Link>
+                </Link>
+                <div>
+                  <Text variant="headingMd">{orgItem.title}</Text>
+                </div>
+              </div>
             ))}
-            <div className="flex h-60 w-48 flex-col items-center justify-center gap-3 rounded-2 bg-baseGraySlateSolid6 p-4">
+            <div className="flex h-72 w-56 flex-col items-center justify-center gap-3 rounded-2 bg-baseGraySlateSolid6 p-4">
               <Icon source={Icons.plus} size={40} color="success" />
               <Text alignment="center" variant="headingMd">
                 Add New Organization
