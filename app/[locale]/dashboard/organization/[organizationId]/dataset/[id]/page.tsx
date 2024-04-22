@@ -81,7 +81,6 @@ export default function Page({ params }: { params: { id: string } }) {
           </Text>
         </div>
         <Link href={`/dashboard/organization/${param.organizationId}/dataset`}>
-          manage datasests
           <Text className="flex gap-1" color="interactive">
             Go back to Drafts{' '}
             <Icon source={Icons.cross} size={20} color="interactive" />
