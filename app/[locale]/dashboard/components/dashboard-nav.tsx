@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
-import { Icon, IconButton, Text, Tooltip } from 'opub-ui';
+import { Divider, Icon, IconButton, Text, Tooltip } from 'opub-ui';
 
 import { SidebarNavItem } from 'types';
 import { cn } from '@/lib/utils';
@@ -14,7 +15,7 @@ import styles from '../dashboard.module.scss';
 interface DashboardNavProps {
   items: SidebarNavItem[];
 }
-export function DashboardNav({ items }: DashboardNavProps) {
+export function DashboardNav({ items, organizationId }: DashboardNavProps & { organizationId?: string }) {
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const path = usePathname();
 
@@ -35,6 +36,28 @@ export function DashboardNav({ items }: DashboardNavProps) {
       )}
     >
       <nav className={cn('flex flex-col gap-2')}>
+        {organizationId && !isCollapsed ? (
+          <>
+            <div className="flex flex-col items-center justify-center py-4">
+              <Image
+                height={140}
+                width={140}
+                src={'/obi.jpg'}
+                alt={'Organisation ID'}
+              />
+              <Text variant="headingMd" fontWeight="medium" className="py-2">
+                {organizationId}
+              </Text>
+              <Link href={'/dashboard'}>
+                <Text variant="headingXs" color="interactive">
+                  {' '}
+                  Go back to Dashboard{' '}
+                </Text>
+              </Link>
+            </div>
+            <Divider className="m-auto w-4/5" />
+          </>
+        ) : null}
         <div className="w-fit self-end">
           <IconButton
             size="slim"

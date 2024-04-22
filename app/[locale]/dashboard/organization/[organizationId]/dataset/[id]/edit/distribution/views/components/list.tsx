@@ -8,8 +8,8 @@ export type Item = {
   chart: {
     label: string;
     value: viewOptions;
+    data: object;
   };
-  data: any;
 };
 
 export const ListItem = ({

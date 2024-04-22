@@ -17,6 +17,7 @@ import {
   IconLink,
   IconMenu2,
   IconPencil,
+  IconPlus,
   IconSearch,
   IconShare3,
   IconShieldCheck,
@@ -58,5 +59,6 @@ export const Icons: {
   access: IconShieldCheck,
   share: IconShare3,
   pencil:IconPencil,
-  fileUpload: IconFileUpload
+  fileUpload: IconFileUpload,
+  plus: IconPlus,
 };
