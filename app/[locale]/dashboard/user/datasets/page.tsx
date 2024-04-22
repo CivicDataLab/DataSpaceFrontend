@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import GraphqlTable from '../../components/GraphqlTable/graphqlTable';
+import ListingHeader from '../../components/ListingHeader';
 
 const Page = () => {
   const [rowData, setRowData] = useState([]);
@@ -74,8 +75,28 @@ const Page = () => {
     // fetchData(queryParams.pageSize, queryParams.currentPage);
   }, [queryParams]); // Fetch data when queryParams change
 
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const handleFilterChange = (value: string) => {
+    setSelectedFilter(value);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+  };
+
   return (
     <div>
+      <ListingHeader
+        selectedFilter={selectedFilter}
+        onFilterChange={handleFilterChange}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        actionEnabled={false}
+        count={120}
+        label={'datasets'}
+      />
       <GraphqlTable
         table={{
           columns: [

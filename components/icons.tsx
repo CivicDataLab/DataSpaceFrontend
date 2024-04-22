@@ -16,6 +16,7 @@ import {
   IconLayoutSidebarLeftExpand,
   IconLink,
   IconMenu2,
+  IconPlus,
   IconSearch,
   IconShare3,
   IconShieldCheck,
@@ -55,4 +56,5 @@ export const Icons: {
   menu: IconMenu2,
   access: IconShieldCheck,
   share: IconShare3,
+  plus: IconPlus,
 };

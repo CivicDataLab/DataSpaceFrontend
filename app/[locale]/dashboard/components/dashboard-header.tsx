@@ -1,8 +1,7 @@
 import React from 'react';
-import Link from 'next/link';
-import { Text } from 'opub-ui';
+import { useRouter } from 'next/navigation';
+import { Tab, TabList, Tabs, Text } from 'opub-ui';
 
-import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 
 export function DashboardHeader({ currentPath }: { currentPath: string }) {
@@ -18,53 +17,37 @@ export function DashboardHeader({ currentPath }: { currentPath: string }) {
       selected: currentPath.indexOf('organization') >= 0,
     },
   ];
+  const router = useRouter();
+
+  const handleTabClick = (url: string) => {
+    router.replace(url);
+  };
+
+  const initialTabLabel =
+    userDashboardOptions.find((option) => option.selected)?.label ||
+    'My Datasets';
 
   return (
     <>
-      <div className="bg-baseGraySlateAlpha2 px-5 py-3">
-        <BreadCrumbs
-          data={[
-            { href: '/', label: 'Home' },
-            {
-              href: '/dashboard/user/datasets',
-              label: 'User Dashboard',
-            },
-            {
-              href: '#',
-              label: currentPath.includes('organization')
-                ? 'My Organizations'
-                : 'My Personal Datasets',
-            },
-          ]}
-        />
-      </div>
-      <div className="flex flex-col gap-4 px-5 py-4">
+      <div className="flex flex-col gap-4 py-6">
         <Text variant="headingLg" as="h1" className="px-1">
           User Dashboard
         </Text>
-        <ul className="flex max-w-[90vw] gap-2 overflow-x-auto lg:max-w-[10vw] lg:overflow-x-visible">
-          {userDashboardOptions.map((dashboardOpt) => (
-            <li
-              className={cn(
-                'cursor-no-drop text-textDisabled hover:text-textDisabled focus:text-textDisabled'
-              )}
-              key={dashboardOpt.url}
-            >
-              <Link
-                className={cn(
-                  'relative block w-full rounded-l-05 p-3 text-center text-textSubdued lg:min-w-[15rem]',
-                  // 'lg:text-start',
-                  'hover:text-textDefault focus:text-textDefault',
-                  dashboardOpt.selected &&
-                    'pointer-events-none bg-surfaceDefault text-textDefault shadow-insetButton'
-                )}
-                href={dashboardOpt.url}
-              >
-                {dashboardOpt.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div>
+          <Tabs defaultValue={initialTabLabel}>
+            <TabList fitted>
+              {userDashboardOptions.map((item, index) => (
+                <Tab
+                  value={item.label}
+                  key={index}
+                  onClick={() => handleTabClick(item.url)}
+                >
+                  {item.label}
+                </Tab>
+              ))}
+            </TabList>
+          </Tabs>
+        </div>
       </div>
     </>
   );
