@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, SearchInput, Select, Text } from 'opub-ui';
 
-interface TableHeaderProps {
+interface ListingHeaderProps {
   filterEnabled?: boolean;
   searchEnabled?: boolean;
   countEnabled?: boolean;
@@ -15,7 +15,7 @@ interface TableHeaderProps {
   label: string;
 }
 
-const TableHeader: React.FC<TableHeaderProps> = ({
+const ListingHeader: React.FC<ListingHeaderProps> = ({
   filterEnabled = true,
   searchEnabled = true,
   countEnabled = true,
@@ -82,4 +82,4 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   );
 };
 
-export default TableHeader;
+export default ListingHeader;

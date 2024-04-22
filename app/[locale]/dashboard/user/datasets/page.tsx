@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import GraphqlTable from '../../components/GraphqlTable/graphqlTable';
-import TableHeader from '../../components/TableHeader';
+import ListingHeader from '../../components/ListingHeader';
 
 const Page = () => {
   const [rowData, setRowData] = useState([]);
@@ -88,7 +88,7 @@ const Page = () => {
 
   return (
     <div>
-      <TableHeader
+      <ListingHeader
         selectedFilter={selectedFilter}
         onFilterChange={handleFilterChange}
         searchQuery={searchQuery}
