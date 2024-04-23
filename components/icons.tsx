@@ -16,6 +16,7 @@ import {
   IconLayoutSidebarLeftExpand,
   IconLink,
   IconMenu2,
+  IconPencil,
   IconPlus,
   IconSearch,
   IconShare3,
@@ -25,6 +26,7 @@ import {
   IconUserCog,
   IconUsers,
   IconX,
+  IconFileUpload
   // TablerIconsProps,
 } from '@tabler/icons-react';
 
@@ -56,5 +58,7 @@ export const Icons: {
   menu: IconMenu2,
   access: IconShieldCheck,
   share: IconShare3,
+  pencil:IconPencil,
+  fileUpload: IconFileUpload,
   plus: IconPlus,
 };

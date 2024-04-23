@@ -1,9 +1,8 @@
 'use client';
 
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
-import { Divider } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { ActionBar } from './components/action-bar';
@@ -26,7 +25,6 @@ const createDatasetMutationDoc: any = graphql(`
     }
   }
 `);
-
 
 export const Page = () => {
   const params = useParams();
@@ -68,7 +66,7 @@ export const Page = () => {
         }}
         isLoading={isLoading}
       />
-      <Divider />
+
       <Content />
     </>
   );
