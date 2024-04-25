@@ -28,5 +28,10 @@ jobs:
           username: "ubuntu"
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          script: cd /home/ubuntu/DataExchange/DataExFrontend/ && kill $(ps aux | grep 'npm run start' | awk '{print $2}') && kill $(ps aux | grep 'next-server' | awk '{print $2}') && npm run build && bpm run start
+          script: |
+            cd /home/ubuntu/DataExchange/DataExFrontend/
+            kill $(ps aux | grep 'npm run start' | awk '{print $2}')
+            kill $(ps aux | grep 'next-server' | awk '{print $2}')
+            npm run build
+            npm run start
 
