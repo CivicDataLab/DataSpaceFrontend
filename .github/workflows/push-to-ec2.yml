@@ -21,3 +21,12 @@ jobs:
           REMOTE_USER: "ubuntu"
           TARGET: "/home/ubuntu/DataExchange/DataExFrontend/"
 
+      - name: run the application remotely
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: "datakeep.civicdays.in"
+          username: "ubuntu"
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: whoami
+
