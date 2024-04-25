@@ -107,7 +107,7 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
           Average
           <div className="mt-2">
             <Switch
-              name="average"
+              // name="average"
               checked={average}
               onCheckedChange={(checked) => {
                 setAverage(checked);
