@@ -2,10 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useParams, usePathname } from 'next/navigation';
+import { useParams, usePathname,useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import { Button, Icon, SkeletonDisplayText, Text } from 'opub-ui';
+import { Button, Divider, Icon, SkeletonDisplayText, Tab, TabList, Tabs, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -35,6 +35,8 @@ export function EditLayout({ children, params }: LayoutProps) {
   const pathName = usePathname();
   const routerParams = useParams();
 
+  const orgParams = useParams<{ organizationId: string }>();
+
   const pathItem = layoutList.find(function (v) {
     return pathName.indexOf(v) >= 0;
   });
@@ -44,9 +46,14 @@ export function EditLayout({ children, params }: LayoutProps) {
     return <>{children}</>;
   }
 
+  const DATASET_INFO = {
+    title: 'Untitled',
+    timestamp: '20 March 2023 - 10:30AM',
+  };
+
   return (
     <div className="mt-8 flex h-full flex-col">
-      {/* <Header id={params.id} title={data?.dataset?.title} /> */}
+      <Header dataset={DATASET_INFO} orgId={orgParams.organizationId} />
       <div className="lg:flex-column mt-4 flex flex-col">
         <div>
           <Navigation
@@ -55,7 +62,7 @@ export function EditLayout({ children, params }: LayoutProps) {
             organization={routerParams.organizationId.toString()}
           />
         </div>
-        <div className="bg-surface shadow-card border-l-divider rounded-tl-none max-w-[994px] flex-grow px-6 py-4">
+        <div className="bg-surface shadow-card border-l-divider rounded-tl-none max-w-[1280px] flex-grow py-4">
           {children}
         </div>
       </div>
@@ -63,36 +70,35 @@ export function EditLayout({ children, params }: LayoutProps) {
   );
 }
 
-const Header = ({ id, title }: { id: string; title?: string }) => {
+const Header = ({ dataset, orgId }: any) => {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex flex-wrap items-center gap-4">
-        <Link href="/dashboard/dataset">
-          <Icon source={Icons.back} size={32} />
-          <Text visuallyHidden>Go to dataset listing page</Text>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          {title ? (
-            <div className="text-clamp">
-              <Text variant="headingLg" as="h2">
-                {title}
-              </Text>
-            </div>
-          ) : (
-            <div className="min-w-[120px]">
-              <SkeletonDisplayText />
-            </div>
-          )}
-          <div className="whitespace-nowrap">
-            <Text color="subdued">ID #{id}</Text>
-          </div>
+    <>
+      <div className="mb-3 flex justify-between">
+        <div className="flex items-center gap-4">
+          <Text variant="headingSm" color="subdued">
+            DATASET NAME :
+            <b>
+              {dataset.title} - {dataset.timestamp}
+            </b>
+          </Text>
+          <Text
+            variant="headingSm"
+            className="flex items-center"
+            color="interactive"
+          >
+            <Icon source={Icons.pencil} size={16} color="interactive" />
+            edit
+          </Text>
         </div>
+        <Link href={`/dashboard/organization/${orgId}/dataset`}>
+          <Text className="flex gap-1" color="interactive">
+            Go back to Drafts{' '}
+            <Icon source={Icons.cross} size={20} color="interactive" />
+          </Text>
+        </Link>
       </div>
-      <Button url={`/dashboard/dataset/${id}/edit`} kind="tertiary">
-        Edit Info
-      </Button>
-    </div>
+      <Divider />
+    </>
   );
 };
 
@@ -129,44 +135,31 @@ const Navigation = ({
     },
   ];
 
+  const router = useRouter();
+
+  const handleTabClick = (url: string) => {
+    router.replace(url);
+  };
+
+  const initialTabLabel =
+    links.find((option) => option.selected)?.label ||
+    'Distributions';
+
   return (
-    <ul className="flex max-w-[90vw] overflow-x-auto lg:max-w-[10vw] lg:overflow-x-visible">
-      {links.map((link) => (
-        <li
-          className={cn(
-            link.disabled &&
-              'cursor-no-drop text-textDisabled hover:text-textDisabled focus:text-textDisabled'
-          )}
-          key={link.url}
-        >
-          <Link
-            className={cn(
-              'relative block w-full rounded-l-05 p-3 text-center text-textSubdued lg:min-w-[10rem]',
-              'lg:text-start',
-              'hover:text-textDefault focus:text-textDefault',
-              link.selected &&
-                'pointer-events-none bg-surfaceDefault text-textDefault shadow-insetButton',
-              link.disabled && 'pointer-events-none'
-            )}
-            href={link.url}
+    <div>
+    <Tabs defaultValue={initialTabLabel}>
+      <TabList fitted>
+        {links.map((item, index) => (
+          <Tab
+            value={item.label}
+            key={index}
+            onClick={() => handleTabClick(item.url)}
           >
-            <Text
-              variant="bodyLg"
-              fontWeight={link.selected ? 'medium' : 'regular'}
-              color="inherit"
-            >
-              {link.label}
-            </Text>
-            <span
-              className={cn(
-                'absolute bottom-0 right-0 h-[3px] w-full',
-                'right-0 bg-transparent lg:top-0 lg:h-full lg:w-[3px] lg:rounded-l-1',
-                link.selected && 'bg-decorativeIconFour'
-              )}
-            />
-          </Link>
-        </li>
-      ))}
-    </ul>
+            {item.label}
+          </Tab>
+        ))}
+      </TabList>
+    </Tabs>
+  </div>
   );
 };
