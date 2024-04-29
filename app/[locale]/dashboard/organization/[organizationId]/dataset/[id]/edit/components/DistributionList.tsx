@@ -108,7 +108,7 @@ const NoList = ({
       <DropZone
         name="file_details"
         label="Upload"
-        onChange={handleDropZoneDrop}
+        onDrop={handleDropZoneDrop}
         labelHidden
         className="min-h-[70vh] bg-baseGraySlateSolid5"
       >
