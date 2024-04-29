@@ -4,7 +4,6 @@ import {
   ButtonGroup,
   Divider,
   DropZone,
-  Form,
   Icon,
   Text,
 } from 'opub-ui';
@@ -104,17 +103,15 @@ const NoList = ({
   );
 
   return (
-    <Form>
-      <DropZone
-        name="file_details"
-        label="Upload"
-        onDrop={handleDropZoneDrop}
-        labelHidden
-        className="min-h-[70vh] bg-baseGraySlateSolid5"
-      >
-        {uploadedFile}
-        {fileUpload}
-      </DropZone>
-    </Form>
+    <DropZone
+      name="file_details"
+      label="Upload"
+      onDrop={handleDropZoneDrop}
+      labelHidden
+      className="min-h-[70vh] bg-baseGraySlateSolid5"
+    >
+      {uploadedFile}
+      {fileUpload}
+    </DropZone>
   );
 };
