@@ -5,24 +5,29 @@ import { Icons } from './icons';
 
 interface TagProps {
   type: 'open' | 'registered' | 'restricted';
-  icon: true | false;
+  icon?: boolean;
 }
 
 const CustomTags: React.FC<TagProps> = ({ type, icon = false }) => {
   let bgColor;
   let label;
+  let iconName;
   switch (type.toLowerCase()) {
     case 'open':
       bgColor = 'var(--base-green-solid-7)';
       label = 'Open Access';
+      iconName = Icons.openAccess;
       break;
     case 'registered':
       bgColor = 'var(--base-amber-solid-6)';
       label = 'Registered Access';
+      iconName = Icons.registeredAccess;
+
       break;
     case 'restricted':
       bgColor = 'var(--base-red-solid-7)';
       label = 'Restricted Access';
+      iconName = Icons.restrictedAccess;
       break;
     default:
       bgColor = 'white';
@@ -34,23 +39,16 @@ const CustomTags: React.FC<TagProps> = ({ type, icon = false }) => {
     <div
       className="h-fit w-fit p-1"
       style={{
-        backgroundColor: bgColor,
+        border: ` 2px solid  ${bgColor}`,
         borderRadius: '4px',
       }}
     >
       <div className="flex w-full gap-2 ">
-        {icon && <Icon source={Icons.access} />}
-        <Text className="" variant="bodyMd">
-          {label}
-        </Text>
+        {icon && iconName && <Icon source={iconName} />}
+        <Text variant="bodyMd">{label}</Text>
       </div>
     </div>
   );
 };
 
 export default CustomTags;
-// 12px padding 8x 2 y
-
-// 14px p 4
-
-// size icon
