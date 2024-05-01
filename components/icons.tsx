@@ -10,6 +10,7 @@ import {
   IconDatabaseEdit,
   IconDatabasePlus,
   IconFilePlus,
+  IconFileUpload,
   IconFolder,
   IconInfoCircle,
   IconLayoutSidebarLeftCollapse,
@@ -21,12 +22,13 @@ import {
   IconSearch,
   IconShare3,
   IconShieldCheck,
+  IconShieldLock,
+  IconShieldStar,
   IconTerminal,
   IconTrash,
   IconUserCog,
   IconUsers,
   IconX,
-  IconFileUpload
   // TablerIconsProps,
 } from '@tabler/icons-react';
 
@@ -57,8 +59,11 @@ export const Icons: {
   cross: IconX,
   menu: IconMenu2,
   access: IconShieldCheck,
+  openAccess: IconShieldCheck,
+  registeredAccess: IconShieldStar,
+  restrictedAccess: IconShieldLock,
   share: IconShare3,
-  pencil:IconPencil,
+  pencil: IconPencil,
   fileUpload: IconFileUpload,
   plus: IconPlus,
 };
