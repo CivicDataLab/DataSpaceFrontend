@@ -102,28 +102,118 @@ export const data = [
             accessType: 'Open',
             accessModelTitle:
               'Temperature and Precipitation (2011-2015) Guwahati, Assam - Open Access',
-            fields: '121',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
             rows: '1-10',
             count: '10(out of 100)',
-            preview: [],
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 11', description: 'Desc 11' },
+                { title: 'Res 22', description: 'Desc 22' },
+              ],
+            ],
           },
           {
             accessType: 'Registered',
             accessModelTitle:
               'Temperature and Precipitation (2011-2015) Guwahati, Assam - Open Access',
-            fields: [{}],
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 13', description: 'Desc 13' },
+                { title: 'Res 23', description: 'Desc 23' },
+              ],
+            ],
             rows: '1-10',
             count: '10(out of 100)',
-            preview: [],
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 14', description: 'Desc 14' },
+                { title: 'Res 24', description: 'Desc 24' },
+              ],
+            ],
           },
           {
             accessType: 'Restricted',
             accessModelTitle:
               'Temperature and Precipitation (2011-2015) Guwahati, Assam - Open Access',
-            fields: [{}],
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 15', description: 'Desc 15' },
+                { title: 'Res 25', description: 'Desc 25' },
+              ],
+            ],
             rows: '1-10',
             count: '10(out of 100)',
-            preview: [],
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 16', description: 'Desc 16' },
+                { title: 'Res 26', description: 'Desc 26' },
+              ],
+            ],
           },
         ],
       },
@@ -131,16 +221,93 @@ export const data = [
         title: 'Telangana Budget 2021-22',
         description:
           'This section provides budget documents of Telangana for the year 2021-22',
-      },
-      {
-        title: 'Telangana Budget 2022-23',
-        description:
-          'This section provides budget documents of Telangana for the year 2022-23.',
+        accessModelData: [
+          {
+            accessType: 'Open',
+            accessModelTitle:
+              'Temperature and Precipitation (2011-2015) Guwahati, Assam - Open Access',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+            rows: '1-10',
+            count: '10(out of 100)',
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+          },
+        ],
       },
       {
         title: 'Telangana Budget 2023-24',
         description:
           'This section provides budget documents of Telangana for the year 2023-24.',
+        accessModelData: [
+          {
+            accessType: 'Open',
+            accessModelTitle:
+              'Temperature and Precipitation (2011-2015) Guwahati, Assam - Open Access',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+            rows: '1-10',
+            count: '10(out of 100)',
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+          },
+        ],
       },
     ],
     accessModels: [
