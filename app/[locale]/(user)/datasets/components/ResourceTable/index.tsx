@@ -35,7 +35,6 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
           const rowData = row.original as unknown as RowData;
           const accessorKey = column.accessorKey as keyof RowData;
           const cellValue = rowData[accessorKey];
-          console.log(cellValue);
           return (
             <Dialog>
               <Dialog.Trigger>
