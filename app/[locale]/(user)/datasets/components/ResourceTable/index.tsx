@@ -1,10 +1,13 @@
 import React from 'react';
-import { Dialog, Table } from 'opub-ui';
+import { Button, Dialog, Table } from 'opub-ui';
 
 interface ColumnData {
   accessorKey: string;
   header: string;
   isModalTrigger?: boolean;
+  label?: string;
+  table?: boolean;
+  modalHeader?: string;
 }
 
 interface RowData {
@@ -36,12 +39,18 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
           return (
             <Dialog>
               <Dialog.Trigger>
-                <button className="text-blue-500 cursor-pointer">
-                  Open Dialog
-                </button>
+                <Button kind="tertiary">{column.label}</Button>
               </Dialog.Trigger>
-              <Dialog.Content title="Dialog Title">
-                {cellValue[0]?.count}
+              <Dialog.Content title={column.modalHeader}>
+                {column?.table ? (
+                  <Table
+                    columns={cellValue[0]}
+                    rows={cellValue[1]}
+                    hideFooter={true}
+                  />
+                ) : (
+                  cellValue
+                )}
               </Dialog.Content>
             </Dialog>
           );
