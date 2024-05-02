@@ -7,8 +7,6 @@ interface VisualizationProps {
 }
 
 const Visualization: React.FC<VisualizationProps> = ({ data }) => {
-  console.log(data);
-
   return (
     <div className="">
       {data.map((item: any, index: any) => (
