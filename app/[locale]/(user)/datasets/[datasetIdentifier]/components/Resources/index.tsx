@@ -1,3 +1,4 @@
+import { table } from 'console';
 import React from 'react';
 import {
   Accordion,
@@ -5,6 +6,8 @@ import {
   AccordionItem,
   AccordionTrigger,
   Button,
+  Dialog,
+  Table,
   Text,
 } from 'opub-ui';
 
@@ -17,16 +20,21 @@ interface ResourceProps {
 const generateColumnData = () => {
   return [
     {
-      accessorKey: 'accessType',
-      header: 'Access Type',
-    },
-    {
       accessorKey: 'accessModelTitle',
       header: 'Access Model Title',
     },
     {
+      accessorKey: 'accessType',
+      header: 'Access Type',
+    },
+
+    {
       accessorKey: 'fields',
       header: 'Fields',
+      isModalTrigger: true,
+      label: 'Preview',
+      table: true,
+      modalHeader: 'Fields',
     },
     {
       accessorKey: 'rows',
@@ -36,7 +44,14 @@ const generateColumnData = () => {
       accessorKey: 'count',
       header: 'Count',
     },
-    // Add more columns if needed
+    {
+      accessorKey: 'preview',
+      header: 'Preview',
+      isModalTrigger: true,
+      label: 'Preview',
+      table: true,
+      modalHeader: 'Preview',
+    },
   ];
 };
 
@@ -47,13 +62,11 @@ const generateTableData = (accessModelData: any[]) => {
     fields: accessModel.fields,
     rows: accessModel.rows,
     count: accessModel.count,
-    // Add more data from accessModel if needed
+    preview: accessModel.preview,
   }));
 };
 
 const Resources: React.FC<ResourceProps> = ({ data }) => {
-  console.log(data);
-
   return (
     <>
       {data.map((item: any, index: any) => (
@@ -70,9 +83,32 @@ const Resources: React.FC<ResourceProps> = ({ data }) => {
             </div>
           </div>
           <div className="align-center flex flex-col justify-between gap-4 sm:flex-row">
-            <Button className="h-fit w-fit" kind="secondary">
-              Download
-            </Button>
+            <Dialog>
+              <Dialog.Trigger>
+                <Button className="h-fit w-fit" kind="secondary">
+                  View Fields
+                </Button>
+              </Dialog.Trigger>
+              <Dialog.Content title={'View Fields'}>
+                <Table
+                  columns={[
+                    {
+                      accessorKey: 'title',
+                      header: 'Title',
+                    },
+                    {
+                      accessorKey: 'description',
+                      header: 'Description',
+                    },
+                  ]}
+                  rows={[
+                    { title: 'Res 1', description: 'Desc 1' },
+                    { title: 'Res 2', description: 'Desc 2' },
+                  ]}
+                  hideFooter={true}
+                />
+              </Dialog.Content>
+            </Dialog>
           </div>
           <div className="flex">
             <Accordion type="single" collapsible className="w-full">
@@ -83,7 +119,7 @@ const Resources: React.FC<ResourceProps> = ({ data }) => {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent
-                  className="flex w-full flex-col p-5"
+                  className="flex w-full flex-col "
                   style={{
                     backgroundColor: 'var( --base-pure-white)',
                     outline: '1px solid var( --base-pure-white)',
