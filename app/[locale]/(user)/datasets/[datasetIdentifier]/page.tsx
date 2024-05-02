@@ -44,6 +44,7 @@ const DatasetDetailsPage = () => {
       component: <Visualization data={data[1].visualization} />,
     },
   ];
+  const [activeTab, setActiveTab] = useState('resources'); // State to manage active tab
 
   return (
     <main className=" bg-surfaceDefault">
@@ -84,10 +85,14 @@ const DatasetDetailsPage = () => {
               </Tray>
             </div>
             <div className="mt-5">
-              <Tabs defaultValue="resources">
+              <Tabs defaultValue={activeTab} key={activeTab}>
                 <TabList fitted>
                   {TabsList.map((item, index) => (
-                    <Tab value={item.value} key={index}>
+                    <Tab
+                      value={item.value}
+                      key={index}
+                      onClick={(e) => setActiveTab(item.value)} // Update active tab on click
+                    >
                       {item.label}
                     </Tab>
                   ))}
@@ -111,9 +116,15 @@ const DatasetDetailsPage = () => {
               // sizes="100vw"
               // style={{ width: '80%' }}
             />
-            <Link className="text-actionPrimaryInteractivePressed" href={'#'}>
+            {/* <Link className="text-actionPrimaryInteractivePressed" href={'#'}>
               Visualizations
-            </Link>
+            </Link> */}
+            <Button
+              kind="tertiary"
+              onClick={() => setActiveTab('visualizations')}
+            >
+              Visualizations
+            </Button>
           </div>
           <div>
             <Metadata data={DatasetInfo} />
