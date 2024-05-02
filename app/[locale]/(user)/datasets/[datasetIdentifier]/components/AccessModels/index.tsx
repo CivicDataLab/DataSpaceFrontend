@@ -9,10 +9,55 @@ import {
 } from 'opub-ui';
 
 import CustomTags from '@/components/CustomTags';
+import ResourceTable from '../../../components/ResourceTable';
 
 interface AccessModelProps {
   data: any;
 }
+
+const generateColumnData = () => {
+  return [
+    {
+      accessorKey: 'resourceName',
+      header: 'Resource Name',
+    },
+
+    {
+      accessorKey: 'fields',
+      header: 'Fields',
+      isModalTrigger: true,
+      label: 'Preview',
+      table: true,
+      modalHeader: 'Fields',
+    },
+    {
+      accessorKey: 'rows',
+      header: 'Rows',
+    },
+    {
+      accessorKey: 'count',
+      header: 'Count',
+    },
+    {
+      accessorKey: 'preview',
+      header: 'Preview',
+      isModalTrigger: true,
+      label: 'Preview',
+      table: true,
+      modalHeader: 'Preview',
+    },
+  ];
+};
+
+const generateTableData = (resource: any[]) => {
+  return resource.map((item: any) => ({
+    resourceName: item.resourceName,
+    fields: item.fields,
+    preview: item.preview,
+    rows: item.rows,
+    count: item.count,
+  }));
+};
 
 const AccessModels: React.FC<AccessModelProps> = ({ data }) => {
   return (
@@ -43,7 +88,9 @@ const AccessModels: React.FC<AccessModelProps> = ({ data }) => {
                   {/* <div className="w-3/4 text-justify">
                     <Button kind="secondary">Download</Button>
                   </div> */}
-                  <div>See Resources</div>
+                  <div className=" text-baseBlueSolid8 hover:no-underline ">
+                    See Resources
+                  </div>
                 </AccordionTrigger>
                 <AccordionContent
                   className="flex w-full flex-col p-5"
@@ -52,11 +99,12 @@ const AccessModels: React.FC<AccessModelProps> = ({ data }) => {
                     outline: '1px solid var( --base-pure-white)',
                   }}
                 >
-                  {item.resource.map((item: any, index: any) => (
-                    <div key={index}>
-                      <Text>{item.title}</Text>
-                    </div>
-                  ))}
+                  {item.resource && item.resource.length > 0 && (
+                    <ResourceTable
+                      ColumnsData={generateColumnData()}
+                      RowsData={generateTableData(item.resource)}
+                    />
+                  )}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
