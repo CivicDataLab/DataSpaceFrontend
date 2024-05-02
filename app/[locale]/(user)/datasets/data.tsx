@@ -320,9 +320,43 @@ export const data = [
           'Open access model helps you to view data without login',
         resource: [
           {
-            title: 'Telangana Budget 2021-22',
+            resourceName: 'Telangana Budget 2021-22',
             description:
               'This section provides budget documents of Telangana for the year 2021-22',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 11', description: 'Desc 11' },
+                { title: 'Res 22', description: 'Desc 22' },
+              ],
+            ],
+            rows: '1-10',
+            count: '10(out of 100)',
           },
         ],
       },
@@ -335,9 +369,43 @@ export const data = [
           'Registered access model helps you to view data after login',
         resource: [
           {
-            title: 'Telangana Budget 2023-24',
+            resourceName: 'Telangana Budget 2021-22',
             description:
-              'This section provides budget documents of Telangana for the year 2023-24',
+              'This section provides budget documents of Telangana for the year 2021-22',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 11', description: 'Desc 11' },
+                { title: 'Res 22', description: 'Desc 22' },
+              ],
+            ],
+            rows: '1-10',
+            count: '10(out of 100)',
           },
         ],
       },
@@ -350,9 +418,43 @@ export const data = [
           'Restricted access model helps you to view data after login',
         resource: [
           {
-            title: 'Telangana Budget 2021-22',
+            resourceName: 'Telangana Budget 2021-22',
             description:
               'This section provides budget documents of Telangana for the year 2021-22',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 11', description: 'Desc 11' },
+                { title: 'Res 22', description: 'Desc 22' },
+              ],
+            ],
+            rows: '1-10',
+            count: '10(out of 100)',
           },
         ],
       },
