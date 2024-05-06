@@ -5,28 +5,32 @@ import { Icons } from './icons';
 
 interface TagProps {
   type: 'open' | 'registered' | 'restricted';
-  icon?: boolean;
+  iconOnly?: boolean;
 }
 
-const CustomTags: React.FC<TagProps> = ({ type, icon = false }) => {
+const CustomTags: React.FC<TagProps> = ({ type, iconOnly = true }) => {
   let bgColor;
   let label;
   let iconName;
+  let helpText;
   switch (type.toLowerCase()) {
     case 'open':
       bgColor = 'var(--base-green-solid-7)';
-      label = 'Open Access';
+      label = 'OPEN ACCESS';
+      helpText = 'Can be downloaded directly';
       iconName = Icons.openAccess;
       break;
     case 'registered':
       bgColor = 'var(--base-amber-solid-6)';
-      label = 'Registered Access';
+      label = 'REGISTERED ACCESS';
+      helpText = 'Register/ Login to download';
       iconName = Icons.registeredAccess;
 
       break;
     case 'restricted':
       bgColor = 'var(--base-red-solid-7)';
-      label = 'Restricted Access';
+      label = 'RESTRICTED ACCESS';
+      helpText = 'Request access for download';
       iconName = Icons.restrictedAccess;
       break;
     default:
@@ -36,17 +40,24 @@ const CustomTags: React.FC<TagProps> = ({ type, icon = false }) => {
   }
 
   return (
-    <div
-      className="h-fit w-fit p-1"
-      style={{
-        border: ` 2px solid  ${bgColor}`,
-        borderRadius: '4px',
-      }}
-    >
-      <div className="flex w-full gap-2 ">
-        {icon && iconName && <Icon source={iconName} />}
-        <Text variant="bodyMd">{label}</Text>
+    <div className="flex gap-2">
+      <div
+        className="h-fit w-fit p-1"
+        style={{
+          background: ` ${bgColor}`,
+          borderRadius: '4px',
+        }}
+      >
+        <div className="flex w-full gap-2 ">
+          {iconName && <Icon source={iconName} color="onBgDefault" size={40} />}
+        </div>
       </div>
+      {iconOnly && (
+        <div className="flex flex-col gap-1">
+          <Text variant="bodyMd">{label}</Text>
+          {helpText && <Text>{helpText}</Text>}
+        </div>
+      )}
     </div>
   );
 };

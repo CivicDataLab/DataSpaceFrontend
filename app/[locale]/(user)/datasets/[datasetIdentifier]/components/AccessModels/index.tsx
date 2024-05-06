@@ -76,9 +76,9 @@ const AccessModels: React.FC<AccessModelProps> = ({ data }) => {
             </div>
           </div>
           <div className="align-center flex flex-col justify-between gap-4 sm:flex-row">
-            <CustomTags type={item.type} icon={true} />
+            <CustomTags type={item.type} />
             <Button className="h-fit w-fit" kind="secondary">
-              Download
+              Download All Resources
             </Button>
           </div>
           <div className="flex">
