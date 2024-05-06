@@ -29,7 +29,7 @@ const Sidebar = () => {
           <div className="mb-2 flex justify-between">
             <div>
               <Text variant="headingMd" as="h1" className="px-1">
-                Data Exchange
+                CivicDataSpace
               </Text>
             </div>
             <Button onClick={() => setOpen(false)} kind="tertiary">
