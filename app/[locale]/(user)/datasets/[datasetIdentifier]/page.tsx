@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Button, Icon, Tab, TabList, TabPanel, Tabs, Tray } from 'opub-ui';
+import { BarChart } from 'opub-ui/viz';
 
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
-import { data } from '../data';
+import { data as datainfo } from '../data';
 import AccessModels from './components/AccessModels';
 import Metadata from './components/Metadata';
 import PrimaryData from './components/PrimaryData';
@@ -15,10 +16,12 @@ import Resources from './components/Resources';
 import Visualization from './components/Visualizations';
 
 const DatasetDetailsPage = () => {
-  const DatasetInfo = data[1];
+  const DatasetInfo = datainfo[1];
   const [open, setOpen] = useState(false);
   const primaryDataRef = useRef<HTMLDivElement>(null); // Explicitly specify the type of ref
   const [primaryDataHeight, setPrimaryDataHeight] = useState(0);
+
+  const id = useParams();
 
   useEffect(() => {
     if (primaryDataRef.current) {
@@ -31,20 +34,39 @@ const DatasetDetailsPage = () => {
     {
       label: 'Resources',
       value: 'resources',
-      component: <Resources data={data[1].resources} />,
+      component: <Resources data={datainfo[1].resources} />,
     },
     {
       label: 'Access Models',
       value: 'accessmodels',
-      component: <AccessModels data={data[1].accessModels} />,
+      component: <AccessModels data={datainfo[1].accessModels} />,
     },
     {
       label: 'Visualizations',
       value: 'visualizations',
-      component: <Visualization data={data[1].visualization} />,
+      component: <Visualization data={datainfo[1].visualization} />,
     },
   ];
   const [activeTab, setActiveTab] = useState('resources'); // State to manage active tab
+
+  const barOptions = {
+    xAxis: {
+      type: 'category',
+      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    },
+    yAxis: {
+      type: 'value',
+    },
+    series: [
+      {
+        data: [120, 200, 150, 80, 70, 110, 130],
+        type: 'bar',
+        name: 'Sales',
+        color: 'rgb(55,162,218)',
+      },
+    ],
+  };
+  console.log(primaryDataHeight.toString() + 'px');
 
   return (
     <main className=" bg-surfaceDefault">
@@ -56,7 +78,7 @@ const DatasetDetailsPage = () => {
         ]}
       />
       <div className="flex w-full gap-7 md:px-10 lg:px-10">
-        <div className="w-full py-11  lg:w-9/12">
+        <div className="w-full flex-grow  py-11 lg:w-9/12">
           <div className="mx-6 block flex flex-col gap-5  ">
             <div ref={primaryDataRef} className="flex flex-col gap-4">
               <PrimaryData data={DatasetInfo} />
@@ -108,17 +130,7 @@ const DatasetDetailsPage = () => {
         </div>
         <div className="hidden flex-col gap-8 border-l-2 border-solid border-baseGraySlateSolid3 pl-7 pt-6 lg:flex lg:w-1/5">
           <div className="flex flex-col items-center justify-center gap-4 text-center">
-            <Image
-              src={'/visualization.svg'}
-              width={primaryDataHeight + 60}
-              height={primaryDataHeight + 40} // Set height dynamically
-              alt={'Organization Logo'}
-              // sizes="100vw"
-              // style={{ width: '80%' }}
-            />
-            {/* <Link className="text-actionPrimaryInteractivePressed" href={'#'}>
-              Visualizations
-            </Link> */}
+            <BarChart options={barOptions} height={'250px'} />
             <Button
               kind="tertiary"
               onClick={() => setActiveTab('visualizations')}
