@@ -4,11 +4,18 @@ import { Icon, Text } from 'opub-ui';
 import { Icons } from './icons';
 
 interface TagProps {
-  type: 'open' | 'registered' | 'restricted';
+  type: 'open' | 'registered' | 'restricted' | string;
   iconOnly?: boolean;
+  size?: 24 | 40;
+  background?: boolean;
 }
 
-const CustomTags: React.FC<TagProps> = ({ type, iconOnly = true }) => {
+const CustomTags: React.FC<TagProps> = ({
+  type,
+  iconOnly,
+  size = 40,
+  background = true,
+}) => {
   let bgColor;
   let label;
   let iconName;
@@ -44,15 +51,21 @@ const CustomTags: React.FC<TagProps> = ({ type, iconOnly = true }) => {
       <div
         className="h-fit w-fit p-1"
         style={{
-          background: ` ${bgColor}`,
+          background: background ? bgColor : 'white',
           borderRadius: '4px',
         }}
       >
         <div className="flex w-full gap-2 ">
-          {iconName && <Icon source={iconName} color="onBgDefault" size={40} />}
+          {iconName && (
+            <Icon
+              source={iconName}
+              color={background ? 'onBgDefault' : 'highlight'}
+              size={size}
+            />
+          )}
         </div>
       </div>
-      {iconOnly && (
+      {!iconOnly && (
         <div className="flex flex-col gap-1">
           <Text variant="bodyMd">{label}</Text>
           {helpText && <Text>{helpText}</Text>}
