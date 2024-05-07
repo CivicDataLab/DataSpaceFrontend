@@ -75,7 +75,7 @@ const AccessModels: React.FC<AccessModelProps> = ({ data }) => {
               <Text>{item.description}</Text>
             </div>
           </div>
-          <div className="align-center flex flex-col justify-between gap-4 sm:flex-row">
+          <div className="align-center flex flex-col items-center justify-between gap-4 sm:flex-row">
             <CustomTags type={item.type} />
             <Button className="h-fit w-fit" kind="secondary">
               Download All Resources
