@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
+import { graphql } from '@/gql';
+import { useQuery } from '@tanstack/react-query';
 import { Button, Icon, Tab, TabList, TabPanel, Tabs, Tray } from 'opub-ui';
 import { BarChart } from 'opub-ui/viz';
 
+import { GraphQL } from '@/lib/api';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { data as datainfo } from '../data';
@@ -15,13 +17,27 @@ import PrimaryData from './components/PrimaryData';
 import Resources from './components/Resources';
 import Visualization from './components/Visualizations';
 
+const datasetQuery: any = graphql(`
+  query GetDatasetData {
+    dataset {
+      id
+      created
+      modified
+    }
+  }
+`);
+
 const DatasetDetailsPage = () => {
   const DatasetInfo = datainfo[1];
   const [open, setOpen] = useState(false);
   const primaryDataRef = useRef<HTMLDivElement>(null); // Explicitly specify the type of ref
   const [primaryDataHeight, setPrimaryDataHeight] = useState(0);
 
-  const id = useParams();
+  const { data, error, isLoading, refetch } = useQuery([], () =>
+    GraphQL(datasetQuery, [])
+  );
+
+  console.log(data, error, isLoading);
 
   useEffect(() => {
     if (primaryDataRef.current) {
@@ -49,6 +65,10 @@ const DatasetDetailsPage = () => {
   ];
   const [activeTab, setActiveTab] = useState('resources'); // State to manage active tab
 
+  useEffect(() => {
+    refetch();
+  }, [activeTab]);
+
   const barOptions = {
     xAxis: {
       type: 'category',
@@ -66,7 +86,6 @@ const DatasetDetailsPage = () => {
       },
     ],
   };
-  console.log(primaryDataHeight.toString() + 'px');
 
   return (
     <main className=" bg-surfaceDefault">
