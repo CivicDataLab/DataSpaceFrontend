@@ -66,7 +66,7 @@ export function MainNav({ hideSearch = false }) {
             <div className="flex items-center gap-2">
               <Icon source={Icons.logo} size={24} color="success" />
               <Text variant="headingLg" as="h1">
-                Data Exchange
+                CivicDataSpace
               </Text>
             </div>
           </Link>
