@@ -15,6 +15,7 @@ import { bytesToSize } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
 import { EditDistribution } from './EditDistribution';
+import { EditResource } from './EditResource';
 
 export function DistributionList({
   setPage,
@@ -94,17 +95,25 @@ const NoList = ({
 
   return (
     <>
-      <DropZone
-        name="file_details"
-        label="Upload"
-        allowMultiple={true}
-        onDrop={handleDropZoneDrop}
-        labelHidden
-        className="min-h-[70vh] bg-baseGraySlateSolid5"
-      >
-        {uploadedFile}
-        {fileUpload}
-      </DropZone>
+      {fileSelected ? (
+        <EditResource
+          uploadedFile={uploadedFile}
+          handleDropZoneDrop={handleDropZoneDrop}
+          file={file}
+         />
+      ) : (
+        <DropZone
+          name="file_details"
+          label="Upload"
+          allowMultiple={true}
+          onDrop={handleDropZoneDrop}
+          labelHidden
+          className="min-h-[70vh] bg-baseGraySlateSolid5"
+        >
+          {uploadedFile}
+          {fileUpload}
+        </DropZone>
+      )}
     </>
   );
 };
