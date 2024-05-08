@@ -1,7 +1,17 @@
-import { Button, ButtonGroup, Divider, Icon, Text } from 'opub-ui';
+import React from 'react';
+import {
+  Button,
+  ButtonGroup,
+  Divider,
+  DropZone,
+  Icon,
+  Text,
+} from 'opub-ui';
 
+import { bytesToSize } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
+import { EditDistribution } from './EditDistribution';
 
 export function DistributionList({
   setPage,
@@ -11,11 +21,11 @@ export function DistributionList({
 }) {
   return (
     <div>
-      <Text variant="headingMd">Add Distribution</Text>
+      {/* <Text variant="headingMd">Add Distribution</Text>
       <div className="pt-4">
         <Divider />
-      </div>
-      <div className="py-20">
+      </div> */}
+      <div className="py-4">
         <NoList setPage={setPage} />
       </div>
     </div>
@@ -27,27 +37,81 @@ const NoList = ({
 }: {
   setPage: (page: 'list' | 'create') => void;
 }) => {
-  return (
-    <div className="flex flex-col items-center justify-center p-6">
-      <Icon
-        source={Icons.distribution}
-        size={64}
-        stroke={1}
-        color="interactive"
-      />
-      <div className="pt-4">
-        <Text variant="headingSm" color="subdued">
-          You have not added any distributions yet.
-        </Text>
-      </div>
-      <div className="pt-6">
-        <ButtonGroup>
-          <LinkButton href={`${window.location}/views`} kind="secondary">
-            Add Views
-          </LinkButton>
-          <Button onClick={() => setPage('create')}>Add Distribution</Button>
-        </ButtonGroup>
+  const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT'];
+
+  const [fileSelected, setFileSelected] = React.useState(false);
+
+  const [file, setFile] = React.useState<File>();
+
+  const handleDropZoneDrop = React.useCallback(
+    (_dropFiles: File[], acceptedFiles: File[]) => {
+      setFile(acceptedFiles[0]);
+      setFileSelected(true);
+    },
+    []
+  );
+
+  function handleFileDelete(props: React.MouseEvent<HTMLButtonElement>) {
+    props.stopPropagation();
+    setFileSelected(false);
+    setFile(undefined);
+  }
+
+  const hint = (
+    <>
+      <Button kind="secondary" variant="interactive">
+        Choose Files to Upload
+      </Button>
+      <Text>Maximum File Size Limit : 5 MB</Text>
+      <Text className="flex items-center gap-1">
+        Supported File Types :{' '}
+        {fileTypes.map((type, index) => {
+          return (
+            <div className="rounded-1 bg-basePureWhite px-2 py-1" key={index}>
+              {type}
+            </div>
+          );
+        })}
+      </Text>
+    </>
+  );
+
+  const fileUpload = !file && <DropZone.FileUpload actionHint={hint} />;
+  const uploadedFile = file && (
+    <div className="flex h-full items-center justify-center py-16">
+      <div className="surfaceDefault flex items-center gap-3 rounded-05 px-3 py-2">
+        <Icon source={Icons.check} size={24} color="success" />
+        <div className="flex flex-col">
+          <div className="max-w-[180px]">
+            <Text variant="headingMd" truncate>
+              {file.name}
+            </Text>
+          </div>
+          <Text variant="bodyMd" color="subdued">
+            {bytesToSize(file.size)}
+          </Text>
+        </div>
+        <Button
+          size="slim"
+          icon={<Icon source={Icons.delete} size={24} />}
+          kind="tertiary"
+          accessibilityLabel="delete resource"
+          onClick={handleFileDelete}
+        />
       </div>
     </div>
+  );
+
+  return (
+    <DropZone
+      name="file_details"
+      label="Upload"
+      onDrop={handleDropZoneDrop}
+      labelHidden
+      className="min-h-[70vh] bg-baseGraySlateSolid5"
+    >
+      {uploadedFile}
+      {fileUpload}
+    </DropZone>
   );
 };
