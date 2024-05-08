@@ -25,6 +25,58 @@ export const EditResource = ({
 }: any) => {
   const fileUpload = file.length === 0 && <DropZone.FileUpload />;
 
+  const table = {
+    columns: [
+      {
+        accessorKey: 'field_key',
+        header: 'FIELD KEY',
+      },
+      {
+        accessorKey: 'display_name',
+        header: 'DISPLAY NAME',
+      },
+      {
+        accessorKey: 'description',
+        header: 'DESCRIPTION',
+      },
+      {
+        accessorKey: 'format',
+        header: 'FORMAT',
+      },
+    ],
+    rows: [
+      {
+        field_key: 'date',
+        display_name: 'Date',
+        description: 'Date on which measurements are taken',
+        format: 'Date',
+      },
+      {
+        field_key: 'date',
+        display_name: 'Date',
+        description: 'Date on which measurements are taken',
+        format: 'Date',
+      },
+      {
+        field_key: 'date',
+        display_name: 'Date',
+        description: 'Date on which measurements are taken',
+        format: 'Date',
+      },
+    ],
+  };
+
+  const rowActions = [
+    {
+      content: 'Delete',
+      destructive: true,
+      icon: IconTrash,
+      onAction: (e: any) => {
+        console.log(e, ' deleted');
+      },
+    },
+  ];
+
   return (
     <div className=" bg-basePureWhite px-6 py-8">
       <div className="flex items-center gap-2">
@@ -184,6 +236,32 @@ export const EditResource = ({
         <div className="flex w-1/6 justify-center ">
           <Text>See Preview</Text>
         </div>
+      </div>
+      <div className="flex justify-between">
+        <Text>Fields in the Resource</Text>
+        <div className="flex">
+          <Link className="mx-4 flex items-center gap-1" href="/">
+            <Text>Refetch Fields</Text>{' '}
+            <Icon source={Icons.info} color="interactive" />
+          </Link>
+          <Link className="flex items-center gap-1" href="/">
+            <Text> Reset Fields </Text>{' '}
+            <Icon source={Icons.info} color="interactive" />
+          </Link>
+        </div>
+      </div>
+      <Text variant="headingXs" as="span" fontWeight="regular">
+        The Field settings apply to the Resource on a master level and can not
+        be changed in Access Models.
+      </Text>
+      <div className="mt-3">
+        <DataTable
+          rowActions={rowActions}
+          columns={table.columns}
+          rows={table.rows}
+          hideFooter={true}
+          defaultRowCount={10}
+        />
       </div>
     </div>
   );
