@@ -43,6 +43,19 @@ export const EditResource = ({
         accessorKey: 'format',
         header: 'FORMAT',
       },
+      {
+        header: 'DELETE',
+        cell: ({ row }: any) => (
+          <IconButton
+          size="medium"
+          icon={Icons.delete}
+          color='interactive'
+          onClick={(e) =>console.log(row.original) }
+        >
+          Delete
+        </IconButton>
+        ),
+      },
     ],
     rows: [
       {
@@ -65,17 +78,6 @@ export const EditResource = ({
       },
     ],
   };
-
-  const rowActions = [
-    {
-      content: 'Delete',
-      destructive: true,
-      icon: IconTrash,
-      onAction: (e: any) => {
-        console.log(e, ' deleted');
-      },
-    },
-  ];
 
   return (
     <div className=" bg-basePureWhite px-6 py-8">
@@ -256,7 +258,6 @@ export const EditResource = ({
       </Text>
       <div className="mt-3">
         <DataTable
-          rowActions={rowActions}
           columns={table.columns}
           rows={table.rows}
           hideFooter={true}
