@@ -9,32 +9,19 @@ const PrimaryData: React.FC<PrimaryDataProps> = ({ data }) => {
   return (
     <>
       <div>
-        <Text variant="headingLg">{data.datasetTitle}</Text>
+        <Text variant="headingLg">{data?.title}</Text>
       </div>
       <div className="flex flex-wrap items-center">
         {/* <Text fontWeight="bold">Tags&nbsp;:&nbsp;</Text> */}
         <div className="flex gap-2">
-          {data.metadata.tags.map((item: any, index: any) => (
-            <Tag key={index}>{item.title}</Tag>
+          {data?.tags.map((item: any, index: any) => (
+            <Tag key={index}>{item}</Tag>
           ))}
         </div>
       </div>
       <div>
-        <Text variant="bodyMd">{data.description}</Text>
+        <Text variant="bodyMd">{data?.description}</Text>
       </div>
-      {/* <div className="flex flex-wrap items-center">
-        <Text fontWeight="bold">Categories&nbsp;:</Text>
-        <Text>&nbsp;{data.metadata.category}</Text>
-      </div> */}
-
-      {/* <div className="flex flex-wrap items-center">
-        <Text fontWeight="bold">Formats&nbsp;:&nbsp;</Text>
-        <div className="flex gap-2">
-          {data.metadata.formats.map((item: any, index: any) => (
-            <Tag key={index}>{item.type}</Tag>
-          ))}
-        </div>
-      </div> */}
     </>
   );
 };

@@ -1,20 +1,15 @@
 import React from 'react';
 import { Button, Icon, Text } from 'opub-ui';
 
+import { formatDate, toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
-interface Metadata {
-  metadata: any;
-}
-
 interface MetadataProps {
-  data: Metadata;
+  data: any;
   setOpen?: (isOpen: boolean) => void;
 }
 
 const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
-  const { metadata } = data;
-
   return (
     <>
       <div className="flex items-center justify-between">
@@ -34,30 +29,21 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
         )}
       </div>
       <div className="flex flex-col flex-wrap gap-5 pt-6">
-        {/* <div className="sm:mt-1 sm:grid sm:grid-cols-1 sm:gap-2 md:mt-1 md:grid md:grid-cols-2 md:gap-2 lg:flex lg:flex-col lg:flex-wrap lg:gap-3 lg:pt-3"> */}
+        {data?.metadata?.map((item: any, index: any) => (
+          <div className="flex gap-2" key={index}>
+            <Text className="min-w-24 basis-1/4">
+              {toTitleCase(item.metadataItem.label)}
+            </Text>
+            <Text> {item.value}</Text>
+          </div>
+        ))}
         <div className="flex gap-2">
-          <Text className="min-w-24 basis-1/4">Source </Text>
-          <Text> {metadata.source}</Text>
+          <Text className="min-w-24 basis-1/4">Created</Text>
+          <Text>{formatDate(data?.created)}</Text>
         </div>
         <div className="flex gap-2">
-          <Text className="min-w-24 basis-1/4">Location </Text>
-          <Text> {metadata.location}</Text>
-        </div>
-        <div className="flex gap-2">
-          <Text className="min-w-24 basis-1/4">Update </Text>
-          <Text>{metadata.update}</Text>
-        </div>
-        <div className="flex gap-2">
-          <Text className="min-w-24 basis-1/4">Licence </Text>
-          <Text>{metadata.licence}</Text>
-        </div>
-        <div className="flex gap-2">
-          <Text className="min-w-24 basis-1/4">Policy </Text>
-          <Text>{metadata.policy}</Text>
-        </div>
-        <div className="flex gap-2 ">
-          <Text className="min-w-24 basis-1/4">Organization </Text>
-          <Text>{metadata.organization}</Text>
+          <Text className="min-w-24 basis-1/4">Modified</Text>
+          <Text>{formatDate(data?.modified)}</Text>
         </div>
       </div>
     </>

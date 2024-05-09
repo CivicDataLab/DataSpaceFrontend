@@ -69,14 +69,14 @@ const generateTableData = (accessModelData: any[]) => {
 const Resources: React.FC<ResourceProps> = ({ data }) => {
   return (
     <>
-      {data.map((item: any, index: any) => (
+      {data?.resources.map((item: any, index: any) => (
         <div
           key={index}
           className="my-4 flex flex-col gap-4 rounded-2 p-6 shadow-basicDeep"
         >
           <div className="mb-1 flex flex-wrap justify-between gap-1 lg:gap-0">
             <div className="p2-4 lg:w-2/5">
-              <Text variant="headingMd">{item.title}</Text>
+              <Text variant="headingMd">{item.name}</Text>
             </div>
             <div className="lg:w-3/5 lg:pl-4">
               <Text>{item.description}</Text>
