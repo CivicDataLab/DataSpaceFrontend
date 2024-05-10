@@ -22,49 +22,60 @@ const generateColumnData = () => {
       accessorKey: 'resourceName',
       header: 'Resource Name',
     },
-
     {
-      accessorKey: 'fields',
-      header: 'Fields',
-      isModalTrigger: true,
-      label: 'Preview',
-      table: true,
-      modalHeader: 'Fields',
+      accessorKey: 'description',
+      header: 'Resource description',
     },
-    {
-      accessorKey: 'rows',
-      header: 'Rows',
-    },
-    {
-      accessorKey: 'count',
-      header: 'Count',
-    },
-    {
-      accessorKey: 'preview',
-      header: 'Preview',
-      isModalTrigger: true,
-      label: 'Preview',
-      table: true,
-      modalHeader: 'Preview',
-    },
+    // {
+    //   accessorKey: 'fields',
+    //   header: 'Fields',
+    //   isModalTrigger: true,
+    //   label: 'Preview',
+    //   table: true,
+    //   modalHeader: 'Fields',
+    // },
+    // {
+    //   accessorKey: 'rows',
+    //   header: 'Rows',
+    // },
+    // {
+    //   accessorKey: 'count',
+    //   header: 'Count',
+    // },
+    // {
+    //   accessorKey: 'preview',
+    //   header: 'Preview',
+    //   isModalTrigger: true,
+    //   label: 'Preview',
+    //   table: true,
+    //   modalHeader: 'Preview',
+    // },
   ];
 };
 
-const generateTableData = (resource: any[]) => {
-  return resource.map((item: any) => ({
-    resourceName: item.resourceName,
-    fields: item.fields,
-    preview: item.preview,
-    rows: item.rows,
-    count: item.count,
+const generateTableData = (resources: any[]) => {
+  return resources.map((item: any) => ({
+    resourceName: item.resource.name,
+    description: item.resource.description,
+    // fields: item.fields,
+    // preview: item.preview,
+    // rows: item.rows,
+    // count: item.count,
   }));
 };
 
 const accessModelResourcesQuery = graphql(`
   query accessModelResources($datasetId: UUID!) {
     accessModelResources(datasetId: $datasetId) {
+      modelResources {
+        resource {
+          name
+          description
+          id
+        }
+      }
       id
-      title
+      name
       description
       type
       created
@@ -84,8 +95,6 @@ const AccessModels = () => {
       })
   );
 
-  console.log(data);
-
   return (
     <>
       {isLoading ? (
@@ -100,7 +109,7 @@ const AccessModels = () => {
           >
             <div className="mb-1 flex flex-wrap justify-between gap-1 lg:gap-0">
               <div className="p2-4 lg:w-2/5">
-                <Text variant="headingMd">{item.title}</Text>
+                <Text variant="headingMd">{item.name}</Text>
               </div>
               <div className="lg:w-3/5 lg:pl-4">
                 <Text>{item.description}</Text>
@@ -127,12 +136,10 @@ const AccessModels = () => {
                       outline: '1px solid var( --base-pure-white)',
                     }}
                   >
-                    {item.resource && item.resource.length > 0 && (
-                      <ResourceTable
-                        ColumnsData={generateColumnData()}
-                        RowsData={generateTableData(item.resource)}
-                      />
-                    )}
+                    <ResourceTable
+                      ColumnsData={generateColumnData()}
+                      RowsData={generateTableData(item.modelResources)}
+                    />
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
