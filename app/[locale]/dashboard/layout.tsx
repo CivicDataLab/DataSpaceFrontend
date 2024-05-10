@@ -2,6 +2,7 @@
 
 import React from 'react';
 
+import MainFooter from './components/main-footer';
 import { MainNav } from './components/main-nav';
 
 interface DashboardLayoutProps {
@@ -20,6 +21,9 @@ export default function Layout({ children }: DashboardLayoutProps) {
         <MainNav />
       </header>
       <>{children}</>
+      <footer>
+        <MainFooter />
+      </footer>
     </div>
   );
 }
