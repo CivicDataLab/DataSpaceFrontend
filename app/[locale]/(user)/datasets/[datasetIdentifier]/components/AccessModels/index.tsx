@@ -1,19 +1,20 @@
 import React from 'react';
+import { useParams } from 'next/navigation';
+import { graphql } from '@/gql';
+import { useQuery } from '@tanstack/react-query';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
   Button,
+  Spinner,
   Text,
 } from 'opub-ui';
 
+import { GraphQL } from '@/lib/api';
 import CustomTags from '@/components/CustomTags';
 import ResourceTable from '../../../components/ResourceTable';
-
-interface AccessModelProps {
-  data: any;
-}
 
 const generateColumnData = () => {
   return [
@@ -59,10 +60,35 @@ const generateTableData = (resource: any[]) => {
   }));
 };
 
-const AccessModels: React.FC<AccessModelProps> = ({ data }) => {
+const metadataQuery: any = graphql(`
+  query GetMetadata {
+    metadata {
+      id
+      label
+      dataStandard
+      urn
+      dataType
+      options
+      validator
+      type
+      model
+      enabled
+      filterable
+    }
+  }
+`);
+
+const AccessModels = () => {
+  const param = useParams();
+  const { data, error, isLoading } = useQuery(
+    [`accessmodel_${param.datasetIdentifier}`],
+    () => GraphQL(metadataQuery, [])
+  );
+
+  console.log(data);
   return (
     <>
-      {data.map((item: any, index: any) => (
+      {/* {data.map((item: any, index: any) => (
         <div
           key={index}
           className="my-4 flex flex-col gap-4 rounded-2 p-6 shadow-basicDeep"
@@ -85,9 +111,6 @@ const AccessModels: React.FC<AccessModelProps> = ({ data }) => {
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1">
                 <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 ">
-                  {/* <div className="w-3/4 text-justify">
-                    <Button kind="secondary">Download</Button>
-                  </div> */}
                   <div className=" text-baseBlueSolid8 hover:no-underline ">
                     See Resources
                   </div>
@@ -110,7 +133,14 @@ const AccessModels: React.FC<AccessModelProps> = ({ data }) => {
             </Accordion>
           </div>
         </div>
-      ))}
+      ))} */}
+      {isLoading ? (
+        <div className=" mt-8 flex justify-center">
+          <Spinner />
+        </div>
+      ) : (
+        <Text>Test the query</Text>
+      )}
     </>
   );
 };
