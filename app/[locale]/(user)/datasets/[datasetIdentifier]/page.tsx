@@ -124,7 +124,9 @@ const DatasetDetailsPage = () => {
           <div className="mx-6 block flex flex-col gap-5  ">
             <div ref={primaryDataRef} className="flex flex-col gap-4">
               {isLoading ? (
-                <Spinner />
+                <div className=" mt-8 flex justify-center">
+                  <Spinner />
+                </div>
               ) : (
                 <PrimaryData data={data && data?.datasets[0]} />
               )}
@@ -150,7 +152,9 @@ const DatasetDetailsPage = () => {
                 }
               >
                 {isLoading ? (
-                  <Spinner />
+                  <div className=" mt-8 flex justify-center">
+                    <Spinner />
+                  </div>
                 ) : (
                   <Metadata
                     data={data && data?.datasets[0]}
@@ -192,7 +196,9 @@ const DatasetDetailsPage = () => {
             </Button>
           </div>
           {isLoading ? (
-            <Spinner />
+            <div className=" mt-8 flex justify-center">
+              <Spinner />
+            </div>
           ) : (
             <div>
               <Metadata data={data && data?.datasets[0]} />

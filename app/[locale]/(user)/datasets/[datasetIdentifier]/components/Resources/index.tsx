@@ -93,7 +93,7 @@ const Resources = () => {
   return (
     <>
       {isLoading ? (
-        <div className=" my-7">
+        <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
       ) : (
