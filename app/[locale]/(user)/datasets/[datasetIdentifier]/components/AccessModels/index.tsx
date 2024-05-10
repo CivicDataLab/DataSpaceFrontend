@@ -60,86 +60,85 @@ const generateTableData = (resource: any[]) => {
   }));
 };
 
-const metadataQuery: any = graphql(`
-  query GetMetadata {
-    metadata {
+const accessModelResourcesQuery = graphql(`
+  query accessModelResources($datasetId: UUID!) {
+    accessModelResources(datasetId: $datasetId) {
       id
-      label
-      dataStandard
-      urn
-      dataType
-      options
-      validator
+      title
+      description
       type
-      model
-      enabled
-      filterable
+      created
+      modified
     }
   }
 `);
 
 const AccessModels = () => {
-  const param = useParams();
+  const params = useParams();
+
   const { data, error, isLoading } = useQuery(
-    [`accessmodel_${param.datasetIdentifier}`],
-    () => GraphQL(metadataQuery, [])
+    [`accessmodel_${params.datasetIdentifier}`],
+    () =>
+      GraphQL(accessModelResourcesQuery, {
+        datasetId: params.datasetIdentifier,
+      })
   );
 
   console.log(data);
+
   return (
     <>
-      {/* {data.map((item: any, index: any) => (
-        <div
-          key={index}
-          className="my-4 flex flex-col gap-4 rounded-2 p-6 shadow-basicDeep"
-        >
-          <div className="mb-1 flex flex-wrap justify-between gap-1 lg:gap-0">
-            <div className="p2-4 lg:w-2/5">
-              <Text variant="headingMd">{item.title}</Text>
-            </div>
-            <div className="lg:w-3/5 lg:pl-4">
-              <Text>{item.description}</Text>
-            </div>
-          </div>
-          <div className="align-center flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <CustomTags type={item.type} />
-            <Button className="h-fit w-fit" kind="secondary">
-              Download All Resources
-            </Button>
-          </div>
-          <div className="flex">
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="item-1">
-                <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 ">
-                  <div className=" text-baseBlueSolid8 hover:no-underline ">
-                    See Resources
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent
-                  className="flex w-full flex-col p-5"
-                  style={{
-                    backgroundColor: 'var( --base-pure-white)',
-                    outline: '1px solid var( --base-pure-white)',
-                  }}
-                >
-                  {item.resource && item.resource.length > 0 && (
-                    <ResourceTable
-                      ColumnsData={generateColumnData()}
-                      RowsData={generateTableData(item.resource)}
-                    />
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-        </div>
-      ))} */}
       {isLoading ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
       ) : (
-        <Text>Test the query</Text>
+        data?.accessModelResources.map((item: any, index: any) => (
+          <div
+            key={index}
+            className="my-4 flex flex-col gap-4 rounded-2 p-6 shadow-basicDeep"
+          >
+            <div className="mb-1 flex flex-wrap justify-between gap-1 lg:gap-0">
+              <div className="p2-4 lg:w-2/5">
+                <Text variant="headingMd">{item.title}</Text>
+              </div>
+              <div className="lg:w-3/5 lg:pl-4">
+                <Text>{item.description}</Text>
+              </div>
+            </div>
+            <div className="align-center flex flex-col items-center justify-between gap-4 sm:flex-row">
+              <CustomTags type={item.type.split('.').pop().toLowerCase()} />
+              <Button className="h-fit w-fit" kind="secondary">
+                Download All Resources
+              </Button>
+            </div>
+            <div className="flex">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="item-1">
+                  <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 ">
+                    <div className=" text-baseBlueSolid8 hover:no-underline ">
+                      See Resources
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent
+                    className="flex w-full flex-col p-5"
+                    style={{
+                      backgroundColor: 'var( --base-pure-white)',
+                      outline: '1px solid var( --base-pure-white)',
+                    }}
+                  >
+                    {item.resource && item.resource.length > 0 && (
+                      <ResourceTable
+                        ColumnsData={generateColumnData()}
+                        RowsData={generateTableData(item.resource)}
+                      />
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          </div>
+        ))
       )}
     </>
   );

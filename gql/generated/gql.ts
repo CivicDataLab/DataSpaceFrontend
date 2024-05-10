@@ -13,7 +13,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Therefore it is highly recommended to use the babel or swc plugin for production.
  */
 const documents = {
-    "\n  query GetMetadata {\n    metadata {\n      id\n      label\n      dataStandard\n      urn\n      dataType\n      options\n      validator\n      type\n      model\n      enabled\n      filterable\n    }\n  }\n": types.GetMetadataDocument,
+    "\n  query accessModelResources($datasetId: UUID!) {\n    accessModelResources(datasetId: $datasetId) {\n      id\n      title\n      description\n      type\n      created\n      modified\n    }\n  }\n": types.AccessModelResourcesDocument,
     "\n  query datasetResources($datasetId: UUID!) {\n    datasetResources(datasetId: $datasetId) {\n      id\n      created\n      modified\n      type\n      name\n      description\n    }\n  }\n": types.DatasetResourcesDocument,
     "\n  query datasets($filters: DatasetFilter) {\n    datasets(filters: $filters) {\n      tags\n      id\n      title\n      description\n      created\n      modified\n      metadata {\n        metadataItem {\n          id\n          label\n        }\n        value\n      }\n      resources {\n        id\n        created\n        modified\n        type\n        name\n        description\n      }\n    }\n  }\n": types.DatasetsDocument,
     "\n  mutation GenerateDatasetName {\n    addDataset {\n      __typename\n      ... on TypeDataset {\n        id\n        created\n      }\n      ... on OperationInfo {\n        messages {\n          kind\n          message\n        }\n      }\n    }\n  }\n": types.GenerateDatasetNameDocument,
@@ -36,7 +36,7 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query GetMetadata {\n    metadata {\n      id\n      label\n      dataStandard\n      urn\n      dataType\n      options\n      validator\n      type\n      model\n      enabled\n      filterable\n    }\n  }\n"): (typeof documents)["\n  query GetMetadata {\n    metadata {\n      id\n      label\n      dataStandard\n      urn\n      dataType\n      options\n      validator\n      type\n      model\n      enabled\n      filterable\n    }\n  }\n"];
+export function graphql(source: "\n  query accessModelResources($datasetId: UUID!) {\n    accessModelResources(datasetId: $datasetId) {\n      id\n      title\n      description\n      type\n      created\n      modified\n    }\n  }\n"): (typeof documents)["\n  query accessModelResources($datasetId: UUID!) {\n    accessModelResources(datasetId: $datasetId) {\n      id\n      title\n      description\n      type\n      created\n      modified\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

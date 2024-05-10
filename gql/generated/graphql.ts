@@ -20,9 +20,29 @@ export type Scalars = {
   Upload: any;
 };
 
+export type AccessModelInput = {
+  dataset: Scalars['UUID'];
+  description?: InputMaybe<Scalars['String']>;
+  resources: Array<AccessModelResourceInput>;
+  title: Scalars['String'];
+  type: AccessTypes;
+};
+
+export type AccessModelResourceInput = {
+  resource: Scalars['UUID'];
+};
+
+export enum AccessTypes {
+  Private = 'PRIVATE',
+  Protected = 'PROTECTED',
+  Public = 'PUBLIC'
+}
+
 export type AddDatasetPayload = OperationInfo | TypeDataset;
 
 export type AddUpdateDatasetMetadataPayload = OperationInfo | TypeDataset;
+
+export type CreateAccessModelPayload = OperationInfo | TypeAccessModel;
 
 export type CreateFileResourceInput = {
   dataset: Scalars['UUID'];
@@ -82,6 +102,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   addDataset: AddDatasetPayload;
   addUpdateDatasetMetadata: AddUpdateDatasetMetadataPayload;
+  createAccessModel: CreateAccessModelPayload;
   createFileResources: Array<TypeResource>;
   createMetadata: TypeMetadata;
   deleteMetadata: TypeMetadata;
@@ -93,6 +114,11 @@ export type Mutation = {
 
 export type MutationAddUpdateDatasetMetadataArgs = {
   updateMetadataInput: UpdateMetadataInput;
+};
+
+
+export type MutationCreateAccessModelArgs = {
+  accessModelInput: AccessModelInput;
 };
 
 
@@ -158,11 +184,16 @@ export enum OperationMessageKind {
 
 export type Query = {
   __typename?: 'Query';
-  dataset: TypeDataset;
+  accessModelResources: Array<TypeAccessModel>;
   datasetResources: Array<TypeResource>;
   datasets: Array<TypeDataset>;
   metadata: Array<TypeMetadata>;
   resource: Array<TypeResource>;
+};
+
+
+export type QueryAccessModelResourcesArgs = {
+  datasetId: Scalars['UUID'];
 };
 
 
@@ -175,9 +206,32 @@ export type QueryDatasetsArgs = {
   filters?: InputMaybe<DatasetFilter>;
 };
 
+/** AccessModel(id, title, description, dataset, type, organization, created, modified) */
+export type TypeAccessModel = {
+  __typename?: 'TypeAccessModel';
+  created: Scalars['DateTime'];
+  dataset: DjangoModelType;
+  description: Scalars['String'];
+  id: Scalars['UUID'];
+  modified: Scalars['DateTime'];
+  organization?: Maybe<DjangoModelType>;
+  resources: Array<TypeAccessModelResource>;
+  title: Scalars['String'];
+  type: Scalars['String'];
+};
+
+/** AccessModelResource(id, access_model, resource) */
+export type TypeAccessModelResource = {
+  __typename?: 'TypeAccessModelResource';
+  accessModel: DjangoModelType;
+  id: Scalars['ID'];
+  resource: DjangoModelType;
+};
+
 /** Dataset(id, title, description, organization, created, modified) */
 export type TypeDataset = {
   __typename?: 'TypeDataset';
+  accessModels: Array<TypeAccessModel>;
   created: Scalars['DateTime'];
   description: Scalars['String'];
   id: Scalars['UUID'];
@@ -259,10 +313,12 @@ export type UpdateMetadataInput = {
   metadata: Array<DsMetadataItemType>;
 };
 
-export type GetMetadataQueryVariables = Exact<{ [key: string]: never; }>;
+export type AccessModelResourcesQueryVariables = Exact<{
+  datasetId: Scalars['UUID'];
+}>;
 
 
-export type GetMetadataQuery = { __typename?: 'Query', metadata: Array<{ __typename?: 'TypeMetadata', id: string, label: string, dataStandard: string, urn: string, dataType: string, options: string, validator: string, type: string, model: string, enabled: boolean, filterable: boolean }> };
+export type AccessModelResourcesQuery = { __typename?: 'Query', accessModelResources: Array<{ __typename?: 'TypeAccessModel', id: any, title: string, description: string, type: string, created: any, modified: any }> };
 
 export type DatasetResourcesQueryVariables = Exact<{
   datasetId: Scalars['UUID'];
@@ -284,7 +340,7 @@ export type GenerateDatasetNameMutationVariables = Exact<{ [key: string]: never;
 export type GenerateDatasetNameMutation = { __typename?: 'Mutation', addDataset: { __typename: 'OperationInfo', messages: Array<{ __typename?: 'OperationMessage', kind: OperationMessageKind, message: string }> } | { __typename: 'TypeDataset', id: any, created: any } };
 
 
-export const GetMetadataDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetMetadata"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"metadata"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"dataStandard"}},{"kind":"Field","name":{"kind":"Name","value":"urn"}},{"kind":"Field","name":{"kind":"Name","value":"dataType"}},{"kind":"Field","name":{"kind":"Name","value":"options"}},{"kind":"Field","name":{"kind":"Name","value":"validator"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"filterable"}}]}}]}}]} as unknown as DocumentNode<GetMetadataQuery, GetMetadataQueryVariables>;
+export const AccessModelResourcesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"accessModelResources"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"datasetId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessModelResources"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"datasetId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"datasetId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"modified"}}]}}]}}]} as unknown as DocumentNode<AccessModelResourcesQuery, AccessModelResourcesQueryVariables>;
 export const DatasetResourcesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"datasetResources"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"datasetId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"datasetResources"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"datasetId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"datasetId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"modified"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}}]}}]}}]} as unknown as DocumentNode<DatasetResourcesQuery, DatasetResourcesQueryVariables>;
 export const DatasetsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"datasets"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"filters"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"DatasetFilter"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"datasets"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filters"},"value":{"kind":"Variable","name":{"kind":"Name","value":"filters"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"modified"}},{"kind":"Field","name":{"kind":"Name","value":"metadata"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"metadataItem"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"label"}}]}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}},{"kind":"Field","name":{"kind":"Name","value":"resources"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"modified"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}}]}}]}}]}}]} as unknown as DocumentNode<DatasetsQuery, DatasetsQueryVariables>;
 export const GenerateDatasetNameDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"GenerateDatasetName"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addDataset"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TypeDataset"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"created"}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"OperationInfo"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"messages"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GenerateDatasetNameMutation, GenerateDatasetNameMutationVariables>;
