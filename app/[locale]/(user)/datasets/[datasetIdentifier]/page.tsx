@@ -77,13 +77,7 @@ const DatasetDetailsPage = () => {
     {
       label: 'Resources',
       value: 'resources',
-      component: isLoading ? (
-        <div className="my-8">
-          <Spinner />
-        </div>
-      ) : (
-        <Resources data={data && data?.datasets[0]} />
-      ),
+      component: <Resources />,
     },
     {
       label: 'Access Models',
