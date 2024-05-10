@@ -88,8 +88,6 @@ const Resources = () => {
     () => GraphQL(datasetResourceQuery, { datasetId: params.datasetIdentifier })
   );
 
-  console.log(data);
-
   return (
     <>
       {isLoading ? (
