@@ -1,7 +1,10 @@
 import React from 'react';
+import Link from 'next/link';
+import router from 'next/router';
 import {
   Button,
   ButtonGroup,
+  Combobox,
   Divider,
   DropZone,
   Icon,
@@ -12,6 +15,7 @@ import { bytesToSize } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
 import { EditDistribution } from './EditDistribution';
+import { EditResource } from './EditResource';
 
 export function DistributionList({
   setPage,
@@ -40,21 +44,19 @@ const NoList = ({
   const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT'];
 
   const [fileSelected, setFileSelected] = React.useState(false);
-
-  const [file, setFile] = React.useState<File>();
+  const [file, setFile] = React.useState<File[]>([]);
 
   const handleDropZoneDrop = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
-      setFile(acceptedFiles[0]);
+      setFile((files) => [...files, ...acceptedFiles]);
       setFileSelected(true);
     },
     []
   );
 
-  function handleFileDelete(props: React.MouseEvent<HTMLButtonElement>) {
-    props.stopPropagation();
-    setFileSelected(false);
-    setFile(undefined);
+  function handleFileDelete(index: any) {
+    const updatedFiles = [...file.slice(0, index), ...file.slice(index + 1)];
+    setFile(updatedFiles);
   }
 
   const hint = (
@@ -76,42 +78,42 @@ const NoList = ({
     </>
   );
 
-  const fileUpload = !file && <DropZone.FileUpload actionHint={hint} />;
-  const uploadedFile = file && (
-    <div className="flex h-full items-center justify-center py-16">
-      <div className="surfaceDefault flex items-center gap-3 rounded-05 px-3 py-2">
-        <Icon source={Icons.check} size={24} color="success" />
-        <div className="flex flex-col">
-          <div className="max-w-[180px]">
-            <Text variant="headingMd" truncate>
-              {file.name}
-            </Text>
-          </div>
-          <Text variant="bodyMd" color="subdued">
-            {bytesToSize(file.size)}
-          </Text>
+  const fileUpload = file.length === 0 && (
+    <DropZone.FileUpload actionHint={hint} />
+  );
+  const uploadedFile = file.length > 0 && (
+    <div className="flex h-full items-center justify-center px-2 py-14">
+      <div className="flex-col">
+        <div>
+          <Icon source={Icons.check} size={24} color="success" />
+          <div className="flex">{file[0].name.substring(0, 15) + ' ...'} </div>
+          <Text variant="bodySm">{file[0].size} bytes</Text>
         </div>
-        <Button
-          size="slim"
-          icon={<Icon source={Icons.delete} size={24} />}
-          kind="tertiary"
-          accessibilityLabel="delete resource"
-          onClick={handleFileDelete}
-        />
       </div>
     </div>
   );
 
   return (
-    <DropZone
-      name="file_details"
-      label="Upload"
-      onDrop={handleDropZoneDrop}
-      labelHidden
-      className="min-h-[70vh] bg-baseGraySlateSolid5"
-    >
-      {uploadedFile}
-      {fileUpload}
-    </DropZone>
+    <>
+      {fileSelected ? (
+        <EditResource
+          uploadedFile={uploadedFile}
+          handleDropZoneDrop={handleDropZoneDrop}
+          file={file}
+         />
+      ) : (
+        <DropZone
+          name="file_details"
+          label="Upload"
+          allowMultiple={true}
+          onDrop={handleDropZoneDrop}
+          labelHidden
+          className="min-h-[70vh] bg-baseGraySlateSolid5"
+        >
+          {uploadedFile}
+          {fileUpload}
+        </DropZone>
+      )}
+    </>
   );
 };
