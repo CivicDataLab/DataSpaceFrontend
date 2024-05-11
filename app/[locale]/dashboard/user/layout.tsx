@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className=" bg-surfaceDefault">
-      <div className="bg-baseGraySlateAlpha1 px-5 py-3 ">
+      <div>
         <BreadCrumbs
           data={[
             { href: '/', label: 'Home' },

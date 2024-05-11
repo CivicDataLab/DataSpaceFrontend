@@ -14,7 +14,7 @@ interface BreadCrumbsProps {
 
 const BreadCrumbs: React.FC<BreadCrumbsProps> = ({ data }) => {
   return (
-    <>
+    <div className="bg-baseGraySlateSolid2 px-6 py-2 lg:px-10">
       <Breadcrumb className="mx-1">
         <BreadcrumbList>
           {data.map((item, index) => (
@@ -33,7 +33,7 @@ const BreadCrumbs: React.FC<BreadCrumbsProps> = ({ data }) => {
           ))}
         </BreadcrumbList>
       </Breadcrumb>
-    </>
+    </div>
   );
 };
 

@@ -31,6 +31,7 @@ export const data = [
       source: 'OGD',
       licence: 'Government Open Data License ',
       policy: 'National Data Sharing and Accessibility Policy',
+      organization: 'Open Budget India',
     },
   },
   {
@@ -60,32 +61,253 @@ export const data = [
         },
         { type: 'Restricted' },
       ],
+
       accessModelsCount: '2',
       location: 'India',
       source: 'OGD',
       licence: 'Government Open Data License ',
       policy: 'National Data Sharing and Accessibility Policy (NDSAP)',
+      organization: 'Open Budget India',
     },
+    visualization: [
+      {
+        title:
+          'Temperature and Precipitation (2011-2015) Guwahati, Assam - Preview',
+        description:
+          'Daily weather summaries for Guwahati, Assam, India, covering 2011-2015. Variables available for this period include Max Temperature, Min Temperature, and Total Precipitation.',
+        images: [
+          '/visualization.svg',
+          '/visualization.svg',
+          '/visualization.svg',
+          '/visualization.svg',
+        ],
+      },
+      {
+        title:
+          'Temperature and Precipitation (2011-2015) Guwahati, Assam - Preview',
+        description:
+          'Daily weather summaries for Guwahati, Assam, India, covering 2011-2015. Variables available for this period include Max Temperature, Min Temperature, and Total Precipitation.',
+        images: ['/visualization.svg', '/visualization.svg'],
+      },
+    ],
     resources: [
       {
         title: 'Telangana Budget 2020-21',
         description:
-          'This section provides budget documents of Telangana for the year 2020-21.',
+          'Daily weather summaries for Guwahati, Assam, India, in the year 2011. Variables available for this period include Max Temperature, Min Temperature, and Total Precipitation.',
+
+        schema: [],
+        accessModelData: [
+          {
+            accessType: 'Open',
+            accessModelTitle:
+              'Temperature and Precipitation (2011-2015) Guwahati, Assam - Open Access',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+            rows: '1-10',
+            count: '10(out of 100)',
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 11', description: 'Desc 11' },
+                { title: 'Res 22', description: 'Desc 22' },
+              ],
+            ],
+          },
+          {
+            accessType: 'Registered',
+            accessModelTitle:
+              'Temperature and Precipitation (2011-2015) Guwahati, Assam - Open Access',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 13', description: 'Desc 13' },
+                { title: 'Res 23', description: 'Desc 23' },
+              ],
+            ],
+            rows: '1-10',
+            count: '10(out of 100)',
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 14', description: 'Desc 14' },
+                { title: 'Res 24', description: 'Desc 24' },
+              ],
+            ],
+          },
+          {
+            accessType: 'Restricted',
+            accessModelTitle:
+              'Temperature and Precipitation (2011-2015) Guwahati, Assam - Open Access',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 15', description: 'Desc 15' },
+                { title: 'Res 25', description: 'Desc 25' },
+              ],
+            ],
+            rows: '1-10',
+            count: '10(out of 100)',
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 16', description: 'Desc 16' },
+                { title: 'Res 26', description: 'Desc 26' },
+              ],
+            ],
+          },
+        ],
       },
       {
         title: 'Telangana Budget 2021-22',
         description:
           'This section provides budget documents of Telangana for the year 2021-22',
-      },
-      {
-        title: 'Telangana Budget 2022-23',
-        description:
-          'This section provides budget documents of Telangana for the year 2022-23.',
+        accessModelData: [
+          {
+            accessType: 'Open',
+            accessModelTitle:
+              'Temperature and Precipitation (2011-2015) Guwahati, Assam - Open Access',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+            rows: '1-10',
+            count: '10(out of 100)',
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+          },
+        ],
       },
       {
         title: 'Telangana Budget 2023-24',
         description:
           'This section provides budget documents of Telangana for the year 2023-24.',
+        accessModelData: [
+          {
+            accessType: 'Open',
+            accessModelTitle:
+              'Temperature and Precipitation (2011-2015) Guwahati, Assam - Open Access',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+            rows: '1-10',
+            count: '10(out of 100)',
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+          },
+        ],
       },
     ],
     accessModels: [
@@ -98,9 +320,43 @@ export const data = [
           'Open access model helps you to view data without login',
         resource: [
           {
-            title: 'Telangana Budget 2021-22',
+            resourceName: 'Telangana Budget 2021-22',
             description:
               'This section provides budget documents of Telangana for the year 2021-22',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 11', description: 'Desc 11' },
+                { title: 'Res 22', description: 'Desc 22' },
+              ],
+            ],
+            rows: '1-10',
+            count: '10(out of 100)',
           },
         ],
       },
@@ -113,9 +369,43 @@ export const data = [
           'Registered access model helps you to view data after login',
         resource: [
           {
-            title: 'Telangana Budget 2023-24',
+            resourceName: 'Telangana Budget 2021-22',
             description:
-              'This section provides budget documents of Telangana for the year 2023-24',
+              'This section provides budget documents of Telangana for the year 2021-22',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 11', description: 'Desc 11' },
+                { title: 'Res 22', description: 'Desc 22' },
+              ],
+            ],
+            rows: '1-10',
+            count: '10(out of 100)',
           },
         ],
       },
@@ -128,9 +418,43 @@ export const data = [
           'Restricted access model helps you to view data after login',
         resource: [
           {
-            title: 'Telangana Budget 2021-22',
+            resourceName: 'Telangana Budget 2021-22',
             description:
               'This section provides budget documents of Telangana for the year 2021-22',
+            fields: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 1', description: 'Desc 1' },
+                { title: 'Res 2', description: 'Desc 2' },
+              ],
+            ],
+            preview: [
+              [
+                {
+                  accessorKey: 'title',
+                  header: 'Title',
+                },
+                {
+                  accessorKey: 'description',
+                  header: 'Description',
+                },
+              ],
+              [
+                { title: 'Res 11', description: 'Desc 11' },
+                { title: 'Res 22', description: 'Desc 22' },
+              ],
+            ],
+            rows: '1-10',
+            count: '10(out of 100)',
           },
         ],
       },

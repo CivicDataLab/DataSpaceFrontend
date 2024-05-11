@@ -1,88 +1,169 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
+import { graphql } from '@/gql';
+import { useQuery } from '@tanstack/react-query';
 import { Button, Icon, Tab, TabList, TabPanel, Tabs, Tray } from 'opub-ui';
+import { BarChart } from 'opub-ui/viz';
 
+import { GraphQL } from '@/lib/api';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
-import { data } from '../data';
+import { data as datainfo } from '../data';
 import AccessModels from './components/AccessModels';
 import Metadata from './components/Metadata';
 import PrimaryData from './components/PrimaryData';
 import Resources from './components/Resources';
+import Visualization from './components/Visualizations';
+
+const datasetQuery: any = graphql(`
+  query GetDatasetData {
+    dataset {
+      id
+      created
+      modified
+    }
+  }
+`);
 
 const DatasetDetailsPage = () => {
-  const DatasetInfo = data[1];
+  const DatasetInfo = datainfo[1];
   const [open, setOpen] = useState(false);
+  const primaryDataRef = useRef<HTMLDivElement>(null); // Explicitly specify the type of ref
+  const [primaryDataHeight, setPrimaryDataHeight] = useState(0);
+
+  const { data, error, isLoading, refetch } = useQuery([], () =>
+    GraphQL(datasetQuery, [])
+  );
+
+  console.log(data, error, isLoading);
+
+  useEffect(() => {
+    if (primaryDataRef.current) {
+      const height = primaryDataRef.current.clientHeight;
+      setPrimaryDataHeight(height);
+    }
+  }, [primaryDataRef]);
 
   const TabsList = [
     {
       label: 'Resources',
       value: 'resources',
-      component: <Resources data={data[1].resources} />,
+      component: <Resources data={datainfo[1].resources} />,
     },
     {
       label: 'Access Models',
       value: 'accessmodels',
-      component: <AccessModels data={data[1].accessModels} />,
+      component: <AccessModels data={datainfo[1].accessModels} />,
+    },
+    {
+      label: 'Visualizations',
+      value: 'visualizations',
+      component: <Visualization data={datainfo[1].visualization} />,
     },
   ];
+  const [activeTab, setActiveTab] = useState('resources'); // State to manage active tab
+
+  useEffect(() => {
+    refetch();
+  }, [activeTab]);
+
+  const barOptions = {
+    xAxis: {
+      type: 'category',
+      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    },
+    yAxis: {
+      type: 'value',
+    },
+    series: [
+      {
+        data: [120, 200, 150, 80, 70, 110, 130],
+        type: 'bar',
+        name: 'Sales',
+        color: 'rgb(55,162,218)',
+      },
+    ],
+  };
+
   return (
-    <main className="mx-5 flex gap-8">
-      <div className="w-full bg-surfaceDefault py-5 shadow-basicMd lg:w-9/12">
-        {' '}
-        <BreadCrumbs
-          data={[
-            { href: '/', label: 'Home' },
-            { href: '/datasets', label: 'Dataset Listing' },
-            { href: '#', label: 'Dataset Details' },
-          ]}
-        />
-        <div className="mx-6 block flex flex-col gap-5 py-6 md:mx-14 lg:mx-14">
-          <PrimaryData data={DatasetInfo} />
-          <div
-            className="sm:block md:block lg:hidden"
-            title="About the Dataset"
-          >
-            <Tray
-              size="narrow"
-              open={open}
-              onOpenChange={setOpen}
-              trigger={
-                <>
-                  <Button
-                    kind="tertiary"
-                    className="lg:hidden"
-                    onClick={(e) => setOpen(true)}
-                  >
-                    <Icon source={Icons.info} size={24} color="default" />
-                  </Button>
-                </>
-              }
+    <main className=" bg-surfaceDefault">
+      <BreadCrumbs
+        data={[
+          { href: '/', label: 'Home' },
+          { href: '/datasets', label: 'Dataset Listing' },
+          { href: '#', label: 'Dataset Details' },
+        ]}
+      />
+      <div className="flex w-full gap-7 md:px-10 lg:px-10">
+        <div className="w-full flex-grow  py-11 lg:w-9/12">
+          <div className="mx-6 block flex flex-col gap-5  ">
+            <div ref={primaryDataRef} className="flex flex-col gap-4">
+              <PrimaryData data={DatasetInfo} />
+            </div>
+            <div
+              className="sm:block md:block lg:hidden"
+              title="About the Dataset"
             >
-              <Metadata data={DatasetInfo} setOpen={setOpen} />
-            </Tray>
-          </div>
-          <div className="mt-5">
-            <Tabs defaultValue="resources">
-              <TabList fitted>
+              <Tray
+                size="narrow"
+                open={open}
+                onOpenChange={setOpen}
+                trigger={
+                  <>
+                    <Button
+                      kind="tertiary"
+                      className="lg:hidden"
+                      onClick={(e) => setOpen(true)}
+                    >
+                      <Icon source={Icons.info} size={24} color="default" />
+                    </Button>
+                  </>
+                }
+              >
+                <Metadata data={DatasetInfo} setOpen={setOpen} />
+              </Tray>
+            </div>
+            <div className="mt-5">
+              <Tabs defaultValue={activeTab} key={activeTab}>
+                <TabList fitted>
+                  {TabsList.map((item, index) => (
+                    <Tab
+                      value={item.value}
+                      key={index}
+                      onClick={(e) => setActiveTab(item.value)} // Update active tab on click
+                    >
+                      {item.label}
+                    </Tab>
+                  ))}
+                </TabList>
                 {TabsList.map((item, index) => (
-                  <Tab value={item.value} key={index}>
-                    {item.label}
-                  </Tab>
+                  <TabPanel value={item.value} key={index}>
+                    {item.component}
+                  </TabPanel>
                 ))}
-              </TabList>
-              {TabsList.map((item, index) => (
-                <TabPanel value={item.value} key={index}>
-                  {item.component}
-                </TabPanel>
-              ))}
-            </Tabs>
+              </Tabs>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="hidden pt-16 lg:block">
-        <Metadata data={DatasetInfo} />
+        <div className="hidden flex-col gap-8 border-l-2 border-solid border-baseGraySlateSolid3 pl-7 pt-6 lg:flex lg:w-1/5">
+          <div className="flex flex-col items-center justify-center gap-4 text-center">
+            <BarChart options={barOptions} height={'250px'} />
+            <Button
+              kind="tertiary"
+              onClick={() => setActiveTab('visualizations')}
+            >
+              Visualizations
+            </Button>
+          </div>
+          <div>
+            <Metadata data={DatasetInfo} />
+          </div>
+          <div className=" mx-auto">
+            <Image width={200} height={200} src={'/obi.jpg'} alt="Org Logo" />
+          </div>
+        </div>
       </div>
     </main>
   );

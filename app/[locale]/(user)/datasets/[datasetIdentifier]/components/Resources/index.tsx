@@ -1,18 +1,139 @@
+import { table } from 'console';
 import React from 'react';
-import { Text } from 'opub-ui';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+  Button,
+  Dialog,
+  Table,
+  Text,
+} from 'opub-ui';
+
+import ResourceTable from '../../../components/ResourceTable';
 
 interface ResourceProps {
   data: any;
 }
 
+const generateColumnData = () => {
+  return [
+    {
+      accessorKey: 'accessModelTitle',
+      header: 'Access Model Title',
+    },
+    {
+      accessorKey: 'accessType',
+      header: 'Access Type',
+    },
+
+    {
+      accessorKey: 'fields',
+      header: 'Fields',
+      isModalTrigger: true,
+      label: 'Preview',
+      table: true,
+      modalHeader: 'Fields',
+    },
+    {
+      accessorKey: 'rows',
+      header: 'Rows',
+    },
+    {
+      accessorKey: 'count',
+      header: 'Count',
+    },
+    {
+      accessorKey: 'preview',
+      header: 'Preview',
+      isModalTrigger: true,
+      label: 'Preview',
+      table: true,
+      modalHeader: 'Preview',
+    },
+  ];
+};
+
+const generateTableData = (accessModelData: any[]) => {
+  return accessModelData.map((accessModel: any) => ({
+    accessType: accessModel.accessType,
+    accessModelTitle: accessModel.accessModelTitle,
+    fields: accessModel.fields,
+    rows: accessModel.rows,
+    count: accessModel.count,
+    preview: accessModel.preview,
+  }));
+};
+
 const Resources: React.FC<ResourceProps> = ({ data }) => {
   return (
     <>
       {data.map((item: any, index: any) => (
-        <div key={index} className="my-4 bg-actionSecondaryDisabled p-4">
-          <div className="flex flex-col gap-1">
-            <Text variant="headingMd">{item.title}</Text>
-            <Text>{item.description}</Text>
+        <div
+          key={index}
+          className="my-4 flex flex-col gap-4 rounded-2 p-6 shadow-basicDeep"
+        >
+          <div className="mb-1 flex flex-wrap justify-between gap-1 lg:gap-0">
+            <div className="p2-4 lg:w-2/5">
+              <Text variant="headingMd">{item.title}</Text>
+            </div>
+            <div className="lg:w-3/5 lg:pl-4">
+              <Text>{item.description}</Text>
+            </div>
+          </div>
+          <div className="align-center flex flex-col justify-between gap-4 sm:flex-row">
+            <Dialog>
+              <Dialog.Trigger>
+                <Button className="h-fit w-fit" kind="secondary">
+                  View Fields
+                </Button>
+              </Dialog.Trigger>
+              <Dialog.Content title={'View Fields'}>
+                <Table
+                  columns={[
+                    {
+                      accessorKey: 'title',
+                      header: 'Title',
+                    },
+                    {
+                      accessorKey: 'description',
+                      header: 'Description',
+                    },
+                  ]}
+                  rows={[
+                    { title: 'Res 1', description: 'Desc 1' },
+                    { title: 'Res 2', description: 'Desc 2' },
+                  ]}
+                  hideFooter={true}
+                />
+              </Dialog.Content>
+            </Dialog>
+          </div>
+          <div className="flex">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value={`item-${index}`}>
+                <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 ">
+                  <div className=" text-baseBlueSolid8 hover:no-underline ">
+                    See Access Type
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent
+                  className="flex w-full flex-col "
+                  style={{
+                    backgroundColor: 'var( --base-pure-white)',
+                    outline: '1px solid var( --base-pure-white)',
+                  }}
+                >
+                  {item.accessModelData && item.accessModelData.length > 0 && (
+                    <ResourceTable
+                      ColumnsData={generateColumnData()}
+                      RowsData={generateTableData(item.accessModelData)}
+                    />
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         </div>
       ))}

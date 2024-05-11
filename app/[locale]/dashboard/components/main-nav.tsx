@@ -65,7 +65,7 @@ export function MainNav({ hideSearch = false }) {
           <Link href="/">
             <div className="flex items-center gap-2">
               <Icon source={Icons.logo} size={24} color="success" />
-              <Text variant="headingLg" as="h1">
+              <Text variant="headingLg" className="text-surfaceDefault" as="h1">
                 CivicDataSpace
               </Text>
             </div>
@@ -115,7 +115,11 @@ export function MainNav({ hideSearch = false }) {
           )}
           <div className="hidden min-w-[102px] lg:block">
             <Link href={'/datasets'}>
-              <Text variant="headingSm" as="h1" color={'highlight'}>
+              <Text
+                variant="headingSm"
+                as="h1"
+                className=" text-surfaceDefault"
+              >
                 Dataset Listing
               </Text>
             </Link>
@@ -124,7 +128,7 @@ export function MainNav({ hideSearch = false }) {
             <div className="min-w-[112px]" />
           ) : (
             <div className="flex min-w-[112px] shrink-0 items-center justify-end gap-4">
-              <Icon source={Icons.notification} />
+              <Icon source={Icons.notification} color="onBgDefault" />
               {session?.user ? (
                 <ProfileContent
                   session={session}
