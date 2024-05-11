@@ -1,8 +1,13 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { notFound, usePathname } from 'next/navigation';
+import { Icon, Text } from 'opub-ui';
 
+import { Icons } from '@/components/icons';
+import MainFooter from '../dashboard/components/main-footer';
 import { MainNav } from '../dashboard/components/main-nav';
 
 interface UserLayoutProps {
@@ -29,6 +34,9 @@ export default function Layout({ children }: UserLayoutProps) {
         <MainNav hideSearch={hideSearch} />
       </header>
       <>{children}</>
+      <footer>
+        <MainFooter />
+      </footer>
     </div>
   );
 }
