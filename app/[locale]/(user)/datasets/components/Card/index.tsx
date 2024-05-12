@@ -7,7 +7,7 @@ import CustomTags from '@/components/CustomTags';
 interface Dataset {
   datasetTitle: string;
   description: string;
-  id: number;
+  id: string;
   metadata: Metadata;
 }
 

@@ -2,9 +2,19 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import { Button, Icon, Tab, TabList, TabPanel, Tabs, Tray } from 'opub-ui';
+import {
+  Button,
+  Icon,
+  Spinner,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
+  Tray,
+} from 'opub-ui';
 import { BarChart } from 'opub-ui/viz';
 
 import { GraphQL } from '@/lib/api';
@@ -17,27 +27,44 @@ import PrimaryData from './components/PrimaryData';
 import Resources from './components/Resources';
 import Visualization from './components/Visualizations';
 
-const datasetQuery: any = graphql(`
-  query GetDatasetData {
-    dataset {
+const datasetQuery = graphql(`
+  query datasets($filters: DatasetFilter) {
+    datasets(filters: $filters) {
+      tags
       id
+      title
+      description
       created
       modified
+      metadata {
+        metadataItem {
+          id
+          label
+        }
+        value
+      }
+      resources {
+        id
+        created
+        modified
+        type
+        name
+        description
+      }
     }
   }
 `);
 
 const DatasetDetailsPage = () => {
-  const DatasetInfo = datainfo[1];
   const [open, setOpen] = useState(false);
   const primaryDataRef = useRef<HTMLDivElement>(null); // Explicitly specify the type of ref
   const [primaryDataHeight, setPrimaryDataHeight] = useState(0);
 
-  const { data, error, isLoading, refetch } = useQuery([], () =>
-    GraphQL(datasetQuery, [])
-  );
+  const params = useParams();
 
-  console.log(data, error, isLoading);
+  const { data, isLoading } = useQuery([`${params.datasetIdentifier}`], () =>
+    GraphQL(datasetQuery, { filters: { id: params.datasetIdentifier } })
+  );
 
   useEffect(() => {
     if (primaryDataRef.current) {
@@ -50,12 +77,12 @@ const DatasetDetailsPage = () => {
     {
       label: 'Resources',
       value: 'resources',
-      component: <Resources data={datainfo[1].resources} />,
+      component: <Resources />,
     },
     {
       label: 'Access Models',
       value: 'accessmodels',
-      component: <AccessModels data={datainfo[1].accessModels} />,
+      component: <AccessModels />,
     },
     {
       label: 'Visualizations',
@@ -64,10 +91,6 @@ const DatasetDetailsPage = () => {
     },
   ];
   const [activeTab, setActiveTab] = useState('resources'); // State to manage active tab
-
-  useEffect(() => {
-    refetch();
-  }, [activeTab]);
 
   const barOptions = {
     xAxis: {
@@ -100,7 +123,13 @@ const DatasetDetailsPage = () => {
         <div className="w-full flex-grow  py-11 lg:w-9/12">
           <div className="mx-6 block flex flex-col gap-5  ">
             <div ref={primaryDataRef} className="flex flex-col gap-4">
-              <PrimaryData data={DatasetInfo} />
+              {isLoading ? (
+                <div className=" mt-8 flex justify-center">
+                  <Spinner />
+                </div>
+              ) : (
+                <PrimaryData data={data && data?.datasets[0]} />
+              )}
             </div>
             <div
               className="sm:block md:block lg:hidden"
@@ -122,7 +151,16 @@ const DatasetDetailsPage = () => {
                   </>
                 }
               >
-                <Metadata data={DatasetInfo} setOpen={setOpen} />
+                {isLoading ? (
+                  <div className=" mt-8 flex justify-center">
+                    <Spinner />
+                  </div>
+                ) : (
+                  <Metadata
+                    data={data && data?.datasets[0]}
+                    setOpen={setOpen}
+                  />
+                )}
               </Tray>
             </div>
             <div className="mt-5">
@@ -157,9 +195,16 @@ const DatasetDetailsPage = () => {
               Visualizations
             </Button>
           </div>
-          <div>
-            <Metadata data={DatasetInfo} />
-          </div>
+          {isLoading ? (
+            <div className=" mt-8 flex justify-center">
+              <Spinner />
+            </div>
+          ) : (
+            <div>
+              <Metadata data={data && data?.datasets[0]} />
+            </div>
+          )}
+
           <div className=" mx-auto">
             <Image width={200} height={200} src={'/obi.jpg'} alt="Org Logo" />
           </div>

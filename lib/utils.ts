@@ -13,6 +13,12 @@ export function formatDate(input: string | number): string {
   });
 }
 
+export function toTitleCase(str: string) {
+  return str.replace(/\b\w/g, function (char: string) {
+    return char.toUpperCase();
+  });
+}
+
 const convertMap: any = {
   border: (value: { width: any; style: any; color: any }) => {
     return `${value.width} ${value.style} ${value.color}`;

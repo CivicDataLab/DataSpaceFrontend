@@ -4,7 +4,7 @@ import { Icon, Text } from 'opub-ui';
 import { Icons } from './icons';
 
 interface TagProps {
-  type: 'open' | 'registered' | 'restricted' | string;
+  type: 'public' | 'protected' | 'private' | string;
   iconOnly?: boolean;
   size?: 24 | 40;
   background?: boolean;
@@ -20,23 +20,24 @@ const CustomTags: React.FC<TagProps> = ({
   let label;
   let iconName;
   let helpText;
+
   switch (type.toLowerCase()) {
-    case 'open':
+    case 'public':
       bgColor = 'var(--base-green-solid-7)';
-      label = 'OPEN ACCESS';
+      label = 'PUBLIC ACCESS';
       helpText = 'Can be downloaded directly';
       iconName = Icons.openAccess;
       break;
-    case 'registered':
+    case 'protected':
       bgColor = 'var(--base-amber-solid-6)';
-      label = 'REGISTERED ACCESS';
+      label = 'PROTECTED ACCESS';
       helpText = 'Register/ Login to download';
       iconName = Icons.registeredAccess;
 
       break;
-    case 'restricted':
+    case 'private':
       bgColor = 'var(--base-red-solid-7)';
-      label = 'RESTRICTED ACCESS';
+      label = 'PRIVATE ACCESS';
       helpText = 'Request access for download';
       iconName = Icons.restrictedAccess;
       break;
