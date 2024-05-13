@@ -28,6 +28,7 @@ import {
   Select,
   Text,
   TextField,
+  toast
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -91,6 +92,12 @@ export const EditResource = ({
       GraphQL(updateResourceDoc, data),
     {
       onSuccess: () => {
+        toast('File changes saved', {
+          action: {
+            label: 'Dismiss',
+            onClick: () => {},
+          },
+        });
         refetch();
       },
       onError: (err: any) => {
