@@ -32,7 +32,7 @@ const generateColumnData = () => {
         return (
           <CustomTags
             type={row?.original?.accessType?.split('.').pop().toLowerCase()}
-            size={24}
+            size={20}
             helpText={false}
           />
         );
