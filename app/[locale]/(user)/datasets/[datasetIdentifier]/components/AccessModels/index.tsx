@@ -121,29 +121,31 @@ const AccessModels = () => {
                 Download All Resources
               </Button>
             </div>
-            <div className="flex">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="item-1">
-                  <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 ">
-                    <div className=" text-baseBlueSolid8 hover:no-underline ">
-                      See Resources
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent
-                    className="flex w-full flex-col p-5"
-                    style={{
-                      backgroundColor: 'var( --base-pure-white)',
-                      outline: '1px solid var( --base-pure-white)',
-                    }}
-                  >
-                    <ResourceTable
-                      ColumnsData={generateColumnData()}
-                      RowsData={generateTableData(item.modelResources)}
-                    />
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
+            {item?.modelResources?.length > 0 && (
+              <div className="flex">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="item-1">
+                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 ">
+                      <div className=" text-baseBlueSolid8 hover:no-underline ">
+                        See Resources
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent
+                      className="flex w-full flex-col p-5"
+                      style={{
+                        backgroundColor: 'var( --base-pure-white)',
+                        outline: '1px solid var( --base-pure-white)',
+                      }}
+                    >
+                      <ResourceTable
+                        ColumnsData={generateColumnData()}
+                        RowsData={generateTableData(item.modelResources)}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            )}
           </div>
         ))
       )}
