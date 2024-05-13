@@ -1,6 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
+import { useParams, useSearchParams } from 'next/navigation';
 import router from 'next/router';
+import { graphql } from '@/gql';
+import { CreateFileResourceInput } from '@/gql/generated/graphql';
+import { useMutation } from '@tanstack/react-query';
 import {
   Button,
   ButtonGroup,
@@ -8,9 +12,11 @@ import {
   Divider,
   DropZone,
   Icon,
+  Spinner,
   Text,
 } from 'opub-ui';
 
+import { GraphQL } from '@/lib/api';
 import { bytesToSize } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
@@ -42,22 +48,49 @@ const NoList = ({
   setPage: (page: 'list' | 'create') => void;
 }) => {
   const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT'];
-
+  const params = useParams();
   const [fileSelected, setFileSelected] = React.useState(false);
+
   const [file, setFile] = React.useState<File[]>([]);
+
+  const createResourceFilesDoc: any = graphql(`
+    mutation readFiles($fileResourceInput: CreateFileResourceInput!) {
+      createFileResources(fileResourceInput: $fileResourceInput) {
+        id
+        created
+        name
+      }
+    }
+  `);
+
+  const searchParams = useSearchParams();
+  const resourceId = searchParams.get('id');
+
+  const { mutate, isLoading } = useMutation(
+    (data: { fileResourceInput: CreateFileResourceInput }) =>
+      GraphQL(createResourceFilesDoc, data),
+    {
+      onSuccess: () => {
+        setFileSelected(true);
+      },
+      onError: (err: any) => {
+        console.log('Error ::: ', err);
+      },
+    }
+  );
 
   const handleDropZoneDrop = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
+      mutate({
+        fileResourceInput: {
+          dataset: params.id,
+          files: acceptedFiles,
+        },
+      });
       setFile((files) => [...files, ...acceptedFiles]);
-      setFileSelected(true);
     },
     []
   );
-
-  function handleFileDelete(index: any) {
-    const updatedFiles = [...file.slice(0, index), ...file.slice(index + 1)];
-    setFile(updatedFiles);
-  }
 
   const hint = (
     <>
@@ -95,24 +128,32 @@ const NoList = ({
 
   return (
     <>
-      {fileSelected ? (
-        <EditResource
-          uploadedFile={uploadedFile}
-          handleDropZoneDrop={handleDropZoneDrop}
-          file={file}
-         />
+      {isLoading ? (
+        <div className="flex h-[70vh] w-full items-center justify-center">
+          <Spinner size={40} />
+        </div>
       ) : (
-        <DropZone
-          name="file_details"
-          label="Upload"
-          allowMultiple={true}
-          onDrop={handleDropZoneDrop}
-          labelHidden
-          className="min-h-[70vh] bg-baseGraySlateSolid5"
-        >
-          {uploadedFile}
-          {fileUpload}
-        </DropZone>
+        <>
+          {fileSelected || resourceId ? (
+            <EditResource
+              uploadedFile={uploadedFile}
+              handleDropZoneDrop={handleDropZoneDrop}
+              file={file}
+            />
+          ) : (
+            <DropZone
+              name="file_details"
+              label="Upload"
+              allowMultiple={true}
+              onDrop={handleDropZoneDrop}
+              labelHidden
+              className="min-h-[70vh] bg-baseGraySlateSolid5"
+            >
+              {uploadedFile}
+              {fileUpload}
+            </DropZone>
+          )}
+        </>
       )}
     </>
   );
