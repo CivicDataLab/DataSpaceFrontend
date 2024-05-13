@@ -14,15 +14,23 @@ const MainFooter = () => {
         }}
       >
         <div className="flex flex-wrap items-center justify-start gap-8 p-10 md:justify-center lg:justify-center lg:gap-32 ">
-          <div className="flex  gap-8 ">
-            <div className="flex items-center gap-2">
-              <Icon source={Icons.logo} size={24} color="success" />
-              <Text variant="headingLg" className="text-surfaceDefault" as="h1">
-                CivicDataSpace
-              </Text>
-            </div>
+          <div className="flex items-center gap-8 ">
+            <Link href="/">
+              <div className="flex items-center gap-2">
+                <Icon source={Icons.logo} size={24} color="success" />
+                <Text
+                  variant="headingLg"
+                  className="text-surfaceDefault"
+                  as="h1"
+                >
+                  CivicDataSpace
+                </Text>
+              </div>
+            </Link>
             <div>
-              <Image src={'/cdl.svg'} width={96} alt={'cdl'} height={94} />
+              <Link href={'https://civicdatalab.in'} target="_blank">
+                <Image src={'/cdl.svg'} width={96} alt={'cdl'} height={94} />
+              </Link>{' '}
             </div>
           </div>
           <div className=" flex  gap-6">
@@ -66,7 +74,7 @@ const MainFooter = () => {
 
           <Text variant="bodyMd">
             This Platform is designed, developed and hosted by CivicDataLab for
-            Open Data PLatform
+            Data Exchange
           </Text>
         </div>
       </div>
