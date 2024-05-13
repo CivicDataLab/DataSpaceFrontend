@@ -63,7 +63,7 @@ const Cards = ({ data }: { data: Dataset }) => {
                   key={index}
                   type={item.type}
                   iconOnly={true}
-                  size={24}
+                  size={20}
                   background={false}
                 />
               ))}
