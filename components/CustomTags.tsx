@@ -6,39 +6,40 @@ import { Icons } from './icons';
 interface TagProps {
   type: 'public' | 'protected' | 'private' | string;
   iconOnly?: boolean;
-  size?: 24 | 40;
+  size?: 20 | 32;
   background?: boolean;
+  helpText?: boolean;
 }
 
 const CustomTags: React.FC<TagProps> = ({
   type,
   iconOnly,
-  size = 40,
+  size = 32,
   background = true,
+  helpText = true,
 }) => {
   let bgColor;
   let label;
   let iconName;
-  let helpText;
+  let text;
 
   switch (type.toLowerCase()) {
     case 'public':
       bgColor = 'var(--base-green-solid-7)';
       label = 'PUBLIC ACCESS';
-      helpText = 'Can be downloaded directly';
+      text = 'Can be downloaded directly';
       iconName = Icons.openAccess;
       break;
     case 'protected':
       bgColor = 'var(--base-amber-solid-6)';
       label = 'PROTECTED ACCESS';
-      helpText = 'Register/ Login to download';
+      text = 'Register/ Login to download';
       iconName = Icons.registeredAccess;
-
       break;
     case 'private':
       bgColor = 'var(--base-red-solid-7)';
       label = 'PRIVATE ACCESS';
-      helpText = 'Request access for download';
+      text = 'Request access for download';
       iconName = Icons.restrictedAccess;
       break;
     default:
@@ -67,9 +68,9 @@ const CustomTags: React.FC<TagProps> = ({
         </div>
       </div>
       {!iconOnly && (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col justify-center gap-1">
           <Text variant="bodyMd">{label}</Text>
-          {helpText && <Text>{helpText}</Text>}
+          {helpText && <Text>{text}</Text>}
         </div>
       )}
     </div>
