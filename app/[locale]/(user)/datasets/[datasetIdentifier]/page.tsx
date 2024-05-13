@@ -185,7 +185,7 @@ const DatasetDetailsPage = () => {
             </div>
           </div>
         </div>
-        <div className="hidden flex-col gap-8 border-l-2 border-solid border-baseGraySlateSolid3 pl-7 pt-6 lg:flex lg:w-1/5">
+        <div className=" hidden flex-col gap-8 border-l-2 border-solid border-baseGraySlateSolid3 py-6 pl-7 lg:flex lg:w-1/5">
           <div className="flex flex-col items-center justify-center gap-4 text-center">
             <BarChart options={barOptions} height={'250px'} />
             <Button
@@ -205,7 +205,7 @@ const DatasetDetailsPage = () => {
             </div>
           )}
 
-          <div className=" mx-auto">
+          <div className="mx-auto">
             <Image width={200} height={200} src={'/obi.jpg'} alt="Org Logo" />
           </div>
         </div>
