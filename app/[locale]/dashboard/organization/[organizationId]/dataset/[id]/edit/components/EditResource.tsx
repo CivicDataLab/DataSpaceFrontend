@@ -28,7 +28,6 @@ import {
   Select,
   Text,
   TextField,
-  toast,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -69,9 +68,35 @@ export const EditResource = ({
     refetchOnReconnect: true,
   });
 
+  const updateResourceDoc: any = graphql(`
+    mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {
+      updateFileResource(fileResourceInput: $fileResourceInput) {
+        __typename
+        ... on TypeResource {
+          id
+          description
+          name
+        }
+      }
+    }
+  `);
+
   const [resourceId, setResourceId] = useQueryState(
     'id',
     parseAsString.withDefault('')
+  );
+
+  const { mutate, isLoading } = useMutation(
+    (data: { fileResourceInput: UpdateFileResourceInput }) =>
+      GraphQL(updateResourceDoc, data),
+    {
+      onSuccess: () => {
+        refetch();
+      },
+      onError: (err: any) => {
+        console.log('Error ::: ', err);
+      },
+    }
   );
 
   const table = {
@@ -177,7 +202,15 @@ export const EditResource = ({
   //   </div>
   // );
 
-  const saveResource = () => {} ;
+  const saveResource = () => {
+    mutate({
+      fileResourceInput: {
+        id: resourceId,
+        description: resourceData.description,
+        name: resourceData.name,
+      },
+    });
+  };
 
   return (
     <div className=" bg-basePureWhite px-6 py-8">
@@ -205,7 +238,7 @@ export const EditResource = ({
       </div>
       <Divider className="mb-8 mt-6" />
       <div className="flex justify-center">
-        <Button className="w-1/3" onClick={saveResource}>
+        <Button className="w-1/3" loading={isLoading} onClick={saveResource}>
           SAVE RESOURCE
         </Button>
       </div>
