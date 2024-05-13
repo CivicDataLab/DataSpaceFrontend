@@ -16,54 +16,71 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import CustomTags from '@/components/CustomTags';
 import ResourceTable from '../../../components/ResourceTable';
 
 const generateColumnData = () => {
   return [
     {
       accessorKey: 'accessModelTitle',
-      header: 'Access Model Title',
+      header: 'Access Modal Name',
     },
     {
       accessorKey: 'accessType',
       header: 'Access Type',
+      cell: ({ row }: any) => {
+        return (
+          <CustomTags
+            type={row?.original?.accessType?.split('.').pop().toLowerCase()}
+            size={24}
+            helpText={false}
+          />
+        );
+      },
     },
 
     {
-      accessorKey: 'fields',
-      header: 'Fields',
-      isModalTrigger: true,
-      label: 'Preview',
-      table: true,
-      modalHeader: 'Fields',
+      accessorKey: 'accessModelDescription',
+      header: 'Access Model Description',
     },
-    {
-      accessorKey: 'rows',
-      header: 'Rows',
-    },
-    {
-      accessorKey: 'count',
-      header: 'Count',
-    },
-    {
-      accessorKey: 'preview',
-      header: 'Preview',
-      isModalTrigger: true,
-      label: 'Preview',
-      table: true,
-      modalHeader: 'Preview',
-    },
+
+    // {
+    //   accessorKey: 'fields',
+    //   header: 'Fields',
+    //   isModalTrigger: true,
+    //   label: 'Preview',
+    //   table: true,
+    //   modalHeader: 'Fields',
+    // },
+    // {
+    //   accessorKey: 'rows',
+    //   header: 'Rows',
+    // },
+    // {
+    //   accessorKey: 'count',
+    //   header: 'Count',
+    // },
+    // {
+    //   accessorKey: 'preview',
+    //   header: 'Preview',
+    //   isModalTrigger: true,
+    //   label: 'Preview',
+    //   table: true,
+    //   modalHeader: 'Preview',
+    // },
   ];
 };
 
 const generateTableData = (accessModelData: any[]) => {
   return accessModelData.map((accessModel: any) => ({
-    accessType: accessModel.accessType,
-    accessModelTitle: accessModel.accessModelTitle,
-    fields: accessModel.fields,
-    rows: accessModel.rows,
-    count: accessModel.count,
-    preview: accessModel.preview,
+    accessType: accessModel.type,
+    accessModelTitle: accessModel.name,
+    accessModelDescription: accessModel.description,
+
+    // fields: accessModel.fields,
+    // rows: accessModel.rows,
+    // count: accessModel.count,
+    // preview: accessModel.preview,
   }));
 };
 
@@ -76,6 +93,11 @@ const datasetResourceQuery = graphql(`
       type
       name
       description
+      accessModels {
+        name
+        description
+        type
+      }
     }
   }
 `);
@@ -136,32 +158,31 @@ const Resources = () => {
                 </Dialog.Content>
               </Dialog>
             </div>
-            <div className="flex">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value={`item-${index}`}>
-                  <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 ">
-                    <div className=" text-baseBlueSolid8 hover:no-underline ">
-                      See Access Type
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent
-                    className="flex w-full flex-col "
-                    style={{
-                      backgroundColor: 'var( --base-pure-white)',
-                      outline: '1px solid var( --base-pure-white)',
-                    }}
-                  >
-                    {item.accessModelData &&
-                      item.accessModelData.length > 0 && (
-                        <ResourceTable
-                          ColumnsData={generateColumnData()}
-                          RowsData={generateTableData(item.accessModelData)}
-                        />
-                      )}
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
+            {item?.accessModels?.length > 0 && (
+              <div className="flex">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="item-1">
+                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 ">
+                      <div className=" text-baseBlueSolid8 hover:no-underline ">
+                        See Access Type
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent
+                      className="flex w-full flex-col "
+                      style={{
+                        backgroundColor: 'var( --base-pure-white)',
+                        outline: '1px solid var( --base-pure-white)',
+                      }}
+                    >
+                      <ResourceTable
+                        ColumnsData={generateColumnData()}
+                        RowsData={generateTableData(item.accessModels)}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            )}
           </div>
         ))
       )}
