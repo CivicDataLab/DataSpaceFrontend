@@ -1,7 +1,20 @@
 import React from 'react';
 import Link from 'next/link';
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from 'next/navigation';
 import GraphqlTable from '@/app/[locale]/dashboard/components/GraphqlTable/graphqlTable';
+import { graphql } from '@/gql';
+import {
+  CreateFileResourceInput,
+  UpdateFileResourceInput,
+} from '@/gql/generated/graphql';
 import { IconTrash } from '@tabler/icons-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { parseAsString, useQueryState } from 'next-usequerystate';
 import {
   Button,
   ButtonGroup,
@@ -12,18 +25,54 @@ import {
   DropZone,
   Icon,
   IconButton,
+  Select,
   Text,
   TextField,
+  toast,
 } from 'opub-ui';
 
+import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+
+const getReourceDoc = graphql(`
+  query getResource {
+    resource {
+      id
+      dataset {
+        pk
+      }
+      type
+      name
+      description
+    }
+  }
+`);
+
+interface TListItem {
+  label: string;
+  value: string;
+  description: string;
+  dataset: any;
+}
 
 export const EditResource = ({
   uploadedFile,
   handleDropZoneDrop,
   file,
 }: any) => {
-  const fileUpload = file.length === 0 && <DropZone.FileUpload />;
+
+  const {
+    data,
+    refetch,
+  } = useQuery([`get_resources`], () => GraphQL(getReourceDoc), {
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+  });
+
+  const [resourceId, setResourceId] = useQueryState(
+    'id',
+    parseAsString.withDefault('')
+  );
 
   const table = {
     columns: [
@@ -47,13 +96,13 @@ export const EditResource = ({
         header: 'DELETE',
         cell: ({ row }: any) => (
           <IconButton
-          size="medium"
-          icon={Icons.delete}
-          color='interactive'
-          onClick={(e) =>console.log(row.original) }
-        >
-          Delete
-        </IconButton>
+            size="medium"
+            icon={Icons.delete}
+            color="interactive"
+            onClick={(e) => console.log(row.original)}
+          >
+            Delete
+          </IconButton>
         ),
       },
     ],
@@ -79,33 +128,70 @@ export const EditResource = ({
     ],
   };
 
+  const params = useParams();
+
+  const ResourceList: TListItem[] =
+    data?.resource
+      .filter((item) => item.dataset?.pk === params.id)
+      .map((item) => ({
+        label: item.name,
+        value: item.id,
+        description: item.description,
+        dataset: item.dataset?.pk,
+      })) || [];
+
+  const getResourceObject = (resourceId: string) => {
+    return ResourceList.find((item) => item.value === resourceId);
+  };
+
+  const [resourceData, setResourceData] = React.useState({
+    name: getResourceObject(resourceId)?.label ?? '',
+    description: getResourceObject(resourceId)?.description || '',
+  });
+
+  const handleInputChange = (key: string, value: string) => {
+    setResourceData((prevState) => ({
+      ...prevState,
+      [key]: value,
+    }));
+  };
+
+  const handleResourceChange = (e: any) => {
+    setResourceId(e, { shallow: false });
+    setResourceData({
+      name: getResourceObject(e)?.label ?? '',
+      description: getResourceObject(resourceId)?.description ?? '',
+    });
+  };
+
+  // const handleDropZoneDrop = React.useCallback(
+  //   (_dropFiles: File[], acceptedFiles: File[]) => setFile(acceptedFiles[0]),
+  //   []
+  // );
+
+  // const uploadedFile = ResourceList.length > 0 && (
+  //   <div style={{ padding: '0' }}>
+  //     <div className="flex flex-col gap-2">
+  //       <div>{file.name} </div>
+  //     </div>
+  //   </div>
+  // );
+
+  const saveResource = () => {} ;
+
   return (
     <div className=" bg-basePureWhite px-6 py-8">
       <div className="flex items-center gap-2">
         <Text>Resource Name :</Text>
         <div className=" w-3/6">
-          <Combobox
-            name="geo_list"
-            label="Resource"
+          <Select
+            label="Resource List"
             labelHidden
-            placeholder="Search Locations"
-            list={[
-              {
-                label:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-                value:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-              },
-              {
-                label:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-                value:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-              },
-            ]}
-            displaySelected
-            required
-            error="This field is required"
+            options={ResourceList}
+            onChange={(e) => {
+              handleResourceChange(e);
+            }}
+            name="Resource List"
           />
         </div>
         <Button className="mx-5">ADD NEW RESOURCE</Button>
@@ -119,15 +205,19 @@ export const EditResource = ({
       </div>
       <Divider className="mb-8 mt-6" />
       <div className="flex justify-center">
-        <Button className="w-1/3">SAVE RESOURCE</Button>
+        <Button className="w-1/3" onClick={saveResource}>
+          SAVE RESOURCE
+        </Button>
       </div>
       <div className="mt-8 flex items-stretch gap-10">
         <div className="flex w-3/4 flex-col">
           <div className="mb-10 flex gap-6 ">
             <div className="w-2/3">
               <TextField
+                value={resourceData.name}
+                onChange={(text) => handleInputChange('name', text)}
                 label="Resource Name"
-                name="error"
+                name="resourceName"
                 required
                 helpText="To know about best practices for naming Resources go to our User Guide"
               />
@@ -139,16 +229,8 @@ export const EditResource = ({
                 placeholder="Search Locations"
                 list={[
                   {
-                    label:
-                      'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-                    value:
-                      'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-                  },
-                  {
-                    label:
-                      'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-                    value:
-                      'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
+                    label: 'v3',
+                    value: 'v3',
                   },
                 ]}
                 displaySelected
@@ -158,22 +240,24 @@ export const EditResource = ({
             </div>
           </div>
           <TextField
-            defaultValue=""
-            label="Description"
+            value={resourceData.description}
+            onChange={(text) => handleInputChange('description', text)}
+            label="Resource Description"
+            name="resourceDesc"
             multiline={4}
-            name="multi-line"
           />
         </div>
         <div className="w-1/4 items-stretch ">
-          <DropZone
-            name="file_details"
-            label="Change file for this Resource"
-            onDrop={handleDropZoneDrop}
-            className=" bg-basePureWhite"
-          >
-            {uploadedFile}
-            {fileUpload}
-          </DropZone>
+          <div style={{ width: 250, height: 250 }}>
+            {/* <DropZone
+              name="file_upload"
+              allowMultiple={false}
+              onDrop={handleDropZoneDrop}
+            >
+              {uploadedFile}
+              <DropZone.FileUpload />
+            </DropZone> */}
+          </div>
         </div>
       </div>
       <div className=" my-8 flex items-center gap-4 border-1 border-solid border-baseGraySlateSolid7 px-7 py-4 ">
