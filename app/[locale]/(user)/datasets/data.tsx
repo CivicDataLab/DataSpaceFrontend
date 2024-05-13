@@ -1,6 +1,6 @@
 export const data = [
   {
-    id: 'f473c641-8c7e-4e3c-aa0a-16ca29505641',
+    id: 'cca765a3-a5cf-4bcd-bc8d-e5447cc498ca',
     datasetTitle:
       'Assam, India : Historical Weather Data : 2011-2020 - Guwahati(name may extend upto two lines after which ...)',
     description:
@@ -22,9 +22,9 @@ export const data = [
       ],
       accessModels: [
         {
-          type: 'Open',
+          type: 'Private',
         },
-        { type: 'Restricted' },
+        { type: 'Public' },
       ],
       accessModelsCount: '8',
       location: 'India',
@@ -35,7 +35,7 @@ export const data = [
     },
   },
   {
-    id: '888',
+    id: 'f473c641-8c7e-4e3c-aa0a-16ca29505641',
     datasetTitle:
       'Monthly Production of Petroleum Products by Refineries & Fractionators HVD of year 2023-2024',
     description:
@@ -57,9 +57,9 @@ export const data = [
       ],
       accessModels: [
         {
-          type: 'Registered',
+          type: 'Private',
         },
-        { type: 'Restricted' },
+        { type: 'Public' },
       ],
 
       accessModelsCount: '2',
@@ -483,9 +483,9 @@ export const data = [
       ],
       accessModels: [
         {
-          type: 'Open',
+          type: 'Private',
         },
-        { type: 'Restricted' },
+        { type: 'Public' },
       ],
       accessModelsCount: '8',
       location: 'India',
