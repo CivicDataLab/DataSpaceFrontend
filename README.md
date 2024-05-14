@@ -1,6 +1,6 @@
 # Data Exchange Frontend
 
-A platform to speed up the development of Open Data Exchange. 
+A platform to speed up the development of Open Data Exchange.
 
 ## Getting Started
 
@@ -20,7 +20,23 @@ cd data-exchange
 npm i
 ```
 
-3. Start the development server:
+3. Create '.env.local' file in the project folder with the following:
+
+```
+KEYCLOAK_CLIENT_ID='opub-dataex'
+KEYCLOAK_CLIENT_SECRET='xqZ9PZqnRsIn95dd4B2OpznGOWXVwpKv'
+AUTH_ISSUER=https://opub-kc.civicdatalab.in/auth/realms/dataexchange
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET='xqZ9PZqnRsIn95dd4B2OpznGOWXVwpKv'
+END_SESSION_URL=https://opub-kc.civicdatalab.in/auth/realms/dataexchange/protocol/openid-connect/logout
+REFRESH_TOKEN_URL=https://opub-kc.civicdatalab.in/auth/realms/dataexchange/protocol/openid-connect/token
+NEXT_PUBLIC_BACKEND_URL='https://api.datakeep.civicdays.in/api/graphql'
+BACKEND_GRAPHQL_URL= 'https://api.datakeep.civicdays.in/api/graphql'
+NEXT_PUBLIC_BACKEND_GRAPHQL_URL= 'https://api.datakeep.civicdays.in/api/graphql'
+NEXT_PUBLIC_BACKEND_URL= 'https://api.datakeep.civicdays.in'
+```
+
+4. Start the development server:
 
 ```bash
 npm run dev
