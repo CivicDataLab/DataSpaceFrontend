@@ -1,6 +1,6 @@
 # Data Exchange Frontend
 
-A platform to speed up the development of Open Data Exchange. 
+A platform to speed up the development of Open Data Exchange.
 
 ## Getting Started
 
@@ -20,7 +20,23 @@ cd data-exchange
 npm i
 ```
 
-3. Start the development server:
+3. Create '.env.local' file in the project folder with the following:
+
+```
+KEYCLOAK_CLIENT_ID
+KEYCLOAK_CLIENT_SECRET
+AUTH_ISSUER
+NEXTAUTH_URL
+NEXTAUTH_SECRET
+END_SESSION_URL
+REFRESH_TOKEN_URL
+NEXT_PUBLIC_BACKEND_URL
+BACKEND_GRAPHQL_URL
+NEXT_PUBLIC_BACKEND_GRAPHQL_URL
+NEXT_PUBLIC_BACKEND_URL
+```
+
+4. Start the development server:
 
 ```bash
 npm run dev
