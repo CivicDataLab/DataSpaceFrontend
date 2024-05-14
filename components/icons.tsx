@@ -13,6 +13,7 @@ import {
   IconDatabaseCog,
   IconDatabaseEdit,
   IconDatabasePlus,
+  IconDownload,
   IconFilePlus,
   IconFileUpload,
   IconFolder,
@@ -74,4 +75,5 @@ export const Icons: {
   facebook: IconBrandFacebookFilled,
   linkedin: IconBrandLinkedin,
   github: IconBrandGithubFilled,
+  download: IconDownload,
 };
