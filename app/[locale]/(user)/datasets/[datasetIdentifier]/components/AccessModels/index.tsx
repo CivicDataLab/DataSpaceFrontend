@@ -1,4 +1,4 @@
-import React from 'react';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
@@ -8,12 +8,14 @@ import {
   AccordionItem,
   AccordionTrigger,
   Button,
+  Icon,
   Spinner,
   Text,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import CustomTags from '@/components/CustomTags';
+import { Icons } from '@/components/icons';
 import ResourceTable from '../../../components/ResourceTable';
 
 const generateColumnData = () => {
@@ -25,6 +27,21 @@ const generateColumnData = () => {
     {
       accessorKey: 'description',
       header: 'Resource description',
+    },
+    {
+      accessorKey: 'download',
+      header: 'Download',
+      cell: ({ row }: any) => {
+        return (
+          <Link
+            href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${row.original.download}`}
+            target="_blank"
+            className=" flex justify-center"
+          >
+            <Icon source={Icons.download} size={20} />
+          </Link>
+        );
+      },
     },
     // {
     //   accessorKey: 'fields',
@@ -57,6 +74,7 @@ const generateTableData = (resources: any[]) => {
   return resources.map((item: any) => ({
     resourceName: item.resource.name,
     description: item.resource.description,
+    download: item.resource.id,
     // fields: item.fields,
     // preview: item.preview,
     // rows: item.rows,
@@ -95,6 +113,8 @@ const AccessModels = () => {
       })
   );
 
+  console.log(data);
+
   return (
     <>
       {isLoading ? (
@@ -117,7 +137,19 @@ const AccessModels = () => {
             </div>
             <div className="align-center flex flex-col items-center justify-between gap-4 sm:flex-row">
               <CustomTags type={item.type.split('.').pop().toLowerCase()} />
-              <Button className="h-fit w-fit" kind="secondary">
+
+              <Button
+                className="h-fit w-fit"
+                kind="secondary"
+                onClick={() => {
+                  item.modelResources.forEach((resource: any) => {
+                    // Construct the download URL for each resource
+                    const downloadUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${resource.resource.id}`;
+                    // Open the URL in a new tab
+                    window.open(downloadUrl, '_blank');
+                  });
+                }}
+              >
                 Download All Resources
               </Button>
             </div>
