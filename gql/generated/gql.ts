@@ -26,8 +26,8 @@ const documents = {
     types.GetResourceDocument,
   '\n    mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {\n      updateFileResource(fileResourceInput: $fileResourceInput) {\n        __typename\n        ... on TypeResource {\n          id\n          description\n          name\n        }\n      }\n    }\n  ':
     types.UpdateFileResourceDocument,
-  '\n  query resourcesSummary($datasetId: UUID!) {\n    datasetResources(datasetId: $datasetId) {\n      id\n      created\n      modified\n      type\n      name\n      description\n      accessModels {\n        name\n        description\n        type\n      }\n    }\n  }\n':
-    types.ResourcesSummaryDocument,
+  '\n  query datasetsSummary($filters: DatasetFilter) {\n    datasets(filters: $filters) {\n      metadata {\n        metadataItem {\n          id\n          label\n        }\n        id\n        value\n      }\n      resources {\n        id\n        type\n        name\n        description\n      }\n      accessModels {\n        id\n        name\n        description\n        type\n        created\n        modified\n      }\n      tags\n      id\n      title\n      description\n      created\n      modified\n    }\n  }\n':
+    types.DatasetsSummaryDocument,
   '\n  mutation GenerateDatasetName {\n    addDataset {\n      __typename\n      ... on TypeDataset {\n        id\n        created\n      }\n      ... on OperationInfo {\n        messages {\n          kind\n          message\n        }\n      }\n    }\n  }\n':
     types.GenerateDatasetNameDocument,
 };
@@ -86,8 +86,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  query resourcesSummary($datasetId: UUID!) {\n    datasetResources(datasetId: $datasetId) {\n      id\n      created\n      modified\n      type\n      name\n      description\n      accessModels {\n        name\n        description\n        type\n      }\n    }\n  }\n'
-): (typeof documents)['\n  query resourcesSummary($datasetId: UUID!) {\n    datasetResources(datasetId: $datasetId) {\n      id\n      created\n      modified\n      type\n      name\n      description\n      accessModels {\n        name\n        description\n        type\n      }\n    }\n  }\n'];
+  source: '\n  query datasetsSummary($filters: DatasetFilter) {\n    datasets(filters: $filters) {\n      metadata {\n        metadataItem {\n          id\n          label\n        }\n        id\n        value\n      }\n      resources {\n        id\n        type\n        name\n        description\n      }\n      accessModels {\n        id\n        name\n        description\n        type\n        created\n        modified\n      }\n      tags\n      id\n      title\n      description\n      created\n      modified\n    }\n  }\n'
+): (typeof documents)['\n  query datasetsSummary($filters: DatasetFilter) {\n    datasets(filters: $filters) {\n      metadata {\n        metadataItem {\n          id\n          label\n        }\n        id\n        value\n      }\n      resources {\n        id\n        type\n        name\n        description\n      }\n      accessModels {\n        id\n        name\n        description\n        type\n        created\n        modified\n      }\n      tags\n      id\n      title\n      description\n      created\n      modified\n    }\n  }\n'];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

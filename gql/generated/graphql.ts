@@ -122,6 +122,7 @@ export type Mutation = {
   createMetadata: TypeMetadata;
   deleteFileResource: Scalars['Boolean'];
   deleteMetadata: TypeMetadata;
+  resetFileResourceSchema: ResetFileResourceSchemaPayload;
   updateDataset: UpdateDatasetPayload;
   updateFileResource: UpdateFileResourcePayload;
   updateMetadata: TypeMetadata;
@@ -149,6 +150,10 @@ export type MutationDeleteFileResourceArgs = {
 
 export type MutationDeleteMetadataArgs = {
   data: NodeInput;
+};
+
+export type MutationResetFileResourceSchemaArgs = {
+  resourceId: Scalars['UUID'];
 };
 
 export type MutationUpdateDatasetArgs = {
@@ -215,6 +220,8 @@ export type QueryDatasetsArgs = {
   filters?: InputMaybe<DatasetFilter>;
 };
 
+export type ResetFileResourceSchemaPayload = OperationInfo | TypeResource;
+
 /** AccessModel(id, name, description, dataset, type, organization, created, modified) */
 export type TypeAccessModel = {
   __typename?: 'TypeAccessModel';
@@ -267,11 +274,12 @@ export type TypeDatasetMetadata = {
   value: Scalars['String'];
 };
 
-/** ResourceFileDetails(id, resource, file, size, created, modified) */
+/** ResourceFileDetails(id, resource, file, size, created, modified, format) */
 export type TypeFileDetails = {
   __typename?: 'TypeFileDetails';
   created: Scalars['DateTime'];
   file: DjangoFileType;
+  format: Scalars['String'];
   id: Scalars['ID'];
   modified: Scalars['DateTime'];
   resource: DjangoModelType;
@@ -479,25 +487,41 @@ export type UpdateFileResourceMutation = {
       };
 };
 
-export type ResourcesSummaryQueryVariables = Exact<{
-  datasetId: Scalars['UUID'];
+export type DatasetsSummaryQueryVariables = Exact<{
+  filters?: InputMaybe<DatasetFilter>;
 }>;
 
-export type ResourcesSummaryQuery = {
+export type DatasetsSummaryQuery = {
   __typename?: 'Query';
-  datasetResources: Array<{
-    __typename?: 'TypeResource';
+  datasets: Array<{
+    __typename?: 'TypeDataset';
+    tags: Array<string>;
     id: any;
+    title: string;
+    description: string;
     created: any;
     modified: any;
-    type: string;
-    name: string;
-    description: string;
+    metadata: Array<{
+      __typename?: 'TypeDatasetMetadata';
+      id: string;
+      value: string;
+      metadataItem: { __typename?: 'TypeMetadata'; id: string; label: string };
+    }>;
+    resources: Array<{
+      __typename?: 'TypeResource';
+      id: any;
+      type: string;
+      name: string;
+      description: string;
+    }>;
     accessModels: Array<{
-      __typename?: 'TypeResourceAccessModel';
+      __typename?: 'TypeAccessModel';
+      id: any;
       name: string;
       description: string;
       type: string;
+      created: any;
+      modified: any;
     }>;
   }>;
 };
@@ -651,21 +675,6 @@ export const DatasetResourcesDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'type' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'accessModels' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'description' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'type' } },
-                    ],
-                  },
-                },
               ],
             },
           },
@@ -781,117 +790,23 @@ export const DatasetsDocument = {
     },
   ],
 } as unknown as DocumentNode<DatasetsQuery, DatasetsQueryVariables>;
-export const ReadFilesDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'readFiles' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'fileResourceInput' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'CreateFileResourceInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'createFileResources' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'fileResourceInput' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'fileResourceInput' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'created' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<ReadFilesMutation, ReadFilesMutationVariables>;
-export const GetResourceDocument = {
+export const DatasetsSummaryDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
       operation: 'query',
-      name: { kind: 'Name', value: 'getResource' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'resource' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'dataset' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'pk' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'type' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetResourceQuery, GetResourceQueryVariables>;
-export const UpdateFileResourceDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'updateFileResource' },
+      name: { kind: 'Name', value: 'datasetsSummary' },
       variableDefinitions: [
         {
           kind: 'VariableDefinition',
           variable: {
             kind: 'Variable',
-            name: { kind: 'Name', value: 'fileResourceInput' },
+            name: { kind: 'Name', value: 'filters' },
           },
           type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'UpdateFileResourceInput' },
-            },
+            kind: 'NamedType',
+            name: { kind: 'Name', value: 'DatasetFilter' },
           },
         },
       ],
@@ -900,110 +815,94 @@ export const UpdateFileResourceDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'updateFileResource' },
+            name: { kind: 'Name', value: 'datasets' },
             arguments: [
               {
                 kind: 'Argument',
-                name: { kind: 'Name', value: 'fileResourceInput' },
+                name: { kind: 'Name', value: 'filters' },
                 value: {
                   kind: 'Variable',
-                  name: { kind: 'Name', value: 'fileResourceInput' },
+                  name: { kind: 'Name', value: 'filters' },
                 },
               },
             ],
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
                 {
-                  kind: 'InlineFragment',
-                  typeCondition: {
-                    kind: 'NamedType',
-                    name: { kind: 'Name', value: 'TypeResource' },
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'metadata' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'metadataItem' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'label' },
+                            },
+                          ],
+                        },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'value' } },
+                    ],
                   },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'resources' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },
                       },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                     ],
                   },
                 },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  UpdateFileResourceMutation,
-  UpdateFileResourceMutationVariables
->;
-export const ResourcesSummaryDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'resourcesSummary' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'datasetId' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'datasetResources' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'datasetId' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'datasetId' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'created' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'modified' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'type' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'accessModels' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'created' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'modified' },
+                      },
                     ],
                   },
                 },
+                { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'created' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'modified' } },
               ],
             },
           },
@@ -1012,8 +911,8 @@ export const ResourcesSummaryDocument = {
     },
   ],
 } as unknown as DocumentNode<
-  ResourcesSummaryQuery,
-  ResourcesSummaryQueryVariables
+  DatasetsSummaryQuery,
+  DatasetsSummaryQueryVariables
 >;
 export const GenerateDatasetNameDocument = {
   kind: 'Document',
