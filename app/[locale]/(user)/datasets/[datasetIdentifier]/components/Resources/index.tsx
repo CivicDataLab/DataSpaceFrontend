@@ -1,5 +1,4 @@
-import { table } from 'console';
-import React from 'react';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +9,7 @@ import {
   AccordionTrigger,
   Button,
   Dialog,
+  Icon,
   Spinner,
   Table,
   Text,
@@ -17,6 +17,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import CustomTags from '@/components/CustomTags';
+import { Icons } from '@/components/icons';
 import ResourceTable from '../../../components/ResourceTable';
 
 const generateColumnData = () => {
@@ -40,8 +41,19 @@ const generateColumnData = () => {
     },
 
     {
-      accessorKey: 'accessModelDescription',
-      header: 'Access Model Description',
+      accessorKey: 'download',
+      header: 'Download',
+      cell: ({ row }: any) => {
+        return (
+          <Link
+            href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${row.original.resourceId}`}
+            target="_blank"
+            className=" flex justify-center"
+          >
+            <Icon source={Icons.download} size={20} />
+          </Link>
+        );
+      },
     },
 
     // {
@@ -71,12 +83,12 @@ const generateColumnData = () => {
   ];
 };
 
-const generateTableData = (accessModelData: any[]) => {
+const generateTableData = (accessModelData: any[], id: any) => {
   return accessModelData.map((accessModel: any) => ({
     accessType: accessModel.type,
     accessModelTitle: accessModel.name,
     accessModelDescription: accessModel.description,
-
+    resourceId: id,
     // fields: accessModel.fields,
     // rows: accessModel.rows,
     // count: accessModel.count,
@@ -176,7 +188,7 @@ const Resources = () => {
                     >
                       <ResourceTable
                         ColumnsData={generateColumnData()}
-                        RowsData={generateTableData(item.accessModels)}
+                        RowsData={generateTableData(item.accessModels, item.id)}
                       />
                     </AccordionContent>
                   </AccordionItem>
