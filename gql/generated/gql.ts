@@ -19,6 +19,7 @@ const documents = {
     "\n    mutation readFiles($fileResourceInput: CreateFileResourceInput!) {\n      createFileResources(fileResourceInput: $fileResourceInput) {\n        id\n        created\n        name\n      }\n    }\n  ": types.ReadFilesDocument,
     "\n  query getResource {\n    resource {\n      id\n      dataset {\n        pk\n      }\n      type\n      name\n      description\n    }\n  }\n": types.GetResourceDocument,
     "\n    mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {\n      updateFileResource(fileResourceInput: $fileResourceInput) {\n        __typename\n        ... on TypeResource {\n          id\n          description\n          name\n        }\n      }\n    }\n  ": types.UpdateFileResourceDocument,
+    "\n    mutation deleteFileResource($resourceId: UUID!) {\n      deleteFileResource(resourceId: $resourceId)\n    }\n  ": types.DeleteFileResourceDocument,
     "\n  mutation GenerateDatasetName {\n    addDataset {\n      __typename\n      ... on TypeDataset {\n        id\n        created\n      }\n      ... on OperationInfo {\n        messages {\n          kind\n          message\n        }\n      }\n    }\n  }\n": types.GenerateDatasetNameDocument,
 };
 
@@ -60,6 +61,10 @@ export function graphql(source: "\n  query getResource {\n    resource {\n      
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n    mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {\n      updateFileResource(fileResourceInput: $fileResourceInput) {\n        __typename\n        ... on TypeResource {\n          id\n          description\n          name\n        }\n      }\n    }\n  "): (typeof documents)["\n    mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {\n      updateFileResource(fileResourceInput: $fileResourceInput) {\n        __typename\n        ... on TypeResource {\n          id\n          description\n          name\n        }\n      }\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    mutation deleteFileResource($resourceId: UUID!) {\n      deleteFileResource(resourceId: $resourceId)\n    }\n  "): (typeof documents)["\n    mutation deleteFileResource($resourceId: UUID!) {\n      deleteFileResource(resourceId: $resourceId)\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

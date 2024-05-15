@@ -16,8 +16,12 @@ import { Icons } from '@/components/icons';
 import { getReourceDoc } from './EditResource';
 
 export const ResourceListView = () => {
-
-  const params = useParams();
+  
+  const updateResourceList: any = graphql(`
+    mutation deleteFileResource($resourceId: UUID!) {
+      deleteFileResource(resourceId: $resourceId)
+    }
+  `);
 
   const {
     data,
@@ -27,6 +31,32 @@ export const ResourceListView = () => {
     refetchOnMount: true,
     refetchOnReconnect: true,
   });
+
+  const { mutate, isLoading } = useMutation(
+    (data: { resourceId: string }) => GraphQL(updateResourceList, data),
+    {
+      onSuccess: () => {
+        refetch();
+        toast('Resource Deleted Successfully', {
+          action: {
+            label: 'Dismiss',
+            onClick: () => {},
+          },
+        });
+      },
+      onError: (err: any) => {
+        console.log('Error ::: ', err);
+      },
+    }
+  );
+
+  const params = useParams();
+
+  const deleteRow = (row: any) => {
+    mutate({
+      resourceId: row.id,
+    });
+  };
 
   const table = {
     columns: [
@@ -45,6 +75,19 @@ export const ResourceListView = () => {
       {
         accessorKey: 'id',
         header: 'id',
+      },
+      {
+        header: 'DELETE',
+        cell: ({ row }: any) => (
+          <IconButton
+            size="medium"
+            icon={Icons.delete}
+            color="interactive"
+            onClick={() => deleteRow(row.original)}
+          >
+            Delete
+          </IconButton>
+        ),
       },
     ],
 
