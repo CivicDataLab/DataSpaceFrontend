@@ -14,7 +14,7 @@ import {
 } from '@/gql/generated/graphql';
 import { IconTrash } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
+import { parseAsBoolean, parseAsString, useQueryState } from 'next-usequerystate';
 import {
   Button,
   ButtonGroup,
@@ -86,7 +86,12 @@ export const EditResource = ({
     'id',
     parseAsString.withDefault('')
   );
-
+  
+  const [listView, setListView] = useQueryState(
+    'listView',
+    parseAsBoolean.withDefault(false)
+  );
+  
   const { mutate, isLoading } = useMutation(
     (data: { fileResourceInput: UpdateFileResourceInput }) =>
       GraphQL(updateResourceDoc, data),
@@ -209,6 +214,11 @@ export const EditResource = ({
   //   </div>
   // );
 
+  const listViewFunction = () => {
+    setResourceId('');
+    setListView(true);
+  };
+
   const saveResource = () => {
     mutate({
       fileResourceInput: {
@@ -235,13 +245,21 @@ export const EditResource = ({
           />
         </div>
         <Button className="mx-5">ADD NEW RESOURCE</Button>
-        <Link href="/" className="flex w-1/6 items-center justify-end gap-2">
-          <Text color="interactive">
-            Go back to <br />
-            Resource List
-          </Text>
-          <Icon source={Icons.cross} color="interactive" />
-        </Link>
+        <Button
+            className="w-1/6 justify-end"
+            size="medium"
+            kind="tertiary"
+            variant="basic"
+            onClick={listViewFunction}
+          >
+            <div className="flex items-center gap-2">
+              <Text color="interactive">
+                Go back to <br />
+                Resource List
+              </Text>
+              <Icon source={Icons.cross} color="interactive" />
+            </div>
+          </Button>
       </div>
       <Divider className="mb-8 mt-6" />
       <div className="flex justify-center">

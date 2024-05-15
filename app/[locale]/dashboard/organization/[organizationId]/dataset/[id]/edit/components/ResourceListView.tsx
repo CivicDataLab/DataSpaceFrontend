@@ -32,6 +32,12 @@ export const ResourceListView = () => {
     refetchOnReconnect: true,
   });
 
+  const [resourceId, setResourceId] = useQueryState('id', parseAsString);
+  const [listView, setListView] = useQueryState(
+    'listView',
+    parseAsBoolean.withDefault(true)
+  );
+
   const { mutate, isLoading } = useMutation(
     (data: { resourceId: string }) => GraphQL(updateResourceList, data),
     {
@@ -58,11 +64,27 @@ export const ResourceListView = () => {
     });
   };
 
+  const check = (info: any) => {
+    setResourceId(info.row.original.id);
+    setListView(false);
+  };
+
   const table = {
     columns: [
       {
         accessorKey: 'name_of_resource',
         header: 'NAME OF RESOURCE',
+        cell: (info: any) => {
+          console.log(info);
+          return (
+            <div
+              style={{ cursor: 'pointer', textDecoration: 'underline' }}
+              onClick={() => check(info)}
+            >
+              {info.row.original.name_of_resource}
+            </div>
+          );
+        },
       },
       {
         accessorKey: 'type',

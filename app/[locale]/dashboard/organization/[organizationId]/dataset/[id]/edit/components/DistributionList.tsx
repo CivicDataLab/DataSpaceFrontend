@@ -15,13 +15,18 @@ import {
   Spinner,
   Text,
 } from 'opub-ui';
-
+import {
+  parseAsBoolean,
+  parseAsString,
+  useQueryState,
+} from 'next-usequerystate';
 import { GraphQL } from '@/lib/api';
 import { bytesToSize } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
 import { EditDistribution } from './EditDistribution';
 import { EditResource } from './EditResource';
+import { ResourceListView } from './ResourceListView';
 
 export function DistributionList({
   setPage,
@@ -49,8 +54,6 @@ const NoList = ({
 }) => {
   const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT'];
   const params = useParams();
-  const [fileSelected, setFileSelected] = React.useState(false);
-
   const [file, setFile] = React.useState<File[]>([]);
 
   const createResourceFilesDoc: any = graphql(`
@@ -63,15 +66,19 @@ const NoList = ({
     }
   `);
 
-  const searchParams = useSearchParams();
-  const resourceId = searchParams.get('id');
+  const [resourceId,setResourceId ] = useQueryState('id',parseAsString)
+
+  const [listView, setListView] = useQueryState(
+    'listView',
+    parseAsBoolean.withDefault(false)
+  );
 
   const { mutate, isLoading } = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(createResourceFilesDoc, data),
     {
-      onSuccess: () => {
-        setFileSelected(true);
+      onSuccess: (data:any) => {
+        setResourceId(data.createFileResources[0].id)
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
@@ -126,6 +133,8 @@ const NoList = ({
     </div>
   );
 
+  if (listView) return <ResourceListView  />;
+
   return (
     <>
       {isLoading ? (
@@ -134,7 +143,7 @@ const NoList = ({
         </div>
       ) : (
         <>
-          {fileSelected || resourceId ? (
+          { resourceId && !listView  ? (
             <EditResource
               uploadedFile={uploadedFile}
               handleDropZoneDrop={handleDropZoneDrop}
