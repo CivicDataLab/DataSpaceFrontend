@@ -14,7 +14,11 @@ import {
 } from '@/gql/generated/graphql';
 import { IconTrash } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
+import {
+  parseAsBoolean,
+  parseAsString,
+  useQueryState,
+} from 'next-usequerystate';
 import {
   Button,
   ButtonGroup,
@@ -28,25 +32,12 @@ import {
   Select,
   Text,
   TextField,
-  toast
+  toast,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-
-const getReourceDoc = graphql(`
-  query getResource {
-    resource {
-      id
-      dataset {
-        pk
-      }
-      type
-      name
-      description
-    }
-  }
-`);
+import { getReourceDoc } from './DistributionList';
 
 interface TListItem {
   label: string;
@@ -60,14 +51,15 @@ export const EditResource = ({
   handleDropZoneDrop,
   file,
 }: any) => {
-
-  const {
-    data,
-    refetch,
-  } = useQuery([`get_resources`], () => GraphQL(getReourceDoc), {
-    refetchOnMount: true,
-    refetchOnReconnect: true,
-  });
+  
+  const { data, refetch } = useQuery(
+    [`get_resources`],
+    () => GraphQL(getReourceDoc),
+    {
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+    }
+  );
 
   const updateResourceDoc: any = graphql(`
     mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {
@@ -209,6 +201,10 @@ export const EditResource = ({
   //   </div>
   // );
 
+  const listViewFunction = () => {
+    setResourceId('');
+  };
+
   const saveResource = () => {
     mutate({
       fileResourceInput: {
@@ -235,13 +231,21 @@ export const EditResource = ({
           />
         </div>
         <Button className="mx-5">ADD NEW RESOURCE</Button>
-        <Link href="/" className="flex w-1/6 items-center justify-end gap-2">
-          <Text color="interactive">
-            Go back to <br />
-            Resource List
-          </Text>
-          <Icon source={Icons.cross} color="interactive" />
-        </Link>
+        <Button
+          className="w-1/6 justify-end"
+          size="medium"
+          kind="tertiary"
+          variant="basic"
+          onClick={listViewFunction}
+        >
+          <div className="flex items-center gap-2">
+            <Text color="interactive">
+              Go back to <br />
+              Resource List
+            </Text>
+            <Icon source={Icons.cross} color="interactive" />
+          </div>
+        </Button>
       </div>
       <Divider className="mb-8 mt-6" />
       <div className="flex justify-center">
