@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { SidebarNavItem } from '@/types';
 
 import { cn } from '@/lib/utils';
+import BreadCrumbs from '@/components/BreadCrumbs';
 import { DashboardNav } from '../../components/dashboard-nav';
 import { MobileDashboardNav } from '../../components/mobile-dashboard-nav';
 import styles from '../../components/styles.module.scss';
@@ -32,23 +33,37 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
   ];
 
   const organizationId = params.organizationId;
-  
-  return (
-    <div
-      className={cn('relative grid grow grid-cols-[8px_1fr] gap-1', 'md:flex')}
-    >
-      <DashboardNav items={orgSidebarNav} organizationId={organizationId} />
 
-      <div className="z-1 basis-2 md:hidden">
-        <MobileDashboardNav
-          setIsOpened={setIsOpened}
-          isOpened={isOpened}
-          items={orgSidebarNav}
-        />
+  return (
+    <>
+      <BreadCrumbs
+        data={[
+          { href: '/', label: 'Home' },
+          {
+            href: '/dashboard/user/datasets',
+            label: 'User Dashboard',
+          },
+        ]}
+      />
+      <div
+        className={cn(
+          'relative grid grow grid-cols-[8px_1fr] gap-1',
+          ' bg-surfaceDefault py-4 pl-10 pr-4 md:flex'
+        )}
+      >
+        <DashboardNav items={orgSidebarNav} organizationId={organizationId} />
+
+        <div className="z-1 basis-2 md:hidden">
+          <MobileDashboardNav
+            setIsOpened={setIsOpened}
+            isOpened={isOpened}
+            items={orgSidebarNav}
+          />
+        </div>
+        <div className={cn(styles.Main, isOpened && styles.MainOpened)}>
+          {children}
+        </div>
       </div>
-      <div className={cn(styles.Main, isOpened && styles.MainOpened)}>
-        {children}
-      </div>
-    </div>
+    </>
   );
 }

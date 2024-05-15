@@ -15,7 +15,10 @@ import styles from '../dashboard.module.scss';
 interface DashboardNavProps {
   items: SidebarNavItem[];
 }
-export function DashboardNav({ items, organizationId }: DashboardNavProps & { organizationId?: string }) {
+export function DashboardNav({
+  items,
+  organizationId,
+}: DashboardNavProps & { organizationId?: string }) {
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const path = usePathname();
 
@@ -29,8 +32,8 @@ export function DashboardNav({ items, organizationId }: DashboardNavProps & { or
   return (
     <aside
       className={cn(
-        'overflow-hidden bg-surfaceDefault pr-2 pt-2',
-        'z-1 hidden shrink-0 basis-[240px] shadow-insetBasic md:block',
+        'overflow-hidden bg-surfaceDefault ',
+        ' z-1 mb-10 hidden shrink-0 basis-[260px]  rounded-2 border-2  border-solid  border-baseGraySlateSolid6 shadow-insetBasic md:block',
         isCollapsed && 'basis-[60px]',
         styles.Collapse
       )}
@@ -38,7 +41,7 @@ export function DashboardNav({ items, organizationId }: DashboardNavProps & { or
       <nav className={cn('flex flex-col gap-2')}>
         {organizationId && !isCollapsed ? (
           <>
-            <div className="flex flex-col items-center justify-center py-4">
+            <div className="flex flex-col items-center justify-center px-4 py-8">
               <Image
                 height={140}
                 width={140}
