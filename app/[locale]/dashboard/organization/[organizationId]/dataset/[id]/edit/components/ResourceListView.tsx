@@ -13,30 +13,15 @@ import { DataTable, IconButton, Spinner, toast } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
-import { getReourceDoc } from './EditResource';
 
-export const ResourceListView = () => {
-  
+export const ResourceListView = ({ data, refetch }: any) => {
   const updateResourceList: any = graphql(`
     mutation deleteFileResource($resourceId: UUID!) {
       deleteFileResource(resourceId: $resourceId)
     }
   `);
 
-  const {
-    data,
-    refetch,
-    isLoading: isPending,
-  } = useQuery([`list_resources`], () => GraphQL(getReourceDoc), {
-    refetchOnMount: true,
-    refetchOnReconnect: true,
-  });
-
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
-  const [listView, setListView] = useQueryState(
-    'listView',
-    parseAsBoolean.withDefault(true)
-  );
 
   const { mutate, isLoading } = useMutation(
     (data: { resourceId: string }) => GraphQL(updateResourceList, data),
@@ -64,9 +49,8 @@ export const ResourceListView = () => {
     });
   };
 
-  const check = (info: any) => {
+  const handleResourceID = (info: any) => {
     setResourceId(info.row.original.id);
-    setListView(false);
   };
 
   const table = {
@@ -79,7 +63,7 @@ export const ResourceListView = () => {
           return (
             <div
               style={{ cursor: 'pointer', textDecoration: 'underline' }}
-              onClick={() => check(info)}
+              onClick={() => handleResourceID(info)}
             >
               {info.row.original.name_of_resource}
             </div>
@@ -129,24 +113,16 @@ export const ResourceListView = () => {
   );
 
   return (
-    <>
-      {isPending ? (
-        <div className="flex h-[70vh] w-full items-center justify-center">
-          <Spinner size={40} />
-        </div>
-      ) : (
-        <div className="mt-3">
-          <DataTable
-            addToolbar
-            columns={filteredColumns}
-            rows={table.rows}
-            hideFooter={true}
-            hideSelection={true}
-            defaultRowCount={10}
-            hideViewSelector
-          />
-        </div>
-      )}
-    </>
+    <div className="mt-3">
+      <DataTable
+        addToolbar
+        columns={filteredColumns}
+        rows={table.rows}
+        hideFooter={true}
+        hideSelection={true}
+        defaultRowCount={10}
+        hideViewSelector
+      />
+    </div>
   );
 };
