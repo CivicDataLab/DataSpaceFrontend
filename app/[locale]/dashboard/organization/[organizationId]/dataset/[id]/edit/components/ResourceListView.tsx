@@ -13,8 +13,21 @@ import { DataTable, IconButton, Spinner, toast } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import { getReourceDoc } from './EditResource';
 
 export const ResourceListView = () => {
+
+  const params = useParams();
+
+  const {
+    data,
+    refetch,
+    isLoading: isPending,
+  } = useQuery([`list_resources`], () => GraphQL(getReourceDoc), {
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+  });
+
   const table = {
     columns: [
       {
@@ -35,26 +48,15 @@ export const ResourceListView = () => {
       },
     ],
 
-    rows: [
-      {
-        name_of_resource: 'name_of_resource',
-        type: 'type',
-        date_added: 'date_added',
-        id: 'id',
-      },
-      {
-        name_of_resource: 'name_of_resource',
-        type: 'type',
-        date_added: 'date_added',
-        id: 'id',
-      },
-      {
-        name_of_resource: 'name_of_resource',
-        type: 'type',
-        date_added: 'date_added',
-        id: 'id',
-      },
-    ],
+    rows:
+      data?.resource
+        .filter((item: any) => item.dataset.pk === params.id)
+        .map((item: any) => ({
+          name_of_resource: item.name,
+          type: item.type,
+          date_added: formatDate(item.created),
+          id: item.id,
+        })) || [],
   };
 
   const filteredColumns = table.columns.filter(
@@ -63,17 +65,23 @@ export const ResourceListView = () => {
 
   return (
     <>
-      <div className="mt-3">
-        <DataTable
-          addToolbar
-          columns={filteredColumns}
-          rows={table.rows}
-          hideFooter={true}
-          hideSelection={true}
-          defaultRowCount={10}
-          hideViewSelector
-        />
-      </div>
+      {isPending ? (
+        <div className="flex h-[70vh] w-full items-center justify-center">
+          <Spinner size={40} />
+        </div>
+      ) : (
+        <div className="mt-3">
+          <DataTable
+            addToolbar
+            columns={filteredColumns}
+            rows={table.rows}
+            hideFooter={true}
+            hideSelection={true}
+            defaultRowCount={10}
+            hideViewSelector
+          />
+        </div>
+      )}
     </>
   );
 };

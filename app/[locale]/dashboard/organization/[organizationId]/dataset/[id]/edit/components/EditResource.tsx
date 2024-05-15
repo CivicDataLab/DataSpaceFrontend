@@ -34,7 +34,7 @@ import {
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 
-const getReourceDoc = graphql(`
+export const getReourceDoc = graphql(`
   query getResource {
     resource {
       id
