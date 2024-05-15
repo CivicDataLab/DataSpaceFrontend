@@ -82,6 +82,16 @@ export function DistributionList({
   );
 }
 
+export const createResourceFilesDoc: any = graphql(`
+  mutation readFiles($fileResourceInput: CreateFileResourceInput!) {
+    createFileResources(fileResourceInput: $fileResourceInput) {
+      id
+      created
+      name
+    }
+  }
+`);
+
 const NoList = ({
   setPage,
 }: {
@@ -90,16 +100,6 @@ const NoList = ({
   const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT'];
   const params = useParams();
   const [file, setFile] = React.useState<File[]>([]);
-
-  const createResourceFilesDoc: any = graphql(`
-    mutation readFiles($fileResourceInput: CreateFileResourceInput!) {
-      createFileResources(fileResourceInput: $fileResourceInput) {
-        id
-        created
-        name
-      }
-    }
-  `);
 
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
 
@@ -172,11 +172,7 @@ const NoList = ({
       ) : (
         <>
           {resourceId ? (
-            <EditResource
-              uploadedFile={uploadedFile}
-              handleDropZoneDrop={handleDropZoneDrop}
-              file={file}
-            />
+            <EditResource />
           ) : (
             <DropZone
               name="file_details"

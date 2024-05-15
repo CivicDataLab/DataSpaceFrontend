@@ -25,6 +25,7 @@ import {
   Checkbox,
   Combobox,
   DataTable,
+  Dialog,
   Divider,
   DropZone,
   Icon,
@@ -37,7 +38,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import { getReourceDoc } from './DistributionList';
+import { createResourceFilesDoc, getReourceDoc } from './DistributionList';
 
 interface TListItem {
   label: string;
@@ -46,12 +47,7 @@ interface TListItem {
   dataset: any;
 }
 
-export const EditResource = ({
-  uploadedFile,
-  handleDropZoneDrop,
-  file,
-}: any) => {
-  
+export const EditResource = () => {
   const { data, refetch } = useQuery(
     [`get_resources`],
     () => GraphQL(getReourceDoc),
@@ -98,6 +94,26 @@ export const EditResource = ({
     }
   );
 
+  const { mutate: transform } = useMutation(
+    (data: { fileResourceInput: CreateFileResourceInput }) =>
+      GraphQL(createResourceFilesDoc, data),
+    {
+      onSuccess: (data: any) => {
+        setResourceId(data.createFileResources[0].id);
+        toast('Resource Added Successfully', {
+          action: {
+            label: 'Dismiss',
+            onClick: () => {},
+          },
+        });
+        refetch();
+      },
+      onError: (err: any) => {
+        console.log('Error ::: ', err);
+      },
+    }
+  );
+  
   const table = {
     columns: [
       {
@@ -188,18 +204,29 @@ export const EditResource = ({
     });
   };
 
-  // const handleDropZoneDrop = React.useCallback(
-  //   (_dropFiles: File[], acceptedFiles: File[]) => setFile(acceptedFiles[0]),
-  //   []
-  // );
 
-  // const uploadedFile = ResourceList.length > 0 && (
-  //   <div style={{ padding: '0' }}>
-  //     <div className="flex flex-col gap-2">
-  //       <div>{file.name} </div>
-  //     </div>
-  //   </div>
-  // );
+  const [file, setFile] = React.useState<File[]>([]);
+
+  const dropZone = React.useCallback(
+    (_dropFiles: File[], acceptedFiles: File[]) => {
+      transform({
+        fileResourceInput: {
+          dataset: params.id,
+          files: acceptedFiles,
+        },
+      });
+      setFile((files) => [...files, ...acceptedFiles]);
+    },
+    []
+  );
+
+  const uploadedFile = file.length > 0 && (
+    <div className="flex flex-col gap-2 p-4">
+      {file.map((file, index) => {
+        return <div key={index}>{file.name}</div>;
+      })}
+    </div>
+  );
 
   const listViewFunction = () => {
     setResourceId('');
@@ -230,7 +257,17 @@ export const EditResource = ({
             name="Resource List"
           />
         </div>
-        <Button className="mx-5">ADD NEW RESOURCE</Button>
+        <Dialog>
+          <Dialog.Trigger>
+            <Button className="mx-5">ADD NEW RESOURCE</Button>
+          </Dialog.Trigger>
+          <Dialog.Content title={'Add New Resource'}>
+            <DropZone name="file_upload" allowMultiple={true} onDrop={dropZone}>
+              {uploadedFile}
+              {file.length === 0 && <DropZone.FileUpload />}
+            </DropZone>
+          </Dialog.Content>
+        </Dialog>
         <Button
           className="w-1/6 justify-end"
           size="medium"
