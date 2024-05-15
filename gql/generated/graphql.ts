@@ -329,7 +329,7 @@ export type TypeResource = {
   metadata: Array<TypeResourceMetadata>;
   modified: Scalars['DateTime'];
   name: Scalars['String'];
-  schema?: Maybe<TypeResourceSchema>;
+  schema?: Maybe<Array<TypeResourceSchema>>;
   type: Scalars['String'];
 };
 
