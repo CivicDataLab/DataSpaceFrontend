@@ -47,7 +47,7 @@ interface TListItem {
   dataset: any;
 }
 
-export const EditResource = () => {
+export const EditResource = ({ reload }: any) => {
   const { data, refetch } = useQuery(
     [`get_resources`],
     () => GraphQL(getReourceDoc),
@@ -70,10 +70,7 @@ export const EditResource = () => {
     }
   `);
 
-  const [resourceId, setResourceId] = useQueryState(
-    'id',
-    parseAsString.withDefault('')
-  );
+  const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
 
   const { mutate, isLoading } = useMutation(
     (data: { fileResourceInput: UpdateFileResourceInput }) =>
@@ -107,13 +104,14 @@ export const EditResource = () => {
           },
         });
         refetch();
+        reload();
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
       },
     }
   );
-  
+
   const table = {
     columns: [
       {
@@ -184,26 +182,25 @@ export const EditResource = () => {
     return ResourceList.find((item) => item.value === resourceId);
   };
 
-  const [resourceData, setResourceData] = React.useState({
-    name: getResourceObject(resourceId)?.label ?? '',
-    description: getResourceObject(resourceId)?.description || '',
-  });
+  const [resourceName, setResourceName] = React.useState(
+    getResourceObject(resourceId)?.label
+  );
+  const [resourceDesc, setResourceDesc] = React.useState(
+    getResourceObject(resourceId)?.description
+  );
 
-  const handleInputChange = (key: string, value: string) => {
-    setResourceData((prevState) => ({
-      ...prevState,
-      [key]: value,
-    }));
+  const handleNameChange = (text: string) => {
+    setResourceName(text);
+  };
+  const handleDescChange = (text: string) => {
+    setResourceDesc(text);
   };
 
   const handleResourceChange = (e: any) => {
     setResourceId(e, { shallow: false });
-    setResourceData({
-      name: getResourceObject(e)?.label ?? '',
-      description: getResourceObject(resourceId)?.description ?? '',
-    });
+    setResourceName(getResourceObject(e)?.label);
+    setResourceDesc(getResourceObject(e)?.description);
   };
-
 
   const [file, setFile] = React.useState<File[]>([]);
 
@@ -236,8 +233,8 @@ export const EditResource = () => {
     mutate({
       fileResourceInput: {
         id: resourceId,
-        description: resourceData.description,
-        name: resourceData.name,
+        description: resourceDesc,
+        name: resourceName,
       },
     });
   };
@@ -251,6 +248,7 @@ export const EditResource = () => {
             label="Resource List"
             labelHidden
             options={ResourceList}
+            value={getResourceObject(resourceId)?.value}
             onChange={(e) => {
               handleResourceChange(e);
             }}
@@ -259,7 +257,7 @@ export const EditResource = () => {
         </div>
         <Dialog>
           <Dialog.Trigger>
-            <Button className="mx-5">ADD NEW RESOURCE</Button>
+            <Button className=" mx-5">ADD NEW RESOURCE</Button>
           </Dialog.Trigger>
           <Dialog.Content title={'Add New Resource'}>
             <DropZone name="file_upload" allowMultiple={true} onDrop={dropZone}>
@@ -269,7 +267,7 @@ export const EditResource = () => {
           </Dialog.Content>
         </Dialog>
         <Button
-          className="w-1/6 justify-end"
+          className=" w-1/5 justify-end"
           size="medium"
           kind="tertiary"
           variant="basic"
@@ -295,10 +293,10 @@ export const EditResource = () => {
           <div className="mb-10 flex gap-6 ">
             <div className="w-2/3">
               <TextField
-                value={resourceData.name}
-                onChange={(text) => handleInputChange('name', text)}
+                value={resourceName}
+                onChange={(text) => handleNameChange(text)}
                 label="Resource Name"
-                name="resourceName"
+                name="a"
                 required
                 helpText="To know about best practices for naming Resources go to our User Guide"
               />
@@ -321,8 +319,8 @@ export const EditResource = () => {
             </div>
           </div>
           <TextField
-            value={resourceData.description}
-            onChange={(text) => handleInputChange('description', text)}
+            value={resourceDesc}
+            onChange={(text) => handleDescChange(text)}
             label="Resource Description"
             name="resourceDesc"
             multiline={4}

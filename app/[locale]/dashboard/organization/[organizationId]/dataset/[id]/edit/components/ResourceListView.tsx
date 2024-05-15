@@ -59,7 +59,6 @@ export const ResourceListView = ({ data, refetch }: any) => {
         accessorKey: 'name_of_resource',
         header: 'NAME OF RESOURCE',
         cell: (info: any) => {
-          console.log(info);
           return (
             <div
               style={{ cursor: 'pointer', textDecoration: 'underline' }}
