@@ -128,7 +128,7 @@ const Navigation = ({
     },
     {
       label: 'Access Models',
-      url: `/dashboard/organization/${organization}/dataset/${id}/edit/access`,
+      url: `/dashboard/organization/${organization}/dataset/${id}/edit/access?list=true`,
       selected: pathItem === 'access',
     },
     {
