@@ -1,17 +1,20 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
   Button,
+  Spinner,
   Table,
   Tag,
   Text,
+  toast,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -52,23 +55,16 @@ const datasetSummaryQuery = graphql(`
   }
 `);
 
-// const createDatasetMutationDoc: any = graphql(`
-//   mutation GenerateDatasetName {
-//     addDataset {
-//       __typename
-//       ... on TypeDataset {
-//         id
-//         created
-//       }
-//       ... on OperationInfo {
-//         messages {
-//           kind
-//           message
-//         }
-//       }
-//     }
-//   }
-// `);
+const publishDatasetMutation: any = graphql(`
+  mutation publishDataset($datasetId: UUID!) {
+    publishDataset(datasetId: $datasetId) {
+      ... on TypeDataset {
+        id
+        status
+      }
+    }
+  }
+`);
 
 const generateColumnData = (name: any) => {
   return [
@@ -93,13 +89,14 @@ const generateTableData = (name: any, data: any) => {
 const Page = () => {
   const params = useParams();
 
-  const { data, isLoading } = useQuery([`summary_${params.id}`], () =>
+  const { data, isLoading, refetch } = useQuery([`summary_${params.id}`], () =>
     GraphQL(datasetSummaryQuery, { filters: { id: params.id } })
   );
 
-  console.log(data);
+  useEffect(() => {
+    refetch();
+  });
 
-  // Summary data as per your provided format
   const Summary = [
     {
       name: 'Resource',
@@ -124,24 +121,20 @@ const Page = () => {
       value: formatDate(data?.datasets[0].modified),
     },
   ];
+  const router = useRouter();
 
-  // const { mutate, isLoading } = useMutation(
-  //   () => GraphQL(createDatasetMutationDoc, []),
-  //   {
-  //     onSuccess: (data: any) => {
-  //       queryClient.invalidateQueries({
-  //         queryKey: [`create_dataset_${'52'}`],
-  //       });
-
-  //       router.push(
-  //         `/dashboard/organization/${params.organizationId}/dataset/${data?.addDataset?.id}/edit/distribution`
-  //       );
-  //     },
-  //     onError: (err: any) => {
-  //       console.log('Error ::: ', err);
-  //     },
-  //   }
-  // );
+  const { mutate, isLoading: mutationLoading } = useMutation(
+    () => GraphQL(publishDatasetMutation, { datasetId: params.id }),
+    {
+      onSuccess: (data: any) => {
+        toast('Dataset Published Successfully');
+        router.push(`/dashboard/organization/${params.organizationId}/dataset`);
+      },
+      onError: (err: any) => {
+        toast(`Received ${err} on dataset publish `);
+      },
+    }
+  );
 
   return (
     <>
@@ -156,8 +149,10 @@ const Page = () => {
           </Text>
         </div>
         <div className=" flex flex-col gap-10 pt-6">
-          {isLoading ? (
-            <Text>Loading...</Text>
+          {isLoading || mutationLoading ? (
+            <div className=" mt-8 flex justify-center">
+              <Spinner />
+            </div>
           ) : (
             <>
               {Summary.map((item, index) => (
@@ -231,6 +226,7 @@ const Page = () => {
                   !data?.datasets[0]?.resources.length &&
                   !data?.datasets[0]?.accessModels.length
                 }
+                onClick={() => mutate()}
               >
                 Publish
               </Button>
