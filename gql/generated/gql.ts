@@ -18,8 +18,11 @@ const documents = {
     "\n  query datasets($filters: DatasetFilter) {\n    datasets(filters: $filters) {\n      tags\n      id\n      title\n      description\n      created\n      modified\n      metadata {\n        metadataItem {\n          id\n          label\n        }\n        value\n      }\n      resources {\n        id\n        created\n        modified\n        type\n        name\n        description\n      }\n    }\n  }\n": types.DatasetsDocument,
     "\n  query getResource {\n    resource {\n      id\n      dataset {\n        pk\n      }\n      type\n      name\n      description\n      created\n    }\n  }\n": types.GetResourceDocument,
     "\n    mutation readFiles($fileResourceInput: CreateFileResourceInput!) {\n      createFileResources(fileResourceInput: $fileResourceInput) {\n        id\n        created\n        name\n      }\n    }\n  ": types.ReadFilesDocument,
+    "\n  query MetaDataQuery {\n    metadata {\n      id\n      label\n      dataStandard\n      urn\n      dataType\n      options\n      validator\n      type\n      model\n      enabled\n    }\n  }\n": types.MetaDataQueryDocument,
+    "\n  mutation SaveMetadata($UpdateMetadataInput: UpdateMetadataInput!) {\n    addUpdateDatasetMetadata(updateMetadataInput: $UpdateMetadataInput) {\n      __typename\n      ... on TypeDataset {\n        id\n        created\n      }\n      ... on OperationInfo {\n        messages {\n          kind\n          message\n        }\n      }\n    }\n  }\n": types.SaveMetadataDocument,
     "\n    mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {\n      updateFileResource(fileResourceInput: $fileResourceInput) {\n        __typename\n        ... on TypeResource {\n          id\n          description\n          name\n        }\n      }\n    }\n  ": types.UpdateFileResourceDocument,
     "\n    mutation deleteFileResource($resourceId: UUID!) {\n      deleteFileResource(resourceId: $resourceId)\n    }\n  ": types.DeleteFileResourceDocument,
+    "\n  query datasetQuery($filters: DatasetFilter) {\n    datasets(filters: $filters) {\n      id\n      title\n      metadata {\n        metadataItem {\n          id\n          label\n        }\n        id\n        value\n      }\n    }\n  }\n": types.DatasetQueryDocument,
     "\n  query datasetsSummary($filters: DatasetFilter) {\n    datasets(filters: $filters) {\n      metadata {\n        metadataItem {\n          id\n          label\n        }\n        id\n        value\n      }\n      resources {\n        id\n        type\n        name\n        description\n      }\n      accessModels {\n        id\n        name\n        description\n        type\n        created\n        modified\n      }\n      tags\n      id\n      title\n      description\n      created\n      modified\n    }\n  }\n": types.DatasetsSummaryDocument,
     "\n  mutation publishDataset($datasetId: UUID!) {\n    publishDataset(datasetId: $datasetId) {\n      ... on TypeDataset {\n        id\n        status\n      }\n    }\n  }\n": types.PublishDatasetDocument,
     "\n  mutation GenerateDatasetName {\n    addDataset {\n      __typename\n      ... on TypeDataset {\n        id\n        created\n      }\n      ... on OperationInfo {\n        messages {\n          kind\n          message\n        }\n      }\n    }\n  }\n": types.GenerateDatasetNameDocument,
@@ -62,11 +65,23 @@ export function graphql(source: "\n    mutation readFiles($fileResourceInput: Cr
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  query MetaDataQuery {\n    metadata {\n      id\n      label\n      dataStandard\n      urn\n      dataType\n      options\n      validator\n      type\n      model\n      enabled\n    }\n  }\n"): (typeof documents)["\n  query MetaDataQuery {\n    metadata {\n      id\n      label\n      dataStandard\n      urn\n      dataType\n      options\n      validator\n      type\n      model\n      enabled\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SaveMetadata($UpdateMetadataInput: UpdateMetadataInput!) {\n    addUpdateDatasetMetadata(updateMetadataInput: $UpdateMetadataInput) {\n      __typename\n      ... on TypeDataset {\n        id\n        created\n      }\n      ... on OperationInfo {\n        messages {\n          kind\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation SaveMetadata($UpdateMetadataInput: UpdateMetadataInput!) {\n    addUpdateDatasetMetadata(updateMetadataInput: $UpdateMetadataInput) {\n      __typename\n      ... on TypeDataset {\n        id\n        created\n      }\n      ... on OperationInfo {\n        messages {\n          kind\n          message\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n    mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {\n      updateFileResource(fileResourceInput: $fileResourceInput) {\n        __typename\n        ... on TypeResource {\n          id\n          description\n          name\n        }\n      }\n    }\n  "): (typeof documents)["\n    mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {\n      updateFileResource(fileResourceInput: $fileResourceInput) {\n        __typename\n        ... on TypeResource {\n          id\n          description\n          name\n        }\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n    mutation deleteFileResource($resourceId: UUID!) {\n      deleteFileResource(resourceId: $resourceId)\n    }\n  "): (typeof documents)["\n    mutation deleteFileResource($resourceId: UUID!) {\n      deleteFileResource(resourceId: $resourceId)\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query datasetQuery($filters: DatasetFilter) {\n    datasets(filters: $filters) {\n      id\n      title\n      metadata {\n        metadataItem {\n          id\n          label\n        }\n        id\n        value\n      }\n    }\n  }\n"): (typeof documents)["\n  query datasetQuery($filters: DatasetFilter) {\n    datasets(filters: $filters) {\n      id\n      title\n      metadata {\n        metadataItem {\n          id\n          label\n        }\n        id\n        value\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

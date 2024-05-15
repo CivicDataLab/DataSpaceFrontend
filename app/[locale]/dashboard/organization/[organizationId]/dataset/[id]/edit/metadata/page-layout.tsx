@@ -4,7 +4,7 @@ import React from 'react';
 import { graphql } from '@/gql';
 // import { UpdateDatasetInput } from '@/gql/generated/graphql';
 import { usePRouter } from '@/hooks/use-prouter';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { GraphQL } from '@/lib/api';
 import { EditMetadata } from '../components/EditMetadata';
@@ -57,8 +57,8 @@ import { EditMetadata } from '../components/EditMetadata';
 // `);
 
 export function MetadataPage({ params }: { params: { id: string } }) {
-  const router = usePRouter();
-  const submitRef = React.useRef<HTMLButtonElement>(null);
+  // const router = usePRouter();
+  // const submitRef = React.useRef<HTMLButtonElement>(null);
 
   // const { data } = useQuery([`dataset_meta_${params.id}`], () =>
   //   GraphQL(datasetQueryDoc, { dataset_id: Number(params.id) })
