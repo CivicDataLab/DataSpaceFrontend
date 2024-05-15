@@ -2,10 +2,19 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useParams, usePathname,useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import { Button, Divider, Icon, SkeletonDisplayText, Tab, TabList, Tabs, Text } from 'opub-ui';
+import {
+  Button,
+  Divider,
+  Icon,
+  SkeletonDisplayText,
+  Tab,
+  TabList,
+  Tabs,
+  Text,
+} from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -25,7 +34,7 @@ interface LayoutProps {
   params: { id: string };
 }
 
-const layoutList = ['metadata', 'access', 'distribution', 'review', 'publish'];
+const layoutList = ['metadata', 'access', 'distribution', 'publish'];
 
 export function EditLayout({ children, params }: LayoutProps) {
   // const { data } = useQuery([`dataset_layout_${params.id}`], () =>
@@ -62,7 +71,7 @@ export function EditLayout({ children, params }: LayoutProps) {
             organization={routerParams.organizationId.toString()}
           />
         </div>
-        <div className="bg-surface shadow-card border-l-divider rounded-tl-none max-w-[1280px] flex-grow py-4">
+        <div className="bg-surface shadow-card border-l-divider rounded-tl-none  flex-grow py-4">
           {children}
         </div>
       </div>
@@ -128,10 +137,10 @@ const Navigation = ({
       selected: pathItem === 'metadata',
     },
     {
-      label: 'Review',
-      url: `/dashboard/organization/${organization}/dataset/${id}/edit/review`,
+      label: 'Publish',
+      url: `/dashboard/organization/${organization}/dataset/${id}/edit/publish`,
       disabled: true,
-      selected: pathItem === 'review',
+      selected: pathItem === 'publish',
     },
   ];
 
@@ -142,24 +151,23 @@ const Navigation = ({
   };
 
   const initialTabLabel =
-    links.find((option) => option.selected)?.label ||
-    'Distributions';
+    links.find((option) => option.selected)?.label || 'Distributions';
 
   return (
     <div>
-    <Tabs defaultValue={initialTabLabel}>
-      <TabList fitted>
-        {links.map((item, index) => (
-          <Tab
-            value={item.label}
-            key={index}
-            onClick={() => handleTabClick(item.url)}
-          >
-            {item.label}
-          </Tab>
-        ))}
-      </TabList>
-    </Tabs>
-  </div>
+      <Tabs defaultValue={initialTabLabel}>
+        <TabList fitted>
+          {links.map((item, index) => (
+            <Tab
+              value={item.label}
+              key={index}
+              onClick={() => handleTabClick(item.url)}
+            >
+              {item.label}
+            </Tab>
+          ))}
+        </TabList>
+      </Tabs>
+    </div>
   );
 };
