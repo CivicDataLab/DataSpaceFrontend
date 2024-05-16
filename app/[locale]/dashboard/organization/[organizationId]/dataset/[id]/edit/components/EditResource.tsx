@@ -25,6 +25,7 @@ import {
   Checkbox,
   Combobox,
   DataTable,
+  Dialog,
   Divider,
   DropZone,
   Icon,
@@ -37,21 +38,17 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import { getReourceDoc } from './DistributionList';
+import { createResourceFilesDoc, getReourceDoc } from './DistributionList';
 
 interface TListItem {
   label: string;
   value: string;
   description: string;
   dataset: any;
+  fileDetails: any;
 }
 
-export const EditResource = ({
-  uploadedFile,
-  handleDropZoneDrop,
-  file,
-}: any) => {
-  
+export const EditResource = ({ reload }: any) => {
   const { data, refetch } = useQuery(
     [`get_resources`],
     () => GraphQL(getReourceDoc),
@@ -74,10 +71,7 @@ export const EditResource = ({
     }
   `);
 
-  const [resourceId, setResourceId] = useQueryState(
-    'id',
-    parseAsString.withDefault('')
-  );
+  const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
 
   const { mutate, isLoading } = useMutation(
     (data: { fileResourceInput: UpdateFileResourceInput }) =>
@@ -91,6 +85,27 @@ export const EditResource = ({
           },
         });
         refetch();
+      },
+      onError: (err: any) => {
+        console.log('Error ::: ', err);
+      },
+    }
+  );
+
+  const { mutate: transform } = useMutation(
+    (data: { fileResourceInput: CreateFileResourceInput }) =>
+      GraphQL(createResourceFilesDoc, data),
+    {
+      onSuccess: (data: any) => {
+        setResourceId(data.createFileResources[0].id);
+        toast('Resource Added Successfully', {
+          action: {
+            label: 'Dismiss',
+            onClick: () => {},
+          },
+        });
+        refetch();
+        reload();
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
@@ -153,6 +168,7 @@ export const EditResource = ({
   };
 
   const params = useParams();
+  const router = useRouter();
 
   const ResourceList: TListItem[] =
     data?.resource
@@ -162,77 +178,134 @@ export const EditResource = ({
         value: item.id,
         description: item.description,
         dataset: item.dataset?.pk,
+        fileDetails: item.fileDetails,
       })) || [];
 
   const getResourceObject = (resourceId: string) => {
     return ResourceList.find((item) => item.value === resourceId);
   };
 
-  const [resourceData, setResourceData] = React.useState({
-    name: getResourceObject(resourceId)?.label ?? '',
-    description: getResourceObject(resourceId)?.description || '',
-  });
+  const [resourceName, setResourceName] = React.useState(
+    getResourceObject(resourceId)?.label
+  );
+  const [resourceDesc, setResourceDesc] = React.useState(
+    getResourceObject(resourceId)?.description
+  );
 
-  const handleInputChange = (key: string, value: string) => {
-    setResourceData((prevState) => ({
-      ...prevState,
-      [key]: value,
-    }));
+  const handleNameChange = (text: string) => {
+    setResourceName(text);
   };
+  const handleDescChange = (text: string) => {
+    setResourceDesc(text);
+  };
+
+  React.useEffect(() => {
+   if(resourceId){
+    setResourceName(getResourceObject(resourceId)?.label);
+    setResourceDesc( getResourceObject(resourceId)?.description)
+   }
+  },[resourceId])
 
   const handleResourceChange = (e: any) => {
     setResourceId(e, { shallow: false });
-    setResourceData({
-      name: getResourceObject(e)?.label ?? '',
-      description: getResourceObject(resourceId)?.description ?? '',
-    });
+    setResourceName(getResourceObject(e)?.label);
+    setResourceDesc(getResourceObject(e)?.description);
   };
 
-  // const handleDropZoneDrop = React.useCallback(
-  //   (_dropFiles: File[], acceptedFiles: File[]) => setFile(acceptedFiles[0]),
-  //   []
-  // );
+  const [file, setFile] = React.useState<File[]>([]);
 
-  // const uploadedFile = ResourceList.length > 0 && (
-  //   <div style={{ padding: '0' }}>
-  //     <div className="flex flex-col gap-2">
-  //       <div>{file.name} </div>
-  //     </div>
-  //   </div>
-  // );
+  const dropZone = React.useCallback(
+    (_dropFiles: File[], acceptedFiles: File[]) => {
+      transform({
+        fileResourceInput: {
+          dataset: params.id,
+          files: acceptedFiles,
+        },
+      });
+      setFile((files) => [...files, ...acceptedFiles]);
+    },
+    []
+  );
 
+  const uploadedFile = file.length > 0 && (
+    <div className="flex flex-col gap-2 p-4">
+      {file.map((file, index) => {
+        return <div key={index}>{file.name}</div>;
+      })}
+    </div>
+  );
+
+  const [resourceFile, setResourceFile] = React.useState<File>();
+
+  const onDrop = React.useCallback(
+    (_dropFiles: File[], acceptedFiles: File[]) =>
+      setResourceFile(acceptedFiles[0]),
+    []
+  );
+
+  console.log(resourceFile, 'resourceFile');
+
+  const fileInput = resourceFile ? (
+    <div className="flex ">{resourceFile.name} </div>
+  ) : (
+    <div className="flex">
+      <Text className="break-all">
+        {getResourceObject(resourceId)?.fileDetails.file.name.replace(
+          'resources/',
+          ''
+        )}{' '}
+      </Text>
+    </div>
+  );
+
+  
   const listViewFunction = () => {
-    setResourceId('');
+    refetch()
+    router.push(
+      `/dashboard/organization/${params.organizationId}/dataset/${params.id}/edit/distribution`
+    );
   };
 
   const saveResource = () => {
     mutate({
       fileResourceInput: {
         id: resourceId,
-        description: resourceData.description,
-        name: resourceData.name,
+        description: resourceDesc ? resourceDesc :getResourceObject(resourceId)?.description,
+        name: resourceName ? resourceName: getResourceObject(resourceId)?.label,
+         file: resourceFile
       },
     });
   };
 
   return (
     <div className=" bg-basePureWhite px-6 py-8">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-6">
         <Text>Resource Name :</Text>
         <div className=" w-3/6">
           <Select
             label="Resource List"
             labelHidden
             options={ResourceList}
+            value={getResourceObject(resourceId)?.value}
             onChange={(e) => {
               handleResourceChange(e);
             }}
             name="Resource List"
           />
         </div>
-        <Button className="mx-5">ADD NEW RESOURCE</Button>
+        <Dialog>
+          <Dialog.Trigger>
+            <Button className=" mx-5">ADD NEW RESOURCE</Button>
+          </Dialog.Trigger>
+          <Dialog.Content title={'Add New Resource'}>
+            <DropZone name="file_upload" allowMultiple={true} onDrop={dropZone}>
+              {uploadedFile}
+              {file.length === 0 && <DropZone.FileUpload />}
+            </DropZone>
+          </Dialog.Content>
+        </Dialog>
         <Button
-          className="w-1/6 justify-end"
+          className=" w-1/5 justify-end"
           size="medium"
           kind="tertiary"
           variant="basic"
@@ -254,14 +327,14 @@ export const EditResource = ({
         </Button>
       </div>
       <div className="mt-8 flex items-stretch gap-10">
-        <div className="flex w-3/4 flex-col">
+        <div className="flex w-4/5 flex-col">
           <div className="mb-10 flex gap-6 ">
             <div className="w-2/3">
               <TextField
-                value={resourceData.name}
-                onChange={(text) => handleInputChange('name', text)}
+                value={resourceName}
+                onChange={(text) => handleNameChange(text)}
                 label="Resource Name"
-                name="resourceName"
+                name="a"
                 required
                 helpText="To know about best practices for naming Resources go to our User Guide"
               />
@@ -284,27 +357,28 @@ export const EditResource = ({
             </div>
           </div>
           <TextField
-            value={resourceData.description}
-            onChange={(text) => handleInputChange('description', text)}
+            value={resourceDesc}
+            onChange={(text) => handleDescChange(text)}
             label="Resource Description"
             name="resourceDesc"
             multiline={4}
           />
         </div>
-        <div className="w-1/4 items-stretch ">
-          <div style={{ width: 250, height: 250 }}>
-            {/* <DropZone
-              name="file_upload"
-              allowMultiple={false}
-              onDrop={handleDropZoneDrop}
-            >
-              {uploadedFile}
-              <DropZone.FileUpload />
-            </DropZone> */}
-          </div>
+        <div className="flex w-1/5 flex-col justify-between border-1 border-solid border-baseGraySlateSolid7 p-3 ">
+          {fileInput}
+
+          <DropZone
+            name="file_upload"
+            allowMultiple={false}
+            onDrop={onDrop}
+            className="w-full border-none bg-baseGraySlateSolid5"
+            label="Change file for this resource"
+          >
+            <DropZone.FileUpload />
+          </DropZone>
         </div>
       </div>
-      <div className=" my-8 flex items-center gap-4 border-1 border-solid border-baseGraySlateSolid7 px-7 py-4 ">
+      {/* <div className=" my-8 flex items-center gap-4 border-1 border-solid border-baseGraySlateSolid7 px-7 py-4 ">
         <div className="flex w-1/6 items-center justify-center gap-1">
           <Checkbox name="checkbox" onChange={() => console.log('hi')}>
             Enabel Preview
@@ -313,6 +387,7 @@ export const EditResource = ({
         </div>
 
         <div className="h-[70px] w-[2px] bg-baseGraySlateSolid7"></div>
+
         <div className="flex items-center gap-5 px-8">
           <Text>
             Select Rows to be <br /> shown in the Preview
@@ -391,7 +466,7 @@ export const EditResource = ({
           hideFooter={true}
           defaultRowCount={10}
         />
-      </div>
+      </div> */}
     </div>
   );
 };

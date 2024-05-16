@@ -40,6 +40,20 @@ export const getReourceDoc = graphql(`
       name
       description
       created
+      fileDetails {
+        id
+        resource {
+          pk
+        }
+        file {
+          name
+          path
+          url
+        }
+        size
+        created
+        modified
+      }
     }
   }
 `);
@@ -50,7 +64,7 @@ export function DistributionList({
   setPage: (page: 'list' | 'create') => void;
   setEditId: (id: string) => void;
 }) {
-
+  
   const { data, isLoading, refetch } = useQuery(
     [`fetch_resources`],
     () => GraphQL(getReourceDoc),
@@ -75,31 +89,33 @@ export function DistributionList({
         <ResourceListView data={data} refetch={refetch} />
       ) : (
         <div className="py-4">
-          <NoList setPage={setPage} />
+          <NoList setPage={setPage} reload={refetch} />
         </div>
       )}
     </div>
   );
 }
 
+export const createResourceFilesDoc: any = graphql(`
+  mutation readFiles($fileResourceInput: CreateFileResourceInput!) {
+    createFileResources(fileResourceInput: $fileResourceInput) {
+      id
+      created
+      name
+    }
+  }
+`);
+
 const NoList = ({
   setPage,
+  reload,
 }: {
   setPage: (page: 'list' | 'create') => void;
+  reload: any;
 }) => {
   const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT'];
   const params = useParams();
   const [file, setFile] = React.useState<File[]>([]);
-
-  const createResourceFilesDoc: any = graphql(`
-    mutation readFiles($fileResourceInput: CreateFileResourceInput!) {
-      createFileResources(fileResourceInput: $fileResourceInput) {
-        id
-        created
-        name
-      }
-    }
-  `);
 
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
 
@@ -172,11 +188,7 @@ const NoList = ({
       ) : (
         <>
           {resourceId ? (
-            <EditResource
-              uploadedFile={uploadedFile}
-              handleDropZoneDrop={handleDropZoneDrop}
-              file={file}
-            />
+            <EditResource reload={reload} />
           ) : (
             <DropZone
               name="file_details"
