@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
+import { AccessModelInput, AccessTypes } from '@/gql/generated/graphql';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Button,
   Divider,
@@ -10,6 +11,7 @@ import {
   Spinner,
   Text,
   TextField,
+  toast,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -35,6 +37,20 @@ const datasetResourcesQuery = graphql(`
   }
 `);
 
+const createAccessModel: any = graphql(`
+  mutation createAccessModel($accessModelInput: AccessModelInput!) {
+    createAccessModel(accessModelInput: $accessModelInput) {
+      __typename
+      ... on TypeAccessModel {
+        id
+        description
+        name
+        type
+      }
+    }
+  }
+`);
+
 const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
   useEffect(() => {
     setQueryList(false);
@@ -46,6 +62,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
   );
 
   const [accessModelData, setAccessModelData] = useState({
+    dataset: params.id,
     name: '',
     description: '',
     type: '',
@@ -95,6 +112,21 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
     setSelectedResources(allResourceIds);
     setShowSelectAll(false);
   };
+
+  const { mutate, isLoading: mutationLoading } = useMutation(
+    (data: { accessModelInput: AccessModelInput }) =>
+      GraphQL(createAccessModel, data),
+    {
+      onSuccess: () => {
+        toast('Access Model Saved');
+        setQueryList(true);
+      },
+      onError: (err: any) => {
+        console.log('Error ::: ', err);
+      },
+    }
+  );
+
   console.log(accessModelData);
 
   return (
@@ -113,6 +145,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
         <Button
           onClick={(e) =>
             setAccessModelData({
+              dataset: params.id,
               name: '',
               description: '',
               type: '',
@@ -145,7 +178,21 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
       ) : (
         <div className="mt-6 flex flex-col gap-8">
           <div className="text-center">
-            <Button>Save Access Type</Button>
+            <Button
+              onClick={() =>
+                mutate({
+                  accessModelInput: {
+                    name: accessModelData.name,
+                    resources: accessModelData.resources,
+                    dataset: accessModelData.dataset,
+                    description: accessModelData.description,
+                    type: accessModelData.type as AccessTypes,
+                  },
+                })
+              }
+            >
+              Save Access Type
+            </Button>
           </div>
           <div className="flex flex-col gap-6">
             <div className="flex  gap-6">
