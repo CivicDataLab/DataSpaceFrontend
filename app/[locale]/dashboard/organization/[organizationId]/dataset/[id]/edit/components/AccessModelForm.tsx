@@ -4,7 +4,6 @@ import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import {
   Button,
-  Combobox,
   Divider,
   Icon,
   Select,
@@ -15,6 +14,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import ResourceSelector from './ResourceSelector';
 
 interface AccessModelProps {
   setQueryList: any;
@@ -89,8 +89,6 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
     setShowSelectAll(false);
   };
 
-  console.log(selectedResources, data);
-
   return (
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
       <div className="mb-6 flex flex-wrap justify-between gap-6">
@@ -144,41 +142,49 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
           <div className="text-center">
             <Button>Save Access Type</Button>
           </div>
-          <TextField
-            value={accessModelData.name}
-            onChange={(e) =>
-              setAccessModelData({ ...accessModelData, name: e })
-            }
-            label="Access Type Name"
-            name="name"
-            required
-            helpText="To know about best practices for naming Resources go to our User Guide"
-          />
-          <TextField
-            value={accessModelData.description}
-            onChange={(e) =>
-              setAccessModelData({
-                ...accessModelData,
-                description: e,
-              })
-            }
-            label="Description"
-            name="description"
-            multiline={4}
-          />
-          <Select
-            name={'permissions'}
-            options={[
-              { label: 'Public', value: 'PUBLIC' },
-              { label: 'Protected', value: 'PROTECTED' },
-              { label: 'Private', value: 'PRIVATE' },
-            ]}
-            label={'Permissions'}
-            placeholder="Select"
-            onChange={(e) =>
-              setAccessModelData({ ...accessModelData, permission: e })
-            }
-          />
+          <div className="flex flex-col gap-6">
+            <div className="flex  gap-6">
+              <div className=" w-4/5">
+                <TextField
+                  value={accessModelData.name}
+                  onChange={(e) =>
+                    setAccessModelData({ ...accessModelData, name: e })
+                  }
+                  label="Access Type Name"
+                  name="name"
+                  required
+                  helpText="To know about best practices for naming Resources go to our User Guide"
+                />
+              </div>
+              <Select
+                className=" w-1/6"
+                name={'permissions'}
+                options={[
+                  { label: 'Public', value: 'PUBLIC' },
+                  { label: 'Protected', value: 'PROTECTED' },
+                  { label: 'Private', value: 'PRIVATE' },
+                ]}
+                label={'Permissions'}
+                placeholder="Select"
+                onChange={(e) =>
+                  setAccessModelData({ ...accessModelData, permission: e })
+                }
+              />
+            </div>
+            <TextField
+              value={accessModelData.description}
+              onChange={(e) =>
+                setAccessModelData({
+                  ...accessModelData,
+                  description: e,
+                })
+              }
+              label="Description"
+              name="description"
+              multiline={4}
+            />
+          </div>
+
           <div className="flex flex-wrap items-center gap-5">
             <Select
               name={'permissions'}
@@ -216,19 +222,23 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
               </Button>
             </div>
           </div>
-          {selectedResources.map((resourceId, index) => (
-            <div key={index} className="flex flex-wrap items-center gap-5">
-              <Combobox
-                name={''}
-                list={[]}
-                label={`Resource ${index + 1}`}
-                displaySelected
+          {selectedResources.map((resourceId, index) => {
+            const selectedResource = data?.datasetResources.find(
+              (resource) => resource.id === resourceId
+            );
+
+            if (!selectedResource || !selectedResource.schema) {
+              return null;
+            }
+
+            return (
+              <ResourceSelector
+                key={index}
+                selectedResource={selectedResource}
+                handleRemoveResource={handleRemoveResource}
               />
-              <Button onClick={() => handleRemoveResource(resourceId)}>
-                Remove
-              </Button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
