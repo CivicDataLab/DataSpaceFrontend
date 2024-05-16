@@ -14,7 +14,7 @@ const Access = () => {
   return (
     <div>
       {queryList ? (
-        <AccessModelList setQueryList={setQueryList} />
+        <AccessModelList setQueryList={setQueryList} queryList={queryList} />
       ) : (
         <AccessModelForm setQueryList={setQueryList} />
       )}
