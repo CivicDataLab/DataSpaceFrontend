@@ -3,18 +3,9 @@
 import LoadingPage from '@/app/[locale]/dashboard/loading';
 import { graphql } from '@/gql';
 import { TypeMetadata, UpdateMetadataInput } from '@/gql/generated/graphql';
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
-import {
-  Button,
-  Divider,
-  Form,
-  FormLayout,
-  Input,
-  Text
-} from 'opub-ui';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useParams, useRouter } from 'next/navigation';
+import { Button, Divider, Form, FormLayout, Input, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 
@@ -62,6 +53,9 @@ export function EditMetadata({
 }) {
   // const submitRef = React.useRef<HTMLButtonElement>(null);
 
+  const router = useRouter();
+  const params = useParams();
+
   const getMetaDataQueryRes: { data: any; isLoading: boolean } = useQuery(
     [`dataset_meta_${id}`],
     () => GraphQL(metadataQueryDoc, [])
@@ -76,10 +70,9 @@ export function EditMetadata({
         //   queryKey: [`create_dataset_${'52'}`],
         // });
 
-        // router.push(
-        //   `/dashboard/organization/${params.organizationId}/dataset/${params.id}/edit/publish`
-        // );
-        console.log(data);
+        router.push(
+          `/dashboard/organization/${params.organizationId}/dataset/${params.id}/edit/publish`
+        );
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
