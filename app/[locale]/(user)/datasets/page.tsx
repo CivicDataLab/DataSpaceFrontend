@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchDatasets } from '@/fetch';
+import { fetchDatasets, fetchFacets } from '@/fetch';
 import { Button, Pill, SearchInput, Select, Text, Tray } from 'opub-ui';
 
 import BreadCrumbs from '@/components/BreadCrumbs';
@@ -89,6 +89,16 @@ const DatasetsListing = () => {
         console.error(err);
       });
   }, [variables]);
+
+  useEffect(() => {
+    fetchFacets()
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, []);
 
   const handlePageChange = (newPage: number) => {
     setQueryParams({ ...queryParams, currentPage: newPage });

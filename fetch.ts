@@ -5,3 +5,11 @@ export const fetchDatasets = async (variables: any) => {
   const data = await response.json();
   return data;
 };
+
+export const fetchFacets = async () => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/search/dataset/`
+  );
+  const data = await response.json();
+  return data;
+};
