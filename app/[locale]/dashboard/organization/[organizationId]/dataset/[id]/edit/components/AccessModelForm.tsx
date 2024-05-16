@@ -127,8 +127,6 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
     }
   );
 
-  console.log(accessModelData);
-
   return (
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
       <div className="mb-6 flex flex-wrap justify-between gap-6">

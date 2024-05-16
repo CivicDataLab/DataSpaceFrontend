@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Checkbox, Combobox, Text, TextField } from 'opub-ui';
-import { boolean } from 'zod';
+import { Button, Checkbox, Combobox, Icon, Text, TextField } from 'opub-ui';
+
+import { cn } from '@/lib/utils';
+import { Icons } from '@/components/icons';
+import styles from '../edit.module.scss';
 
 interface ResourceSelectorProps {
   selectedResource: any;
@@ -85,57 +88,64 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-5">
-      <div className="flex w-2/4 flex-col gap-4">
+    <div>
+      <div className=" mb-4">
         <Text>{selectedResource.name}</Text>
-        <div className="relative mr-4 flex items-center">
-          <div className="w-full">
-            <Combobox
-              displaySelected
-              label={'Select Fields of the Resource'}
-              list={options}
-              selectedValue={selectedFields}
-              name={''}
-              helpText={'Use the dropdown to add specific fields'}
-              onChange={(e: any) => handleFieldSelection(e)}
-            />
+      </div>
+      <div className="flex flex-wrap justify-between gap-6 px-8">
+        <div className="flex w-full flex-col gap-4 xl:w-3/5">
+          <div className="relative mr-4 flex items-center">
+            <div className="w-full">
+              <Combobox
+                displaySelected
+                label={'Select Fields of the Resource'}
+                list={options}
+                selectedValue={selectedFields}
+                name={''}
+                helpText={'Use the dropdown to add specific fields'}
+                onChange={(e: any) => handleFieldSelection(e)}
+              />
+            </div>
+            <div className="absolute right-0 top-0 " style={{ top: '-4px' }}>
+              <Checkbox
+                name={'Select All Fields'}
+                defaultChecked={true}
+                checked={selectAllFields}
+                onChange={() => setSelectAllFields(!selectAllFields)}
+              >
+                Select All
+              </Checkbox>
+            </div>
           </div>
-          <div className="absolute right-0 top-0 pb-8">
+        </div>
+        <hr className=" m-0" />
+        <div className="flex w-fit flex-col items-center justify-center gap-1">
+          <div className="flex w-full items-center justify-between gap-2 ">
+            <Text>Select Rows of the Resource</Text>
             <Checkbox
-              name={'Select All Fields'}
-              defaultChecked={true}
-              checked={selectAllFields}
-              onChange={() => setSelectAllFields(!selectAllFields)}
+              name={'Select All Rows'}
+              defaultChecked={false}
+              onChange={(e) => console.log(e)}
             >
               Select All
             </Checkbox>
           </div>
+          <div className={cn('flex  flex-wrap gap-6', styles.accessModelEdit)}>
+            <TextField type="number" label="From Row Number" name="name" />
+            <TextField type="number" label="From Row Number" name="name" />
+          </div>
         </div>
+        <hr className=" m-0" />
+        <Button
+          className="my-auto h-fit w-fit items-center"
+          kind="tertiary"
+          onClick={() => handleRemoveResource(selectedResource.id)}
+        >
+          <span className="flex flex-col items-center justify-center gap-2">
+            <Icon source={Icons.delete} size={24} /> Remove <br /> Resource
+          </span>
+        </Button>
       </div>
-      <hr />
-      {/* <div className="flex w-fit flex-col gap-1">
-        <div className="flex gap-2 ">
-          <Text>Select Rows of the Resource</Text>
-          <Checkbox
-            name={'Select All Rows'}
-            defaultChecked={true}
-            onChange={() => setSelectAllRows(!selectAllRows)}
-          >
-            Select All
-          </Checkbox>
-        </div>
-        <div className="flex  flex-wrap gap-6 ">
-          <TextField type="number" label="From Row Number" name="name" />
-          <TextField type="number" label="From Row Number" name="name" />
-        </div>
-      </div> */}
-      <hr />
-      <Button
-        className="my-auto h-fit w-fit"
-        onClick={() => handleRemoveResource(selectedResource.id)}
-      >
-        Remove
-      </Button>
     </div>
   );
 };
