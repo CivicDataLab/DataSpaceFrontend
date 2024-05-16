@@ -10,6 +10,7 @@ import {
   AccordionItem,
   AccordionTrigger,
   Button,
+  Dialog,
   Spinner,
   Table,
   Tag,
@@ -36,6 +37,12 @@ const datasetSummaryQuery = graphql(`
         type
         name
         description
+        schema {
+          fieldName
+          id
+          format
+          description
+        }
       }
       accessModels {
         id
@@ -44,6 +51,14 @@ const datasetSummaryQuery = graphql(`
         type
         created
         modified
+        modelResources {
+          resource {
+            name
+            description
+            id
+            type
+          }
+        }
       }
       tags
       id
@@ -76,13 +91,81 @@ const generateColumnData = (name: any) => {
       accessorKey: 'type',
       header: 'Type',
     },
+    {
+      accessorKey: 'dialog',
+      header: `${name === 'Access Type' ? 'Resources' : 'Fields'}`,
+      cell: ({ row }: any) => {
+        console.log(row.original.dialog.length);
+
+        return (
+          <>
+            <Dialog>
+              <Dialog.Trigger>
+                <Button
+                  kind="tertiary"
+                  disabled={row.original.dialog.length === 0}
+                >
+                  {name === 'Access Type' ? 'Resources' : 'Fields'}
+                </Button>
+              </Dialog.Trigger>
+              <Dialog.Content
+                title={name === 'Access Type' ? 'Resources' : 'Fields'}
+                limitHeight
+              >
+                {name === 'Access Type' ? (
+                  <Table
+                    columns={[
+                      {
+                        accessorKey: 'name',
+                        header: 'Name of the Resource',
+                      },
+                      {
+                        accessorKey: 'type',
+                        header: 'Permissions',
+                      },
+                    ]}
+                    rows={row.original.dialog.map((item: any) => ({
+                      name: item.resource.name,
+                      type: item.resource.type,
+                    }))}
+                    hideFooter
+                  />
+                ) : (
+                  <Table
+                    columns={[
+                      {
+                        accessorKey: 'name',
+                        header: 'Name of the Field',
+                      },
+                      {
+                        accessorKey: 'format',
+                        header: 'Format',
+                      },
+                    ]}
+                    rows={row.original.dialog.map((item: any) => ({
+                      name: item.fieldName,
+                      format: item.format,
+                    }))}
+                    hideFooter
+                  />
+                )}
+              </Dialog.Content>
+            </Dialog>
+          </>
+        );
+      },
+    },
   ];
 };
 
 const generateTableData = (name: any, data: any) => {
   return data.map((item: any) => ({
     name: item.name,
-    type: name === 'Access Type' ? item.type.split('.').pop() : item.type,
+    type:
+      name === 'Access Type'
+        ? toTitleCase(item.type.split('.').pop().toLowerCase())
+        : item.type,
+    dialog: name === 'Access Type' ? item.modelResources : item.schema,
   }));
 };
 
