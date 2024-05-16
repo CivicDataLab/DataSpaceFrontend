@@ -89,7 +89,7 @@ export function DistributionList({
         <ResourceListView data={data} refetch={refetch} />
       ) : (
         <div className="py-4">
-          <NoList setPage={setPage} reload={refetch} />
+          <NoList setPage={setPage} reload={refetch} data={data} />
         </div>
       )}
     </div>
@@ -109,9 +109,11 @@ export const createResourceFilesDoc: any = graphql(`
 const NoList = ({
   setPage,
   reload,
+  data
 }: {
   setPage: (page: 'list' | 'create') => void;
   reload: any;
+  data: any
 }) => {
   const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT'];
   const params = useParams();
@@ -189,7 +191,7 @@ const NoList = ({
       ) : (
         <>
           {resourceId ? (
-            <EditResource reload={reload} />
+            <EditResource reload={reload} data={data}/>
           ) : (
             <DropZone
               name="file_details"

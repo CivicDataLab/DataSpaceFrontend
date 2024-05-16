@@ -48,15 +48,7 @@ interface TListItem {
   fileDetails: any;
 }
 
-export const EditResource = ({ reload }: any) => {
-  const { data, refetch } = useQuery(
-    [`get_resources`],
-    () => GraphQL(getReourceDoc),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
-  );
+export const EditResource = ({ reload, data }: any) => {
 
   const updateResourceDoc: any = graphql(`
     mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {
@@ -84,7 +76,7 @@ export const EditResource = ({ reload }: any) => {
             onClick: () => {},
           },
         });
-        refetch();
+        reload();
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
@@ -104,7 +96,6 @@ export const EditResource = ({ reload }: any) => {
             onClick: () => {},
           },
         });
-        refetch();
         reload();
       },
       onError: (err: any) => {
@@ -172,8 +163,8 @@ export const EditResource = ({ reload }: any) => {
 
   const ResourceList: TListItem[] =
     data?.resource
-      .filter((item) => item.dataset?.pk === params.id)
-      .map((item) => ({
+      .filter((item: any) => item.dataset?.pk === params.id)
+      .map((item: any) => ({
         label: item.name,
         value: item.id,
         description: item.description,
@@ -200,11 +191,11 @@ export const EditResource = ({ reload }: any) => {
   };
 
   React.useEffect(() => {
-   if(resourceId){
     setResourceName(getResourceObject(resourceId)?.label);
-    setResourceDesc( getResourceObject(resourceId)?.description)
-   }
-  },[resourceId])
+    setResourceDesc(getResourceObject(resourceId)?.description);
+
+    //fix this later
+  }, [JSON.stringify(ResourceList), resourceId]);
 
   const handleResourceChange = (e: any) => {
     setResourceId(e, { shallow: false });
@@ -243,8 +234,6 @@ export const EditResource = ({ reload }: any) => {
     []
   );
 
-  console.log(resourceFile, 'resourceFile');
-
   const fileInput = resourceFile ? (
     <div className="flex ">{resourceFile.name} </div>
   ) : (
@@ -258,7 +247,7 @@ export const EditResource = ({ reload }: any) => {
     </div>
   );
 
-  
+
   const listViewFunction = () => {
     router.push(
       `/dashboard/organization/${params.organizationId}/dataset/${params.id}/edit/distribution`
