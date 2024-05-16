@@ -62,6 +62,10 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
         value: option?.value,
       }))
     );
+
+    // Check if all options are selected
+    const allOptionsSelected = selectedOptions.length === options.length;
+
     // Update accessModelData with the selected fields
     setAccessModelData((prevData: any) => ({
       ...prevData,
@@ -75,6 +79,9 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
         },
       ],
     }));
+
+    // Update selectAllFields state based on whether all options are selected or not
+    setSelectAllFields(allOptionsSelected);
   };
 
   return (
@@ -97,6 +104,7 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
             <Checkbox
               name={'Select All Fields'}
               defaultChecked={true}
+              checked={selectAllFields}
               onChange={() => setSelectAllFields(!selectAllFields)}
             >
               Select All
