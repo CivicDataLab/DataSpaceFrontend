@@ -4,7 +4,12 @@ import { useParams, useSearchParams } from 'next/navigation';
 import router from 'next/router';
 import { graphql } from '@/gql';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import {
+  parseAsBoolean,
+  parseAsString,
+  useQueryState,
+} from 'next-usequerystate';
 import {
   Button,
   ButtonGroup,
@@ -22,6 +27,22 @@ import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
 import { EditDistribution } from './EditDistribution';
 import { EditResource } from './EditResource';
+import { ResourceListView } from './ResourceListView';
+
+export const getReourceDoc = graphql(`
+  query getResource {
+    resource {
+      id
+      dataset {
+        pk
+      }
+      type
+      name
+      description
+      created
+    }
+  }
+`);
 
 export function DistributionList({
   setPage,
@@ -29,15 +50,34 @@ export function DistributionList({
   setPage: (page: 'list' | 'create') => void;
   setEditId: (id: string) => void;
 }) {
+
+  const { data, isLoading, refetch } = useQuery(
+    [`fetch_resources`],
+    () => GraphQL(getReourceDoc),
+    {
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+    }
+  );
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const resourceId = searchParams.get('id');
+
   return (
     <div>
-      {/* <Text variant="headingMd">Add Distribution</Text>
-      <div className="pt-4">
-        <Divider />
-      </div> */}
-      <div className="py-4">
-        <NoList setPage={setPage} />
-      </div>
+      {isLoading ? (
+        <div className="flex h-[70vh] w-full items-center justify-center">
+          <Spinner size={40} />
+        </div>
+      ) : !resourceId && data &&
+        data?.resource.filter((item: any) => item.dataset.pk === params.id).length >
+          0 ? (
+        <ResourceListView data={data} refetch={refetch} />
+      ) : (
+        <div className="py-4">
+          <NoList setPage={setPage} />
+        </div>
+      )}
     </div>
   );
 }
@@ -49,8 +89,6 @@ const NoList = ({
 }) => {
   const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT'];
   const params = useParams();
-  const [fileSelected, setFileSelected] = React.useState(false);
-
   const [file, setFile] = React.useState<File[]>([]);
 
   const createResourceFilesDoc: any = graphql(`
@@ -63,15 +101,14 @@ const NoList = ({
     }
   `);
 
-  const searchParams = useSearchParams();
-  const resourceId = searchParams.get('id');
+  const [resourceId, setResourceId] = useQueryState('id', parseAsString);
 
   const { mutate, isLoading } = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(createResourceFilesDoc, data),
     {
-      onSuccess: () => {
-        setFileSelected(true);
+      onSuccess: (data: any) => {
+        setResourceId(data.createFileResources[0].id);
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
@@ -134,7 +171,7 @@ const NoList = ({
         </div>
       ) : (
         <>
-          {fileSelected || resourceId ? (
+          {resourceId ? (
             <EditResource
               uploadedFile={uploadedFile}
               handleDropZoneDrop={handleDropZoneDrop}
