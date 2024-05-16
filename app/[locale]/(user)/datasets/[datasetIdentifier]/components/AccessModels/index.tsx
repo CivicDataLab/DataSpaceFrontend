@@ -18,7 +18,6 @@ import {
 import { GraphQL } from '@/lib/api';
 import CustomTags from '@/components/CustomTags';
 import { Icons } from '@/components/icons';
-import ResourceTable from '../../../components/ResourceTable';
 
 const generateColumnData = () => {
   return [
@@ -130,8 +129,6 @@ const AccessModels = () => {
       })
   );
 
-  console.log(data);
-
   return (
     <>
       {isLoading ? (
@@ -152,7 +149,7 @@ const AccessModels = () => {
                 <Text>{item.description}</Text>
               </div>
             </div>
-            <div className="align-center flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <div className="align-center  flex flex-col justify-between gap-4 sm:flex-row lg:items-center">
               <CustomTags type={item.type.split('.').pop().toLowerCase()} />
 
               <Button

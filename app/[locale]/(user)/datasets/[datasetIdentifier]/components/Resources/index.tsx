@@ -18,7 +18,6 @@ import {
 import { GraphQL } from '@/lib/api';
 import CustomTags from '@/components/CustomTags';
 import { Icons } from '@/components/icons';
-import ResourceTable from '../../../components/ResourceTable';
 
 const generateColumnData = () => {
   return [
