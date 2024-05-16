@@ -1,46 +1,67 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
-import { Hydrate } from '@/lib';
-import { dehydrate } from '@tanstack/react-query';
+import { TypeDatasetMetadata } from '@/gql/generated/graphql';
+import { dehydrate, Hydrate, useMutation } from '@tanstack/react-query';
 
 import { getQueryClient, GraphQL } from '@/lib/api';
+import { EditMetadata } from '../components/EditMetadata';
 import styles from '../edit.module.scss';
-import { MetadataPage } from './page-layout';
 
-// const datasetQueryDoc = graphql(`
-//   query datasetQuery($dataset_id: Int) {
-//     dataset(dataset_id: $dataset_id) {
-//       id
-//       title
-//       description
-//       source
-//       update_frequency
-//       language
-//       remote_issued
-//       geography {
-//         name
-//         id
-//       }
-//       tags {
-//         id
-//         name
-//       }
-//     }
-//   }
-// `);
+const datasetMetadataQueryDoc: any = graphql(`
+  query datasetQuery($filters: DatasetFilter) {
+    datasets(filters: $filters) {
+      id
+      title
+      metadata {
+        metadataItem {
+          id
+          label
+        }
+        id
+        value
+      }
+    }
+  }
+`);
 
-export default async function Page({ params }: { params: { id: string } }) {
+export default async function Page({
+  params,
+}: {
+  params: { id: string; organizationId: string };
+}) {
+  const router = useRouter();
+
   const queryClient = getQueryClient();
-  // await queryClient.prefetchQuery([`dataset_meta_${params.id}`], () =>
-  //   GraphQL(datasetQueryDoc, {
-  //     dataset_id: Number(params.id),
-  //   })
-  // );
-  const dehydratedState = dehydrate(queryClient);
+
+  await queryClient.prefetchQuery([`dataset_metadata_query`], () =>
+    GraphQL(datasetMetadataQueryDoc, { filters: { id: params.id } })
+  );
+
+  const dehydratedState: any = dehydrate(queryClient);
+
+  const defaultValuesPrepFn = (metadataArray: Array<TypeDatasetMetadata>) => {
+    let defaultVal: {
+      [key: string]: string | number | undefined;
+    } = {};
+
+    metadataArray?.map((field) => {
+      defaultVal[field.metadataItem.id] = field.value;
+    });
+
+    return defaultVal;
+  };
 
   return (
     <Hydrate state={dehydratedState}>
       <div className={styles.EditPage}>
-        <MetadataPage params={params} />
+        <EditMetadata
+          id={params.id}
+          defaultValues={defaultValuesPrepFn(
+            dehydratedState.queries[0]?.state.data?.datasets[0].metadata
+          )}
+        />
       </div>
     </Hydrate>
   );
