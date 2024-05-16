@@ -110,6 +110,12 @@ const datasetResourceQuery = graphql(`
         description
         type
       }
+      schema {
+        fieldName
+        id
+        format
+        description
+      }
     }
   }
 `);
@@ -149,22 +155,27 @@ const Resources = () => {
                     View Fields
                   </Button>
                 </Dialog.Trigger>
-                <Dialog.Content title={'View Fields'}>
+                <Dialog.Content title={'View Fields'} limitHeight>
                   <Table
                     columns={[
                       {
-                        accessorKey: 'title',
-                        header: 'Title',
+                        accessorKey: 'name',
+                        header: 'Name',
+                      },
+                      {
+                        accessorKey: 'format',
+                        header: 'Format',
                       },
                       {
                         accessorKey: 'description',
                         header: 'Description',
                       },
                     ]}
-                    rows={[
-                      { title: 'Res 1', description: 'Desc 1' },
-                      { title: 'Res 2', description: 'Desc 2' },
-                    ]}
+                    rows={item.schema.map((item: any) => ({
+                      name: item.fieldName,
+                      format: item.format,
+                      description: item.description,
+                    }))}
                     hideFooter={true}
                   />
                 </Dialog.Content>
