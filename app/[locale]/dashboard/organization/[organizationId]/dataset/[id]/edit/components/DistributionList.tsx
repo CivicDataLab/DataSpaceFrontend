@@ -30,29 +30,31 @@ import { EditResource } from './EditResource';
 import { ResourceListView } from './ResourceListView';
 
 export const getReourceDoc = graphql(`
-  query getResource {
-    resource {
-      id
-      dataset {
-        pk
-      }
-      type
-      name
-      description
-      created
-      fileDetails {
+  query getResources($filters: DatasetFilter) {
+    datasets(filters: $filters) {
+      resources {
         id
-        resource {
+        dataset {
           pk
         }
-        file {
-          name
-          path
-          url
-        }
-        size
+        type
+        name
+        description
         created
-        modified
+        fileDetails {
+          id
+          resource {
+            pk
+          }
+          file {
+            name
+            path
+            url
+          }
+          size
+          created
+          modified
+        }
       }
     }
   }
@@ -65,15 +67,17 @@ export function DistributionList({
   setEditId: (id: string) => void;
 }) {
   
+  const params = useParams();
+
   const { data, isLoading, refetch } = useQuery(
-    [`fetch_resources`],
-    () => GraphQL(getReourceDoc),
+    [`fetch_resources_${params.id}`],
+    () => GraphQL(getReourceDoc, { filters: { id: params.id } }),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
     }
   );
-  const params = useParams();
+
   const searchParams = useSearchParams();
   const resourceId = searchParams.get('id');
 
@@ -83,10 +87,8 @@ export function DistributionList({
         <div className="flex h-[70vh] w-full items-center justify-center">
           <Spinner size={40} />
         </div>
-      ) : !resourceId && data &&
-        data?.resource.filter((item: any) => item.dataset.pk === params.id).length >
-          0 ? (
-        <ResourceListView data={data} refetch={refetch} />
+      ) : !resourceId && data && data.datasets[0].resources.length > 0 ? (
+        <ResourceListView data={data.datasets[0].resources} refetch={refetch} />
       ) : (
         <div className="py-4">
           <NoList setPage={setPage} reload={refetch} data={data} />
@@ -191,7 +193,7 @@ const NoList = ({
       ) : (
         <>
           {resourceId ? (
-            <EditResource reload={reload} data={data}/>
+            <EditResource reload={reload} data={data.datasets[0].resources}/>
           ) : (
             <DropZone
               name="file_details"

@@ -128,9 +128,7 @@ export const ResourceListView = ({ data, refetch }: any) => {
     ],
 
     rows:
-      data?.resource
-        .filter((item: any) => item.dataset.pk === params.id)
-        .map((item: any) => ({
+      data.map((item: any) => ({
           name_of_resource: item.name,
           type: item.type,
           date_added: formatDate(item.created),
