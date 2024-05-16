@@ -8,8 +8,10 @@ import {
   AccordionItem,
   AccordionTrigger,
   Button,
+  Dialog,
   Icon,
   Spinner,
+  Table,
   Text,
 } from 'opub-ui';
 
@@ -29,6 +31,43 @@ const generateColumnData = () => {
       header: 'Resource description',
     },
     {
+      accessorKey: 'schema',
+      header: 'Fields',
+      cell: ({ row }: any) => {
+        return (
+          <Dialog>
+            <Dialog.Trigger>
+              <Button
+                kind="tertiary"
+                disabled={row.original.schema.length === 0}
+              >
+                Fields
+              </Button>
+            </Dialog.Trigger>
+            <Dialog.Content title={'Fields'} limitHeight>
+              <Table
+                columns={[
+                  {
+                    accessorKey: 'name',
+                    header: 'Name',
+                  },
+                  {
+                    accessorKey: 'format',
+                    header: 'Format',
+                  },
+                ]}
+                rows={row.original.schema.map((field: any) => ({
+                  name: field.fieldName,
+                  format: field.format,
+                }))}
+                hideFooter
+              />
+            </Dialog.Content>
+          </Dialog>
+        );
+      },
+    },
+    {
       accessorKey: 'download',
       header: 'Download',
       cell: ({ row }: any) => {
@@ -43,30 +82,6 @@ const generateColumnData = () => {
         );
       },
     },
-    // {
-    //   accessorKey: 'fields',
-    //   header: 'Fields',
-    //   isModalTrigger: true,
-    //   label: 'Preview',
-    //   table: true,
-    //   modalHeader: 'Fields',
-    // },
-    // {
-    //   accessorKey: 'rows',
-    //   header: 'Rows',
-    // },
-    // {
-    //   accessorKey: 'count',
-    //   header: 'Count',
-    // },
-    // {
-    //   accessorKey: 'preview',
-    //   header: 'Preview',
-    //   isModalTrigger: true,
-    //   label: 'Preview',
-    //   table: true,
-    //   modalHeader: 'Preview',
-    // },
   ];
 };
 
@@ -75,20 +90,22 @@ const generateTableData = (resources: any[]) => {
     resourceName: item.resource.name,
     description: item.resource.description,
     download: item.resource.id,
-    // fields: item.fields,
-    // preview: item.preview,
-    // rows: item.rows,
-    // count: item.count,
+    schema: item.fields,
   }));
 };
 
 const accessModelResourcesQuery = graphql(`
-  query accessModelResources($datasetId: UUID!) {
+  query accessModelResource($datasetId: UUID!) {
     accessModelResources(datasetId: $datasetId) {
       modelResources {
         resource {
           name
           description
+          id
+        }
+        fields {
+          fieldName
+          format
           id
         }
       }
@@ -169,9 +186,10 @@ const AccessModels = () => {
                         outline: '1px solid var( --base-pure-white)',
                       }}
                     >
-                      <ResourceTable
-                        ColumnsData={generateColumnData()}
-                        RowsData={generateTableData(item.modelResources)}
+                      <Table
+                        columns={generateColumnData()}
+                        rows={generateTableData(item.modelResources)}
+                        hideFooter
                       />
                     </AccordionContent>
                   </AccordionItem>
