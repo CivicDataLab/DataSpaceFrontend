@@ -26,7 +26,7 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
   useEffect(() => {
     const initialOptions = selectedResource.schema.map((field: any) => ({
       label: field.fieldName,
-      value: field.id,
+      value: +field.id,
     }));
     setOptions(initialOptions);
     if (selectAllFields) {
@@ -55,7 +55,7 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
     }
   }, [selectedResource.schema, selectAllFields]);
 
-  const handleFieldSelection = (selectedOptions: string[]) => {
+  const handleFieldSelection = (selectedOptions: []) => {
     setSelectedFields(
       selectedOptions.map((option: any) => ({
         label: option?.label || '',
