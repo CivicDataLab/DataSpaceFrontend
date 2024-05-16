@@ -70,15 +70,6 @@ export function EditLayout({ children, params }: LayoutProps) {
 
   const orgParams = useParams<{ organizationId: string }>();
 
-  const pathItem = layoutList.find(function (v) {
-    return pathName.indexOf(v) >= 0;
-  });
-
-  // if not from the layoutList, return children
-  if (!pathItem) {
-    return <>{children}</>;
-  }
-
   const getDatasetTitleRes: { data: any; isLoading: boolean; refetch: any } =
     useQuery([`dataset_title_${routerParams.id}`], () =>
       GraphQL(datasetQueryDoc, {
@@ -106,6 +97,15 @@ export function EditLayout({ children, params }: LayoutProps) {
       },
     }
   );
+
+  const pathItem = layoutList.find(function (v) {
+    return pathName.indexOf(v) >= 0;
+  });
+
+  // if not from the layoutList, return children
+  if (!pathItem) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="mt-8 flex h-full flex-col">
