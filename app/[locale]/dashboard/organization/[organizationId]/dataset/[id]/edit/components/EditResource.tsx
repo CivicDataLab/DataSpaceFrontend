@@ -247,9 +247,7 @@ export const EditResource = ({ reload, data }: any) => {
 
 
   const listViewFunction = () => {
-    router.push(
-      `/dashboard/organization/${params.organizationId}/dataset/${params.id}/edit/distribution`
-    );
+    setResourceId('')
   };
 
   const saveResource = () => {
