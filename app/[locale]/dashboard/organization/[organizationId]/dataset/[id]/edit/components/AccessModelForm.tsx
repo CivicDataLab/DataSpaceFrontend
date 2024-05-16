@@ -48,7 +48,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
   const [accessModelData, setAccessModelData] = useState({
     name: '',
     description: '',
-    permission: '',
+    type: '',
     resources: [],
   });
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
@@ -115,22 +115,14 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
             setAccessModelData({
               name: '',
               description: '',
-              permission: '',
+              type: '',
               resources: [],
             })
           }
         >
           Add New Access Type
         </Button>
-        {showSelectAll ? (
-          <Button onClick={handleSelectAll} kind="tertiary">
-            Select All
-          </Button>
-        ) : (
-          <Button onClick={() => setShowSelectAll(true)} kind="tertiary">
-            Show Select All
-          </Button>
-        )}
+
         <Button
           onClick={(e) => setQueryList(true)}
           kind="tertiary"
@@ -180,7 +172,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
                 label={'Permissions'}
                 placeholder="Select"
                 onChange={(e) =>
-                  setAccessModelData({ ...accessModelData, permission: e })
+                  setAccessModelData({ ...accessModelData, type: e })
                 }
               />
             </div>
@@ -200,7 +192,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
 
           <div className="flex flex-wrap items-center gap-5">
             <Select
-              name={'permissions'}
+              name={'resourceSelection'}
               className="w-4/5"
               options={
                 availableResources.length > 0
