@@ -40,6 +40,20 @@ export const getReourceDoc = graphql(`
       name
       description
       created
+      fileDetails {
+        id
+        resource {
+          pk
+        }
+        file {
+          name
+          path
+          url
+        }
+        size
+        created
+        modified
+      }
     }
   }
 `);

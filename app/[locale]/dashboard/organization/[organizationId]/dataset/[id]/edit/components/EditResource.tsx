@@ -45,6 +45,7 @@ interface TListItem {
   value: string;
   description: string;
   dataset: any;
+  fileDetails: any;
 }
 
 export const EditResource = ({ reload }: any) => {
@@ -167,6 +168,7 @@ export const EditResource = ({ reload }: any) => {
   };
 
   const params = useParams();
+  const router = useRouter();
 
   const ResourceList: TListItem[] =
     data?.resource
@@ -176,6 +178,7 @@ export const EditResource = ({ reload }: any) => {
         value: item.id,
         description: item.description,
         dataset: item.dataset?.pk,
+        fileDetails: item.fileDetails,
       })) || [];
 
   const getResourceObject = (resourceId: string) => {
@@ -195,6 +198,13 @@ export const EditResource = ({ reload }: any) => {
   const handleDescChange = (text: string) => {
     setResourceDesc(text);
   };
+
+  React.useEffect(() => {
+   if(resourceId){
+    setResourceName(getResourceObject(resourceId)?.label);
+    setResourceDesc( getResourceObject(resourceId)?.description)
+   }
+  },[resourceId])
 
   const handleResourceChange = (e: any) => {
     setResourceId(e, { shallow: false });
@@ -225,23 +235,51 @@ export const EditResource = ({ reload }: any) => {
     </div>
   );
 
+  const [resourceFile, setResourceFile] = React.useState<File>();
+
+  const onDrop = React.useCallback(
+    (_dropFiles: File[], acceptedFiles: File[]) =>
+      setResourceFile(acceptedFiles[0]),
+    []
+  );
+
+  console.log(resourceFile, 'resourceFile');
+
+  const fileInput = resourceFile ? (
+    <div className="flex ">{resourceFile.name} </div>
+  ) : (
+    <div className="flex">
+      <Text className="break-all">
+        {getResourceObject(resourceId)?.fileDetails.file.name.replace(
+          'resources/',
+          ''
+        )}{' '}
+      </Text>
+    </div>
+  );
+
+  
   const listViewFunction = () => {
-    setResourceId('');
+    refetch()
+    router.push(
+      `/dashboard/organization/${params.organizationId}/dataset/${params.id}/edit/distribution`
+    );
   };
 
   const saveResource = () => {
     mutate({
       fileResourceInput: {
         id: resourceId,
-        description: resourceDesc,
-        name: resourceName,
+        description: resourceDesc ? resourceDesc :getResourceObject(resourceId)?.description,
+        name: resourceName ? resourceName: getResourceObject(resourceId)?.label,
+         file: resourceFile
       },
     });
   };
 
   return (
     <div className=" bg-basePureWhite px-6 py-8">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-6">
         <Text>Resource Name :</Text>
         <div className=" w-3/6">
           <Select
@@ -289,7 +327,7 @@ export const EditResource = ({ reload }: any) => {
         </Button>
       </div>
       <div className="mt-8 flex items-stretch gap-10">
-        <div className="flex w-3/4 flex-col">
+        <div className="flex w-4/5 flex-col">
           <div className="mb-10 flex gap-6 ">
             <div className="w-2/3">
               <TextField
@@ -326,20 +364,21 @@ export const EditResource = ({ reload }: any) => {
             multiline={4}
           />
         </div>
-        <div className="w-1/4 items-stretch ">
-          <div style={{ width: 250, height: 250 }}>
-            {/* <DropZone
-              name="file_upload"
-              allowMultiple={false}
-              onDrop={handleDropZoneDrop}
-            >
-              {uploadedFile}
-              <DropZone.FileUpload />
-            </DropZone> */}
-          </div>
+        <div className="flex w-1/5 flex-col justify-between border-1 border-solid border-baseGraySlateSolid7 p-3 ">
+          {fileInput}
+
+          <DropZone
+            name="file_upload"
+            allowMultiple={false}
+            onDrop={onDrop}
+            className="w-full border-none bg-baseGraySlateSolid5"
+            label="Change file for this resource"
+          >
+            <DropZone.FileUpload />
+          </DropZone>
         </div>
       </div>
-      <div className=" my-8 flex items-center gap-4 border-1 border-solid border-baseGraySlateSolid7 px-7 py-4 ">
+      {/* <div className=" my-8 flex items-center gap-4 border-1 border-solid border-baseGraySlateSolid7 px-7 py-4 ">
         <div className="flex w-1/6 items-center justify-center gap-1">
           <Checkbox name="checkbox" onChange={() => console.log('hi')}>
             Enabel Preview
@@ -348,6 +387,7 @@ export const EditResource = ({ reload }: any) => {
         </div>
 
         <div className="h-[70px] w-[2px] bg-baseGraySlateSolid7"></div>
+
         <div className="flex items-center gap-5 px-8">
           <Text>
             Select Rows to be <br /> shown in the Preview
@@ -426,7 +466,7 @@ export const EditResource = ({ reload }: any) => {
           hideFooter={true}
           defaultRowCount={10}
         />
-      </div>
+      </div> */}
     </div>
   );
 };
