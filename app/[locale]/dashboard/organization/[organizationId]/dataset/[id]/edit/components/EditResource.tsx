@@ -260,7 +260,6 @@ export const EditResource = ({ reload }: any) => {
 
   
   const listViewFunction = () => {
-    refetch()
     router.push(
       `/dashboard/organization/${params.organizationId}/dataset/${params.id}/edit/distribution`
     );
