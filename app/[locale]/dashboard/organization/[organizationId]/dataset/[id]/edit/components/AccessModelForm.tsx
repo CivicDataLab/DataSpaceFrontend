@@ -122,7 +122,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
         setQueryList(true);
       },
       onError: (err: any) => {
-        console.log('Error ::: ', err);
+        toast(`Received ${err} during access model saving`);
       },
     }
   );
@@ -169,7 +169,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
         </Button>
       </div>
       <Divider />
-      {isLoading ? (
+      {isLoading || mutationLoading ? (
         <div className="mt-8 flex justify-center">
           <Spinner />
         </div>
