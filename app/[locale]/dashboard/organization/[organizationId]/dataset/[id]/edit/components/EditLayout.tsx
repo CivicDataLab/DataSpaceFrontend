@@ -120,8 +120,6 @@ const Navigation = ({
   pathItem: string;
   organization: string;
 }) => {
-  console.log(pathItem);
-
   const links = [
     {
       label: 'Distributions',
