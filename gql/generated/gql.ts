@@ -20,6 +20,8 @@ const documents = {
     "\n  mutation createAccessModel($accessModelInput: AccessModelInput!) {\n    createAccessModel(accessModelInput: $accessModelInput) {\n      __typename\n      ... on TypeAccessModel {\n        id\n        description\n        name\n        type\n      }\n    }\n  }\n": types.CreateAccessModelDocument,
     "\n  query getResource {\n    resource {\n      id\n      dataset {\n        pk\n      }\n      type\n      name\n      description\n      created\n      fileDetails {\n        id\n        resource {\n          pk\n        }\n        file {\n          name\n          path\n          url\n        }\n        size\n        created\n        modified\n      }\n    }\n  }\n": types.GetResourceDocument,
     "\n  mutation readFiles($fileResourceInput: CreateFileResourceInput!) {\n    createFileResources(fileResourceInput: $fileResourceInput) {\n      id\n      created\n      name\n    }\n  }\n": types.ReadFilesDocument,
+    "\n  query datasetTitleQuery($filters: DatasetFilter) {\n    datasets(filters: $filters) {\n      id\n      title\n      created\n    }\n  }\n": types.DatasetTitleQueryDocument,
+    "\n  mutation SaveTitle($updateDatasetInput: UpdateDatasetInput!) {\n    updateDataset(updateDatasetInput: $updateDatasetInput) {\n      __typename\n      ... on TypeDataset {\n        id\n        title\n        created\n      }\n      ... on OperationInfo {\n        messages {\n          kind\n          message\n        }\n      }\n    }\n  }\n": types.SaveTitleDocument,
     "\n  query MetaDataQuery {\n    metadata {\n      id\n      label\n      dataStandard\n      urn\n      dataType\n      options\n      validator\n      type\n      model\n      enabled\n    }\n  }\n": types.MetaDataQueryDocument,
     "\n  mutation SaveMetadata($UpdateMetadataInput: UpdateMetadataInput!) {\n    addUpdateDatasetMetadata(updateMetadataInput: $UpdateMetadataInput) {\n      __typename\n      ... on TypeDataset {\n        id\n        created\n      }\n      ... on OperationInfo {\n        messages {\n          kind\n          message\n        }\n      }\n    }\n  }\n": types.SaveMetadataDocument,
     "\n    mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {\n      updateFileResource(fileResourceInput: $fileResourceInput) {\n        __typename\n        ... on TypeResource {\n          id\n          description\n          name\n        }\n      }\n    }\n  ": types.UpdateFileResourceDocument,
@@ -72,6 +74,14 @@ export function graphql(source: "\n  query getResource {\n    resource {\n      
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation readFiles($fileResourceInput: CreateFileResourceInput!) {\n    createFileResources(fileResourceInput: $fileResourceInput) {\n      id\n      created\n      name\n    }\n  }\n"): (typeof documents)["\n  mutation readFiles($fileResourceInput: CreateFileResourceInput!) {\n    createFileResources(fileResourceInput: $fileResourceInput) {\n      id\n      created\n      name\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query datasetTitleQuery($filters: DatasetFilter) {\n    datasets(filters: $filters) {\n      id\n      title\n      created\n    }\n  }\n"): (typeof documents)["\n  query datasetTitleQuery($filters: DatasetFilter) {\n    datasets(filters: $filters) {\n      id\n      title\n      created\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SaveTitle($updateDatasetInput: UpdateDatasetInput!) {\n    updateDataset(updateDatasetInput: $updateDatasetInput) {\n      __typename\n      ... on TypeDataset {\n        id\n        title\n        created\n      }\n      ... on OperationInfo {\n        messages {\n          kind\n          message\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation SaveTitle($updateDatasetInput: UpdateDatasetInput!) {\n    updateDataset(updateDatasetInput: $updateDatasetInput) {\n      __typename\n      ... on TypeDataset {\n        id\n        title\n        created\n      }\n      ... on OperationInfo {\n        messages {\n          kind\n          message\n        }\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

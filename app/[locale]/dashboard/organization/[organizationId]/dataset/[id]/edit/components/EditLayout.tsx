@@ -1,15 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
+import { UpdateDatasetInput } from '@/gql/generated/graphql';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Button,
   Divider,
+  Form,
+  FormLayout,
   Icon,
-  SkeletonDisplayText,
+  Input,
   Tab,
   TabList,
   Tabs,
@@ -17,17 +20,36 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
-// const datasetQueryDoc = graphql(`
-//   query datasetQueryLayout($dataset_id: Int) {
-//     dataset(dataset_id: $dataset_id) {
-//       id
-//       title
-//     }
-//   }
-// `);
+const datasetQueryDoc: any = graphql(`
+  query datasetTitleQuery($filters: DatasetFilter) {
+    datasets(filters: $filters) {
+      id
+      title
+      created
+    }
+  }
+`);
+
+const updateDatasetTitleMutationDoc: any = graphql(`
+  mutation SaveTitle($updateDatasetInput: UpdateDatasetInput!) {
+    updateDataset(updateDatasetInput: $updateDatasetInput) {
+      __typename
+      ... on TypeDataset {
+        id
+        title
+        created
+      }
+      ... on OperationInfo {
+        messages {
+          kind
+          message
+        }
+      }
+    }
+  }
+`);
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -44,6 +66,8 @@ export function EditLayout({ children, params }: LayoutProps) {
   const pathName = usePathname();
   const routerParams = useParams();
 
+  const [editMode, setEditMode] = useState(false);
+
   const orgParams = useParams<{ organizationId: string }>();
 
   const pathItem = layoutList.find(function (v) {
@@ -55,14 +79,43 @@ export function EditLayout({ children, params }: LayoutProps) {
     return <>{children}</>;
   }
 
-  const DATASET_INFO = {
-    title: 'Untitled',
-    timestamp: '20 March 2023 - 10:30AM',
-  };
+  const getDatasetTitleRes: { data: any; isLoading: boolean; refetch: any } =
+    useQuery([`dataset_title_${routerParams.id}`], () =>
+      GraphQL(datasetQueryDoc, {
+        filters: {
+          id: routerParams.id,
+        },
+      })
+    );
+
+  const updateDatasetTitleMutation = useMutation(
+    (data: { updateDatasetInput: UpdateDatasetInput }) =>
+      GraphQL(updateDatasetTitleMutationDoc, data),
+    {
+      onSuccess: (data: any) => {
+        // queryClient.invalidateQueries({
+        //   queryKey: [`create_dataset_${'52'}`],
+        // });
+
+        setEditMode(false);
+
+        getDatasetTitleRes.refetch();
+      },
+      onError: (err: any) => {
+        console.log('Error ::: ', err);
+      },
+    }
+  );
 
   return (
     <div className="mt-8 flex h-full flex-col">
-      <Header dataset={DATASET_INFO} orgId={orgParams.organizationId} />
+      <Header
+        dataset={getDatasetTitleRes?.data?.datasets[0]}
+        orgId={orgParams.organizationId}
+        saveTitle={updateDatasetTitleMutation.mutate}
+        editMode={editMode}
+        setEditMode={setEditMode}
+      />
       <div className="lg:flex-column mt-4 flex flex-col">
         <div>
           <Navigation
@@ -79,26 +132,82 @@ export function EditLayout({ children, params }: LayoutProps) {
   );
 }
 
-const Header = ({ dataset, orgId }: any) => {
+const Header = ({ dataset, orgId, saveTitle, editMode, setEditMode }: any) => {
   return (
     <>
       <div className="mb-3 flex justify-between">
-        <div className="flex items-center gap-4">
-          <Text variant="headingSm" color="subdued">
-            DATASET NAME :
-            <b>
-              {dataset.title} - {dataset.timestamp}
-            </b>
-          </Text>
-          <Text
-            variant="headingSm"
-            className="flex items-center"
-            color="interactive"
+        {!editMode ? (
+          <div className="flex items-center gap-4">
+            <Text variant="headingSm" color="subdued">
+              DATASET NAME :
+              {dataset?.title !== '' ? (
+                <b>{dataset?.title}</b>
+              ) : (
+                <b>
+                  Untitled -{' '}
+                  {new Date(dataset?.created).toLocaleDateString('en-IN', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </b>
+              )}
+            </Text>
+            <Button
+              kind="tertiary"
+              icon={
+                <Icon source={Icons.pencil} size={16} color="interactive" />
+              }
+              onClick={() => setEditMode(true)}
+            >
+              edit
+            </Button>
+          </div>
+        ) : (
+          <Form
+            onSubmit={(values: any) =>
+              saveTitle({
+                updateDatasetInput: {
+                  dataset: dataset.id,
+                  title: values.title,
+                  description: '',
+                  tags: [],
+                },
+              })
+            }
           >
-            <Icon source={Icons.pencil} size={16} color="interactive" />
-            edit
-          </Text>
-        </div>
+            <FormLayout>
+              <div className="flex items-center gap-4">
+                <Text variant="headingSm" color="subdued">
+                  DATASET NAME :
+                </Text>
+                <Input
+                  name="title"
+                  labelHidden
+                  label="Datset Title"
+                  defaultValue={
+                    dataset?.title !== ''
+                      ? dataset?.title
+                      : `Untitled - ${new Date(
+                          dataset?.created
+                        ).toLocaleDateString('en-IN', {
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}`
+                  }
+                />
+                <Button submit kind="primary">
+                  Save
+                </Button>
+                <Button kind="tertiary" onClick={() => setEditMode(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </FormLayout>
+          </Form>
+        )}
+
         <Link href={`/dashboard/organization/${orgId}/dataset`}>
           <Text className="flex gap-1" color="interactive">
             Go back to Drafts{' '}
