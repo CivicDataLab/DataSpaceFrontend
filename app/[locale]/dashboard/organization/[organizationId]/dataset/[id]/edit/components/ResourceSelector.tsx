@@ -1,23 +1,81 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Checkbox, Combobox, Text, TextField } from 'opub-ui';
 import { boolean } from 'zod';
 
 interface ResourceSelectorProps {
   selectedResource: any;
   handleRemoveResource: (resourceId: string) => void;
+  accessModelData: any;
+  setAccessModelData: (data: any) => void;
 }
 
 const ResourceSelector: React.FC<ResourceSelectorProps> = ({
   selectedResource,
   handleRemoveResource,
+  accessModelData,
+  setAccessModelData,
 }) => {
   const [selectAllFields, setSelectAllFields] = useState(true);
-  const [selectAllRows, setSelectAllRows] = useState(true);
+  const [options, setOptions] = useState<{ label: string; value: string }[]>(
+    []
+  );
+  const [selectedFields, setSelectedFields] = useState<
+    { label: string; value: string }[]
+  >([]);
 
-  const options = selectedResource.schema.map((field: any) => ({
-    label: field.fieldName,
-    value: field.id,
-  }));
+  useEffect(() => {
+    const initialOptions = selectedResource.schema.map((field: any) => ({
+      label: field.fieldName,
+      value: field.id,
+    }));
+    setOptions(initialOptions);
+    if (selectAllFields) {
+      setSelectedFields(initialOptions);
+      // Update accessModelData with all options selected
+      setAccessModelData((prevData: any) => ({
+        ...prevData,
+        resources: [
+          ...prevData.resources.filter(
+            (resource: any) => resource.resource !== selectedResource.id
+          ),
+          {
+            resource: selectedResource.id,
+            fields: initialOptions.map((option: any) => option.value),
+          },
+        ],
+      }));
+    } else {
+      // Update accessModelData to remove this resource
+      setAccessModelData((prevData: any) => ({
+        ...prevData,
+        resources: prevData.resources.filter(
+          (resource: any) => resource.resource !== selectedResource.id
+        ),
+      }));
+    }
+  }, [selectedResource.schema, selectAllFields]);
+
+  const handleFieldSelection = (selectedOptions: string[]) => {
+    setSelectedFields(
+      selectedOptions.map((option: any) => ({
+        label: option?.label || '',
+        value: option?.value,
+      }))
+    );
+    // Update accessModelData with the selected fields
+    setAccessModelData((prevData: any) => ({
+      ...prevData,
+      resources: [
+        ...prevData.resources.filter(
+          (resource: any) => resource.resource !== selectedResource.id
+        ),
+        {
+          resource: selectedResource.id,
+          fields: selectedOptions.map((option: any) => option.value),
+        },
+      ],
+    }));
+  };
 
   return (
     <div className="flex flex-wrap gap-5">
@@ -29,10 +87,10 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
               displaySelected
               label={'Select Fields of the Resource'}
               list={options}
-              selectedValue={selectAllFields ? options : [options[1]]}
+              selectedValue={selectedFields}
               name={''}
               helpText={'Use the dropdown to add specific fields'}
-              onChange={(e) => console.log(e)}
+              onChange={(e: any) => handleFieldSelection(e)}
             />
           </div>
           <div className="absolute right-0 top-0 pb-8">
@@ -47,7 +105,7 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
         </div>
       </div>
       <hr />
-      <div className="flex w-fit flex-col gap-1">
+      {/* <div className="flex w-fit flex-col gap-1">
         <div className="flex gap-2 ">
           <Text>Select Rows of the Resource</Text>
           <Checkbox
@@ -62,7 +120,7 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
           <TextField type="number" label="From Row Number" name="name" />
           <TextField type="number" label="From Row Number" name="name" />
         </div>
-      </div>
+      </div> */}
       <hr />
       <Button
         className="my-auto h-fit w-fit"

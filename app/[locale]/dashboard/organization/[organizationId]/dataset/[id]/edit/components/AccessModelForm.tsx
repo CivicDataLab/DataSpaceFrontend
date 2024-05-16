@@ -49,6 +49,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
     name: '',
     description: '',
     permission: '',
+    resources: [],
   });
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
   const [showSelectAll, setShowSelectAll] = useState(false);
@@ -80,6 +81,12 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
   const handleRemoveResource = (resourceId: string) => {
     setSelectedResources((prev) => prev.filter((id) => id !== resourceId));
     setResId('');
+    setAccessModelData((prevData: any) => ({
+      ...prevData,
+      resources: prevData.resources.filter(
+        (resource: any) => resource.resource !== resourceId
+      ),
+    }));
   };
 
   const handleSelectAll = () => {
@@ -88,6 +95,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
     setSelectedResources(allResourceIds);
     setShowSelectAll(false);
   };
+  console.log(accessModelData);
 
   return (
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
@@ -104,7 +112,12 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
         </div>
         <Button
           onClick={(e) =>
-            setAccessModelData({ name: '', description: '', permission: '' })
+            setAccessModelData({
+              name: '',
+              description: '',
+              permission: '',
+              resources: [],
+            })
           }
         >
           Add New Access Type
@@ -236,6 +249,8 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
                 key={index}
                 selectedResource={selectedResource}
                 handleRemoveResource={handleRemoveResource}
+                accessModelData={accessModelData}
+                setAccessModelData={setAccessModelData}
               />
             );
           })}
