@@ -124,6 +124,7 @@ const NoList = ({
       GraphQL(createResourceFilesDoc, data),
     {
       onSuccess: (data: any) => {
+        reload();
         setResourceId(data.createFileResources[0].id);
       },
       onError: (err: any) => {
