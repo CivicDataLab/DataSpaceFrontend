@@ -9,6 +9,7 @@ import { formatDate, toTitleCase } from '@/lib/utils';
 
 interface AccessModelListProps {
   setQueryList: any;
+  queryList: any;
 }
 
 const generateColumnData = () => {
@@ -59,22 +60,27 @@ const accessModelQuery = graphql(`
   }
 `);
 
-const AccessModelList: React.FC<AccessModelListProps> = ({ setQueryList }) => {
+const AccessModelList: React.FC<AccessModelListProps> = ({
+  setQueryList,
+  queryList,
+}) => {
   const params = useParams();
 
-  const { data, refetch } = useQuery([`accessModelList_${params.id}`], () =>
-    GraphQL(accessModelQuery, {
-      datasetId: params.id,
-    })
+  const { data, isLoading, refetch } = useQuery(
+    [`accessModelList_${params.id}`],
+    () =>
+      GraphQL(accessModelQuery, {
+        datasetId: params.id,
+      })
   );
 
   useEffect(() => {
     refetch();
-  });
+  }, [queryList]);
 
   return (
     <div>
-      {!data ? (
+      {!data || isLoading ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
