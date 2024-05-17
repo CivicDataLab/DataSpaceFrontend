@@ -43,6 +43,10 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
             href: '/dashboard/user/datasets',
             label: 'User Dashboard',
           },
+          {
+            href: '',
+            label: `${params.organizationId}`,
+          },
         ]}
       />
       <div
