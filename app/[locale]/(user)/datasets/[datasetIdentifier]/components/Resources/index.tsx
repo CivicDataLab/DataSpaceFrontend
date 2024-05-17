@@ -200,9 +200,9 @@ const Resources = () => {
             {item?.accessModels?.length > 0 && (
               <div className="flex">
                 <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="item-1">
-                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 ">
-                      <div className=" text-baseBlueSolid8 hover:no-underline ">
+                  <AccordionItem value="item-1" className=" border-none">
+                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 hover:no-underline  ">
+                      <div className=" text-baseBlueSolid8 ">
                         See Access Type
                       </div>
                     </AccordionTrigger>
