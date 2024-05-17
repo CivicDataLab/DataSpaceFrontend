@@ -92,8 +92,8 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
       <div className=" mb-4">
         <Text>{selectedResource.name}</Text>
       </div>
-      <div className="flex flex-wrap justify-between gap-6 px-8">
-        <div className="flex w-full flex-col gap-4 xl:w-3/5">
+      <div className="flex flex-wrap justify-start gap-6 px-8">
+        <div className="flex w-full flex-col gap-4 2xl:w-3/5">
           <div className="relative mr-4 flex items-center">
             <div className="w-full">
               <Combobox
@@ -118,24 +118,28 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
             </div>
           </div>
         </div>
-        <hr className=" m-0" />
-        <div className="flex w-fit flex-col items-center justify-center gap-1">
-          <div className="flex w-full items-center justify-between gap-2 ">
-            <Text>Select Rows of the Resource</Text>
-            <Checkbox
-              name={'Select All Rows'}
-              defaultChecked={false}
-              onChange={(e) => console.log(e)}
+        <div className="flex gap-6">
+          <hr className=" m-0" />
+          <div className="flex w-fit flex-col items-center justify-center gap-1">
+            <div className="flex w-full items-center justify-between gap-2 ">
+              <Text>Select Rows of the Resource</Text>
+              <Checkbox
+                name={'Select All Rows'}
+                defaultChecked={false}
+                onChange={(e) => console.log(e)}
+              >
+                Select All
+              </Checkbox>
+            </div>
+            <div
+              className={cn('flex  flex-wrap gap-6', styles.accessModelEdit)}
             >
-              Select All
-            </Checkbox>
+              <TextField type="number" label="From Row Number" name="name" />
+              <TextField type="number" label="From Row Number" name="name" />
+            </div>
           </div>
-          <div className={cn('flex  flex-wrap gap-6', styles.accessModelEdit)}>
-            <TextField type="number" label="From Row Number" name="name" />
-            <TextField type="number" label="From Row Number" name="name" />
-          </div>
+          <hr className=" m-0" />
         </div>
-        <hr className=" m-0" />
         <Button
           className="my-auto h-fit w-fit items-center"
           kind="tertiary"
