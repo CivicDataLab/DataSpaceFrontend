@@ -2,103 +2,73 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchDatasets, fetchFacets } from '@/fetch';
+import { fetchDatasets } from '@/fetch';
 import { Button, Pill, SearchInput, Select, Text, Tray } from 'opub-ui';
 
 import BreadCrumbs from '@/components/BreadCrumbs';
 import DatasetCards from './components/DatasetCards';
 import Filter from './components/FIlter/Filter';
-import { data } from './data';
 
 const DatasetsListing = () => {
-  const [open, setOpen] = useState(false);
-  const [facets, setFacets] = useState<any>([]);
+  const [facets, setFacets] = useState<any>({});
   const [variables, setVariables] = useState('');
-  const [selectedOptions, setSelectedOptions] = useState<
-    Record<string, string[]>
-  >({});
-
-  const count = facets?.hits?.total?.value;
-  const datasetDetails = facets?.hits?.hits;
-  const options = facets?.aggregations;
+  const [open, setOpen] = useState(false);
+  const count = facets?.total;
+  const datasetDetails = facets?.results;
 
   const [queryParams, setQueryParams] = useState({
     pageSize: 5,
     currentPage: 1,
     paramNames: {
       pageSize: 'size',
-      currentPage: 'from',
+      currentPage: 'page',
     },
   });
 
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const sizeParam = urlParams.get(queryParams.paramNames.pageSize);
-      const fromParam = urlParams.get(queryParams.paramNames.currentPage);
+    const urlParams = new URLSearchParams(window.location.search);
+    const sizeParam = urlParams.get(queryParams.paramNames.pageSize);
+    const pageParam = urlParams.get(queryParams.paramNames.currentPage);
 
-      if (sizeParam && fromParam) {
-        setQueryParams({
-          ...queryParams,
-          pageSize: Number(sizeParam),
-          currentPage: Number(fromParam),
-        });
-      }
+    if (sizeParam && pageParam) {
+      setQueryParams({
+        ...queryParams,
+        pageSize: Number(sizeParam),
+        currentPage: Number(pageParam),
+      });
     }
-  }, [queryParams.paramNames]);
+  }, []);
 
   useEffect(() => {
-    const queryParamsArray = Object.entries(selectedOptions).reduce(
-      (acc, [key, value]) => {
-        const encodedValues = value
-          .map((v) => `${encodeURIComponent(key)}=${encodeURIComponent(v)}`)
-          .join('&');
-        acc.push(encodedValues);
-        return acc;
-      },
-      [] as string[]
-    );
-
-    const queryParamsString = queryParamsArray.join('&');
-    const variablesString = `?q=&${queryParamsString}&${queryParams.paramNames.pageSize}=${queryParams.pageSize}&${queryParams.paramNames.currentPage}=${(queryParams.currentPage - 1) * queryParams.pageSize}`;
-
+    const variablesString = `?${queryParams.paramNames.pageSize}=${queryParams.pageSize}&${queryParams.paramNames.currentPage}=${queryParams.currentPage}`;
     setVariables(variablesString);
 
-    // Update URL with selected filter options, pageSize, and currentPage
+    // Update URL with pageSize and currentPage
     const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('fq', queryParamsString);
     currentUrl.searchParams.set(
       queryParams.paramNames.pageSize,
       queryParams.pageSize.toString()
     );
     currentUrl.searchParams.set(
       queryParams.paramNames.currentPage,
-      ((queryParams.currentPage - 1) * queryParams.pageSize).toString()
+      queryParams.currentPage.toString()
     );
     router.push(currentUrl.toString());
-  }, [selectedOptions, queryParams]);
+  }, [queryParams]);
 
   useEffect(() => {
-    fetchDatasets(variables)
-      .then((res) => {
-        setFacets(res);
-      })
-      .catch((err) => {
-        console.error(err);
-      });
+    if (variables) {
+      fetchDatasets(variables)
+        .then((res) => {
+          setFacets(res);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    }
   }, [variables]);
-
-  useEffect(() => {
-    fetchFacets()
-      .then((res) => {
-        console.log(res);
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, []);
 
   const handlePageChange = (newPage: number) => {
     setQueryParams({ ...queryParams, currentPage: newPage });
@@ -106,17 +76,6 @@ const DatasetsListing = () => {
 
   const handlePageSizeChange = (newSize: number) => {
     setQueryParams({ ...queryParams, pageSize: newSize, currentPage: 1 });
-  };
-
-  const handlePillRemove = (category: string, value: string) => {
-    setSelectedOptions((prevSelectedOptions) => {
-      const updatedOptions = { ...prevSelectedOptions };
-      const updatedValues = updatedOptions[category].filter(
-        (item) => item !== value
-      );
-      updatedOptions[category] = updatedValues;
-      return updatedOptions;
-    });
   };
 
   return (
@@ -161,7 +120,7 @@ const DatasetsListing = () => {
               ]}
             />
           </div>
-          <Tray
+          {/* <Tray
             size="narrow"
             open={open}
             onOpenChange={setOpen}
@@ -177,35 +136,31 @@ const DatasetsListing = () => {
           >
             <Filter
               setOpen={setOpen}
-              options={options}
-              setSelectedOptions={setSelectedOptions}
-              selectedOptions={selectedOptions}
+              options={}
+              setSelectedOptions={}
+              selectedOptions={}
             />
-          </Tray>
+          </Tray> */}
         </div>
         <div className="row flex gap-5">
           <div className="hidden min-w-64 max-w-64 lg:block">
-            <Filter
-              options={options}
-              setSelectedOptions={setSelectedOptions}
-              selectedOptions={selectedOptions}
-            />
+            {/* <Filter
+              options={}
+              setSelectedOptions={}
+              selectedOptions={}
+            /> */}
           </div>
+
           <div className="flex w-full flex-col px-2">
             <div className="flex gap-2 border-b-2 border-solid border-baseGraySlateSolid4 pb-4">
-              {Object.entries(selectedOptions).map(([category, values]) =>
-                values.map((value) => (
-                  <Pill
-                    key={`${category}-${value}`}
-                    onRemove={() => handlePillRemove(category, value)}
-                  >
-                    {value}
-                  </Pill>
-                ))
-              )}
+              {/* <Pill
+                    key={}
+                    onRemove={} >
+                    {}
+                  </Pill> */}
             </div>
+
             <div className="mb-16 flex flex-col gap-6">
-              {/* Render dataset cards */}
               {facets !== undefined && datasetDetails?.length > 0 && (
                 <DatasetCards
                   data={datasetDetails}
