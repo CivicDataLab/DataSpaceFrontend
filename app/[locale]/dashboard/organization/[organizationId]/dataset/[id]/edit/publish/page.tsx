@@ -11,6 +11,7 @@ import {
   AccordionTrigger,
   Button,
   Dialog,
+  Icon,
   Spinner,
   Table,
   Tag,
@@ -20,6 +21,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { formatDate, toTitleCase } from '@/lib/utils';
+import { Icons } from '@/components/icons';
 
 const datasetSummaryQuery = graphql(`
   query datasetsSummary($filters: DatasetFilter) {
@@ -187,14 +189,25 @@ const Page = () => {
     {
       name: 'Resource',
       data: data?.datasets[0]?.resources,
+      error:
+        data && data?.datasets[0]?.resources.length === 0
+          ? 'No Resources found. Please add to continue.'
+          : '',
+      errorType: 'critical',
     },
     {
       name: 'Access Type',
       data: data?.datasets[0]?.accessModels,
+      error:
+        data && data?.datasets[0]?.resources.length === 0
+          ? 'No Access Type found. Please add to continue.'
+          : '',
+      errorType: 'critical',
     },
     {
       name: 'Metadata',
       data: data?.datasets[0]?.metadata,
+      error: '',
     },
   ];
 
@@ -222,6 +235,8 @@ const Page = () => {
     }
   );
 
+  console.log(Summary);
+
   return (
     <>
       <div className=" w-full py-6">
@@ -243,10 +258,25 @@ const Page = () => {
             <>
               {Summary.map((item, index) => (
                 <Accordion type="single" collapsible key={index}>
-                  <AccordionItem value={`item-${index}`}>
-                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-baseBlueSolid3  p-4  ">
-                      <div>
-                        <Text className=" font-semi-bold">See {item.name}</Text>
+                  <AccordionItem
+                    value={`item-${index}`}
+                    className=" border-none"
+                  >
+                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-baseBlueSolid3  p-4 hover:no-underline ">
+                      <div className="flex flex-wrap items-center justify-start gap-2">
+                        <Text className=" w-32 text-justify font-semi-bold">
+                          {item.name}
+                        </Text>
+                        {item.error !== '' && (
+                          <div className="flex items-center gap-2">
+                            <Icon
+                              source={Icons.alert}
+                              color="critical"
+                              size={24}
+                            />
+                            <Text variant="bodyMd">{item.error}</Text>
+                          </div>
+                        )}
                       </div>
                     </AccordionTrigger>
                     <AccordionContent
@@ -258,23 +288,38 @@ const Page = () => {
                     >
                       <div className=" py-4">
                         {item.name !== 'Metadata' ? (
-                          <Table
-                            columns={generateColumnData(item.name)}
-                            rows={generateTableData(item.name, item.data)}
-                            hideFooter
-                          />
+                          item.data &&
+                          item?.data.length > 0 && (
+                            <Table
+                              columns={generateColumnData(item.name)}
+                              rows={generateTableData(item.name, item.data)}
+                              hideFooter
+                            />
+                          )
                         ) : (
                           <div className="flex flex-col gap-4 px-8 py-4">
-                            {PrimaryMetadata.map((item, index) => (
-                              <div className="flex flex-wrap gap-2" key={index}>
-                                <Text className=" basis-1/6" variant="bodyMd">
-                                  {item.label}:
-                                </Text>
-                                <Text variant="bodyMd" className=" basis-4/5">
-                                  {item.value}
-                                </Text>
-                              </div>
-                            ))}
+                            {PrimaryMetadata.map(
+                              (item, index) =>
+                                item.value && (
+                                  <div
+                                    className="flex flex-wrap gap-2"
+                                    key={index}
+                                  >
+                                    <Text
+                                      className=" basis-1/6"
+                                      variant="bodyMd"
+                                    >
+                                      {item.label}:
+                                    </Text>
+                                    <Text
+                                      variant="bodyMd"
+                                      className=" basis-4/5"
+                                    >
+                                      {item.value}
+                                    </Text>
+                                  </div>
+                                )
+                            )}
 
                             {item?.data?.map((item: any, index: any) => (
                               <div className="flex flex-wrap gap-2" key={index}>
