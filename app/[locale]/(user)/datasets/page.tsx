@@ -147,11 +147,8 @@ const DatasetsListing = () => {
 
   const handleRemoveFilter = (category: string, value: string) => {
     setQueryParams((prevParams) => {
-      const newValues = prevParams.filters[category].filter((v) => v !== value);
-      const newFilters = newValues.length
-        ? { ...prevParams.filters, [category]: newValues }
-        : { ...prevParams.filters };
-      if (!newValues.length) delete newFilters[category];
+      const newFilters = { ...prevParams.filters };
+      newFilters[category] = newFilters[category].filter((v) => v !== value);
       return { ...prevParams, filters: newFilters, currentPage: 1 };
     });
   };
