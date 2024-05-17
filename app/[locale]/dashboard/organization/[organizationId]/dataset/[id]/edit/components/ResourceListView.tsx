@@ -14,10 +14,12 @@ import {
   DataTable,
   Dialog,
   DropZone,
+  Icon,
   IconButton,
   SearchInput,
   Spinner,
   Text,
+  TextField,
   toast,
 } from 'opub-ui';
 
@@ -25,6 +27,13 @@ import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { createResourceFilesDoc } from './DistributionList';
+
+type FilteredRow = {
+  name_of_resource: string;
+  type: string;
+  date_added: string;
+  id: string;
+};
 
 export const ResourceListView = ({ data, refetch }: any) => {
   const updateResourceList: any = graphql(`
@@ -35,10 +44,14 @@ export const ResourceListView = ({ data, refetch }: any) => {
 
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
 
-  const { mutate, isLoading } = useMutation(
+  const { mutate } = useMutation(
     (data: { resourceId: string }) => GraphQL(updateResourceList, data),
     {
-      onSuccess: () => {
+      onSuccess: (data, variables) => {
+        const updatedFilteredRows = filteredRows.filter(
+          (row: any) => row.id !== variables.resourceId
+        );
+        setFilteredRows(updatedFilteredRows);
         refetch();
         toast('Resource Deleted Successfully', {
           action: {
@@ -136,16 +149,17 @@ export const ResourceListView = ({ data, refetch }: any) => {
         })) || [],
   };
 
-  //const [filteredRows, setFilteredRows] = React.useState(table.rows);
+  const [filteredRows, setFilteredRows] = React.useState<FilteredRow[]>(
+    table.rows
+  );
 
-  // const handleSearchChange = (e:string) => {
-  //   console.log(e, 'e');
-  //   const searchTerm = e.toLowerCase();
-  //   const filtered = table.rows.filter((row:any) =>
-  //     row.name_of_resource.toLowerCase().includes(searchTerm)
-  //   );
-  //   setFilteredRows(filtered);
-  // };
+  const handleSearchChange = (e: string) => {
+    const searchTerm = e.toLowerCase();
+    const filtered = table.rows.filter((row: any) =>
+      row.name_of_resource.toLowerCase().includes(searchTerm)
+    );
+    setFilteredRows(filtered);
+  };
 
   const filteredColumns = table.columns.filter(
     (column) => column.accessorKey !== 'id'
@@ -177,16 +191,16 @@ export const ResourceListView = ({ data, refetch }: any) => {
   return (
     <div className="mt-3">
       <div className="my-8 flex items-center gap-6 px-4">
-        {/* <Text>
-          Showing {table.rows.length} of {table.rows.length} resources
-        </Text> */}
-        {/* <SearchInput
+        <Text>
+          Showing {filteredRows.length} of {filteredRows.length} resources
+        </Text>
+        <SearchInput
           className="w-1/2 "
           placeholder="Search in Resources"
           label="Search"
           name="Search"
-          onChange={function Ga() {} }
-        /> */}
+          onChange={(e) => handleSearchChange(e)}
+        />
         {/* <Dialog>
           <Dialog.Trigger>
             <Button size="medium" className=" mx-5">
@@ -194,11 +208,7 @@ export const ResourceListView = ({ data, refetch }: any) => {
             </Button>
           </Dialog.Trigger>
           <Dialog.Content title={'Add New Resource'}>
-            <DropZone
-              name="file_upload"
-              allowMultiple={true}
-              onDrop={dropZone}
-            >
+            <DropZone name="file_upload" allowMultiple={true} onDrop={dropZone}>
               {uploadedFile}
               {file.length === 0 && <DropZone.FileUpload />}
             </DropZone>
@@ -206,9 +216,8 @@ export const ResourceListView = ({ data, refetch }: any) => {
         </Dialog> */}
       </div>
       <DataTable
-        addToolbar
         columns={filteredColumns}
-        rows={table.rows}
+        rows={filteredRows}
         hideFooter={true}
         hideSelection={true}
         defaultRowCount={10}
