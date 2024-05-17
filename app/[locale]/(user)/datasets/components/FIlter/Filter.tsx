@@ -10,6 +10,7 @@ import {
   Text,
 } from 'opub-ui';
 
+import { toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
 interface FilterProps {
@@ -45,7 +46,7 @@ const Filter: React.FC<FilterProps> = ({
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value={category}>
                 <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-baseIndigoSolid5 py-2 hover:no-underline">
-                  <Text>{category}</Text>
+                  <Text>{toTitleCase(category)}</Text>
                 </AccordionTrigger>
                 <AccordionContent
                   className="flex w-full flex-col px-3 pb-0 pt-2"
