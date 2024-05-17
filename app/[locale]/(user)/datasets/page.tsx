@@ -9,16 +9,48 @@ import BreadCrumbs from '@/components/BreadCrumbs';
 import DatasetCards from './components/DatasetCards';
 import Filter from './components/FIlter/Filter';
 
+interface Bucket {
+  key: string;
+  doc_count: number;
+}
+
+interface Aggregation {
+  buckets: Bucket[];
+}
+
+interface Aggregations {
+  [key: string]: Aggregation;
+}
+
+interface FilterOptions {
+  [key: string]: string[];
+}
+
+interface QueryParams {
+  pageSize: number;
+  currentPage: number;
+  filters: FilterOptions;
+  paramNames: {
+    pageSize: string;
+    currentPage: string;
+  };
+}
+
 const DatasetsListing = () => {
-  const [facets, setFacets] = useState<any>({});
+  const [facets, setFacets] = useState<{
+    results: any[];
+    total: number;
+    aggregations: Aggregations;
+  } | null>(null);
   const [variables, setVariables] = useState('');
   const [open, setOpen] = useState(false);
-  const count = facets?.total;
-  const datasetDetails = facets?.results;
+  const count = facets?.total ?? 0;
+  const datasetDetails = facets?.results ?? [];
 
-  const [queryParams, setQueryParams] = useState({
+  const [queryParams, setQueryParams] = useState<QueryParams>({
     pageSize: 5,
     currentPage: 1,
+    filters: {},
     paramNames: {
       pageSize: 'size',
       currentPage: 'page',
@@ -31,21 +63,31 @@ const DatasetsListing = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const sizeParam = urlParams.get(queryParams.paramNames.pageSize);
     const pageParam = urlParams.get(queryParams.paramNames.currentPage);
+    const filters: FilterOptions = {};
 
-    if (sizeParam && pageParam) {
-      setQueryParams({
-        ...queryParams,
-        pageSize: Number(sizeParam),
-        currentPage: Number(pageParam),
-      });
-    }
+    urlParams.forEach((value, key) => {
+      if (!Object.values(queryParams.paramNames).includes(key)) {
+        filters[key] = value.split(',');
+      }
+    });
+
+    setQueryParams((prevParams) => ({
+      ...prevParams,
+      pageSize: sizeParam ? Number(sizeParam) : prevParams.pageSize,
+      currentPage: pageParam ? Number(pageParam) : prevParams.currentPage,
+      filters,
+    }));
   }, []);
-
   useEffect(() => {
-    const variablesString = `?${queryParams.paramNames.pageSize}=${queryParams.pageSize}&${queryParams.paramNames.currentPage}=${queryParams.currentPage}`;
+    const filtersString = Object.entries(queryParams.filters)
+      .filter(([_, values]) => values.length > 0) // Only include non-empty filter values
+      .map(([key, values]) => `${key}=${values.join(',')}`)
+      .join('&');
+
+    const variablesString = `?${filtersString}&${queryParams.paramNames.pageSize}=${queryParams.pageSize}&${queryParams.paramNames.currentPage}=${queryParams.currentPage}`;
     setVariables(variablesString);
 
-    // Update URL with pageSize and currentPage
+    // Update URL with pageSize, currentPage, and filters
     const currentUrl = new URL(window.location.href);
     currentUrl.searchParams.set(
       queryParams.paramNames.pageSize,
@@ -55,6 +97,16 @@ const DatasetsListing = () => {
       queryParams.paramNames.currentPage,
       queryParams.currentPage.toString()
     );
+
+    Object.entries(queryParams.filters).forEach(([key, values]) => {
+      if (values.length > 0) {
+        // Only set non-empty filter values in the URL
+        currentUrl.searchParams.set(key, values.join(','));
+      } else {
+        currentUrl.searchParams.delete(key); // Remove empty filter values from the URL
+      }
+    });
+
     router.push(currentUrl.toString());
   }, [queryParams]);
 
@@ -71,12 +123,51 @@ const DatasetsListing = () => {
   }, [variables]);
 
   const handlePageChange = (newPage: number) => {
-    setQueryParams({ ...queryParams, currentPage: newPage });
+    setQueryParams((prevParams) => ({ ...prevParams, currentPage: newPage }));
   };
 
   const handlePageSizeChange = (newSize: number) => {
-    setQueryParams({ ...queryParams, pageSize: newSize, currentPage: 1 });
+    setQueryParams((prevParams) => ({
+      ...prevParams,
+      pageSize: newSize,
+      currentPage: 1,
+    }));
   };
+
+  const handleFilterChange = (category: string, values: string[]) => {
+    setQueryParams((prevParams) => ({
+      ...prevParams,
+      filters: {
+        ...prevParams.filters,
+        [category]: values,
+      },
+      currentPage: 1, // Reset to first page when filters change
+    }));
+  };
+
+  const handleRemoveFilter = (category: string, value: string) => {
+    setQueryParams((prevParams) => {
+      const newValues = prevParams.filters[category].filter((v) => v !== value);
+      const newFilters = newValues.length
+        ? { ...prevParams.filters, [category]: newValues }
+        : { ...prevParams.filters };
+      if (!newValues.length) delete newFilters[category];
+      return { ...prevParams, filters: newFilters, currentPage: 1 };
+    });
+  };
+
+  const aggregations: Aggregations = facets?.aggregations || {};
+
+  const filterOptions = Object.entries(aggregations).reduce(
+    (acc: Record<string, { label: string; value: string }[]>, [key, value]) => {
+      acc[key.replace('.raw', '')] = value.buckets.map((bucket: Bucket) => ({
+        label: bucket.key,
+        value: bucket.key,
+      }));
+      return acc;
+    },
+    {}
+  );
 
   return (
     <main className="bg-surfaceDefault">
@@ -120,7 +211,7 @@ const DatasetsListing = () => {
               ]}
             />
           </div>
-          {/* <Tray
+          <Tray
             size="narrow"
             open={open}
             onOpenChange={setOpen}
@@ -136,28 +227,33 @@ const DatasetsListing = () => {
           >
             <Filter
               setOpen={setOpen}
-              options={}
-              setSelectedOptions={}
-              selectedOptions={}
+              options={filterOptions}
+              setSelectedOptions={handleFilterChange}
+              selectedOptions={queryParams.filters}
             />
-          </Tray> */}
+          </Tray>
         </div>
         <div className="row flex gap-5">
           <div className="hidden min-w-64 max-w-64 lg:block">
-            {/* <Filter
-              options={}
-              setSelectedOptions={}
-              selectedOptions={}
-            /> */}
+            <Filter
+              options={filterOptions}
+              setSelectedOptions={handleFilterChange}
+              selectedOptions={queryParams.filters}
+            />
           </div>
 
           <div className="flex w-full flex-col px-2">
             <div className="flex gap-2 border-b-2 border-solid border-baseGraySlateSolid4 pb-4">
-              {/* <Pill
-                    key={}
-                    onRemove={} >
-                    {}
-                  </Pill> */}
+              {Object.entries(queryParams.filters).map(([category, values]) =>
+                values.map((value) => (
+                  <Pill
+                    key={`${category}-${value}`}
+                    onRemove={() => handleRemoveFilter(category, value)}
+                  >
+                    {value}
+                  </Pill>
+                ))
+              )}
             </div>
 
             <div className="mb-16 flex flex-col gap-6">

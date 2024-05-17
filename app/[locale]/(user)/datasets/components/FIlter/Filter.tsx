@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -14,10 +14,8 @@ import { Icons } from '@/components/icons';
 
 interface FilterProps {
   setOpen?: (isOpen: boolean) => void;
-  options?: Record<string, any>;
-  setSelectedOptions: React.Dispatch<
-    React.SetStateAction<Record<string, string[]>>
-  >;
+  options: Record<string, { label: string; value: string }[]>;
+  setSelectedOptions: (category: string, values: string[]) => void;
   selectedOptions: Record<string, string[]>;
 }
 
@@ -42,7 +40,7 @@ const Filter: React.FC<FilterProps> = ({
         )}
       </div>
       <div className="flex flex-col gap-5">
-        {Object.entries(options || {}).map(([category, data], index) => (
+        {Object.entries(options).map(([category, data], index) => (
           <div key={index}>
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value={category}>
@@ -58,17 +56,11 @@ const Filter: React.FC<FilterProps> = ({
                 >
                   <CheckboxGroup
                     name={category}
-                    options={data?.buckets?.map((bucket: { key: string }) => ({
-                      label: bucket.key,
-                      value: bucket.key,
-                    }))}
+                    options={data}
                     title={undefined}
                     value={selectedOptions[category] || []}
-                    onChange={(e) => {
-                      setSelectedOptions({
-                        ...selectedOptions,
-                        [category]: e,
-                      });
+                    onChange={(values) => {
+                      setSelectedOptions(category, values as string[]);
                     }}
                   />
                 </AccordionContent>
