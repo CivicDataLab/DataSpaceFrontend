@@ -71,6 +71,18 @@ export const ResourceListView = ({ data, refetch }: any) => {
       GraphQL(createResourceFilesDoc, data),
     {
       onSuccess: (data: any) => {
+        const updatedRows = data.createFileResources.map((item: any) => ({
+          name_of_resource: item.name,
+          type: item.type,
+          date_added: formatDate(item.created),
+          id: item.id,
+        }));
+
+        setFilteredRows((prevRows: FilteredRow[]) => [
+          ...prevRows,
+          ...updatedRows,
+        ]);
+
         refetch();
         toast('Resource Added Successfully', {
           action: {
@@ -201,7 +213,7 @@ export const ResourceListView = ({ data, refetch }: any) => {
           name="Search"
           onChange={(e) => handleSearchChange(e)}
         />
-        {/* <Dialog>
+        <Dialog>
           <Dialog.Trigger>
             <Button size="medium" className=" mx-5">
               ADD NEW RESOURCE
@@ -213,7 +225,7 @@ export const ResourceListView = ({ data, refetch }: any) => {
               {file.length === 0 && <DropZone.FileUpload />}
             </DropZone>
           </Dialog.Content>
-        </Dialog> */}
+        </Dialog>
       </div>
       <DataTable
         columns={filteredColumns}

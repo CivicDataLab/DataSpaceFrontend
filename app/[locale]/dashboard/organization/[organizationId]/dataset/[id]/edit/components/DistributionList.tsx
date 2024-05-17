@@ -119,6 +119,7 @@ export const createResourceFilesDoc: any = graphql(`
       id
       created
       name
+      type
     }
   }
 `);
