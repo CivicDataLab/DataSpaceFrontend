@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchDatasets } from '@/fetch';
 import { Button, Pill, SearchInput, Select, Text, Tray } from 'opub-ui';
@@ -34,6 +34,7 @@ interface QueryParams {
     pageSize: string;
     currentPage: string;
   };
+  query?: string;
 }
 
 const DatasetsListing = () => {
@@ -46,6 +47,7 @@ const DatasetsListing = () => {
   const [open, setOpen] = useState(false);
   const count = facets?.total ?? 0;
   const datasetDetails = facets?.results ?? [];
+  const router = useRouter();
 
   const [queryParams, setQueryParams] = useState<QueryParams>({
     pageSize: 5,
@@ -55,9 +57,8 @@ const DatasetsListing = () => {
       pageSize: 'size',
       currentPage: 'page',
     },
+    query: '',
   });
-
-  const router = useRouter();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -78,16 +79,21 @@ const DatasetsListing = () => {
       filters,
     }));
   }, []);
+
   useEffect(() => {
     const filtersString = Object.entries(queryParams.filters)
       .filter(([_, values]) => values.length > 0) // Only include non-empty filter values
       .map(([key, values]) => `${key}=${values.join(',')}`)
       .join('&');
 
-    const variablesString = `?${filtersString}&${queryParams.paramNames.pageSize}=${queryParams.pageSize}&${queryParams.paramNames.currentPage}=${queryParams.currentPage}`;
+    const searchParam = queryParams.query
+      ? `&query=${encodeURIComponent(queryParams.query)}`
+      : '';
+
+    const variablesString = `?${filtersString}&${queryParams.paramNames.pageSize}=${queryParams.pageSize}&${queryParams.paramNames.currentPage}=${queryParams.currentPage}${searchParam}`;
     setVariables(variablesString);
 
-    // Update URL with pageSize, currentPage, and filters
+    // Update URL with pageSize, currentPage, filters, and query
     const currentUrl = new URL(window.location.href);
     currentUrl.searchParams.set(
       queryParams.paramNames.pageSize,
@@ -106,6 +112,12 @@ const DatasetsListing = () => {
         currentUrl.searchParams.delete(key); // Remove empty filter values from the URL
       }
     });
+
+    if (queryParams.query) {
+      currentUrl.searchParams.set('query', queryParams.query);
+    } else {
+      currentUrl.searchParams.delete('query');
+    }
 
     router.push(currentUrl.toString());
   }, [queryParams]);
@@ -153,6 +165,10 @@ const DatasetsListing = () => {
     });
   };
 
+  const handleSearch = (searchTerm: string) => {
+    setQueryParams((prevParams) => ({ ...prevParams, query: searchTerm }));
+  };
+
   const aggregations: Aggregations = facets?.aggregations || {};
 
   const filterOptions = Object.entries(aggregations).reduce(
@@ -186,6 +202,8 @@ const DatasetsListing = () => {
               label={'Search'}
               name={'Search'}
               placeholder="Search for data"
+              onSubmit={(value) => handleSearch(value)}
+              withButton
             />
           </div>
           <div className="flex items-center gap-2">
