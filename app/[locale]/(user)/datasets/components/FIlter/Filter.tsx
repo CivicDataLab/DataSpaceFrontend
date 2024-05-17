@@ -26,14 +26,27 @@ const Filter: React.FC<FilterProps> = ({
   setSelectedOptions,
   selectedOptions,
 }) => {
+  const handleReset = () => {
+    Object.keys(options).forEach((category) => {
+      setSelectedOptions(category, []); // Reset selected options for each category
+    });
+  };
+
   return (
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid5 px-4 py-6">
       <div className="mb-5 flex justify-between">
-        <div>
-          <Text variant="headingMd">Filters</Text>
+        <div className="flex w-full justify-between">
+          <div>
+            <Text variant="headingMd">Filters</Text>
+          </div>
+          <div>
+            <Button kind="tertiary" onClick={handleReset}>
+              Reset
+            </Button>
+          </div>
         </div>
         {setOpen && (
-          <div className="align-center mr-2">
+          <div className="align-center mx-3">
             <Button onClick={() => setOpen(false)} kind="tertiary">
               <Icon source={Icons.cross} size={24} color="default" />
             </Button>
