@@ -18,7 +18,6 @@ import {
 import { GraphQL } from '@/lib/api';
 import CustomTags from '@/components/CustomTags';
 import { Icons } from '@/components/icons';
-import ResourceTable from '../../../components/ResourceTable';
 
 const generateColumnData = () => {
   return [
@@ -39,7 +38,45 @@ const generateColumnData = () => {
         );
       },
     },
-
+    {
+      accessorKey: 'schema',
+      header: 'Fields',
+      cell: ({ row }: any) => {
+        return (
+          <Dialog>
+            <Dialog.Trigger>
+              <Button
+                kind="tertiary"
+                disabled={row.original.schema.length === 0}
+              >
+                Fields
+              </Button>
+            </Dialog.Trigger>
+            <Dialog.Content title={'Fields'} limitHeight>
+              <Table
+                columns={[
+                  {
+                    accessorKey: 'name',
+                    header: 'Name',
+                  },
+                  {
+                    accessorKey: 'format',
+                    header: 'Format',
+                  },
+                ]}
+                rows={row.original.schema.flatMap((item: any) =>
+                  item.fields.map((field: any) => ({
+                    name: field.fieldName,
+                    format: field.format,
+                  }))
+                )}
+                hideFooter
+              />
+            </Dialog.Content>
+          </Dialog>
+        );
+      },
+    },
     {
       accessorKey: 'download',
       header: 'Download',
@@ -55,31 +92,6 @@ const generateColumnData = () => {
         );
       },
     },
-
-    // {
-    //   accessorKey: 'fields',
-    //   header: 'Fields',
-    //   isModalTrigger: true,
-    //   label: 'Preview',
-    //   table: true,
-    //   modalHeader: 'Fields',
-    // },
-    // {
-    //   accessorKey: 'rows',
-    //   header: 'Rows',
-    // },
-    // {
-    //   accessorKey: 'count',
-    //   header: 'Count',
-    // },
-    // {
-    //   accessorKey: 'preview',
-    //   header: 'Preview',
-    //   isModalTrigger: true,
-    //   label: 'Preview',
-    //   table: true,
-    //   modalHeader: 'Preview',
-    // },
   ];
 };
 
@@ -89,10 +101,7 @@ const generateTableData = (accessModelData: any[], id: any) => {
     accessModelTitle: accessModel.name,
     accessModelDescription: accessModel.description,
     resourceId: id,
-    // fields: accessModel.fields,
-    // rows: accessModel.rows,
-    // count: accessModel.count,
-    // preview: accessModel.preview,
+    schema: accessModel.modelResources,
   }));
 };
 
@@ -109,6 +118,19 @@ const datasetResourceQuery = graphql(`
         name
         description
         type
+        modelResources {
+          fields {
+            format
+            fieldName
+            description
+          }
+        }
+      }
+      schema {
+        fieldName
+        id
+        format
+        description
       }
     }
   }
@@ -149,22 +171,27 @@ const Resources = () => {
                     View Fields
                   </Button>
                 </Dialog.Trigger>
-                <Dialog.Content title={'View Fields'}>
+                <Dialog.Content title={'View Fields'} limitHeight>
                   <Table
                     columns={[
                       {
-                        accessorKey: 'title',
-                        header: 'Title',
+                        accessorKey: 'name',
+                        header: 'Name',
+                      },
+                      {
+                        accessorKey: 'format',
+                        header: 'Format',
                       },
                       {
                         accessorKey: 'description',
                         header: 'Description',
                       },
                     ]}
-                    rows={[
-                      { title: 'Res 1', description: 'Desc 1' },
-                      { title: 'Res 2', description: 'Desc 2' },
-                    ]}
+                    rows={item.schema.map((item: any) => ({
+                      name: item.fieldName,
+                      format: item.format,
+                      description: item.description,
+                    }))}
                     hideFooter={true}
                   />
                 </Dialog.Content>
@@ -186,9 +213,10 @@ const Resources = () => {
                         outline: '1px solid var( --base-pure-white)',
                       }}
                     >
-                      <ResourceTable
-                        ColumnsData={generateColumnData()}
-                        RowsData={generateTableData(item.accessModels, item.id)}
+                      <Table
+                        columns={generateColumnData()}
+                        rows={generateTableData(item.accessModels, item.id)}
+                        hideFooter
                       />
                     </AccordionContent>
                   </AccordionItem>

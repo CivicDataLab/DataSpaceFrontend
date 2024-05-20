@@ -8,15 +8,16 @@ import {
   AccordionItem,
   AccordionTrigger,
   Button,
+  Dialog,
   Icon,
   Spinner,
+  Table,
   Text,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import CustomTags from '@/components/CustomTags';
 import { Icons } from '@/components/icons';
-import ResourceTable from '../../../components/ResourceTable';
 
 const generateColumnData = () => {
   return [
@@ -27,6 +28,43 @@ const generateColumnData = () => {
     {
       accessorKey: 'description',
       header: 'Resource description',
+    },
+    {
+      accessorKey: 'schema',
+      header: 'Fields',
+      cell: ({ row }: any) => {
+        return (
+          <Dialog>
+            <Dialog.Trigger>
+              <Button
+                kind="tertiary"
+                disabled={row.original.schema.length === 0}
+              >
+                Fields
+              </Button>
+            </Dialog.Trigger>
+            <Dialog.Content title={'Fields'} limitHeight>
+              <Table
+                columns={[
+                  {
+                    accessorKey: 'name',
+                    header: 'Name',
+                  },
+                  {
+                    accessorKey: 'format',
+                    header: 'Format',
+                  },
+                ]}
+                rows={row.original.schema.map((field: any) => ({
+                  name: field.fieldName,
+                  format: field.format,
+                }))}
+                hideFooter
+              />
+            </Dialog.Content>
+          </Dialog>
+        );
+      },
     },
     {
       accessorKey: 'download',
@@ -43,30 +81,6 @@ const generateColumnData = () => {
         );
       },
     },
-    // {
-    //   accessorKey: 'fields',
-    //   header: 'Fields',
-    //   isModalTrigger: true,
-    //   label: 'Preview',
-    //   table: true,
-    //   modalHeader: 'Fields',
-    // },
-    // {
-    //   accessorKey: 'rows',
-    //   header: 'Rows',
-    // },
-    // {
-    //   accessorKey: 'count',
-    //   header: 'Count',
-    // },
-    // {
-    //   accessorKey: 'preview',
-    //   header: 'Preview',
-    //   isModalTrigger: true,
-    //   label: 'Preview',
-    //   table: true,
-    //   modalHeader: 'Preview',
-    // },
   ];
 };
 
@@ -75,20 +89,22 @@ const generateTableData = (resources: any[]) => {
     resourceName: item.resource.name,
     description: item.resource.description,
     download: item.resource.id,
-    // fields: item.fields,
-    // preview: item.preview,
-    // rows: item.rows,
-    // count: item.count,
+    schema: item.fields,
   }));
 };
 
 const accessModelResourcesQuery = graphql(`
-  query accessModelResources($datasetId: UUID!) {
+  query accessModelResource($datasetId: UUID!) {
     accessModelResources(datasetId: $datasetId) {
       modelResources {
         resource {
           name
           description
+          id
+        }
+        fields {
+          fieldName
+          format
           id
         }
       }
@@ -113,8 +129,6 @@ const AccessModels = () => {
       })
   );
 
-  console.log(data);
-
   return (
     <>
       {isLoading ? (
@@ -135,7 +149,7 @@ const AccessModels = () => {
                 <Text>{item.description}</Text>
               </div>
             </div>
-            <div className="align-center flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <div className="align-center  flex flex-col justify-between gap-4 sm:flex-row lg:items-center">
               <CustomTags type={item.type.split('.').pop().toLowerCase()} />
 
               <Button
@@ -169,9 +183,10 @@ const AccessModels = () => {
                         outline: '1px solid var( --base-pure-white)',
                       }}
                     >
-                      <ResourceTable
-                        ColumnsData={generateColumnData()}
-                        RowsData={generateTableData(item.modelResources)}
+                      <Table
+                        columns={generateColumnData()}
+                        rows={generateTableData(item.modelResources)}
+                        hideFooter
                       />
                     </AccordionContent>
                   </AccordionItem>
