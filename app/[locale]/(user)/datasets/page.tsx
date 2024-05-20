@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchDatasets } from '@/fetch';
 import { Button, Pill, SearchInput, Select, Text, Tray } from 'opub-ui';
@@ -30,12 +30,122 @@ interface QueryParams {
   pageSize: number;
   currentPage: number;
   filters: FilterOptions;
-  paramNames: {
-    pageSize: string;
-    currentPage: string;
-  };
   query?: string;
 }
+
+type Action =
+  | { type: 'SET_PAGE_SIZE'; payload: number }
+  | { type: 'SET_CURRENT_PAGE'; payload: number }
+  | { type: 'SET_FILTERS'; payload: { category: string; values: string[] } }
+  | { type: 'REMOVE_FILTER'; payload: { category: string; value: string } }
+  | { type: 'SET_QUERY'; payload: string }
+  | { type: 'INITIALIZE'; payload: QueryParams };
+
+const initialState: QueryParams = {
+  pageSize: 5,
+  currentPage: 1,
+  filters: {},
+  query: '',
+};
+
+const queryReducer = (state: QueryParams, action: Action): QueryParams => {
+  switch (action.type) {
+    case 'SET_PAGE_SIZE': {
+      return { ...state, pageSize: action.payload, currentPage: 1 };
+    }
+    case 'SET_CURRENT_PAGE': {
+      return { ...state, currentPage: action.payload };
+    }
+    case 'SET_FILTERS': {
+      return {
+        ...state,
+        filters: {
+          ...state.filters,
+          [action.payload.category]: action.payload.values,
+        },
+        currentPage: 1,
+      };
+    }
+    case 'REMOVE_FILTER': {
+      const newFilters = { ...state.filters };
+      newFilters[action.payload.category] = newFilters[
+        action.payload.category
+      ].filter((v) => v !== action.payload.value);
+      return { ...state, filters: newFilters, currentPage: 1 };
+    }
+    case 'SET_QUERY': {
+      return { ...state, query: action.payload };
+    }
+    case 'INITIALIZE': {
+      return { ...state, ...action.payload };
+    }
+    default:
+      return state;
+  }
+};
+
+const useUrlParams = (
+  queryParams: QueryParams,
+  setQueryParams: React.Dispatch<Action>,
+  setVariables: (vars: string) => void
+) => {
+  const router = useRouter();
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sizeParam = urlParams.get('size');
+    const pageParam = urlParams.get('page');
+    const filters: FilterOptions = {};
+
+    urlParams.forEach((value, key) => {
+      if (!['size', 'page', 'query'].includes(key)) {
+        filters[key] = value.split(',');
+      }
+    });
+
+    const initialParams: QueryParams = {
+      pageSize: sizeParam ? Number(sizeParam) : 5,
+      currentPage: pageParam ? Number(pageParam) : 1,
+      filters,
+      query: urlParams.get('query') || '',
+    };
+
+    setQueryParams({ type: 'INITIALIZE', payload: initialParams });
+  }, [setQueryParams]);
+
+  useEffect(() => {
+    const filtersString = Object.entries(queryParams.filters)
+      .filter(([_, values]) => values.length > 0)
+      .map(([key, values]) => `${key}=${values.join(',')}`)
+      .join('&');
+
+    const searchParam = queryParams.query
+      ? `&query=${encodeURIComponent(queryParams.query)}`
+      : '';
+    const variablesString = `?${filtersString}&size=${queryParams.pageSize}&page=${queryParams.currentPage}${searchParam}`;
+    setVariables(variablesString);
+
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('size', queryParams.pageSize.toString());
+    currentUrl.searchParams.set('page', queryParams.currentPage.toString());
+
+    Object.entries(queryParams.filters).forEach(([key, values]) => {
+      if (values.length > 0) {
+        currentUrl.searchParams.set(key, values.join(','));
+      } else {
+        currentUrl.searchParams.delete(key);
+      }
+    });
+
+    if (queryParams.query) {
+      currentUrl.searchParams.set('query', queryParams.query);
+    } else {
+      currentUrl.searchParams.delete('query');
+    }
+
+    router.push(currentUrl.toString());
+  }, [queryParams, setVariables, router]);
+};
 
 const DatasetsListing = () => {
   const [facets, setFacets] = useState<{
@@ -47,80 +157,9 @@ const DatasetsListing = () => {
   const [open, setOpen] = useState(false);
   const count = facets?.total ?? 0;
   const datasetDetails = facets?.results ?? [];
-  const router = useRouter();
+  const [queryParams, setQueryParams] = useReducer(queryReducer, initialState);
 
-  const [queryParams, setQueryParams] = useState<QueryParams>({
-    pageSize: 5,
-    currentPage: 1,
-    filters: {},
-    paramNames: {
-      pageSize: 'size',
-      currentPage: 'page',
-    },
-    query: '',
-  });
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const sizeParam = urlParams.get(queryParams.paramNames.pageSize);
-    const pageParam = urlParams.get(queryParams.paramNames.currentPage);
-    const filters: FilterOptions = {};
-
-    urlParams.forEach((value, key) => {
-      if (!Object.values(queryParams.paramNames).includes(key)) {
-        filters[key] = value.split(',');
-      }
-    });
-
-    setQueryParams((prevParams) => ({
-      ...prevParams,
-      pageSize: sizeParam ? Number(sizeParam) : prevParams.pageSize,
-      currentPage: pageParam ? Number(pageParam) : prevParams.currentPage,
-      filters,
-    }));
-  }, []);
-
-  useEffect(() => {
-    const filtersString = Object.entries(queryParams.filters)
-      .filter(([_, values]) => values.length > 0) // Only include non-empty filter values
-      .map(([key, values]) => `${key}=${values.join(',')}`)
-      .join('&');
-
-    const searchParam = queryParams.query
-      ? `&query=${encodeURIComponent(queryParams.query)}`
-      : '';
-
-    const variablesString = `?${filtersString}&${queryParams.paramNames.pageSize}=${queryParams.pageSize}&${queryParams.paramNames.currentPage}=${queryParams.currentPage}${searchParam}`;
-    setVariables(variablesString);
-
-    // Update URL with pageSize, currentPage, filters, and query
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set(
-      queryParams.paramNames.pageSize,
-      queryParams.pageSize.toString()
-    );
-    currentUrl.searchParams.set(
-      queryParams.paramNames.currentPage,
-      queryParams.currentPage.toString()
-    );
-
-    Object.entries(queryParams.filters).forEach(([key, values]) => {
-      if (values.length > 0) {
-        // Only set non-empty filter values in the URL
-        currentUrl.searchParams.set(key, values.join(','));
-      } else {
-        currentUrl.searchParams.delete(key); // Remove empty filter values from the URL
-      }
-    });
-
-    if (queryParams.query) {
-      currentUrl.searchParams.set('query', queryParams.query);
-    } else {
-      currentUrl.searchParams.delete('query');
-    }
-
-    router.push(currentUrl.toString());
-  }, [queryParams]);
+  useUrlParams(queryParams, setQueryParams, setVariables);
 
   useEffect(() => {
     if (variables) {
@@ -135,38 +174,23 @@ const DatasetsListing = () => {
   }, [variables]);
 
   const handlePageChange = (newPage: number) => {
-    setQueryParams((prevParams) => ({ ...prevParams, currentPage: newPage }));
+    setQueryParams({ type: 'SET_CURRENT_PAGE', payload: newPage });
   };
 
   const handlePageSizeChange = (newSize: number) => {
-    setQueryParams((prevParams) => ({
-      ...prevParams,
-      pageSize: newSize,
-      currentPage: 1,
-    }));
+    setQueryParams({ type: 'SET_PAGE_SIZE', payload: newSize });
   };
 
   const handleFilterChange = (category: string, values: string[]) => {
-    setQueryParams((prevParams) => ({
-      ...prevParams,
-      filters: {
-        ...prevParams.filters,
-        [category]: values,
-      },
-      currentPage: 1, // Reset to first page when filters change
-    }));
+    setQueryParams({ type: 'SET_FILTERS', payload: { category, values } });
   };
 
   const handleRemoveFilter = (category: string, value: string) => {
-    setQueryParams((prevParams) => {
-      const newFilters = { ...prevParams.filters };
-      newFilters[category] = newFilters[category].filter((v) => v !== value);
-      return { ...prevParams, filters: newFilters, currentPage: 1 };
-    });
+    setQueryParams({ type: 'REMOVE_FILTER', payload: { category, value } });
   };
 
   const handleSearch = (searchTerm: string) => {
-    setQueryParams((prevParams) => ({ ...prevParams, query: searchTerm }));
+    setQueryParams({ type: 'SET_QUERY', payload: searchTerm });
   };
 
   const aggregations: Aggregations = facets?.aggregations || {};
@@ -199,11 +223,11 @@ const DatasetsListing = () => {
           </div>
           <div className="w-full max-w-[550px] md:block">
             <SearchInput
-              label={'Search'}
-              name={'Search'}
+              label="Search"
+              name="Search"
               placeholder="Search for data"
               onSubmit={(value) => handleSearch(value)}
-              withButton
+              onClear={(value) => handleSearch(value)}
             />
           </div>
           <div className="flex items-center gap-2">
@@ -234,7 +258,7 @@ const DatasetsListing = () => {
               <Button
                 kind="secondary"
                 className="lg:hidden"
-                onClick={(e) => setOpen(true)}
+                onClick={() => setOpen(true)}
               >
                 Filter
               </Button>
@@ -257,7 +281,7 @@ const DatasetsListing = () => {
             />
           </div>
 
-          <div className=" flex w-full flex-col px-2">
+          <div className="flex w-full flex-col px-2">
             <div className="flex gap-2 border-b-2 border-solid border-baseGraySlateSolid4 pb-4">
               {Object.entries(queryParams.filters).map(([category, values]) =>
                 values.map((value) => (
@@ -271,8 +295,8 @@ const DatasetsListing = () => {
               )}
             </div>
 
-            <div className=" flex flex-col gap-6">
-              {facets !== undefined && datasetDetails?.length > 0 && (
+            <div className="flex flex-col gap-6">
+              {facets && datasetDetails?.length > 0 && (
                 <DatasetCards
                   data={datasetDetails}
                   totalCount={count}
