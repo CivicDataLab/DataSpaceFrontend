@@ -38,7 +38,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import { createResourceFilesDoc, getReourceDoc } from './DistributionList';
+import { createResourceFilesDoc } from './DistributionList';
 
 interface TListItem {
   label: string;
@@ -162,9 +162,7 @@ export const EditResource = ({ reload, data }: any) => {
   const router = useRouter();
 
   const ResourceList: TListItem[] =
-    data?.resource
-      .filter((item: any) => item.dataset?.pk === params.id)
-      .map((item: any) => ({
+    data.map((item: any) => ({
         label: item.name,
         value: item.id,
         description: item.description,
@@ -249,9 +247,7 @@ export const EditResource = ({ reload, data }: any) => {
 
 
   const listViewFunction = () => {
-    router.push(
-      `/dashboard/organization/${params.organizationId}/dataset/${params.id}/edit/distribution`
-    );
+    setResourceId('')
   };
 
   const saveResource = () => {

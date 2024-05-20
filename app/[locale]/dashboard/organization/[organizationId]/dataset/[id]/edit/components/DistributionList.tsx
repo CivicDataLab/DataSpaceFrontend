@@ -30,29 +30,31 @@ import { EditResource } from './EditResource';
 import { ResourceListView } from './ResourceListView';
 
 export const getReourceDoc = graphql(`
-  query getResource {
-    resource {
-      id
-      dataset {
-        pk
-      }
-      type
-      name
-      description
-      created
-      fileDetails {
+  query getResources($filters: DatasetFilter) {
+    datasets(filters: $filters) {
+      resources {
         id
-        resource {
+        dataset {
           pk
         }
-        file {
-          name
-          path
-          url
-        }
-        size
+        type
+        name
+        description
         created
-        modified
+        fileDetails {
+          id
+          resource {
+            pk
+          }
+          file {
+            name
+            path
+            url
+          }
+          size
+          created
+          modified
+        }
       }
     }
   }
@@ -64,16 +66,17 @@ export function DistributionList({
   setPage: (page: 'list' | 'create') => void;
   setEditId: (id: string) => void;
 }) {
-  
+  const params = useParams();
+
   const { data, isLoading, refetch } = useQuery(
-    [`fetch_resources`],
-    () => GraphQL(getReourceDoc),
+    [`fetch_resources_${params.id}`],
+    () => GraphQL(getReourceDoc, { filters: { id: params.id } }),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
     }
   );
-  const params = useParams();
+
   const searchParams = useSearchParams();
   const resourceId = searchParams.get('id');
 
@@ -83,14 +86,28 @@ export function DistributionList({
         <div className="flex h-[70vh] w-full items-center justify-center">
           <Spinner size={40} />
         </div>
-      ) : !resourceId && data &&
-        data?.resource.filter((item: any) => item.dataset.pk === params.id).length >
-          0 ? (
-        <ResourceListView data={data} refetch={refetch} />
       ) : (
-        <div className="py-4">
-          <NoList setPage={setPage} reload={refetch} data={data} />
-        </div>
+        <>
+          {data && data.datasets[0].resources.length > 0 ? (
+            <>
+              {resourceId ? (
+                <EditResource
+                  reload={refetch}
+                  data={data.datasets[0].resources}
+                />
+              ) : (
+                <ResourceListView
+                  refetch={refetch}
+                  data={data.datasets[0].resources}
+                />
+              )}
+            </>
+          ) : (
+            <div className="py-4">
+              <NoList setPage={setPage} reload={refetch} />
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -109,11 +126,9 @@ export const createResourceFilesDoc: any = graphql(`
 const NoList = ({
   setPage,
   reload,
-  data
 }: {
   setPage: (page: 'list' | 'create') => void;
   reload: any;
-  data: any
 }) => {
   const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT'];
   const params = useParams();
@@ -170,43 +185,19 @@ const NoList = ({
   const fileUpload = file.length === 0 && (
     <DropZone.FileUpload actionHint={hint} />
   );
-  const uploadedFile = file.length > 0 && (
-    <div className="flex h-full items-center justify-center px-2 py-14">
-      <div className="flex-col">
-        <div>
-          <Icon source={Icons.check} size={24} color="success" />
-          <div className="flex">{file[0].name.substring(0, 15) + ' ...'} </div>
-          <Text variant="bodySm">{file[0].size} bytes</Text>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <>
-      {isLoading ? (
-        <div className="flex h-[70vh] w-full items-center justify-center">
-          <Spinner size={40} />
-        </div>
-      ) : (
-        <>
-          {resourceId ? (
-            <EditResource reload={reload} data={data}/>
-          ) : (
-            <DropZone
-              name="file_details"
-              label="Upload"
-              allowMultiple={true}
-              onDrop={handleDropZoneDrop}
-              labelHidden
-              className="min-h-[70vh] bg-baseGraySlateSolid5"
-            >
-              {uploadedFile}
-              {fileUpload}
-            </DropZone>
-          )}
-        </>
-      )}
+      <DropZone
+        name="file_details"
+        label="Upload"
+        allowMultiple={true}
+        onDrop={handleDropZoneDrop}
+        labelHidden
+        className="min-h-[70vh] bg-baseGraySlateSolid5"
+      >
+        {fileUpload}
+      </DropZone>
     </>
   );
 };
