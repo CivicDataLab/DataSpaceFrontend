@@ -1,4 +1,5 @@
 import {
+  IconAlertCircleFilled,
   IconArrowLeft,
   IconArrowRight,
   IconBarrierBlock,
@@ -76,4 +77,5 @@ export const Icons: {
   linkedin: IconBrandLinkedin,
   github: IconBrandGithubFilled,
   download: IconDownload,
+  alert: IconAlertCircleFilled,
 };

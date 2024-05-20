@@ -95,10 +95,12 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
             </Button>
           </div>
 
-          <Table
-            columns={generateColumnData()}
-            rows={generateTableData(data?.accessModelResources)}
-          />
+          {data.accessModelResources.length > 0 && (
+            <Table
+              columns={generateColumnData()}
+              rows={generateTableData(data?.accessModelResources)}
+            />
+          )}
         </>
       )}
     </div>

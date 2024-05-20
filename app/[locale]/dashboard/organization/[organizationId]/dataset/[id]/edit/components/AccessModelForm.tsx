@@ -129,7 +129,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
 
   return (
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
-      <div className="mb-6 flex flex-wrap justify-between gap-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-6">
         <div className="flex w-2/3 flex-wrap items-center gap-2">
           <Text>Access Type Name:</Text>
           <Select
@@ -141,6 +141,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
           />
         </div>
         <Button
+          className=" h-fit w-fit"
           onClick={(e) =>
             setAccessModelData({
               dataset: params.id,
