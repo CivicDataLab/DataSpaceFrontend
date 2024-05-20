@@ -3,7 +3,15 @@
 import React, { useEffect, useReducer, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchDatasets } from '@/fetch';
-import { Button, Pill, SearchInput, Select, Text, Tray } from 'opub-ui';
+import {
+  Button,
+  Pill,
+  SearchInput,
+  Select,
+  Spinner,
+  Text,
+  Tray,
+} from 'opub-ui';
 
 import BreadCrumbs from '@/components/BreadCrumbs';
 import DatasetCards from './components/DatasetCards';
@@ -158,6 +166,7 @@ const DatasetsListing = () => {
   const count = facets?.total ?? 0;
   const datasetDetails = facets?.results ?? [];
   const [queryParams, setQueryParams] = useReducer(queryReducer, initialState);
+  console.log(facets);
 
   useUrlParams(queryParams, setQueryParams, setVariables);
 
@@ -214,102 +223,109 @@ const DatasetsListing = () => {
           { href: '#', label: 'Dataset Listing' },
         ]}
       />
-      <section className="mx-6 md:mx-8 lg:mx-10">
-        <div className="my-4 flex flex-wrap items-center justify-between gap-6 rounded-2 bg-baseBlueSolid4 p-2">
-          <div>
-            <Text>
-              Showing {datasetDetails?.length} of {count} Datasets
-            </Text>
-          </div>
-          <div className="w-full max-w-[550px] md:block">
-            <SearchInput
-              label="Search"
-              name="Search"
-              placeholder="Search for data"
-              onSubmit={(value) => handleSearch(value)}
-              onClear={(value) => handleSearch(value)}
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Text variant="bodyLg" className="font-bold text-baseBlueSolid8">
-              Sort by:
-            </Text>
-            <Select
-              label=""
-              labelInline
-              name="select"
-              options={[
-                {
-                  label: 'Newest',
-                  value: 'newestUpdate',
-                },
-                {
-                  label: 'Oldest',
-                  value: 'oldestUpdate',
-                },
-              ]}
-            />
-          </div>
-          <Tray
-            size="narrow"
-            open={open}
-            onOpenChange={setOpen}
-            trigger={
-              <Button
-                kind="secondary"
-                className="lg:hidden"
-                onClick={() => setOpen(true)}
-              >
-                Filter
-              </Button>
-            }
-          >
-            <Filter
-              setOpen={setOpen}
-              options={filterOptions}
-              setSelectedOptions={handleFilterChange}
-              selectedOptions={queryParams.filters}
-            />
-          </Tray>
+      {datasetDetails.length <= 0 ? (
+        <div className="flex h-96 items-center justify-center">
+          <Spinner />
         </div>
-        <div className="row mb-16 flex gap-5">
-          <div className="hidden min-w-64 max-w-64 lg:block">
-            <Filter
-              options={filterOptions}
-              setSelectedOptions={handleFilterChange}
-              selectedOptions={queryParams.filters}
-            />
+      ) : (
+        <section className="mx-6 md:mx-8 lg:mx-10">
+          <div className="my-4 flex flex-wrap items-center justify-between gap-6 rounded-2 bg-baseBlueSolid4 p-2">
+            <div>
+              <Text>
+                Showing {datasetDetails?.length} of {count} Datasets
+              </Text>
+            </div>
+            <div className="w-full max-w-[550px] md:block">
+              <SearchInput
+                label="Search"
+                name="Search"
+                placeholder="Search for data"
+                onSubmit={(value) => handleSearch(value)}
+                onClear={(value) => handleSearch(value)}
+                withButton
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Text variant="bodyLg" className="font-bold text-baseBlueSolid8">
+                Sort by:
+              </Text>
+              <Select
+                label=""
+                labelInline
+                name="select"
+                options={[
+                  {
+                    label: 'Newest',
+                    value: 'newestUpdate',
+                  },
+                  {
+                    label: 'Oldest',
+                    value: 'oldestUpdate',
+                  },
+                ]}
+              />
+            </div>
+            <Tray
+              size="narrow"
+              open={open}
+              onOpenChange={setOpen}
+              trigger={
+                <Button
+                  kind="secondary"
+                  className="lg:hidden"
+                  onClick={() => setOpen(true)}
+                >
+                  Filter
+                </Button>
+              }
+            >
+              <Filter
+                setOpen={setOpen}
+                options={filterOptions}
+                setSelectedOptions={handleFilterChange}
+                selectedOptions={queryParams.filters}
+              />
+            </Tray>
           </div>
-
-          <div className="flex w-full flex-col px-2">
-            <div className="flex gap-2 border-b-2 border-solid border-baseGraySlateSolid4 pb-4">
-              {Object.entries(queryParams.filters).map(([category, values]) =>
-                values.map((value) => (
-                  <Pill
-                    key={`${category}-${value}`}
-                    onRemove={() => handleRemoveFilter(category, value)}
-                  >
-                    {value}
-                  </Pill>
-                ))
-              )}
+          <div className="row mb-16 flex gap-5">
+            <div className="hidden min-w-64 max-w-64 lg:block">
+              <Filter
+                options={filterOptions}
+                setSelectedOptions={handleFilterChange}
+                selectedOptions={queryParams.filters}
+              />
             </div>
 
-            <div className="flex flex-col gap-6">
-              {facets && datasetDetails?.length > 0 && (
-                <DatasetCards
-                  data={datasetDetails}
-                  totalCount={count}
-                  pageSize={queryParams.pageSize}
-                  currentPage={queryParams.currentPage}
-                  onPageChange={handlePageChange}
-                  onPageSizeChange={handlePageSizeChange}
-                />
-              )}
+            <div className="flex w-full flex-col px-2">
+              <div className="flex gap-2 border-b-2 border-solid border-baseGraySlateSolid4 pb-4">
+                {Object.entries(queryParams.filters).map(([category, values]) =>
+                  values.map((value) => (
+                    <Pill
+                      key={`${category}-${value}`}
+                      onRemove={() => handleRemoveFilter(category, value)}
+                    >
+                      {value}
+                    </Pill>
+                  ))
+                )}
+              </div>
+
+              <div className="flex flex-col gap-6">
+                {facets && datasetDetails?.length > 0 && (
+                  <DatasetCards
+                    data={datasetDetails}
+                    totalCount={count}
+                    pageSize={queryParams.pageSize}
+                    currentPage={queryParams.currentPage}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                  />
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </main>
   );
 };
