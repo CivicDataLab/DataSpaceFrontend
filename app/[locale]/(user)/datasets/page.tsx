@@ -248,7 +248,7 @@ const DatasetsListing = () => {
             />
           </Tray>
         </div>
-        <div className="row flex gap-5">
+        <div className="row mb-16 flex gap-5">
           <div className="hidden min-w-64 max-w-64 lg:block">
             <Filter
               options={filterOptions}
@@ -257,7 +257,7 @@ const DatasetsListing = () => {
             />
           </div>
 
-          <div className="flex w-full flex-col px-2">
+          <div className=" flex w-full flex-col px-2">
             <div className="flex gap-2 border-b-2 border-solid border-baseGraySlateSolid4 pb-4">
               {Object.entries(queryParams.filters).map(([category, values]) =>
                 values.map((value) => (
@@ -271,7 +271,7 @@ const DatasetsListing = () => {
               )}
             </div>
 
-            <div className="mb-16 flex flex-col gap-6">
+            <div className=" flex flex-col gap-6">
               {facets !== undefined && datasetDetails?.length > 0 && (
                 <DatasetCards
                   data={datasetDetails}
