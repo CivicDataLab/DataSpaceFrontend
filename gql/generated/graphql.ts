@@ -145,6 +145,108 @@ export type CategoryInputPartial = {
   parentId?: InputMaybe<Scalars['ID']>;
 };
 
+/** access model | type */
+export enum ApiAccessModelTypeEnum {
+  /** Private */
+  Private = 'PRIVATE',
+  /** Protected */
+  Protected = 'PROTECTED',
+  /** Public */
+  Public = 'PUBLIC'
+}
+
+/** dataset | status */
+export enum ApiDatasetStatusEnum {
+  /** Archived */
+  Archived = 'ARCHIVED',
+  /** Draft */
+  Draft = 'DRAFT',
+  /** Published */
+  Published = 'PUBLISHED'
+}
+
+/** metadata | data standard */
+export enum ApiMetadataDataStandardEnum {
+  /** Dcatv3 */
+  Dcatv3 = 'DCATV3',
+  /** Na */
+  Na = 'NA',
+  /** Obds */
+  Obds = 'OBDS',
+  /** Ocds */
+  Ocds = 'OCDS'
+}
+
+/** metadata | data type */
+export enum ApiMetadataDataTypeEnum {
+  /** Date */
+  Date = 'DATE',
+  /** Multiselect */
+  Multiselect = 'MULTISELECT',
+  /** Number */
+  Number = 'NUMBER',
+  /** Select */
+  Select = 'SELECT',
+  /** String */
+  String = 'STRING'
+}
+
+/** metadata | model */
+export enum ApiMetadataModelEnum {
+  /** Dataset */
+  Dataset = 'DATASET',
+  /** Reseource */
+  Resource = 'RESOURCE'
+}
+
+/** metadata | type */
+export enum ApiMetadataTypeEnum {
+  /** Advanced */
+  Advanced = 'ADVANCED',
+  /** Optional */
+  Optional = 'OPTIONAL',
+  /** Required */
+  Required = 'REQUIRED'
+}
+
+/** resource schema | format */
+export enum ApiResourceSchemaFormatEnum {
+  /** Date */
+  Date = 'DATE',
+  /** Integer */
+  Integer = 'INTEGER',
+  /** Number */
+  Number = 'NUMBER',
+  /** String */
+  String = 'STRING'
+}
+
+/** resource | type */
+export enum ApiResourceTypeEnum {
+  /** Api */
+  Api = 'API',
+  /** External */
+  External = 'EXTERNAL',
+  /** File */
+  File = 'FILE'
+}
+
+/** Category(id, name, description, parent_id) */
+export type CategoryInput = {
+  description?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars['ID']>;
+  name: Scalars['String'];
+  parentId?: InputMaybe<Scalars['ID']>;
+};
+
+/** Category(id, name, description, parent_id) */
+export type CategoryInputPartial = {
+  description?: InputMaybe<Scalars['String']>;
+  id: Scalars['GlobalID'];
+  name?: InputMaybe<Scalars['String']>;
+  parentId?: InputMaybe<Scalars['ID']>;
+};
+
 export type CreateAccessModelPayload = OperationInfo | TypeAccessModel;
 
 export type CreateFileResourceInput = {
@@ -613,7 +715,9 @@ export type AccessModelResourcesQueryVariables = Exact<{
 
 export type AccessModelResourcesQuery = { __typename?: 'Query', accessModelResources: Array<{ __typename?: 'TypeAccessModel', id: any, name: string, description: string, type: ApiAccessModelTypeEnum, created: any, modified: any, modelResources: Array<{ __typename?: 'TypeAccessModelResource', resource: { __typename?: 'TypeResource', name: string, description: string, id: any } }> }> };
 
-export type GetResourceQueryVariables = Exact<{ [key: string]: never; }>;
+export type GetResourcesQueryVariables = Exact<{
+  filters?: InputMaybe<DatasetFilter>;
+}>;
 
 
 export type GetResourceQuery = { __typename?: 'Query', resource: Array<{ __typename?: 'TypeResource', id: any, type: ApiResourceTypeEnum, name: string, description: string, created: any, dataset?: { __typename?: 'DjangoModelType', pk: string } | null, fileDetails?: { __typename?: 'TypeFileDetails', id: string, size?: number | null, created: any, modified: any, resource: { __typename?: 'DjangoModelType', pk: string }, file: { __typename?: 'DjangoFileType', name: string, path: string, url: string } } | null }> };
@@ -665,12 +769,17 @@ export type DeleteFileResourceMutationVariables = Exact<{
 
 export type DeleteFileResourceMutation = { __typename?: 'Mutation', deleteFileResource: boolean };
 
-export type DatasetQueryQueryVariables = Exact<{
+export type DatasetDetailsQueryQueryVariables = Exact<{
   filters?: InputMaybe<DatasetFilter>;
 }>;
 
 
-export type DatasetQueryQuery = { __typename?: 'Query', datasets: Array<{ __typename?: 'TypeDataset', id: any, title: string, metadata: Array<{ __typename?: 'TypeDatasetMetadata', id: string, value: string, metadataItem: { __typename?: 'TypeMetadata', id: string, label: string } }> }> };
+export type DatasetDetailsQueryQuery = { __typename?: 'Query', datasets: Array<{ __typename?: 'TypeDataset', id: any, title: string, metadata: Array<{ __typename?: 'TypeDatasetMetadata', id: string, value: string, metadataItem: { __typename?: 'TypeMetadata', id: string, label: string } }> }> };
+
+export type MetaDataQueryQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MetaDataQueryQuery = { __typename?: 'Query', metadata: Array<{ __typename?: 'TypeMetadata', id: string, label: string, dataStandard: ApiMetadataDataStandardEnum, urn: string, dataType: ApiMetadataDataTypeEnum, options: string, validator: string, type: ApiMetadataTypeEnum, model: ApiMetadataModelEnum, enabled: boolean, filterable: boolean }> };
 
 export type DatasetsSummaryQueryVariables = Exact<{
   filters?: InputMaybe<DatasetFilter>;
@@ -698,12 +807,10 @@ export const DatasetsDocument = {"kind":"Document","definitions":[{"kind":"Opera
 export const ResourcesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"resources"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"datasetId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"datasetResources"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"datasetId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"datasetId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"schema"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"fieldName"}}]}}]}}]}}]} as unknown as DocumentNode<ResourcesQuery, ResourcesQueryVariables>;
 export const CreateAccessModelDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createAccessModel"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"accessModelInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"AccessModelInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createAccessModel"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"accessModelInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"accessModelInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TypeAccessModel"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}}]}}]} as unknown as DocumentNode<CreateAccessModelMutation, CreateAccessModelMutationVariables>;
 export const AccessModelResourcesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"accessModelResources"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"datasetId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessModelResources"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"datasetId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"datasetId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"modelResources"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"resource"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"modified"}}]}}]}}]} as unknown as DocumentNode<AccessModelResourcesQuery, AccessModelResourcesQueryVariables>;
-export const GetResourceDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getResource"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"resource"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"dataset"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pk"}}]}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"fileDetails"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"resource"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pk"}}]}},{"kind":"Field","name":{"kind":"Name","value":"file"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"path"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"modified"}}]}}]}}]}}]} as unknown as DocumentNode<GetResourceQuery, GetResourceQueryVariables>;
+export const GetResourcesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getResources"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"filters"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"DatasetFilter"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"datasets"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filters"},"value":{"kind":"Variable","name":{"kind":"Name","value":"filters"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"resources"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"dataset"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pk"}}]}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"fileDetails"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"resource"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"pk"}}]}},{"kind":"Field","name":{"kind":"Name","value":"file"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"path"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"modified"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GetResourcesQuery, GetResourcesQueryVariables>;
 export const ReadFilesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"readFiles"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"fileResourceInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateFileResourceInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createFileResources"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"fileResourceInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"fileResourceInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<ReadFilesMutation, ReadFilesMutationVariables>;
 export const DatasetTitleQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"datasetTitleQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"filters"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"DatasetFilter"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"datasets"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filters"},"value":{"kind":"Variable","name":{"kind":"Name","value":"filters"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"created"}}]}}]}}]} as unknown as DocumentNode<DatasetTitleQueryQuery, DatasetTitleQueryQueryVariables>;
 export const SaveTitleDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SaveTitle"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"updateDatasetInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateDatasetInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateDataset"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"updateDatasetInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"updateDatasetInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TypeDataset"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"created"}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"OperationInfo"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"messages"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<SaveTitleMutation, SaveTitleMutationVariables>;
-export const MetaDataQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"MetaDataQuery"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"metadata"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"label"}},{"kind":"Field","name":{"kind":"Name","value":"dataStandard"}},{"kind":"Field","name":{"kind":"Name","value":"urn"}},{"kind":"Field","name":{"kind":"Name","value":"dataType"}},{"kind":"Field","name":{"kind":"Name","value":"options"}},{"kind":"Field","name":{"kind":"Name","value":"validator"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"enabled"}}]}}]}}]} as unknown as DocumentNode<MetaDataQueryQuery, MetaDataQueryQueryVariables>;
-export const SaveMetadataDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SaveMetadata"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"UpdateMetadataInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateMetadataInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addUpdateDatasetMetadata"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"updateMetadataInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"UpdateMetadataInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TypeDataset"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"created"}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"OperationInfo"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"messages"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]}}]}}]} as unknown as DocumentNode<SaveMetadataMutation, SaveMetadataMutationVariables>;
 export const UpdateFileResourceDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"updateFileResource"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"fileResourceInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateFileResourceInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateFileResource"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"fileResourceInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"fileResourceInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"__typename"}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TypeResource"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<UpdateFileResourceMutation, UpdateFileResourceMutationVariables>;
 export const DeleteFileResourceDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"deleteFileResource"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"resourceId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteFileResource"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"resourceId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"resourceId"}}}]}]}}]} as unknown as DocumentNode<DeleteFileResourceMutation, DeleteFileResourceMutationVariables>;
 export const DatasetQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"datasetQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"filters"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"DatasetFilter"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"datasets"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filters"},"value":{"kind":"Variable","name":{"kind":"Name","value":"filters"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"metadata"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"metadataItem"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"label"}}]}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]} as unknown as DocumentNode<DatasetQueryQuery, DatasetQueryQueryVariables>;
