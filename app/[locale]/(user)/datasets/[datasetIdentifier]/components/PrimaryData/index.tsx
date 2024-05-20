@@ -15,7 +15,7 @@ const PrimaryData: React.FC<PrimaryDataProps> = ({ data }) => {
         {/* <Text fontWeight="bold">Tags&nbsp;:&nbsp;</Text> */}
         <div className="flex gap-2">
           {data?.tags.map((item: any, index: any) => (
-            <Tag key={index}>{item}</Tag>
+            <Tag key={index}>{item.value}</Tag>
           ))}
         </div>
       </div>

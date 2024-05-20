@@ -30,7 +30,10 @@ import Visualization from './components/Visualizations';
 const datasetQuery = graphql(`
   query datasets($filters: DatasetFilter) {
     datasets(filters: $filters) {
-      tags
+      tags {
+        id
+        value
+      }
       id
       title
       description

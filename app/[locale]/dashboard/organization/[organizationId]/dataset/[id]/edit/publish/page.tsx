@@ -60,7 +60,10 @@ const datasetSummaryQuery = graphql(`
           }
         }
       }
-      tags
+      tags {
+        id
+        value
+      }
       id
       title
       description
@@ -291,7 +294,7 @@ const Page = () => {
                               <div className=" basis-4/5">
                                 {data?.datasets[0].tags.map(
                                   (item: any, index: any) => (
-                                    <Tag key={index}>{item}</Tag>
+                                    <Tag key={index}>{item.value}</Tag>
                                   )
                                 )}
                               </div>
