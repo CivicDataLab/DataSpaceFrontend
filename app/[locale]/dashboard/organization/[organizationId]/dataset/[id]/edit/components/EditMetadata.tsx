@@ -1,17 +1,50 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import LoadingPage from '@/app/[locale]/dashboard/loading';
 import { graphql } from '@/gql';
-import { TypeMetadata, UpdateMetadataInput } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
-import { Button, Divider, Form, FormLayout, Input, Text } from 'opub-ui';
+import {
+  TypeDatasetMetadata,
+  TypeMetadata,
+  UpdateDatasetInput,
+  UpdateMetadataInput,
+} from '@/gql/generated/graphql';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Button,
+  Combobox,
+  Divider,
+  Form,
+  FormLayout,
+  Input,
+  Text,
+  toast,
+} from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 
+const datasetMetadataQueryDoc: any = graphql(`
+  query MetadataValues($filters: DatasetFilter) {
+    datasets(filters: $filters) {
+      title
+      id
+      description
+      metadata {
+        metadataItem {
+          id
+          label
+        }
+        id
+        value
+      }
+    }
+  }
+`);
+
 const metadataQueryDoc: any = graphql(`
-  query MetaDataQuery {
-    metadata {
+  query MetaDataList($filters: MetadataFilter) {
+    metadata(filters: $filters) {
       id
       label
       dataStandard
@@ -22,6 +55,7 @@ const metadataQueryDoc: any = graphql(`
       type
       model
       enabled
+      filterable
     }
   }
 `);
@@ -44,22 +78,74 @@ const updateMetadataMutationDoc: any = graphql(`
   }
 `);
 
+const updateDatasetMutationDoc: any = graphql(`
+  mutation SaveDatasetDescTags($updateDatasetInput: UpdateDatasetInput!) {
+    updateDataset(updateDatasetInput: $updateDatasetInput) {
+      __typename
+      ... on TypeDataset {
+        id
+      }
+      ... on OperationInfo {
+        messages {
+          kind
+          message
+        }
+      }
+    }
+  }
+`);
+
 export function EditMetadata({
   id,
-  defaultValues,
+  // defaultValues,
+  // description,
 }: {
   id: string;
-  defaultValues: any;
+  // defaultValues: any;
+  // description: string;
 }) {
   // const submitRef = React.useRef<HTMLButtonElement>(null);
 
   const router = useRouter();
   const params = useParams();
 
-  const getMetaDataQueryRes: { data: any; isLoading: boolean } = useQuery(
-    [`dataset_meta_${id}`],
-    () => GraphQL(metadataQueryDoc, [])
-  );
+  const queryClient = useQueryClient();
+
+  const [datasetDetailsMutationFlag, setDatasetDetailsMutationFlag] =
+    useState(false);
+  const [metadataDetailsMutationFlag, setMetadataDetailsMutationFlag] =
+    useState(false);
+  useEffect(() => {
+    if (datasetDetailsMutationFlag && metadataDetailsMutationFlag) {
+      toast('Details updated successfully!');
+
+      queryClient.invalidateQueries({
+        queryKey: [`metadata_values_query_${id}`, `metadata_fields_list_${id}`],
+      });
+
+      getMetaDataListQuery.refetch();
+      getDatasetMetadata.refetch();
+
+      router.push(
+        `/dashboard/organization/${params.organizationId}/dataset/${id}/edit/publish`
+      );
+    }
+  }, [datasetDetailsMutationFlag, metadataDetailsMutationFlag]);
+
+  const getMetaDataListQuery: { data: any; isLoading: boolean; refetch: any } =
+    useQuery([`metadata_fields_list_${id}`], () =>
+      GraphQL(metadataQueryDoc, {
+        filters: {
+          model: 'DATASET',
+          enabled: true,
+        },
+      })
+    );
+
+  const getDatasetMetadata: { data: any; isLoading: boolean; refetch: any } =
+    useQuery([`metadata_values_query_${id}`], () =>
+      GraphQL(datasetMetadataQueryDoc, { filters: { id: id } })
+    );
 
   const updateMetadataMutation = useMutation(
     (data: { UpdateMetadataInput: UpdateMetadataInput }) =>
@@ -70,39 +156,82 @@ export function EditMetadata({
         //   queryKey: [`create_dataset_${'52'}`],
         // });
 
-        router.push(
-          `/dashboard/organization/${params.organizationId}/dataset/${params.id}/edit/publish`
-        );
+        setMetadataDetailsMutationFlag(!metadataDetailsMutationFlag);
       },
       onError: (err: any) => {
-        console.log('Error ::: ', err);
+        toast('Error:  ' + err.message.split(':')[0]);
       },
     }
   );
 
+  const updateDatasetMutation = useMutation(
+    (data: { updateDatasetInput: UpdateDatasetInput }) =>
+      GraphQL(updateDatasetMutationDoc, data),
+    {
+      onSuccess: (data: any) => {
+        setDatasetDetailsMutationFlag(!datasetDetailsMutationFlag);
+      },
+      onError: (err: any) => {
+        toast('Error:  ' + err.message.split(':')[0]);
+      },
+    }
+  );
+
+  const defaultValuesPrepFn = (metadataArray: Array<TypeDatasetMetadata>) => {
+    let defaultVal: {
+      [key: string]: string | number | undefined;
+    } = {};
+
+    metadataArray?.map((field) => {
+      defaultVal[field.metadataItem.id] = field.value;
+    });
+
+    return defaultVal;
+  };
+
   return (
     <>
-      {getMetaDataQueryRes?.isLoading ? (
+      {getMetaDataListQuery?.isLoading ? (
         <LoadingPage />
       ) : (
         <Form
           onSubmit={(values) => {
+            updateDatasetMutation.mutate({
+              updateDatasetInput: {
+                dataset: id,
+                title: getDatasetMetadata?.data?.datasets[0]?.title,
+                description: values.description,
+                tags: [],
+              },
+            });
+
             updateMetadataMutation.mutate({
               UpdateMetadataInput: {
                 dataset: id,
                 metadata: [
-                  ...Object.keys(values).map((key) => {
-                    return {
-                      id: key,
-                      value: values[key] || '',
-                    };
-                  }),
+                  ...Object.keys(values)
+                    .filter(
+                      (valueItem) =>
+                        valueItem !== 'description' && valueItem !== 'tags'
+                    )
+                    .map((key) => {
+                      return {
+                        id: key,
+                        value: values[key] || '',
+                      };
+                    }),
                 ],
               },
             });
           }}
           formOptions={{
-            defaultValues: defaultValues,
+            resetOptions: {
+              keepValues: true,
+              keepDirtyValues: true,
+            },
+            defaultValues: defaultValuesPrepFn(
+              getDatasetMetadata?.data?.datasets[0]?.metadata
+            ),
           }}
         >
           <>
@@ -115,28 +244,52 @@ export function EditMetadata({
 
             <div className="pt-3">
               <FormLayout>
-                {getMetaDataQueryRes?.data?.metadata?.length > 0 ? (
-                  getMetaDataQueryRes?.data?.metadata
-                    ?.filter((fieldItem: TypeMetadata) => fieldItem.enabled)
-                    ?.map((metadataFormItem: TypeMetadata) => {
-                      if (metadataFormItem.dataType === 'STRING') {
-                        return (
-                          <Input
-                            key={metadataFormItem.id}
-                            name={metadataFormItem.id}
-                            label={metadataFormItem.label}
-                            disabled={
-                              getMetaDataQueryRes.isLoading ||
-                              !metadataFormItem.enabled
-                            }
-                          />
-                        );
+                <Input
+                  key="description"
+                  multiline
+                  name="description"
+                  label={'Description'}
+                  defaultValue={
+                    getDatasetMetadata?.data?.datasets[0].description
+                  }
+                />
+
+                <div className="flex flex-wrap">
+                  <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
+                    <Combobox name={'tags'} list={[]} label={'Tags'} />
+                  </div>
+                  <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"></div>
+                </div>
+
+                <div className="flex flex-wrap">
+                  {getMetaDataListQuery?.data?.metadata?.length > 0 ? (
+                    getMetaDataListQuery?.data?.metadata?.map(
+                      (metadataFormItem: TypeMetadata) => {
+                        if (metadataFormItem.dataType === 'STRING') {
+                          return (
+                            <div
+                              key={metadataFormItem.id}
+                              className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"
+                            >
+                              <Input
+                                name={metadataFormItem.id}
+                                label={metadataFormItem.label}
+                                disabled={
+                                  getMetaDataListQuery.isLoading ||
+                                  !metadataFormItem.enabled
+                                }
+                              />
+                            </div>
+                          );
+                        }
+                        return null;
                       }
-                      return null;
-                    })
-                ) : (
-                  <>No Metadata Fields!!</>
-                )}
+                    )
+                  ) : (
+                    <></>
+                  )}
+                </div>
+
                 {/* <FormLayout.Group>
                   <Select
                     name="update_frequency"
@@ -151,7 +304,7 @@ export function EditMetadata({
                     placeholder="Select"
                     required
                     error="This field is required"
-                    disabled={getMetaDataQueryRes.isLoading}
+                    disabled={getMetaDataListQuery.isLoading}
                   />
                   <Select
                     name="language"
@@ -166,7 +319,7 @@ export function EditMetadata({
                     placeholder="Select"
                     required
                     error="This field is required"
-                    disabled={getMetaDataQueryRes.isLoading}
+                    disabled={getMetaDataListQuery.isLoading}
                   />
                 </FormLayout.Group>
 

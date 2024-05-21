@@ -26,10 +26,10 @@ export default async function Page({ params }: { params: { id: string } }) {
   const dehydratedState = dehydrate(queryClient);
 
   return (
-    <Hydrate state={dehydratedState}>
+    // <Hydrate state={dehydratedState}>
       <div className={styles.EditPage}>
         <EditPage params={params} />
       </div>
-    </Hydrate>
+    // </Hydrate>
   );
 }
