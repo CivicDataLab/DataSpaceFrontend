@@ -151,31 +151,32 @@ const AccessModels = () => {
             </div>
             <div className="align-center  flex flex-col justify-between gap-4 sm:flex-row lg:items-center">
               <CustomTags type={item.type.split('.').pop().toLowerCase()} />
-
-              <Button
-                className="h-fit w-fit"
-                kind="secondary"
-                onClick={() => {
-                  item.modelResources.forEach((resource: any) => {
-                    // Construct the download URL for each resource
-                    const downloadUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${resource.resource.id}`;
-                    // Open the URL in a new tab
-                    window.open(downloadUrl, '_blank');
-                  });
-                }}
-              >
-                Download All Resources
-              </Button>
             </div>
             {item?.modelResources?.length > 0 && (
               <div className="flex">
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="item-1" className=" border-none">
-                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 hover:no-underline">
-                      <div className=" text-baseBlueSolid8  ">
-                        See Resources
-                      </div>
-                    </AccordionTrigger>
+                    <div className="flex flex-wrap items-center justify-between">
+                      <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 hover:no-underline">
+                        <div className=" text-baseBlueSolid8  ">
+                          See Resources
+                        </div>
+                      </AccordionTrigger>
+                      <Button
+                        className="h-fit w-fit"
+                        kind="secondary"
+                        onClick={() => {
+                          item.modelResources.forEach((resource: any) => {
+                            // Construct the download URL for each resource
+                            const downloadUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${resource.resource.id}`;
+                            // Open the URL in a new tab
+                            window.open(downloadUrl, '_blank');
+                          });
+                        }}
+                      >
+                        Download All Resources
+                      </Button>
+                    </div>
                     <AccordionContent
                       className="flex w-full flex-col p-5"
                       style={{
