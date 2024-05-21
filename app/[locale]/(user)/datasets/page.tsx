@@ -166,7 +166,6 @@ const DatasetsListing = () => {
   const count = facets?.total ?? 0;
   const datasetDetails = facets?.results ?? [];
   const [queryParams, setQueryParams] = useReducer(queryReducer, initialState);
-  console.log(facets);
 
   useUrlParams(queryParams, setQueryParams, setVariables);
 
