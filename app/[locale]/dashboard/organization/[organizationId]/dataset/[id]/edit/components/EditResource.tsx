@@ -63,6 +63,22 @@ export const EditResource = ({ reload, data }: any) => {
     }
   `);
 
+  const resetSchema: any = graphql(`
+    mutation resetFileResourceSchema($resourceId: UUID!) {
+      resetFileResourceSchema(resourceId: $resourceId) {
+        ... on TypeResource {
+          id
+          schema {
+            format
+            description
+            id
+            fieldName
+          }
+        }
+      }
+    }
+  `);
+
   const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
 
   const { mutate, isLoading } = useMutation(
@@ -163,12 +179,12 @@ export const EditResource = ({ reload, data }: any) => {
 
   const ResourceList: TListItem[] =
     data.map((item: any) => ({
-        label: item.name,
-        value: item.id,
-        description: item.description,
-        dataset: item.dataset?.pk,
-        fileDetails: item.fileDetails,
-      })) || [];
+      label: item.name,
+      value: item.id,
+      description: item.description,
+      dataset: item.dataset?.pk,
+      fileDetails: item.fileDetails,
+    })) || [];
 
   const getResourceObject = (resourceId: string) => {
     return ResourceList.find((item) => item.value === resourceId);
@@ -425,18 +441,33 @@ export const EditResource = ({ reload, data }: any) => {
         <div className="flex w-1/6 justify-center ">
           <Text>See Preview</Text>
         </div>
-      </div>
-      <div className="flex justify-between">
+      </div>*/}
+      <div className="flex justify-between mt-8">
         <Text>Fields in the Resource</Text>
-        <div className="flex">
-          <Link className="mx-4 flex items-center gap-1" href="/">
-            <Text>Refetch Fields</Text>{' '}
-            <Icon source={Icons.info} color="interactive" />
-          </Link>
-          <Link className="flex items-center gap-1" href="/">
-            <Text> Reset Fields </Text>{' '}
-            <Icon source={Icons.info} color="interactive" />
-          </Link>
+        <div className="flex gap-4">
+          <Button
+            size="medium"
+            kind="tertiary"
+            variant="basic"
+            onClick={function Ga() {}}
+          >
+            <div className="flex items-center gap-1">
+              <Text>Refetch Fields</Text>{' '}
+              <Icon source={Icons.info} color="interactive" />
+            </div>
+          </Button>
+
+          <Button
+            size="medium"
+            kind="tertiary"
+            variant="basic"
+            onClick={function Ga() {}}
+          >
+            <div className="flex items-center gap-1">
+              <Text>Reset Fields</Text>{' '}
+              <Icon source={Icons.info} color="interactive" />
+            </div>
+          </Button>
         </div>
       </div>
       <Text variant="headingXs" as="span" fontWeight="regular">
@@ -450,7 +481,7 @@ export const EditResource = ({ reload, data }: any) => {
           hideFooter={true}
           defaultRowCount={10}
         />
-      </div> */}
+      </div>
     </div>
   );
 };
