@@ -36,3 +36,7 @@ next-env.d.ts
 
 # intellij files
 .idea
+
+# generated graphql files
+/gql/generated/gql.ts
+/gql/generated/graphql.ts
