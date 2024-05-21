@@ -223,7 +223,7 @@ const DatasetsListing = () => {
           { href: '#', label: 'Dataset Listing' },
         ]}
       />
-      {datasetDetails.length <= 0 ? (
+      {datasetDetails.length < 0 ? (
         <div className="flex h-96 items-center justify-center">
           <Spinner />
         </div>
