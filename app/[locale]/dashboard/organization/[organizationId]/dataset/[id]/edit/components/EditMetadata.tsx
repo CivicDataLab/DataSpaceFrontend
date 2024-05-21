@@ -267,9 +267,11 @@ export function EditMetadata({
                       (metadataFormItem: TypeMetadata) => {
                         if (metadataFormItem.dataType === 'STRING') {
                           return (
-                            <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
+                            <div
+                              key={metadataFormItem.id}
+                              className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"
+                            >
                               <Input
-                                key={metadataFormItem.id}
                                 name={metadataFormItem.id}
                                 label={metadataFormItem.label}
                                 disabled={
