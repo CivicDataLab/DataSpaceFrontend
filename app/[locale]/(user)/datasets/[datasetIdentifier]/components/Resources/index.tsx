@@ -164,48 +164,51 @@ const Resources = () => {
                 <Text>{item.description}</Text>
               </div>
             </div>
-            <div className="align-center flex flex-col justify-between gap-4 sm:flex-row">
-              <Dialog>
-                <Dialog.Trigger>
-                  <Button className="h-fit w-fit" kind="secondary">
-                    View Fields
-                  </Button>
-                </Dialog.Trigger>
-                <Dialog.Content title={'View Fields'} limitHeight>
-                  <Table
-                    columns={[
-                      {
-                        accessorKey: 'name',
-                        header: 'Name',
-                      },
-                      {
-                        accessorKey: 'format',
-                        header: 'Format',
-                      },
-                      {
-                        accessorKey: 'description',
-                        header: 'Description',
-                      },
-                    ]}
-                    rows={item.schema.map((item: any) => ({
-                      name: item.fieldName,
-                      format: item.format,
-                      description: item.description,
-                    }))}
-                    hideFooter={true}
-                  />
-                </Dialog.Content>
-              </Dialog>
-            </div>
+
             {item?.accessModels?.length > 0 && (
               <div className="flex">
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="item-1" className=" border-none">
-                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 hover:no-underline  ">
-                      <div className=" text-baseBlueSolid8 ">
-                        See Access Type
+                    <div className="flex flex-wrap items-center justify-between">
+                      <div className="align-center flex flex-col justify-between gap-4 sm:flex-row">
+                        <Dialog>
+                          <Dialog.Trigger>
+                            <Button className="h-fit w-fit" kind="secondary">
+                              View Fields
+                            </Button>
+                          </Dialog.Trigger>
+                          <Dialog.Content title={'View Fields'} limitHeight>
+                            <Table
+                              columns={[
+                                {
+                                  accessorKey: 'name',
+                                  header: 'Name',
+                                },
+                                {
+                                  accessorKey: 'format',
+                                  header: 'Format',
+                                },
+                                {
+                                  accessorKey: 'description',
+                                  header: 'Description',
+                                },
+                              ]}
+                              rows={item.schema.map((item: any) => ({
+                                name: item.fieldName,
+                                format: item.format,
+                                description: item.description,
+                              }))}
+                              hideFooter={true}
+                            />
+                          </Dialog.Content>
+                        </Dialog>
                       </div>
-                    </AccordionTrigger>
+                      <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 hover:no-underline  ">
+                        <div className=" text-baseBlueSolid8 ">
+                          See Access Type
+                        </div>
+                      </AccordionTrigger>
+                    </div>
                     <AccordionContent
                       className="flex w-full flex-col "
                       style={{
