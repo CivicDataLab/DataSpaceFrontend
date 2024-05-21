@@ -33,5 +33,6 @@ jobs:
             kill $(ps aux | grep 'npm run start' | awk '{print $2}')
             kill $(ps aux | grep 'next-server' | awk '{print $2}')
             npm run build
+            npm run generate
             npm run start
 
