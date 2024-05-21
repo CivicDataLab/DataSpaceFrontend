@@ -1,64 +1,52 @@
-import React from 'react';
 import Link from 'next/link';
 import { Tag, Text } from 'opub-ui';
 
-import CustomTags from '@/components/CustomTags';
-
 interface Dataset {
-  datasetTitle: string;
+  tags: string[];
   description: string;
+  title: string;
   id: string;
-  metadata: Metadata;
-}
-
-interface Metadata {
-  update: string;
-  category: string;
-  tags: { title: string }[];
-  formats: { type: string }[];
-  accessModels: { type: string }[];
-  accessModelsCount: string;
 }
 
 const Cards = ({ data }: { data: Dataset }) => {
-  const { datasetTitle, description, metadata, id } = data;
   return (
-    <>
-      <div className="border-b-2 border-solid border-baseGraySlateSolid4 p-6 ">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="">
-            <Link href={`/datasets/${id}`}>
-              <Text variant="headingMd">{datasetTitle}</Text>
-            </Link>
-          </div>
-          <div className="">
-            <Text variant="bodySm">{description}</Text>
-          </div>
+    <div className="border-b-2 border-solid border-baseGraySlateSolid4 p-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div>
+          <Link href={`/datasets/${data.id}`}>
+            <Text variant="headingMd">{data.title}</Text>
+          </Link>
+        </div>
+        <div className="description-container line-clamp-4">
+          <Text variant="bodySm">{data.description}</Text>
+        </div>
+        {data.tags && data.tags.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
             <Text fontWeight="bold">Tags:</Text>
             <div className="flex gap-2">
-              {metadata.tags.map((item, index) => (
-                <Tag key={index}>{item.title}</Tag>
+              {data.tags.map((item, index) => (
+                <Tag key={index}>{item}</Tag>
               ))}
             </div>
           </div>
-          <div className="flex flex-wrap items-center">
+        )}
+        {/*   <div className="flex flex-wrap items-center">
             <Text fontWeight="bold">Categories&nbsp;:</Text>
-            <Text>&nbsp;{metadata.category}</Text>
+            <Text>&nbsp;{sector}</Text>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Text fontWeight="bold">Formats:</Text>
             <div className="flex gap-2">
-              {metadata.formats.map((item, index) => (
-                <Tag key={index}>{item.type}</Tag>
+              {format.map((item, index) => (
+                <Tag key={index}>{item}</Tag>
               ))}
             </div>
           </div>
           <div className="flex flex-wrap items-center">
             <Text fontWeight="bold">Access Models&nbsp;:</Text>
-            <Text>&nbsp;{metadata.accessModelsCount} in total</Text>&nbsp;
+            <Text>&nbsp;{dataset_access_models.length} in total</Text>&nbsp;
             <div className="flex gap-2">
-              {metadata.accessModels.map((item, index) => (
+              {dataset_access_models.map((item: any, index) => (
                 <CustomTags
                   key={index}
                   type={item.type}
@@ -68,10 +56,10 @@ const Cards = ({ data }: { data: Dataset }) => {
                 />
               ))}
             </div>
-          </div>
-        </div>
+          </div> */}
       </div>
-    </>
+    </div>
   );
 };
+
 export default Cards;
