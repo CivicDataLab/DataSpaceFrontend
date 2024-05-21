@@ -14,9 +14,7 @@ const Cards = ({ data }: { data: Dataset }) => {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div>
           <Link href={`/datasets/${data.id}`}>
-            <Text variant="headingMd">
-              {data.title} - {data.id}
-            </Text>
+            <Text variant="headingMd">{data.title}</Text>
           </Link>
         </div>
         <div className="description-container line-clamp-4">
