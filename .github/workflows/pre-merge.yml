@@ -6,15 +6,16 @@ on:
   pull_request:
     branches: ['dev']
 env:
-    KEYCLOAK_CLIENT_ID: ${{secrets.KEYCLOAK_CLIENT_ID}}
-    KEYCLOAK_CLIENT_SECRET: ${{secrets.KEYCLOAK_CLIENT_SECRET}}
-    AUTH_ISSUER: ${{secrets.AUTH_ISSUER}}
-    NEXTAUTH_URL: ${{secrets.NEXTAUTH_URL}}
-    NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
-    END_SESSION_URL: ${{secrets.END_SESSION_URL}}
-    REFRESH_TOKEN_URL: ${{secrets.REFRESH_TOKEN_URL}}
-    NEXT_PUBLIC_BACKEND_URL: ${{secrets.NEXT_PUBLIC_BACKEND_URL}}
-    
+  KEYCLOAK_CLIENT_ID: ${{secrets.KEYCLOAK_CLIENT_ID}}
+  KEYCLOAK_CLIENT_SECRET: ${{secrets.KEYCLOAK_CLIENT_SECRET}}
+  AUTH_ISSUER: ${{secrets.AUTH_ISSUER}}
+  NEXTAUTH_URL: ${{secrets.NEXTAUTH_URL}}
+  NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
+  END_SESSION_URL: ${{secrets.END_SESSION_URL}}
+  REFRESH_TOKEN_URL: ${{secrets.REFRESH_TOKEN_URL}}
+  NEXT_PUBLIC_BACKEND_URL: ${{secrets.NEXT_PUBLIC_BACKEND_URL}}
+  BACKEND_GRAPHQL_URL: ${{secrets.BACKEND_GRAPHQL_URL}}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,7 +31,6 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-        
 
       - run: npm ci --force
       - run: npm run generate
