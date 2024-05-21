@@ -13,9 +13,11 @@ import {
   Tray,
 } from 'opub-ui';
 
+import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import DatasetCards from './components/DatasetCards';
 import Filter from './components/FIlter/Filter';
+import Styles from './dataset.module.scss';
 
 interface Bucket {
   key: string;
@@ -234,14 +236,14 @@ const DatasetsListing = () => {
                 Showing {datasetDetails?.length} of {count} Datasets
               </Text>
             </div>
-            <div className="w-full max-w-[550px] md:block">
+            <div className=" w-full max-w-[550px] md:block">
               <SearchInput
                 label="Search"
                 name="Search"
-                placeholder="Search for data"
+                className={cn(Styles.Search)}
+                placeholder="Search datasets"
                 onSubmit={(value) => handleSearch(value)}
                 onClear={(value) => handleSearch(value)}
-                withButton
               />
             </div>
             <div className="flex items-center gap-2">
