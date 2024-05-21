@@ -78,23 +78,6 @@ const updateMetadataMutationDoc: any = graphql(`
   }
 `);
 
-const updateDatasetMutationDoc: any = graphql(`
-  mutation SaveDatasetDescTags($updateDatasetInput: UpdateDatasetInput!) {
-    updateDataset(updateDatasetInput: $updateDatasetInput) {
-      __typename
-      ... on TypeDataset {
-        id
-      }
-      ... on OperationInfo {
-        messages {
-          kind
-          message
-        }
-      }
-    }
-  }
-`);
-
 export function EditMetadata({
   id,
   // defaultValues,
@@ -110,27 +93,6 @@ export function EditMetadata({
   const params = useParams();
 
   const queryClient = useQueryClient();
-
-  const [datasetDetailsMutationFlag, setDatasetDetailsMutationFlag] =
-    useState(false);
-  const [metadataDetailsMutationFlag, setMetadataDetailsMutationFlag] =
-    useState(false);
-  useEffect(() => {
-    if (datasetDetailsMutationFlag && metadataDetailsMutationFlag) {
-      toast('Details updated successfully!');
-
-      queryClient.invalidateQueries({
-        queryKey: [`metadata_values_query_${id}`, `metadata_fields_list_${id}`],
-      });
-
-      getMetaDataListQuery.refetch();
-      getDatasetMetadata.refetch();
-
-      router.push(
-        `/dashboard/organization/${params.organizationId}/dataset/${id}/edit/publish`
-      );
-    }
-  }, [datasetDetailsMutationFlag, metadataDetailsMutationFlag]);
 
   const getMetaDataListQuery: { data: any; isLoading: boolean; refetch: any } =
     useQuery([`metadata_fields_list_${id}`], () =>
@@ -156,20 +118,21 @@ export function EditMetadata({
         //   queryKey: [`create_dataset_${'52'}`],
         // });
 
-        setMetadataDetailsMutationFlag(!metadataDetailsMutationFlag);
-      },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
-      },
-    }
-  );
+        toast('Details updated successfully!');
 
-  const updateDatasetMutation = useMutation(
-    (data: { updateDatasetInput: UpdateDatasetInput }) =>
-      GraphQL(updateDatasetMutationDoc, data),
-    {
-      onSuccess: (data: any) => {
-        setDatasetDetailsMutationFlag(!datasetDetailsMutationFlag);
+        queryClient.invalidateQueries({
+          queryKey: [
+            `metadata_values_query_${id}`,
+            `metadata_fields_list_${id}`,
+          ],
+        });
+
+        getMetaDataListQuery.refetch();
+        getDatasetMetadata.refetch();
+
+        router.push(
+          `/dashboard/organization/${params.organizationId}/dataset/${id}/edit/publish`
+        );
       },
       onError: (err: any) => {
         toast('Error:  ' + err.message.split(':')[0]);
@@ -196,15 +159,6 @@ export function EditMetadata({
       ) : (
         <Form
           onSubmit={(values) => {
-            updateDatasetMutation.mutate({
-              updateDatasetInput: {
-                dataset: id,
-                title: getDatasetMetadata?.data?.datasets[0]?.title,
-                description: values.description,
-                tags: [],
-              },
-            });
-
             updateMetadataMutation.mutate({
               UpdateMetadataInput: {
                 dataset: id,
@@ -221,6 +175,8 @@ export function EditMetadata({
                       };
                     }),
                 ],
+                description: values.description || '',
+                tags: values.tags || [],
               },
             });
           }}
