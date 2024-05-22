@@ -120,7 +120,7 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
         </div>
       ) : (
         <>
-          <div className=" my-6 flex justify-between px-3 py-4">
+          <div className=" my-6 flex items-center justify-between px-3 py-4">
             <Text>
               Showing {data.accessModelResources?.length} Access Types
             </Text>
