@@ -16,12 +16,12 @@ const Page = () => {
 
   const organizationsList = [
     {
-      title: 'Organization 1 ',
-      slug: 'asjdfhasf',
+      title: 'Open Budgets India',
+      slug: 'open-budgets-india',
     },
     {
-      title: 'Organization 2',
-      slug: 'asjdfhasf',
+      title: 'Open Contracting India',
+      slug: 'open-contracting-india',
     },
   ];
 
