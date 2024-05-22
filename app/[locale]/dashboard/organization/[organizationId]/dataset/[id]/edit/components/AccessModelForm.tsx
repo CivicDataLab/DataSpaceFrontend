@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import {
-  AccessModelInput,
-  AccessTypes,
-  EditAccessModelInput,
-} from '@/gql/generated/graphql';
+import { AccessTypes, EditAccessModelInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Button,
@@ -57,19 +53,6 @@ const accessModelListQuery = graphql(`
   }
 `);
 
-const createAccessModel: any = graphql(`
-  mutation createAccessModel($accessModelInput: AccessModelInput!) {
-    createAccessModel(accessModelInput: $accessModelInput) {
-      __typename
-      ... on TypeAccessModel {
-        id
-        description
-        name
-        type
-      }
-    }
-  }
-`);
 const editaccessModel: any = graphql(`
   mutation editAccessModel($accessModelInput: EditAccessModelInput!) {
     editAccessModel(accessModelInput: $accessModelInput) {
@@ -80,6 +63,28 @@ const editaccessModel: any = graphql(`
         name
         type
       }
+    }
+  }
+`);
+
+const getAccessModelDetails: any = graphql(`
+  query accessModel($accessModelId: UUID!) {
+    accessModel(accessModelId: $accessModelId) {
+      modelResources {
+        fields {
+          id
+          fieldName
+        }
+        resource {
+          id
+          name
+        }
+      }
+      id
+      name
+      description
+      created
+      modified
     }
   }
 `);
@@ -106,6 +111,14 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     [`accessModelList_${params.id}`],
     () => GraphQL(accessModelListQuery, { datasetId: params.id })
   );
+  const {
+    data: accessModelDetails,
+    refetch,
+    isLoading: accessModelDetailsLoading,
+  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
+    [`accessModelDetails${params.id}`],
+    () => GraphQL(getAccessModelDetails, { accessModelId: accessModelId })
+  );
 
   const [accessModelData, setAccessModelData] = useState({
     dataset: params.id,
@@ -113,6 +126,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     description: '',
     type: 'PUBLIC',
     resources: [],
+    accessModelId: '',
   });
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
   const [showSelectAll, setShowSelectAll] = useState(false);
@@ -127,6 +141,20 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
       );
     }
   }, [data, selectedResources]);
+
+  useEffect(() => {
+    if (accessModelId) {
+      refetch();
+      setAccessModelData({
+        dataset: params.id,
+        name: accessModelDetails.accessModel.name,
+        description: accessModelDetails.accessModel.description,
+        type: accessModelDetails.accessModel.type,
+        resources: [],
+        accessModelId: accessModelDetails.accessModel.id,
+      });
+    }
+  }, [accessModelId]);
 
   const [resId, setResId] = useState('');
 
@@ -159,21 +187,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     setShowSelectAll(false);
   };
 
-  const { mutate, isLoading: mutationLoading } = useMutation(
-    (data: { accessModelInput: AccessModelInput }) =>
-      GraphQL(createAccessModel, data),
-    {
-      onSuccess: () => {
-        toast('Access Model Saved');
-        setList(true);
-      },
-      onError: (err: any) => {
-        toast(`Received ${err} during access model saving`);
-      },
-    }
-  );
-
-  const { mutate: editMutate, isLoading: editMutationLoading } = useMutation(
+  const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { accessModelInput: EditAccessModelInput }) =>
       GraphQL(editaccessModel, data),
     {
@@ -186,19 +200,9 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     }
   );
 
-  const saveAccessModel = () => {
-    editMutate({
-      accessModelInput: {
-        name: accessModelData.name,
-        resources: accessModelData.resources,
-        dataset: accessModelData.dataset,
-        description: accessModelData.description,
-        type: accessModelData.type as AccessTypes,
-        accessModelId: '4172d5f1-5c76-4542-ab4a-5c29b0a2345f',
-      },
-    });
-  };
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  console.log(accessModelDetails);
 
   return (
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
@@ -237,6 +241,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                         description: '',
                         type: '',
                         resources: [],
+                        accessModelId: '',
                       });
                       setIsSheetOpen(false);
                     }}
@@ -255,8 +260,12 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                     className="  rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6  py-3  "
                   >
                     <Button
-                      kind="tertiary"
+                      kind={'tertiary'}
                       className="flex w-full justify-start"
+                      onClick={() => {
+                        setAccessModelId(item.id);
+                        setIsSheetOpen(false);
+                      }}
                     >
                       {item.name}
                     </Button>
@@ -268,7 +277,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
         </Sheet>
       </div>
       <Divider />
-      {isLoading || mutationLoading ? (
+      {isLoading || editMutationLoading ? (
         <div className="mt-8 flex justify-center">
           <Spinner />
         </div>
@@ -284,6 +293,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                     dataset: accessModelData.dataset,
                     description: accessModelData.description,
                     type: accessModelData.type as AccessTypes,
+                    accessModelId: accessModelId,
                   },
                 })
               }
@@ -303,7 +313,6 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                   name="name"
                   required
                   helpText="To know about best practices for naming Resources go to our User Guide"
-                  onBlur={saveAccessModel}
                 />
               </div>
               <Select
