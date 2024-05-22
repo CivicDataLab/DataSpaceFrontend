@@ -1,37 +1,27 @@
 import React from 'react';
-import { DataTable, Text } from 'opub-ui';
 
 import Footer from './footer';
 
 interface GraphqlTableProps {
-  table: {
-    columns: any[];
-    rows: any[];
-  };
   totalRows: number;
   pageSize: number;
   currentPage: number;
   onPageChange: (newPage: number) => void;
   onPageSizeChange: (newSize: number) => void;
+  children: React.ReactNode;
 }
 
-const GraphqlTable: React.FC<GraphqlTableProps> = ({
-  table,
+const GraphqlPagination: React.FC<GraphqlTableProps> = ({
   totalRows,
   pageSize,
   currentPage,
   onPageChange,
   onPageSizeChange,
+  children,
 }) => {
   return (
     <div>
-      <DataTable
-        columns={table.columns}
-        rows={table.rows}
-        hideFooter={true}
-        hideSelection={true}
-        defaultRowCount={100}
-      />
+      {children}
       <Footer
         totalRows={totalRows}
         pageSize={pageSize}
@@ -43,4 +33,4 @@ const GraphqlTable: React.FC<GraphqlTableProps> = ({
   );
 };
 
-export default GraphqlTable;
+export default GraphqlPagination;
