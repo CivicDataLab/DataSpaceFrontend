@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { AccessModelInput, AccessTypes } from '@/gql/generated/graphql';
+import {
+  AccessModelInput,
+  AccessTypes,
+  EditAccessModelInput,
+} from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Button,
   Divider,
   Icon,
   Select,
+  Sheet,
   Spinner,
   Text,
   TextField,
@@ -22,7 +27,7 @@ interface AccessModelProps {
   setQueryList: any;
 }
 
-const datasetResourcesQuery = graphql(`
+const datasetResourcesQuery: any = graphql(`
   query resources($datasetId: UUID!) {
     datasetResources(datasetId: $datasetId) {
       id
@@ -33,6 +38,19 @@ const datasetResourcesQuery = graphql(`
         id
         fieldName
       }
+    }
+  }
+`);
+
+const accessModelListQuery = graphql(`
+  query accessModelResources($datasetId: UUID!) {
+    accessModelResources(datasetId: $datasetId) {
+      id
+      name
+      description
+      type
+      created
+      modified
     }
   }
 `);
@@ -50,6 +68,19 @@ const createAccessModel: any = graphql(`
     }
   }
 `);
+const editaccessModel: any = graphql(`
+  mutation editAccessModel($accessModelInput: EditAccessModelInput!) {
+    editAccessModel(accessModelInput: $accessModelInput) {
+      __typename
+      ... on TypeAccessModel {
+        id
+        description
+        name
+        type
+      }
+    }
+  }
+`);
 
 const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
   useEffect(() => {
@@ -57,15 +88,26 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
   }, []);
 
   const params = useParams();
-  const { data, isLoading } = useQuery([`resourcesList_${params.id}`], () =>
-    GraphQL(datasetResourcesQuery, { datasetId: params.id })
+  const { data, isLoading }: { data: any; isLoading: boolean } = useQuery(
+    [`resourcesList_${params.id}`],
+    () => GraphQL(datasetResourcesQuery, { datasetId: params.id })
   );
+
+  const {
+    data: accessModelList,
+    isLoading: accessModelListLoading,
+  }: { data: any; isLoading: boolean } = useQuery(
+    [`accessModelList_${params.id}`],
+    () => GraphQL(accessModelListQuery, { datasetId: params.id })
+  );
+
+  console.log(accessModelList);
 
   const [accessModelData, setAccessModelData] = useState({
     dataset: params.id,
     name: '',
     description: '',
-    type: '',
+    type: 'PUBLIC',
     resources: [],
   });
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
@@ -76,7 +118,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
     if (data) {
       setAvailableResources(
         data.datasetResources.filter(
-          (resource) => !selectedResources.includes(resource.id)
+          (resource: any) => !selectedResources.includes(resource.id)
         )
       );
     }
@@ -108,7 +150,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
 
   const handleSelectAll = () => {
     const allResourceIds =
-      data?.datasetResources.map((resource) => resource.id) || [];
+      data?.datasetResources.map((resource: any) => resource.id) || [];
     setSelectedResources(allResourceIds);
     setShowSelectAll(false);
   };
@@ -127,47 +169,99 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
     }
   );
 
+  const { mutate: editMutate, isLoading: editMutationLoading } = useMutation(
+    (data: { accessModelInput: EditAccessModelInput }) =>
+      GraphQL(editaccessModel, data),
+    {
+      onSuccess: () => {
+        toast('Access Model Saved');
+      },
+      onError: (err: any) => {
+        toast(`Received ${err} during access model saving`);
+      },
+    }
+  );
+
+  const saveAccessModel = () => {
+    editMutate({
+      accessModelInput: {
+        name: accessModelData.name,
+        resources: accessModelData.resources,
+        dataset: accessModelData.dataset,
+        description: accessModelData.description,
+        type: accessModelData.type as AccessTypes,
+        accessModelId: '4172d5f1-5c76-4542-ab4a-5c29b0a2345f',
+      },
+    });
+  };
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
   return (
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-6">
-        <div className="flex w-2/3 flex-wrap items-center gap-2">
-          <Text>Access Type Name:</Text>
-          <Select
-            className="w-2/3"
-            labelHidden
-            name={'Access Type Name'}
-            options={[]}
-            label={''}
-          />
-        </div>
-        <Button
-          className=" h-fit w-fit"
-          onClick={(e) =>
-            setAccessModelData({
-              dataset: params.id,
-              name: '',
-              description: '',
-              type: '',
-              resources: [],
-            })
-          }
-        >
-          Add New Access Type
-        </Button>
-
         <Button
           onClick={(e) => setQueryList(true)}
           kind="tertiary"
-          className="flex text-end"
+          className="flex text-start"
         >
           <span className="flex items-center gap-2">
+            <Icon source={Icons.cross} color="interactive" size={24} />
             <Text color="interactive">
               Go back to <br />
-              Resource List
+              Access Model Listing
             </Text>
-            <Icon source={Icons.cross} color="interactive" size={24} />
           </span>
         </Button>
+        <Sheet open={isSheetOpen}>
+          <Sheet.Trigger>
+            <Button onClick={() => setIsSheetOpen(true)}>
+              Select Access Type{' '}
+            </Button>
+          </Sheet.Trigger>
+          <Sheet.Content side="bottom">
+            <div className=" flex  flex-col gap-6 p-10">
+              <div className="flex items-center justify-between">
+                <Text variant="bodyLg">Select Resource</Text>
+                <div className="flex items-center gap-3">
+                  <Button
+                    className=" h-fit w-fit"
+                    size="medium"
+                    onClick={(e) => {
+                      setAccessModelData({
+                        dataset: params.id,
+                        name: '',
+                        description: '',
+                        type: '',
+                        resources: [],
+                      });
+                      setIsSheetOpen(false);
+                    }}
+                  >
+                    Add New Access Type
+                  </Button>
+                  <Button kind="tertiary" onClick={() => setIsSheetOpen(false)}>
+                    <Icon source={Icons.cross} size={24} />
+                  </Button>
+                </div>
+              </div>
+              {accessModelList?.accessModelResources.map(
+                (item: any, index: any) => (
+                  <div
+                    key={index}
+                    className="  rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6  py-3  "
+                  >
+                    <Button
+                      kind="tertiary"
+                      className="flex w-full justify-start"
+                    >
+                      {item.name}
+                    </Button>
+                  </div>
+                )
+              )}
+            </div>
+          </Sheet.Content>
+        </Sheet>
       </div>
       <Divider />
       {isLoading || mutationLoading ? (
@@ -205,6 +299,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
                   name="name"
                   required
                   helpText="To know about best practices for naming Resources go to our User Guide"
+                  onBlur={saveAccessModel}
                 />
               </div>
               <Select
@@ -216,6 +311,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
                   { label: 'Private', value: 'PRIVATE' },
                 ]}
                 label={'Permissions'}
+                defaultValue="PUBLIC"
                 placeholder="Select"
                 onChange={(e) =>
                   setAccessModelData({ ...accessModelData, type: e })
@@ -275,7 +371,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
           </div>
           {selectedResources.map((resourceId, index) => {
             const selectedResource = data?.datasetResources.find(
-              (resource) => resource.id === resourceId
+              (resource: any) => resource.id === resourceId
             );
 
             if (!selectedResource || !selectedResource.schema) {
