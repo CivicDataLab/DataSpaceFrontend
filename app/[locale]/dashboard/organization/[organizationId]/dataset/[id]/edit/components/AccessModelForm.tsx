@@ -25,6 +25,8 @@ import ResourceSelector from './ResourceSelector';
 
 interface AccessModelProps {
   setList: any;
+  setAccessModelId: any;
+  accessModelId: any;
 }
 
 const datasetResourcesQuery: any = graphql(`
@@ -82,7 +84,11 @@ const editaccessModel: any = graphql(`
   }
 `);
 
-const AccessModelForm: React.FC<AccessModelProps> = ({ setList }) => {
+const AccessModelForm: React.FC<AccessModelProps> = ({
+  setList,
+  setAccessModelId,
+  accessModelId,
+}) => {
   useEffect(() => {
     setList(false);
   }, []);
@@ -198,7 +204,10 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setList }) => {
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-6">
         <Button
-          onClick={(e) => setList(true)}
+          onClick={(e) => {
+            setList(true);
+            setAccessModelId('');
+          }}
           kind="tertiary"
           className="flex text-start"
         >

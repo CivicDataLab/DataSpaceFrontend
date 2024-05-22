@@ -26,7 +26,11 @@ const Access = () => {
           setAccessModelId={setAccessModelId}
         />
       ) : (
-        <AccessModelForm setList={setList} />
+        <AccessModelForm
+          setList={setList}
+          setAccessModelId={setAccessModelId}
+          accessModelId={accessModelId}
+        />
       )}
     </div>
   );
