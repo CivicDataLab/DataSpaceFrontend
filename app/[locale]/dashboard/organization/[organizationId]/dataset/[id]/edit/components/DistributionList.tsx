@@ -37,6 +37,12 @@ export const getReourceDoc = graphql(`
         dataset {
           pk
         }
+        schema {
+          id
+          fieldName
+          format
+          description
+        }
         type
         name
         description
@@ -190,6 +196,7 @@ const NoList = ({
   return (
     <>
       <DropZone
+        accept=".json, .csv, application/json, text/csv"
         name="file_details"
         label="Upload"
         allowMultiple={true}

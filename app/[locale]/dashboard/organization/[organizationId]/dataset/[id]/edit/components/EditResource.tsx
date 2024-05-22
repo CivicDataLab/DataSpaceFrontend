@@ -24,6 +24,7 @@ import {
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { createResourceFilesDoc } from './DistributionList';
+import { ResourceSchema } from './ResourceSchema';
 
 interface TListItem {
   label: string;
@@ -34,6 +35,8 @@ interface TListItem {
 }
 
 export const EditResource = ({ reload, data }: any) => {
+  const params = useParams();
+
   const updateResourceDoc: any = graphql(`
     mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {
       updateFileResource(fileResourceInput: $fileResourceInput) {
@@ -42,22 +45,6 @@ export const EditResource = ({ reload, data }: any) => {
           id
           description
           name
-        }
-      }
-    }
-  `);
-
-  const resetSchema: any = graphql(`
-    mutation resetFileResourceSchema($resourceId: UUID!) {
-      resetFileResourceSchema(resourceId: $resourceId) {
-        ... on TypeResource {
-          id
-          schema {
-            format
-            description
-            id
-            fieldName
-          }
         }
       }
     }
@@ -104,61 +91,6 @@ export const EditResource = ({ reload, data }: any) => {
     }
   );
 
-  const table = {
-    columns: [
-      {
-        accessorKey: 'field_key',
-        header: 'FIELD KEY',
-      },
-      {
-        accessorKey: 'display_name',
-        header: 'DISPLAY NAME',
-      },
-      {
-        accessorKey: 'description',
-        header: 'DESCRIPTION',
-      },
-      {
-        accessorKey: 'format',
-        header: 'FORMAT',
-      },
-      {
-        header: 'DELETE',
-        cell: ({ row }: any) => (
-          <IconButton
-            size="medium"
-            icon={Icons.delete}
-            color="interactive"
-            onClick={(e) => console.log(row.original)}
-          >
-            Delete
-          </IconButton>
-        ),
-      },
-    ],
-    rows: [
-      {
-        field_key: 'date',
-        display_name: 'Date',
-        description: 'Date on which measurements are taken',
-        format: 'Date',
-      },
-      {
-        field_key: 'date',
-        display_name: 'Date',
-        description: 'Date on which measurements are taken',
-        format: 'Date',
-      },
-      {
-        field_key: 'date',
-        display_name: 'Date',
-        description: 'Date on which measurements are taken',
-        format: 'Date',
-      },
-    ],
-  };
-
-  const params = useParams();
   const router = useRouter();
 
   const ResourceList: TListItem[] =
@@ -429,46 +361,10 @@ export const EditResource = ({ reload, data }: any) => {
           <Text>See Preview</Text>
         </div>
       </div>*/}
-      <div className="flex justify-between mt-8">
-        <Text>Fields in the Resource</Text>
-        <div className="flex gap-4">
-          <Button
-            size="medium"
-            kind="tertiary"
-            variant="basic"
-            onClick={function Ga() {}}
-          >
-            <div className="flex items-center gap-1">
-              <Text>Refetch Fields</Text>{' '}
-              <Icon source={Icons.info} color="interactive" />
-            </div>
-          </Button>
-
-          <Button
-            size="medium"
-            kind="tertiary"
-            variant="basic"
-            onClick={function Ga() {}}
-          >
-            <div className="flex items-center gap-1">
-              <Text>Reset Fields</Text>{' '}
-              <Icon source={Icons.info} color="interactive" />
-            </div>
-          </Button>
-        </div>
-      </div>
-      <Text variant="headingXs" as="span" fontWeight="regular">
-        The Field settings apply to the Resource on a master level and can not
-        be changed in Access Models.
-      </Text>
-      <div className="mt-3">
-        <DataTable
-          columns={table.columns}
-          rows={table.rows}
-          hideFooter={true}
-          defaultRowCount={10}
-        />
-      </div>
+      {resourceId &&
+      data?.find((item: any) => item.id === resourceId).schema.length > 0 ? (
+        <ResourceSchema resourceId={resourceId} data={data} />
+      ) : null}
     </div>
   );
 };
