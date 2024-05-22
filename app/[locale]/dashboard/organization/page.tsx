@@ -17,11 +17,11 @@ const Page = () => {
   const organizationsList = [
     {
       title: 'Open Budgets India',
-      slug: '5487f640-ba1c-431d-a6db-203b4c49b42a',
+      slug: 'open-budgets-india',
     },
     {
       title: 'Open Contracting India',
-      slug: '86f34967-f614-43c1-b7cb-443e4d815424',
+      slug: 'open-contracting-india',
     },
   ];
 
