@@ -15,7 +15,8 @@ import {
 
 import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
-import DatasetCards from './components/DatasetCards';
+import GraphqlPagination from '../../dashboard/components/GraphqlPagination/graphqlPagination';
+import Card from './components/Card';
 import Filter from './components/FIlter/Filter';
 import Styles from './dataset.module.scss';
 
@@ -313,14 +314,17 @@ const DatasetsListing = () => {
 
               <div className="flex flex-col gap-6">
                 {facets && datasetDetails?.length > 0 && (
-                  <DatasetCards
-                    data={datasetDetails}
-                    totalCount={count}
+                  <GraphqlPagination
+                    totalRows={count}
                     pageSize={queryParams.pageSize}
                     currentPage={queryParams.currentPage}
                     onPageChange={handlePageChange}
                     onPageSizeChange={handlePageSizeChange}
-                  />
+                  >
+                    {datasetDetails.map((item: any, index: any) => (
+                      <Card key={index} data={item} />
+                    ))}
+                  </GraphqlPagination>
                 )}
               </div>
             </div>
