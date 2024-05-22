@@ -100,8 +100,6 @@ const generateColumnData = (name: any) => {
       accessorKey: 'dialog',
       header: `${name === 'Access Type' ? 'Resources' : 'Fields'}`,
       cell: ({ row }: any) => {
-        console.log(row.original.dialog.length);
-
         return (
           <>
             <Dialog>
@@ -199,7 +197,7 @@ const Page = () => {
       name: 'Access Type',
       data: data?.datasets[0]?.accessModels,
       error:
-        data && data?.datasets[0]?.resources.length === 0
+        data && data?.datasets[0]?.accessModels.length === 0
           ? 'No Access Type found. Please add to continue.'
           : '',
       errorType: 'critical',
@@ -234,8 +232,6 @@ const Page = () => {
       },
     }
   );
-
-  console.log(Summary);
 
   return (
     <>
@@ -354,7 +350,7 @@ const Page = () => {
               <Button
                 className="m-auto w-fit"
                 disabled={
-                  !data?.datasets[0]?.resources.length &&
+                  !data?.datasets[0]?.resources.length ||
                   !data?.datasets[0]?.accessModels.length
                 }
                 onClick={() => mutate()}
