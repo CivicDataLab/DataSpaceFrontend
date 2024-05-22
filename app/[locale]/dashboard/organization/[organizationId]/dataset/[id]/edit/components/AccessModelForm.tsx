@@ -24,7 +24,7 @@ import { Icons } from '@/components/icons';
 import ResourceSelector from './ResourceSelector';
 
 interface AccessModelProps {
-  setQueryList: any;
+  setList: any;
 }
 
 const datasetResourcesQuery: any = graphql(`
@@ -82,9 +82,9 @@ const editaccessModel: any = graphql(`
   }
 `);
 
-const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
+const AccessModelForm: React.FC<AccessModelProps> = ({ setList }) => {
   useEffect(() => {
-    setQueryList(false);
+    setList(false);
   }, []);
 
   const params = useParams();
@@ -100,8 +100,6 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
     [`accessModelList_${params.id}`],
     () => GraphQL(accessModelListQuery, { datasetId: params.id })
   );
-
-  console.log(accessModelList);
 
   const [accessModelData, setAccessModelData] = useState({
     dataset: params.id,
@@ -161,7 +159,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
     {
       onSuccess: () => {
         toast('Access Model Saved');
-        setQueryList(true);
+        setList(true);
       },
       onError: (err: any) => {
         toast(`Received ${err} during access model saving`);
@@ -200,16 +198,13 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-6">
         <Button
-          onClick={(e) => setQueryList(true)}
+          onClick={(e) => setList(true)}
           kind="tertiary"
           className="flex text-start"
         >
           <span className="flex items-center gap-2">
-            <Icon source={Icons.cross} color="interactive" size={24} />
-            <Text color="interactive">
-              Go back to <br />
-              Access Model Listing
-            </Text>
+            <Icon source={Icons.back} color="interactive" size={24} />
+            <Text color="interactive">Access Model Listing</Text>
           </span>
         </Button>
         <Sheet open={isSheetOpen}>

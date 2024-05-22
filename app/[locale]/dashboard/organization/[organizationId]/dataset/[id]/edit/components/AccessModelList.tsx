@@ -1,5 +1,6 @@
 import { UUID } from 'crypto';
 import React, { useEffect } from 'react';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -10,8 +11,9 @@ import { formatDate, toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
 interface AccessModelListProps {
-  setQueryList: any;
-  queryList: any;
+  setList: any;
+  list: any;
+  setAccessModelId: any;
 }
 
 const accessModelQuery = graphql(`
@@ -34,8 +36,9 @@ const deleteAccessModel: any = graphql(`
 `);
 
 const AccessModelList: React.FC<AccessModelListProps> = ({
-  setQueryList,
-  queryList,
+  setList,
+  list,
+  setAccessModelId,
 }) => {
   const params = useParams();
 
@@ -53,7 +56,7 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
 
   useEffect(() => {
     refetch();
-  }, [queryList]);
+  }, [list]);
 
   const { mutate } = useMutation(
     (data: { accessModelId: UUID }) => GraphQL(deleteAccessModel, data),
@@ -73,6 +76,17 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
       {
         accessorKey: 'name',
         header: 'Name of Access Type',
+        cell: ({ row }: any) => (
+          <Link
+            href={''}
+            onClick={() => {
+              setAccessModelId(row.original.id);
+              setList(false);
+            }}
+          >
+            <span className=" underline">{row.original.name}</span>
+          </Link>
+        ),
       },
       {
         accessorKey: 'date',
@@ -124,9 +138,7 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
             <Text>
               Showing {data.accessModelResources?.length} Access Types
             </Text>
-            <Button onClick={(e) => setQueryList(false)}>
-              Add Access Type
-            </Button>
+            <Button onClick={(e) => setList(false)}>Add Access Type</Button>
           </div>
 
           <DataTable
