@@ -1,16 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import LoadingPage from '@/app/[locale]/dashboard/loading';
 import { graphql } from '@/gql';
 import {
   TypeDatasetMetadata,
   TypeMetadata,
-  UpdateDatasetInput,
-  UpdateMetadataInput,
+  UpdateMetadataInput
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Button,
   Combobox,
@@ -22,6 +19,7 @@ import {
   toast,
 } from 'opub-ui';
 
+import { Loading } from '@/components/loading';
 import { GraphQL } from '@/lib/api';
 
 const datasetMetadataQueryDoc: any = graphql(`
@@ -154,72 +152,75 @@ export function EditMetadata({
 
   return (
     <>
-      {getMetaDataListQuery?.isLoading ? (
-        <LoadingPage />
-      ) : (
-        <Form
-          onSubmit={(values) => {
-            updateMetadataMutation.mutate({
-              UpdateMetadataInput: {
-                dataset: id,
-                metadata: [
-                  ...Object.keys(values)
-                    .filter(
-                      (valueItem) =>
-                        valueItem !== 'description' && valueItem !== 'tags'
-                    )
-                    .map((key) => {
-                      return {
-                        id: key,
-                        value: values[key] || '',
-                      };
-                    }),
-                ],
-                description: values.description || '',
-                tags: values.tags || [],
-              },
-            });
-          }}
-          formOptions={{
-            resetOptions: {
-              keepValues: true,
-              keepDirtyValues: true,
+      <Form
+        onSubmit={(values) => {
+          updateMetadataMutation.mutate({
+            UpdateMetadataInput: {
+              dataset: id,
+              metadata: [
+                ...Object.keys(values)
+                  .filter(
+                    (valueItem) =>
+                      valueItem !== 'description' && valueItem !== 'tags'
+                  )
+                  .map((key) => {
+                    return {
+                      id: key,
+                      value: values[key] || '',
+                    };
+                  }),
+              ],
+              description: values.description || '',
+              tags: values.tags || [],
             },
-            defaultValues: defaultValuesPrepFn(
-              getDatasetMetadata?.data?.datasets[0]?.metadata
-            ),
-          }}
-        >
-          <>
-            <div className="flex flex-col gap-1">
-              <Text variant="headingMd">Add Metadata</Text>
-            </div>
-            <div className="my-4">
-              <Divider />
-            </div>
+          });
+        }}
+        formOptions={{
+          resetOptions: {
+            keepValues: true,
+            keepDirtyValues: true,
+          },
+          defaultValues: defaultValuesPrepFn(
+            getDatasetMetadata?.data?.datasets[0]?.metadata
+          ),
+        }}
+      >
+        <>
+          <div className="pt-3">
+            <FormLayout>
+              <Input
+                key="description"
+                multiline
+                name="description"
+                label={'Description'}
+                defaultValue={getDatasetMetadata?.data?.datasets[0].description}
+              />
 
-            <div className="pt-3">
-              <FormLayout>
-                <Input
-                  key="description"
-                  multiline
-                  name="description"
-                  label={'Description'}
-                  defaultValue={
-                    getDatasetMetadata?.data?.datasets[0].description
-                  }
-                />
-
-                <div className="flex flex-wrap">
-                  <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
-                    <Combobox name={'tags'} list={[]} label={'Tags'} />
-                  </div>
-                  <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"></div>
+              <div className="flex flex-wrap">
+                <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
+                  <Combobox name={'tags'} list={[]} label={'Tags'} />
                 </div>
+                <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"></div>
+              </div>
 
-                <div className="flex flex-wrap">
-                  {getMetaDataListQuery?.data?.metadata?.length > 0 ? (
-                    getMetaDataListQuery?.data?.metadata?.map(
+              {getMetaDataListQuery.isLoading ? (
+                <Loading />
+              ) : getMetaDataListQuery?.data?.metadata?.length > 0 ? (
+                <>
+                  <div className="my-4">
+                    <Divider />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <Text variant="headingMd">Add Metadata</Text>
+                  </div>
+
+                  <div className="my-4">
+                    <Divider />
+                  </div>
+
+                  <div className="flex flex-wrap">
+                    {getMetaDataListQuery?.data?.metadata?.map(
                       (metadataFormItem: TypeMetadata) => {
                         if (metadataFormItem.dataType === 'STRING') {
                           return (
@@ -240,117 +241,35 @@ export function EditMetadata({
                         }
                         return null;
                       }
-                    )
-                  ) : (
-                    <></>
-                  )}
-                </div>
-
-                {/* <FormLayout.Group>
-                  <Select
-                    name="update_frequency"
-                    label="Update Frequency"
-                    helpText="How often is this dataset updated?"
-                    options={[
-                      { label: 'Daily', value: 'daily' },
-                      { label: 'Weekly', value: 'weekly' },
-                      { label: 'Monthly', value: 'monthly' },
-                      { label: 'Yearly', value: 'yearly' },
-                    ]}
-                    placeholder="Select"
-                    required
-                    error="This field is required"
-                    disabled={getMetaDataListQuery.isLoading}
-                  />
-                  <Select
-                    name="language"
-                    label="Language"
-                    helpText="What language is this dataset in?"
-                    options={[
-                      { label: 'English', value: 'english' },
-                      { label: 'Hindi', value: 'hindi' },
-                      { label: 'Spanish', value: 'spanish' },
-                      { label: 'French', value: 'french' },
-                    ]}
-                    placeholder="Select"
-                    required
-                    error="This field is required"
-                    disabled={getMetaDataListQuery.isLoading}
-                  />
-                </FormLayout.Group>
-
-                <FormLayout.Group>
-                  <Combobox
-                    name="geo_list"
-                    label="Geography"
-                    // helpText="Which geography does this data belong to?"
-                    placeholder="Search Locations"
-                    list={[
-                      {
-                        label: 'India',
-                        value: 'india',
-                      },
-                      {
-                        label: 'USA',
-                        value: 'usa',
-                      },
-                      {
-                        label: 'UK',
-                        value: 'uk',
-                      },
-                    ]}
-                    displaySelected
-                    required
-                    error="This field is required"
-                  />
-                  <Combobox
-                    name="tags_list"
-                    label="Tags"
-                    placeholder="Search Tags"
-                    // helpText="Any other tags or keywords that can help people discover your dataset"
-                    list={[
-                      {
-                        label: 'Health',
-                        value: 'health',
-                      },
-                      {
-                        label: 'Education',
-                        value: 'education',
-                      },
-                      {
-                        label: 'Agriculture',
-                        value: 'agriculture',
-                      },
-                    ]}
-                    displaySelected
-                    required
-                    error="This field is required"
-                  />
-                </FormLayout.Group> */}
-              </FormLayout>
-            </div>
-            <div className="mt-8">
-              <Divider />
-            </div>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <Button
-                id="exitAfterSave"
-                disabled
-                loading={updateMetadataMutation.isLoading}
-              >
-                Save & Exit
-              </Button>
-              <Button
-                id="proceedAfterSave"
-                submit
-                loading={updateMetadataMutation.isLoading}
-              >
-                Save & Proceed
-              </Button>
-            </div>
-          </>
-        </Form>
-      )}
+                    )}
+                  </div>
+                </>
+              ) : (
+                <></>
+              )}
+            </FormLayout>
+          </div>
+          <div className="mt-8">
+            <Divider />
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <Button
+              id="exitAfterSave"
+              disabled
+              loading={updateMetadataMutation.isLoading}
+            >
+              Save & Exit
+            </Button>
+            <Button
+              id="proceedAfterSave"
+              submit
+              loading={updateMetadataMutation.isLoading}
+            >
+              Save & Proceed
+            </Button>
+          </div>
+        </>
+      </Form>
     </>
   );
 }
