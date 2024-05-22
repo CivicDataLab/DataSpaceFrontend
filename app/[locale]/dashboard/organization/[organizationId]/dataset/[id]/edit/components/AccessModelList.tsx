@@ -17,13 +17,6 @@ interface AccessModelListProps {
 const accessModelQuery = graphql(`
   query accessModelResources($datasetId: UUID!) {
     accessModelResources(datasetId: $datasetId) {
-      modelResources {
-        resource {
-          name
-          description
-          id
-        }
-      }
       id
       name
       description
