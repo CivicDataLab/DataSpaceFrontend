@@ -17,6 +17,7 @@ import {
   TabList,
   Tabs,
   Text,
+  toast,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -56,7 +57,7 @@ interface LayoutProps {
   params: { id: string };
 }
 
-const layoutList = ['metadata', 'access', 'distribution', 'publish'];
+const layoutList = ['metadata', 'access', 'resources', 'publish'];
 
 export function EditLayout({ children, params }: LayoutProps) {
   // const { data } = useQuery([`dataset_layout_${params.id}`], () =>
@@ -93,7 +94,7 @@ export function EditLayout({ children, params }: LayoutProps) {
         getDatasetTitleRes.refetch();
       },
       onError: (err: any) => {
-        console.log('Error ::: ', err);
+        toast(err.message.split(':')[0]);
       },
     }
   );
@@ -229,11 +230,11 @@ const Navigation = ({
   pathItem: string;
   organization: string;
 }) => {
-  const links = [
+  let links = [
     {
-      label: 'Distributions',
-      url: `/dashboard/organization/${organization}/dataset/${id}/edit/distribution`,
-      selected: pathItem === 'distribution',
+      label: 'Resources',
+      url: `/dashboard/organization/${organization}/dataset/${id}/edit/resources`,
+      selected: pathItem === 'resources',
     },
     {
       label: 'Access Models',
@@ -248,7 +249,6 @@ const Navigation = ({
     {
       label: 'Publish',
       url: `/dashboard/organization/${organization}/dataset/${id}/edit/publish`,
-      disabled: true,
       selected: pathItem === 'publish',
     },
   ];

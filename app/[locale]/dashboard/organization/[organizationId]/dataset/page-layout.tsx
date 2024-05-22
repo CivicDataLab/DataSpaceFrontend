@@ -41,7 +41,7 @@ export const Page = () => {
         });
 
         router.push(
-          `/dashboard/organization/${params.organizationId}/dataset/${data?.addDataset?.id}/edit/distribution`
+          `/dashboard/organization/${params.organizationId}/dataset/${data?.addDataset?.id}/edit/resources`
         );
       },
       onError: (err: any) => {
