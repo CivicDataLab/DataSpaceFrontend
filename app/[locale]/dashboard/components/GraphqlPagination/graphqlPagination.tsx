@@ -1,32 +1,29 @@
 import React from 'react';
-import Footer from '@/app/[locale]/dashboard/components/GraphqlTable/footer';
 
-import Card from '../Card';
+import Footer from './footer';
 
-interface DatasetCardsProps {
-  data: any;
-  totalCount: number;
+interface GraphqlTableProps {
+  totalRows: number;
   pageSize: number;
   currentPage: number;
   onPageChange: (newPage: number) => void;
   onPageSizeChange: (newSize: number) => void;
+  children: React.ReactNode;
 }
 
-const DatasetCards: React.FC<DatasetCardsProps> = ({
-  data,
-  totalCount,
+const GraphqlPagination: React.FC<GraphqlTableProps> = ({
+  totalRows,
   pageSize,
   currentPage,
   onPageChange,
   onPageSizeChange,
+  children,
 }) => {
   return (
     <div>
-      {data.map((item: any, index: any) => (
-        <Card key={index} data={item} />
-      ))}
+      {children}
       <Footer
-        totalRows={totalCount}
+        totalRows={totalRows}
         pageSize={pageSize}
         currentPage={currentPage}
         onPageChange={onPageChange}
@@ -36,4 +33,4 @@ const DatasetCards: React.FC<DatasetCardsProps> = ({
   );
 };
 
-export default DatasetCards;
+export default GraphqlPagination;
