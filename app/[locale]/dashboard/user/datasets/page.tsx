@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { DataTable } from 'opub-ui';
 
-import GraphqlTable from '../../components/GraphqlTable/graphqlTable';
+import GraphqlPagination from '../../components/GraphqlPagination/graphqlPagination';
 import ListingHeader from '../../components/ListingHeader';
 
 const Page = () => {
@@ -97,9 +98,15 @@ const Page = () => {
         count={120}
         label={'datasets'}
       />
-      <GraphqlTable
-        table={{
-          columns: [
+      <GraphqlPagination
+        totalRows={totalRows}
+        pageSize={queryParams.pageSize}
+        currentPage={queryParams.currentPage}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+      >
+        <DataTable
+          columns={[
             {
               accessorKey: 'dataset_title',
               header: 'Dataset',
@@ -112,19 +119,17 @@ const Page = () => {
               accessorKey: 'org_types',
               header: '0rg Type',
             },
-          ],
-          rows: rowData.map((item: any) => ({
+          ]}
+          rows={rowData.map((item: any) => ({
             dataset_title: item._source.dataset_title,
             org_title: item._source.org_title,
             org_types: item._source.org_types,
-          })),
-        }}
-        totalRows={totalRows}
-        pageSize={queryParams.pageSize}
-        currentPage={queryParams.currentPage}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-      />
+          }))}
+          hideFooter={true}
+          hideSelection={true}
+          defaultRowCount={100}
+        />
+      </GraphqlPagination>
     </div>
   );
 };
