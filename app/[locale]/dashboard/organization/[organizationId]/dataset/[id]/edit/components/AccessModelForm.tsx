@@ -364,23 +364,29 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-5">
-            <div className="w-full">
+          <div className="flex items-end gap-6">
+            <div className="w-3/4">
               <Combobox
                 displaySelected
                 label={'Select Fields of the Resource'}
                 list={availableResources}
                 selectedValue={selectedFields}
                 name={''}
-                helpText={'Use the dropdown to add specific fields'}
+                helpText={
+                  'Only Resources added will be part of this Access Type. After adding select the Fields and Rows to be included'
+                }
                 onChange={(e: any) => handleAddResource(e)}
               />
             </div>
 
             <div className="flex h-fit w-fit items-center gap-5">
-              <Button onClick={handleSelectAll} kind="secondary">
+              <Button
+                onClick={handleSelectAll}
+                kind="secondary"
+                className="h-fit w-fit"
+              >
                 <span className="flex items-center gap-1">
-                  <Text>Select All</Text>
+                  <Text variant="bodySm">Add All Resources</Text>
                   <Icon source={Icons.plus} size={24} />
                 </span>
               </Button>
