@@ -5,6 +5,7 @@ import { AccessTypes, EditAccessModelInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Button,
+  Combobox,
   Divider,
   Icon,
   Select,
@@ -130,14 +131,23 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   });
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
   const [showSelectAll, setShowSelectAll] = useState(false);
-  const [availableResources, setAvailableResources] = useState<any[]>([]);
+
+  const [availableResources, setAvailableResources] = useState<
+    { label: string; value: string; schema: [] }[]
+  >([]);
+
+  const [selectedFields, setSelectedFields] = useState<
+    { label: string; value: string }[]
+  >([]);
 
   useEffect(() => {
     if (data) {
       setAvailableResources(
-        data.datasetResources.filter(
-          (resource: any) => !selectedResources.includes(resource.id)
-        )
+        data.datasetResources.map((field: any) => ({
+          label: field.name,
+          value: field.id,
+          schema: field.schema,
+        }))
       );
     }
   }, [data, selectedResources]);
@@ -147,11 +157,11 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
       refetch();
       setAccessModelData({
         dataset: params.id,
-        name: accessModelDetails.accessModel.name,
-        description: accessModelDetails.accessModel.description,
-        type: accessModelDetails.accessModel.type,
+        name: accessModelDetails?.accessModel.name,
+        description: accessModelDetails?.accessModel.description,
+        type: accessModelDetails?.accessModel.type,
         resources: [],
-        accessModelId: accessModelDetails.accessModel.id,
+        accessModelId: accessModelDetails?.accessModel.id,
       });
     }
   }, [accessModelId]);
@@ -159,31 +169,42 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   const [resId, setResId] = useState('');
 
   // Inside handleAddResource function
-  const handleAddResource = (resourceId: string) => {
-    if (resourceId !== '') {
-      setSelectedResources((prev) => [...prev, resourceId]);
-      setResId('');
-      setAvailableResources((prev) =>
-        prev.filter((item) => item.id !== resourceId)
-      ); // Filter out the selected resource
-    }
+  const handleAddResource = (resourceId: any) => {
+    setSelectedResources(resourceId);
+    setResId('');
+    setAvailableResources(resourceId); // Filter out the selected resource
+    setSelectedFields(resourceId);
   };
 
-  const handleRemoveResource = (resourceId: string) => {
-    setSelectedResources((prev) => prev.filter((id) => id !== resourceId));
-    setResId('');
+  const handleRemoveResource = (resourceId: any) => {
+    // Filter out the selected resource from selectedResources
+    setSelectedResources((prevResources) =>
+      prevResources.filter((resource: any) => resource.value !== resourceId)
+    );
+
+    // Filter out the selected fields associated with the removed resource
+    setSelectedFields((prevFields) =>
+      prevFields.filter((field) => field.value.split('.')[0] !== resourceId)
+    );
+    // Remove the corresponding resource from accessModelData.resources
     setAccessModelData((prevData: any) => ({
       ...prevData,
       resources: prevData.resources.filter(
-        (resource: any) => resource.resource !== resourceId
+        (resource: any) => resource.id !== resourceId
       ),
     }));
   };
 
   const handleSelectAll = () => {
-    const allResourceIds =
-      data?.datasetResources.map((resource: any) => resource.id) || [];
-    setSelectedResources(allResourceIds);
+    const allResources =
+      data?.datasetResources.map((resource: any) => ({
+        label: resource.name,
+        value: resource.id,
+        schema: resource.schema,
+      })) || [];
+    setSelectedFields(allResources);
+
+    setSelectedResources(allResources);
     setShowSelectAll(false);
   };
 
@@ -201,8 +222,6 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   );
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-
-  console.log(accessModelDetails);
 
   return (
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
@@ -346,34 +365,19 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-5">
-            <Select
-              name={'resourceSelection'}
-              className="w-4/5"
-              options={
-                availableResources.length > 0
-                  ? [
-                      { label: 'Select', value: '' },
-                      ...availableResources.map((item) => ({
-                        label: item.name,
-                        value: item.id,
-                      })),
-                    ]
-                  : [{ label: 'Select', value: '' }] // Render only 'Select' when no resources are available
-              }
-              label={'Select the Resources to be added to the Access Type'}
-              onChange={(e) => setResId(e)}
-              required
-              value={resId}
-              helpText="Only Resources added will be part of this Access Type. After adding select the Fields and Rows to be included"
-            />
+            <div className="w-full">
+              <Combobox
+                displaySelected
+                label={'Select Fields of the Resource'}
+                list={availableResources}
+                selectedValue={selectedFields}
+                name={''}
+                helpText={'Use the dropdown to add specific fields'}
+                onChange={(e: any) => handleAddResource(e)}
+              />
+            </div>
 
             <div className="flex h-fit w-fit items-center gap-5">
-              <Button onClick={() => handleAddResource(resId)} kind="secondary">
-                <span className="flex items-center gap-1">
-                  <Text>Add</Text>
-                  <Icon source={Icons.plus} size={24} />
-                </span>
-              </Button>
               <Button onClick={handleSelectAll} kind="secondary">
                 <span className="flex items-center gap-1">
                   <Text>Select All</Text>
@@ -382,9 +386,9 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
               </Button>
             </div>
           </div>
-          {selectedResources.map((resourceId, index) => {
+          {selectedResources?.map((resourceId: any, index) => {
             const selectedResource = data?.datasetResources.find(
-              (resource: any) => resource.id === resourceId
+              (resource: any) => resource.id === resourceId.value
             );
 
             if (!selectedResource || !selectedResource.schema) {
