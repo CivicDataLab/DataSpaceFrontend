@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, Table, Icon, IconButton, Spinner, Text } from 'opub-ui';
+import { Button, DataTable, Icon, IconButton, Spinner, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
@@ -101,10 +101,11 @@ export const ResourceSchema = ({
             <Spinner size={30} />
           </div>
         ) : data && data.length > 0 ? (
-          <Table
+          <DataTable
             columns={generateColumnData()}
             rows={generateTableData(data)}
             hideFooter={true}
+            hideSelection
           />
         ) : (
           <div className="flex justify-center mt-8">Click on Reset Fields</div>
