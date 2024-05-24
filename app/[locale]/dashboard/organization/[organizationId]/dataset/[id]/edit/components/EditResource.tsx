@@ -1,30 +1,15 @@
 import React from 'react';
-import Link from 'next/link';
-import {
-  useParams,
-  usePathname,
-  useRouter,
-  useSearchParams,
-} from 'next/navigation';
-import GraphqlTable from '@/app/[locale]/dashboard/components/GraphqlTable/graphqlTable';
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   CreateFileResourceInput,
   UpdateFileResourceInput,
 } from '@/gql/generated/graphql';
-import { IconTrash } from '@tabler/icons-react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  parseAsBoolean,
-  parseAsString,
-  useQueryState,
-} from 'next-usequerystate';
+import { useMutation } from '@tanstack/react-query';
+import { parseAsString, useQueryState } from 'next-usequerystate';
 import {
   Button,
-  ButtonGroup,
-  Checkbox,
   Combobox,
-  DataTable,
   Dialog,
   Divider,
   DropZone,
@@ -50,8 +35,9 @@ interface TListItem {
 }
 
 export const EditResource = ({ reload, data }: any) => {
-  const params = useParams();
 
+  const params = useParams();
+  
   const updateResourceDoc: any = graphql(`
     mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {
       updateFileResource(fileResourceInput: $fileResourceInput) {
@@ -211,18 +197,21 @@ export const EditResource = ({ reload, data }: any) => {
     </div>
   );
 
-
   const listViewFunction = () => {
-    setResourceId('')
+    setResourceId('');
   };
 
   const saveResource = () => {
     mutate({
       fileResourceInput: {
         id: resourceId,
-        description: resourceDesc ? resourceDesc :getResourceObject(resourceId)?.description,
-        name: resourceName ? resourceName: getResourceObject(resourceId)?.label,
-         file: resourceFile
+        description: resourceDesc
+          ? resourceDesc
+          : getResourceObject(resourceId)?.description,
+        name: resourceName
+          ? resourceName
+          : getResourceObject(resourceId)?.label,
+        file: resourceFile,
       },
     });
   };

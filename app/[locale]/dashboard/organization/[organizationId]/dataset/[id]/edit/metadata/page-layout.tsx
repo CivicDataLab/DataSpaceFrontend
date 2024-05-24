@@ -74,7 +74,7 @@ export function MetadataPage({ params }: { params: { id: string } }) {
   //         queryKey: [`dataset_meta_${params.id}`],
   //       });
   //       router.push(
-  //         `/dashboard/dataset/${data.update_dataset?.dataset?.id}/edit/distribution`
+  //         `/dashboard/dataset/${data.update_dataset?.dataset?.id}/edit/resources`
   //       );
   //     },
   //   }
