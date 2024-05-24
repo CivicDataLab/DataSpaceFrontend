@@ -71,6 +71,25 @@ export const EditResource = ({ reload, data }: any) => {
     }
   );
 
+  const fetchSchema: any = graphql(`
+    query datasetSchema($datasetId: UUID!) {
+      datasetResources(datasetId: $datasetId) {
+        schema {
+          id
+          fieldName
+          format
+          description
+        }
+        id
+      }
+    }
+  `);
+
+  const { data: payload, refetch, isLoading: isPending,} = useQuery<any>(
+    [`fetch_schema_${params.id}`], 
+    () => GraphQL(fetchSchema, { datasetId: params.id })
+  );
+
   const { mutate: transform } = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(createResourceFilesDoc, data),
@@ -361,9 +380,17 @@ export const EditResource = ({ reload, data }: any) => {
           <Text>See Preview</Text>
         </div>
       </div>*/}
-      {resourceId &&
-      data?.find((item: any) => item.id === resourceId).schema.length > 0 ? (
-        <ResourceSchema resourceId={resourceId} data={data} />
+      {resourceId && payload && Object.keys(payload).length > 0 ? (
+        <ResourceSchema
+          resourceId={resourceId}
+          isPending={isPending}
+          refetch={refetch}
+          data={
+            payload?.datasetResources?.filter(
+              (item: any) => item.id === resourceId
+            )[0]?.schema
+          }
+        />
       ) : null}
     </div>
   );

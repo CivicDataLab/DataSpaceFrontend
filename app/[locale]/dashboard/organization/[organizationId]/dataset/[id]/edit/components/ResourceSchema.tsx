@@ -1,48 +1,19 @@
 import React from 'react';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { useMutation } from '@tanstack/react-query';
-import { Button, DataTable, Icon, IconButton, Spinner, Text } from 'opub-ui';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Button, Table, Icon, IconButton, Spinner, Text } from 'opub-ui';
+
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 
-export const ResourceSchema = ({ resourceId, data }: any) => {
-  const table = {
-    columns: [
-      {
-        accessorKey: 'fieldName',
-        header: 'FIELD NAME',
-      },
-      {
-        accessorKey: 'description',
-        header: 'DESCRIPTION',
-      },
-      {
-        accessorKey: 'format',
-        header: 'FORMAT',
-      },
-      {
-        header: 'DELETE',
-        cell: ({ row }: any) => (
-          <IconButton
-            size="medium"
-            icon={Icons.delete}
-            color="interactive"
-            onClick={(e) => console.log(row.original)}
-          >
-            Delete
-          </IconButton>
-        ),
-      },
-    ],
-    rows: data
-      .find((item: any) => item.id === resourceId)
-      .schema.map((item: any) => ({
-        fieldName: item.fieldName,
-        description: item.description,
-        format: item.format,
-      })),
-  };
-
+export const ResourceSchema = ({
+  resourceId,
+  isPending,
+  data,
+  refetch,
+}: any) => {
+  
   const resetSchema: any = graphql(`
     mutation resetFileResourceSchema($resourceId: UUID!) {
       resetFileResourceSchema(resourceId: $resourceId) {
@@ -62,14 +33,39 @@ export const ResourceSchema = ({ resourceId, data }: any) => {
   const { mutate, isLoading } = useMutation(
     (data: { resourceId: string }) => GraphQL(resetSchema, data),
     {
-      onSuccess: (data) => {
-        console.log(data, '-data');
+      onSuccess: () => {
+        refetch();
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
       },
     }
   );
+
+  const generateColumnData = () => {
+    return [
+      {
+        accessorKey: 'fieldName',
+        header: 'FIELD NAME',
+      },
+      {
+        accessorKey: 'description',
+        header: 'DESCRIPTION',
+      },
+      {
+        accessorKey: 'format',
+        header: 'FORMAT',
+      },
+    ];
+  };
+
+  const generateTableData = (data: any[]) => {
+    return data.map((item: any) => ({
+      fieldName: item.fieldName,
+      description: item.description,
+      format: item.format,
+    }));
+  };
 
   const setFields = () => {
     mutate({
@@ -100,17 +96,18 @@ export const ResourceSchema = ({ resourceId, data }: any) => {
         be changed in Access Models.
       </Text>
       <div className="mt-3">
-        {isLoading ? (
+        {isPending || isLoading ? (
           <div className=" mt-8 flex justify-center">
             <Spinner size={30} />
           </div>
-        ) : (
-          <DataTable
-            columns={table.columns}
-            rows={table.rows}
+        ) : data && data.length > 0 ? (
+          <Table
+            columns={generateColumnData()}
+            rows={generateTableData(data)}
             hideFooter={true}
-            defaultRowCount={10}
           />
+        ) : (
+          <div className="flex justify-center mt-8">Click on Reset Fields</div>
         )}
       </div>
     </>
