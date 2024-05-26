@@ -83,6 +83,7 @@ const getAccessModelDetails: any = graphql(`
       }
       id
       name
+      type
       description
       created
       modified
@@ -108,7 +109,8 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   const {
     data: accessModelList,
     isLoading: accessModelListLoading,
-  }: { data: any; isLoading: boolean } = useQuery(
+    refetch: accessModelListRefetch,
+  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`accessModelList_${params.id}`],
     () => GraphQL(accessModelListQuery, { datasetId: params.id })
   );
@@ -153,33 +155,94 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   }, [data, selectedResources]);
 
   useEffect(() => {
-    if (accessModelId) {
+    if (accessModelDetails && accessModelDetails.accessModel && accessModelId) {
+      const { name, description, type, modelResources } =
+        accessModelDetails.accessModel;
       refetch();
+      // Update accessModelData with the received data
       setAccessModelData({
         dataset: params.id,
-        name: accessModelDetails?.accessModel.name,
-        description: accessModelDetails?.accessModel.description,
-        type: accessModelDetails?.accessModel.type,
-        resources: [],
-        accessModelId: accessModelDetails?.accessModel.id,
+        name: name,
+        description: description,
+        type: type,
+        accessModelId: accessModelId,
+        resources: modelResources.map((resource: any) => ({
+          resource: resource.resource.id,
+          fields: resource.fields.map((field: any) => field.id),
+        })),
       });
+
+      // Update selectedResources and selectedFields based on modelResources
+      const selectedResourcesIds = modelResources.map((resource: any) => ({
+        label: resource.resource.name,
+        value: resource.resource.id,
+        schema: resource.fields.map((field: any) => ({
+          label: field.fieldName,
+          value: field.id,
+        })),
+      }));
+
+      setSelectedResources(selectedResourcesIds);
+
+      const selectedFieldsIds = selectedResourcesIds.map((resource: any) => ({
+        label: resource.label,
+        value: resource.value,
+        schema: resource.schema.map((field: any) => ({
+          id: field.id,
+          fieldName: field.fieldName,
+        })),
+      }));
+      setSelectedFields(selectedFieldsIds);
     }
-  }, [accessModelId]);
+  }, [accessModelDetails, accessModelId]);
 
   const [resId, setResId] = useState('');
 
-  const handleAddResource = (resourceId: any) => {
-    setSelectedResources((prevResources) => [...prevResources, resourceId]);
+  const handleAddResource = (resourceDetails: any) => {
+    setSelectedResources(resourceDetails);
     setResId('');
-    setAvailableResources((prevAvailableResources) =>
-      prevAvailableResources.filter((resource) => resource.value !== resourceId)
-    );
-    setSelectedFields((prevFields) => [...prevFields, resourceId]);
+    setAvailableResources(resourceDetails); // Filter out the selected resource
+    setSelectedFields(resourceDetails);
+    const newResources = resourceDetails.map((resource: any) => ({
+      resource: resource.value,
+      fields: resource.schema.map((field: any) => field.id),
+    }));
 
-    // setAccessModelData((prevData) => ({
-    //   ...prevData,
-    //   resources: [...prevData.resources, { id: resourceId }],
-    // }));
+    setAccessModelData((prevData: any) => ({
+      ...prevData,
+      resources: newResources,
+    }));
+    if (resourceDetails.length === 0) {
+      setAccessModelData((prevData: any) => ({
+        ...prevData,
+        resources: [],
+      }));
+    } else {
+      setAccessModelData((prevData: any) => ({
+        ...prevData,
+        resources: [...prevData.resources],
+      }));
+    }
+  };
+
+  const handleRemoveResource = (resourceId: any) => {
+    // Filter out the selected resource from selectedResources
+    setSelectedResources((prevResources) =>
+      prevResources.filter((resource: any) => resource.value !== resourceId)
+    );
+
+    // Filter out the selected fields associated with the removed resource
+    setSelectedFields((prevFields) =>
+      prevFields.filter((field) => field.value.split('.')[0] !== resourceId)
+    );
+
+    // Remove the corresponding resource from accessModelData.resources
+    setAccessModelData((prevData: any) => ({
+      ...prevData,
+      resources: prevData.resources.filter(
+        (resource: any) => resource.resource !== resourceId
+      ),
+    }));
   };
 
   const handleSelectAll = () => {
@@ -196,26 +259,10 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
 
     setAccessModelData((prevData) => ({
       ...prevData,
-      resources: allResources.map((resource: any) => ({ id: resource.value })),
-    }));
-  };
-
-  const handleRemoveResource = (resourceId: any) => {
-    // Filter out the selected resource from selectedResources
-    setSelectedResources((prevResources) =>
-      prevResources.filter((resource: any) => resource.value !== resourceId)
-    );
-
-    // Filter out the selected fields associated with the removed resource
-    setSelectedFields((prevFields) =>
-      prevFields.filter((field) => field.value.split('.')[0] !== resourceId)
-    );
-    // Remove the corresponding resource from accessModelData.resources
-    setAccessModelData((prevData: any) => ({
-      ...prevData,
-      resources: prevData.resources.filter(
-        (resource: any) => resource.id !== resourceId
-      ),
+      resources: allResources.map((resource: any) => ({
+        resource: resource.value,
+        fields: resource.schema.map((option: any) => option.value),
+      })),
     }));
   };
 
@@ -225,6 +272,10 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     {
       onSuccess: () => {
         toast('Access Model Saved');
+        // refetch();
+        // accessModelListRefetch();
+
+        setList(true);
       },
       onError: (err: any) => {
         toast(`Received ${err} during access model saving`);
@@ -307,7 +358,10 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
         </Sheet>
       </div>
       <Divider />
-      {isLoading || editMutationLoading ? (
+      {isLoading ||
+      editMutationLoading ||
+      accessModelDetailsLoading ||
+      accessModelListLoading ? (
         <div className="mt-8 flex justify-center">
           <Spinner />
         </div>
@@ -316,14 +370,14 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
           <div className="text-center">
             <Button
               onClick={() =>
-                console.log({
+                mutate({
                   accessModelInput: {
                     name: accessModelData.name,
                     resources: accessModelData.resources,
                     dataset: accessModelData.dataset,
                     description: accessModelData.description,
                     type: accessModelData.type as AccessTypes,
-                    accessModelId: accessModelId,
+                    accessModelId: accessModelId || null,
                   },
                 })
               }
@@ -354,7 +408,8 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                   { label: 'Private', value: 'PRIVATE' },
                 ]}
                 label={'Permissions'}
-                defaultValue="PUBLIC"
+                defaultValue={'PUBLIC'}
+                value={accessModelData.type}
                 placeholder="Select"
                 onChange={(e) =>
                   setAccessModelData({ ...accessModelData, type: e })
