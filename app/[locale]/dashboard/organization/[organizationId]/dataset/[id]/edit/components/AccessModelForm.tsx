@@ -168,12 +168,36 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
 
   const [resId, setResId] = useState('');
 
-  // Inside handleAddResource function
   const handleAddResource = (resourceId: any) => {
-    setSelectedResources(resourceId);
+    setSelectedResources((prevResources) => [...prevResources, resourceId]);
     setResId('');
-    setAvailableResources(resourceId); // Filter out the selected resource
-    setSelectedFields(resourceId);
+    setAvailableResources((prevAvailableResources) =>
+      prevAvailableResources.filter((resource) => resource.value !== resourceId)
+    );
+    setSelectedFields((prevFields) => [...prevFields, resourceId]);
+
+    // setAccessModelData((prevData) => ({
+    //   ...prevData,
+    //   resources: [...prevData.resources, { id: resourceId }],
+    // }));
+  };
+
+  const handleSelectAll = () => {
+    const allResources =
+      data?.datasetResources.map((resource: any) => ({
+        label: resource.name,
+        value: resource.id,
+        schema: resource.schema,
+      })) || [];
+
+    setSelectedFields(allResources);
+    setSelectedResources(allResources);
+    setShowSelectAll(false);
+
+    setAccessModelData((prevData) => ({
+      ...prevData,
+      resources: allResources.map((resource: any) => ({ id: resource.value })),
+    }));
   };
 
   const handleRemoveResource = (resourceId: any) => {
@@ -193,19 +217,6 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
         (resource: any) => resource.id !== resourceId
       ),
     }));
-  };
-
-  const handleSelectAll = () => {
-    const allResources =
-      data?.datasetResources.map((resource: any) => ({
-        label: resource.name,
-        value: resource.id,
-        schema: resource.schema,
-      })) || [];
-    setSelectedFields(allResources);
-
-    setSelectedResources(allResources);
-    setShowSelectAll(false);
   };
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
@@ -305,7 +316,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
           <div className="text-center">
             <Button
               onClick={() =>
-                mutate({
+                console.log({
                   accessModelInput: {
                     name: accessModelData.name,
                     resources: accessModelData.resources,
