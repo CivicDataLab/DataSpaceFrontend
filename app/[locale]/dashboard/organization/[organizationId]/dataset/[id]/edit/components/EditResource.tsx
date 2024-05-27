@@ -1,12 +1,11 @@
-import React from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   CreateFileResourceInput,
   UpdateFileResourceInput,
 } from '@/gql/generated/graphql';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Button,
   Combobox,
@@ -14,17 +13,16 @@ import {
   Divider,
   DropZone,
   Icon,
-  IconButton,
   Select,
   Text,
   TextField,
-  toast,
+  toast
 } from 'opub-ui';
+import React from 'react';
 
-import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import { GraphQL } from '@/lib/api';
 import { createResourceFilesDoc } from './DistributionList';
-import { ResourceSchema } from './ResourceSchema';
 import { ResourceSchema } from './ResourceSchema';
 
 interface TListItem {
@@ -36,9 +34,8 @@ interface TListItem {
 }
 
 export const EditResource = ({ reload, data }: any) => {
-
   const params = useParams();
-  
+
   const updateResourceDoc: any = graphql(`
     mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {
       updateFileResource(fileResourceInput: $fileResourceInput) {
@@ -73,23 +70,12 @@ export const EditResource = ({ reload, data }: any) => {
     }
   );
 
-  const fetchSchema: any = graphql(`
-    query datasetSchema($datasetId: UUID!) {
-      datasetResources(datasetId: $datasetId) {
-        schema {
-          id
-          fieldName
-          format
-          description
-        }
-        id
-      }
-    }
-  `);
-
-  const { data: payload, refetch, isLoading: isPending,} = useQuery<any>(
-    [`fetch_schema_${params.id}`], 
-    () => GraphQL(fetchSchema, { datasetId: params.id })
+  const {
+    data: payload,
+    refetch,
+    isLoading: isPending,
+  } = useQuery<any>([`fetch_schema_${params.id}`], () =>
+    GraphQL(fetchSchema, { datasetId: params.id })
   );
 
   const fetchSchema: any = graphql(`
@@ -105,11 +91,6 @@ export const EditResource = ({ reload, data }: any) => {
       }
     }
   `);
-
-  const { data: payload, refetch, isLoading: isPending,} = useQuery<any>(
-    [`fetch_schema_${params.id}`], 
-    () => GraphQL(fetchSchema, { datasetId: params.id })
-  );
 
   const { mutate: transform } = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
