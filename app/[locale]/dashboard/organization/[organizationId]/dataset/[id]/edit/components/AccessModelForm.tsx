@@ -323,11 +323,17 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                         resources: [],
                         accessModelId: '',
                       });
+                      setAccessModelId('');
+                      setSelectedResources([]);
+                      setAvailableResources([]);
+                      setSelectedFields([]);
+
                       setIsSheetOpen(false);
                     }}
                   >
                     Add New Access Type
                   </Button>
+
                   <Button kind="tertiary" onClick={() => setIsSheetOpen(false)}>
                     <Icon source={Icons.cross} size={24} />
                   </Button>
