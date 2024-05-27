@@ -116,7 +116,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   );
   const {
     data: accessModelDetails,
-    refetch,
+    refetch: accessModelDetailsRefetch,
     isLoading: accessModelDetailsLoading,
   }: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`accessModelDetails${params.id}`],
@@ -158,7 +158,8 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     if (accessModelDetails && accessModelDetails.accessModel && accessModelId) {
       const { name, description, type, modelResources } =
         accessModelDetails.accessModel;
-      refetch();
+
+      accessModelDetailsRefetch();
       // Update accessModelData with the received data
       setAccessModelData({
         dataset: params.id,
@@ -196,11 +197,8 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     }
   }, [accessModelDetails, accessModelId]);
 
-  const [resId, setResId] = useState('');
-
   const handleAddResource = (resourceDetails: any) => {
     setSelectedResources(resourceDetails);
-    setResId('');
     setAvailableResources(resourceDetails); // Filter out the selected resource
     setSelectedFields(resourceDetails);
     const newResources = resourceDetails.map((resource: any) => ({
@@ -272,10 +270,10 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     {
       onSuccess: () => {
         toast('Access Model Saved');
-        // refetch();
-        // accessModelListRefetch();
+        accessModelDetailsRefetch();
+        accessModelListRefetch();
 
-        setList(true);
+        // setList(true);
       },
       onError: (err: any) => {
         toast(`Received ${err} during access model saving`);
@@ -373,11 +371,11 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                 mutate({
                   accessModelInput: {
                     name: accessModelData.name,
-                    resources: accessModelData.resources,
                     dataset: accessModelData.dataset,
                     description: accessModelData.description,
                     type: accessModelData.type as AccessTypes,
                     accessModelId: accessModelId || null,
+                    resources: accessModelData.resources,
                   },
                 })
               }
