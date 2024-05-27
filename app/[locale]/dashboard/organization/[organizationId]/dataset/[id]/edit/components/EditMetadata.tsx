@@ -105,7 +105,7 @@ export function EditMetadata({ id }: { id: string }) {
   const getMetaDataListQuery: {
     data: any;
     isLoading: boolean;
-    refetch: Function;
+    refetch: any;
   } = useQuery([`metadata_fields_list_${id}`], () =>
     GraphQL(metadataQueryDoc, {
       filters: {
@@ -118,7 +118,7 @@ export function EditMetadata({ id }: { id: string }) {
   const getDatasetMetadata: {
     data: any;
     isLoading: boolean;
-    refetch: Function;
+    refetch: any;
     error: any;
   } = useQuery([`metadata_values_query_${id}`], () =>
     GraphQL(datasetMetadataQueryDoc, { filters: { id: id } })
