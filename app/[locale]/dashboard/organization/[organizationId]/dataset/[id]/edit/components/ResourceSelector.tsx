@@ -119,13 +119,22 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
 
   return (
     <div>
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <Text>{selectedResource.name}</Text>
+        <Button
+          kind="tertiary"
+          size="slim"
+          onClick={() => handleRemoveResource(selectedResource.id)}
+        >
+          <span className="flex flex-col items-center justify-center gap-2">
+            <Icon source={Icons.delete} size={18} color="highlight" />
+          </span>
+        </Button>
       </div>
-      <div className="flex flex-wrap justify-start gap-6 px-8">
-        <div className="flex w-full flex-col gap-4 2xl:w-3/5">
+      <div className="flex flex-wrap gap-6 px-8">
+        <div className="flex w-3/5 flex-col gap-4">
           <div className="relative mr-4 flex items-center">
-            <div className="w-full">
+            <div>
               <Combobox
                 displaySelected
                 label="Select Fields of the Resource"
@@ -147,7 +156,7 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
             </div>
           </div>
         </div>
-        <div className="flex gap-6">
+        <div className="flex w-fit gap-6">
           <hr className="m-0" />
           <div className="flex w-fit flex-col items-center justify-center gap-1">
             <div className="flex w-full items-center justify-between gap-2">
@@ -160,22 +169,12 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
                 Select All
               </Checkbox>
             </div>
-            <div className={cn('flex flex-wrap gap-6', styles.accessModelEdit)}>
+            <div className={cn('flex gap-6', styles.accessModelEdit)}>
               <TextField type="number" label="From Row Number" name="fromRow" />
               <TextField type="number" label="To Row Number" name="toRow" />
             </div>
           </div>
-          <hr className="m-0" />
         </div>
-        <Button
-          className="my-auto h-fit w-fit items-center"
-          kind="tertiary"
-          onClick={() => handleRemoveResource(selectedResource.id)}
-        >
-          <span className="flex flex-col items-center justify-center gap-2">
-            <Icon source={Icons.delete} size={24} /> Remove <br /> Resource
-          </span>
-        </Button>
       </div>
     </div>
   );
