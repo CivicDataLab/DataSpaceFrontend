@@ -29,7 +29,7 @@ import { EditDistribution } from './EditDistribution';
 import { EditResource } from './EditResource';
 import { ResourceListView } from './ResourceListView';
 
-export const getReourceDoc = graphql(`
+export const getReourceDoc: any = graphql(`
   query getResources($filters: DatasetFilter) {
     datasets(filters: $filters) {
       resources {
@@ -74,7 +74,11 @@ export function DistributionList({
 }) {
   const params = useParams();
 
-  const { data, isLoading, refetch } = useQuery(
+  const {
+    data,
+    isLoading,
+    refetch,
+  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_resources_${params.id}`],
     () => GraphQL(getReourceDoc, { filters: { id: params.id } }),
     {
