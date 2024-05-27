@@ -1,12 +1,11 @@
-import React from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   CreateFileResourceInput,
   UpdateFileResourceInput,
 } from '@/gql/generated/graphql';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Button,
   Combobox,
@@ -14,16 +13,17 @@ import {
   Divider,
   DropZone,
   Icon,
-  IconButton,
   Select,
   Text,
   TextField,
-  toast,
+  toast
 } from 'opub-ui';
+import React from 'react';
 
-import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import { GraphQL } from '@/lib/api';
 import { createResourceFilesDoc } from './DistributionList';
+import { ResourceSchema } from './ResourceSchema';
 
 interface TListItem {
   label: string;
@@ -34,6 +34,8 @@ interface TListItem {
 }
 
 export const EditResource = ({ reload, data }: any) => {
+  const params = useParams();
+
   const updateResourceDoc: any = graphql(`
     mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {
       updateFileResource(fileResourceInput: $fileResourceInput) {
@@ -68,6 +70,28 @@ export const EditResource = ({ reload, data }: any) => {
     }
   );
 
+  const {
+    data: payload,
+    refetch,
+    isLoading: isPending,
+  } = useQuery<any>([`fetch_schema_${params.id}`], () =>
+    GraphQL(fetchSchema, { datasetId: params.id })
+  );
+
+  const fetchSchema: any = graphql(`
+    query datasetSchema($datasetId: UUID!) {
+      datasetResources(datasetId: $datasetId) {
+        schema {
+          id
+          fieldName
+          format
+          description
+        }
+        id
+      }
+    }
+  `);
+
   const { mutate: transform } = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(createResourceFilesDoc, data),
@@ -88,61 +112,6 @@ export const EditResource = ({ reload, data }: any) => {
     }
   );
 
-  const table = {
-    columns: [
-      {
-        accessorKey: 'field_key',
-        header: 'FIELD KEY',
-      },
-      {
-        accessorKey: 'display_name',
-        header: 'DISPLAY NAME',
-      },
-      {
-        accessorKey: 'description',
-        header: 'DESCRIPTION',
-      },
-      {
-        accessorKey: 'format',
-        header: 'FORMAT',
-      },
-      {
-        header: 'DELETE',
-        cell: ({ row }: any) => (
-          <IconButton
-            size="medium"
-            icon={Icons.delete}
-            color="interactive"
-            onClick={(e) => console.log(row.original)}
-          >
-            Delete
-          </IconButton>
-        ),
-      },
-    ],
-    rows: [
-      {
-        field_key: 'date',
-        display_name: 'Date',
-        description: 'Date on which measurements are taken',
-        format: 'Date',
-      },
-      {
-        field_key: 'date',
-        display_name: 'Date',
-        description: 'Date on which measurements are taken',
-        format: 'Date',
-      },
-      {
-        field_key: 'date',
-        display_name: 'Date',
-        description: 'Date on which measurements are taken',
-        format: 'Date',
-      },
-    ],
-  };
-
-  const params = useParams();
   const router = useRouter();
 
   const ResourceList: TListItem[] =
@@ -412,32 +381,19 @@ export const EditResource = ({ reload, data }: any) => {
         <div className="flex w-1/6 justify-center ">
           <Text>See Preview</Text>
         </div>
-      </div>
-      <div className="flex justify-between">
-        <Text>Fields in the Resource</Text>
-        <div className="flex">
-          <Link className="mx-4 flex items-center gap-1" href="/">
-            <Text>Refetch Fields</Text>{' '}
-            <Icon source={Icons.info} color="interactive" />
-          </Link>
-          <Link className="flex items-center gap-1" href="/">
-            <Text> Reset Fields </Text>{' '}
-            <Icon source={Icons.info} color="interactive" />
-          </Link>
-        </div>
-      </div>
-      <Text variant="headingXs" as="span" fontWeight="regular">
-        The Field settings apply to the Resource on a master level and can not
-        be changed in Access Models.
-      </Text>
-      <div className="mt-3">
-        <DataTable
-          columns={table.columns}
-          rows={table.rows}
-          hideFooter={true}
-          defaultRowCount={10}
+      </div>*/}
+      {resourceId && payload && Object.keys(payload).length > 0 ? (
+        <ResourceSchema
+          resourceId={resourceId}
+          isPending={isPending}
+          refetch={refetch}
+          data={
+            payload?.datasetResources?.filter(
+              (item: any) => item.id === resourceId
+            )[0]?.schema
+          }
         />
-      </div> */}
+      ) : null}
     </div>
   );
 };

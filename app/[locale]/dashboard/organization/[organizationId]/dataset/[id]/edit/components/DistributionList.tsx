@@ -29,13 +29,19 @@ import { EditDistribution } from './EditDistribution';
 import { EditResource } from './EditResource';
 import { ResourceListView } from './ResourceListView';
 
-export const getReourceDoc = graphql(`
+export const getReourceDoc: any = graphql(`
   query getResources($filters: DatasetFilter) {
     datasets(filters: $filters) {
       resources {
         id
         dataset {
           pk
+        }
+        schema {
+          id
+          fieldName
+          format
+          description
         }
         type
         name
@@ -68,7 +74,11 @@ export function DistributionList({
 }) {
   const params = useParams();
 
-  const { data, isLoading, refetch } = useQuery(
+  const {
+    data,
+    isLoading,
+    refetch,
+  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_resources_${params.id}`],
     () => GraphQL(getReourceDoc, { filters: { id: params.id } }),
     {
@@ -190,6 +200,7 @@ const NoList = ({
   return (
     <>
       <DropZone
+        accept=".json, .csv, application/json, text/csv"
         name="file_details"
         label="Upload"
         allowMultiple={true}
