@@ -1,13 +1,15 @@
 'use client';
 
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
+  TypeCategory,
+  TypeDataset,
   TypeDatasetMetadata,
   TypeMetadata,
-  UpdateMetadataInput
+  UpdateMetadataInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
 import {
   Button,
   Combobox,
@@ -19,8 +21,17 @@ import {
   toast,
 } from 'opub-ui';
 
-import { Loading } from '@/components/loading';
 import { GraphQL } from '@/lib/api';
+import { Loading } from '@/components/loading';
+
+const categoriesListQueryDoc: any = graphql(`
+  query CategoryList {
+    categories {
+      id
+      name
+    }
+  }
+`);
 
 const datasetMetadataQueryDoc: any = graphql(`
   query MetadataValues($filters: DatasetFilter) {
@@ -28,6 +39,10 @@ const datasetMetadataQueryDoc: any = graphql(`
       title
       id
       description
+      categories {
+        id
+        name
+      }
       metadata {
         metadataItem {
           id
@@ -76,46 +91,44 @@ const updateMetadataMutationDoc: any = graphql(`
   }
 `);
 
-export function EditMetadata({
-  id,
-  // defaultValues,
-  // description,
-}: {
-  id: string;
-  // defaultValues: any;
-  // description: string;
-}) {
-  // const submitRef = React.useRef<HTMLButtonElement>(null);
-
+export function EditMetadata({ id }: { id: string }) {
   const router = useRouter();
   const params = useParams();
 
   const queryClient = useQueryClient();
 
-  const getMetaDataListQuery: { data: any; isLoading: boolean; refetch: any } =
-    useQuery([`metadata_fields_list_${id}`], () =>
-      GraphQL(metadataQueryDoc, {
-        filters: {
-          model: 'DATASET',
-          enabled: true,
-        },
-      })
+  const getCategoriesList: { data: any; isLoading: boolean; error: any } =
+    useQuery([`categories_list_query`], () =>
+      GraphQL(categoriesListQueryDoc, [])
     );
 
-  const getDatasetMetadata: { data: any; isLoading: boolean; refetch: any } =
-    useQuery([`metadata_values_query_${id}`], () =>
-      GraphQL(datasetMetadataQueryDoc, { filters: { id: id } })
-    );
+  const getMetaDataListQuery: {
+    data: any;
+    isLoading: boolean;
+    refetch: any;
+  } = useQuery([`metadata_fields_list_${id}`], () =>
+    GraphQL(metadataQueryDoc, {
+      filters: {
+        model: 'DATASET',
+        enabled: true,
+      },
+    })
+  );
+
+  const getDatasetMetadata: {
+    data: any;
+    isLoading: boolean;
+    refetch: any;
+    error: any;
+  } = useQuery([`metadata_values_query_${id}`], () =>
+    GraphQL(datasetMetadataQueryDoc, { filters: { id: id } })
+  );
 
   const updateMetadataMutation = useMutation(
     (data: { UpdateMetadataInput: UpdateMetadataInput }) =>
       GraphQL(updateMetadataMutationDoc, data),
     {
       onSuccess: (data: any) => {
-        // queryClient.invalidateQueries({
-        //   queryKey: [`create_dataset_${'52'}`],
-        // });
-
         toast('Details updated successfully!');
 
         queryClient.invalidateQueries({
@@ -138,14 +151,27 @@ export function EditMetadata({
     }
   );
 
-  const defaultValuesPrepFn = (metadataArray: Array<TypeDatasetMetadata>) => {
+  const defaultValuesPrepFn = (dataset: TypeDataset) => {
+    // Function to set default values for the form
+
     let defaultVal: {
-      [key: string]: string | number | undefined;
+      [key: string]: any;
     } = {};
 
-    metadataArray?.map((field) => {
+    dataset.metadata?.map((field) => {
       defaultVal[field.metadataItem.id] = field.value;
     });
+
+    defaultVal['description'] = dataset.description || '';
+
+    defaultVal['categories'] = dataset.categories?.map(
+      (category: TypeCategory) => {
+        return {
+          label: category.name,
+          value: category.id,
+        };
+      }
+    );
 
     return defaultVal;
   };
@@ -161,7 +187,7 @@ export function EditMetadata({
                 ...Object.keys(values)
                   .filter(
                     (valueItem) =>
-                      valueItem !== 'description' && valueItem !== 'tags'
+                      !['categories', 'description', 'tags'].includes(valueItem)
                   )
                   .map((key) => {
                     return {
@@ -172,6 +198,8 @@ export function EditMetadata({
               ],
               description: values.description || '',
               tags: values.tags || [],
+              categories:
+                values.categories?.map((item: any) => item.value) || [],
             },
           });
         }}
@@ -181,26 +209,44 @@ export function EditMetadata({
             keepDirtyValues: true,
           },
           defaultValues: defaultValuesPrepFn(
-            getDatasetMetadata?.data?.datasets[0]?.metadata
+            getDatasetMetadata.isLoading || getDatasetMetadata.error
+              ? {}
+              : getDatasetMetadata?.data?.datasets[0]
           ),
         }}
       >
         <>
           <div className="pt-3">
             <FormLayout>
-              <Input
-                key="description"
-                multiline
-                name="description"
-                label={'Description'}
-                defaultValue={getDatasetMetadata?.data?.datasets[0].description}
-              />
+              <div className="w-full py-4 pr-4">
+                <Input
+                  key="description"
+                  multiline
+                  name="description"
+                  label={'Description'}
+                />
+              </div>
 
               <div className="flex flex-wrap">
                 <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
                   <Combobox name={'tags'} list={[]} label={'Tags'} />
                 </div>
-                <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"></div>
+                <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
+                  <Combobox
+                    displaySelected
+                    label="Categories"
+                    list={
+                      getCategoriesList.isLoading || getCategoriesList.error
+                        ? []
+                        : getCategoriesList.data?.categories?.map(
+                            (item: TypeCategory) => {
+                              return { label: item.name, value: item.id };
+                            }
+                          ) || []
+                    }
+                    name="categories"
+                  />
+                </div>
               </div>
 
               {getMetaDataListQuery.isLoading ? (

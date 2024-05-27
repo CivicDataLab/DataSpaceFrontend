@@ -22,6 +22,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import { Loading } from '@/components/loading';
 
 const datasetQueryDoc: any = graphql(`
   query datasetTitleQuery($filters: DatasetFilter) {
@@ -110,13 +111,17 @@ export function EditLayout({ children, params }: LayoutProps) {
 
   return (
     <div className="mt-8 flex h-full flex-col">
-      <Header
-        dataset={getDatasetTitleRes?.data?.datasets[0]}
-        orgId={orgParams.organizationId}
-        saveTitle={updateDatasetTitleMutation.mutate}
-        editMode={editMode}
-        setEditMode={setEditMode}
-      />
+      {getDatasetTitleRes.isLoading ? (
+        <Loading />
+      ) : (
+        <Header
+          dataset={getDatasetTitleRes?.data?.datasets[0]}
+          orgId={orgParams.organizationId}
+          saveTitle={updateDatasetTitleMutation.mutate}
+          editMode={editMode}
+          setEditMode={setEditMode}
+        />
+      )}
       <div className="lg:flex-column mt-4 flex flex-col">
         <div>
           <Navigation
@@ -136,23 +141,11 @@ export function EditLayout({ children, params }: LayoutProps) {
 const Header = ({ dataset, orgId, saveTitle, editMode, setEditMode }: any) => {
   return (
     <>
-      <div className="mb-3 flex justify-between">
+      <div className="mb-3 flex flex-wrap-reverse items-center justify-between gap-4 md:gap-4 lg:flex-nowrap lg:gap-12">
         {!editMode ? (
           <div className="flex items-center gap-4">
             <Text variant="headingSm" color="subdued">
-              DATASET NAME :
-              {dataset?.title !== '' ? (
-                <b>{dataset?.title}</b>
-              ) : (
-                <b>
-                  Untitled -{' '}
-                  {new Date(dataset?.created).toLocaleDateString('en-IN', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </b>
-              )}
+              DATASET NAME : <b>{dataset?.title}</b>
             </Text>
             <Button
               kind="tertiary"
@@ -165,48 +158,55 @@ const Header = ({ dataset, orgId, saveTitle, editMode, setEditMode }: any) => {
             </Button>
           </div>
         ) : (
-          <Form
-            onSubmit={(values: any) =>
-              saveTitle({
-                updateDatasetInput: {
-                  dataset: dataset.id,
-                  title: values.title,
-                  description: '',
-                  tags: [],
-                },
-              })
-            }
-          >
-            <FormLayout>
-              <div className="flex items-center gap-4">
-                <Text variant="headingSm" color="subdued">
-                  DATASET NAME :
-                </Text>
-                <Input
-                  name="title"
-                  labelHidden
-                  label="Datset Title"
-                  defaultValue={
-                    dataset?.title !== ''
-                      ? dataset?.title
-                      : `Untitled - ${new Date(
-                          dataset?.created
-                        ).toLocaleDateString('en-IN', {
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}`
-                  }
-                />
-                <Button submit kind="primary">
-                  Save
-                </Button>
-                <Button kind="tertiary" onClick={() => setEditMode(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </FormLayout>
-          </Form>
+          <div className="flex-grow">
+            <Form
+              onSubmit={(values: any) =>
+                saveTitle({
+                  updateDatasetInput: {
+                    dataset: dataset.id,
+                    title: values.title,
+                    description: '',
+                    tags: [],
+                  },
+                })
+              }
+            >
+              <FormLayout>
+                <div className="flex flex-wrap items-center gap-4">
+                  <Text variant="headingSm" color="subdued">
+                    DATASET NAME :
+                  </Text>
+                  <div className="flex-grow">
+                    <Input
+                      name="title"
+                      labelHidden
+                      label="Datset Title"
+                      defaultValue={
+                        dataset?.title !== ''
+                          ? dataset?.title
+                          : `Untitled - ${new Date(
+                              dataset?.created
+                            ).toLocaleDateString('en-IN', {
+                              month: 'long',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}`
+                      }
+                    />
+                  </div>
+                  <div className="flex flex-row gap-4">
+                    <Button submit kind="primary">
+                      Save
+                    </Button>
+
+                    <Button kind="tertiary" onClick={() => setEditMode(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </FormLayout>
+            </Form>
+          </div>
         )}
 
         <Link href={`/dashboard/organization/${orgId}/dataset`}>
