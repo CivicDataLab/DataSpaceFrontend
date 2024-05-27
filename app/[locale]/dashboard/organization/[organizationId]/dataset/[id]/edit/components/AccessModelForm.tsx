@@ -268,10 +268,11 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     (data: { accessModelInput: EditAccessModelInput }) =>
       GraphQL(editaccessModel, data),
     {
-      onSuccess: () => {
+      onSuccess: (res: any) => {
         toast('Access Model Saved');
         accessModelDetailsRefetch();
         accessModelListRefetch();
+        setAccessModelId(res?.editAccessModel?.id);
 
         // setList(true);
       },
