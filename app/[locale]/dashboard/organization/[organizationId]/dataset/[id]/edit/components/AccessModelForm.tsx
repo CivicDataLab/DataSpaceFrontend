@@ -169,7 +169,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
         accessModelId: accessModelId,
         resources: modelResources.map((resource: any) => ({
           resource: resource.resource.id,
-          fields: resource.fields.map((field: any) => field.id),
+          fields: resource.fields.map((field: any) => +field.id),
         })),
       });
 
