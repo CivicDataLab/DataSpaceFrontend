@@ -460,10 +460,11 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
           <div className="flex items-end gap-6">
             <div className={cn(' w-3/4', styles.combobox)}>
               <Combobox
-                displaySelected
+                // displaySelected
                 label={'Select Fields of the Resource'}
                 list={availableResources}
                 selectedValue={selectedFields}
+                placeholder={`${selectedResources.length} resources selected`}
                 name={''}
                 helpText={
                   'Only Resources added will be part of this Access Type. After adding select the Fields and Rows to be included'
