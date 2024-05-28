@@ -257,13 +257,15 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
 
     handleSave({ ...accessModelData, resources: updatedResources });
   };
-
   const handleSelectAll = () => {
     const allResources =
       data?.datasetResources.map((resource: any) => ({
         label: resource.name,
         value: resource.id,
-        schema: resource.schema,
+        schema: resource.schema.map((field: any) => ({
+          label: field.fieldName,
+          value: field.id.toString(), // Ensure ID is a string for Combobox
+        })),
       })) || [];
 
     setSelectedFields(allResources);
@@ -272,15 +274,16 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
 
     const updatedResources = allResources.map((resource: any) => ({
       resource: resource.value,
-      fields: resource.schema.map((option: any) => option.value),
+      fields: resource.schema.map((option: any) => parseInt(option.value, 10)), // Convert to integer
     }));
 
-    setAccessModelData((prevData) => ({
-      ...prevData,
+    const updatedData = {
+      ...accessModelData,
       resources: updatedResources,
-    }));
+    };
 
-    handleSave({ ...accessModelData, resources: updatedResources });
+    setAccessModelData(updatedData);
+    handleSave(updatedData);
   };
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
