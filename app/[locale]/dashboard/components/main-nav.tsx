@@ -124,6 +124,19 @@ export function MainNav({ hideSearch = false }) {
               </Text>
             </Link>
           </div>
+
+          <div className="hidden min-w-[102px] lg:block">
+            <Link href={'/categories'}>
+              <Text
+                variant="headingSm"
+                as="h1"
+                className=" text-surfaceDefault"
+              >
+                Categories
+              </Text>
+            </Link>
+          </div>
+
           {status === 'loading' ? (
             <div className="min-w-[112px]" />
           ) : (

@@ -22,7 +22,7 @@ import React from 'react';
 
 import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
-import { createResourceFilesDoc } from './DistributionList';
+import { createResourceFilesDoc } from './ResourceDropzone';
 import { ResourceSchema } from './ResourceSchema';
 
 interface TListItem {
