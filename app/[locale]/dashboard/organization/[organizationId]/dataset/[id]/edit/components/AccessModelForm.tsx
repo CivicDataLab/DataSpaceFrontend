@@ -269,7 +269,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
       GraphQL(editaccessModel, data),
     {
       onSuccess: (res: any) => {
-        toast('Access Model Saved');
+        // toast('Access Model Saved');
         accessModelDetailsRefetch();
         accessModelListRefetch();
         setAccessModelId(res?.editAccessModel?.id);
@@ -283,6 +283,19 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   );
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  const handleSave = (updatedData: any) => {
+    mutate({
+      accessModelInput: {
+        name: updatedData.name,
+        dataset: updatedData.dataset,
+        description: updatedData.description,
+        type: updatedData.type as AccessTypes,
+        accessModelId: accessModelId || null,
+        resources: updatedData.resources,
+      },
+    });
+  };
 
   return (
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
@@ -363,16 +376,13 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
         </Sheet>
       </div>
       <Divider />
-      {isLoading ||
-      editMutationLoading ||
-      accessModelDetailsLoading ||
-      accessModelListLoading ? (
+      {isLoading ? (
         <div className="mt-8 flex justify-center">
           <Spinner />
         </div>
       ) : (
         <div className="mt-6 flex flex-col gap-8">
-          <div className="text-center">
+          {/* <div className="text-center">
             <Button
               onClick={() =>
                 mutate({
@@ -389,6 +399,14 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
             >
               Save Access Type
             </Button>
+          </div> */}
+          <div className="flex justify-end">
+            <Text>Auto Save </Text>
+            {editMutationLoading ? (
+              <Icon source={Icons.loader} />
+            ) : (
+              <Icon source={Icons.checkmark} />
+            )}
           </div>
           <div className="flex flex-col gap-6">
             <div className="flex  gap-6">
@@ -402,6 +420,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                   name="name"
                   required
                   helpText="To know about best practices for naming Resources go to our User Guide"
+                  onBlur={() => handleSave(accessModelData)}
                 />
               </div>
               <Select
@@ -419,6 +438,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                 onChange={(e) =>
                   setAccessModelData({ ...accessModelData, type: e })
                 }
+                onBlur={() => handleSave(accessModelData)}
               />
             </div>
             <TextField
@@ -432,6 +452,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
               label="Description"
               name="description"
               multiline={4}
+              onBlur={() => handleSave(accessModelData)}
             />
           </div>
 

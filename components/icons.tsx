@@ -8,6 +8,7 @@ import {
   IconBrandGithubFilled,
   IconBrandLinkedin,
   IconBrandTwitterFilled,
+  IconCheck,
   IconCircleCheckFilled,
   IconCloudUpload,
   IconDatabase,
@@ -22,6 +23,7 @@ import {
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
   IconLink,
+  IconLoader,
   IconMenu2,
   IconPencil,
   IconPlus,
@@ -78,4 +80,6 @@ export const Icons: {
   github: IconBrandGithubFilled,
   download: IconDownload,
   alert: IconAlertCircleFilled,
+  checkmark: IconCheck,
+  loader: IconLoader,
 };
