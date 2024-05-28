@@ -41,7 +41,7 @@ const datasetResourcesQuery: any = graphql(`
   }
 `);
 
-const accessModelListQuery = graphql(`
+const accessModelListQuery: any = graphql(`
   query accessModelResources($datasetId: UUID!) {
     accessModelResources(datasetId: $datasetId) {
       id
