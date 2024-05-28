@@ -89,5 +89,4 @@ export const Icons: {
   loader: IconLoader,
   userList: IconUsers,
   userSettings: IconUserCog,
-
 };
