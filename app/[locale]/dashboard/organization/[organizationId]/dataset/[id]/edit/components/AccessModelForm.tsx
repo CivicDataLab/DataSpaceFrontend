@@ -17,7 +17,9 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import styles from '../edit.module.scss';
 import ResourceSelector from './ResourceSelector';
 
 interface AccessModelProps {
@@ -131,6 +133,9 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     resources: [],
     accessModelId: '',
   });
+  const [previousAccessModelData, setPreviousAccessModelData] =
+    useState(accessModelData);
+
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
   const [showSelectAll, setShowSelectAll] = useState(false);
 
@@ -161,7 +166,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
 
       accessModelDetailsRefetch();
       // Update accessModelData with the received data
-      setAccessModelData({
+      const newData = {
         dataset: params.id,
         name: name,
         description: description,
@@ -171,7 +176,10 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
           resource: resource.resource.id,
           fields: resource.fields.map((field: any) => +field.id),
         })),
-      });
+      };
+
+      setAccessModelData(newData);
+      setPreviousAccessModelData(newData);
 
       // Update selectedResources and selectedFields based on modelResources
       const selectedResourcesIds = modelResources.map((resource: any) => ({
@@ -203,13 +211,14 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     setSelectedFields(resourceDetails);
     const newResources = resourceDetails.map((resource: any) => ({
       resource: resource.value,
-      fields: resource.schema.map((field: any) => field.id),
+      fields: resource.schema.map((field: any) => +field.id),
     }));
 
     setAccessModelData((prevData: any) => ({
       ...prevData,
       resources: newResources,
     }));
+
     if (resourceDetails.length === 0) {
       setAccessModelData((prevData: any) => ({
         ...prevData,
@@ -221,6 +230,8 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
         resources: [...prevData.resources],
       }));
     }
+
+    handleSave({ ...accessModelData, resources: newResources });
   };
 
   const handleRemoveResource = (resourceId: any) => {
@@ -235,12 +246,16 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     );
 
     // Remove the corresponding resource from accessModelData.resources
+    const updatedResources = accessModelData.resources.filter(
+      (resource: any) => resource.resource !== resourceId
+    );
+
     setAccessModelData((prevData: any) => ({
       ...prevData,
-      resources: prevData.resources.filter(
-        (resource: any) => resource.resource !== resourceId
-      ),
+      resources: updatedResources,
     }));
+
+    handleSave({ ...accessModelData, resources: updatedResources });
   };
 
   const handleSelectAll = () => {
@@ -255,13 +270,17 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     setSelectedResources(allResources);
     setShowSelectAll(false);
 
+    const updatedResources = allResources.map((resource: any) => ({
+      resource: resource.value,
+      fields: resource.schema.map((option: any) => option.value),
+    }));
+
     setAccessModelData((prevData) => ({
       ...prevData,
-      resources: allResources.map((resource: any) => ({
-        resource: resource.value,
-        fields: resource.schema.map((option: any) => option.value),
-      })),
+      resources: updatedResources,
     }));
+
+    handleSave({ ...accessModelData, resources: updatedResources });
   };
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
@@ -269,12 +288,11 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
       GraphQL(editaccessModel, data),
     {
       onSuccess: (res: any) => {
-        toast('Access Model Saved');
+        // toast('Access Model Saved');
         accessModelDetailsRefetch();
         accessModelListRefetch();
         setAccessModelId(res?.editAccessModel?.id);
-
-        // setList(true);
+        setPreviousAccessModelData(accessModelData);
       },
       onError: (err: any) => {
         toast(`Received ${err} during access model saving`);
@@ -283,6 +301,28 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   );
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  const handleSave = (updatedData: any) => {
+    if (
+      JSON.stringify(updatedData) !== JSON.stringify(previousAccessModelData)
+    ) {
+      mutate({
+        accessModelInput: {
+          name: updatedData.name,
+          dataset: params.id,
+          description: updatedData.description,
+          type: updatedData.type as AccessTypes,
+          resources: updatedData.resources,
+          accessModelId: accessModelId || null,
+        },
+      });
+    }
+  };
+
+  const handleChange = (field: string, value: any) => {
+    const updatedData = { ...accessModelData, [field]: value };
+    setAccessModelData(updatedData);
+  };
 
   return (
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
@@ -343,11 +383,12 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                 (item: any, index: any) => (
                   <div
                     key={index}
-                    className="  rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6  py-3  "
+                    className={`rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6 py-3 ${accessModelId === item.id ? ' bg-baseGraySlateSolid5' : ''}`}
                   >
                     <Button
                       kind={'tertiary'}
                       className="flex w-full justify-start"
+                      disabled={accessModelId === item.id}
                       onClick={() => {
                         setAccessModelId(item.id);
                         setIsSheetOpen(false);
@@ -363,41 +404,27 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
         </Sheet>
       </div>
       <Divider />
-      {isLoading ||
-      editMutationLoading ||
-      accessModelDetailsLoading ||
-      accessModelListLoading ? (
+      {isLoading ? (
         <div className="mt-8 flex justify-center">
           <Spinner />
         </div>
       ) : (
         <div className="mt-6 flex flex-col gap-8">
-          <div className="text-center">
-            <Button
-              onClick={() =>
-                mutate({
-                  accessModelInput: {
-                    name: accessModelData.name,
-                    dataset: accessModelData.dataset,
-                    description: accessModelData.description,
-                    type: accessModelData.type as AccessTypes,
-                    accessModelId: accessModelId || null,
-                    resources: accessModelData.resources,
-                  },
-                })
-              }
-            >
-              Save Access Type
-            </Button>
+          <div className="flex justify-end gap-2">
+            <Text color="highlight">Auto Save </Text>
+            {editMutationLoading ? (
+              <Spinner />
+            ) : (
+              <Icon source={Icons.checkmark} />
+            )}
           </div>
           <div className="flex flex-col gap-6">
             <div className="flex  gap-6">
               <div className=" w-4/5">
                 <TextField
                   value={accessModelData.name}
-                  onChange={(e) =>
-                    setAccessModelData({ ...accessModelData, name: e })
-                  }
+                  onChange={(e) => handleChange('name', e)}
+                  onBlur={() => handleSave(accessModelData)}
                   label="Access Type Name"
                   name="name"
                   required
@@ -416,19 +443,14 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                 defaultValue={'PUBLIC'}
                 value={accessModelData.type}
                 placeholder="Select"
-                onChange={(e) =>
-                  setAccessModelData({ ...accessModelData, type: e })
-                }
+                onChange={(e) => handleChange('type', e)}
+                onBlur={() => handleSave(accessModelData)}
               />
             </div>
             <TextField
               value={accessModelData.description}
-              onChange={(e) =>
-                setAccessModelData({
-                  ...accessModelData,
-                  description: e,
-                })
-              }
+              onChange={(e) => handleChange('description', e)}
+              onBlur={() => handleSave(accessModelData)}
               label="Description"
               name="description"
               multiline={4}
@@ -436,7 +458,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
           </div>
 
           <div className="flex items-end gap-6">
-            <div className="w-3/4">
+            <div className={cn(' w-3/4', styles.combobox)}>
               <Combobox
                 displaySelected
                 label={'Select Fields of the Resource'}
@@ -479,6 +501,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                 handleRemoveResource={handleRemoveResource}
                 accessModelData={accessModelData}
                 setAccessModelData={setAccessModelData}
+                handleSave={handleSave}
               />
             );
           })}

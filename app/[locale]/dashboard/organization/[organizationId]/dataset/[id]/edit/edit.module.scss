@@ -9,3 +9,9 @@
     width: 140px;
   }
 }
+
+.combobox {
+  [role='presentation'] {
+    z-index: 1000 !important;
+  }
+}

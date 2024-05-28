@@ -10,6 +10,7 @@ interface ResourceSelectorProps {
   handleRemoveResource: (resourceId: string) => void;
   accessModelData: any;
   setAccessModelData: (data: any) => void;
+  handleSave: (updatedData: any) => void;
 }
 
 const ResourceSelector: React.FC<ResourceSelectorProps> = ({
@@ -17,6 +18,7 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
   handleRemoveResource,
   accessModelData,
   setAccessModelData,
+  handleSave,
 }) => {
   const [selectAllFields, setSelectAllFields] = useState(true);
   const [options, setOptions] = useState<{ label: string; value: string }[]>(
@@ -57,10 +59,10 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
       );
     } else if (selectAllFields) {
       setSelectedFields(initialOptions);
-      setAccessModelData((prevData: any) => ({
-        ...prevData,
+      const updatedData = {
+        ...accessModelData,
         resources: [
-          ...prevData.resources.filter(
+          ...accessModelData.resources.filter(
             (resource: any) => resource.resource !== selectedResource.id
           ),
           {
@@ -70,9 +72,17 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
             ), // Convert to integer
           },
         ],
-      }));
+      };
+      setAccessModelData(updatedData);
+      handleSave(updatedData);
     }
-  }, [selectedResource, accessModelData, selectAllFields]);
+  }, [
+    selectedResource,
+    accessModelData,
+    selectAllFields,
+    setAccessModelData,
+    handleSave,
+  ]);
 
   const handleFieldSelection = (selectedOptions: any) => {
     const updatedFields = selectedOptions.map((option: any) => ({
@@ -82,10 +92,10 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
 
     setSelectedFields(updatedFields);
 
-    setAccessModelData((prevData: any) => ({
-      ...prevData,
+    const updatedData = {
+      ...accessModelData,
       resources: [
-        ...prevData.resources.filter(
+        ...accessModelData.resources.filter(
           (resource: any) => resource.resource !== selectedResource.id
         ),
         {
@@ -93,7 +103,10 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
           fields: updatedFields.map((field: any) => parseInt(field.value, 10)), // Convert to integer
         },
       ],
-    }));
+    };
+
+    setAccessModelData(updatedData);
+    handleSave(updatedData);
 
     setSelectAllFields(updatedFields.length === options.length);
   };
@@ -103,10 +116,10 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
     setSelectAllFields(!selectAllFields);
     setSelectedFields(updatedFields);
 
-    setAccessModelData((prevData: any) => ({
-      ...prevData,
+    const updatedData = {
+      ...accessModelData,
       resources: [
-        ...prevData.resources.filter(
+        ...accessModelData.resources.filter(
           (resource: any) => resource.resource !== selectedResource.id
         ),
         {
@@ -114,7 +127,10 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
           fields: updatedFields.map((field: any) => parseInt(field.value, 10)), // Convert to integer
         },
       ],
-    }));
+    };
+
+    setAccessModelData(updatedData);
+    handleSave(updatedData);
   };
 
   return (
@@ -132,9 +148,9 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
         </Button>
       </div>
       <div className="flex flex-wrap gap-6 px-8">
-        <div className="flex w-3/5 flex-col gap-4">
+        <div className="flex w-full flex-col gap-4 2xl:w-3/5">
           <div className="relative mr-4 flex items-center">
-            <div>
+            <div className={cn('mt-1 w-full', styles.combobox)}>
               <Combobox
                 displaySelected
                 label="Select Fields of the Resource"
@@ -145,7 +161,7 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
                 onChange={(e: any) => handleFieldSelection(e)}
               />
             </div>
-            <div className="absolute right-0" style={{ top: '-4px' }}>
+            <div className="absolute right-0" style={{ top: '1px' }}>
               <Checkbox
                 name="Select All Fields"
                 checked={selectAllFields}
