@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { AccessModelInput, AccessTypes } from '@/gql/generated/graphql';
+import { AccessTypes, EditAccessModelInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Button,
+  Combobox,
   Divider,
   Icon,
   Select,
+  Sheet,
   Spinner,
   Text,
   TextField,
@@ -19,10 +21,12 @@ import { Icons } from '@/components/icons';
 import ResourceSelector from './ResourceSelector';
 
 interface AccessModelProps {
-  setQueryList: any;
+  setList: any;
+  setAccessModelId: any;
+  accessModelId: any;
 }
 
-const datasetResourcesQuery = graphql(`
+const datasetResourcesQuery: any = graphql(`
   query resources($datasetId: UUID!) {
     datasetResources(datasetId: $datasetId) {
       id
@@ -37,9 +41,22 @@ const datasetResourcesQuery = graphql(`
   }
 `);
 
-const createAccessModel: any = graphql(`
-  mutation createAccessModel($accessModelInput: AccessModelInput!) {
-    createAccessModel(accessModelInput: $accessModelInput) {
+const accessModelListQuery: any = graphql(`
+  query accessModelResources($datasetId: UUID!) {
+    accessModelResources(datasetId: $datasetId) {
+      id
+      name
+      description
+      type
+      created
+      modified
+    }
+  }
+`);
+
+const editaccessModel: any = graphql(`
+  mutation editAccessModel($accessModelInput: EditAccessModelInput!) {
+    editAccessModel(accessModelInput: $accessModelInput) {
       __typename
       ... on TypeAccessModel {
         id
@@ -51,53 +68,173 @@ const createAccessModel: any = graphql(`
   }
 `);
 
-const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
+const getAccessModelDetails: any = graphql(`
+  query accessModel($accessModelId: UUID!) {
+    accessModel(accessModelId: $accessModelId) {
+      modelResources {
+        fields {
+          id
+          fieldName
+        }
+        resource {
+          id
+          name
+        }
+      }
+      id
+      name
+      type
+      description
+      created
+      modified
+    }
+  }
+`);
+
+const AccessModelForm: React.FC<AccessModelProps> = ({
+  setList,
+  setAccessModelId,
+  accessModelId,
+}) => {
   useEffect(() => {
-    setQueryList(false);
+    setList(false);
   }, []);
 
   const params = useParams();
-  const { data, isLoading } = useQuery([`resourcesList_${params.id}`], () =>
-    GraphQL(datasetResourcesQuery, { datasetId: params.id })
+  const { data, isLoading }: { data: any; isLoading: boolean } = useQuery(
+    [`resourcesList_${params.id}`],
+    () => GraphQL(datasetResourcesQuery, { datasetId: params.id })
+  );
+
+  const {
+    data: accessModelList,
+    isLoading: accessModelListLoading,
+    refetch: accessModelListRefetch,
+  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
+    [`accessModelList_${params.id}`],
+    () => GraphQL(accessModelListQuery, { datasetId: params.id })
+  );
+  const {
+    data: accessModelDetails,
+    refetch: accessModelDetailsRefetch,
+    isLoading: accessModelDetailsLoading,
+  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
+    [`accessModelDetails${params.id}`],
+    () => GraphQL(getAccessModelDetails, { accessModelId: accessModelId })
   );
 
   const [accessModelData, setAccessModelData] = useState({
     dataset: params.id,
     name: '',
     description: '',
-    type: '',
+    type: 'PUBLIC',
     resources: [],
+    accessModelId: '',
   });
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
   const [showSelectAll, setShowSelectAll] = useState(false);
-  const [availableResources, setAvailableResources] = useState<any[]>([]);
+
+  const [availableResources, setAvailableResources] = useState<
+    { label: string; value: string; schema: [] }[]
+  >([]);
+
+  const [selectedFields, setSelectedFields] = useState<
+    { label: string; value: string }[]
+  >([]);
 
   useEffect(() => {
     if (data) {
       setAvailableResources(
-        data.datasetResources.filter(
-          (resource) => !selectedResources.includes(resource.id)
-        )
+        data.datasetResources.map((field: any) => ({
+          label: field.name,
+          value: field.id,
+          schema: field.schema,
+        }))
       );
     }
   }, [data, selectedResources]);
 
-  const [resId, setResId] = useState('');
+  useEffect(() => {
+    if (accessModelDetails && accessModelDetails.accessModel && accessModelId) {
+      const { name, description, type, modelResources } =
+        accessModelDetails.accessModel;
 
-  // Inside handleAddResource function
-  const handleAddResource = (resourceId: string) => {
-    if (resourceId !== '') {
-      setSelectedResources((prev) => [...prev, resourceId]);
-      setResId('');
-      setAvailableResources((prev) =>
-        prev.filter((item) => item.id !== resourceId)
-      ); // Filter out the selected resource
+      accessModelDetailsRefetch();
+      // Update accessModelData with the received data
+      setAccessModelData({
+        dataset: params.id,
+        name: name,
+        description: description,
+        type: type,
+        accessModelId: accessModelId,
+        resources: modelResources.map((resource: any) => ({
+          resource: resource.resource.id,
+          fields: resource.fields.map((field: any) => +field.id),
+        })),
+      });
+
+      // Update selectedResources and selectedFields based on modelResources
+      const selectedResourcesIds = modelResources.map((resource: any) => ({
+        label: resource.resource.name,
+        value: resource.resource.id,
+        schema: resource.fields.map((field: any) => ({
+          label: field.fieldName,
+          value: field.id,
+        })),
+      }));
+
+      setSelectedResources(selectedResourcesIds);
+
+      const selectedFieldsIds = selectedResourcesIds.map((resource: any) => ({
+        label: resource.label,
+        value: resource.value,
+        schema: resource.schema.map((field: any) => ({
+          id: field.id,
+          fieldName: field.fieldName,
+        })),
+      }));
+      setSelectedFields(selectedFieldsIds);
+    }
+  }, [accessModelDetails, accessModelId]);
+
+  const handleAddResource = (resourceDetails: any) => {
+    setSelectedResources(resourceDetails);
+    setAvailableResources(resourceDetails); // Filter out the selected resource
+    setSelectedFields(resourceDetails);
+    const newResources = resourceDetails.map((resource: any) => ({
+      resource: resource.value,
+      fields: resource.schema.map((field: any) => field.id),
+    }));
+
+    setAccessModelData((prevData: any) => ({
+      ...prevData,
+      resources: newResources,
+    }));
+    if (resourceDetails.length === 0) {
+      setAccessModelData((prevData: any) => ({
+        ...prevData,
+        resources: [],
+      }));
+    } else {
+      setAccessModelData((prevData: any) => ({
+        ...prevData,
+        resources: [...prevData.resources],
+      }));
     }
   };
 
-  const handleRemoveResource = (resourceId: string) => {
-    setSelectedResources((prev) => prev.filter((id) => id !== resourceId));
-    setResId('');
+  const handleRemoveResource = (resourceId: any) => {
+    // Filter out the selected resource from selectedResources
+    setSelectedResources((prevResources) =>
+      prevResources.filter((resource: any) => resource.value !== resourceId)
+    );
+
+    // Filter out the selected fields associated with the removed resource
+    setSelectedFields((prevFields) =>
+      prevFields.filter((field) => field.value.split('.')[0] !== resourceId)
+    );
+
+    // Remove the corresponding resource from accessModelData.resources
     setAccessModelData((prevData: any) => ({
       ...prevData,
       resources: prevData.resources.filter(
@@ -107,19 +244,37 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
   };
 
   const handleSelectAll = () => {
-    const allResourceIds =
-      data?.datasetResources.map((resource) => resource.id) || [];
-    setSelectedResources(allResourceIds);
+    const allResources =
+      data?.datasetResources.map((resource: any) => ({
+        label: resource.name,
+        value: resource.id,
+        schema: resource.schema,
+      })) || [];
+
+    setSelectedFields(allResources);
+    setSelectedResources(allResources);
     setShowSelectAll(false);
+
+    setAccessModelData((prevData) => ({
+      ...prevData,
+      resources: allResources.map((resource: any) => ({
+        resource: resource.value,
+        fields: resource.schema.map((option: any) => option.value),
+      })),
+    }));
   };
 
-  const { mutate, isLoading: mutationLoading } = useMutation(
-    (data: { accessModelInput: AccessModelInput }) =>
-      GraphQL(createAccessModel, data),
+  const { mutate, isLoading: editMutationLoading } = useMutation(
+    (data: { accessModelInput: EditAccessModelInput }) =>
+      GraphQL(editaccessModel, data),
     {
-      onSuccess: () => {
+      onSuccess: (res: any) => {
         toast('Access Model Saved');
-        setQueryList(true);
+        accessModelDetailsRefetch();
+        accessModelListRefetch();
+        setAccessModelId(res?.editAccessModel?.id);
+
+        // setList(true);
       },
       onError: (err: any) => {
         toast(`Received ${err} during access model saving`);
@@ -127,50 +282,91 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
     }
   );
 
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
   return (
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-6">
-        <div className="flex w-2/3 flex-wrap items-center gap-2">
-          <Text>Access Type Name:</Text>
-          <Select
-            className="w-2/3"
-            labelHidden
-            name={'Access Type Name'}
-            options={[]}
-            label={''}
-          />
-        </div>
         <Button
-          className=" h-fit w-fit"
-          onClick={(e) =>
-            setAccessModelData({
-              dataset: params.id,
-              name: '',
-              description: '',
-              type: '',
-              resources: [],
-            })
-          }
-        >
-          Add New Access Type
-        </Button>
-
-        <Button
-          onClick={(e) => setQueryList(true)}
+          onClick={(e) => {
+            setList(true);
+            setAccessModelId('');
+          }}
           kind="tertiary"
-          className="flex text-end"
+          className="flex text-start"
         >
           <span className="flex items-center gap-2">
-            <Text color="interactive">
-              Go back to <br />
-              Resource List
-            </Text>
-            <Icon source={Icons.cross} color="interactive" size={24} />
+            <Icon source={Icons.back} color="interactive" size={24} />
+            <Text color="interactive">Access Model Listing</Text>
           </span>
         </Button>
+        <Sheet open={isSheetOpen}>
+          <Sheet.Trigger>
+            <Button onClick={() => setIsSheetOpen(true)}>
+              Select Access Type{' '}
+            </Button>
+          </Sheet.Trigger>
+          <Sheet.Content side="bottom">
+            <div className=" flex  flex-col gap-6 p-10">
+              <div className="flex items-center justify-between">
+                <Text variant="bodyLg">Select Resource</Text>
+                <div className="flex items-center gap-3">
+                  <Button
+                    className=" h-fit w-fit"
+                    size="medium"
+                    onClick={(e) => {
+                      setAccessModelData({
+                        dataset: params.id,
+                        name: '',
+                        description: '',
+                        type: '',
+                        resources: [],
+                        accessModelId: '',
+                      });
+                      setAccessModelId('');
+                      setSelectedResources([]);
+                      setAvailableResources([]);
+                      setSelectedFields([]);
+
+                      setIsSheetOpen(false);
+                    }}
+                  >
+                    Add New Access Type
+                  </Button>
+
+                  <Button kind="tertiary" onClick={() => setIsSheetOpen(false)}>
+                    <Icon source={Icons.cross} size={24} />
+                  </Button>
+                </div>
+              </div>
+              {accessModelList?.accessModelResources.map(
+                (item: any, index: any) => (
+                  <div
+                    key={index}
+                    className="  rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6  py-3  "
+                  >
+                    <Button
+                      kind={'tertiary'}
+                      className="flex w-full justify-start"
+                      onClick={() => {
+                        setAccessModelId(item.id);
+                        setIsSheetOpen(false);
+                      }}
+                    >
+                      {item.name}
+                    </Button>
+                  </div>
+                )
+              )}
+            </div>
+          </Sheet.Content>
+        </Sheet>
       </div>
       <Divider />
-      {isLoading || mutationLoading ? (
+      {isLoading ||
+      editMutationLoading ||
+      accessModelDetailsLoading ||
+      accessModelListLoading ? (
         <div className="mt-8 flex justify-center">
           <Spinner />
         </div>
@@ -182,10 +378,11 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
                 mutate({
                   accessModelInput: {
                     name: accessModelData.name,
-                    resources: accessModelData.resources,
                     dataset: accessModelData.dataset,
                     description: accessModelData.description,
                     type: accessModelData.type as AccessTypes,
+                    accessModelId: accessModelId || null,
+                    resources: accessModelData.resources,
                   },
                 })
               }
@@ -216,6 +413,8 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
                   { label: 'Private', value: 'PRIVATE' },
                 ]}
                 label={'Permissions'}
+                defaultValue={'PUBLIC'}
+                value={accessModelData.type}
                 placeholder="Select"
                 onChange={(e) =>
                   setAccessModelData({ ...accessModelData, type: e })
@@ -236,46 +435,37 @@ const AccessModelForm: React.FC<AccessModelProps> = ({ setQueryList }) => {
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-5">
-            <Select
-              name={'resourceSelection'}
-              className="w-4/5"
-              options={
-                availableResources.length > 0
-                  ? [
-                      { label: 'Select', value: '' },
-                      ...availableResources.map((item) => ({
-                        label: item.name,
-                        value: item.id,
-                      })),
-                    ]
-                  : [{ label: 'Select', value: '' }] // Render only 'Select' when no resources are available
-              }
-              label={'Select the Resources to be added to the Access Type'}
-              onChange={(e) => setResId(e)}
-              required
-              value={resId}
-              helpText="Only Resources added will be part of this Access Type. After adding select the Fields and Rows to be included"
-            />
+          <div className="flex items-end gap-6">
+            <div className="w-3/4">
+              <Combobox
+                displaySelected
+                label={'Select Fields of the Resource'}
+                list={availableResources}
+                selectedValue={selectedFields}
+                name={''}
+                helpText={
+                  'Only Resources added will be part of this Access Type. After adding select the Fields and Rows to be included'
+                }
+                onChange={(e: any) => handleAddResource(e)}
+              />
+            </div>
 
             <div className="flex h-fit w-fit items-center gap-5">
-              <Button onClick={() => handleAddResource(resId)} kind="secondary">
+              <Button
+                onClick={handleSelectAll}
+                kind="secondary"
+                className="h-fit w-fit"
+              >
                 <span className="flex items-center gap-1">
-                  <Text>Add</Text>
-                  <Icon source={Icons.plus} size={24} />
-                </span>
-              </Button>
-              <Button onClick={handleSelectAll} kind="secondary">
-                <span className="flex items-center gap-1">
-                  <Text>Select All</Text>
+                  <Text variant="bodySm">Add All Resources</Text>
                   <Icon source={Icons.plus} size={24} />
                 </span>
               </Button>
             </div>
           </div>
-          {selectedResources.map((resourceId, index) => {
+          {selectedResources?.map((resourceId: any, index) => {
             const selectedResource = data?.datasetResources.find(
-              (resource) => resource.id === resourceId
+              (resource: any) => resource.id === resourceId.value
             );
 
             if (!selectedResource || !selectedResource.schema) {
