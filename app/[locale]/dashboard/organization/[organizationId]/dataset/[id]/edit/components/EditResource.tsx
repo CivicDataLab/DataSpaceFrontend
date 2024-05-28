@@ -1,29 +1,39 @@
 import { graphql } from '@/gql';
 import {
   CreateFileResourceInput,
+  SchemaUpdateInput,
   UpdateFileResourceInput,
 } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
-import { useParams, useRouter } from 'next/navigation';
+import { IconTrash } from '@tabler/icons-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  parseAsBoolean,
+  parseAsString,
+  useQueryState,
+} from 'next-usequerystate';
 import {
   Button,
+  ButtonGroup,
+  Checkbox,
   Combobox,
+  DataTable,
   Dialog,
   Divider,
   DropZone,
   Icon,
+  IconButton,
   Select,
   Text,
   TextField,
-  toast
+  toast,
 } from 'opub-ui';
-import React from 'react';
 
-import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
+import { Icons } from '@/components/icons';
 import { createResourceFilesDoc } from './ResourceDropzone';
-import { ResourceSchema } from './ResourceSchema';
+import { ResourceSchema, updateSchema } from './ResourceSchema';
+import { useParams } from 'next/navigation';
+import React from 'react';
 
 interface TListItem {
   label: string;
@@ -50,6 +60,7 @@ export const EditResource = ({ reload, data }: any) => {
   `);
 
   const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
+  const [schema, setSchema] = React.useState([]);
 
   const { mutate, isLoading } = useMutation(
     (data: { fileResourceInput: UpdateFileResourceInput }) =>
@@ -92,6 +103,18 @@ export const EditResource = ({ reload, data }: any) => {
     }
   `);
 
+  const { mutate: modify } = useMutation(
+    (data: { input: SchemaUpdateInput }) => GraphQL(updateSchema, data),
+    {
+      onSuccess: (data) => {
+        console.log(data);
+      },
+      onError: (err: any) => {
+        console.log('Error ::: ', err);
+      },
+    }
+  );
+  
   const { mutate: transform } = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(createResourceFilesDoc, data),
@@ -111,8 +134,6 @@ export const EditResource = ({ reload, data }: any) => {
       },
     }
   );
-
-  const router = useRouter();
 
   const ResourceList: TListItem[] =
     data.map((item: any) => ({
@@ -215,6 +236,14 @@ export const EditResource = ({ reload, data }: any) => {
         file: resourceFile,
       },
     });
+    if (schema.length > 0) {
+      modify({
+        input: {
+          resource: resourceId,
+          updates: schema,
+        },
+      });
+    }
   };
 
   return (
@@ -384,6 +413,7 @@ export const EditResource = ({ reload, data }: any) => {
       </div>*/}
       {resourceId && payload && Object.keys(payload).length > 0 ? (
         <ResourceSchema
+          setSchema={setSchema}
           resourceId={resourceId}
           isPending={isPending}
           refetch={refetch}
