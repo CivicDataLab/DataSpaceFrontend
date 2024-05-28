@@ -150,7 +150,7 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
       <div className="flex flex-wrap gap-6 px-8">
         <div className="flex w-full flex-col gap-4 2xl:w-3/5">
           <div className="relative mr-4 flex items-center">
-            <div className="mt-1 w-full">
+            <div className={cn('mt-1 w-full', styles.combobox)}>
               <Combobox
                 displaySelected
                 label="Select Fields of the Resource"

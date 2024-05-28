@@ -17,7 +17,9 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import styles from '../edit.module.scss';
 import ResourceSelector from './ResourceSelector';
 
 interface AccessModelProps {
@@ -456,7 +458,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
           </div>
 
           <div className="flex items-end gap-6">
-            <div className="w-3/4">
+            <div className={cn(' w-3/4', styles.combobox)}>
               <Combobox
                 displaySelected
                 label={'Select Fields of the Resource'}
