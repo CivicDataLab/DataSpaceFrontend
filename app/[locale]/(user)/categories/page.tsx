@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Text } from 'opub-ui';
 
 import BreadCrumbs from '@/components/BreadCrumbs';
+import { ErrorPage } from '@/components/error';
 import { Loading } from '@/components/loading';
 import { GraphQL } from '@/lib/api';
 
@@ -74,9 +75,7 @@ const CategoriesListingPage = () => {
             </div>
           </>
         ) : getCategoriesList.isError ? (
-          <div className="text font-Medium flex h-[680px] w-full flex-col items-center justify-center gap-4 text-600">
-            Error fetching data. Please try again later.
-          </div>
+          <ErrorPage />
         ) : (
           <></>
         )}
