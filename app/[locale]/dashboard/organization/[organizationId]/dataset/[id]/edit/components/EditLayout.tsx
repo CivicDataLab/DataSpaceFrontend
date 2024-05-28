@@ -13,6 +13,7 @@ import {
   FormLayout,
   Icon,
   Input,
+  Spinner,
   Tab,
   TabList,
   Tabs,
@@ -22,7 +23,6 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import { Loading } from '@/components/loading';
 
 const datasetQueryDoc: any = graphql(`
   query datasetTitleQuery($filters: DatasetFilter) {
@@ -112,7 +112,9 @@ export function EditLayout({ children, params }: LayoutProps) {
   return (
     <div className="mt-8 flex h-full flex-col">
       {getDatasetTitleRes.isLoading ? (
-        <Loading />
+        <div className="flex flex-row items-center justify-center">
+          <Spinner size={24} />
+        </div>
       ) : (
         <Header
           dataset={getDatasetTitleRes?.data?.datasets[0]}
