@@ -1,70 +1,105 @@
 'use client';
 
 import React from 'react';
+import { useSearchParams } from 'next/navigation';
 import { graphql } from '@/gql';
-// import { usePRouter } from '@/hooks/use-prouter';
+
 import { useQuery } from '@tanstack/react-query';
+import { Spinner,Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { LinkButton } from '@/components/Link';
-import { DistributionList } from '../components/DistributionList';
-import { EditDistribution } from '../components/EditDistribution';
+import { EditResource } from '../components/EditResource';
+import { ResourceDropzone } from '../components/ResourceDropzone';
+import { ResourceListView } from '../components/ResourceListView';
 
-// const datasetDistributionQueryDoc = graphql(`
-//   query datasetDistributionQuery($dataset_id: Int) {
-//     dataset(dataset_id: $dataset_id) {
-//       id
-//       title
-//       resource_set {
-//         id
-//         title
-//         description
-//         file_details {
-//           resource {
-//             id
-//             title
-//             description
-//           }
-//           format
-//           file
-//           remote_url
-//           source_file_name
-//         }
-//       }
-//     }
-//   }
-// `);
+export const getReourceDoc = graphql(`
+  query getResources($filters: DatasetFilter) {
+    datasets(filters: $filters) {
+      resources {
+        id
+        dataset {
+          pk
+        }
+        schema {
+          id
+          fieldName
+          format
+          description
+        }
+        type
+        name
+        description
+        created
+        fileDetails {
+          id
+          resource {
+            pk
+          }
+          file {
+            name
+            path
+            url
+          }
+          size
+          created
+          modified
+        }
+      }
+    }
+  }
+`);
 
 export function DistibutionPage({ params }: { params: { id: string } }) {
-  const [editId, setEditId] = React.useState<string | null>(null);
-  const [page, setPage] = React.useState<'list' | 'create'>('list');
-  // const router = usePRouter();
-  const submitRef = React.useRef<HTMLButtonElement>(null);
 
-  // const { data } = useQuery([`dataset_distribution_${params.id}`], () =>
-  //   GraphQL(datasetDistributionQueryDoc, {
-  //     dataset_id: Number(params.id),
-  //   })
-  // );
+  const { data, isLoading, refetch } = useQuery(
+    [`fetch_resources_${params.id}`],
+    () => GraphQL(getReourceDoc, { filters: { id: params.id } }),
+    {
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+    }
+  );
+
+  const searchParams = useSearchParams();
+  const resourceId = searchParams.get('id');
 
   return (
     <>
-      {!editId && page === 'list' ? (
-        <div>
-          <DistributionList setPage={setPage} setEditId={setEditId} />
-        </div>
-      ) : (
-        // <EditDistribution
-        //   setPage={setPage}
-        //   submitRef={submitRef}
-        //   id={params.id}
-        //   defaultVal={{
-        //     id: params.id,
-        //     resources: data?.dataset?.resource_set || [],
-        //   }}
-        // />
-        <>Edit Distribution</>
-      )}
+      <div>
+        {isLoading ? (
+          <div className="flex min-h-full w-full items-center justify-center">
+            <Spinner size={40} />
+          </div>
+        ) : (
+          <>
+            {data && data.datasets[0].resources.length > 0 ? (
+              <>
+                {resourceId ? (
+                  <EditResource
+                    reload={refetch}
+                    data={data.datasets[0].resources}
+                  />
+                ) : (
+                  <ResourceListView
+                    refetch={refetch}
+                    data={data.datasets[0].resources}
+                  />
+                )}
+              </>
+            ) : data && data.datasets[0].resources.length === 0 ? (
+              <div className="py-4">
+                <ResourceDropzone reload={refetch} />
+              </div>
+            ) : (
+              <div className="flex h-[70vh] w-full items-center justify-center">
+                <Text variant="headingLg">
+                   Please refresh this page
+                </Text> 
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </>
   );
 }

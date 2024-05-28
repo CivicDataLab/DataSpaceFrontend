@@ -26,7 +26,7 @@ import {
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
-import { createResourceFilesDoc } from './DistributionList';
+import { createResourceFilesDoc } from './ResourceDropzone';
 
 type FilteredRow = {
   name_of_resource: string;

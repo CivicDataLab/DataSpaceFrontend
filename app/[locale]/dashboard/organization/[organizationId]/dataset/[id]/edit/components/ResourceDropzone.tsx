@@ -1,127 +1,20 @@
 import React from 'react';
-import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
-import router from 'next/router';
 import { graphql } from '@/gql';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
-  parseAsBoolean,
   parseAsString,
   useQueryState,
 } from 'next-usequerystate';
 import {
   Button,
-  ButtonGroup,
-  Combobox,
-  Divider,
   DropZone,
-  Icon,
-  Spinner,
   Text,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { bytesToSize } from '@/lib/utils';
-import { Icons } from '@/components/icons';
-import { LinkButton } from '@/components/Link';
-import { EditDistribution } from './EditDistribution';
-import { EditResource } from './EditResource';
-import { ResourceListView } from './ResourceListView';
-
-export const getReourceDoc: any = graphql(`
-  query getResources($filters: DatasetFilter) {
-    datasets(filters: $filters) {
-      resources {
-        id
-        dataset {
-          pk
-        }
-        schema {
-          id
-          fieldName
-          format
-          description
-        }
-        type
-        name
-        description
-        created
-        fileDetails {
-          id
-          resource {
-            pk
-          }
-          file {
-            name
-            path
-            url
-          }
-          size
-          created
-          modified
-        }
-      }
-    }
-  }
-`);
-
-export function DistributionList({
-  setPage,
-}: {
-  setPage: (page: 'list' | 'create') => void;
-  setEditId: (id: string) => void;
-}) {
-  const params = useParams();
-
-  const {
-    data,
-    isLoading,
-    refetch,
-  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_resources_${params.id}`],
-    () => GraphQL(getReourceDoc, { filters: { id: params.id } }),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
-  );
-
-  const searchParams = useSearchParams();
-  const resourceId = searchParams.get('id');
-
-  return (
-    <div>
-      {isLoading ? (
-        <div className="flex h-[70vh] w-full items-center justify-center">
-          <Spinner size={40} />
-        </div>
-      ) : (
-        <>
-          {data && data.datasets[0].resources.length > 0 ? (
-            <>
-              {resourceId ? (
-                <EditResource
-                  reload={refetch}
-                  data={data.datasets[0].resources}
-                />
-              ) : (
-                <ResourceListView
-                  refetch={refetch}
-                  data={data.datasets[0].resources}
-                />
-              )}
-            </>
-          ) : (
-            <div className="py-4">
-              <NoList setPage={setPage} reload={refetch} />
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
 
 export const createResourceFilesDoc: any = graphql(`
   mutation readFiles($fileResourceInput: CreateFileResourceInput!) {
@@ -134,12 +27,10 @@ export const createResourceFilesDoc: any = graphql(`
   }
 `);
 
-const NoList = ({
-  setPage,
+export const ResourceDropzone = ({
   reload,
 }: {
-  setPage: (page: 'list' | 'create') => void;
-  reload: any;
+  reload: () => void;
 }) => {
   const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT'];
   const params = useParams();
