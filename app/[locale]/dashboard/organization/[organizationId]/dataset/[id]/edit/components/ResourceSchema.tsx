@@ -64,7 +64,7 @@ export const ResourceSchema = ({
 }: any) => {
 
   const transformedData = data.map((item: any) => ({
-    schemaId: parseInt(item.id, 10),
+    schemaId: item.id,
     format: item.format,
     description: item.description,
   }));
@@ -156,7 +156,7 @@ export const ResourceSchema = ({
       {
         accessorKey: 'format',
         header: 'FORMAT',
-        cell: (info: any) => {
+        cell: (info: any) => {     
           const rowIndex = info.row.index;
           const format = updatedData[rowIndex]?.format || '';
           return (

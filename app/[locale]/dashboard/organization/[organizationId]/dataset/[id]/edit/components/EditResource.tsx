@@ -1,3 +1,5 @@
+import React from 'react';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   CreateFileResourceInput,
@@ -32,8 +34,6 @@ import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { createResourceFilesDoc } from './ResourceDropzone';
 import { ResourceSchema, updateSchema } from './ResourceSchema';
-import { useParams } from 'next/navigation';
-import React from 'react';
 
 interface TListItem {
   label: string;
@@ -106,15 +106,21 @@ export const EditResource = ({ reload, data }: any) => {
   const { mutate: modify } = useMutation(
     (data: { input: SchemaUpdateInput }) => GraphQL(updateSchema, data),
     {
-      onSuccess: (data) => {
-        console.log(data);
+      onSuccess: () => {
+        refetch();
+        toast('Schema Updated Successfully', {
+          action: {
+            label: 'Dismiss',
+            onClick: () => {},
+          },
+        });
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
       },
     }
   );
-  
+
   const { mutate: transform } = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(createResourceFilesDoc, data),
@@ -277,7 +283,7 @@ export const EditResource = ({ reload, data }: any) => {
           className=" w-1/5 justify-end"
           size="medium"
           kind="tertiary"
-          variant="basic"
+          variant="interactive"
           onClick={listViewFunction}
         >
           <div className="flex items-center gap-2">
@@ -385,7 +391,7 @@ export const EditResource = ({ reload, data }: any) => {
           />
           <Combobox
             name="to_row_number"
-            label="To Row Number"
+            label="To Row Number"  
             placeholder="Search Locations"
             list={[
               {
