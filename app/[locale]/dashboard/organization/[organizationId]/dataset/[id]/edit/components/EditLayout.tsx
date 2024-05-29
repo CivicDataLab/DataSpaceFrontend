@@ -58,7 +58,7 @@ interface LayoutProps {
   params: { id: string };
 }
 
-const layoutList = ['metadata', 'access', 'resources', 'publish'];
+const layoutList = ['metadata', 'access', 'charts', 'resources', 'publish'];
 
 export function EditLayout({ children, params }: LayoutProps) {
   // const { data } = useQuery([`dataset_layout_${params.id}`], () =>
@@ -242,6 +242,11 @@ const Navigation = ({
       label: 'Access Models',
       url: `/dashboard/organization/${organization}/dataset/${id}/edit/access?list=true`,
       selected: pathItem === 'access',
+    },
+    {
+      label: 'Charts',
+      url: `/dashboard/organization/${organization}/dataset/${id}/edit/charts`,
+      selected: pathItem === 'charts',
     },
     {
       label: 'Metadata',
