@@ -1,10 +1,18 @@
 import { UUID } from 'crypto';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, DataTable, IconButton, Spinner, Text, toast } from 'opub-ui';
+import {
+  Button,
+  DataTable,
+  IconButton,
+  SearchInput,
+  Spinner,
+  Text,
+  toast,
+} from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { formatDate, toTitleCase } from '@/lib/utils';
@@ -54,11 +62,16 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
       })
   );
 
+  const [filteredRows, setFilteredRows] = useState<any[]>([]);
+
   useEffect(() => {
     refetch();
-  }, [list]);
+    if (data?.accessModelResources) {
+      setFilteredRows(data.accessModelResources);
+    }
+  }, [data, list]);
 
-  const { mutate } = useMutation(
+  const { mutate, isLoading: deleteLoading } = useMutation(
     (data: { accessModelId: UUID }) => GraphQL(deleteAccessModel, data),
     {
       onSuccess: () => {
@@ -126,24 +139,39 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
     }));
   };
 
+  const handleSearchChange = (e: string) => {
+    const searchTerm = e.toLowerCase();
+    const filtered = data?.accessModelResources.filter((row: any) =>
+      row.name.toLowerCase().includes(searchTerm)
+    );
+    setFilteredRows(filtered || []);
+  };
+
   return (
     <div>
-      {!data || isLoading ? (
+      {!data || isLoading || deleteLoading ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between p-4">
+          <div className=" my-6 flex flex-wrap items-center justify-between px-3 py-4">
             <Text>
-              Showing {data.accessModelResources?.length} Access Types
+              Showing {data?.accessModelResources?.length || 0} Access Types
             </Text>
+            <SearchInput
+              className="w-1/2 "
+              placeholder="Search in Resources"
+              label="Search"
+              name="Search"
+              onChange={(e) => handleSearchChange(e)}
+            />
             <Button onClick={(e) => setList(false)}>Add Access Type</Button>
           </div>
 
           <DataTable
             columns={generateColumnData()}
-            rows={generateTableData(data.accessModelResources)}
+            rows={generateTableData(filteredRows)}
             hideSelection
             truncate
             hideFooter
