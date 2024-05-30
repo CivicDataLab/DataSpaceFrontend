@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
+import ReactECharts from 'echarts-for-react';
 import {
   Button,
   Checkbox,
@@ -12,10 +13,10 @@ import {
   Text,
   TextField,
 } from 'opub-ui';
-import { BarChart } from 'opub-ui/viz';
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import { vizdata } from './data';
 
 interface VisualizationProps {
   setType: any;
@@ -215,37 +216,20 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({ setType }) => {
               onBlur={() => handleSave(chartData)}
               onChange={(e) => handleChange('aggregate', e)}
             />
-            <Checkbox
-              name="legend"
-              checked={chartData.showLegend}
-              onBlur={() => handleSave(chartData)}
-              onChange={(e) => handleChange('showLegend', e)}
-            >
-              Show Legend (Legend values will be taken from resource)
-            </Checkbox>
+            <div className=" pt-7">
+              <Checkbox
+                name="legend"
+                checked={chartData.showLegend}
+                onBlur={() => handleSave(chartData)}
+                onChange={(e) => handleChange('showLegend', e)}
+              >
+                Show Legend (Legend values will be taken from resource)
+              </Checkbox>
+            </div>
           </div>
-          <div className="mb-6 p-8 text-center">
+          <div className="mb-6 flex flex-col gap-6 p-8 text-center">
             <Text>Preview</Text>
-            <BarChart
-              height="400px"
-              options={{
-                xAxis: {
-                  type: 'category',
-                  data: ['Mon'],
-                },
-                yAxis: {
-                  type: 'value',
-                },
-                series: [
-                  {
-                    data: [120],
-                    type: 'bar',
-                    name: 'Sales',
-                    color: 'rgb(55,162,218)',
-                  },
-                ],
-              }}
-            />
+            <ReactECharts option={vizdata.data} />
           </div>
         </div>
       </div>
