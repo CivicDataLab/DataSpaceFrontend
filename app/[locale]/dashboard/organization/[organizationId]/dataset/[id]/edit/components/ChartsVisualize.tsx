@@ -63,21 +63,13 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({ setType }) => {
   const [previousChartData, setPreviousChartData] = useState(chartData);
   const [resourceSchema, setResourceSchema] = useState([]);
 
-  const saveChartData = () => {
-    // Implement your save logic here
-    console.log('Autosaving chart data...', chartData);
-    setPreviousChartData(chartData);
-  };
-
-  useEffect(() => {
-    const hasChanges =
-      JSON.stringify(chartData) !== JSON.stringify(previousChartData);
-    if (hasChanges) {
-      saveChartData();
+  const handleSave = (updatedData: any) => {
+    if (JSON.stringify(chartData) !== JSON.stringify(previousChartData)) {
+      console.log(updatedData);
+      setPreviousChartData(updatedData);
     }
-  }, [chartData]);
-
-  const handleInputChange = (field: string, value: any) => {
+  };
+  const handleChange = (field: string, value: any) => {
     setChartData((prevData) => ({
       ...prevData,
       [field]: value,
@@ -85,11 +77,11 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({ setType }) => {
   };
 
   const handleResourceChange = (resourceId: string) => {
-    const selectedResource = data.datasetResources.find(
+    const selectedResource = data?.datasetResources.find(
       (resource: any) => resource.id === resourceId
     );
-    setResourceSchema(selectedResource.schema);
-    handleInputChange('resource', resourceId);
+    setResourceSchema(selectedResource?.schema || []);
+    handleChange('resource', resourceId);
   };
 
   return (
@@ -136,17 +128,19 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({ setType }) => {
         <Divider />
         <div className="mt-8 flex flex-col gap-8">
           <TextField
-            onChange={(e) => handleInputChange('name', e)}
+            onChange={(e) => handleChange('name', e)}
             label="Chart Name"
             name="name"
             required
             helpText="To know about best practices for naming Visualizations go to our User Guide"
+            onBlur={() => handleSave(chartData)}
           />
           <TextField
-            onChange={(e) => handleInputChange('description', e)}
+            onChange={(e) => handleChange('description', e)}
             label="Description"
             name="description"
             multiline={4}
+            onBlur={() => handleSave(chartData)}
           />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Select
@@ -159,7 +153,8 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({ setType }) => {
               ]}
               label="Select Chart Type"
               placeholder="Select"
-              onChange={(e) => handleInputChange('chartType', e)}
+              onBlur={() => handleSave(chartData)}
+              onChange={(e) => handleChange('chartType', e)}
             />
             <Select
               name="resource"
@@ -169,6 +164,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({ setType }) => {
               }))}
               label="Select Resources"
               placeholder="Select"
+              onBlur={() => handleSave(chartData)}
               onChange={(e) => handleResourceChange(e)}
             />
             <Select
@@ -179,13 +175,14 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({ setType }) => {
               }))}
               label="X-axis Column"
               placeholder="Select"
-              onChange={(e) => handleInputChange('xAxisColumn', e)}
-              helpText="Select the column which will be mapped on the X-axis"
+              onBlur={() => handleSave(chartData)}
+              onChange={(e) => handleChange('xAxisColumn', e)}
             />
             <TextField
-              onChange={(e) => handleInputChange('xAxisLabel', e)}
+              onChange={(e) => handleChange('xAxisLabel', e)}
               label="X-axis Label"
               name="xAxisLabel"
+              onBlur={() => handleSave(chartData)}
               required
             />
             <Select
@@ -195,14 +192,15 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({ setType }) => {
                 value: field.id,
               }))}
               label="Y-axis Column"
+              onBlur={() => handleSave(chartData)}
               placeholder="Select"
-              onChange={(e) => handleInputChange('yAxisColumn', e)}
-              helpText="Select the column which will be mapped on the Y-axis"
+              onChange={(e) => handleChange('yAxisColumn', e)}
             />
             <TextField
-              onChange={(e) => handleInputChange('yAxisLabel', e)}
+              onChange={(e) => handleChange('yAxisLabel', e)}
               label="Y-axis Label"
               name="yAxisLabel"
+              onBlur={() => handleSave(chartData)}
               required
             />
             <Select
@@ -214,12 +212,14 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({ setType }) => {
               ]}
               label="Aggregate"
               placeholder="Select"
-              onChange={(e) => handleInputChange('aggregate', e)}
+              onBlur={() => handleSave(chartData)}
+              onChange={(e) => handleChange('aggregate', e)}
             />
             <Checkbox
               name="legend"
               checked={chartData.showLegend}
-              onChange={(e) => handleInputChange('showLegend', e)}
+              onBlur={() => handleSave(chartData)}
+              onChange={(e) => handleChange('showLegend', e)}
             >
               Show Legend (Legend values will be taken from resource)
             </Checkbox>
