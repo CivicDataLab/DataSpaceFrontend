@@ -245,7 +245,7 @@ const Navigation = ({
     },
     {
       label: 'Charts',
-      url: `/dashboard/organization/${organization}/dataset/${id}/edit/charts`,
+      url: `/dashboard/organization/${organization}/dataset/${id}/edit/charts?type=list`,
       selected: pathItem === 'charts',
     },
     {
