@@ -63,16 +63,11 @@ export const ResourceSchema = ({
   refetch,
 }: any) => {
 
-  const transformedData = data.map((item: any) => ({
-    schemaId: item.id,
-    format: item.format,
-    description: item.description,
-  }));
-  const [updatedData, setUpdatedData] = React.useState<any>(transformedData);
+  const [updatedData, setUpdatedData] = React.useState<any>(data);
 
   React.useEffect(() => {
     if (data && data.length > 0) {
-      setUpdatedData(transformedData);
+      setUpdatedData(data);
     }
   }, [data]);
 

@@ -417,7 +417,10 @@ export const EditResource = ({ reload, data }: any) => {
           <Text>See Preview</Text>
         </div>
       </div>*/}
-      {resourceId && payload && Object.keys(payload).length > 0 ? (
+      {resourceId &&
+      payload?.datasetResources?.filter(
+        (item: any) => item.id === resourceId
+      ) ? (
         <ResourceSchema
           setSchema={setSchema}
           resourceId={resourceId}
