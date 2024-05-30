@@ -186,9 +186,9 @@ export const vizdata = {
     title: [
       {
         show: true,
-        // text: 'Chart',
+        text: '',
         target: 'blank',
-        // subtext: 'Subtitle',
+        subtext: '',
         subtarget: 'blank',
         padding: 5,
         itemGap: 10,
