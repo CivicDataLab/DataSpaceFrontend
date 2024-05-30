@@ -1,22 +1,26 @@
 'use client';
 
 import React from 'react';
-import { Button, Text } from 'opub-ui';
+import { parseAsString, useQueryState } from 'next-usequerystate';
+
+import ChartsImage from '../components/ChartsImage';
+import ChartsList from '../components/ChartsList';
+import ChartsVisualize from '../components/ChartsVisualize';
 
 const Charts = () => {
+  const [type, setType] = useQueryState(
+    'type',
+    parseAsString.withDefault('list')
+  );
   return (
     <div className=" mt-6">
-      <div className="flex flex-col items-center gap-6">
-        <Text>* Adding Visualizations is Optional and can be skipped.</Text>
-        <Text>
-          ** Visualizations will appear separately in the Visualizations tab of
-          the dataset details. They are not a part of any Access type.
-        </Text>
-
-        <Button className=" w-60">Visualize Data</Button>
-        <Button className=" w-60">Add Image</Button>
-      </div>
-      <div></div>
+      {type === 'list' ? (
+        <ChartsList setType={setType} type={type} />
+      ) : type === 'visualize' ? (
+        <ChartsVisualize setType={setType} />
+      ) : (
+        <ChartsImage setType={setType} />
+      )}
     </div>
   );
 };
