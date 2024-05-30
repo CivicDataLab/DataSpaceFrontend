@@ -63,17 +63,52 @@ export const EditResource = ({ reload, data }: any) => {
   const [schema, setSchema] = React.useState([]);
 
   const { mutate, isLoading } = useMutation(
-    (data: { fileResourceInput: UpdateFileResourceInput }) =>
-      GraphQL(updateResourceDoc, data),
+    (data: {
+      fileResourceInput: UpdateFileResourceInput;
+      isResetSchema: boolean;
+    }) => GraphQL(updateResourceDoc, data),
     {
-      onSuccess: () => {
+      onSuccess: (data, variables) => {
         toast('File changes saved', {
           action: {
             label: 'Dismiss',
             onClick: () => {},
           },
         });
+        if (variables.isResetSchema) {
+          schemaMutate({
+            resourceId: resourceId,
+          });
+        }
         reload();
+      },
+      onError: (err: any) => {
+        console.log('Error ::: ', err);
+      },
+    }
+  );
+
+  const resetSchema: any = graphql(`
+    mutation resetFileResourceSchema($resourceId: UUID!) {
+      resetFileResourceSchema(resourceId: $resourceId) {
+        ... on TypeResource {
+          id
+          schema {
+            format
+            description
+            id
+            fieldName
+          }
+        }
+      }
+    }
+  `);
+
+  const { mutate: schemaMutate, isLoading: isSchemaLoading } = useMutation(
+    (data: { resourceId: string }) => GraphQL(resetSchema, data),
+    {
+      onSuccess: () => {
+        refetch();
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
@@ -133,6 +168,7 @@ export const EditResource = ({ reload, data }: any) => {
             onClick: () => {},
           },
         });
+        refetch();
         reload();
       },
       onError: (err: any) => {
@@ -204,17 +240,20 @@ export const EditResource = ({ reload, data }: any) => {
     </div>
   );
 
-  const [resourceFile, setResourceFile] = React.useState<File>();
 
   const onDrop = React.useCallback(
-    (_dropFiles: File[], acceptedFiles: File[]) =>
-      setResourceFile(acceptedFiles[0]),
+    (_dropFiles: File[], acceptedFiles: File[]) => {
+      mutate({
+        fileResourceInput: {
+          id: resourceId,
+          file: acceptedFiles[0],
+        },
+        isResetSchema: true,
+      });
+    },
     []
   );
-
-  const fileInput = resourceFile ? (
-    <div className="flex ">{resourceFile.name} </div>
-  ) : (
+  const fileInput = (
     <div className="flex">
       <Text className="break-all">
         {getResourceObject(resourceId)?.fileDetails.file.name.replace(
@@ -239,14 +278,18 @@ export const EditResource = ({ reload, data }: any) => {
         name: resourceName
           ? resourceName
           : getResourceObject(resourceId)?.label,
-        file: resourceFile,
       },
+      isResetSchema: false,
     });
     if (schema.length > 0) {
+      const updatedScheme = schema.map((item) => {
+        const { fieldName, ...rest } = item as any;
+        return rest;
+      });
       modify({
         input: {
           resource: resourceId,
-          updates: schema,
+          updates: updatedScheme,
         },
       });
     }
@@ -425,7 +468,8 @@ export const EditResource = ({ reload, data }: any) => {
           setSchema={setSchema}
           resourceId={resourceId}
           isPending={isPending}
-          refetch={refetch}
+          schemaMutate={schemaMutate}
+          isSchemaLoading={isSchemaLoading}
           data={
             payload?.datasetResources?.filter(
               (item: any) => item.id === resourceId

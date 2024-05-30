@@ -60,13 +60,14 @@ export const ResourceSchema = ({
   resourceId,
   isPending,
   data,
-  refetch,
+  schemaMutate,
+  isSchemaLoading
 }: any) => {
 
   const [updatedData, setUpdatedData] = React.useState<any>(data);
 
   React.useEffect(() => {
-    if (data && data.length > 0) {
+    if (data) {
       setUpdatedData(data);
     }
   }, [data]);
@@ -87,35 +88,6 @@ export const ResourceSchema = ({
   };
 
   setSchema(updatedData);
-
-  const resetSchema: any = graphql(`
-    mutation resetFileResourceSchema($resourceId: UUID!) {
-      resetFileResourceSchema(resourceId: $resourceId) {
-        ... on TypeResource {
-          id
-          schema {
-            format
-            description
-            id
-            fieldName
-          }
-        }
-      }
-    }
-  `);
-
-  const { mutate, isLoading } = useMutation(
-    (data: { resourceId: string }) => GraphQL(resetSchema, data),
-    {
-      onSuccess: () => {
-        refetch();
-      },
-      onError: (err: any) => {
-        console.log('Error ::: ', err);
-      },
-    }
-  );
-
   const options = [
     {
       label: 'Integer',
@@ -178,7 +150,7 @@ export const ResourceSchema = ({
   };
 
   const setFields = () => {
-    mutate({
+    schemaMutate({
       resourceId: resourceId,
     });
   };
@@ -206,7 +178,7 @@ export const ResourceSchema = ({
         be changed in Access Models.
       </Text>
       <div className="mt-3">
-        {isPending || isLoading ? (
+        {isPending || isSchemaLoading ? (
           <div className=" mt-8 flex justify-center">
             <Spinner size={30} />
           </div>
