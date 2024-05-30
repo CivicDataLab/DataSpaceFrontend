@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
@@ -83,6 +83,32 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({ setType }) => {
     );
     setResourceSchema(selectedResource?.schema || []);
     handleChange('resource', resourceId);
+  };
+  const chartRef = useRef<ReactECharts>(null);
+
+  const handleDownload = () => {
+    // Get the echarts instance from the chart reference
+    const chartInstance = chartRef.current?.getEchartsInstance();
+
+    if (!chartInstance) {
+      console.error('Failed to get the chart instance');
+      return;
+    }
+
+    // Convert the chart to base64 image data
+    const base64Data = chartInstance.getDataURL({
+      type: 'png', // You can change the image type as needed
+      pixelRatio: 2, // Adjust pixel ratio for better image quality
+      backgroundColor: '#fff', // Background color of the chart
+    });
+
+    // Create a download link
+    const link = document.createElement('a');
+    link.href = base64Data;
+    link.download = 'chart.png'; // Specify the file name
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -229,7 +255,10 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({ setType }) => {
           </div>
           <div className="mb-6 flex flex-col gap-6 p-8 text-center">
             <Text>Preview</Text>
-            <ReactECharts option={vizdata.data} />
+            <ReactECharts option={vizdata.data} ref={chartRef} />
+            <Button className="w-fit" onClick={handleDownload}>
+              Download Chart
+            </Button>
           </div>
         </div>
       </div>
