@@ -25,6 +25,7 @@ import {
   Icon,
   IconButton,
   Select,
+  Spinner,
   Text,
   TextField,
   toast,
@@ -460,23 +461,43 @@ export const EditResource = ({ reload, data }: any) => {
           <Text>See Preview</Text>
         </div>
       </div>*/}
-      {resourceId &&
-      payload?.datasetResources?.filter(
-        (item: any) => item.id === resourceId
-      ) ? (
-        <ResourceSchema
-          setSchema={setSchema}
-          resourceId={resourceId}
-          isPending={isPending}
-          schemaMutate={schemaMutate}
-          isSchemaLoading={isSchemaLoading}
-          data={
-            payload?.datasetResources?.filter(
-              (item: any) => item.id === resourceId
-            )[0]?.schema
-          }
-        />
-      ) : null}
+      <div className="my-8">
+        <div className="flex flex-wrap justify-between">
+          <Text>Fields in the Resource</Text>
+          <Button
+            size="medium"
+            kind="tertiary"
+            variant="basic"
+            onClick={() =>
+              schemaMutate({
+                resourceId: resourceId,
+              })
+            }
+          >
+            <div className="flex items-center gap-1">
+              <Text>Reset Fields</Text>{' '}
+              <Icon source={Icons.info} color="interactive" />
+            </div>
+          </Button>
+        </div>
+        <Text variant="headingXs" as="span" fontWeight="regular">
+           The Field settings apply to the Resource on a master level and can not
+           be changed in Access Models.
+        </Text>
+        {isPending || isSchemaLoading ? (
+          <div className=" mt-8 flex justify-center">
+            <Spinner size={30} />
+          </div>
+        ) : resourceId && payload?.datasetResources?.filter(
+            (item: any) => item.id === resourceId ).length > 0 ? (
+               <ResourceSchema
+                  setSchema={setSchema}
+                  data={payload?.datasetResources?.filter((item: any) => item.id === resourceId)[0]?.schema}
+                />
+          ) : (
+             <div className="my-8 flex justify-center"> Click on Reset Fields </div>
+        )}
+      </div>
     </div>
   );
 };

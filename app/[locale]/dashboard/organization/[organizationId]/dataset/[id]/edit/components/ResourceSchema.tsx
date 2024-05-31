@@ -55,14 +55,7 @@ const DescriptionCell = ({
   );
 };
 
-export const ResourceSchema = ({
-  setSchema,
-  resourceId,
-  isPending,
-  data,
-  schemaMutate,
-  isSchemaLoading
-}: any) => {
+export const ResourceSchema = ({ setSchema, data }: any) => {
 
   const [updatedData, setUpdatedData] = React.useState<any>(data);
 
@@ -123,7 +116,7 @@ export const ResourceSchema = ({
       {
         accessorKey: 'format',
         header: 'FORMAT',
-        cell: (info: any) => {     
+        cell: (info: any) => {
           const rowIndex = info.row.index;
           const format = updatedData[rowIndex]?.format || '';
           return (
@@ -149,49 +142,17 @@ export const ResourceSchema = ({
     }));
   };
 
-  const setFields = () => {
-    schemaMutate({
-      resourceId: resourceId,
-    });
-  };
-
   return (
     <>
-      <div className="mt-8 flex justify-between">
-        <Text>Fields in the Resource</Text>
-        <div className="flex gap-4">
-          <Button
-            size="medium"
-            kind="tertiary"
-            variant="basic"
-            onClick={setFields}
-          >
-            <div className="flex items-center gap-1">
-              <Text>Reset Fields</Text>{' '}
-              <Icon source={Icons.info} color="interactive" />
-            </div>
-          </Button>
-        </div>
-      </div>
-      <Text variant="headingXs" as="span" fontWeight="regular">
-        The Field settings apply to the Resource on a master level and can not
-        be changed in Access Models.
-      </Text>
       <div className="mt-3">
-        {isPending || isSchemaLoading ? (
-          <div className=" mt-8 flex justify-center">
-            <Spinner size={30} />
-          </div>
-        ) : data && data.length > 0 ? (
+        {data && data.length > 0 ? (
           <DataTable
             columns={generateColumnData()}
             rows={generateTableData(data)}
             hideFooter={true}
             hideSelection
           />
-        ) : (
-          <div className="mt-8 flex justify-center">Click on Reset Fields</div>
-        )}
+        ):<div className="mt-8 flex justify-center">Click on Reset Fields</div>}
       </div>
     </>
   );
