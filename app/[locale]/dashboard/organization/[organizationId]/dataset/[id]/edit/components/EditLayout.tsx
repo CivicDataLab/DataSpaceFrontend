@@ -132,7 +132,7 @@ export function EditLayout({ children, params }: LayoutProps) {
             organization={routerParams.organizationId.toString()}
           />
         </div>
-        <div className="bg-surface shadow-card border-l-divider rounded-tl-none  flex-grow py-4">
+        <div className="bg-surface shadow-card border-l-divider rounded-tl-none  my-6  flex-grow">
           {children}
         </div>
       </div>

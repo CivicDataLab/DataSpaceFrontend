@@ -257,13 +257,15 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
 
     handleSave({ ...accessModelData, resources: updatedResources });
   };
-
   const handleSelectAll = () => {
     const allResources =
       data?.datasetResources.map((resource: any) => ({
         label: resource.name,
         value: resource.id,
-        schema: resource.schema,
+        schema: resource.schema.map((field: any) => ({
+          label: field.fieldName,
+          value: field.id.toString(), // Ensure ID is a string for Combobox
+        })),
       })) || [];
 
     setSelectedFields(allResources);
@@ -272,15 +274,16 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
 
     const updatedResources = allResources.map((resource: any) => ({
       resource: resource.value,
-      fields: resource.schema.map((option: any) => option.value),
+      fields: resource.schema.map((option: any) => parseInt(option.value, 10)), // Convert to integer
     }));
 
-    setAccessModelData((prevData) => ({
-      ...prevData,
+    const updatedData = {
+      ...accessModelData,
       resources: updatedResources,
-    }));
+    };
 
-    handleSave({ ...accessModelData, resources: updatedResources });
+    setAccessModelData(updatedData);
+    handleSave(updatedData);
   };
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
@@ -460,10 +463,11 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
           <div className="flex items-end gap-6">
             <div className={cn(' w-3/4', styles.combobox)}>
               <Combobox
-                displaySelected
+                // displaySelected
                 label={'Select Fields of the Resource'}
                 list={availableResources}
                 selectedValue={selectedFields}
+                placeholder={`${selectedResources.length} resources selected`}
                 name={''}
                 helpText={
                   'Only Resources added will be part of this Access Type. After adding select the Fields and Rows to be included'
