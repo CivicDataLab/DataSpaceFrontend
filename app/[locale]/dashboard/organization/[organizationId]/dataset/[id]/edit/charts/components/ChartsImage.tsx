@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { Button, Divider, Icon, Sheet, Text } from 'opub-ui';
+import {
+  Button,
+  Divider,
+  DropZone,
+  Icon,
+  Sheet,
+  Text,
+  TextField,
+} from 'opub-ui';
 
 import { Icons } from '@/components/icons';
 
@@ -55,6 +63,32 @@ const ChartsImage: React.FC<ImageProps> = ({ setType }) => {
           </Sheet>
         </div>
         <Divider />
+        <div className="mt-8 flex w-full  gap-8">
+          <div className="flex w-4/5 flex-col gap-8">
+            <TextField
+              // onChange={(e) => handleChange('name', e)}
+              label="Chart Name"
+              name="name"
+              required
+              helpText="To know about best practices for naming Visualizations go to our User Guide"
+              // onBlur={() => handleSave(chartData)}
+            />
+            <TextField
+              // onChange={(e) => handleChange('description', e)}
+              label="Description"
+              name="description"
+              multiline={4}
+              // onBlur={() => handleSave(chartData)}
+            />
+          </div>
+          <DropZone
+            name={'drop'}
+            label="File associated with resource"
+            onDrop={(e) => console.log(e)}
+          >
+            <DropZone.FileUpload actionHint="Accepts .gif, .jpg, and .png" />
+          </DropZone>
+        </div>
       </div>
     </>
   );
