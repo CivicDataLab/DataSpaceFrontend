@@ -3,9 +3,9 @@
 import React from 'react';
 import { parseAsString, useQueryState } from 'next-usequerystate';
 
-import ChartsImage from '../components/ChartsImage';
-import ChartsList from '../components/ChartsList';
-import ChartsVisualize from '../components/ChartsVisualize';
+import ChartsImage from './components/ChartsImage';
+import ChartsList from './components/ChartsList';
+import ChartsVisualize from './components/ChartsVisualize';
 
 const Charts = () => {
   const [type, setType] = useQueryState(
