@@ -44,6 +44,7 @@ export const getReourceDoc = graphql(`
           created
           modified
         }
+        previewEnabled
       }
     }
   }

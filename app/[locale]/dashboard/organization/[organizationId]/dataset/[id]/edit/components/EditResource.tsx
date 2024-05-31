@@ -62,6 +62,10 @@ export const EditResource = ({ reload, data }: any) => {
 
   const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
   const [schema, setSchema] = React.useState([]);
+  const [enablePreview, setEnablePreview] = React.useState<boolean>(false);
+
+  const [startRow,setStartRow] = React.useState("2")
+  const [endRow,setEndRow] = React.useState("2")
 
   const { mutate, isLoading } = useMutation(
     (data: {
@@ -389,9 +393,12 @@ export const EditResource = ({ reload, data }: any) => {
           </DropZone>
         </div>
       </div>
-      {/* <div className=" my-8 flex items-center gap-4 border-1 border-solid border-baseGraySlateSolid7 px-7 py-4 ">
+      <div className="flex items-center gap-4 border-1 border-solid border-baseGraySlateSolid7 my-8 px-7 py-4">
         <div className="flex w-1/6 items-center justify-center gap-1">
-          <Checkbox name="checkbox" onChange={() => console.log('hi')}>
+          <Checkbox
+            name="checkbox"
+            onChange={() => setEnablePreview(!enablePreview)}
+          >
             Enabel Preview
           </Checkbox>
           <Icon source={Icons.info} />
@@ -399,60 +406,43 @@ export const EditResource = ({ reload, data }: any) => {
 
         <div className="h-[70px] w-[2px] bg-baseGraySlateSolid7"></div>
 
-        <div className="flex items-center gap-5 px-8">
-          <Text>
+        <div className="flex w-4/6 items-center justify-between gap-5 px-8">
+          <Text color={enablePreview ?'default' : 'onBgDisabled'} >
             Select Rows to be <br /> shown in the Preview
           </Text>
-          <Combobox
-            name="geo_list"
+          <TextField
             label="From Row Number"
-            placeholder="Search Locations"
-            list={[
-              {
-                label:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-                value:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-              },
-              {
-                label:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-                value:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-              },
-            ]}
-            displaySelected
-            required
-            error="This field is required"
+            name="fromRowNumber"
+            type="number"
+            value={startRow}
+            onChange={e => setStartRow(e)}
+            min={1}
+            disabled={!enablePreview}
           />
-          <Combobox
-            name="to_row_number"
+          <TextField
             label="To Row Number"  
-            placeholder="Search Locations"
-            list={[
-              {
-                label:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-                value:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-              },
-              {
-                label:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-                value:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-              },
-            ]}
-            displaySelected
-            required
-            error="This field is required"
+            name="torowNumber"
+            type="number"
+            value={endRow}
+            onChange={e => setEndRow(e)}
+            min={1}
+            disabled={!enablePreview}
           />
         </div>
         <div className="h-[70px] w-[2px] bg-baseGraySlateSolid7"></div>
         <div className="flex w-1/6 justify-center ">
-          <Text>See Preview</Text>
+          <Button
+            className=" w-full "
+            size="medium"
+            kind="tertiary"
+            variant="interactive"
+            onClick={() => console.log()}
+            disabled={!enablePreview}
+          >
+            See Preview
+          </Button>
         </div>
-      </div>*/}
+      </div>
       <div className="my-8">
         <div className="flex flex-wrap justify-between">
           <Text>Fields in the Resource</Text>
