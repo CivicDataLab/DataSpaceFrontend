@@ -269,12 +269,8 @@ export const EditResource = ({ reload, data }: any) => {
     mutate({
       fileResourceInput: {
         id: resourceId,
-        description: resourceDesc
-          ? resourceDesc
-          : getResourceObject(resourceId)?.description,
-        name: resourceName
-          ? resourceName
-          : getResourceObject(resourceId)?.label,
+        description: resourceDesc || '',
+        name: resourceName || '',
       },
       isResetSchema: false,
     });
