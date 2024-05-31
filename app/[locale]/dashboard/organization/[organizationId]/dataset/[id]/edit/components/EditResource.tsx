@@ -77,7 +77,7 @@ export const EditResource = ({ reload, data }: any) => {
           },
         });
         if (variables.isResetSchema) {
-          schemaMutate({
+          schemaMutation.mutate({
             resourceId: resourceId,
           });
         }
@@ -105,11 +105,11 @@ export const EditResource = ({ reload, data }: any) => {
     }
   `);
 
-  const { mutate: schemaMutate, isLoading: isSchemaLoading } = useMutation(
+  const schemaMutation = useMutation(
     (data: { resourceId: string }) => GraphQL(resetSchema, data),
     {
       onSuccess: () => {
-        refetch();
+        schemaQuery.refetch();
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
@@ -117,11 +117,7 @@ export const EditResource = ({ reload, data }: any) => {
     }
   );
 
-  const {
-    data: payload,
-    refetch,
-    isLoading: isPending,
-  } = useQuery<any>([`fetch_schema_${params.id}`], () =>
+  const schemaQuery = useQuery<any>([`fetch_schema_${params.id}`], () =>
     GraphQL(fetchSchema, { datasetId: params.id })
   );
 
@@ -143,7 +139,7 @@ export const EditResource = ({ reload, data }: any) => {
     (data: { input: SchemaUpdateInput }) => GraphQL(updateSchema, data),
     {
       onSuccess: () => {
-        refetch();
+        schemaQuery.refetch();
         toast('Schema Updated Successfully', {
           action: {
             label: 'Dismiss',
@@ -169,7 +165,7 @@ export const EditResource = ({ reload, data }: any) => {
             onClick: () => {},
           },
         });
-        refetch();
+        schemaQuery.refetch();
         reload();
       },
       onError: (err: any) => {
@@ -469,7 +465,7 @@ export const EditResource = ({ reload, data }: any) => {
             kind="tertiary"
             variant="basic"
             onClick={() =>
-              schemaMutate({
+              schemaMutation.mutate({
                 resourceId: resourceId,
               })
             }
@@ -484,15 +480,16 @@ export const EditResource = ({ reload, data }: any) => {
            The Field settings apply to the Resource on a master level and can not
            be changed in Access Models.
         </Text>
-        {isPending || isSchemaLoading ? (
+        {schemaQuery.isLoading || schemaMutation.isLoading ? (
           <div className=" mt-8 flex justify-center">
             <Spinner size={30} />
           </div>
-        ) : resourceId && payload?.datasetResources?.filter(
+        ) : resourceId && schemaQuery.data?.datasetResources?.filter(
             (item: any) => item.id === resourceId ).length > 0 ? (
                <ResourceSchema
                   setSchema={setSchema}
-                  data={payload?.datasetResources?.filter((item: any) => item.id === resourceId)[0]?.schema}
+                  data={schemaQuery.data?.datasetResources?.filter(
+                    (item: any) => item.id === resourceId)[0]?.schema}
                 />
           ) : (
              <div className="my-8 flex justify-center"> Click on Reset Fields </div>
