@@ -45,6 +45,9 @@ export const getReourceDoc = graphql(`
           modified
         }
         previewEnabled
+        previewDetails {
+          pk
+        }
       }
     }
   }

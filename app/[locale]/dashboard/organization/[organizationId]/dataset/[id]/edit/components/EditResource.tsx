@@ -42,6 +42,7 @@ interface TListItem {
   description: string;
   dataset: any;
   fileDetails: any;
+  previewEnabled: boolean;
 }
 
 export const EditResource = ({ reload, data }: any) => {
@@ -64,8 +65,8 @@ export const EditResource = ({ reload, data }: any) => {
   const [schema, setSchema] = React.useState([]);
   const [enablePreview, setEnablePreview] = React.useState<boolean>(false);
 
-  const [startRow,setStartRow] = React.useState("2")
-  const [endRow,setEndRow] = React.useState("2")
+  const [startRow, setStartRow] = React.useState('2');
+  const [endRow, setEndRow] = React.useState('2');
 
   const { mutate, isLoading } = useMutation(
     (data: {
@@ -139,7 +140,7 @@ export const EditResource = ({ reload, data }: any) => {
     }
   `);
 
-  const { mutate: modify } = useMutation(
+  const schemaUpdation = useMutation(
     (data: { input: SchemaUpdateInput }) => GraphQL(updateSchema, data),
     {
       onSuccess: () => {
@@ -185,6 +186,7 @@ export const EditResource = ({ reload, data }: any) => {
       description: item.description,
       dataset: item.dataset?.pk,
       fileDetails: item.fileDetails,
+      previewEnabled: item.previewEnabled,
     })) || [];
 
   const getResourceObject = (resourceId: string) => {
@@ -265,10 +267,6 @@ export const EditResource = ({ reload, data }: any) => {
     </div>
   );
 
-  const listViewFunction = () => {
-    setResourceId('');
-  };
-
   const saveResource = () => {
     mutate({
       fileResourceInput: {
@@ -283,13 +281,25 @@ export const EditResource = ({ reload, data }: any) => {
         const { fieldName, ...rest } = item as any;
         return rest;
       });
-      modify({
+      schemaUpdation.mutate({
         input: {
           resource: resourceId,
           updates: updatedScheme,
         },
       });
     }
+  };
+
+  const preview = getResourceObject(resourceId)?.previewEnabled ?? false;
+
+  const handlePreview = () => {
+    mutate({
+      fileResourceInput: {
+        id: resourceId,
+        previewEnabled: !preview,
+      },
+      isResetSchema: false,
+    });
   };
 
   return (
@@ -324,7 +334,7 @@ export const EditResource = ({ reload, data }: any) => {
           size="medium"
           kind="tertiary"
           variant="interactive"
-          onClick={listViewFunction}
+          onClick={() => setResourceId('')}
         >
           <div className="flex items-center gap-2">
             <Text color="interactive">
@@ -393,12 +403,9 @@ export const EditResource = ({ reload, data }: any) => {
           </DropZone>
         </div>
       </div>
-      <div className="flex items-center gap-4 border-1 border-solid border-baseGraySlateSolid7 my-8 px-7 py-4">
+      <div className="my-8 flex items-center gap-4 border-1 border-solid border-baseGraySlateSolid7 px-7 py-4">
         <div className="flex w-1/6 items-center justify-center gap-1">
-          <Checkbox
-            name="checkbox"
-            onChange={() => setEnablePreview(!enablePreview)}
-          >
+          <Checkbox name="checkbox" checked={preview} onChange={handlePreview}>
             Enabel Preview
           </Checkbox>
           <Icon source={Icons.info} />
@@ -407,7 +414,7 @@ export const EditResource = ({ reload, data }: any) => {
         <div className="h-[70px] w-[2px] bg-baseGraySlateSolid7"></div>
 
         <div className="flex w-4/6 items-center justify-between gap-5 px-8">
-          <Text color={enablePreview ?'default' : 'onBgDisabled'} >
+          <Text color={preview ? 'default' : 'onBgDisabled'}>
             Select Rows to be <br /> shown in the Preview
           </Text>
           <TextField
@@ -415,18 +422,18 @@ export const EditResource = ({ reload, data }: any) => {
             name="fromRowNumber"
             type="number"
             value={startRow}
-            onChange={e => setStartRow(e)}
+            onChange={(e) => setStartRow(e)}
             min={1}
-            disabled={!enablePreview}
+            disabled={!preview}
           />
           <TextField
-            label="To Row Number"  
+            label="To Row Number"
             name="torowNumber"
             type="number"
             value={endRow}
-            onChange={e => setEndRow(e)}
+            onChange={(e) => setEndRow(e)}
             min={1}
-            disabled={!enablePreview}
+            disabled={!preview}
           />
         </div>
         <div className="h-[70px] w-[2px] bg-baseGraySlateSolid7"></div>
@@ -436,8 +443,7 @@ export const EditResource = ({ reload, data }: any) => {
             size="medium"
             kind="tertiary"
             variant="interactive"
-            onClick={() => console.log()}
-            disabled={!enablePreview}
+            disabled={!preview}
           >
             See Preview
           </Button>
@@ -463,8 +469,8 @@ export const EditResource = ({ reload, data }: any) => {
           </Button>
         </div>
         <Text variant="headingXs" as="span" fontWeight="regular">
-           The Field settings apply to the Resource on a master level and can not
-           be changed in Access Models.
+          The Field settings apply to the Resource on a master level and can not
+          be changed in Access Models.
         </Text>
         {schemaQuery.isLoading || schemaMutation.isLoading ? (
           <div className=" mt-8 flex justify-center">
@@ -472,12 +478,12 @@ export const EditResource = ({ reload, data }: any) => {
           </div>
         ) : resourceId && schemaQuery.data?.datasetResources?.filter(
             (item: any) => item.id === resourceId ).length > 0 ? (
-               <ResourceSchema
-                  setSchema={setSchema}
+          <ResourceSchema
+            setSchema={setSchema}
                   data={schemaQuery.data?.datasetResources?.filter(
                     (item: any) => item.id === resourceId)[0]?.schema}
-                />
-          ) : (
+          />
+        ) : (
              <div className="my-8 flex justify-center"> Click on Reset Fields </div>
         )}
       </div>
