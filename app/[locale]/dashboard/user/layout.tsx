@@ -40,12 +40,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
       <div className="m-auto w-11/12">
         <DashboardHeader currentPath={pathname} />
-        <div
-          className={cn(
-            'relative grid grow grid-cols-[8px_1fr] gap-1',
-            'md:flex'
-          )}
-        >
+        <div className="flex flex-col md:flex-row">
           <DashboardNav items={dashboardConfig.sidebarNav} />
           <div className="z-1 basis-2 md:hidden">
             <MobileDashboardNav
@@ -54,9 +49,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               items={dashboardConfig.sidebarNav}
             />
           </div>
-          <div className={cn(styles.Main, isOpened && styles.MainOpened)}>
-            {children}
-          </div>
+          <div className={cn(styles.Main)}>{children}</div>
         </div>
       </div>
     </div>
