@@ -38,9 +38,9 @@ const DescriptionCell = ({
 }) => {
   const [description, setDescription] = React.useState(value || '');
 
-  const handleChange = (text: string) => {
-    setDescription(text);
-    handleFieldChange('description', text, rowIndex);
+  const handleChange = (e:any) => {
+    setDescription(e?.target?.value);
+    handleFieldChange('description', e?.target?.value, rowIndex);
   };
 
   return (
@@ -49,8 +49,8 @@ const DescriptionCell = ({
       labelHidden
       name="description"
       type="text"
-      value={description}
-      onChange={(e: any) => handleChange(e)}
+      defaultValue={description}
+      onBlur={(e: any) => handleChange(e)}
     />
   );
 };
