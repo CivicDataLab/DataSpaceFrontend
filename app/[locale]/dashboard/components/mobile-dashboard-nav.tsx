@@ -6,13 +6,11 @@ import { usePathname } from 'next/navigation';
 import { useOnClickOutside } from '@/hooks/use-on-click-outside';
 import { SidebarNavItem } from '@/types';
 import { IconMenu, IconX } from '@tabler/icons-react';
-import { Icon, Text } from 'opub-ui';
+import { Button, Icon, Sheet, Text } from 'opub-ui';
 import { twMerge } from 'tailwind-merge';
 
-import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import dashboardStyles from '../dashboard.module.scss';
-import styles from './styles.module.scss';
 
 interface DashboardNavProps {
   items: SidebarNavItem[];
@@ -39,20 +37,19 @@ export function MobileDashboardNav({
 
   return (
     <>
-      <button
-        onClick={() => {
-          setIsOpened(!isOpened);
-        }}
-        className={cn(styles.NavButton, isOpened && styles.NavButtonOpen)}
-      >
-        <Icon source={isOpened ? IconX : IconMenu} />
-        <Text visuallyHidden>Trigger Menu</Text>
-      </button>
-      <aside
-        ref={asideRef}
-        className={cn(styles.Aside, isOpened && styles.AsideOpen)}
-      >
-        <nav className={styles.MobileNavContainer}>
+      <Sheet open={isOpened}>
+        <Sheet.Trigger>
+          <Button onClick={() => setIsOpened(!isOpened)} kind="tertiary">
+            <Icon source={IconMenu} />
+            <Text visuallyHidden>Trigger Menu</Text>
+          </Button>
+        </Sheet.Trigger>
+        <Sheet.Content side="left" size="narrow" className="pr-4 pt-4">
+          <div className="mb-4 flex justify-end">
+            <Button onClick={() => setIsOpened(!isOpened)} kind="tertiary">
+              <Icon source={IconX} />
+            </Button>
+          </div>
           <ul>
             {items.map((item) => {
               const icon = Icons[item.icon || 'arrowRight'];
@@ -93,8 +90,8 @@ export function MobileDashboardNav({
               );
             })}
           </ul>
-        </nav>
-      </aside>
+        </Sheet.Content>
+      </Sheet>
     </>
   );
 }

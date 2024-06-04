@@ -110,7 +110,7 @@ export function EditLayout({ children, params }: LayoutProps) {
   }
 
   return (
-    <div className="mt-8 flex h-full flex-col">
+    <div className="flex h-full flex-col lg:mt-8">
       {getDatasetTitleRes.isLoading ? (
         <div className="flex flex-row items-center justify-center">
           <Spinner size={24} />

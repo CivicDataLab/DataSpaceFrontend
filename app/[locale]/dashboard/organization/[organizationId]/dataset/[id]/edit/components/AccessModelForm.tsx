@@ -350,8 +350,8 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
             </Button>
           </Sheet.Trigger>
           <Sheet.Content side="bottom">
-            <div className=" flex  flex-col gap-6 p-10">
-              <div className="flex items-center justify-between">
+            <div className=" flex flex-col gap-6 p-10">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <Text variant="bodyLg">Select Resource</Text>
                 <div className="flex items-center gap-3">
                   <Button
@@ -422,8 +422,8 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
             )}
           </div>
           <div className="flex flex-col gap-6">
-            <div className="flex  gap-6">
-              <div className=" w-4/5">
+            <div className="flex flex-wrap  gap-6">
+              <div className="w-full lg:w-4/5">
                 <TextField
                   value={accessModelData.name}
                   onChange={(e) => handleChange('name', e)}
@@ -435,7 +435,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                 />
               </div>
               <Select
-                className=" w-1/6"
+                className="w-full lg:w-1/6"
                 name={'permissions'}
                 options={[
                   { label: 'Public', value: 'PUBLIC' },
@@ -460,10 +460,9 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
             />
           </div>
 
-          <div className="flex items-end gap-6">
-            <div className={cn(' w-3/4', styles.combobox)}>
+          <div className="flex flex-wrap items-end gap-6">
+            <div className={cn('w-full lg:w-3/4', styles.combobox)}>
               <Combobox
-                // displaySelected
                 label={'Select Fields of the Resource'}
                 list={availableResources}
                 selectedValue={selectedFields}

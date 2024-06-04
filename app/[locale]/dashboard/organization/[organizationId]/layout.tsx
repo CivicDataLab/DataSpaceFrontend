@@ -51,8 +51,8 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       />
       <div
         className={cn(
-          'relative grid grow grid-cols-[8px_1fr] gap-1',
-          ' bg-surfaceDefault py-4 pl-10 pr-4 md:flex'
+          'relative flex flex-col md:flex-row',
+          ' bg-surfaceDefault p-4 md:flex'
         )}
       >
         <DashboardNav items={orgSidebarNav} organizationId={organizationId} />
@@ -64,9 +64,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
             items={orgSidebarNav}
           />
         </div>
-        <div className={cn(styles.Main, isOpened && styles.MainOpened)}>
-          {children}
-        </div>
+        <div className={cn(styles.Main)}>{children}</div>
       </div>
     </>
   );

@@ -302,14 +302,14 @@ const Page = () => {
                                     key={index}
                                   >
                                     <Text
-                                      className=" basis-1/6"
+                                      className="lg:basis-1/6"
                                       variant="bodyMd"
                                     >
                                       {item.label}:
                                     </Text>
                                     <Text
                                       variant="bodyMd"
-                                      className=" basis-4/5"
+                                      className="lg:basis-4/5"
                                     >
                                       {item.value}
                                     </Text>
@@ -319,20 +319,20 @@ const Page = () => {
 
                             {item?.data?.map((item: any, index: any) => (
                               <div className="flex flex-wrap gap-2" key={index}>
-                                <Text className=" basis-1/6" variant="bodyMd">
+                                <Text className="lg:basis-1/6" variant="bodyMd">
                                   {toTitleCase(item.metadataItem.label)}:
                                 </Text>
-                                <Text variant="bodyMd" className=" basis-4/5">
+                                <Text variant="bodyMd" className="lg:basis-4/5">
                                   {' '}
                                   {item.value}
                                 </Text>
                               </div>
                             ))}
                             <div className="flex flex-wrap gap-2">
-                              <Text className=" basis-1/6" variant="bodyMd">
+                              <Text className="lg:basis-1/6" variant="bodyMd">
                                 Tags:
                               </Text>
-                              <div className=" basis-4/5">
+                              <div className="lg:basis-4/5">
                                 {data?.datasets[0].tags.map(
                                   (item: any, index: any) => (
                                     <Tag key={index}>{item.value}</Tag>

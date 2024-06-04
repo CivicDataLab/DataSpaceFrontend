@@ -147,9 +147,9 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
           </span>
         </Button>
       </div>
-      <div className="flex flex-wrap gap-6 px-8">
+      <div className="flex flex-wrap gap-6 lg:px-8 ">
         <div className="flex w-full flex-col gap-4 2xl:w-3/5">
-          <div className="relative mr-4 flex items-center">
+          <div className="relative mr-4 flex flex-wrap  items-center">
             <div className={cn('mt-1 w-full', styles.combobox)}>
               <Combobox
                 displaySelected
@@ -161,7 +161,7 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
                 onChange={(e: any) => handleFieldSelection(e)}
               />
             </div>
-            <div className="absolute right-0" style={{ top: '1px' }}>
+            <div className="right-0 lg:absolute" style={{ top: '1px' }}>
               <Checkbox
                 name="Select All Fields"
                 checked={selectAllFields}
@@ -185,7 +185,7 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
                 Select All
               </Checkbox>
             </div>
-            <div className={cn('flex gap-6', styles.accessModelEdit)}>
+            <div className={cn('flex flex-wrap gap-6', styles.accessModelEdit)}>
               <TextField type="number" label="From Row Number" name="fromRow" />
               <TextField type="number" label="To Row Number" name="toRow" />
             </div>
