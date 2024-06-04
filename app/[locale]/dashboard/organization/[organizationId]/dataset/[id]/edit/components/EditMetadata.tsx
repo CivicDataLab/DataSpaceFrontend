@@ -7,6 +7,7 @@ import {
   TypeDataset,
   TypeDatasetMetadata,
   TypeMetadata,
+  TypeTag,
   UpdateMetadataInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -33,12 +34,25 @@ const categoriesListQueryDoc: any = graphql(`
   }
 `);
 
+const tagsListQueryDoc: any = graphql(`
+  query TagsList {
+    tags {
+      id
+      value
+    }
+  }
+`);
+
 const datasetMetadataQueryDoc: any = graphql(`
   query MetadataValues($filters: DatasetFilter) {
     datasets(filters: $filters) {
       title
       id
       description
+      tags {
+        id
+        value
+      }
       categories {
         id
         name
@@ -102,6 +116,11 @@ export function EditMetadata({ id }: { id: string }) {
       GraphQL(categoriesListQueryDoc, [])
     );
 
+  const getTagsList: { data: any; isLoading: boolean; error: any } = useQuery(
+    [`tags_list_query`],
+    () => GraphQL(tagsListQueryDoc, [])
+  );
+
   const getMetaDataListQuery: {
     data: any;
     isLoading: boolean;
@@ -164,14 +183,21 @@ export function EditMetadata({ id }: { id: string }) {
 
     defaultVal['description'] = dataset.description || '';
 
-    defaultVal['categories'] = dataset.categories?.map(
-      (category: TypeCategory) => {
+    defaultVal['categories'] =
+      dataset.categories?.map((category: TypeCategory) => {
         return {
           label: category.name,
           value: category.id,
         };
-      }
-    );
+      }) || [];
+
+    defaultVal['tags'] =
+      dataset.tags?.map((tag: TypeTag) => {
+        return {
+          label: tag.value,
+          value: tag.id,
+        };
+      }) || [];
 
     return defaultVal;
   };
@@ -180,6 +206,7 @@ export function EditMetadata({ id }: { id: string }) {
     <>
       <Form
         onSubmit={(values) => {
+          // Call the mutation to save both the static and dynamic metadata
           updateMetadataMutation.mutate({
             UpdateMetadataInput: {
               dataset: id,
@@ -197,7 +224,7 @@ export function EditMetadata({ id }: { id: string }) {
                   }),
               ],
               description: values.description || '',
-              tags: values.tags || [],
+              tags: values.tags?.map((item: any) => item.label) || [],
               categories:
                 values.categories?.map((item: any) => item.value) || [],
             },
@@ -229,7 +256,21 @@ export function EditMetadata({ id }: { id: string }) {
 
               <div className="flex flex-wrap">
                 <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
-                  <Combobox name={'tags'} list={[]} label={'Tags'} />
+                  <Combobox
+                    displaySelected
+                    name="tags"
+                    list={
+                      getTagsList.isLoading || getTagsList.error
+                        ? []
+                        : getTagsList.data?.tags?.map((item: TypeTag) => {
+                            return {
+                              label: item.value,
+                              value: item.id,
+                            };
+                          }) || []
+                    }
+                    label="Tags"
+                  />
                 </div>
                 <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
                   <Combobox
