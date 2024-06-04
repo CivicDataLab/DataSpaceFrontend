@@ -1,0 +1,21 @@
+.Item {
+  transition:
+    background-color var(--duration-200) var(--ease-in-out),
+    gap var(--duration-200) var(--ease-in-out);
+
+  &:hover {
+    background-color: var(--surface-selected);
+  }
+}
+
+.Selected {
+  background-color: var(--surface-selected);
+
+  svg {
+    color: var(--icon-success);
+  }
+}
+
+.Collapse {
+  transition: flex-basis var(--duration-300) var(--ease-in-out);
+}

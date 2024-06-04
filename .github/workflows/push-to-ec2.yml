@@ -1,0 +1,38 @@
+name: Push-to-EC2
+
+on: push
+
+jobs:
+  deploy:
+    name: Push to EC2 Instance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v1
+
+      - name: Deploy to my EC2 instance
+        uses: easingthemes/ssh-deploy@v2.1.5
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          SOURCE: "./"
+          SCRIPT_BEFORE: ls
+          REMOTE_HOST: "datakeep.civicdays.in"
+          REMOTE_USER: "ubuntu"
+          TARGET: "/home/ubuntu/DataExchange/DataExFrontend/"
+
+      - name: run the application remotely
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: "datakeep.civicdays.in"
+          username: "ubuntu"
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            cd /home/ubuntu/DataExchange/DataExFrontend/
+            kill $(ps aux | grep 'npm run start' | awk '{print $2}')
+            kill $(ps aux | grep 'next-server' | awk '{print $2}')
+            npm run build
+            npm run generate
+            npm run start
+
