@@ -1,5 +1,12 @@
 
 
+## [0.1.4](https://github.com/CivicDataLab/DataExFrontend/compare/0.1.2dev...0.1.4) (2024-06-04)
+
+
+### Features
+
+* add query and update mutation to integrate tags in metadata form ([e2121d4](https://github.com/CivicDataLab/DataExFrontend/commit/e2121d4f4db762ee75cde4c7053bac1757921411))
+
 ## [0.1.3](https://github.com/CivicDataLab/DataExFrontend/compare/0.1.2...0.1.3) (2024-04-15)
 
 
