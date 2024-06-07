@@ -35,6 +35,7 @@ import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { createResourceFilesDoc } from './ResourceDropzone';
 import { ResourceSchema, updateSchema } from './ResourceSchema';
+import { ResourceMetadata } from './ResourceMetadata';
 
 interface TListItem {
   label: string;
@@ -453,6 +454,7 @@ export const EditResource = ({ reload, data }: any) => {
           <Text>See Preview</Text>
         </div>
       </div>*/}
+      <ResourceMetadata/>
       <div className="my-8">
         <div className="flex flex-wrap justify-between">
           <Text>Fields in the Resource</Text>
