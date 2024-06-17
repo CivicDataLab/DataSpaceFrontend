@@ -26,7 +26,7 @@ import {
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
-import { createResourceFilesDoc } from './ResourceDropzone';
+import { createResourceFilesDoc,updateResourceList } from './query';
 
 type FilteredRow = {
   name_of_resource: string;
@@ -36,11 +36,6 @@ type FilteredRow = {
 };
 
 export const ResourceListView = ({ data, refetch }: any) => {
-  const updateResourceList: any = graphql(`
-    mutation deleteFileResource($resourceId: UUID!) {
-      deleteFileResource(resourceId: $resourceId)
-    }
-  `);
 
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
 

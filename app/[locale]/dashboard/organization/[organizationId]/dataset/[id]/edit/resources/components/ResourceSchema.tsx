@@ -16,17 +16,6 @@ import {
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 
-export const updateSchema: any = graphql(`
-  mutation updateSchema($input: SchemaUpdateInput!) {
-    updateSchema(input: $input) {
-      __typename
-      ... on TypeResource {
-        id
-      }
-    }
-  }
-`);
-
 const DescriptionCell = ({
   value,
   rowIndex,

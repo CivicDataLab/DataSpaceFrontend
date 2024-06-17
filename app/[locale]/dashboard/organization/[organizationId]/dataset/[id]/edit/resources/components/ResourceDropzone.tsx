@@ -15,17 +15,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { bytesToSize } from '@/lib/utils';
-
-export const createResourceFilesDoc: any = graphql(`
-  mutation readFiles($fileResourceInput: CreateFileResourceInput!) {
-    createFileResources(fileResourceInput: $fileResourceInput) {
-      id
-      created
-      name
-      type
-    }
-  }
-`);
+import { createResourceFilesDoc } from './query';
 
 export const ResourceDropzone = ({
   reload,

@@ -33,8 +33,15 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import { createResourceFilesDoc } from './ResourceDropzone';
-import { ResourceSchema, updateSchema } from './ResourceSchema';
+import {
+  fetchSchema,
+  resetSchema,
+  updateResourceDoc,
+  updateSchema,
+  createResourceFilesDoc
+} from './query';
+
+import { ResourceSchema } from './ResourceSchema';
 
 interface TListItem {
   label: string;
@@ -46,19 +53,6 @@ interface TListItem {
 
 export const EditResource = ({ reload, data }: any) => {
   const params = useParams();
-
-  const updateResourceDoc: any = graphql(`
-    mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {
-      updateFileResource(fileResourceInput: $fileResourceInput) {
-        __typename
-        ... on TypeResource {
-          id
-          description
-          name
-        }
-      }
-    }
-  `);
 
   const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
   const [schema, setSchema] = React.useState([]);
@@ -89,22 +83,6 @@ export const EditResource = ({ reload, data }: any) => {
     }
   );
 
-  const resetSchema: any = graphql(`
-    mutation resetFileResourceSchema($resourceId: UUID!) {
-      resetFileResourceSchema(resourceId: $resourceId) {
-        ... on TypeResource {
-          id
-          schema {
-            format
-            description
-            id
-            fieldName
-          }
-        }
-      }
-    }
-  `);
-
   const schemaMutation = useMutation(
     (data: { resourceId: string }) => GraphQL(resetSchema, data),
     {
@@ -120,20 +98,6 @@ export const EditResource = ({ reload, data }: any) => {
   const schemaQuery = useQuery<any>([`fetch_schema_${params.id}`], () =>
     GraphQL(fetchSchema, { datasetId: params.id })
   );
-
-  const fetchSchema: any = graphql(`
-    query datasetSchema($datasetId: UUID!) {
-      datasetResources(datasetId: $datasetId) {
-        schema {
-          id
-          fieldName
-          format
-          description
-        }
-        id
-      }
-    }
-  `);
 
   const { mutate: modify } = useMutation(
     (data: { input: SchemaUpdateInput }) => GraphQL(updateSchema, data),
@@ -473,8 +437,8 @@ export const EditResource = ({ reload, data }: any) => {
           </Button>
         </div>
         <Text variant="headingXs" as="span" fontWeight="regular">
-           The Field settings apply to the Resource on a master level and can not
-           be changed in Access Models.
+          The Field settings apply to the Resource on a master level and can not
+          be changed in Access Models.
         </Text>
         {schemaQuery.isLoading || schemaMutation.isLoading ? (
           <div className=" mt-8 flex justify-center">
@@ -482,12 +446,12 @@ export const EditResource = ({ reload, data }: any) => {
           </div>
         ) : resourceId && schemaQuery.data?.datasetResources?.filter(
             (item: any) => item.id === resourceId ).length > 0 ? (
-               <ResourceSchema
-                  setSchema={setSchema}
+          <ResourceSchema
+            setSchema={setSchema}
                   data={schemaQuery.data?.datasetResources?.filter(
                     (item: any) => item.id === resourceId)[0]?.schema}
-                />
-          ) : (
+          />
+        ) : (
              <div className="my-8 flex justify-center"> Click on Reset Fields </div>
         )}
       </div>
