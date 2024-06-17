@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
-import { graphql } from '@/gql';
 
 import { useQuery } from '@tanstack/react-query';
 import { Spinner,Text } from 'opub-ui';
@@ -11,43 +10,7 @@ import { GraphQL } from '@/lib/api';
 import { EditResource } from '../components/EditResource';
 import { ResourceDropzone } from '../components/ResourceDropzone';
 import { ResourceListView } from '../components/ResourceListView';
-
-export const getReourceDoc = graphql(`
-  query getResources($filters: DatasetFilter) {
-    datasets(filters: $filters) {
-      resources {
-        id
-        dataset {
-          pk
-        }
-        schema {
-          id
-          fieldName
-          format
-          description
-        }
-        type
-        name
-        description
-        created
-        fileDetails {
-          id
-          resource {
-            pk
-          }
-          file {
-            name
-            path
-            url
-          }
-          size
-          created
-          modified
-        }
-      }
-    }
-  }
-`);
+import { getReourceDoc } from './query';
 
 export function DistibutionPage({ params }: { params: { id: string } }) {
 
