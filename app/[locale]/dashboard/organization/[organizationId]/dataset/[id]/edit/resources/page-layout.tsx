@@ -7,9 +7,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Spinner,Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { EditResource } from '../components/EditResource';
-import { ResourceDropzone } from '../components/ResourceDropzone';
-import { ResourceListView } from '../components/ResourceListView';
+import { EditResource } from './components/EditResource'
+import { ResourceDropzone } from './components/ResourceDropzone';
+import { ResourceListView } from './components/ResourceListView';
 import { getReourceDoc } from './query';
 
 export function DistibutionPage({ params }: { params: { id: string } }) {
