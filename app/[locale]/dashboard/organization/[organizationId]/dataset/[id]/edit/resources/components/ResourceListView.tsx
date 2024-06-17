@@ -39,7 +39,7 @@ export const ResourceListView = ({ data, refetch }: any) => {
 
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
 
-  const { mutate } = useMutation(
+  const updateResourceMutation = useMutation(
     (data: { resourceId: string }) => GraphQL(updateResourceList, data),
     {
       onSuccess: (data, variables) => {
@@ -61,7 +61,7 @@ export const ResourceListView = ({ data, refetch }: any) => {
     }
   );
 
-  const { mutate: transform } = useMutation(
+  const createResourceMutation = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(createResourceFilesDoc, data),
     {
@@ -95,7 +95,7 @@ export const ResourceListView = ({ data, refetch }: any) => {
   const params = useParams();
 
   const deleteRow = (row: any) => {
-    mutate({
+    updateResourceMutation.mutate({
       resourceId: row.id,
     });
   };
@@ -176,7 +176,7 @@ export const ResourceListView = ({ data, refetch }: any) => {
 
   const dropZone = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
-      transform({
+      createResourceMutation.mutate({
         fileResourceInput: {
           dataset: params.id,
           files: acceptedFiles,

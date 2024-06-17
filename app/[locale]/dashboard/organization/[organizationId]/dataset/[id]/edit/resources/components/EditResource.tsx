@@ -34,13 +34,12 @@ import {
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import {
+  createResourceFilesDoc,
   fetchSchema,
   resetSchema,
   updateResourceDoc,
   updateSchema,
-  createResourceFilesDoc
 } from './query';
-
 import { ResourceSchema } from './ResourceSchema';
 
 interface TListItem {
@@ -57,7 +56,7 @@ export const EditResource = ({ reload, data }: any) => {
   const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
   const [schema, setSchema] = React.useState([]);
 
-  const { mutate, isLoading } = useMutation(
+  const updateResourceMutation = useMutation(
     (data: {
       fileResourceInput: UpdateFileResourceInput;
       isResetSchema: boolean;
@@ -99,7 +98,7 @@ export const EditResource = ({ reload, data }: any) => {
     GraphQL(fetchSchema, { datasetId: params.id })
   );
 
-  const { mutate: modify } = useMutation(
+  const updateSchemaMutation = useMutation(
     (data: { input: SchemaUpdateInput }) => GraphQL(updateSchema, data),
     {
       onSuccess: () => {
@@ -117,7 +116,7 @@ export const EditResource = ({ reload, data }: any) => {
     }
   );
 
-  const { mutate: transform } = useMutation(
+  const createResourceMutation = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(createResourceFilesDoc, data),
     {
@@ -182,7 +181,7 @@ export const EditResource = ({ reload, data }: any) => {
 
   const dropZone = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
-      transform({
+      createResourceMutation.mutate({
         fileResourceInput: {
           dataset: params.id,
           files: acceptedFiles,
@@ -201,10 +200,9 @@ export const EditResource = ({ reload, data }: any) => {
     </div>
   );
 
-
   const onDrop = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
-      mutate({
+      updateResourceMutation.mutate({
         fileResourceInput: {
           id: resourceId,
           file: acceptedFiles[0],
@@ -230,7 +228,7 @@ export const EditResource = ({ reload, data }: any) => {
   };
 
   const saveResource = () => {
-    mutate({
+    updateResourceMutation.mutate({
       fileResourceInput: {
         id: resourceId,
         description: resourceDesc || '',
@@ -243,7 +241,7 @@ export const EditResource = ({ reload, data }: any) => {
         const { fieldName, ...rest } = item as any;
         return rest;
       });
-      modify({
+      updateSchemaMutation.mutate({
         input: {
           resource: resourceId,
           updates: updatedScheme,
@@ -297,7 +295,11 @@ export const EditResource = ({ reload, data }: any) => {
       </div>
       <Divider className="mb-8 mt-6" />
       <div className="flex justify-center">
-        <Button className="w-1/3" loading={isLoading} onClick={saveResource}>
+        <Button
+          className="w-1/3"
+          loading={updateResourceMutation.isLoading}
+          onClick={saveResource}
+        >
           SAVE RESOURCE
         </Button>
       </div>
