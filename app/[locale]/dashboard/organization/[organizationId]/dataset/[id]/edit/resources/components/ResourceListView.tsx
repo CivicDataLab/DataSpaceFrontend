@@ -35,7 +35,12 @@ type FilteredRow = {
   id: string;
 };
 
-export const ResourceListView = ({ data, refetch }: any) => {
+type ResourceListProps = {
+  data : any[];
+  refetch: () => void;
+}
+
+export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
 
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
 

@@ -33,6 +33,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import { TListItem } from '../page-layout';
 import {
   createResourceFilesDoc,
   fetchSchema,
@@ -42,15 +43,14 @@ import {
 } from './query';
 import { ResourceSchema } from './ResourceSchema';
 
-interface TListItem {
-  label: string;
-  value: string;
-  description: string;
-  dataset: any;
-  fileDetails: any;
+interface EditProps {
+  refetch: () => void;
+  list: TListItem[];
 }
 
-export const EditResource = ({ reload, data }: any) => {
+
+
+export const EditResource = ({ refetch, list }: EditProps) => {
   const params = useParams();
 
   const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
@@ -74,7 +74,7 @@ export const EditResource = ({ reload, data }: any) => {
             resourceId: resourceId,
           });
         }
-        reload();
+        refetch();
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
@@ -129,7 +129,7 @@ export const EditResource = ({ reload, data }: any) => {
           },
         });
         schemaQuery.refetch();
-        reload();
+        refetch();
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
@@ -137,17 +137,8 @@ export const EditResource = ({ reload, data }: any) => {
     }
   );
 
-  const ResourceList: TListItem[] =
-    data.map((item: any) => ({
-      label: item.name,
-      value: item.id,
-      description: item.description,
-      dataset: item.dataset?.pk,
-      fileDetails: item.fileDetails,
-    })) || [];
-
   const getResourceObject = (resourceId: string) => {
-    return ResourceList.find((item) => item.value === resourceId);
+    return list.find((item: TListItem) => item.value === resourceId);
   };
 
   const [resourceName, setResourceName] = React.useState(
@@ -157,19 +148,12 @@ export const EditResource = ({ reload, data }: any) => {
     getResourceObject(resourceId)?.description
   );
 
-  const handleNameChange = (text: string) => {
-    setResourceName(text);
-  };
-  const handleDescChange = (text: string) => {
-    setResourceDesc(text);
-  };
-
   React.useEffect(() => {
     setResourceName(getResourceObject(resourceId)?.label);
     setResourceDesc(getResourceObject(resourceId)?.description);
 
     //fix this later
-  }, [JSON.stringify(ResourceList), resourceId]);
+  }, [JSON.stringify(list), resourceId]);
 
   const handleResourceChange = (e: any) => {
     setResourceId(e, { shallow: false });
@@ -258,7 +242,7 @@ export const EditResource = ({ reload, data }: any) => {
           <Select
             label="Resource List"
             labelHidden
-            options={ResourceList}
+            options={list}
             value={getResourceObject(resourceId)?.value}
             onChange={(e) => {
               handleResourceChange(e);
@@ -309,7 +293,7 @@ export const EditResource = ({ reload, data }: any) => {
             <div className="w-2/3">
               <TextField
                 value={resourceName}
-                onChange={(text) => handleNameChange(text)}
+                onChange={(text) => setResourceName(text)}
                 label="Resource Name"
                 name="a"
                 required
@@ -335,7 +319,7 @@ export const EditResource = ({ reload, data }: any) => {
           </div>
           <TextField
             value={resourceDesc}
-            onChange={(text) => handleDescChange(text)}
+            onChange={(text) => setResourceDesc(text)}
             label="Resource Description"
             name="resourceDesc"
             multiline={4}
