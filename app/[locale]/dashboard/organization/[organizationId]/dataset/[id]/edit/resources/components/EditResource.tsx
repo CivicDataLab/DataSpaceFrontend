@@ -318,6 +318,7 @@ export const EditResource = ({ refetch, list }: EditProps) => {
             </div>
           </div>
           <TextField
+            key={resourceId}
             value={resourceDesc}
             onChange={(text) => setResourceDesc(text)}
             label="Resource Description"
