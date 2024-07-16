@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { Button, Icon, Text } from 'opub-ui';
 
 import { formatDate, toTitleCase } from '@/lib/utils';
@@ -13,7 +14,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
   return (
     <>
       <div className="flex items-center justify-between">
-        <div className="w-full border-y-2 border-solid border-baseGraySlateSolid4 py-6">
+        <div className="w-full border-b-2 border-solid border-baseGraySlateSolid4 py-4">
           <Text variant="headingLg" className="pb-2">
             About the Dataset
           </Text>
@@ -29,6 +30,9 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
         )}
       </div>
       <div className="flex flex-col flex-wrap gap-5 pt-6">
+        <div className="mx-auto">
+          <Image width={200} height={200} src={'/obi.jpg'} alt="Org Logo" />
+        </div>
         {data?.metadata?.map((item: any, index: any) => (
           <div className="flex gap-2" key={index}>
             <Text className="min-w-24 basis-1/4">
@@ -40,10 +44,6 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
         <div className="flex gap-2">
           <Text className="min-w-24 basis-1/4">Created</Text>
           <Text>{formatDate(data?.created)}</Text>
-        </div>
-        <div className="flex gap-2">
-          <Text className="min-w-24 basis-1/4">Modified</Text>
-          <Text>{formatDate(data?.modified)}</Text>
         </div>
       </div>
     </>

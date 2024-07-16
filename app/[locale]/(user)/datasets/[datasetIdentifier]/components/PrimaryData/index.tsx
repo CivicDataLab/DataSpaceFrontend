@@ -1,6 +1,8 @@
 import React from 'react';
 import { Tag, Text } from 'opub-ui';
 
+import { formatDate } from '@/lib/utils';
+
 interface PrimaryDataProps {
   data: any;
 }
@@ -21,6 +23,16 @@ const PrimaryData: React.FC<PrimaryDataProps> = ({ data }) => {
       </div>
       <div>
         <Text variant="bodyMd">{data?.description}</Text>
+      </div>
+      <div className="flex flex-wrap gap-6 pt-6">
+        <div className="flex gap-2">
+          <Text className=" font-bold">Last Updated:</Text>
+          <Text>{formatDate(data?.modified)}</Text>
+        </div>
+        <div className="flex gap-2">
+          <Text className=" font-bold">Total Downloads:</Text>
+          <Text>120</Text>
+        </div>
       </div>
     </>
   );
