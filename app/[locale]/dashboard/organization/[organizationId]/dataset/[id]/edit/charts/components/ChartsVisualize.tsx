@@ -46,6 +46,16 @@ const datasetResource: any = graphql(`
   }
 `);
 
+const chartDetailsQuery: any = graphql(`
+  query chartsDetails($datasetId: UUID!) {
+    chartsDetails(datasetId: $datasetId) {
+      id
+      name
+      chartType
+    }
+  }
+`);
+
 const createChart: any = graphql(`
   mutation editResourceChart($chartInput: ResourceChartInput!) {
     editResourceChart(chartInput: $chartInput) {
@@ -112,7 +122,21 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
 
   const { data: chartDetails, refetch }: { data: any; refetch: any } = useQuery(
     [`chartsdata_${params.id}`],
-    () => GraphQL(getResourceChartDetails, { chartDetailsId: chartId })
+    () => GraphQL(getResourceChartDetails, { chartDetailsId: chartId }),
+    {
+      enabled: !!chartId, // Fetch only if chartId is available
+    }
+  );
+  const {
+    data: chartsList,
+    isLoading,
+    refetch: chartsListRefetch,
+  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
+    [`chartsList_${params.id}`],
+    () =>
+      GraphQL(chartDetailsQuery, {
+        datasetId: params.id,
+      })
   );
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -121,7 +145,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     name: '',
     description: '',
     chartType: 'BAR_VERTICAL',
-    resource: data.datasetResources[0].id,
+    resource: data?.datasetResources[0].id,
     xAxisColumn: '',
     xAxisLabel: '',
     yAxisColumn: '',
@@ -160,7 +184,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       refetch();
       updateChartData(chartDetails.resourceChart);
     }
-  }, [chartId, chartDetails, refetch]);
+  }, [chartId, chartDetails]);
 
   const updateChartData = (resourceChart: any) => {
     const updatedData = {
@@ -190,6 +214,8 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         const newChartId = res?.editResourceChart?.id;
         updateChartData(res.editResourceChart);
         setChartId(newChartId);
+        chartsListRefetch();
+        refetch();
       },
       onError: (err: any) => {
         toast(`Received ${err} during resource chart saving`);
@@ -267,10 +293,17 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
                 <div className="flex items-center justify-between">
                   <Text variant="bodyLg">Select Charts</Text>
                   <div className="flex items-center gap-3">
-                    <Button onClick={() => setType('visualize')}>
+                    <Button
+                      className=" h-fit w-fit"
+                      size="medium"
+                      onClick={(e) => {
+                        setChartData(initialChartData);
+                        setChartId('');
+                        setIsSheetOpen(false);
+                      }}
+                    >
                       Visualize Data
                     </Button>
-                    <Button onClick={() => setType('img')}>Add Image</Button>
                     <Button
                       kind="tertiary"
                       onClick={() => setIsSheetOpen(false)}
@@ -279,6 +312,24 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
                     </Button>
                   </div>
                 </div>
+                {chartsList?.chartsDetails.map((item: any, index: any) => (
+                  <div
+                    key={index}
+                    className={`rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6 py-3 ${chartId === item.id ? ' bg-baseGraySlateSolid5' : ''}`}
+                  >
+                    <Button
+                      kind={'tertiary'}
+                      className="flex w-full justify-start"
+                      disabled={chartId === item.id}
+                      onClick={() => {
+                        setChartId(item.id);
+                        setIsSheetOpen(false);
+                      }}
+                    >
+                      {item.name}
+                    </Button>
+                  </div>
+                ))}
               </div>
             </Sheet.Content>
           </Sheet>
@@ -406,8 +457,8 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           </div>
           <div className="mb-6 flex flex-col gap-6 p-8 text-center">
             <Text>Preview</Text>
-            {previousChartData.chart && (
-              <ReactECharts option={previousChartData.chart} ref={chartRef} />
+            {chartData.chart && (
+              <ReactECharts option={chartData.chart} ref={chartRef} />
             )}
           </div>
         </div>
