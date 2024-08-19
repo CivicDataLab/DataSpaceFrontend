@@ -58,8 +58,6 @@ const ChartsList: React.FC<ChartsListProps> = ({
       })
   );
 
-  console.log(data);
-
   const [filteredRows, setFilteredRows] = useState<any[]>([]);
 
   useEffect(() => {
@@ -151,7 +149,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
             <Text>Showing Access Types</Text>
             <SearchInput
               className="w-1/2 "
-              placeholder="Search in Resources"
+              placeholder="Search in charts"
               label="Search"
               name="Search"
               onChange={(e) => handleSearchChange(e)}
