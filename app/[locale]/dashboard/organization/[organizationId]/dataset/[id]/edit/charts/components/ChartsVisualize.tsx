@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
@@ -116,12 +116,12 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   );
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [chartData, setChartData] = useState({
+  const initialChartData = {
     chartId: '',
     name: '',
     description: '',
     chartType: 'BAR_VERTICAL',
-    resource: '',
+    resource: data.datasetResources[0].id,
     xAxisColumn: '',
     xAxisLabel: '',
     yAxisColumn: '',
@@ -129,76 +129,67 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     aggregateType: 'SUM',
     showLegend: false,
     chart: '',
-  });
-  const [previousChartData, setPreviousChartData] = useState(chartData);
-  const [resourceSchema, setResourceSchema] = useState([]);
+  };
+
+  const [chartData, setChartData] = useState(initialChartData);
+  const [previousChartData, setPreviousChartData] = useState(initialChartData);
+  const [resourceSchema, setResourceSchema] = useState<any[]>([]);
 
   useEffect(() => {
-    if (chartId && chartDetails && chartDetails.resourceChart) {
-      refetch();
-      setChartData({
-        aggregateType: chartDetails.resourceChart
-          .aggregateType as AggregateType,
-        chartType: chartDetails.resourceChart.chartType as ChartTypes,
-        description: chartDetails.resourceChart.description,
-        name: chartDetails.resourceChart.name,
-        chartId: chartDetails.resourceChart.id,
-        showLegend: chartDetails.resourceChart.showLegend,
-        xAxisLabel: chartDetails.resourceChart.xAxisLabel,
-        yAxisLabel: chartDetails.resourceChart.yAxisLabel,
-        resource: chartDetails.resourceChart.resource.id,
-        xAxisColumn: chartDetails.resourceChart.xAxisColumn?.id || '',
-        yAxisColumn: chartDetails.resourceChart.yAxisColumn?.id || '',
-        chart: chartDetails.resourceChart.chart,
-      });
-      setPreviousChartData({
-        aggregateType: chartDetails.resourceChart
-          .aggregateType as AggregateType,
-        chartType: chartDetails.resourceChart.chartType as ChartTypes,
-        description: chartDetails.resourceChart.description,
-        name: chartDetails.resourceChart.name,
-        chartId: chartDetails.resourceChart.id,
-        showLegend: chartDetails.resourceChart.showLegend,
-        xAxisLabel: chartDetails.resourceChart.xAxisLabel,
-        yAxisLabel: chartDetails.resourceChart.yAxisLabel,
-        resource: chartDetails.resourceChart.resource.id,
-        xAxisColumn: chartDetails.resourceChart.xAxisColumn?.id || '',
-        yAxisColumn: chartDetails.resourceChart.yAxisColumn?.id || '',
-        chart: chartDetails.resourceChart.chart,
-      });
-    } else {
-      setChartData((prevData) => ({
-        ...prevData,
-        resource: data?.datasetResources[0].id,
-      }));
-      setResourceSchema(data?.datasetResources[0].schema);
+    if (data) {
+      if (!chartId && data?.datasetResources.length) {
+        // Set initial resource schema and chart data
+        const initialResource = data.datasetResources[0];
+        setResourceSchema(initialResource.schema || []);
+        setChartData((prevData) => ({
+          ...prevData,
+          resource: initialResource.id,
+        }));
+      } else if (chartData.resource) {
+        const resource = data?.datasetResources.find(
+          (resource: any) => resource.id === chartData.resource
+        );
+        setResourceSchema(resource?.schema || []);
+        handleChange('resource', chartData.resource);
+      }
     }
-  }, [data, chartDetails]);
+  }, [data, chartId, chartData.resource]);
+
+  useEffect(() => {
+    if (chartId && chartDetails?.resourceChart) {
+      refetch();
+      updateChartData(chartDetails.resourceChart);
+    }
+  }, [chartId, chartDetails, refetch]);
+
+  const updateChartData = (resourceChart: any) => {
+    const updatedData = {
+      aggregateType: resourceChart.aggregateType as AggregateType,
+      chartType: resourceChart.chartType as ChartTypes,
+      description: resourceChart.description,
+      name: resourceChart.name,
+      chartId: resourceChart.id,
+      showLegend: resourceChart.showLegend,
+      xAxisLabel: resourceChart.xAxisLabel,
+      yAxisLabel: resourceChart.yAxisLabel,
+      resource: resourceChart.resource.id,
+      xAxisColumn: resourceChart.xAxisColumn?.id || '',
+      yAxisColumn: resourceChart.yAxisColumn?.id || '',
+      chart: resourceChart.chart,
+    };
+    setChartData(updatedData);
+    setPreviousChartData(updatedData);
+  };
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (chartInput: { chartInput: ResourceChartInput }) =>
       GraphQL(createChart, chartInput),
     {
       onSuccess: (res: any) => {
-        toast('Resource chart Saved');
-
+        toast('Resource chart saved');
         const newChartId = res?.editResourceChart?.id;
-
+        updateChartData(res.editResourceChart);
         setChartId(newChartId);
-        setPreviousChartData({
-          aggregateType: res.editResourceChart.aggregateType as AggregateType,
-          chartType: res.editResourceChart.chartType as ChartTypes,
-          description: res.editResourceChart.description,
-          name: res.editResourceChart.name,
-          chartId: newChartId,
-          showLegend: res.editResourceChart.showLegend,
-          xAxisLabel: res.editResourceChart.xAxisLabel,
-          yAxisLabel: res.editResourceChart.yAxisLabel,
-          resource: res.editResourceChart.resource.id,
-          xAxisColumn: res.editResourceChart.xAxisColumn.id,
-          yAxisColumn: res.editResourceChart.yAxisColumn.id,
-          chart: res.editResourceChart.chart,
-        });
       },
       onError: (err: any) => {
         toast(`Received ${err} during resource chart saving`);
@@ -228,20 +219,24 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       });
     }
   };
-  const handleChange = (field: string, value: any) => {
+
+  const handleChange = useCallback((field: string, value: any) => {
     setChartData((prevData) => ({
       ...prevData,
       [field]: value,
     }));
-  };
+  }, []);
 
-  const handleResourceChange = (resourceId: string) => {
-    const selectedResource = data?.datasetResources.find(
-      (resource: any) => resource.id === resourceId
-    );
-    setResourceSchema(selectedResource?.schema || []);
-    handleChange('resource', resourceId);
-  };
+  const handleResourceChange = useCallback(
+    (resourceId: string) => {
+      const selectedResource = data?.datasetResources.find(
+        (resource: any) => resource.id === resourceId
+      );
+      setResourceSchema(selectedResource?.schema || []);
+      handleChange('resource', resourceId);
+    },
+    [data]
+  );
   const chartRef = useRef<ReactECharts>(null);
 
   return (
