@@ -2,6 +2,7 @@ import {
   IconAlertCircleFilled,
   IconArrowLeft,
   IconArrowRight,
+  IconArrowsDiagonal,
   IconBarrierBlock,
   IconBellFilled,
   IconBrandFacebookFilled,
@@ -16,6 +17,7 @@ import {
   IconDatabaseEdit,
   IconDatabaseOff,
   IconDatabasePlus,
+  IconDotsVertical,
   IconDownload,
   IconFilePlus,
   IconFileUpload,
@@ -84,4 +86,6 @@ export const Icons: {
   loader: IconLoader,
   userList: IconUsers,
   userSettings: IconUserCog,
+  arrowDiagonal: IconArrowsDiagonal,
+  verticalDots: IconDotsVertical,
 };
