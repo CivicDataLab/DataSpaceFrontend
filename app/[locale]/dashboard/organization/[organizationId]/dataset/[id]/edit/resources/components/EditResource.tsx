@@ -33,37 +33,30 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import { createResourceFilesDoc } from './ResourceDropzone';
-import { ResourceSchema, updateSchema } from './ResourceSchema';
+import { TListItem } from '../page-layout';
+import {
+  createResourceFilesDoc,
+  fetchSchema,
+  resetSchema,
+  updateResourceDoc,
+  updateSchema,
+} from './query';
+import { ResourceSchema } from './ResourceSchema';
 
-interface TListItem {
-  label: string;
-  value: string;
-  description: string;
-  dataset: any;
-  fileDetails: any;
+interface EditProps {
+  refetch: () => void;
+  list: TListItem[];
 }
 
-export const EditResource = ({ reload, data }: any) => {
-  const params = useParams();
 
-  const updateResourceDoc: any = graphql(`
-    mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {
-      updateFileResource(fileResourceInput: $fileResourceInput) {
-        __typename
-        ... on TypeResource {
-          id
-          description
-          name
-        }
-      }
-    }
-  `);
+
+export const EditResource = ({ refetch, list }: EditProps) => {
+  const params = useParams();
 
   const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
   const [schema, setSchema] = React.useState([]);
 
-  const { mutate, isLoading } = useMutation(
+  const updateResourceMutation = useMutation(
     (data: {
       fileResourceInput: UpdateFileResourceInput;
       isResetSchema: boolean;
@@ -81,29 +74,13 @@ export const EditResource = ({ reload, data }: any) => {
             resourceId: resourceId,
           });
         }
-        reload();
+        refetch();
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
       },
     }
   );
-
-  const resetSchema: any = graphql(`
-    mutation resetFileResourceSchema($resourceId: UUID!) {
-      resetFileResourceSchema(resourceId: $resourceId) {
-        ... on TypeResource {
-          id
-          schema {
-            format
-            description
-            id
-            fieldName
-          }
-        }
-      }
-    }
-  `);
 
   const schemaMutation = useMutation(
     (data: { resourceId: string }) => GraphQL(resetSchema, data),
@@ -121,21 +98,7 @@ export const EditResource = ({ reload, data }: any) => {
     GraphQL(fetchSchema, { datasetId: params.id })
   );
 
-  const fetchSchema: any = graphql(`
-    query datasetSchema($datasetId: UUID!) {
-      datasetResources(datasetId: $datasetId) {
-        schema {
-          id
-          fieldName
-          format
-          description
-        }
-        id
-      }
-    }
-  `);
-
-  const { mutate: modify } = useMutation(
+  const updateSchemaMutation = useMutation(
     (data: { input: SchemaUpdateInput }) => GraphQL(updateSchema, data),
     {
       onSuccess: () => {
@@ -153,7 +116,7 @@ export const EditResource = ({ reload, data }: any) => {
     }
   );
 
-  const { mutate: transform } = useMutation(
+  const createResourceMutation = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(createResourceFilesDoc, data),
     {
@@ -166,7 +129,7 @@ export const EditResource = ({ reload, data }: any) => {
           },
         });
         schemaQuery.refetch();
-        reload();
+        refetch();
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
@@ -174,17 +137,8 @@ export const EditResource = ({ reload, data }: any) => {
     }
   );
 
-  const ResourceList: TListItem[] =
-    data.map((item: any) => ({
-      label: item.name,
-      value: item.id,
-      description: item.description,
-      dataset: item.dataset?.pk,
-      fileDetails: item.fileDetails,
-    })) || [];
-
   const getResourceObject = (resourceId: string) => {
-    return ResourceList.find((item) => item.value === resourceId);
+    return list.find((item: TListItem) => item.value === resourceId);
   };
 
   const [resourceName, setResourceName] = React.useState(
@@ -194,19 +148,12 @@ export const EditResource = ({ reload, data }: any) => {
     getResourceObject(resourceId)?.description
   );
 
-  const handleNameChange = (text: string) => {
-    setResourceName(text);
-  };
-  const handleDescChange = (text: string) => {
-    setResourceDesc(text);
-  };
-
   React.useEffect(() => {
     setResourceName(getResourceObject(resourceId)?.label);
     setResourceDesc(getResourceObject(resourceId)?.description);
 
     //fix this later
-  }, [JSON.stringify(ResourceList), resourceId]);
+  }, [JSON.stringify(list), resourceId]);
 
   const handleResourceChange = (e: any) => {
     setResourceId(e, { shallow: false });
@@ -218,7 +165,7 @@ export const EditResource = ({ reload, data }: any) => {
 
   const dropZone = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
-      transform({
+      createResourceMutation.mutate({
         fileResourceInput: {
           dataset: params.id,
           files: acceptedFiles,
@@ -237,10 +184,9 @@ export const EditResource = ({ reload, data }: any) => {
     </div>
   );
 
-
   const onDrop = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
-      mutate({
+      updateResourceMutation.mutate({
         fileResourceInput: {
           id: resourceId,
           file: acceptedFiles[0],
@@ -266,7 +212,7 @@ export const EditResource = ({ reload, data }: any) => {
   };
 
   const saveResource = () => {
-    mutate({
+    updateResourceMutation.mutate({
       fileResourceInput: {
         id: resourceId,
         description: resourceDesc || '',
@@ -279,7 +225,7 @@ export const EditResource = ({ reload, data }: any) => {
         const { fieldName, ...rest } = item as any;
         return rest;
       });
-      modify({
+      updateSchemaMutation.mutate({
         input: {
           resource: resourceId,
           updates: updatedScheme,
@@ -296,7 +242,7 @@ export const EditResource = ({ reload, data }: any) => {
           <Select
             label="Resource List"
             labelHidden
-            options={ResourceList}
+            options={list}
             value={getResourceObject(resourceId)?.value}
             onChange={(e) => {
               handleResourceChange(e);
@@ -333,7 +279,11 @@ export const EditResource = ({ reload, data }: any) => {
       </div>
       <Divider className="mb-8 mt-6" />
       <div className="flex justify-center">
-        <Button className="w-1/3" loading={isLoading} onClick={saveResource}>
+        <Button
+          className="w-1/3"
+          loading={updateResourceMutation.isLoading}
+          onClick={saveResource}
+        >
           SAVE RESOURCE
         </Button>
       </div>
@@ -343,7 +293,7 @@ export const EditResource = ({ reload, data }: any) => {
             <div className="w-2/3">
               <TextField
                 value={resourceName}
-                onChange={(text) => handleNameChange(text)}
+                onChange={(text) => setResourceName(text)}
                 label="Resource Name"
                 name="a"
                 required
@@ -368,8 +318,9 @@ export const EditResource = ({ reload, data }: any) => {
             </div>
           </div>
           <TextField
+            key={resourceId}
             value={resourceDesc}
-            onChange={(text) => handleDescChange(text)}
+            onChange={(text) => setResourceDesc(text)}
             label="Resource Description"
             name="resourceDesc"
             multiline={4}
@@ -473,8 +424,8 @@ export const EditResource = ({ reload, data }: any) => {
           </Button>
         </div>
         <Text variant="headingXs" as="span" fontWeight="regular">
-           The Field settings apply to the Resource on a master level and can not
-           be changed in Access Models.
+          The Field settings apply to the Resource on a master level and can not
+          be changed in Access Models.
         </Text>
         {schemaQuery.isLoading || schemaMutation.isLoading ? (
           <div className=" mt-8 flex justify-center">
@@ -482,12 +433,12 @@ export const EditResource = ({ reload, data }: any) => {
           </div>
         ) : resourceId && schemaQuery.data?.datasetResources?.filter(
             (item: any) => item.id === resourceId ).length > 0 ? (
-               <ResourceSchema
-                  setSchema={setSchema}
+          <ResourceSchema
+            setSchema={setSchema}
                   data={schemaQuery.data?.datasetResources?.filter(
                     (item: any) => item.id === resourceId)[0]?.schema}
-                />
-          ) : (
+          />
+        ) : (
              <div className="my-8 flex justify-center"> Click on Reset Fields </div>
         )}
       </div>

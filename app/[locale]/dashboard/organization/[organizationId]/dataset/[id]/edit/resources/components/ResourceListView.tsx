@@ -26,7 +26,7 @@ import {
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
-import { createResourceFilesDoc } from './ResourceDropzone';
+import { createResourceFilesDoc,updateResourceList } from './query';
 
 type FilteredRow = {
   name_of_resource: string;
@@ -35,16 +35,16 @@ type FilteredRow = {
   id: string;
 };
 
-export const ResourceListView = ({ data, refetch }: any) => {
-  const updateResourceList: any = graphql(`
-    mutation deleteFileResource($resourceId: UUID!) {
-      deleteFileResource(resourceId: $resourceId)
-    }
-  `);
+type ResourceListProps = {
+  data : any[];
+  refetch: () => void;
+}
+
+export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
 
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
 
-  const { mutate } = useMutation(
+  const updateResourceMutation = useMutation(
     (data: { resourceId: string }) => GraphQL(updateResourceList, data),
     {
       onSuccess: (data, variables) => {
@@ -66,7 +66,7 @@ export const ResourceListView = ({ data, refetch }: any) => {
     }
   );
 
-  const { mutate: transform } = useMutation(
+  const createResourceMutation = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(createResourceFilesDoc, data),
     {
@@ -100,7 +100,7 @@ export const ResourceListView = ({ data, refetch }: any) => {
   const params = useParams();
 
   const deleteRow = (row: any) => {
-    mutate({
+    updateResourceMutation.mutate({
       resourceId: row.id,
     });
   };
@@ -181,7 +181,7 @@ export const ResourceListView = ({ data, refetch }: any) => {
 
   const dropZone = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
-      transform({
+      createResourceMutation.mutate({
         fileResourceInput: {
           dataset: params.id,
           files: acceptedFiles,
