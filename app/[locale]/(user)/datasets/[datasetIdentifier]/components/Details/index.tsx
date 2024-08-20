@@ -1,4 +1,7 @@
 import React from 'react';
+import { useParams } from 'next/navigation';
+import { graphql } from '@/gql';
+import { useQuery } from '@tanstack/react-query';
 import {
   Button,
   Carousel,
@@ -7,84 +10,94 @@ import {
   CarouselNext,
   CarouselPrevious,
   Icon,
+  Spinner,
   Text,
 } from 'opub-ui';
 import { BarChart } from 'opub-ui/viz';
 
+import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 
+const charts: any = graphql(`
+  query chartsData($datasetId: UUID!) {
+    chartsDetails(datasetId: $datasetId) {
+      aggregateType
+      chartType
+      description
+      id
+      name
+      showLegend
+      xAxisLabel
+      yAxisLabel
+      chart
+    }
+  }
+`);
+
 const Details = () => {
-  const barOptions = {
-    xAxis: {
-      type: 'category',
-      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    },
-    yAxis: {
-      type: 'value',
-    },
-    series: [
-      {
-        data: [120, 200, 150, 80, 70, 110, 130],
-        type: 'bar',
-        name: 'Sales',
-        color: 'rgb(55,162,218)',
-      },
-    ],
-  };
+  const params = useParams();
+
+  const {
+    data,
+    isLoading,
+    refetch,
+  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
+    [`chartdata_${params.datasetIdentifier}`],
+    () =>
+      GraphQL(charts, {
+        datasetId: params.datasetIdentifier,
+      })
+  );
+  console.log(data);
+
   return (
     <>
-      <div className="w-full py-4">
-        <Carousel className="flex w-full items-center">
-          <CarouselPrevious />
-          <CarouselContent>
-            {Array.from({
-              length: 5,
-            }).map((_, index) => (
-              <CarouselItem key={index}>
-                {/* <div className=" w-full border-2 border-solid border-baseRedSolid9 p-56 text-center max-sm:p-20">
-                  <span className="text-4xl font-semibold ">{index + 1}</span>
-                </div> */}
-                <div className=" w-full border-2 border-solid border-baseGraySlateSolid4 p-6 text-center shadow-shadowLayer max-sm:p-2">
-                  <div className="lg:p-10">
-                    <BarChart options={barOptions} height={'450px'} />
-                  </div>
-                  <div className="flex items-center justify-between gap-2 max-sm:flex-wrap">
-                    <div className=" flex flex-col gap-1 py-2 text-start">
-                      <Text className=" font-semi-bold">
-                        Monthly Precipitation levels in Guwahati in 2011
-                      </Text>
-                      <Text>
-                        This chart shows the precipitation levels (in
-                        millimetres) in the city of Guwahati, Assam, India. Sum
-                        of precipitation is mapped out for each month for the
-                        year 2011
-                      </Text>
+      {data?.chartsDetails.length > 0 || !isLoading ? (
+        <div className="w-full py-4">
+          <Carousel className="flex w-full items-center">
+            <CarouselPrevious />
+            <CarouselContent>
+              {data?.chartsDetails.map((item: any, index: any) => (
+                <CarouselItem key={index}>
+                  <div className=" w-full border-2 border-solid border-baseGraySlateSolid4 p-6 text-center shadow-shadowLayer max-sm:p-2">
+                    <div className="lg:p-10">
+                      <BarChart options={item.chart} height={'450px'} />
                     </div>
-                    <div className="flex gap-2">
-                      <Button kind="secondary" className="p-2">
-                        <Icon
-                          source={Icons.arrowDiagonal}
-                          size={20}
-                          color="default"
-                        />
-                      </Button>
+                    <div className="flex items-center justify-between gap-2 max-sm:flex-wrap">
+                      <div className=" flex flex-col gap-1 py-2 text-start">
+                        <Text className=" font-semi-bold">{item.name}</Text>
+                        <Text>{item.description}</Text>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button kind="secondary" className="p-2">
+                          <Icon
+                            source={Icons.arrowDiagonal}
+                            size={20}
+                            color="default"
+                          />
+                        </Button>
 
-                      <Button kind="secondary" className="p-2">
-                        <Icon
-                          source={Icons.verticalDots}
-                          size={20}
-                          color="default"
-                        />
-                      </Button>
+                        <Button kind="secondary" className="p-2">
+                          <Icon
+                            source={Icons.verticalDots}
+                            size={20}
+                            color="default"
+                          />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselNext />
-        </Carousel>
-      </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselNext />
+          </Carousel>
+        </div>
+      ) : (
+        <div className=" mt-8 flex justify-center">
+          <Spinner />
+        </div>
+      )}
     </>
   );
 };
