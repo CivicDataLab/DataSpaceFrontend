@@ -84,21 +84,23 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
     }
   );
 
+  const handleAccessModel = (row: any) => {
+    setAccessModelId(row.original.id);
+    setList(false);
+  };
+
   const generateColumnData = () => {
     return [
       {
         accessorKey: 'name',
         header: 'Name of Access Type',
         cell: ({ row }: any) => (
-          <Link
-            href={''}
-            onClick={() => {
-              setAccessModelId(row.original.id);
-              setList(false);
-            }}
+          <div
+            style={{ cursor: 'pointer', textDecoration: 'underline' }}
+            onClick={() => handleAccessModel(row)}
           >
-            <span className=" underline">{row.original.name}</span>
-          </Link>
+            <span>{row.original.name}</span>
+          </div>
         ),
       },
       {
