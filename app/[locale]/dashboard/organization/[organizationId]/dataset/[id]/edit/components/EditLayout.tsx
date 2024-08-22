@@ -238,11 +238,15 @@ const Navigation = ({
       url: `/dashboard/organization/${organization}/dataset/${id}/edit/resources`,
       selected: pathItem === 'resources',
     },
-    {
-      label: 'Access Models',
-      url: `/dashboard/organization/${organization}/dataset/${id}/edit/access?list=true`,
-      selected: pathItem === 'access',
-    },
+    ...(process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true'
+      ? [
+          {
+            label: 'Access Models',
+            url: `/dashboard/organization/${organization}/dataset/${id}/edit/access?list=true`,
+            selected: pathItem === 'access',
+          },
+        ]
+      : []),
     {
       label: 'Charts',
       url: `/dashboard/organization/${organization}/dataset/${id}/edit/charts?type=list`,

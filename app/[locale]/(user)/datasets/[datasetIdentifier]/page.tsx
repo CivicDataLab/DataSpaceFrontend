@@ -87,17 +87,22 @@ const DatasetDetailsPage = () => {
       value: 'details',
       component: <Details />,
     },
-    {
-      label: 'Access Models',
-      value: 'accessmodels',
-      component: <AccessModels />,
-    },
+    ...(process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true'
+      ? [
+          {
+            label: 'Access Models',
+            value: 'accessmodels',
+            component: <AccessModels />,
+          },
+        ]
+      : []),
     {
       label: 'Resources',
       value: 'resources',
       component: <Resources />,
     },
   ];
+
   const [activeTab, setActiveTab] = useState('details'); // State to manage active tab
   const CarouselInfo = [
     {
