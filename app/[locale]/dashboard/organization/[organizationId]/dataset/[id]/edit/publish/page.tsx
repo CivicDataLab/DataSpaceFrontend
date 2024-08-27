@@ -193,15 +193,19 @@ const Page = () => {
           : '',
       errorType: 'critical',
     },
-    {
-      name: 'Access Type',
-      data: data?.datasets[0]?.accessModels,
-      error:
-        data && data?.datasets[0]?.accessModels.length === 0
-          ? 'No Access Type found. Please add to continue.'
-          : '',
-      errorType: 'critical',
-    },
+    ...(process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true'
+      ? [
+          {
+            name: 'Access Type',
+            data: data?.datasets[0]?.accessModels,
+            error:
+              data && data?.datasets[0]?.accessModels.length === 0
+                ? 'No Access Type found. Please add to continue.'
+                : '',
+            errorType: 'critical',
+          },
+        ]
+      : []),
     {
       name: 'Metadata',
       data: data?.datasets[0]?.metadata,
