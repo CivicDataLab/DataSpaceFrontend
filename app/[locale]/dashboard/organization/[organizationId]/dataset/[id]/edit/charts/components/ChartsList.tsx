@@ -80,21 +80,23 @@ const ChartsList: React.FC<ChartsListProps> = ({
     }
   );
 
+  const handleChart = (row: any) => {
+    setChartId(row.original.id);
+    setType('visualize');
+  };
+
   const generateColumnData = () => {
     return [
       {
         accessorKey: 'name',
         header: 'Name of Access Type',
         cell: ({ row }: any) => (
-          <Link
-            href={''}
-            onClick={() => {
-              setChartId(row.original.id);
-              setType('visualize');
-            }}
+          <div
+            style={{ cursor: 'pointer', textDecoration: 'underline' }}
+            onClick={() => handleChart(row)}
           >
-            <span className=" underline">{row.original.name}</span>
-          </Link>
+            <span>{row.original.name}</span>
+          </div>
         ),
       },
 

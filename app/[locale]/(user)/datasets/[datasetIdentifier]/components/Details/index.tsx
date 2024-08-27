@@ -58,9 +58,9 @@ const Details = () => {
             <CarouselPrevious />
             <CarouselContent>
               {data?.chartsDetails.map((item: any, index: any) => (
-                <CarouselItem key={index}>
-                  <div className=" w-full border-2 border-solid border-baseGraySlateSolid4 p-6 text-center shadow-shadowLayer max-sm:p-2">
-                    <div className="lg:p-10">
+                <CarouselItem key={index} className=" m-auto">
+                  <div className=" w-full border-2 border-solid border-baseGraySlateSolid4 p-6 text-center  shadow-basicLg max-sm:p-2">
+                    <div className=" lg:p-10">
                       <BarChart options={item.chart} height={'450px'} />
                     </div>
                     <div className="flex items-center justify-between gap-2 max-sm:flex-wrap">

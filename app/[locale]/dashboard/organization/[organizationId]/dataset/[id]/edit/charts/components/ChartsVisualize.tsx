@@ -457,7 +457,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           </div>
           <div className="mb-6 flex flex-col gap-6 p-8 text-center">
             <Text>Preview</Text>
-            {chartData.chart && (
+            {Object.keys(chartData.chart).length > 0 && (
               <ReactECharts option={chartData.chart} ref={chartRef} />
             )}
           </div>
