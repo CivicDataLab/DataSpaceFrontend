@@ -1,8 +1,8 @@
+import { Button, Icon, Text } from 'opub-ui';
 import React from 'react';
-import { Button, Icon, Tag, Text } from 'opub-ui';
 
-import { formatDate, toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import { toTitleCase } from '@/lib/utils';
 
 interface MetadataProps {
   data: any;
@@ -16,13 +16,12 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
       item.metadataItem.label !== 'Github Repo Link' &&
       item.metadataItem.label !== 'Source'
   );
-  console.log(data);
 
   return (
     <div className="rounded-md shadow-md flex flex-col gap-6 bg-surfaceDefault px-8 py-6">
       <div className="flex items-center justify-between">
         <Text variant="headingMd" fontWeight="semibold">
-          METADATA
+          Metadata
         </Text>
         {setOpen && (
           <Button onClick={() => setOpen(false)} kind="tertiary">
