@@ -202,6 +202,48 @@ export function EditMetadata({ id }: { id: string }) {
     return defaultVal;
   };
 
+  function renderInputField(metadataFormItem: any, getMetaDataListQuery: any) {
+    // Check the data type and return the corresponding input
+
+    if (metadataFormItem.dataType === 'STRING') {
+      return (
+        <div
+          key={metadataFormItem.id}
+          className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"
+        >
+          <Input
+            name={metadataFormItem.id}
+            label={metadataFormItem.label}
+            disabled={
+              getMetaDataListQuery.isLoading || !metadataFormItem.enabled
+            }
+          />
+        </div>
+      );
+    }
+
+    if (metadataFormItem.dataType === 'DATE') {
+      return (
+        <div
+          key={metadataFormItem.id}
+          className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"
+        >
+          <Input
+            type="date"
+            name={metadataFormItem.id}
+            label={metadataFormItem.label}
+            disabled={
+              getMetaDataListQuery.isLoading || !metadataFormItem.enabled
+            }
+          />
+        </div>
+      );
+    }
+
+    // Add more conditions if there are other data types you want to handle
+    return null;
+  }
+
   return (
     <>
       <Form
@@ -309,24 +351,10 @@ export function EditMetadata({ id }: { id: string }) {
                   <div className="flex flex-wrap">
                     {getMetaDataListQuery?.data?.metadata?.map(
                       (metadataFormItem: TypeMetadata) => {
-                        if (metadataFormItem.dataType === 'STRING') {
-                          return (
-                            <div
-                              key={metadataFormItem.id}
-                              className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"
-                            >
-                              <Input
-                                name={metadataFormItem.id}
-                                label={metadataFormItem.label}
-                                disabled={
-                                  getMetaDataListQuery.isLoading ||
-                                  !metadataFormItem.enabled
-                                }
-                              />
-                            </div>
-                          );
-                        }
-                        return null;
+                        return renderInputField(
+                          metadataFormItem,
+                          getMetaDataListQuery
+                        );
                       }
                     )}
                   </div>
