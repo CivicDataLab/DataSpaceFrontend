@@ -1,6 +1,5 @@
 import React from 'react';
-import Image from 'next/image';
-import { Button, Icon, Text } from 'opub-ui';
+import { Button, Icon, Tag, Text } from 'opub-ui';
 
 import { formatDate, toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
@@ -11,42 +10,78 @@ interface MetadataProps {
 }
 
 const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
+  const filteredMetadataArray = data.metadata.filter(
+    (item: any) =>
+      item.metadataItem.label !== 'Source Website' &&
+      item.metadataItem.label !== 'Github Repo Link' &&
+      item.metadataItem.label !== 'Source'
+  );
+  console.log(data);
+
   return (
-    <>
+    <div className="rounded-md shadow-md flex flex-col gap-6 bg-surfaceDefault px-8 py-6">
       <div className="flex items-center justify-between">
-        <div className="w-full border-b-2 border-solid border-baseGraySlateSolid4 py-4">
-          <Text variant="headingLg" className="pb-2">
-            About the Dataset
-          </Text>
-          <br />
-          <Text>METADATA</Text>
-        </div>
+        <Text variant="headingMd" fontWeight="semibold">
+          METADATA
+        </Text>
         {setOpen && (
-          <div className="align-center mr-2">
-            <Button onClick={(e) => setOpen(false)} kind="tertiary">
-              <Icon source={Icons.cross} size={24} color="default" />
-            </Button>
-          </div>
+          <Button onClick={() => setOpen(false)} kind="tertiary">
+            <Icon source={Icons.cross} size={24} color="default" />
+          </Button>
         )}
       </div>
-      <div className="flex flex-col flex-wrap gap-5 pt-6">
-        <div className="mx-auto">
-          <Image width={200} height={200} src={'/obi.jpg'} alt="Org Logo" />
-        </div>
-        {data?.metadata?.map((item: any, index: any) => (
-          <div className="flex gap-2" key={index}>
-            <Text className="min-w-24 basis-1/4">
-              {toTitleCase(item.metadataItem.label)}
+
+      <div className="flex flex-col gap-5 align-baseline">
+        {filteredMetadataArray.map((item: any, index: any) => (
+          <div
+            className="flex items-center gap-2 border-b-2 border-solid border-baseGraySlateSolid6 pb-2"
+            key={index}
+          >
+            <Text className="text-base min-w-[120px] basis-1/4 font-medium">
+              {toTitleCase(item.metadataItem.label)}:
             </Text>
-            <Text> {item.value}</Text>
+            <Text className="text-base">{item.value}</Text>
           </div>
         ))}
-        <div className="flex gap-2">
-          <Text className="min-w-24 basis-1/4">Created</Text>
-          <Text>{formatDate(data?.created)}</Text>
+        <div className="flex items-baseline gap-2 border-b-2 border-solid border-baseGraySlateSolid6  pb-2">
+          <Text className="text-base min-w-[120px] basis-1/4 font-medium">
+            Formats:
+          </Text>
+          <div className="flex flex-wrap gap-2">
+            {data?.formats.map((item: any, index: any) => (
+              <Text  key={index}>
+                {item}
+              </Text>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-baseline gap-2 border-b-2 border-solid border-baseGraySlateSolid6  pb-2">
+          <Text className="text-base min-w-[120px] basis-1/4 font-medium">
+            Category:
+          </Text>
+          <div className="flex flex-wrap gap-2">
+            {data?.categories.map((item: any, index: any) => (
+              <Text className=" underline" key={index}>
+                {item.name}
+              </Text>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-baseline gap-2  pb-2">
+          <Text className="text-base min-w-[120px] basis-1/4 font-medium">
+            Tags:
+          </Text>
+          <div className="flex flex-wrap gap-2">
+            {data?.tags.map((item: any, index: any) => (
+              <Text className=" underline" key={index}>
+                {item.value}
+              </Text>
+            ))}
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
