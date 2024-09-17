@@ -161,6 +161,7 @@ const Cards = ({ data }: { data: Dataset }) => {
               {data.formats?.length > 0 && (
                 <span className="flex items-center gap-4 py-1 pr-2 lg:w-2/5">
                   {data.formats.map((fileType, index) => (
+                    
                     <Tag key={index} background-color="#E1F0FF">
                       {fileType}
                     </Tag>
@@ -171,9 +172,14 @@ const Cards = ({ data }: { data: Dataset }) => {
               {data?.categories.length > 0 && (
                 <span className="flex gap-2 py-1 pr-2">
                   {data?.categories.map((category, index) => (
-                    <Tag key={index} background-color="#E1F0FF">
-                      {category}
-                    </Tag>
+                   <div
+                   key={index}
+                   className="rounded-1 px-2 py-1 text-75 border-1"
+                   style={{ borderColor: '#95E79E', borderWidth: '2px', borderStyle: 'solid' }}
+                 >
+                   {category}
+                 </div>
+                 
                   ))}
                 </span>
               )}
