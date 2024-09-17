@@ -42,6 +42,8 @@ interface QueryParams {
   currentPage: number;
   filters: FilterOptions;
   query?: string;
+  sort?: string; // Adding sort to QueryParams
+
 }
 
 type Action =
@@ -50,6 +52,7 @@ type Action =
   | { type: 'SET_FILTERS'; payload: { category: string; values: string[] } }
   | { type: 'REMOVE_FILTER'; payload: { category: string; value: string } }
   | { type: 'SET_QUERY'; payload: string }
+  | { type: 'SET_SORT'; payload: string } // Add action to set sort
   | { type: 'INITIALIZE'; payload: QueryParams };
 
 const initialState: QueryParams = {
@@ -57,6 +60,8 @@ const initialState: QueryParams = {
   currentPage: 1,
   filters: {},
   query: '',
+  sort: 'recent', // Default sort is set to recent
+
 };
 
 const queryReducer = (state: QueryParams, action: Action): QueryParams => {
@@ -86,6 +91,9 @@ const queryReducer = (state: QueryParams, action: Action): QueryParams => {
     }
     case 'SET_QUERY': {
       return { ...state, query: action.payload };
+    }
+    case 'SET_SORT': {
+      return { ...state, sort: action.payload };
     }
     case 'INITIALIZE': {
       return { ...state, ...action.payload };
@@ -133,7 +141,10 @@ const useUrlParams = (
     const searchParam = queryParams.query
       ? `&query=${encodeURIComponent(queryParams.query)}`
       : '';
-    const variablesString = `?${filtersString}&size=${queryParams.pageSize}&page=${queryParams.currentPage}${searchParam}`;
+      const sortParam = queryParams.sort
+      ? `&sort=${encodeURIComponent(queryParams.sort)}`
+      : '';
+    const variablesString = `?${filtersString}&size=${queryParams.pageSize}&page=${queryParams.currentPage}${searchParam}${sortParam}`;
     setVariables(variablesString);
 
     const currentUrl = new URL(window.location.href);
@@ -153,7 +164,11 @@ const useUrlParams = (
     } else {
       currentUrl.searchParams.delete('query');
     }
-
+    if (queryParams.sort) {
+      currentUrl.searchParams.set('sort', queryParams.sort);
+    } else {
+      currentUrl.searchParams.delete('sort');
+    }
     router.push(currentUrl.toString());
   }, [queryParams, setVariables, router]);
 };
@@ -202,6 +217,10 @@ const DatasetsListing = () => {
 
   const handleSearch = (searchTerm: string) => {
     setQueryParams({ type: 'SET_QUERY', payload: searchTerm });
+  };
+
+  const handleSortChange = (sortOption: string) => {
+    setQueryParams({ type: 'SET_SORT', payload: sortOption });
   };
 
   const aggregations: Aggregations = facets?.aggregations || {};
@@ -255,14 +274,15 @@ const DatasetsListing = () => {
                 label=""
                 labelInline
                 name="select"
+                onChange={handleSortChange}
                 options={[
                   {
-                    label: 'Newest',
-                    value: 'newestUpdate',
+                    label: 'Recent',
+                    value: 'recent',
                   },
                   {
-                    label: 'Oldest',
-                    value: 'oldestUpdate',
+                    label: 'Alphabetical',
+                    value: 'alphabetical',
                   },
                 ]}
               />
