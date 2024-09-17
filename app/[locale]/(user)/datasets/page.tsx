@@ -208,9 +208,9 @@ const DatasetsListing = () => {
 
   const filterOptions = Object.entries(aggregations).reduce(
     (acc: Record<string, { label: string; value: string }[]>, [key, value]) => {
-      acc[key.replace('.raw', '')] = value.buckets.map((bucket: Bucket) => ({
-        label: bucket.key,
-        value: bucket.key,
+      acc[key] = Object.entries(value).map(([bucketKey]) => ({
+        label: bucketKey,
+        value: bucketKey,
       }));
       return acc;
     },
