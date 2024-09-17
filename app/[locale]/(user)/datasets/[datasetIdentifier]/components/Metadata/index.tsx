@@ -20,7 +20,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
   );
 
   return (
-    <div className="rounded-md shadow-md flex flex-col gap-6 bg-surfaceDefault px-8 py-6">
+    <div className="rounded-md shadow-md flex flex-col gap-6 bg-surfaceDefault  px-6 py-4 lg:px-8 lg:py-6">
       <div className="flex items-center justify-between">
         <Text variant="headingMd" fontWeight="semibold">
           Metadata

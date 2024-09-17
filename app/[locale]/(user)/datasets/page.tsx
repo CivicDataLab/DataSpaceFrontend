@@ -249,7 +249,7 @@ const DatasetsListing = () => {
           <Spinner />
         </div>
       ) : (
-        <section className="mx-6 md:mx-8 lg:mx-10">
+        <section className="mx-5 md:mx-8 lg:mx-10">
           <div className="my-4 flex flex-wrap items-center justify-between gap-6 rounded-2 bg-baseBlueSolid4 p-2">
             <div>
               <Text>
