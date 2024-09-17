@@ -170,7 +170,7 @@ const Cards = ({ data }: { data: Dataset }) => {
               )}
 
               {data?.categories.length > 0 && (
-                <span className="flex gap-2 py-1 pr-2">
+                <span className="flex gap-2 flex-wrap py-1 pr-2">
                   {data?.categories.map((category, index) => (
                    <div
                    key={index}
