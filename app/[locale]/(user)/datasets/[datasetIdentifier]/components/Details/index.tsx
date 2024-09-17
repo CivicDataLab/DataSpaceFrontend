@@ -78,7 +78,7 @@ const Details = () => {
                         <div className="flex gap-2">
                           <Button kind="secondary" className="p-2">
                             <Icon
-                              source={Icons.arrowDiagonal}
+                              source={Icons.share}
                               size={20}
                               color="default"
                             />
@@ -86,7 +86,7 @@ const Details = () => {
 
                           <Button kind="secondary" className="p-2">
                             <Icon
-                              source={Icons.verticalDots}
+                              source={Icons.download}
                               size={20}
                               color="default"
                             />
