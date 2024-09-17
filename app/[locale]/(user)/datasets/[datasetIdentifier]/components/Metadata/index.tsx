@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Button, Icon, Text } from 'opub-ui';
 
 import { toTitleCase } from '@/lib/utils';
@@ -17,7 +18,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
       item.metadataItem.label !== 'Source' &&
       item.value.trim() !== '' // Ensure the value is not empty
   );
-  
+
   return (
     <div className="rounded-md shadow-md flex flex-col gap-6 bg-surfaceDefault px-8 py-6">
       <div className="flex items-center justify-between">
@@ -62,9 +63,14 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             </Text>
             <div className="flex flex-wrap gap-2">
               {data?.categories.map((item: any, index: any) => (
-                <Text className=" underline" key={index}>
-                  {item.name}
-                </Text>
+                <Link
+                  href={`/datasets?categories=${item.name}`}
+                  target="_blank"
+                  className="flex justify-center"
+                  key={index}
+                >
+                  <Text className=" underline">{item.name}</Text>
+                </Link>
               ))}
             </div>
           </div>
@@ -77,9 +83,14 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             </Text>
             <div className="flex flex-wrap gap-2">
               {data?.tags.map((item: any, index: any) => (
-                <Text className=" underline" key={index}>
-                  {item.value}
-                </Text>
+                <Link
+                  href={`/datasets?tags=${item.value}`}
+                  target="_blank"
+                  className="flex justify-center"
+                  key={index}
+                >
+                  <Text className=" underline">{item.value}</Text>
+                </Link>
               ))}
             </div>
           </div>
