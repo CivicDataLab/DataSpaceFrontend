@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
@@ -57,12 +58,12 @@ const Details = () => {
         </div>
       ) : data?.chartsDetails?.length > 0 ? (
         <>
-          <Text variant="bodyLg" className="mx-6">
+          <Text variant="bodyLg" className="mx-6 lg:mx-0">
             Visualizations
           </Text>
           <div className="w-full">
             <Carousel className="flex w-full items-center">
-              <CarouselPrevious />
+              <CarouselPrevious className=" m-2" />
               <CarouselContent>
                 {data?.chartsDetails.map((item: any, index: any) => (
                   <CarouselItem key={index} className="m-auto">
@@ -83,7 +84,11 @@ const Details = () => {
                               color="default"
                             />
                           </Button>
-
+                          {/* <Link
+                            href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/chart/${item.id}`}
+                            target="_blank"
+                            className="flex justify-center"
+                          > */}
                           <Button kind="secondary" className="p-2">
                             <Icon
                               source={Icons.download}
@@ -91,6 +96,7 @@ const Details = () => {
                               color="default"
                             />
                           </Button>
+                          {/* </Link> */}
                         </div>
                       </div>
                     </div>
@@ -102,7 +108,7 @@ const Details = () => {
           </div>
         </>
       ) : (
-       ''
+        ''
       )}
     </div>
   );
