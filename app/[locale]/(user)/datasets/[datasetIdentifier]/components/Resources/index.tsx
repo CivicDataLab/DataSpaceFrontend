@@ -94,7 +94,7 @@ const Resources = () => {
             {data?.datasetResources.map((item: any, index: number) => (
               <div key={index} className="flex flex-wrap justify-between gap-4">
                 <div className="gap flex flex-col lg:w-4/5">
-                  <div className="item flex gap-2">
+                  <div className="item flex gap-2 items-center">
                     <Text variant="headingMd">{item.name}</Text>
                     <Tag>{item.fileDetails.format}</Tag>
                   </div>
