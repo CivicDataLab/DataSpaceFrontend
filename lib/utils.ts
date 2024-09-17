@@ -79,3 +79,27 @@ export function handleRedirect(event: any, link: any) {
     window.open(link, '_blank');
   }
 }
+
+
+export function formatDateString(
+  input: string | number | any,
+  isHyphenated = false
+): string {
+  const date = new Date(input);
+  // If hyphendated it would return date in this format - 2023-01-01 else in April 1, 2021
+  return isHyphenated
+    ? new Date(
+        date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'numeric',
+          // day: 'numeric',
+        })
+      )
+        .toISOString()
+        .split('T')[0]
+    : date.toLocaleDateString('en-US', {
+        month: 'long',
+        // day: 'numeric',
+        year: 'numeric',
+      });
+}
