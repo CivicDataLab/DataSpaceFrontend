@@ -87,10 +87,10 @@ const Resources = () => {
         </div>
       ) : data && data?.datasetResources?.length > 0 ? (
         <>
-          <Text variant="bodyLg" className="mx-6">
+          <Text variant="bodyLg" className="mx-6 lg:mx-0">
             Downloadable Resources
           </Text>
-          <div className="mx-6 mt-5 flex flex-col gap-8 bg-surfaceDefault p-6">
+          <div className="mx-6 lg:mx-0 mt-5 flex flex-col gap-8 bg-surfaceDefault p-6">
             {data?.datasetResources.map((item: any, index: number) => (
               <div key={index} className="flex flex-wrap justify-between gap-4">
                 <div className="gap flex flex-col lg:w-4/5">
