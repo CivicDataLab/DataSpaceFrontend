@@ -1,63 +1,192 @@
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Tag, Text } from 'opub-ui';
+import { Button, Tag, Text, Tooltip } from 'opub-ui';
+
+import { formatDateString } from '@/lib/utils';
+
+interface MetadataItem {
+  label: string;
+}
+
+interface MetadataEntry {
+  metadata_item: MetadataItem;
+  value: string;
+}
 
 interface Dataset {
-  tags: string[];
-  description: string;
-  title: string;
   id: string;
+  metadata: MetadataEntry[];
+  tags: string[];
+  categories: string[];
+  formats: string[];
+  title: string;
+  description: string;
+  created: string; // ISO 8601 date string
+  modified: string; // ISO 8601 date string
+  organization: string | null;
 }
 
 const Cards = ({ data }: { data: Dataset }) => {
+  function getMetadataValue(data: Dataset, label: string): string | null {
+    const metadataEntry = data.metadata.find(
+      (entry) => entry.metadata_item.label === label
+    );
+    return metadataEntry ? metadataEntry.value : null;
+  }
+
+  const [showMore, setShowMore] = useState(false);
+  const [isDescriptionLong, setIsDescriptionLong] = useState(false);
+
+  const descriptionRef = useRef<HTMLDivElement | null>(null);
+
+  const toggleShowMore = (event: React.MouseEvent) => {
+    event.preventDefault(); // Prevent link navigation
+    event.stopPropagation(); // Stop event from propagating to the card's link
+    setShowMore((prevState) => !prevState);
+  };
+
+  useEffect(() => {
+    if (descriptionRef.current) {
+      const isLong =
+        descriptionRef.current.scrollHeight >
+        descriptionRef.current.clientHeight;
+      setIsDescriptionLong(isLong);
+    }
+  }, [data]);
+
   return (
-    <div className="border-b-2 border-solid border-baseGraySlateSolid4 p-6">
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div>
-          <Link href={`/datasets/${data.id}`}>
-            <Text variant="headingMd">{data.title}</Text>
-          </Link>
+    <div className="mb-6 border-b-2 border-solid border-baseGraySlateSolid4">
+      <Link href={`/datasets/${data.id}`} passHref>
+        <div className="w-full cursor-pointer rounded-1 bg-surfaceDefault p-4 shadow-elementCard">
+          <div>
+            <div className="flex flex-col flex-wrap items-start gap-3 lg:flex-row lg:gap-6">
+              <div className="flex  flex-col flex-wrap items-start gap-3 p-0 lg:w-2/5">
+                <Text
+                  className="text-textSubdued"
+                  variant="headingLg"
+                  as="p"
+                  breakWord
+                  fontWeight="semibold"
+                >
+                  {data.title}
+                </Text>
+                <Text
+                  color="default"
+                  className="text-textDefault"
+                  variant="headingSm"
+                  fontWeight="medium"
+                >
+                  Source: {getMetadataValue(data, 'Source') || 'NA'}
+                </Text>
+                <span className="flex flex-col items-start gap-1">
+                  <div className=" flex flex-col gap-2  lg:flex-row">
+                    <Text
+                      color="default"
+                      className="text-textSubdued"
+                      variant="bodySm"
+                      fontWeight="regular"
+                    >
+                      Last Updated:{' '}
+                      {getMetadataValue(data, 'Last Updated') || 'NA'}
+                    </Text>
+                    <Text
+                      color="default"
+                      className="hidden text-textSubdued  lg:block"
+                      variant="bodySm"
+                      fontWeight="regular"
+                    >
+                      |
+                    </Text>
+                    <Text
+                      color="default"
+                      className="text-textSubdued"
+                      variant="bodySm"
+                      fontWeight="regular"
+                    >
+                      Update Frequency:{' '}
+                      {getMetadataValue(data, 'Update Frequency') || 'NA'}
+                    </Text>
+                  </div>
+                  <Text
+                    color="default"
+                    className="text-textSubdued"
+                    variant="bodySm"
+                    fontWeight="regular"
+                  >
+                    Reference Period:{' '}
+                    {formatDateString(getMetadataValue(data, 'Period From')) ||
+                      'NA'}{' '}
+                    to{' '}
+                    {formatDateString(getMetadataValue(data, 'Period To')) ||
+                      'NA'}
+                  </Text>
+                </span>
+              </div>
+
+              <div className="flex flex-1 flex-col-reverse  gap-4 overflow-hidden lg:max-h-[150px] lg:flex-col">
+                <div>
+                  <div
+                    ref={descriptionRef}
+                    className={!showMore ? ' line-clamp-2 lg:line-clamp-5' : ''}
+                  >
+                    <Tooltip
+                      content={data.description}
+                      align="end"
+                      width="wide"
+                    >
+                      <Text variant="bodyMd" as="p" color="default">
+                        {data.description}
+                      </Text>
+                    </Tooltip>
+                  </div>
+
+                  {/* Only show the "Show more" button on medium and small screens */}
+                  {isDescriptionLong && (
+                    <div className="block md:hidden">
+                      <Button
+                        className="self-start p-2"
+                        onClick={toggleShowMore}
+                        variant="interactive"
+                        size="slim"
+                        kind="tertiary"
+                      >
+                        {showMore ? 'Show less' : 'Show more'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-3 lg:gap-6">
+              {data.formats?.length > 0 && (
+                <span className="flex items-center gap-4 py-1 pr-2 lg:w-2/5">
+                  {data.formats.map((fileType, index) => (
+                    
+                    <Tag key={index} background-color="#E1F0FF">
+                      {fileType}
+                    </Tag>
+                  ))}
+                </span>
+              )}
+
+              {data?.categories.length > 0 && (
+                <span className="flex gap-2 flex-wrap py-1 pr-2">
+                  {data?.categories.map((category, index) => (
+                   <div
+                   key={index}
+                   className="rounded-1 px-2 py-1 text-75 border-1"
+                   style={{ borderColor: '#95E79E', borderWidth: '2px', borderStyle: 'solid' }}
+                 >
+                   {category}
+                 </div>
+                 
+                  ))}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="description-container line-clamp-4">
-          <Text variant="bodySm">{data.description}</Text>
-        </div>
-        {data.tags && data.tags.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <Text fontWeight="bold">Tags:</Text>
-            <div className="flex gap-2">
-              {data.tags.map((item, index) => (
-                <Tag key={index}>{item}</Tag>
-              ))}
-            </div>
-          </div>
-        )}
-        {/*   <div className="flex flex-wrap items-center">
-            <Text fontWeight="bold">Categories&nbsp;:</Text>
-            <Text>&nbsp;{sector}</Text>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Text fontWeight="bold">Formats:</Text>
-            <div className="flex gap-2">
-              {format.map((item, index) => (
-                <Tag key={index}>{item}</Tag>
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center">
-            <Text fontWeight="bold">Access Models&nbsp;:</Text>
-            <Text>&nbsp;{dataset_access_models.length} in total</Text>&nbsp;
-            <div className="flex gap-2">
-              {dataset_access_models.map((item: any, index) => (
-                <CustomTags
-                  key={index}
-                  type={item.type}
-                  iconOnly={true}
-                  size={20}
-                  background={false}
-                />
-              ))}
-            </div>
-          </div> */}
-      </div>
+      </Link>
     </div>
   );
 };

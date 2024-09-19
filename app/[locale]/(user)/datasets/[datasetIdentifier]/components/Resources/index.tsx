@@ -1,109 +1,14 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-  Button,
-  Dialog,
-  Icon,
-  Spinner,
-  Table,
-  Text,
-} from 'opub-ui';
+import { Button, Spinner, Tag, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import CustomTags from '@/components/CustomTags';
-import { Icons } from '@/components/icons';
-
-const generateColumnData = () => {
-  return [
-    {
-      accessorKey: 'accessModelTitle',
-      header: 'Access Modal Name',
-    },
-    {
-      accessorKey: 'accessType',
-      header: 'Access Type',
-      cell: ({ row }: any) => {
-        return (
-          <CustomTags
-            type={row?.original?.accessType?.split('.').pop().toLowerCase()}
-            size={20}
-            helpText={false}
-          />
-        );
-      },
-    },
-    {
-      accessorKey: 'schema',
-      header: 'Fields',
-      cell: ({ row }: any) => {
-        return (
-          <Dialog>
-            <Dialog.Trigger>
-              <Button
-                kind="tertiary"
-                disabled={row.original.schema.length === 0}
-              >
-                Fields
-              </Button>
-            </Dialog.Trigger>
-            <Dialog.Content title={'Fields'} limitHeight>
-              <Table
-                columns={[
-                  {
-                    accessorKey: 'name',
-                    header: 'Name',
-                  },
-                  {
-                    accessorKey: 'format',
-                    header: 'Format',
-                  },
-                ]}
-                rows={row.original.schema.flatMap((item: any) =>
-                  item.fields.map((field: any) => ({
-                    name: field.fieldName,
-                    format: field.format,
-                  }))
-                )}
-                hideFooter
-              />
-            </Dialog.Content>
-          </Dialog>
-        );
-      },
-    },
-    {
-      accessorKey: 'download',
-      header: 'Download',
-      cell: ({ row }: any) => {
-        return (
-          <Link
-            href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${row.original.resourceId}`}
-            target="_blank"
-            className=" flex justify-center"
-          >
-            <Icon source={Icons.download} size={20} />
-          </Link>
-        );
-      },
-    },
-  ];
-};
-
-const generateTableData = (accessModelData: any[], id: any) => {
-  return accessModelData.map((accessModel: any) => ({
-    accessType: accessModel.type,
-    accessModelTitle: accessModel.name,
-    accessModelDescription: accessModel.description,
-    resourceId: id,
-    schema: accessModel.modelResources,
-  }));
-};
+import { formatDate } from '@/lib/utils';
 
 const datasetResourceQuery = graphql(`
   query datasetResources($datasetId: UUID!) {
@@ -132,6 +37,9 @@ const datasetResourceQuery = graphql(`
         format
         description
       }
+      fileDetails {
+        format
+      }
     }
   }
 `);
@@ -144,92 +52,93 @@ const Resources = () => {
     () => GraphQL(datasetResourceQuery, { datasetId: params.datasetIdentifier })
   );
 
+  // Use an object to manage the expanded state for each resource individually
+  const [showMore, setShowMore] = useState<{ [key: number]: boolean }>({});
+  const [isDescriptionLong, setIsDescriptionLong] = useState<{ [key: number]: boolean }>({});
+
+  const descriptionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Toggle showMore for a specific resource
+  const toggleShowMore = (index: number) => {
+    setShowMore((prevState) => ({
+      ...prevState,
+      [index]: !prevState[index],
+    }));
+  };
+
+  // Measure the height of the description and set the `isDescriptionLong` flag accordingly
+  useEffect(() => {
+    descriptionRefs.current.forEach((descriptionElement, index) => {
+      if (descriptionElement) {
+        const isLong = descriptionElement.scrollHeight > descriptionElement.clientHeight;
+        setIsDescriptionLong((prevState) => ({
+          ...prevState,
+          [index]: isLong,
+        }));
+      }
+    });
+  }, [data]);
+
   return (
-    <>
+    <div className="w-full">
       {isLoading ? (
-        <div className=" mt-8 flex justify-center">
+        <div className="mt-8 flex justify-center">
           <Spinner />
         </div>
-      ) : (
-        data?.datasetResources?.map((item: any, index: any) => (
-          <div
-            key={index}
-            className="my-4 flex flex-col gap-4 rounded-2 p-6 shadow-basicDeep"
-          >
-            <div className="mb-1 flex flex-wrap justify-between gap-1 lg:gap-0">
-              <div className="p2-4 lg:w-2/5">
-                <Text variant="headingMd">{item.name}</Text>
-              </div>
-              <div className="lg:w-3/5 lg:pl-4">
-                <Text>{item.description}</Text>
-              </div>
-            </div>
-
-            {item?.accessModels?.length > 0 && (
-              <div className="flex">
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="item-1" className=" border-none">
-                    <div className="flex flex-wrap items-center justify-between">
-                      <div className="align-center flex flex-col justify-between gap-4 sm:flex-row">
-                        <Dialog>
-                          <Dialog.Trigger>
-                            <Button className="h-fit w-fit" kind="secondary">
-                              View Fields
-                            </Button>
-                          </Dialog.Trigger>
-                          <Dialog.Content title={'View Fields'} limitHeight>
-                            <Table
-                              columns={[
-                                {
-                                  accessorKey: 'name',
-                                  header: 'Name',
-                                },
-                                {
-                                  accessorKey: 'format',
-                                  header: 'Format',
-                                },
-                                {
-                                  accessorKey: 'description',
-                                  header: 'Description',
-                                },
-                              ]}
-                              rows={item.schema.map((item: any) => ({
-                                name: item.fieldName,
-                                format: item.format,
-                                description: item.description,
-                              }))}
-                              hideFooter={true}
-                            />
-                          </Dialog.Content>
-                        </Dialog>
-                      </div>
-                      <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 hover:no-underline  ">
-                        <div className=" text-baseBlueSolid8 ">
-                          See Access Type
-                        </div>
-                      </AccordionTrigger>
-                    </div>
-                    <AccordionContent
-                      className="flex w-full flex-col "
-                      style={{
-                        backgroundColor: 'var( --base-pure-white)',
-                        outline: '1px solid var( --base-pure-white)',
-                      }}
+      ) : data && data?.datasetResources?.length > 0 ? (
+        <>
+          <Text variant="bodyLg" className="mx-6 lg:mx-0">
+            Downloadable Resources
+          </Text>
+          <div className="mx-6 lg:mx-0 mt-5 flex flex-col gap-8 bg-surfaceDefault p-6">
+            {data?.datasetResources.map((item: any, index: number) => (
+              <div key={index} className="flex flex-wrap justify-between gap-4">
+                <div className="gap flex flex-col lg:w-4/5">
+                  <div className="item flex gap-2 items-center">
+                    <Text variant="headingMd">{item.name}</Text>
+                    <Tag>{item.fileDetails.format}</Tag>
+                  </div>
+                  <div>
+                    <Text>Updated:</Text>
+                    <Text>{formatDate(item.modified)}</Text>
+                  </div>
+                  <div className="flex flex-col">
+                    <div
+                      ref={(el) => (descriptionRefs.current[index] = el)}
+                      className={!showMore[index] ? 'line-clamp-2' : ''}
                     >
-                      <Table
-                        columns={generateColumnData()}
-                        rows={generateTableData(item.accessModels, item.id)}
-                        hideFooter
-                      />
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+                      <Text>{item.description}</Text>
+                    </div>
+                    {isDescriptionLong[index] && (
+                      <Button
+                        className="self-start p-2"
+                        onClick={() => toggleShowMore(index)}
+                        variant="interactive"
+                        size="slim"
+                        kind="tertiary"
+                      >
+                        {showMore[index] ? 'Show less' : 'Show more'}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <Link
+                    href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${item.id}`}
+                    target="_blank"
+                    className="flex justify-center"
+                  >
+                    <Button>Download</Button>
+                  </Link>
+                </div>
               </div>
-            )}
+            ))}
           </div>
-        ))
+        </>
+      ) : (
+        ''
       )}
-    </>
+    </div>
   );
 };
 
