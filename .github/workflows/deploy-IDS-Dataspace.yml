@@ -10,6 +10,7 @@ env:
   KEYCLOAK_CLIENT_SECRET: ${{secrets.KEYCLOAK_CLIENT_SECRET}}
   AUTH_ISSUER: ${{secrets.AUTH_ISSUER}}
   NEXTAUTH_URL: ${{secrets.NEXTAUTH_URL}}
+  NEXT_PUBLIC_NEXTAUTH_URL: ${{secrets.NEXT_PUBLIC_NEXTAUTH_URL}}
   NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
   END_SESSION_URL: ${{secrets.END_SESSION_URL}}
   REFRESH_TOKEN_URL: ${{secrets.REFRESH_TOKEN_URL}}
@@ -52,4 +53,4 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          script: rm -rf DataExchange/DataExFrontend/.next; mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next; /home/ubuntu/.nvm/versions/node/v18.17.0/bin/pm2 restart DataExFrontend
+          script: rm -rf DataExchange/DataExFrontend/.next; mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next; pm2 restart DataExFrontend
