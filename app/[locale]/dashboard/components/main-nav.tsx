@@ -150,6 +150,7 @@ export function MainNav({ hideSearch = false }) {
               ) : (
                 <Button
                   onClick={() => {
+                    console.log(process.env.NEXTAUTH_URL,process.env.NEXT_PUBLIC_NEXTAUTH_URL)
                     signIn('keycloak');
                   }}
                   kind="secondary"
