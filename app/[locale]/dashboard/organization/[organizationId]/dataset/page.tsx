@@ -82,15 +82,17 @@ export default function DatasetPage({
     },
   ];
 
-  useEffect(() => {
-    if (navigationTab === null || navigationTab === undefined)
-      setNavigationTab('drafts');
-  }, [navigationTab]);
-
   const AllDatasetsQuery: { data: any; isLoading: boolean; refetch: any } =
     useQuery([`fetch_datasets_org_dashboard`], () =>
       GraphQL(allDatasetsQueryDoc, [])
     );
+
+  useEffect(() => {
+    if (navigationTab === null || navigationTab === undefined)
+      setNavigationTab('drafts');
+    AllDatasetsQuery.refetch();
+  }, [navigationTab]);
+
 
   const DeleteDatasetMutation: {
     mutate: any;
@@ -147,11 +149,11 @@ export default function DatasetPage({
           size="medium"
           icon={Icons.delete}
           color="interactive"
-          onClick={() =>
+          onClick={() => {
             DeleteDatasetMutation.mutate({
-              datasetId: row.original?.dataset?.id,
-            })
-          }
+              datasetId: row.original?.id,
+            });
+          }}
         >
           Delete
         </IconButton>
@@ -208,7 +210,7 @@ export default function DatasetPage({
         ) : AllDatasetsQuery.isLoading ? (
           <Loading />
         ) : (
-          <Content />
+          <Content params={params} />
         )}
 
         {/* <Page /> */}

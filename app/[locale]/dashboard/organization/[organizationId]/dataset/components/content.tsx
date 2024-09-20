@@ -1,12 +1,49 @@
 'use client';
 
-import { Icon, Text } from 'opub-ui';
+
+import { graphql } from '@/gql';
+import { useMutation } from '@tanstack/react-query';
+import { Button, Icon, Text } from 'opub-ui';
 import { twMerge } from 'tailwind-merge';
 
+import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import { LinkButton } from '@/components/Link';
+import { useRouter } from 'next/navigation';
 
-export function Content() {
+const createDatasetMutationDoc: any = graphql(`
+  mutation GenerateDatasetName {
+    addDataset {
+      __typename
+      ... on TypeDataset {
+        id
+        created
+      }
+      ... on OperationInfo {
+        messages {
+          kind
+          message
+        }
+      }
+    }
+  }
+`);
+export const Content = ({ params }: any) => {
+
+
+  const router = useRouter();
+  
+  const CreateDatasetMutation: { mutate: any; isLoading: boolean; error: any } =
+    useMutation(() => GraphQL(createDatasetMutationDoc, []), {
+      onSuccess: (data: any) => {
+        router.push(
+          `/dashboard/organization/${params.organizationId}/dataset/${data?.addDataset?.id}/edit/resources`
+        );
+      },
+      onError: (err: any) => {
+        console.log('Error ::: ', err);
+      },
+    });
+
   return (
     <div className="flex h-full w-full grow flex-col items-center justify-center">
       <div className={twMerge('h-100 flex flex-col items-center gap-4')}>
@@ -19,8 +56,10 @@ export function Content() {
         <Text variant="headingSm" color="subdued">
           You have not added any datasets yet.
         </Text>
-        <LinkButton href="/dashboard/dataset/new">Add New Dataset</LinkButton>
+        <Button onClick={() => CreateDatasetMutation.mutate()}>
+          Add New Dataset
+        </Button>
       </div>
     </div>
   );
-}
+};
