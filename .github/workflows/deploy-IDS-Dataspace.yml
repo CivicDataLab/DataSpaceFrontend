@@ -52,4 +52,4 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          script: rm -rf DataExchange/DataExFrontend/.next; mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next; pm2 restart deploy
+          script: rm -rf DataExchange/DataExFrontend/.next; mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next; pm2 restart DataExFrontend
