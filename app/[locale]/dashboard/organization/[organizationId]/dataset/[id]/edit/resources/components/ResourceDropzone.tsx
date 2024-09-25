@@ -81,7 +81,7 @@ export const ResourceDropzone = ({
   return (
     <>
       <DropZone
-        accept=".json, .csv, application/json, text/csv, application/zip"
+        accept=".json, .csv, application/json, text/csv, application/zip, /pdf , application/pdf"
         name="file_details"
         label="Upload"
         allowMultiple={true}
