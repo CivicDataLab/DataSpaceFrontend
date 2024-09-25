@@ -230,7 +230,7 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
       <DataTable
         columns={filteredColumns}
         rows={filteredRows}
-        hideFooter={true}
+        hideFooter={false}
         hideSelection={true}
         defaultRowCount={10}
         hideViewSelector
