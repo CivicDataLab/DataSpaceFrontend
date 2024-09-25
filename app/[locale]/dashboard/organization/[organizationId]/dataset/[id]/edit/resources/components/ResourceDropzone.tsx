@@ -22,7 +22,7 @@ export const ResourceDropzone = ({
 }: {
   reload: () => void;
 }) => {
-  const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT'];
+  const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT', 'ZIP'];
   const params = useParams();
   const [file, setFile] = React.useState<File[]>([]);
 
@@ -81,7 +81,7 @@ export const ResourceDropzone = ({
   return (
     <>
       <DropZone
-        accept=".json, .csv, application/json, text/csv"
+        accept=".json, .csv, application/json, text/csv, application/zip"
         name="file_details"
         label="Upload"
         allowMultiple={true}
