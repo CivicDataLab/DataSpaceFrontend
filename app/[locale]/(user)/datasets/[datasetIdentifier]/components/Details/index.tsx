@@ -84,19 +84,19 @@ const Details = () => {
                               color="default"
                             />
                           </Button>
-                          {/* <Link
+                          <Link
                             href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/chart/${item.id}`}
                             target="_blank"
                             className="flex justify-center"
-                          > */}
-                          <Button kind="secondary" className="p-2">
-                            <Icon
-                              source={Icons.download}
-                              size={20}
-                              color="default"
-                            />
-                          </Button>
-                          {/* </Link> */}
+                          >
+                            <Button kind="secondary" className="p-2">
+                              <Icon
+                                source={Icons.download}
+                                size={20}
+                                color="default"
+                              />
+                            </Button>
+                          </Link>
                         </div>
                       </div>
                     </div>
