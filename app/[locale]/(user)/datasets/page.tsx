@@ -321,7 +321,7 @@ const DatasetsListing = () => {
             <div className="flex w-full flex-col px-2">
               <div className="flex gap-2 border-b-2 border-solid border-baseGraySlateSolid4 pb-4">
                 {Object.entries(queryParams.filters).map(([category, values]) =>
-                  values.map((value) => (
+                  values.filter(value => category !== 'sort').map((value) => (
                     <Pill
                       key={`${category}-${value}`}
                       onRemove={() => handleRemoveFilter(category, value)}
