@@ -73,6 +73,12 @@ const createChart: any = graphql(`
         showLegend
         xAxisLabel
         yAxisLabel
+        regionColumn {
+          id
+        }
+        valueColumn {
+          id
+        }
         chart
         xAxisColumn {
           id
@@ -96,6 +102,12 @@ const getResourceChartDetails: any = graphql(`
       showLegend
       xAxisLabel
       yAxisLabel
+      regionColumn {
+        id
+      }
+      valueColumn {
+        id
+      }
       chart
       xAxisColumn {
         id
@@ -153,6 +165,8 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     aggregateType: 'SUM',
     showLegend: false,
     chart: '',
+    regionColumn: '',
+    valueColumn: '',
   };
 
   const [chartData, setChartData] = useState(initialChartData);
@@ -200,6 +214,8 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       xAxisColumn: resourceChart.xAxisColumn?.id || '',
       yAxisColumn: resourceChart.yAxisColumn?.id || '',
       chart: resourceChart.chart,
+      regionColumn: resourceChart.regionColumn?.id || '',
+      valueColumn: resourceChart.valueColumn?.id || '',
     };
     setChartData(updatedData);
     setPreviousChartData(updatedData);
@@ -241,6 +257,8 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           resource: updatedData.resource || data?.datasetResources[0].id,
           xAxisColumn: updatedData.xAxisColumn,
           yAxisColumn: updatedData.yAxisColumn,
+          regionColumn: updatedData.regionColumn,
+          valueColumn: updatedData.valueColumn,
         },
       });
     }
@@ -370,6 +388,8 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
                 { label: 'Bar Horizontal', value: 'BAR_HORIZONTAL' },
                 { label: 'Column', value: 'COLUMN' },
                 { label: 'Line', value: 'LINE' },
+                { label: 'Assam District', value: 'ASSAM_DISTRICT' },
+                { label: 'ASSAM RC', value: 'ASSAM_RC' },
               ]}
               label="Select Chart Type"
               defaultValue={'BAR_VERTICAL'}
@@ -389,46 +409,78 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
               onBlur={() => handleSave(chartData)}
               onChange={(e) => handleResourceChange(e)}
             />
-            <Select
-              name="xAxisColumn"
-              options={resourceSchema?.map((field: any) => ({
-                label: field.fieldName,
-                value: field.id,
-              }))}
-              label="X-axis Column"
-              value={chartData.xAxisColumn}
-              placeholder="Select"
-              onBlur={() => handleSave(chartData)}
-              onChange={(e) => handleChange('xAxisColumn', e)}
-            />
-            <TextField
-              onChange={(e) => handleChange('xAxisLabel', e)}
-              label="X-axis Label"
-              value={chartData.xAxisLabel}
-              name="xAxisLabel"
-              onBlur={() => handleSave(chartData)}
-              required
-            />
-            <Select
-              name="yAxisColumn"
-              options={resourceSchema?.map((field: any) => ({
-                label: field.fieldName,
-                value: field.id,
-              }))}
-              value={chartData.yAxisColumn}
-              label="Y-axis Column"
-              onBlur={() => handleSave(chartData)}
-              placeholder="Select"
-              onChange={(e) => handleChange('yAxisColumn', e)}
-            />
-            <TextField
-              onChange={(e) => handleChange('yAxisLabel', e)}
-              label="Y-axis Label"
-              name="yAxisLabel"
-              value={chartData.yAxisLabel}
-              onBlur={() => handleSave(chartData)}
-              required
-            />
+            {chartData.chartType !== 'ASSAM_DISTRICT' &&
+            chartData.chartType !== 'ASSAM_RC' ? (
+              <>
+                <Select
+                  name="xAxisColumn"
+                  options={resourceSchema?.map((field: any) => ({
+                    label: field.fieldName,
+                    value: field.id,
+                  }))}
+                  label="X-axis Column"
+                  value={chartData.xAxisColumn}
+                  placeholder="Select"
+                  onBlur={() => handleSave(chartData)}
+                  onChange={(e) => handleChange('xAxisColumn', e)}
+                />
+                <TextField
+                  onChange={(e) => handleChange('xAxisLabel', e)}
+                  label="X-axis Label"
+                  value={chartData.xAxisLabel}
+                  name="xAxisLabel"
+                  onBlur={() => handleSave(chartData)}
+                  required
+                />
+                <Select
+                  name="yAxisColumn"
+                  options={resourceSchema?.map((field: any) => ({
+                    label: field.fieldName,
+                    value: field.id,
+                  }))}
+                  value={chartData.yAxisColumn}
+                  label="Y-axis Column"
+                  onBlur={() => handleSave(chartData)}
+                  placeholder="Select"
+                  onChange={(e) => handleChange('yAxisColumn', e)}
+                />
+                <TextField
+                  onChange={(e) => handleChange('yAxisLabel', e)}
+                  label="Y-axis Label"
+                  name="yAxisLabel"
+                  value={chartData.yAxisLabel}
+                  onBlur={() => handleSave(chartData)}
+                  required
+                />
+              </>
+            ) : (
+              <>
+                <Select
+                  name="regionColumn"
+                  options={resourceSchema?.map((field: any) => ({
+                    label: field.fieldName,
+                    value: field.id,
+                  }))}
+                  label="Region Column"
+                  value={chartData.regionColumn}
+                  placeholder="Select"
+                  onBlur={() => handleSave(chartData)}
+                  onChange={(e) => handleChange('regionColumn', e)}
+                />
+                <Select
+                  name="valueColumn"
+                  options={resourceSchema?.map((field: any) => ({
+                    label: field.fieldName,
+                    value: field.id,
+                  }))}
+                  value={chartData.valueColumn}
+                  label="Value Column"
+                  onBlur={() => handleSave(chartData)}
+                  placeholder="Select"
+                  onChange={(e) => handleChange('valueColumn', e)}
+                />
+              </>
+            )}
             <Select
               name="aggregateType"
               options={[
