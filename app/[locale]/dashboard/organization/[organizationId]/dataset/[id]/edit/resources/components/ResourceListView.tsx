@@ -1,32 +1,24 @@
-import React from 'react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { graphql } from '@/gql';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import {
-  parseAsBoolean,
-  parseAsString,
-  useQueryState,
-} from 'next-usequerystate';
+import { useMutation } from '@tanstack/react-query';
+import { parseAsString, useQueryState } from 'next-usequerystate';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Button,
   DataTable,
   Dialog,
   DropZone,
-  Icon,
   IconButton,
   SearchInput,
-  Spinner,
   Text,
-  TextField,
   toast,
 } from 'opub-ui';
+import React from 'react';
 
+import { Icons } from '@/components/icons';
+import { Loading } from '@/components/loading';
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
-import { Icons } from '@/components/icons';
-import { createResourceFilesDoc,updateResourceList } from './query';
+import { createResourceFilesDoc, updateResourceList } from './query';
 
 type FilteredRow = {
   name_of_resource: string;
@@ -36,13 +28,16 @@ type FilteredRow = {
 };
 
 type ResourceListProps = {
-  data : any[];
+  data: any[];
   refetch: () => void;
-}
+};
 
 export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
-
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
+  const [file, setFile] = React.useState<File[]>([]);
+
+  const router = useRouter();
+  const params = useParams();
 
   const updateResourceMutation = useMutation(
     (data: { resourceId: string }) => GraphQL(updateResourceList, data),
@@ -84,20 +79,23 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
         ]);
 
         refetch();
+
         toast('Resource Added Successfully', {
           action: {
             label: 'Dismiss',
             onClick: () => {},
           },
         });
+
+        router.push(
+          `/dashboard/organization/${params.organizationId}/dataset/${params.id}/edit/resources?id=${data.createFileResources[0]?.id}`
+        );
       },
       onError: (err: any) => {
         console.log('Error ::: ', err);
       },
     }
   );
-
-  const params = useParams();
 
   const deleteRow = (row: any) => {
     updateResourceMutation.mutate({
@@ -154,11 +152,11 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
 
     rows:
       data.map((item: any) => ({
-          name_of_resource: item.name,
-          type: item.type,
-          date_added: formatDate(item.created),
-          id: item.id,
-        })) || [],
+        name_of_resource: item.name,
+        type: item.type,
+        date_added: formatDate(item.created),
+        id: item.id,
+      })) || [],
   };
 
   const [filteredRows, setFilteredRows] = React.useState<FilteredRow[]>(
@@ -176,8 +174,6 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
   const filteredColumns = table.columns.filter(
     (column) => column.accessorKey !== 'id'
   );
-
-  const [file, setFile] = React.useState<File[]>([]);
 
   const dropZone = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
@@ -220,10 +216,18 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
             </Button>
           </Dialog.Trigger>
           <Dialog.Content title={'Add New Resource'}>
-            <DropZone name="file_upload" allowMultiple={true} onDrop={dropZone}>
-              {uploadedFile}
-              {file.length === 0 && <DropZone.FileUpload />}
-            </DropZone>
+            {createResourceMutation.isLoading ? (
+              <Loading />
+            ) : (
+              <DropZone
+                name="file_upload"
+                allowMultiple={true}
+                onDrop={dropZone}
+              >
+                {uploadedFile}
+                {file.length === 0 && <DropZone.FileUpload />}
+              </DropZone>
+            )}
           </Dialog.Content>
         </Dialog>
       </div>
