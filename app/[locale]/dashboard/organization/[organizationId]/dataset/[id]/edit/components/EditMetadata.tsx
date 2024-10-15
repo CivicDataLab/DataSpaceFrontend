@@ -18,6 +18,7 @@ import {
   Form,
   FormLayout,
   Input,
+  Select,
   Text,
   toast,
 } from 'opub-ui';
@@ -61,6 +62,7 @@ const datasetMetadataQueryDoc: any = graphql(`
         metadataItem {
           id
           label
+          dataType
         }
         id
         value
@@ -178,8 +180,17 @@ export function EditMetadata({ id }: { id: string }) {
     } = {};
 
     dataset.metadata?.map((field) => {
-      defaultVal[field.metadataItem.id] = field.value;
+      if (field.metadataItem.dataType === 'MULTISELECT') {
+        // Convert comma-separated string to array of {label, value} objects
+        defaultVal[field.metadataItem.id] = field.value.split(', ').map((value: string) => ({
+          label: value,
+          value: value,
+        }));
+      } else {
+        defaultVal[field.metadataItem.id] = field.value;
+      }
     });
+  
 
     defaultVal['description'] = dataset.description || '';
 
@@ -240,6 +251,65 @@ export function EditMetadata({ id }: { id: string }) {
       );
     }
 
+    if (metadataFormItem.dataType === 'SELECT') {
+      return (
+        <div
+          key={metadataFormItem.id}
+          className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"
+        >
+          
+          <Select
+            name={metadataFormItem.id}
+            options={metadataFormItem.options.map((option: string) => ({
+              value: option,
+              label: option,
+            }))}
+            label={metadataFormItem.label}
+          />
+        </div>
+      );
+    }
+    if (metadataFormItem.dataType === 'MULTISELECT') {
+          
+      const prefillData = metadataFormItem.value ? metadataFormItem.value : [];
+
+      return (
+        <div
+          key={metadataFormItem.id}
+          className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"
+        >
+          
+          <Combobox
+            name={metadataFormItem.id}
+            list={[...metadataFormItem.options.map((option: string) => ({
+              label: option,
+              value: option,
+            }))]}
+            label={metadataFormItem.label}
+            displaySelected
+            selectedValue={prefillData}
+            />
+        </div>
+      );
+    }
+    if (metadataFormItem.dataType === 'URL') {
+      return (
+        <div
+          key={metadataFormItem.id}
+          className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"
+        >
+          <Input
+            name={metadataFormItem.id}
+            type='url'
+            label={metadataFormItem.label}
+            disabled={
+              getMetaDataListQuery.isLoading || !metadataFormItem.enabled
+            }
+          />
+        </div>
+      );
+    }
+
     // Add more conditions if there are other data types you want to handle
     return null;
   }
@@ -248,12 +318,20 @@ export function EditMetadata({ id }: { id: string }) {
     <>
       <Form
         onSubmit={(values) => {
+
+          const transformedValues = Object.keys(values).reduce((acc:any, key) => {
+            acc[key] = Array.isArray(values[key]) 
+            ? values[key].map((item:any) => item.value || item).join(', ')
+            : values[key];
+            return acc;
+          }, {});
+
           // Call the mutation to save both the static and dynamic metadata
           updateMetadataMutation.mutate({
             UpdateMetadataInput: {
               dataset: id,
               metadata: [
-                ...Object.keys(values)
+                ...Object.keys(transformedValues)
                   .filter(
                     (valueItem) =>
                       !['categories', 'description', 'tags'].includes(valueItem)
@@ -261,7 +339,7 @@ export function EditMetadata({ id }: { id: string }) {
                   .map((key) => {
                     return {
                       id: key,
-                      value: values[key] || '',
+                      value: transformedValues[key] || '',
                     };
                   }),
               ],
@@ -312,6 +390,7 @@ export function EditMetadata({ id }: { id: string }) {
                           }) || []
                     }
                     label="Tags"
+                    creatable
                   />
                 </div>
                 <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
