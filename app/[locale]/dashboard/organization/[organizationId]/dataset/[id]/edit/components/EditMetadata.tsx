@@ -62,6 +62,7 @@ const datasetMetadataQueryDoc: any = graphql(`
         metadataItem {
           id
           label
+          dataType
         }
         id
         value
@@ -179,8 +180,17 @@ export function EditMetadata({ id }: { id: string }) {
     } = {};
 
     dataset.metadata?.map((field) => {
-      defaultVal[field.metadataItem.id] = field.value;
+      if (field.metadataItem.dataType === 'MULTISELECT') {
+        // Convert comma-separated string to array of {label, value} objects
+        defaultVal[field.metadataItem.id] = field.value.split(', ').map((value: string) => ({
+          label: value,
+          value: value,
+        }));
+      } else {
+        defaultVal[field.metadataItem.id] = field.value;
+      }
     });
+  
 
     defaultVal['description'] = dataset.description || '';
 
@@ -261,7 +271,8 @@ export function EditMetadata({ id }: { id: string }) {
     }
     if (metadataFormItem.dataType === 'MULTISELECT') {
           
-      
+      const prefillData = metadataFormItem.value ? metadataFormItem.value : [];
+
       return (
         <div
           key={metadataFormItem.id}
@@ -276,8 +287,8 @@ export function EditMetadata({ id }: { id: string }) {
             }))]}
             label={metadataFormItem.label}
             displaySelected
-            selectedValue={[]}
-          />
+            selectedValue={prefillData}
+            />
         </div>
       );
     }
