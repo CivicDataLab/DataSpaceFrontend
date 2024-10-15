@@ -1,4 +1,4 @@
-name: Update IDS-DRR Dataspace
+name: Update DataSpace
 
 on:
   push:
