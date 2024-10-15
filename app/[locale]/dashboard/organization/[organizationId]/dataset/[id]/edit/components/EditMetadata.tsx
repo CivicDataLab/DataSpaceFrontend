@@ -312,6 +312,7 @@ export function EditMetadata({ id }: { id: string }) {
                           }) || []
                     }
                     label="Tags"
+                    creatable
                   />
                 </div>
                 <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
@@ -328,6 +329,7 @@ export function EditMetadata({ id }: { id: string }) {
                           ) || []
                     }
                     name="categories"
+                    creatable
                   />
                 </div>
               </div>
