@@ -328,7 +328,7 @@ const Page = () => {
                                 </Text>
                                 <Text variant="bodyMd" className="lg:basis-4/5">
                                   {' '}
-                                  {item.value}
+                                  {item.value === '' ? 'NA' : item.value}
                                 </Text>
                               </div>
                             ))}
