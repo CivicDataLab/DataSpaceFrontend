@@ -320,13 +320,17 @@ export function EditMetadata({ id }: { id: string }) {
 
   return (
     <>
-      {!getTagsList?.isLoading  && !getCategoriesList?.isLoading  ? (
+      {!getTagsList?.isLoading &&
+      !getCategoriesList?.isLoading &&
+      !getDatasetMetadata.isLoading ? (
         <Form
           onSubmit={(values) => {
             const transformedValues = Object.keys(values)?.reduce(
               (acc: any, key) => {
                 acc[key] = Array.isArray(values[key])
-                  ? values[key].map((item: any) => item.value || item).join(', ')
+                  ? values[key]
+                      .map((item: any) => item.value || item)
+                      .join(', ')
                   : values[key];
                 return acc;
               },
@@ -365,9 +369,7 @@ export function EditMetadata({ id }: { id: string }) {
               keepDirtyValues: true,
             },
             defaultValues: defaultValuesPrepFn(
-              getDatasetMetadata.isLoading || getDatasetMetadata.error
-                ? {}
-                : getDatasetMetadata?.data?.datasets[0]
+              getDatasetMetadata?.data?.datasets[0]
             ),
           }}
         >
