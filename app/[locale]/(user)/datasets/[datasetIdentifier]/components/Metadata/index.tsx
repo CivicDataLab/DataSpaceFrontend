@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button, Icon, Text } from 'opub-ui';
-
 import { toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
@@ -20,7 +19,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
   );
 
   return (
-    <div className="rounded-md shadow-md flex flex-col gap-6 bg-surfaceDefault  px-6 py-4 lg:px-8 lg:py-6">
+    <div className="rounded-md shadow-md flex flex-col gap-6 bg-surfaceDefault px-6 py-4 lg:px-8 lg:py-6">
       <div className="flex items-center justify-between">
         <Text variant="headingMd" fontWeight="semibold">
           Metadata
@@ -31,7 +30,6 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
           </Button>
         )}
       </div>
-
       <div className="flex flex-col gap-5 align-baseline">
         {filteredMetadataArray.map((item: any, index: any) => (
           <div
@@ -41,11 +39,13 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             <Text className="text-base min-w-[120px] basis-1/4 font-medium">
               {toTitleCase(item.metadataItem.label)}:
             </Text>
-            <Text className="text-base">{item.value}</Text>
+            <Text className="text-base truncate max-w-xs " title={item.value}>
+              {item.value}
+            </Text>
           </div>
         ))}
         {data?.formats.length > 0 && (
-          <div className="flex items-baseline gap-2 border-b-2 border-solid border-baseGraySlateSolid6  pb-2">
+          <div className="flex items-baseline gap-2 border-b-2 border-solid border-baseGraySlateSolid6 pb-2">
             <Text className="text-base min-w-[120px] basis-1/4 font-medium">
               Formats:
             </Text>
@@ -57,7 +57,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
           </div>
         )}
         {data?.categories.length > 0 && (
-          <div className="flex items-baseline gap-2 border-b-2 border-solid border-baseGraySlateSolid6  pb-2">
+          <div className="flex items-baseline gap-2 border-b-2 border-solid border-baseGraySlateSolid6 pb-2">
             <Text className="text-base min-w-[120px] basis-1/4 font-medium">
               Category:
             </Text>
@@ -69,15 +69,14 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
                   className="flex justify-center"
                   key={index}
                 >
-                  <Text className=" underline">{item.name}</Text>
+                  <Text className="underline">{item.name}</Text>
                 </Link>
               ))}
             </div>
           </div>
         )}
-
         {data?.tags.length > 0 && (
-          <div className="flex items-baseline gap-2  pb-2">
+          <div className="flex items-baseline gap-2 pb-2">
             <Text className="text-base min-w-[120px] basis-1/4 font-medium">
               Tags:
             </Text>
@@ -89,7 +88,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
                   className="flex justify-center"
                   key={index}
                 >
-                  <Text className=" underline">{item.value}</Text>
+                  <Text className="underline">{item.value}</Text>
                 </Link>
               ))}
             </div>
