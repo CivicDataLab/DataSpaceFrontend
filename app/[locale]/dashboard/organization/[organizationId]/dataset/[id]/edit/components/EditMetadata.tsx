@@ -119,8 +119,8 @@ export function EditMetadata({ id }: { id: string }) {
     isLoading: boolean;
     refetch: any;
     error: any;
-  } = useQuery([`metadata_values_query_${id}`], () =>
-    GraphQL(datasetMetadataQueryDoc, { filters: { id: id } }),
+  } = useQuery([`metadata_values_query_${params.id}`], () =>
+    GraphQL(datasetMetadataQueryDoc, { filters: { id: params.id } }),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
@@ -159,7 +159,7 @@ export function EditMetadata({ id }: { id: string }) {
 
         queryClient.invalidateQueries({
           queryKey: [
-            `metadata_values_query_${id}`,
+            `metadata_values_query_${params.id}`,
             `metadata_fields_list_${id}`,
           ],
         });
@@ -184,7 +184,6 @@ export function EditMetadata({ id }: { id: string }) {
       [key: string]: any;
     } = {};
 
-    console.log(dataset,'prefill log');
 
     dataset?.metadata.length > 0 &&
       dataset?.metadata?.map((field) => {
@@ -325,7 +324,6 @@ export function EditMetadata({ id }: { id: string }) {
     return null;
   }
 
-  console.log(getDatasetMetadata);
 
   return (
     <>
