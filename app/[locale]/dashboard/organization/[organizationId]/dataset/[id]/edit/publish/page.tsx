@@ -355,7 +355,8 @@ const Page = () => {
                 className="m-auto w-fit"
                 disabled={
                   !data?.datasets[0]?.resources.length ||
-                  !data?.datasets[0]?.accessModels.length
+                  (process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true' &&
+                    !data?.datasets[0]?.accessModels.length)
                 }
                 onClick={() => mutate()}
               >
