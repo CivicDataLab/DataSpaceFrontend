@@ -16,8 +16,8 @@ import { Content } from './components/content';
 import { Navigation } from './components/navigate-org-datasets';
 
 const allDatasetsQueryDoc: any = graphql(`
-  query allDatasetsQuery($filters: DatasetFilter) {
-    datasets(filters: $filters) {
+   query allDatasetsQuery($filters: DatasetFilter, $order: DatasetOrder) {
+    datasets(filters: $filters, order: $order) {
       title
       id
       created
@@ -66,16 +66,6 @@ export default function DatasetPage({
       selected: navigationTab === 'drafts',
     },
     {
-      label: 'Under Moderation',
-      url: `under-moderation`,
-      selected: navigationTab === 'under-moderation',
-    },
-    {
-      label: 'Needs Review',
-      url: `needs-review`,
-      selected: navigationTab === 'needs-review',
-    },
-    {
       label: 'Published',
       url: `published`,
       selected: navigationTab === 'published',
@@ -83,8 +73,19 @@ export default function DatasetPage({
   ];
 
   const AllDatasetsQuery: { data: any; isLoading: boolean; refetch: any } =
-    useQuery([`fetch_datasets_org_dashboard`], () =>
-      GraphQL(allDatasetsQueryDoc, [])
+    useQuery(
+      [`fetch_datasets_org_dashboard`],
+      () =>
+        GraphQL(allDatasetsQueryDoc, {
+          filters: {
+            status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
+          },
+          order: { modified: 'DESC' }
+        }),
+      {
+        refetchOnMount: true,
+        refetchOnReconnect: true,
+      }
     );
 
   useEffect(() => {
@@ -92,7 +93,6 @@ export default function DatasetPage({
       setNavigationTab('drafts');
     AllDatasetsQuery.refetch();
   }, [navigationTab]);
-
 
   const DeleteDatasetMutation: {
     mutate: any;
