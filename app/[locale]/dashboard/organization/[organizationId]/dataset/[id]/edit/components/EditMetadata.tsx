@@ -25,6 +25,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Loading } from '@/components/loading';
+import DatasetLoading from '../../../components/loading-dataset';
 
 const categoriesListQueryDoc: any = graphql(`
   query CategoryList {
@@ -182,15 +183,16 @@ export function EditMetadata({ id }: { id: string }) {
     dataset.metadata?.map((field) => {
       if (field.metadataItem.dataType === 'MULTISELECT') {
         // Convert comma-separated string to array of {label, value} objects
-        defaultVal[field.metadataItem.id] = field.value.split(', ').map((value: string) => ({
-          label: value,
-          value: value,
-        }));
+        defaultVal[field.metadataItem.id] = field.value
+          .split(', ')
+          .map((value: string) => ({
+            label: value,
+            value: value,
+          }));
       } else {
         defaultVal[field.metadataItem.id] = field.value;
       }
     });
-  
 
     defaultVal['description'] = dataset.description || '';
 
@@ -257,7 +259,6 @@ export function EditMetadata({ id }: { id: string }) {
           key={metadataFormItem.id}
           className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"
         >
-          
           <Select
             name={metadataFormItem.id}
             options={metadataFormItem.options.map((option: string) => ({
@@ -270,7 +271,6 @@ export function EditMetadata({ id }: { id: string }) {
       );
     }
     if (metadataFormItem.dataType === 'MULTISELECT') {
-          
       const prefillData = metadataFormItem.value ? metadataFormItem.value : [];
 
       return (
@@ -278,17 +278,21 @@ export function EditMetadata({ id }: { id: string }) {
           key={metadataFormItem.id}
           className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"
         >
-          
           <Combobox
             name={metadataFormItem.id}
-            list={[...metadataFormItem.options.map((option: string) => ({
-              label: option,
-              value: option,
-            }))]}
+            list={[
+              ...metadataFormItem.options.map(
+                (option: string) =>
+                  ({
+                    label: option,
+                    value: option,
+                  }) || []
+              ),
+            ]}
             label={metadataFormItem.label}
             displaySelected
             selectedValue={prefillData}
-            />
+          />
         </div>
       );
     }
@@ -300,7 +304,7 @@ export function EditMetadata({ id }: { id: string }) {
         >
           <Input
             name={metadataFormItem.id}
-            type='url'
+            type="url"
             label={metadataFormItem.label}
             disabled={
               getMetaDataListQuery.isLoading || !metadataFormItem.enabled
@@ -316,154 +320,156 @@ export function EditMetadata({ id }: { id: string }) {
 
   return (
     <>
-      <Form
-        onSubmit={(values) => {
+      {!getTagsList?.isLoading  && !getCategoriesList?.isLoading  ? (
+        <Form
+          onSubmit={(values) => {
+            const transformedValues = Object.keys(values)?.reduce(
+              (acc: any, key) => {
+                acc[key] = Array.isArray(values[key])
+                  ? values[key].map((item: any) => item.value || item).join(', ')
+                  : values[key];
+                return acc;
+              },
+              {}
+            );
 
-          const transformedValues = Object.keys(values).reduce((acc:any, key) => {
-            acc[key] = Array.isArray(values[key]) 
-            ? values[key].map((item:any) => item.value || item).join(', ')
-            : values[key];
-            return acc;
-          }, {});
-
-          // Call the mutation to save both the static and dynamic metadata
-          updateMetadataMutation.mutate({
-            UpdateMetadataInput: {
-              dataset: id,
-              metadata: [
-                ...Object.keys(transformedValues)
-                  .filter(
-                    (valueItem) =>
-                      !['categories', 'description', 'tags'].includes(valueItem)
-                  )
-                  .map((key) => {
-                    return {
-                      id: key,
-                      value: transformedValues[key] || '',
-                    };
-                  }),
-              ],
-              description: values.description || '',
-              tags: values.tags?.map((item: any) => item.label) || [],
-              categories:
-                values.categories?.map((item: any) => item.value) || [],
+            // Call the mutation to save both the static and dynamic metadata
+            updateMetadataMutation.mutate({
+              UpdateMetadataInput: {
+                dataset: id,
+                metadata: [
+                  ...Object.keys(transformedValues)
+                    .filter(
+                      (valueItem) =>
+                        !['categories', 'description', 'tags'].includes(
+                          valueItem
+                        )
+                    )
+                    .map((key) => {
+                      return {
+                        id: key,
+                        value: transformedValues[key] || '',
+                      };
+                    }),
+                ],
+                description: values.description || '',
+                tags: values.tags?.map((item: any) => item.label) || [],
+                categories:
+                  values.categories?.map((item: any) => item.value) || [],
+              },
+            });
+          }}
+          formOptions={{
+            resetOptions: {
+              keepValues: true,
+              keepDirtyValues: true,
             },
-          });
-        }}
-        formOptions={{
-          resetOptions: {
-            keepValues: true,
-            keepDirtyValues: true,
-          },
-          defaultValues: defaultValuesPrepFn(
-            getDatasetMetadata.isLoading || getDatasetMetadata.error
-              ? {}
-              : getDatasetMetadata?.data?.datasets[0]
-          ),
-        }}
-      >
-        <>
-          <div className="pt-3">
-            <FormLayout>
-              <div className="w-full py-4 pr-4">
-                <Input
-                  key="description"
-                  multiline
-                  name="description"
-                  label={'Description'}
-                />
-              </div>
-
-              <div className="flex flex-wrap">
-                <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
-                  <Combobox
-                    displaySelected
-                    name="tags"
-                    list={
-                      getTagsList.isLoading || getTagsList.error
-                        ? []
-                        : getTagsList.data?.tags?.map((item: TypeTag) => {
-                            return {
-                              label: item.value,
-                              value: item.id,
-                            };
-                          }) || []
-                    }
-                    label="Tags"
-                    creatable
+            defaultValues: defaultValuesPrepFn(
+              getDatasetMetadata.isLoading || getDatasetMetadata.error
+                ? {}
+                : getDatasetMetadata?.data?.datasets[0]
+            ),
+          }}
+        >
+          <>
+            <div className="pt-3">
+              <FormLayout>
+                <div className="w-full py-4 pr-4">
+                  <Input
+                    key="description"
+                    multiline
+                    name="description"
+                    label={'Description'}
                   />
                 </div>
-                <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
-                  <Combobox
-                    displaySelected
-                    label="Categories"
-                    list={
-                      getCategoriesList.isLoading || getCategoriesList.error
-                        ? []
-                        : getCategoriesList.data?.categories?.map(
-                            (item: TypeCategory) => {
-                              return { label: item.name, value: item.id };
-                            }
-                          ) || []
+
+                <div className="flex flex-wrap">
+                  <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
+                    <Combobox
+                      displaySelected
+                      name="tags"
+                      list={getTagsList.data?.tags?.map((item: TypeTag) => {
+                        return {
+                          label: item.value,
+                          value: item.id,
+                        };
+                      })}
+                      label="Tags"
+                      creatable
+                    />
+                  </div>
+                  <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
+                    {
+                      <Combobox
+                        displaySelected
+                        label="Categories"
+                        list={getCategoriesList.data?.categories?.map(
+                          (item: TypeCategory) => {
+                            return { label: item.name, value: item.id };
+                          }
+                        )}
+                        name="categories"
+                      />
                     }
-                    name="categories"
-                  />
+                  </div>
                 </div>
-              </div>
 
-              {getMetaDataListQuery.isLoading ? (
-                <Loading />
-              ) : getMetaDataListQuery?.data?.metadata?.length > 0 ? (
-                <>
-                  <div className="my-4">
-                    <Divider />
-                  </div>
+                {getMetaDataListQuery.isLoading ? (
+                  <Loading />
+                ) : getMetaDataListQuery?.data?.metadata?.length > 0 ? (
+                  <>
+                    <div className="my-4">
+                      <Divider />
+                    </div>
 
-                  <div className="flex flex-col gap-1">
-                    <Text variant="headingMd">Add Metadata</Text>
-                  </div>
+                    <div className="flex flex-col gap-1">
+                      <Text variant="headingMd">Add Metadata</Text>
+                    </div>
 
-                  <div className="my-4">
-                    <Divider />
-                  </div>
+                    <div className="my-4">
+                      <Divider />
+                    </div>
 
-                  <div className="flex flex-wrap">
-                    {getMetaDataListQuery?.data?.metadata?.map(
-                      (metadataFormItem: TypeMetadata) => {
-                        return renderInputField(
-                          metadataFormItem,
-                          getMetaDataListQuery
-                        );
-                      }
-                    )}
-                  </div>
-                </>
-              ) : (
-                <></>
-              )}
-            </FormLayout>
-          </div>
-          <div className="mt-8">
-            <Divider />
-          </div>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <Button
-              id="exitAfterSave"
-              disabled
-              loading={updateMetadataMutation.isLoading}
-            >
-              Save & Exit
-            </Button>
-            <Button
-              id="proceedAfterSave"
-              submit
-              loading={updateMetadataMutation.isLoading}
-            >
-              Save & Proceed
-            </Button>
-          </div>
-        </>
-      </Form>
+                    <div className="flex flex-wrap">
+                      {getMetaDataListQuery?.data?.metadata?.map(
+                        (metadataFormItem: TypeMetadata) => {
+                          return renderInputField(
+                            metadataFormItem,
+                            getMetaDataListQuery
+                          );
+                        }
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <></>
+                )}
+              </FormLayout>
+            </div>
+            <div className="mt-8">
+              <Divider />
+            </div>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <Button
+                id="exitAfterSave"
+                disabled
+                loading={updateMetadataMutation.isLoading}
+              >
+                Save & Exit
+              </Button>
+              <Button
+                id="proceedAfterSave"
+                submit
+                loading={updateMetadataMutation.isLoading}
+              >
+                Save & Proceed
+              </Button>
+            </div>
+          </>
+        </Form>
+      ) : (
+        <DatasetLoading />
+      )}
     </>
   );
 }
