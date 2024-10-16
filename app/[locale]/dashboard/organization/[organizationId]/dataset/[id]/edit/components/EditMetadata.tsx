@@ -114,6 +114,19 @@ export function EditMetadata({ id }: { id: string }) {
 
   const queryClient = useQueryClient();
 
+  const getDatasetMetadata: {
+    data: any;
+    isLoading: boolean;
+    refetch: any;
+    error: any;
+  } = useQuery([`metadata_values_query_${id}`], () =>
+    GraphQL(datasetMetadataQueryDoc, { filters: { id: id } }),
+    {
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+    }
+  );
+
   const getCategoriesList: { data: any; isLoading: boolean; error: any } =
     useQuery([`categories_list_query`], () =>
       GraphQL(categoriesListQueryDoc, [])
@@ -135,15 +148,6 @@ export function EditMetadata({ id }: { id: string }) {
         enabled: true,
       },
     })
-  );
-
-  const getDatasetMetadata: {
-    data: any;
-    isLoading: boolean;
-    refetch: any;
-    error: any;
-  } = useQuery([`metadata_values_query_${id}`], () =>
-    GraphQL(datasetMetadataQueryDoc, { filters: { id: id } })
   );
 
   const updateMetadataMutation = useMutation(
@@ -180,19 +184,22 @@ export function EditMetadata({ id }: { id: string }) {
       [key: string]: any;
     } = {};
 
-    dataset.metadata?.map((field) => {
-      if (field.metadataItem.dataType === 'MULTISELECT') {
-        // Convert comma-separated string to array of {label, value} objects
-        defaultVal[field.metadataItem.id] = field.value
-          .split(', ')
-          .map((value: string) => ({
-            label: value,
-            value: value,
-          }));
-      } else {
-        defaultVal[field.metadataItem.id] = field.value;
-      }
-    });
+    console.log(dataset,'prefill log');
+
+    dataset?.metadata.length > 0 &&
+      dataset?.metadata?.map((field) => {
+        if (field.metadataItem.dataType === 'MULTISELECT') {
+          // Convert comma-separated string to array of {label, value} objects
+          defaultVal[field.metadataItem.id] = field.value
+            .split(', ')
+            .map((value: string) => ({
+              label: value,
+              value: value,
+            }));
+        } else {
+          defaultVal[field.metadataItem.id] = field.value;
+        }
+      });
 
     defaultVal['description'] = dataset.description || '';
 
@@ -317,6 +324,8 @@ export function EditMetadata({ id }: { id: string }) {
     // Add more conditions if there are other data types you want to handle
     return null;
   }
+
+  console.log(getDatasetMetadata);
 
   return (
     <>
