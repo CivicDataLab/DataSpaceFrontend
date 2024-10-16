@@ -27,6 +27,8 @@ interface Dataset {
 }
 
 const Cards = ({ data }: { data: Dataset }) => {
+
+  
   function getMetadataValue(data: Dataset, label: string): string | null {
     const metadataEntry = data.metadata.find(
       (entry) => entry.metadata_item.label === label
@@ -107,19 +109,7 @@ const Cards = ({ data }: { data: Dataset }) => {
                       {getMetadataValue(data, 'Update Frequency') || 'NA'}
                     </Text>
                   </div>
-                  <Text
-                    color="default"
-                    className="text-textSubdued"
-                    variant="bodySm"
-                    fontWeight="regular"
-                  >
-                    Reference Period:{' '}
-                    {formatDateString(getMetadataValue(data, 'Period From')) ||
-                      'NA'}{' '}
-                    to{' '}
-                    {formatDateString(getMetadataValue(data, 'Period To')) ||
-                      'NA'}
-                  </Text>
+                  
                 </span>
               </div>
 

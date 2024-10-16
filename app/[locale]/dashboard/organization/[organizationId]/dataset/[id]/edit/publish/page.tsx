@@ -336,7 +336,7 @@ const Page = () => {
                               <Text className="lg:basis-1/6" variant="bodyMd">
                                 Tags:
                               </Text>
-                              <div className="lg:basis-4/5">
+                              <div className="lg:basis-4/5 flex gap-2">
                                 {data?.datasets[0].tags.map(
                                   (item: any, index: any) => (
                                     <Tag key={index}>{item.value}</Tag>
@@ -355,7 +355,8 @@ const Page = () => {
                 className="m-auto w-fit"
                 disabled={
                   !data?.datasets[0]?.resources.length ||
-                  !data?.datasets[0]?.accessModels.length
+                  (process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true' &&
+                    !data?.datasets[0]?.accessModels.length)
                 }
                 onClick={() => mutate()}
               >
