@@ -36,7 +36,7 @@ export const Content = ({ params }: any) => {
     useMutation(() => GraphQL(createDatasetMutationDoc, []), {
       onSuccess: (data: any) => {
         router.push(
-          `/dashboard/organization/${params.organizationId}/dataset/${data?.addDataset?.id}/edit/resources`
+          `/dashboard/${params.entityType}/${params.organizationId}/dataset/${data?.addDataset?.id}/edit/resources`
         );
       },
       onError: (err: any) => {

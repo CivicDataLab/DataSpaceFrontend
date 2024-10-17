@@ -229,7 +229,7 @@ const Page = () => {
     {
       onSuccess: (data: any) => {
         toast('Dataset Published Successfully');
-        router.push(`/dashboard/organization/${params.organizationId}/dataset`);
+        router.push(`/dashboard/${params.entityType}/${params.organizationId}/dataset`);
       },
       onError: (err: any) => {
         toast(`Received ${err} on dataset publish `);

@@ -71,6 +71,7 @@ const datasetMetadataQueryDoc: any = graphql(`
     }
   }
 `);
+
 const metadataQueryDoc: any = graphql(`
   query MetaDataList($filters: MetadataFilter) {
     metadata(filters: $filters) {
@@ -132,12 +133,10 @@ export function EditMetadata({ id }: { id: string }) {
       GraphQL(categoriesListQueryDoc, [])
     );
 
-  const getTagsList: {
-    data: any;
-    isLoading: boolean;
-    error: any;
-    refetch: any;
-  } = useQuery([`tags_list_query`], () => GraphQL(tagsListQueryDoc, []));
+  const getTagsList: { data: any; isLoading: boolean; error: any } = useQuery(
+    [`tags_list_query`],
+    () => GraphQL(tagsListQueryDoc, [])
+  );
 
   const getMetaDataListQuery: {
     data: any;
@@ -156,7 +155,7 @@ export function EditMetadata({ id }: { id: string }) {
     (data: { UpdateMetadataInput: UpdateMetadataInput }) =>
       GraphQL(updateMetadataMutationDoc, data),
     {
-      onSuccess: (data: any) => {
+      onSuccess: () => {
         toast('Details updated successfully!');
 
         queryClient.invalidateQueries({
@@ -168,10 +167,9 @@ export function EditMetadata({ id }: { id: string }) {
 
         getMetaDataListQuery.refetch();
         getDatasetMetadata.refetch();
-        getTagsList.refetch();
 
         router.push(
-          `/dashboard/organization/${params.organizationId}/dataset/${id}/edit/publish`
+          `/dashboard/${params.entityType}/${params.organizationId}/dataset/${id}/edit/publish`
         );
       },
       onError: (err: any) => {
@@ -289,13 +287,10 @@ export function EditMetadata({ id }: { id: string }) {
           <Combobox
             name={metadataFormItem.id}
             list={[
-              ...metadataFormItem.options.map(
-                (option: string) =>
-                  ({
-                    label: option,
-                    value: option,
-                  }) || []
-              ),
+              ...(metadataFormItem.options.map((option: string) => ({
+                label: option,
+                value: option,
+              })) || []),
             ]}
             label={metadataFormItem.label}
             displaySelected

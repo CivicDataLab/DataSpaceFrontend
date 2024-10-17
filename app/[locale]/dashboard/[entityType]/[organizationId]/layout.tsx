@@ -17,17 +17,17 @@ interface DashboardLayoutProps {
 export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
   const [isOpened, setIsOpened] = React.useState(false);
 
-  const params = useParams<{ organizationId: string }>();
+  const params = useParams<{ entityType: string; organizationId: string }>();
 
   const orgSidebarNav: Array<SidebarNavItem> = [
     {
       title: 'Datasets',
-      href: `/dashboard/organization/${params.organizationId}/dataset`,
+      href: `/dashboard/${params.entityType}/${params.organizationId}/dataset`,
       icon: 'datasetEdit',
     },
     {
       title: 'Manage Consumers',
-      href: `/dashboard/organization/${params.organizationId}/consumers`,
+      href: `/dashboard/${params.entityType}/${params.organizationId}/consumers`,
       icon: 'userList',
     },
   ];

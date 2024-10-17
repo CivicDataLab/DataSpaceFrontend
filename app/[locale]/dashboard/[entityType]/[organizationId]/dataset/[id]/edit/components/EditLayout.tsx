@@ -70,7 +70,7 @@ export function EditLayout({ children, params }: LayoutProps) {
 
   const [editMode, setEditMode] = useState(false);
 
-  const orgParams = useParams<{ organizationId: string }>();
+  
 
   const getDatasetTitleRes: { data: any; isLoading: boolean; refetch: any } =
     useQuery([`dataset_title_${routerParams.id}`], () =>
@@ -118,10 +118,11 @@ export function EditLayout({ children, params }: LayoutProps) {
       ) : (
         <Header
           dataset={getDatasetTitleRes?.data?.datasets[0]}
-          orgId={orgParams.organizationId}
+          orgId={routerParams.organizationId}
           saveTitle={updateDatasetTitleMutation.mutate}
           editMode={editMode}
           setEditMode={setEditMode}
+          entityType={routerParams.entityType}
         />
       )}
       <div className="lg:flex-column mt-4 flex flex-col">
@@ -130,6 +131,7 @@ export function EditLayout({ children, params }: LayoutProps) {
             id={params.id}
             pathItem={pathItem}
             organization={routerParams.organizationId.toString()}
+            entityType={routerParams.entityType.toString()}
           />
         </div>
         <div className="bg-surface shadow-card border-l-divider rounded-tl-none  my-6  flex-grow">
@@ -140,7 +142,7 @@ export function EditLayout({ children, params }: LayoutProps) {
   );
 }
 
-const Header = ({ dataset, orgId, saveTitle, editMode, setEditMode }: any) => {
+const Header = ({ dataset, orgId, saveTitle, editMode, setEditMode, entityType }: any) => {
   return (
     <>
       <div className="mb-3 flex flex-wrap-reverse items-center justify-between gap-4 md:gap-4 lg:flex-nowrap lg:gap-12">
@@ -211,7 +213,7 @@ const Header = ({ dataset, orgId, saveTitle, editMode, setEditMode }: any) => {
           </div>
         )}
 
-        <Link href={`/dashboard/organization/${orgId}/dataset`}>
+        <Link href={`/dashboard/${entityType}/${orgId}/dataset`}>
           <Text className="flex gap-1" color="interactive">
             Go back to Drafts{' '}
             <Icon source={Icons.cross} size={20} color="interactive" />
@@ -227,39 +229,41 @@ const Navigation = ({
   id,
   pathItem,
   organization,
+  entityType
 }: {
   id: string;
   pathItem: string;
   organization: string;
+  entityType: string;
 }) => {
   let links = [
     {
       label: 'Resources',
-      url: `/dashboard/organization/${organization}/dataset/${id}/edit/resources`,
+      url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/resources`,
       selected: pathItem === 'resources',
     },
     ...(process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true'
       ? [
           {
             label: 'Access Models',
-            url: `/dashboard/organization/${organization}/dataset/${id}/edit/access?list=true`,
+            url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/access?list=true`,
             selected: pathItem === 'access',
           },
         ]
       : []),
     {
       label: 'Charts',
-      url: `/dashboard/organization/${organization}/dataset/${id}/edit/charts?type=list`,
+      url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/charts?type=list`,
       selected: pathItem === 'charts',
     },
     {
       label: 'Metadata',
-      url: `/dashboard/organization/${organization}/dataset/${id}/edit/metadata`,
+      url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/metadata`,
       selected: pathItem === 'metadata',
     },
     {
       label: 'Publish',
-      url: `/dashboard/organization/${organization}/dataset/${id}/edit/publish`,
+      url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/publish`,
       selected: pathItem === 'publish',
     },
   ];
