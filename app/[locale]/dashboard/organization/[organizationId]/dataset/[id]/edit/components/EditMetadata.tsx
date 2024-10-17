@@ -71,7 +71,6 @@ const datasetMetadataQueryDoc: any = graphql(`
     }
   }
 `);
-
 const metadataQueryDoc: any = graphql(`
   query MetaDataList($filters: MetadataFilter) {
     metadata(filters: $filters) {
@@ -119,8 +118,9 @@ export function EditMetadata({ id }: { id: string }) {
     isLoading: boolean;
     refetch: any;
     error: any;
-  } = useQuery([`metadata_values_query_${params.id}`], () =>
-    GraphQL(datasetMetadataQueryDoc, { filters: { id: params.id } }),
+  } = useQuery(
+    [`metadata_values_query_${params.id}`],
+    () => GraphQL(datasetMetadataQueryDoc, { filters: { id: params.id } }),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
@@ -132,10 +132,12 @@ export function EditMetadata({ id }: { id: string }) {
       GraphQL(categoriesListQueryDoc, [])
     );
 
-  const getTagsList: { data: any; isLoading: boolean; error: any } = useQuery(
-    [`tags_list_query`],
-    () => GraphQL(tagsListQueryDoc, [])
-  );
+  const getTagsList: {
+    data: any;
+    isLoading: boolean;
+    error: any;
+    refetch: any;
+  } = useQuery([`tags_list_query`], () => GraphQL(tagsListQueryDoc, []));
 
   const getMetaDataListQuery: {
     data: any;
@@ -166,6 +168,7 @@ export function EditMetadata({ id }: { id: string }) {
 
         getMetaDataListQuery.refetch();
         getDatasetMetadata.refetch();
+        getTagsList.refetch();
 
         router.push(
           `/dashboard/organization/${params.organizationId}/dataset/${id}/edit/publish`
@@ -183,7 +186,6 @@ export function EditMetadata({ id }: { id: string }) {
     let defaultVal: {
       [key: string]: any;
     } = {};
-
 
     dataset?.metadata.length > 0 &&
       dataset?.metadata?.map((field) => {
@@ -323,7 +325,6 @@ export function EditMetadata({ id }: { id: string }) {
     // Add more conditions if there are other data types you want to handle
     return null;
   }
-
 
   return (
     <>
