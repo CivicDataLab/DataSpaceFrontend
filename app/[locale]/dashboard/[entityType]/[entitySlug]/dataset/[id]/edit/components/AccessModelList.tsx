@@ -57,9 +57,15 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
   }: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`accessModelList_${params.id}`],
     () =>
-      GraphQL(accessModelQuery, {
-        datasetId: params.id,
-      })
+      GraphQL(
+        accessModelQuery,
+        {
+          // Entity Headers if present
+        },
+        {
+          datasetId: params.id,
+        }
+      )
   );
 
   const [filteredRows, setFilteredRows] = useState<any[]>([]);
@@ -72,7 +78,14 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
   }, [data, list]);
 
   const { mutate, isLoading: deleteLoading } = useMutation(
-    (data: { accessModelId: UUID }) => GraphQL(deleteAccessModel, data),
+    (data: { accessModelId: UUID }) =>
+      GraphQL(
+        deleteAccessModel,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
     {
       onSuccess: () => {
         toast('Access Model Deleted Successfully');

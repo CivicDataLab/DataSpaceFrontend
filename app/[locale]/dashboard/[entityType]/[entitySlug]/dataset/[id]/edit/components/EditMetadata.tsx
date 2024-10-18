@@ -121,7 +121,14 @@ export function EditMetadata({ id }: { id: string }) {
     error: any;
   } = useQuery(
     [`metadata_values_query_${params.id}`],
-    () => GraphQL(datasetMetadataQueryDoc, { filters: { id: params.id } }),
+    () =>
+      GraphQL(
+        datasetMetadataQueryDoc,
+        {
+          // Entity Headers if present
+        },
+        { filters: { id: params.id } }
+      ),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
@@ -130,12 +137,25 @@ export function EditMetadata({ id }: { id: string }) {
 
   const getCategoriesList: { data: any; isLoading: boolean; error: any } =
     useQuery([`categories_list_query`], () =>
-      GraphQL(categoriesListQueryDoc, [])
+      GraphQL(
+        categoriesListQueryDoc,
+        {
+          // Entity Headers if present
+        },
+        []
+      )
     );
 
   const getTagsList: { data: any; isLoading: boolean; error: any } = useQuery(
     [`tags_list_query`],
-    () => GraphQL(tagsListQueryDoc, [])
+    () =>
+      GraphQL(
+        tagsListQueryDoc,
+        {
+          // Entity Headers if present
+        },
+        []
+      )
   );
 
   const getMetaDataListQuery: {
@@ -143,17 +163,29 @@ export function EditMetadata({ id }: { id: string }) {
     isLoading: boolean;
     refetch: any;
   } = useQuery([`metadata_fields_list_${id}`], () =>
-    GraphQL(metadataQueryDoc, {
-      filters: {
-        model: 'DATASET',
-        enabled: true,
+    GraphQL(
+      metadataQueryDoc,
+      {
+        // Entity Headers if present
       },
-    })
+      {
+        filters: {
+          model: 'DATASET',
+          enabled: true,
+        },
+      }
+    )
   );
 
   const updateMetadataMutation = useMutation(
     (data: { UpdateMetadataInput: UpdateMetadataInput }) =>
-      GraphQL(updateMetadataMutationDoc, data),
+      GraphQL(
+        updateMetadataMutationDoc,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
     {
       onSuccess: () => {
         toast('Details updated successfully!');

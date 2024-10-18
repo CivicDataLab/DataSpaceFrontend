@@ -16,7 +16,7 @@ import { Content } from './components/content';
 import { Navigation } from './components/navigate-org-datasets';
 
 const allDatasetsQueryDoc: any = graphql(`
-   query allDatasetsQuery($filters: DatasetFilter, $order: DatasetOrder) {
+  query allDatasetsQuery($filters: DatasetFilter, $order: DatasetOrder) {
     datasets(filters: $filters, order: $order) {
       title
       id
@@ -76,12 +76,18 @@ export default function DatasetPage({
     useQuery(
       [`fetch_datasets_org_dashboard`],
       () =>
-        GraphQL(allDatasetsQueryDoc, {
-          filters: {
-            status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
+        GraphQL(
+          allDatasetsQueryDoc,
+          {
+            // Entity Headers if present
           },
-          order: { modified: 'DESC' }
-        }),
+          {
+            filters: {
+              status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
+            },
+            order: { modified: 'DESC' },
+          }
+        ),
       {
         refetchOnMount: true,
         refetchOnReconnect: true,
@@ -101,7 +107,13 @@ export default function DatasetPage({
   } = useMutation(
     [`delete_dataset`],
     (data: { datasetId: string }) =>
-      GraphQL(deleteDatasetMutationDoc, { datasetId: data.datasetId }),
+      GraphQL(
+        deleteDatasetMutationDoc,
+        {
+          // Entity Headers if present
+        },
+        { datasetId: data.datasetId }
+      ),
     {
       onSuccess: () => {
         toast(`Deleted dataset successfully`);
@@ -114,16 +126,26 @@ export default function DatasetPage({
   );
 
   const CreateDatasetMutation: { mutate: any; isLoading: boolean; error: any } =
-    useMutation(() => GraphQL(createDatasetMutationDoc, []), {
-      onSuccess: (data: any) => {
-        router.push(
-          `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/resources`
-        );
-      },
-      onError: (err: any) => {
-        console.log('Error ::: ', err);
-      },
-    });
+    useMutation(
+      () =>
+        GraphQL(
+          createDatasetMutationDoc,
+          {
+            // Entity Headers if present
+          },
+          []
+        ),
+      {
+        onSuccess: (data: any) => {
+          router.push(
+            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/resources`
+          );
+        },
+        onError: (err: any) => {
+          console.log('Error ::: ', err);
+        },
+      }
+    );
 
   const datasetsListColumns = [
     {

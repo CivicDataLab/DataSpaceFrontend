@@ -129,12 +129,25 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
 }) => {
   const params = useParams();
   const { data }: { data: any } = useQuery([`charts_${params.id}`], () =>
-    GraphQL(datasetResource, { datasetId: params.id })
+    GraphQL(
+      datasetResource,
+      {
+        // Entity Headers if present
+      },
+      { datasetId: params.id }
+    )
   );
 
   const { data: chartDetails, refetch }: { data: any; refetch: any } = useQuery(
     [`chartsdata_${params.id}`],
-    () => GraphQL(getResourceChartDetails, { chartDetailsId: chartId }),
+    () =>
+      GraphQL(
+        getResourceChartDetails,
+        {
+          // Entity Headers if present
+        },
+        { chartDetailsId: chartId }
+      ),
     {
       enabled: !!chartId, // Fetch only if chartId is available
     }
@@ -146,9 +159,15 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   }: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`chartsList_${params.id}`],
     () =>
-      GraphQL(chartDetailsQuery, {
-        datasetId: params.id,
-      })
+      GraphQL(
+        chartDetailsQuery,
+        {
+          // Entity Headers if present
+        },
+        {
+          datasetId: params.id,
+        }
+      )
   );
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -223,7 +242,13 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (chartInput: { chartInput: ResourceChartInput }) =>
-      GraphQL(createChart, chartInput),
+      GraphQL(
+        createChart,
+        {
+          // Entity Headers if present
+        },
+        chartInput
+      ),
     {
       onSuccess: (res: any) => {
         toast('Resource chart saved');

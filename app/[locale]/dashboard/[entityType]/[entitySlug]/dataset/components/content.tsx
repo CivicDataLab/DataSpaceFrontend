@@ -1,6 +1,6 @@
 'use client';
 
-
+import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Icon, Text } from 'opub-ui';
@@ -8,7 +8,6 @@ import { twMerge } from 'tailwind-merge';
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import { useRouter } from 'next/navigation';
 
 const createDatasetMutationDoc: any = graphql(`
   mutation GenerateDatasetName {
@@ -28,21 +27,29 @@ const createDatasetMutationDoc: any = graphql(`
   }
 `);
 export const Content = ({ params }: any) => {
-
-
   const router = useRouter();
-  
+
   const CreateDatasetMutation: { mutate: any; isLoading: boolean; error: any } =
-    useMutation(() => GraphQL(createDatasetMutationDoc, []), {
-      onSuccess: (data: any) => {
-        router.push(
-          `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/resources`
-        );
-      },
-      onError: (err: any) => {
-        console.log('Error ::: ', err);
-      },
-    });
+    useMutation(
+      () =>
+        GraphQL(
+          createDatasetMutationDoc,
+          {
+            // Entity Headers if present
+          },
+          []
+        ),
+      {
+        onSuccess: (data: any) => {
+          router.push(
+            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/resources`
+          );
+        },
+        onError: (err: any) => {
+          console.log('Error ::: ', err);
+        },
+      }
+    );
 
   return (
     <div className="flex h-full w-full grow flex-col items-center justify-center">

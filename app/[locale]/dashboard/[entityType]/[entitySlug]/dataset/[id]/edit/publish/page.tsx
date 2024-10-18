@@ -176,7 +176,13 @@ const Page = () => {
   const params = useParams();
 
   const { data, isLoading, refetch } = useQuery([`summary_${params.id}`], () =>
-    GraphQL(datasetSummaryQuery, { filters: { id: params.id } })
+    GraphQL(
+      datasetSummaryQuery,
+      {
+        // Entity Headers if present
+      },
+      { filters: { id: params.id } }
+    )
   );
 
   useEffect(() => {
@@ -225,11 +231,20 @@ const Page = () => {
   const router = useRouter();
 
   const { mutate, isLoading: mutationLoading } = useMutation(
-    () => GraphQL(publishDatasetMutation, { datasetId: params.id }),
+    () =>
+      GraphQL(
+        publishDatasetMutation,
+        {
+          // Entity Headers if present
+        },
+        { datasetId: params.id }
+      ),
     {
       onSuccess: (data: any) => {
         toast('Dataset Published Successfully');
-        router.push(`/dashboard/${params.entityType}/${params.entitySlug}/dataset`);
+        router.push(
+          `/dashboard/${params.entityType}/${params.entitySlug}/dataset`
+        );
       },
       onError: (err: any) => {
         toast(`Received ${err} on dataset publish `);
@@ -336,7 +351,7 @@ const Page = () => {
                               <Text className="lg:basis-1/6" variant="bodyMd">
                                 Tags:
                               </Text>
-                              <div className="lg:basis-4/5 flex gap-2">
+                              <div className="flex gap-2 lg:basis-4/5">
                                 {data?.datasets[0].tags.map(
                                   (item: any, index: any) => (
                                     <Tag key={index}>{item.value}</Tag>

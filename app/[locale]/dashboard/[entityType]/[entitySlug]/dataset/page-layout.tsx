@@ -33,7 +33,14 @@ export const Page = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isLoading } = useMutation(
-    () => GraphQL(createDatasetMutationDoc, []),
+    () =>
+      GraphQL(
+        createDatasetMutationDoc,
+        {
+          // Entity Headers if present
+        },
+        []
+      ),
     {
       onSuccess: (data: any) => {
         queryClient.invalidateQueries({

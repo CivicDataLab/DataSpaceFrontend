@@ -70,20 +70,30 @@ export function EditLayout({ children, params }: LayoutProps) {
 
   const [editMode, setEditMode] = useState(false);
 
-  
-
   const getDatasetTitleRes: { data: any; isLoading: boolean; refetch: any } =
     useQuery([`dataset_title_${routerParams.id}`], () =>
-      GraphQL(datasetQueryDoc, {
-        filters: {
-          id: routerParams.id,
+      GraphQL(
+        datasetQueryDoc,
+        {
+          // Entity Headers if present
         },
-      })
+        {
+          filters: {
+            id: routerParams.id,
+          },
+        }
+      )
     );
 
   const updateDatasetTitleMutation = useMutation(
     (data: { updateDatasetInput: UpdateDatasetInput }) =>
-      GraphQL(updateDatasetTitleMutationDoc, data),
+      GraphQL(
+        updateDatasetTitleMutationDoc,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
     {
       onSuccess: (data: any) => {
         // queryClient.invalidateQueries({
@@ -142,7 +152,14 @@ export function EditLayout({ children, params }: LayoutProps) {
   );
 }
 
-const Header = ({ dataset, orgId, saveTitle, editMode, setEditMode, entityType }: any) => {
+const Header = ({
+  dataset,
+  orgId,
+  saveTitle,
+  editMode,
+  setEditMode,
+  entityType,
+}: any) => {
   return (
     <>
       <div className="mb-3 flex flex-wrap-reverse items-center justify-between gap-4 md:gap-4 lg:flex-nowrap lg:gap-12">
@@ -229,7 +246,7 @@ const Navigation = ({
   id,
   pathItem,
   organization,
-  entityType
+  entityType,
 }: {
   id: string;
   pathItem: string;

@@ -1,15 +1,15 @@
 'use client';
 
-import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
+import { graphql } from '@/gql';
+import { useQuery } from '@tanstack/react-query';
 import { Text } from 'opub-ui';
 
+import { GraphQL } from '@/lib/api';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { ErrorPage } from '@/components/error';
 import { Loading } from '@/components/loading';
-import { GraphQL } from '@/lib/api';
 
 const categoriesListQueryDoc: any = graphql(`
   query CategoriesList {
@@ -30,7 +30,13 @@ const CategoriesListingPage = () => {
     error: any;
     isError: boolean;
   } = useQuery([`categories_list_page`], () =>
-    GraphQL(categoriesListQueryDoc, [])
+    GraphQL(
+      categoriesListQueryDoc,
+      {
+        // Entity Headers if present
+      },
+      []
+    )
   );
 
   return (

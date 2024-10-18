@@ -105,7 +105,14 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   const params = useParams();
   const { data, isLoading }: { data: any; isLoading: boolean } = useQuery(
     [`resourcesList_${params.id}`],
-    () => GraphQL(datasetResourcesQuery, { datasetId: params.id })
+    () =>
+      GraphQL(
+        datasetResourcesQuery,
+        {
+          // Entity Headers if present
+        },
+        { datasetId: params.id }
+      )
   );
 
   const {
@@ -114,7 +121,14 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     refetch: accessModelListRefetch,
   }: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`accessModelList_${params.id}`],
-    () => GraphQL(accessModelListQuery, { datasetId: params.id })
+    () =>
+      GraphQL(
+        accessModelListQuery,
+        {
+          // Entity Headers if present
+        },
+        { datasetId: params.id }
+      )
   );
   const {
     data: accessModelDetails,
@@ -122,7 +136,14 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     isLoading: accessModelDetailsLoading,
   }: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`accessModelDetails${params.id}`],
-    () => GraphQL(getAccessModelDetails, { accessModelId: accessModelId })
+    () =>
+      GraphQL(
+        getAccessModelDetails,
+        {
+          // Entity Headers if present
+        },
+        { accessModelId: accessModelId }
+      )
   );
 
   const [accessModelData, setAccessModelData] = useState({
@@ -288,7 +309,13 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { accessModelInput: EditAccessModelInput }) =>
-      GraphQL(editaccessModel, data),
+      GraphQL(
+        editaccessModel,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
     {
       onSuccess: (res: any) => {
         // toast('Access Model Saved');

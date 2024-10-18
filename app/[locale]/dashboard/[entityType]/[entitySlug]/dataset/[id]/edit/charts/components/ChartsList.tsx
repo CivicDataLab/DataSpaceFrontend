@@ -53,9 +53,15 @@ const ChartsList: React.FC<ChartsListProps> = ({
   }: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`chartDetails_${params.id}`],
     () =>
-      GraphQL(chartDetailsQuery, {
-        datasetId: params.id,
-      })
+      GraphQL(
+        chartDetailsQuery,
+        {
+          // Entity Headers if present
+        },
+        {
+          datasetId: params.id,
+        }
+      )
   );
 
   const [filteredRows, setFilteredRows] = useState<any[]>([]);
@@ -68,7 +74,14 @@ const ChartsList: React.FC<ChartsListProps> = ({
   }, [data, type]);
 
   const { mutate, isLoading: deleteLoading } = useMutation(
-    (data: { chartId: UUID }) => GraphQL(deleteResourceChart, data),
+    (data: { chartId: UUID }) =>
+      GraphQL(
+        deleteResourceChart,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
     {
       onSuccess: () => {
         toast('Chart Deleted Successfully');

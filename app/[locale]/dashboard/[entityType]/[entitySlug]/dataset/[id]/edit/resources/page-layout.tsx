@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useSearchParams } from 'next/navigation';
-
 import { useQuery } from '@tanstack/react-query';
 import { Spinner, Text } from 'opub-ui';
 
@@ -23,7 +22,14 @@ export interface TListItem {
 export function DistibutionPage({ params }: { params: { id: string } }) {
   const { data, isLoading, refetch } = useQuery(
     [`fetch_resources_${params.id}`],
-    () => GraphQL(getReourceDoc, { filters: { id: params.id } }),
+    () =>
+      GraphQL(
+        getReourceDoc,
+        {
+          // Entity Headers if present
+        },
+        { filters: { id: params.id } }
+      ),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
@@ -56,10 +62,7 @@ export function DistibutionPage({ params }: { params: { id: string } }) {
             {data && ResourceList.length > 0 ? (
               <>
                 {resourceId ? (
-                  <EditResource
-                    refetch={refetch}
-                    list={ResourceList}
-                  />
+                  <EditResource refetch={refetch} list={ResourceList} />
                 ) : (
                   <ResourceListView
                     refetch={refetch}

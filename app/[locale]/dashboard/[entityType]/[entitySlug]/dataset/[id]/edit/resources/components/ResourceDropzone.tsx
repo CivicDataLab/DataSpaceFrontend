@@ -3,25 +3,14 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import {
-  parseAsString,
-  useQueryState,
-} from 'next-usequerystate';
-import {
-  Button,
-  DropZone,
-  Text,
-} from 'opub-ui';
+import { parseAsString, useQueryState } from 'next-usequerystate';
+import { Button, DropZone, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { bytesToSize } from '@/lib/utils';
 import { createResourceFilesDoc } from './query';
 
-export const ResourceDropzone = ({
-  reload,
-}: {
-  reload: () => void;
-}) => {
+export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
   const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT', 'ZIP'];
   const params = useParams();
   const [file, setFile] = React.useState<File[]>([]);
@@ -30,7 +19,13 @@ export const ResourceDropzone = ({
 
   const { mutate, isLoading } = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
-      GraphQL(createResourceFilesDoc, data),
+      GraphQL(
+        createResourceFilesDoc,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
     {
       onSuccess: (data: any) => {
         reload();

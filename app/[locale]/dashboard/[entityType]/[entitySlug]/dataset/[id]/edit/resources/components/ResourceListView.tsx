@@ -1,7 +1,8 @@
+import React from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
 import { useMutation } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
-import { useParams, useRouter } from 'next/navigation';
 import {
   Button,
   DataTable,
@@ -12,12 +13,11 @@ import {
   Text,
   toast,
 } from 'opub-ui';
-import React from 'react';
 
-import { Icons } from '@/components/icons';
-import { Loading } from '@/components/loading';
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
+import { Icons } from '@/components/icons';
+import { Loading } from '@/components/loading';
 import { createResourceFilesDoc, updateResourceList } from './query';
 
 type FilteredRow = {
@@ -40,7 +40,14 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
   const params = useParams();
 
   const updateResourceMutation = useMutation(
-    (data: { resourceId: string }) => GraphQL(updateResourceList, data),
+    (data: { resourceId: string }) =>
+      GraphQL(
+        updateResourceList,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
     {
       onSuccess: (data, variables) => {
         const updatedFilteredRows = filteredRows.filter(
@@ -63,7 +70,13 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
 
   const createResourceMutation = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
-      GraphQL(createResourceFilesDoc, data),
+      GraphQL(
+        createResourceFilesDoc,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
     {
       onSuccess: (data: any) => {
         const updatedRows = data.createFileResources.map((item: any) => ({

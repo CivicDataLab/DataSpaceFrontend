@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
@@ -49,12 +49,21 @@ const Resources = () => {
 
   const { data, isLoading } = useQuery(
     [`resources_${params.datasetIdentifier}`],
-    () => GraphQL(datasetResourceQuery, { datasetId: params.datasetIdentifier })
+    () =>
+      GraphQL(
+        datasetResourceQuery,
+        {
+          // Entity Headers if present
+        },
+        { datasetId: params.datasetIdentifier }
+      )
   );
 
   // Use an object to manage the expanded state for each resource individually
   const [showMore, setShowMore] = useState<{ [key: number]: boolean }>({});
-  const [isDescriptionLong, setIsDescriptionLong] = useState<{ [key: number]: boolean }>({});
+  const [isDescriptionLong, setIsDescriptionLong] = useState<{
+    [key: number]: boolean;
+  }>({});
 
   const descriptionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -70,7 +79,8 @@ const Resources = () => {
   useEffect(() => {
     descriptionRefs.current.forEach((descriptionElement, index) => {
       if (descriptionElement) {
-        const isLong = descriptionElement.scrollHeight > descriptionElement.clientHeight;
+        const isLong =
+          descriptionElement.scrollHeight > descriptionElement.clientHeight;
         setIsDescriptionLong((prevState) => ({
           ...prevState,
           [index]: isLong,
@@ -90,11 +100,11 @@ const Resources = () => {
           <Text variant="bodyLg" className="mx-6 lg:mx-0">
             Downloadable Resources
           </Text>
-          <div className="mx-6 lg:mx-0 mt-5 flex flex-col gap-8 bg-surfaceDefault p-6">
+          <div className="mx-6 mt-5 flex flex-col gap-8 bg-surfaceDefault p-6 lg:mx-0">
             {data?.datasetResources.map((item: any, index: number) => (
               <div key={index} className="flex flex-wrap justify-between gap-4">
                 <div className="gap flex flex-col lg:w-4/5">
-                  <div className="item flex gap-2 items-center">
+                  <div className="item flex items-center gap-2">
                     <Text variant="headingMd">{item.name}</Text>
                     <Tag>{item.fileDetails.format}</Tag>
                   </div>

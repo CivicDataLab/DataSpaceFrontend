@@ -48,8 +48,6 @@ interface EditProps {
   list: TListItem[];
 }
 
-
-
 export const EditResource = ({ refetch, list }: EditProps) => {
   const params = useParams();
 
@@ -60,7 +58,14 @@ export const EditResource = ({ refetch, list }: EditProps) => {
     (data: {
       fileResourceInput: UpdateFileResourceInput;
       isResetSchema: boolean;
-    }) => GraphQL(updateResourceDoc, data),
+    }) =>
+      GraphQL(
+        updateResourceDoc,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
     {
       onSuccess: (data, variables) => {
         toast('File changes saved', {
@@ -83,7 +88,14 @@ export const EditResource = ({ refetch, list }: EditProps) => {
   );
 
   const schemaMutation = useMutation(
-    (data: { resourceId: string }) => GraphQL(resetSchema, data),
+    (data: { resourceId: string }) =>
+      GraphQL(
+        resetSchema,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
     {
       onSuccess: () => {
         schemaQuery.refetch();
@@ -95,11 +107,24 @@ export const EditResource = ({ refetch, list }: EditProps) => {
   );
 
   const schemaQuery = useQuery<any>([`fetch_schema_${params.id}`], () =>
-    GraphQL(fetchSchema, { datasetId: params.id })
+    GraphQL(
+      fetchSchema,
+      {
+        // Entity Headers if present
+      },
+      { datasetId: params.id }
+    )
   );
 
   const updateSchemaMutation = useMutation(
-    (data: { input: SchemaUpdateInput }) => GraphQL(updateSchema, data),
+    (data: { input: SchemaUpdateInput }) =>
+      GraphQL(
+        updateSchema,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
     {
       onSuccess: () => {
         schemaQuery.refetch();
@@ -118,7 +143,13 @@ export const EditResource = ({ refetch, list }: EditProps) => {
 
   const createResourceMutation = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
-      GraphQL(createResourceFilesDoc, data),
+      GraphQL(
+        createResourceFilesDoc,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
     {
       onSuccess: (data: any) => {
         setResourceId(data.createFileResources[0].id);
@@ -431,15 +462,23 @@ export const EditResource = ({ refetch, list }: EditProps) => {
           <div className=" mt-8 flex justify-center">
             <Spinner size={30} />
           </div>
-        ) : resourceId && schemaQuery.data?.datasetResources?.filter(
-            (item: any) => item.id === resourceId ).length > 0 ? (
+        ) : resourceId &&
+          schemaQuery.data?.datasetResources?.filter(
+            (item: any) => item.id === resourceId
+          ).length > 0 ? (
           <ResourceSchema
             setSchema={setSchema}
-                  data={schemaQuery.data?.datasetResources?.filter(
-                    (item: any) => item.id === resourceId)[0]?.schema}
+            data={
+              schemaQuery.data?.datasetResources?.filter(
+                (item: any) => item.id === resourceId
+              )[0]?.schema
+            }
           />
         ) : (
-             <div className="my-8 flex justify-center"> Click on Reset Fields </div>
+          <div className="my-8 flex justify-center">
+            {' '}
+            Click on Reset Fields{' '}
+          </div>
         )}
       </div>
     </div>

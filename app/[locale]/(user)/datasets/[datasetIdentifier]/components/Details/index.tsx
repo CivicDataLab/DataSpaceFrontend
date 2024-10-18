@@ -45,9 +45,15 @@ const Details = () => {
   }: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`chartdata_${params.datasetIdentifier}`],
     () =>
-      GraphQL(charts, {
-        datasetId: params.datasetIdentifier,
-      })
+      GraphQL(
+        charts,
+        {
+          // Entity Headers if present
+        },
+        {
+          datasetId: params.datasetIdentifier,
+        }
+      )
   );
 
   return (
