@@ -165,7 +165,7 @@ export default function DatasetPage({
               }
               primaryAction={{
                 content: 'Add New UseCase',
-                onAction: () => router.push(`/`),
+                onAction: () => router.push(`/manage/usecases/edit/details`),
               }}
             />
 

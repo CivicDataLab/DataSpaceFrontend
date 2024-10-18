@@ -24,7 +24,7 @@ export const Content = ({ params }: any) => {
         <Button
           onClick={() =>
             router.push(
-              `/`
+              `/manage/usecases/edit/details`
             )
           }
         >
