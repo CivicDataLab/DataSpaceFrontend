@@ -19,7 +19,7 @@ export function DashboardHeader({ currentPath }: { currentPath: string }) {
       label: 'My Organizations',
       url: `/dashboard/organization`,
       selected: currentPath.indexOf('organization') >= 0,
-      disabled: true,
+      disabled: false,
     },
   ];
   const router = useRouter();
