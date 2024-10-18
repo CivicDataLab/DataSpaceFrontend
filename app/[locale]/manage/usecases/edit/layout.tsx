@@ -1,0 +1,67 @@
+'use client';
+
+import React from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Tab, TabList, Tabs } from 'opub-ui';
+
+interface LayoutProps {
+  children?: React.ReactNode;
+}
+const EditUseCase = ({ children }: LayoutProps) => {
+  const router = useRouter();
+  const pathName = usePathname();
+
+  const layoutList = ['details', 'assign', 'publish'];
+
+  const pathItem = layoutList.find(function (v) {
+    return pathName.indexOf(v) >= 0;
+  });
+
+  const links = [
+    {
+      label: 'Details',
+      url: `/manage/usecases/edit/details`,
+      selected: pathItem === 'details',
+    },
+    {
+      label: 'Assign',
+      url: `/manage/usecases/edit/assign`,
+      selected: pathItem === 'assign',
+    },
+    {
+      label: 'Publish',
+      url: `/manage/usecases/edit/publish`,
+      selected: pathItem === 'publish',
+    },
+  ];
+
+  const handleTabClick = (url: string) => {
+    router.replace(url); // Navigate to the selected tab
+  };
+
+  const initialTabLabel =
+    links.find((option) => option.selected)?.label || 'Details';
+  return (
+    <div className="mt-8 flex h-full flex-col">
+      {' '}
+      <Tabs defaultValue={initialTabLabel}>
+        <TabList fitted>
+          {links.map((item, index) => (
+            <Tab
+              value={item.label}
+              key={index}
+              onClick={() => handleTabClick(item.url)}
+            >
+              {item.label}
+            </Tab>
+          ))}
+        </TabList>
+      </Tabs>
+      <div className="bg-surface shadow-card border-l-divider rounded-tl-none  my-6  flex-grow">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+export default EditUseCase;
