@@ -1,18 +1,17 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
-import { DataTable, IconButton, toast } from 'opub-ui';
-
-import { GraphQL } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { Button, DataTable, Icon, IconButton, Text, toast } from 'opub-ui';
+import { useEffect } from 'react';
+import { twMerge } from 'tailwind-merge';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import { GraphQL } from '@/lib/api';
 import { ActionBar } from '../../dashboard/organization/[organizationId]/dataset/components/action-bar';
 import { Navigation } from '../../dashboard/organization/[organizationId]/dataset/components/navigate-org-datasets';
-import { Content } from './components/Content';
 
 const allUseCases: any = graphql(`
   query UseCasesData {
@@ -179,7 +178,28 @@ export default function DatasetPage({
         ) : AllUseCases.isLoading ? (
           <Loading />
         ) : (
-          <Content params={params} />
+          <>
+            <div className="flex h-full w-full grow flex-col items-center justify-center">
+              <div
+                className={twMerge('h-100 flex flex-col items-center gap-4')}
+              >
+                <Icon
+                  source={Icons.addDataset}
+                  color="interactive"
+                  stroke={1}
+                  size={80}
+                />
+                <Text variant="headingSm" color="subdued">
+                  You have not added any usecase yet.
+                </Text>
+                <Button
+                  onClick={() => router.push(`/manage/usecases/edit/details`)}
+                >
+                  Add New UseCase
+                </Button>
+              </div>
+            </div>
+          </>
         )}
 
         {/* <Page /> */}
