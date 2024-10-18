@@ -9,9 +9,3 @@ export const siteConfig: SiteConfig = {
 
 export const locales = ['en', 'hi'];
 
-export const gqlConfig = {
-  url: `${process.env.BACKEND_GRAPHQL_URL}`,
-  headers: {
-    organization: '1',
-  },
-};
