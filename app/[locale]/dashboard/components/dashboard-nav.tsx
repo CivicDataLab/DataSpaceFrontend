@@ -17,8 +17,8 @@ interface DashboardNavProps {
 }
 export function DashboardNav({
   items,
-  organizationId,
-}: DashboardNavProps & { organizationId?: string }) {
+  entitySlug,
+}: DashboardNavProps & { entitySlug?: string }) {
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const path = usePathname();
 
@@ -39,7 +39,7 @@ export function DashboardNav({
       )}
     >
       <nav className={cn('flex flex-col gap-2')}>
-        {organizationId && !isCollapsed ? (
+        {entitySlug && !isCollapsed ? (
           <>
             <div className="flex flex-col items-center justify-center px-4 py-8">
               <Image
@@ -49,7 +49,7 @@ export function DashboardNav({
                 alt={'Organisation ID'}
               />
               <Text variant="headingMd" fontWeight="medium" className="py-2">
-                {organizationId}
+                {entitySlug}
               </Text>
               <Link href={'/dashboard'}>
                 <Text variant="headingXs" color="interactive">

@@ -17,22 +17,22 @@ interface DashboardLayoutProps {
 export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
   const [isOpened, setIsOpened] = React.useState(false);
 
-  const params = useParams<{ entityType: string; organizationId: string }>();
+  const params = useParams<{ entityType: string; entitySlug: string }>();
 
   const orgSidebarNav: Array<SidebarNavItem> = [
     {
       title: 'Datasets',
-      href: `/dashboard/${params.entityType}/${params.organizationId}/dataset`,
+      href: `/dashboard/${params.entityType}/${params.entitySlug}/dataset`,
       icon: 'datasetEdit',
     },
     {
       title: 'Manage Consumers',
-      href: `/dashboard/${params.entityType}/${params.organizationId}/consumers`,
+      href: `/dashboard/${params.entityType}/${params.entitySlug}/consumers`,
       icon: 'userList',
     },
   ];
 
-  const organizationId = params.organizationId;
+  const entitySlug = params.entitySlug;
 
   return (
     <>
@@ -45,7 +45,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           },
           {
             href: '',
-            label: `${params.organizationId}`,
+            label: `${params.entitySlug}`,
           },
         ]}
       />
@@ -55,7 +55,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           ' bg-surfaceDefault p-4 md:flex'
         )}
       >
-        <DashboardNav items={orgSidebarNav} organizationId={organizationId} />
+        <DashboardNav items={orgSidebarNav} entitySlug={entitySlug} />
 
         <div className="z-1 basis-2 md:hidden">
           <MobileDashboardNav

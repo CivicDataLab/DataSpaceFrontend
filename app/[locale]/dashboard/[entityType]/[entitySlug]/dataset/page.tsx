@@ -53,7 +53,7 @@ const deleteDatasetMutationDoc: any = graphql(`
 export default function DatasetPage({
   params,
 }: {
-  params: { entityType: string; organizationId: string };
+  params: { entityType: string; entitySlug: string };
 }) {
   const router = useRouter();
 
@@ -117,7 +117,7 @@ export default function DatasetPage({
     useMutation(() => GraphQL(createDatasetMutationDoc, []), {
       onSuccess: (data: any) => {
         router.push(
-          `/dashboard/${params.entityType}/${params.organizationId}/dataset/${data?.addDataset?.id}/edit/resources`
+          `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/resources`
         );
       },
       onError: (err: any) => {
@@ -133,7 +133,7 @@ export default function DatasetPage({
         <LinkButton
           kind="tertiary"
           size="medium"
-          href={`/dashboard/${params.entityType}/${params.organizationId}/dataset/${row.original.id}/edit/resources`}
+          href={`/dashboard/${params.entityType}/${params.entitySlug}/dataset/${row.original.id}/edit/resources`}
         >
           {row.original.title}
         </LinkButton>

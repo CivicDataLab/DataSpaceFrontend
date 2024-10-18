@@ -88,7 +88,7 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
         });
 
         router.push(
-          `/dashboard/${params.entityType}/${params.organizationId}/dataset/${params.id}/edit/resources?id=${data.createFileResources[0]?.id}`
+          `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${params.id}/edit/resources?id=${data.createFileResources[0]?.id}`
         );
       },
       onError: (err: any) => {

@@ -169,7 +169,7 @@ export function EditMetadata({ id }: { id: string }) {
         getDatasetMetadata.refetch();
 
         router.push(
-          `/dashboard/${params.entityType}/${params.organizationId}/dataset/${id}/edit/publish`
+          `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${id}/edit/publish`
         );
       },
       onError: (err: any) => {

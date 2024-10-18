@@ -4,7 +4,7 @@ import styles from '../edit.module.scss';
 export default async function Page({
   params,
 }: {
-  params: { id: string; organizationId: string };
+  params: { id: string; entitySlug: string };
 }) {
   return (
     // <Hydrate state={dehydratedState}>

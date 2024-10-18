@@ -118,7 +118,7 @@ export function EditLayout({ children, params }: LayoutProps) {
       ) : (
         <Header
           dataset={getDatasetTitleRes?.data?.datasets[0]}
-          orgId={routerParams.organizationId}
+          orgId={routerParams.entitySlug}
           saveTitle={updateDatasetTitleMutation.mutate}
           editMode={editMode}
           setEditMode={setEditMode}
@@ -130,7 +130,7 @@ export function EditLayout({ children, params }: LayoutProps) {
           <Navigation
             id={params.id}
             pathItem={pathItem}
-            organization={routerParams.organizationId.toString()}
+            organization={routerParams.entitySlug.toString()}
             entityType={routerParams.entityType.toString()}
           />
         </div>
