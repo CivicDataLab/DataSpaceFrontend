@@ -33,7 +33,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               href: '#',
               label: pathname.includes('organization')
                 ? 'My Organizations'
-                : 'My Personal Datasets',
+                : pathname.includes('dataspace')
+                  ? 'My Data Spaces'
+                  : 'My Personal Datasets',
             },
           ]}
         />

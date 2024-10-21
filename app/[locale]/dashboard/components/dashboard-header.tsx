@@ -1,8 +1,5 @@
-import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Tab, TabList, Tabs, Text } from 'opub-ui';
-
-import BreadCrumbs from '@/components/BreadCrumbs';
 
 export function DashboardHeader({ currentPath }: { currentPath: string }) {
   const userDashboardOptions = [
@@ -10,11 +7,19 @@ export function DashboardHeader({ currentPath }: { currentPath: string }) {
       label: 'My Datasets',
       url: `/dashboard/user/datasets`,
       selected: currentPath.indexOf('user') >= 0,
+      disabled: false,
+    },
+    {
+      label: 'My Data Spaces',
+      url: `/dashboard/dataspace`,
+      selected: currentPath.indexOf('dataspace') >= 0,
+      disabled: false,
     },
     {
       label: 'My Organizations',
       url: `/dashboard/organization`,
       selected: currentPath.indexOf('organization') >= 0,
+      disabled: false,
     },
   ];
   const router = useRouter();
@@ -41,6 +46,7 @@ export function DashboardHeader({ currentPath }: { currentPath: string }) {
                   value={item.label}
                   key={index}
                   onClick={() => handleTabClick(item.url)}
+                  disabled={item.disabled}
                 >
                   {item.label}
                 </Tab>

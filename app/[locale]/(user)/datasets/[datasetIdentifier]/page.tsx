@@ -55,7 +55,13 @@ const DatasetDetailsPage = () => {
   const params = useParams();
 
   const { data, isLoading } = useQuery([`${params.datasetIdentifier}`], () =>
-    GraphQL(datasetQuery, { filters: { id: params.datasetIdentifier } })
+    GraphQL(
+      datasetQuery,
+      {
+        // Entity Headers if present
+      },
+      { filters: { id: params.datasetIdentifier } }
+    )
   );
 
   return (

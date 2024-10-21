@@ -1,18 +1,18 @@
 'use client';
 
+import { useEffect, useReducer, useState } from 'react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import { fetchDatasets } from '@/fetch';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { Pill, SearchInput, Select, Text } from 'opub-ui';
-import { useEffect, useReducer, useState } from 'react';
 
+import { GraphQL } from '@/lib/api';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { ErrorPage } from '@/components/error';
 import { Loading } from '@/components/loading';
-import { GraphQL } from '@/lib/api';
 import Card from '../../datasets/components/Card';
 import Filter from '../../datasets/components/FIlter/Filter';
 
@@ -171,7 +171,13 @@ const CategoryDetailsPage = ({ params }: { params: { categorySlug: any } }) => {
     isLoading: boolean;
     isError: boolean;
   } = useQuery([`get_category_details_${params.categorySlug}`], () =>
-    GraphQL(categoryQueryDoc, { filters: { slug: params.categorySlug } })
+    GraphQL(
+      categoryQueryDoc,
+      {
+        // Entity Headers if present
+      },
+      { filters: { slug: params.categorySlug } }
+    )
   );
 
   const [facets, setFacets] = useState<{

@@ -124,9 +124,15 @@ const AccessModels = () => {
   const { data, error, isLoading } = useQuery(
     [`accessmodel_${params.datasetIdentifier}`],
     () =>
-      GraphQL(accessModelResourcesQuery, {
-        datasetId: params.datasetIdentifier,
-      })
+      GraphQL(
+        accessModelResourcesQuery,
+        {
+          // Entity Headers if present
+        },
+        {
+          datasetId: params.datasetIdentifier,
+        }
+      )
   );
 
   return (
