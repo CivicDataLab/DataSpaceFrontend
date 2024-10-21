@@ -32,18 +32,14 @@ const deleteUseCase: any = graphql(`
   }
 `);
 
-const CreateUseCaseMutation: any = graphql(`
-  mutation UseCase($data: UseCaseInput!) {
-    createUseCase(data: $data) {
+const AddUseCase: any = graphql(`
+  mutation Addusecase {
+    addUseCase {
       __typename
-      id
-      title
-      description
-      created
-      modified
-      website
-      slug
-      status
+      ... on TypeUseCase {
+        id
+        created
+      }
     }
   }
 `);
@@ -108,32 +104,21 @@ export default function DatasetPage({
       },
     }
   );
-  const date = new Date();
-  const formattedDate = `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()} - ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 
   const CreateUseCase: {
     mutate: any;
     isLoading: boolean;
     error: any;
-  } = useMutation(
-    [`delete_Usecase`],
-    () =>
-      GraphQL(CreateUseCaseMutation, {
-        data: { title: `New UseCase ${formattedDate}`, },
-      }),
-    {
-      onSuccess: (response: any) => {
-        toast(`UseCase created successfully`);
-        router.push(
-          `/manage/usecases/edit/${response.createUseCase.id}/details`
-        );
-        AllUseCases.refetch();
-      },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
-      },
-    }
-  );
+  } = useMutation([`delete_Usecase`], () => GraphQL(AddUseCase, []), {
+    onSuccess: (response: any) => {
+      toast(`UseCase created successfully`);
+      router.push(`/manage/usecases/edit/${response.addUseCase.id}/details`);
+      AllUseCases.refetch();
+    },
+    onError: (err: any) => {
+      toast('Error:  ' + err.message.split(':')[0]);
+    },
+  });
 
   const datasetsListColumns = [
     {
