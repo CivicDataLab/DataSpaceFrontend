@@ -147,7 +147,6 @@ const Details = () => {
           id: params.id.toString(),
           title: updatedData.title,
           description: updatedData.description,
-          logo: updatedData.logo,
           website: updatedData.website,
           contactEmail: updatedData.contactEmail,
         },
