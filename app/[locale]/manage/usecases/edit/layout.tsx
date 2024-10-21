@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { Tab, TabList, Tabs } from 'opub-ui';
 
 interface LayoutProps {
@@ -10,6 +10,8 @@ interface LayoutProps {
 const EditUseCase = ({ children }: LayoutProps) => {
   const router = useRouter();
   const pathName = usePathname();
+  const params = useParams();
+
 
   const layoutList = ['details', 'assign', 'publish'];
 
@@ -20,17 +22,17 @@ const EditUseCase = ({ children }: LayoutProps) => {
   const links = [
     {
       label: 'Details',
-      url: `/manage/usecases/edit/details`,
+      url: `/manage/usecases/edit/${params.id}/details`,
       selected: pathItem === 'details',
     },
     {
       label: 'Assign',
-      url: `/manage/usecases/edit/assign`,
+      url: `/manage/usecases/edit/${params.id}/assign`,
       selected: pathItem === 'assign',
     },
     {
       label: 'Publish',
-      url: `/manage/usecases/edit/publish`,
+      url: `/manage/usecases/edit/${params.id}/publish`,
       selected: pathItem === 'publish',
     },
   ];

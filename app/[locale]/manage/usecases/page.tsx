@@ -1,21 +1,23 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
-import { useRouter } from 'next/navigation';
 import { Button, DataTable, Icon, IconButton, Text, toast } from 'opub-ui';
-import { useEffect } from 'react';
 import { twMerge } from 'tailwind-merge';
-import { Icons } from '@/components/icons';
-import { Loading } from '@/components/loading';
+
 import { GraphQL } from '@/lib/api';
+import { Icons } from '@/components/icons';
+import { LinkButton } from '@/components/Link';
+import { Loading } from '@/components/loading';
 import { ActionBar } from '../../dashboard/organization/[organizationId]/dataset/components/action-bar';
 import { Navigation } from '../../dashboard/organization/[organizationId]/dataset/components/navigate-org-datasets';
 
 const allUseCases: any = graphql(`
-  query UseCasesData {
-    useCases {
+  query UseCasesData($filters: UseCaseFilter, $order: UseCaseOrder) {
+    useCases(filters: $filters, order: $order) {
       title
       id
       created
@@ -25,10 +27,23 @@ const allUseCases: any = graphql(`
 `);
 
 const deleteUseCase: any = graphql(`
-  mutation deleteUseCase($data: NodeInput!) {
-    deleteUseCase(data: $data) {
+  mutation deleteUseCase($useCaseId: String!) {
+    deleteUseCase(useCaseId: $useCaseId)
+  }
+`);
+
+const CreateUseCaseMutation: any = graphql(`
+  mutation UseCase($data: UseCaseInput!) {
+    createUseCase(data: $data) {
       __typename
       id
+      title
+      description
+      created
+      modified
+      website
+      slug
+      status
     }
   }
 `);
@@ -57,7 +72,13 @@ export default function DatasetPage({
 
   const AllUseCases: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_UseCases`],
-    () => GraphQL(allUseCases, []),
+    () =>
+      GraphQL(allUseCases, {
+        filters: {
+          status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
+        },
+        order: { modified: 'DESC' },
+      }),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
@@ -76,10 +97,36 @@ export default function DatasetPage({
     error: any;
   } = useMutation(
     [`delete_Usecase`],
-    (data: { id: string }) => GraphQL(deleteUseCase, { data: { id: data.id } }),
+    (data: { id: string }) => GraphQL(deleteUseCase, { useCaseId: data.id }),
     {
       onSuccess: () => {
         toast(`Deleted UseCase successfully`);
+        AllUseCases.refetch();
+      },
+      onError: (err: any) => {
+        toast('Error:  ' + err.message.split(':')[0]);
+      },
+    }
+  );
+  const date = new Date();
+  const formattedDate = `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()} - ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+
+  const CreateUseCase: {
+    mutate: any;
+    isLoading: boolean;
+    error: any;
+  } = useMutation(
+    [`delete_Usecase`],
+    () =>
+      GraphQL(CreateUseCaseMutation, {
+        data: { title: `New UseCase ${formattedDate}`, },
+      }),
+    {
+      onSuccess: (response: any) => {
+        toast(`UseCase created successfully`);
+        router.push(
+          `/manage/usecases/edit/${response.createUseCase.id}/details`
+        );
         AllUseCases.refetch();
       },
       onError: (err: any) => {
@@ -92,15 +139,15 @@ export default function DatasetPage({
     {
       accessorKey: 'title',
       header: 'Title',
-      // cell: ({ row }: any) => (
-      // <LinkButton
-      //   kind="tertiary"
-      //   size="medium"
-      //   href={`/dashboard/organization/${params.organizationId}/dataset/${row.original.id}/edit/resources`}
-      // >
-      // {row.original.title}
-      // </LinkButton>
-      // ),
+      cell: ({ row }: any) => (
+        <LinkButton
+          kind="tertiary"
+          size="medium"
+          href={`/manage/usecases/edit/${row.original.id}/details`}
+        >
+          {row.original.title}
+        </LinkButton>
+      ),
     },
     { accessorKey: 'created', header: 'Date Created' },
     { accessorKey: 'modified', header: 'Date Modified' },
@@ -164,7 +211,7 @@ export default function DatasetPage({
               }
               primaryAction={{
                 content: 'Add New UseCase',
-                onAction: () => router.push(`/manage/usecases/edit/details`),
+                onAction: () => CreateUseCase.mutate(),
               }}
             />
 
@@ -189,14 +236,20 @@ export default function DatasetPage({
                   stroke={1}
                   size={80}
                 />
-                <Text variant="headingSm" color="subdued">
-                  You have not added any usecase yet.
-                </Text>
-                <Button
-                  onClick={() => router.push(`/manage/usecases/edit/details`)}
-                >
-                  Add New UseCase
-                </Button>
+                {navigationTab === 'drafts' ? (
+                  <>
+                    <Text variant="headingSm" color="subdued">
+                      You have not added any usecase yet.
+                    </Text>
+                    <Button onClick={() => CreateUseCase.mutate()}>
+                      Add New UseCase
+                    </Button>
+                  </>
+                ) : (
+                  <Text variant="headingSm" color="subdued">
+                    No Published UseCases yet.
+                  </Text>
+                )}
               </div>
             </div>
           </>
