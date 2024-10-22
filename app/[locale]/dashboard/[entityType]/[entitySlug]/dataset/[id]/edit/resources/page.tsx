@@ -31,7 +31,11 @@ import { DistibutionPage } from './page-layout';
 //   }
 // `);
 
-export default async function Page({ params }: { params: { id: string } }) {
+export default async function Page({
+  params,
+}: {
+  params: { entityType: string; entitySlug: string; id: string };
+}) {
   const queryClient = getQueryClient();
   // await queryClient.prefetchQuery([`dataset_distribution_${params.id}`], () =>
   //   GraphQL(datasetDistributionQueryDoc, {
@@ -42,9 +46,9 @@ export default async function Page({ params }: { params: { id: string } }) {
 
   return (
     // <Hydrate state={dehydratedState}>
-      <div className={styles.EditPage}>
-        <DistibutionPage params={params} />
-      </div>
+    <div className={styles.EditPage}>
+      <DistibutionPage params={params} />
+    </div>
     // </Hydrate>
   );
 }
