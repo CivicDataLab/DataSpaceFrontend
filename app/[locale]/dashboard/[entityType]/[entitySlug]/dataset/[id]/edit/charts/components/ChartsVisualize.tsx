@@ -185,7 +185,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     name: '',
     description: '',
     chartType: 'BAR_VERTICAL',
-    resource: data?.datasetResources[0].id,
+    resource: data?.datasetResources[0]?.id,
     xAxisColumn: '',
     xAxisLabel: '',
     yAxisColumn: '',
@@ -205,7 +205,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     if (data) {
       if (!chartId && data?.datasetResources.length) {
         // Set initial resource schema and chart data
-        const initialResource = data.datasetResources[0];
+        const initialResource = data?.datasetResources[0];
         setResourceSchema(initialResource.schema || []);
         setChartData((prevData) => ({
           ...prevData,
@@ -297,7 +297,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           showLegend: updatedData.showLegend,
           xAxisLabel: updatedData.xAxisLabel,
           yAxisLabel: updatedData.yAxisLabel,
-          resource: updatedData.resource || data?.datasetResources[0].id,
+          resource: updatedData.resource || data?.datasetResources[0]?.id,
           xAxisColumn: updatedData.xAxisColumn,
           yAxisColumn: updatedData.yAxisColumn,
           regionColumn: updatedData.regionColumn,
@@ -446,7 +446,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
                 value: resource.id,
               }))}
               value={chartData.resource}
-              defaultValue={data?.datasetResources[0].id}
+              defaultValue={data?.datasetResources[0]?.id}
               label="Select Resources"
               onBlur={() => handleSave(chartData)}
               onChange={(e) => handleResourceChange(e)}
