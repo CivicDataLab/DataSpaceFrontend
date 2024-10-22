@@ -48,7 +48,11 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
   list,
   setAccessModelId,
 }) => {
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
 
   const {
     data,
@@ -60,7 +64,7 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
       GraphQL(
         accessModelQuery,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         {
           datasetId: params.id,
@@ -82,7 +86,7 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
       GraphQL(
         deleteAccessModel,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),

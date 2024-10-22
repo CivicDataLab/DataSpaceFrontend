@@ -173,13 +173,17 @@ const generateTableData = (name: any, data: any) => {
 };
 
 const Page = () => {
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
 
   const { data, isLoading, refetch } = useQuery([`summary_${params.id}`], () =>
     GraphQL(
       datasetSummaryQuery,
       {
-        // Entity Headers if present
+        [params.entityType]: params.entitySlug,
       },
       { filters: { id: params.id } }
     )
@@ -235,7 +239,7 @@ const Page = () => {
       GraphQL(
         publishDatasetMutation,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         { datasetId: params.id }
       ),

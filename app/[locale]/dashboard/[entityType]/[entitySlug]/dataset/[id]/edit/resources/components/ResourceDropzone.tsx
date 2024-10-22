@@ -12,7 +12,11 @@ import { createResourceFilesDoc } from './query';
 
 export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
   const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT', 'ZIP'];
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
   const [file, setFile] = React.useState<File[]>([]);
 
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
@@ -22,7 +26,7 @@ export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
       GraphQL(
         createResourceFilesDoc,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),

@@ -19,14 +19,18 @@ export interface TListItem {
   fileDetails: any;
 }
 
-export function DistibutionPage({ params }: { params: { id: string } }) {
+export function DistibutionPage({
+  params,
+}: {
+  params: { entityType: string; entitySlug: string; id: string };
+}) {
   const { data, isLoading, refetch } = useQuery(
     [`fetch_resources_${params.id}`],
     () =>
       GraphQL(
         getReourceDoc,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         { filters: { id: params.id } }
       ),

@@ -110,7 +110,11 @@ const updateMetadataMutationDoc: any = graphql(`
 
 export function EditMetadata({ id }: { id: string }) {
   const router = useRouter();
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
 
   const queryClient = useQueryClient();
 
@@ -125,7 +129,7 @@ export function EditMetadata({ id }: { id: string }) {
       GraphQL(
         datasetMetadataQueryDoc,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         { filters: { id: params.id } }
       ),
@@ -140,7 +144,7 @@ export function EditMetadata({ id }: { id: string }) {
       GraphQL(
         categoriesListQueryDoc,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         []
       )
@@ -152,7 +156,7 @@ export function EditMetadata({ id }: { id: string }) {
       GraphQL(
         tagsListQueryDoc,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         []
       )
@@ -166,7 +170,7 @@ export function EditMetadata({ id }: { id: string }) {
     GraphQL(
       metadataQueryDoc,
       {
-        // Entity Headers if present
+        [params.entityType]: params.entitySlug,
       },
       {
         filters: {
@@ -182,7 +186,7 @@ export function EditMetadata({ id }: { id: string }) {
       GraphQL(
         updateMetadataMutationDoc,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),

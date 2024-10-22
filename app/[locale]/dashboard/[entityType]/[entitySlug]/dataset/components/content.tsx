@@ -26,7 +26,11 @@ const createDatasetMutationDoc: any = graphql(`
     }
   }
 `);
-export const Content = ({ params }: any) => {
+export const Content = ({
+  params,
+}: {
+  params: { entityType: string; entitySlug: string };
+}) => {
   const router = useRouter();
 
   const CreateDatasetMutation: { mutate: any; isLoading: boolean; error: any } =
@@ -35,7 +39,7 @@ export const Content = ({ params }: any) => {
         GraphQL(
           createDatasetMutationDoc,
           {
-            // Entity Headers if present
+            [params.entityType]: params.entitySlug,
           },
           []
         ),

@@ -44,7 +44,11 @@ const ChartsList: React.FC<ChartsListProps> = ({
   type,
   setChartId,
 }) => {
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
 
   const {
     data,
@@ -56,7 +60,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
       GraphQL(
         chartDetailsQuery,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         {
           datasetId: params.id,
@@ -78,7 +82,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
       GraphQL(
         deleteResourceChart,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),

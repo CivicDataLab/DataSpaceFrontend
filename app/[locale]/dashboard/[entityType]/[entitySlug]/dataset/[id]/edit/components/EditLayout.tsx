@@ -66,7 +66,11 @@ export function EditLayout({ children, params }: LayoutProps) {
   // );
 
   const pathName = usePathname();
-  const routerParams = useParams();
+  const routerParams = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
 
   const [editMode, setEditMode] = useState(false);
 
@@ -75,7 +79,7 @@ export function EditLayout({ children, params }: LayoutProps) {
       GraphQL(
         datasetQueryDoc,
         {
-          // Entity Headers if present
+          [routerParams.entityType]: routerParams.entitySlug,
         },
         {
           filters: {
@@ -90,7 +94,7 @@ export function EditLayout({ children, params }: LayoutProps) {
       GraphQL(
         updateDatasetTitleMutationDoc,
         {
-          // Entity Headers if present
+          [routerParams.entityType]: routerParams.entitySlug,
         },
         data
       ),
