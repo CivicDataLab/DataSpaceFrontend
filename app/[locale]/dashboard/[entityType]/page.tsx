@@ -18,23 +18,19 @@ const Page = () => {
 
   const dataspacesList = [
     {
-      title: 'Open Budgets India',
+      name: 'Open Budgets India',
       slug: 'open-budgets-india',
-    },
-    {
-      title: 'Open Contracting India',
-      slug: 'open-contracting-india',
     },
   ];
 
   const organizationsList = [
     {
-      title: 'CBGA',
-      slug: 'cbga-india',
+      name: 'CBGA',
+      slug: 'civicdatalab',
     },
     {
-      title: 'Assam Finance Department',
-      slug: 'assam-finance-dept',
+      name: 'Assam Finance Department',
+      slug: 'civicdatalab',
     },
   ];
 
@@ -67,7 +63,7 @@ const Page = () => {
               ...(params.entityType === 'organization'
                 ? organizationsList
                 : dataspacesList),
-            ].map((orgItem) => (
+            ]?.map((orgItem) => (
               <div
                 key={orgItem.slug}
                 className="flex  max-w-64 flex-col items-center gap-3 rounded-2 border-2 border-solid border-baseGraySlateSolid4 px-4 py-5 text-center"
@@ -97,14 +93,14 @@ const Page = () => {
                 </LinkButton> */}
                 </Link>
                 <div>
-                  <Text variant="headingMd">{orgItem.title}</Text>
+                  <Text variant="headingMd">{orgItem.name}</Text>
                 </div>
               </div>
             ))}
             <div className="flex h-72 w-56 flex-col items-center justify-center gap-3 rounded-2 bg-baseGraySlateSolid6 p-4">
               <Icon source={Icons.plus} size={40} color="success" />
               <Text alignment="center" variant="headingMd">
-                Add New Organization
+                {`Add New ${params.entityType === 'organization' ? 'Organization' : 'Data Space'}`}
               </Text>
             </div>
           </div>
