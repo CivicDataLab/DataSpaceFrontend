@@ -155,63 +155,64 @@ const Details = () => {
   };
 
   return (
-    <div className=" flex flex-col gap-4">
+    <div className="mt-3 rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
       <div className="flex justify-end gap-2">
         <Text color="highlight">Auto Save </Text>
         {editMutationLoading ? <Spinner /> : <Icon source={Icons.checkmark} />}
       </div>
-      <div>
-        <TextField
-          label="Title"
-          name="title"
-          value={formData.title}
-          onChange={(e) => handleChange('title', e)}
-          onBlur={() => handleSave(formData)}
-        />
-      </div>
-      <div>
-        <TextField
-          label="Description"
-          name="description"
-          value={formData.description}
-          multiline
-          onChange={(e) => handleChange('description', e)}
-          onBlur={() => handleSave(formData)}
-        />
-      </div>
-      <div>
-        <DropZone
-          label={!UsecasesData?.logo ? 'Logo' : 'Change Logo'}
-          onDrop={onDrop}
-          name={'Logo'}
-        >
-          <DropZone.FileUpload
-            actionTitle={
-              UsecasesData && UsecasesData?.logo?.name.split('/').pop()
-            }
+      <div className=" flex flex-col gap-5">
+        <div>
+          <TextField
+            label="Title"
+            name="title"
+            value={formData.title}
+            onChange={(e) => handleChange('title', e)}
+            onBlur={() => handleSave(formData)}
           />
-        </DropZone>
-      </div>
-
-      <div>
-        <TextField
-          label="Website"
-          name="website"
-          type="url"
-          value={formData.website}
-          onChange={(e) => handleChange('website', e)}
-          onBlur={() => handleSave(formData)}
-        />
-      </div>
-      <div>
-        <TextField
-          label="Contact Email"
-          name="contactEmail"
-          type="email"
-          value={formData.contactEmail}
-          onChange={(e) => handleChange('contactEmail', e)}
-          onBlur={() => handleSave(formData)}
-        />
+        </div>
+        <div>
+          <TextField
+            label="Description"
+            name="description"
+            value={formData.description}
+            multiline={3}
+            onChange={(e) => handleChange('description', e)}
+            onBlur={() => handleSave(formData)}
+          />
+        </div>
+        <div>
+          <DropZone
+            label={!UsecasesData?.logo ? 'Logo' : 'Change Logo'}
+            onDrop={onDrop}
+            name={'Logo'}
+          >
+            <DropZone.FileUpload
+              actionTitle={
+                UsecasesData && UsecasesData?.logo?.name.split('/').pop()
+              }
+            />
+          </DropZone>
+        </div>
+        <div>
+          <TextField
+            label="Website"
+            name="website"
+            type="url"
+            value={formData.website}
+            onChange={(e) => handleChange('website', e)}
+            onBlur={() => handleSave(formData)}
+          />
+        </div>
+        <div>
+          <TextField
+            label="Contact Email"
+            name="contactEmail"
+            type="email"
+            value={formData.contactEmail}
+            onChange={(e) => handleChange('contactEmail', e)}
+            onBlur={() => handleSave(formData)}
+          />
+        </div>
       </div>
     </div>
   );
