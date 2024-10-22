@@ -79,7 +79,7 @@ export default function DatasetPage({
         GraphQL(
           allDatasetsQueryDoc,
           {
-            // Entity Headers if present
+            [params.entityType]: params.entitySlug,
           },
           {
             filters: {
@@ -110,7 +110,7 @@ export default function DatasetPage({
       GraphQL(
         deleteDatasetMutationDoc,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         { datasetId: data.datasetId }
       ),
@@ -131,7 +131,7 @@ export default function DatasetPage({
         GraphQL(
           createDatasetMutationDoc,
           {
-            // Entity Headers if present
+            [params.entityType]: params.entitySlug,
           },
           []
         ),
