@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+
+import * as echarts from 'echarts/core';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
@@ -23,7 +25,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import { vizdata } from './data';
+import assam_geojson from './data';
 
 interface VisualizationProps {
   setType: any;
@@ -220,6 +222,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   }, [chartId, chartDetails]);
 
   const updateChartData = (resourceChart: any) => {
+    echarts.registerMap("assam_district", assam_geojson)
     const updatedData = {
       aggregateType: resourceChart.aggregateType as AggregateType,
       chartType: resourceChart.chartType as ChartTypes,
@@ -534,7 +537,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           </div>
           <div className="mb-6 flex flex-col gap-6 p-8 text-center">
             <Text>Preview</Text>
-            {Object.keys(chartData.chart).length > 0 && (
+            {Object?.keys(chartData.chart).length > 0 && (
               <ReactECharts option={chartData.chart} ref={chartRef} />
             )}
           </div>
