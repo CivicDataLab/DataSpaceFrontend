@@ -127,12 +127,16 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   chartId,
   setChartId,
 }) => {
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
   const { data }: { data: any } = useQuery([`charts_${params.id}`], () =>
     GraphQL(
       datasetResource,
       {
-        // Entity Headers if present
+        [params.entityType]: params.entitySlug,
       },
       { datasetId: params.id }
     )
@@ -144,7 +148,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       GraphQL(
         getResourceChartDetails,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         { chartDetailsId: chartId }
       ),
@@ -162,7 +166,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       GraphQL(
         chartDetailsQuery,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         {
           datasetId: params.id,
@@ -245,7 +249,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       GraphQL(
         createChart,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         chartInput
       ),

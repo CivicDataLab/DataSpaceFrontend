@@ -3,36 +3,60 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { Icon, Text } from 'opub-ui';
 
+import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { DashboardHeader } from '../components/dashboard-header';
+import LoadingPage from '../loading';
 import styles from './../components/styles.module.scss';
+import { allDataSpacesListingDoc, allOrganizationsListingDoc } from './schema';
 
 const Page = () => {
   const pathname = usePathname();
 
-  const params = useParams();
+  const params = useParams<{ entityType: string }>();
 
-  const dataspacesList = [
-    {
-      name: 'Open Budgets India',
-      slug: 'open-budgets-india',
-    },
-  ];
+  const allOrganizationsList: {
+    data: any;
+    isLoading: boolean;
+    error: any;
+    isError: boolean;
+  } = useQuery([`all_organizations_list_page`], () =>
+    GraphQL(
+      allOrganizationsListingDoc,
+      {
+        // Entity Headers if present
+      },
+      {
+        options: {
+          skip: params.entityType !== 'organization',
+        },
+      }
+    )
+  );
 
-  const organizationsList = [
-    {
-      name: 'CBGA',
-      slug: 'civicdatalab',
-    },
-    {
-      name: 'Assam Finance Department',
-      slug: 'civicdatalab',
-    },
-  ];
+  const allDataSpacesList: {
+    data: any;
+    isLoading: boolean;
+    error: any;
+    isError: boolean;
+  } = useQuery([`all_dataspaces_list_page`], () =>
+    GraphQL(
+      allDataSpacesListingDoc,
+      {
+        // Entity Headers if present
+      },
+      {
+        options: {
+          skip: params.entityType !== 'dataspace',
+        },
+      }
+    )
+  );
 
   return (
     <div className=" bg-surfaceDefault">
@@ -57,31 +81,34 @@ const Page = () => {
       </div>
       <div className="m-auto flex w-11/12 flex-col">
         <DashboardHeader currentPath={pathname} />
-        <div className={cn(styles.Main)}>
-          <div className="flex flex-wrap  gap-24">
-            {[
-              ...(params.entityType === 'organization'
-                ? organizationsList
-                : dataspacesList),
-            ]?.map((orgItem) => (
-              <div
-                key={orgItem.slug}
-                className="flex  max-w-64 flex-col items-center gap-3 rounded-2 border-2 border-solid border-baseGraySlateSolid4 px-4 py-5 text-center"
-              >
-                <Link
-                  href={`/dashboard/${params.entityType}/${orgItem.slug}/dataset`}
-                  id={orgItem.slug}
+        {allDataSpacesList.isLoading || allOrganizationsList.isLoading ? (
+          <LoadingPage />
+        ) : (
+          <div className={cn(styles.Main)}>
+            <div className="flex flex-wrap  gap-24">
+              {[
+                ...(params.entityType === 'organization'
+                  ? allOrganizationsList.data.organisations
+                  : allDataSpacesList.data.dataspaces),
+              ]?.map((orgItem) => (
+                <div
+                  key={orgItem.slug}
+                  className="flex  max-w-64 flex-col items-center gap-3 rounded-2 border-2 border-solid border-baseGraySlateSolid4 px-4 py-5 text-center"
                 >
-                  <div className="border-var(--border-radius-5)  rounded-2 ">
-                    <Image
-                      src={'/obi.jpg'}
-                      width={200}
-                      height={200}
-                      alt={'Organization Logo'}
-                    />
-                  </div>
+                  <Link
+                    href={`/dashboard/${params.entityType}/${orgItem.slug}/dataset`}
+                    id={orgItem.slug}
+                  >
+                    <div className="border-var(--border-radius-5)  rounded-2 ">
+                      <Image
+                        src={'/obi.jpg'}
+                        width={200}
+                        height={200}
+                        alt={'Organization Logo'}
+                      />
+                    </div>
 
-                  {/* <LinkButton
+                    {/* <LinkButton
                   href={`/dashboard/organization/${orgItem.slug}/dataset`}
                 >
                   Manage Datasets
@@ -91,20 +118,21 @@ const Page = () => {
                 >
                   Manage Consumers
                 </LinkButton> */}
-                </Link>
-                <div>
-                  <Text variant="headingMd">{orgItem.name}</Text>
+                  </Link>
+                  <div>
+                    <Text variant="headingMd">{orgItem.name}</Text>
+                  </div>
                 </div>
+              ))}
+              <div className="flex h-72 w-56 flex-col items-center justify-center gap-3 rounded-2 bg-baseGraySlateSolid6 p-4">
+                <Icon source={Icons.plus} size={40} color="success" />
+                <Text alignment="center" variant="headingMd">
+                  {`Add New ${params.entityType === 'organization' ? 'Organization' : 'Data Space'}`}
+                </Text>
               </div>
-            ))}
-            <div className="flex h-72 w-56 flex-col items-center justify-center gap-3 rounded-2 bg-baseGraySlateSolid6 p-4">
-              <Icon source={Icons.plus} size={40} color="success" />
-              <Text alignment="center" variant="headingMd">
-                {`Add New ${params.entityType === 'organization' ? 'Organization' : 'Data Space'}`}
-              </Text>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

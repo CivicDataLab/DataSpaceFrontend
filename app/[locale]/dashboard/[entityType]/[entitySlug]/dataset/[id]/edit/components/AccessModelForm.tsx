@@ -102,14 +102,18 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     setList(false);
   }, []);
 
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
   const { data, isLoading }: { data: any; isLoading: boolean } = useQuery(
     [`resourcesList_${params.id}`],
     () =>
       GraphQL(
         datasetResourcesQuery,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         { datasetId: params.id }
       )
@@ -125,7 +129,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
       GraphQL(
         accessModelListQuery,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         { datasetId: params.id }
       )
@@ -140,7 +144,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
       GraphQL(
         getAccessModelDetails,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         { accessModelId: accessModelId }
       )
@@ -312,7 +316,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
       GraphQL(
         editaccessModel,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),

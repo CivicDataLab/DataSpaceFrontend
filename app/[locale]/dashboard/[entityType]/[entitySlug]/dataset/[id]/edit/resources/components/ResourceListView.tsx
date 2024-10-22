@@ -37,14 +37,18 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
   const [file, setFile] = React.useState<File[]>([]);
 
   const router = useRouter();
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
 
   const updateResourceMutation = useMutation(
     (data: { resourceId: string }) =>
       GraphQL(
         updateResourceList,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),
@@ -73,7 +77,7 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
       GraphQL(
         createResourceFilesDoc,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),

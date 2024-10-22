@@ -27,7 +27,10 @@ const createDatasetMutationDoc: any = graphql(`
 `);
 
 export const Page = () => {
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+  }>();
   const router = useRouter();
 
   const queryClient = useQueryClient();
@@ -37,7 +40,7 @@ export const Page = () => {
       GraphQL(
         createDatasetMutationDoc,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         []
       ),
@@ -74,7 +77,7 @@ export const Page = () => {
         isLoading={isLoading}
       />
 
-      <Content />
+      <Content params={params} />
     </>
   );
 };
