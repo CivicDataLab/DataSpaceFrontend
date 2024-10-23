@@ -1,6 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-
-import * as echarts from 'echarts/core';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
@@ -10,6 +8,7 @@ import {
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
+import * as echarts from 'echarts/core';
 import {
   Button,
   Checkbox,
@@ -25,7 +24,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import assam_geojson from './data';
+import assam_geojson from '../../../../../../../../../../geo_json/assam_geojson';
 
 interface VisualizationProps {
   setType: any;
@@ -222,7 +221,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   }, [chartId, chartDetails]);
 
   const updateChartData = (resourceChart: any) => {
-    echarts.registerMap("assam_district", assam_geojson)
+    echarts.registerMap(resourceChart.chartType.toLowerCase(), assam_geojson);
     const updatedData = {
       aggregateType: resourceChart.aggregateType as AggregateType,
       chartType: resourceChart.chartType as ChartTypes,
