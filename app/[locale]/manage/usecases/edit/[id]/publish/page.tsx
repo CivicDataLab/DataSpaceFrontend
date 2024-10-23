@@ -62,11 +62,15 @@ const Publish = () => {
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_UsecaseDetails`],
     () =>
-      GraphQL(UseCaseDetails, {
-        filters: {
-          id: params.id,
-        },
-      }),
+      GraphQL(
+        UseCaseDetails,
+        {},
+        {
+          filters: {
+            id: params.id,
+          },
+        }
+      ),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
@@ -75,7 +79,7 @@ const Publish = () => {
   const router = useRouter();
 
   const { mutate, isLoading: mutationLoading } = useMutation(
-    () => GraphQL(publishUseCaseMutation, { useCaseId: +params.id }),
+    () => GraphQL(publishUseCaseMutation, {}, { useCaseId: +params.id }),
     {
       onSuccess: (data: any) => {
         toast('UseCase Published Successfully');
@@ -110,7 +114,9 @@ const Publish = () => {
     { label: 'Description', value: UseCaseData.data?.useCases[0]?.description },
     {
       label: 'Logo',
-      value: UseCaseData.data && UseCaseData.data?.useCases[0]?.logo?.name.split('/').pop(),
+      value:
+        UseCaseData.data &&
+        UseCaseData.data?.useCases[0]?.logo?.name.split('/').pop(),
     },
     {
       label: 'Website',
@@ -121,8 +127,6 @@ const Publish = () => {
       value: UseCaseData.data?.useCases[0]?.contactEmail,
     },
   ];
-
-
 
   return (
     <>

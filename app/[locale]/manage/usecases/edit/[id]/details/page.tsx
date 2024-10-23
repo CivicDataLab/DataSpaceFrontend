@@ -53,7 +53,7 @@ const Details = () => {
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_UseCaseData`],
     () =>
-      GraphQL(FetchUseCase, {
+      GraphQL(FetchUseCase,{}, {
         filters: {
           id: params.id,
         },
@@ -101,7 +101,7 @@ const Details = () => {
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { data: UseCaseInputPartial }) =>
-      GraphQL(UpdateUseCaseMutation, data),
+      GraphQL(UpdateUseCaseMutation, {},data),
     {
       onSuccess: () => {
         toast('Use case updated successfully');

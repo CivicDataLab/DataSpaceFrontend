@@ -12,8 +12,8 @@ import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
 import { Loading } from '@/components/loading';
-import { ActionBar } from '../../dashboard/organization/[organizationId]/dataset/components/action-bar';
-import { Navigation } from '../../dashboard/organization/[organizationId]/dataset/components/navigate-org-datasets';
+import { ActionBar } from '../../dashboard/[entityType]/[entitySlug]/dataset/components/action-bar';
+import { Navigation } from '../../dashboard/[entityType]/[entitySlug]/dataset/components/navigate-org-datasets';
 
 const allUseCases: any = graphql(`
   query UseCasesData($filters: UseCaseFilter, $order: UseCaseOrder) {
@@ -69,12 +69,16 @@ export default function DatasetPage({
   const AllUseCases: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_UseCases`],
     () =>
-      GraphQL(allUseCases, {
-        filters: {
-          status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
-        },
-        order: { modified: 'DESC' },
-      }),
+      GraphQL(
+        allUseCases,
+        {},
+        {
+          filters: {
+            status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
+          },
+          order: { modified: 'DESC' },
+        }
+      ),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
@@ -93,7 +97,7 @@ export default function DatasetPage({
     error: any;
   } = useMutation(
     [`delete_Usecase`],
-    (data: { id: string }) => GraphQL(deleteUseCase, { useCaseId: data.id }),
+    (data: { id: string }) => GraphQL(deleteUseCase,{}, { useCaseId: data.id }),
     {
       onSuccess: () => {
         toast(`Deleted UseCase successfully`);
@@ -109,7 +113,7 @@ export default function DatasetPage({
     mutate: any;
     isLoading: boolean;
     error: any;
-  } = useMutation([`delete_Usecase`], () => GraphQL(AddUseCase, []), {
+  } = useMutation([`delete_Usecase`], () => GraphQL(AddUseCase,{}, []), {
     onSuccess: (response: any) => {
       toast(`UseCase created successfully`);
       router.push(`/manage/usecases/edit/${response.addUseCase.id}/details`);

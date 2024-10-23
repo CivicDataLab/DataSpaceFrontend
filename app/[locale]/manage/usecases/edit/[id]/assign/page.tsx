@@ -52,11 +52,15 @@ const Assign = () => {
     useQuery(
       [`UseCase_Details`],
       () =>
-        GraphQL(FetchUseCaseDetails, {
-          filters: {
-            id: params.id,
-          },
-        }),
+        GraphQL(
+          FetchUseCaseDetails,
+          {},
+          {
+            filters: {
+              id: params.id,
+            },
+          }
+        ),
       {
         refetchOnMount: true,
         refetchOnReconnect: true,
@@ -102,16 +106,20 @@ const Assign = () => {
 
   const { mutate, isLoading: mutationLoading } = useMutation(
     () =>
-      GraphQL(AssignUsecaseDatasets, {
-        useCaseId: +params.id,
-        datasetIds: Array.isArray(selectedRow)
-          ? selectedRow.map((row: any) => row.id)
-          : [],
-      }),
+      GraphQL(
+        AssignUsecaseDatasets,
+        {},
+        {
+          useCaseId: +params.id,
+          datasetIds: Array.isArray(selectedRow)
+            ? selectedRow.map((row: any) => row.id)
+            : [],
+        }
+      ),
     {
       onSuccess: (data: any) => {
         toast('Dataset Assigned Successfully');
-        UseCaseDetails.refetch()
+        UseCaseDetails.refetch();
         router.push(`/manage/usecases/edit/${params.id}/publish`);
       },
       onError: (err: any) => {
