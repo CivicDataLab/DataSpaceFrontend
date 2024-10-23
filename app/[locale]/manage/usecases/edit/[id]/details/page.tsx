@@ -67,7 +67,6 @@ const Details = () => {
   const UsecasesData =
     UseCaseData?.data?.useCases.length > 0 && UseCaseData?.data?.useCases[0];
 
-  console.log(UseCaseData.isLoading);
 
   const initialFormData = {
     title: '',
