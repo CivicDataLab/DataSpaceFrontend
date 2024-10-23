@@ -39,6 +39,10 @@ const deleteResourceChart: any = graphql(`
   }
 `);
 
+
+
+
+
 const ChartsList: React.FC<ChartsListProps> = ({
   setType,
   type,
@@ -106,7 +110,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
     return [
       {
         accessorKey: 'name',
-        header: 'Name of Access Type',
+        header: 'Name of Chart',
         cell: ({ row }: any) => (
           <div
             style={{ cursor: 'pointer', textDecoration: 'underline' }}
@@ -165,7 +169,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
       ) : (
         <>
           <div className=" my-6 flex flex-wrap items-center justify-between gap-3 px-3 py-4">
-            <Text>Showing Access Types</Text>
+            <Text>Showing Charts</Text>
             <SearchInput
               className="w-1/2 "
               placeholder="Search in charts"
