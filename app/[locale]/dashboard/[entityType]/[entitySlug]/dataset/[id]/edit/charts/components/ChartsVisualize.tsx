@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { renderGeoJSON } from '@/geo_json/render_geojson';
 import { graphql } from '@/gql';
 import {
   AggregateType,
@@ -24,7 +25,6 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import assam_geojson from '../../../../../../../../../../geo_json/assam_geojson';
 
 interface VisualizationProps {
   setType: any;
@@ -151,11 +151,15 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         {
           [params.entityType]: params.entitySlug,
         },
-        { chartDetailsId: chartId }
+        {
+          chartDetailsId: chartId,
+
+          options: {
+            skip: chartId === '',
+          },
+        }
       ),
-    {
-      enabled: !!chartId, // Fetch only if chartId is available
-    }
+    {}
   );
   const {
     data: chartsList,
@@ -225,7 +229,15 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   }, [chartId, chartDetails]);
 
   const updateChartData = (resourceChart: any) => {
-    echarts.registerMap(resourceChart.chartType.toLowerCase(), assam_geojson);
+    if (
+      resourceChart.chartType === 'ASSAM_DISTRICT' ||
+      resourceChart.chartType === 'ASSAM_RC'
+    ) {
+      echarts.registerMap(
+        resourceChart.chartType.toLowerCase(),
+        renderGeoJSON(resourceChart.chartType.toLowerCase())
+      );
+    }
     const updatedData = {
       aggregateType: resourceChart.aggregateType as AggregateType,
       chartType: resourceChart.chartType as ChartTypes,
@@ -417,7 +429,6 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
               options={[
                 { label: 'Bar Vertical', value: 'BAR_VERTICAL' },
                 { label: 'Bar Horizontal', value: 'BAR_HORIZONTAL' },
-                { label: 'Column', value: 'COLUMN' },
                 { label: 'Line', value: 'LINE' },
                 { label: 'Assam District', value: 'ASSAM_DISTRICT' },
                 { label: 'ASSAM RC', value: 'ASSAM_RC' },
