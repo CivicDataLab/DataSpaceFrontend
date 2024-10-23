@@ -44,6 +44,13 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
             label: 'User Dashboard',
           },
           {
+            href: `/dashboard/${params.entityType}`,
+            label:
+              params.entityType === 'organization'
+                ? 'My Organizations'
+                : 'My DataSpaces',
+          },
+          {
             href: '',
             label: `${params.entitySlug}`,
           },
