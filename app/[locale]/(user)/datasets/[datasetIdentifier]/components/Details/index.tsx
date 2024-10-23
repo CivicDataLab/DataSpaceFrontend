@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import assam_geojson from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/dataset/[id]/edit/charts/components/data';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
+import ReactECharts from 'echarts-for-react';
+import * as echarts from 'echarts/core';
 import {
   Button,
   Carousel,
@@ -14,12 +17,11 @@ import {
   Spinner,
   Text,
 } from 'opub-ui';
-import { BarChart } from 'opub-ui/viz';
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 
-const charts: any = graphql(`
+const charts = graphql(`
   query chartsData($datasetId: UUID!) {
     chartsDetails(datasetId: $datasetId) {
       aggregateType
@@ -37,6 +39,7 @@ const charts: any = graphql(`
 
 const Details = () => {
   const params = useParams();
+  const chartRef = useRef<ReactECharts>(null);
 
   const {
     data,
@@ -55,6 +58,15 @@ const Details = () => {
         }
       )
   );
+
+  const renderChart = (item: any) => {
+    if (item.chartType === 'ASSAM_DISTRICT') {
+      // Register the map
+      echarts.registerMap('assam_district', assam_geojson);
+    }
+
+    return <ReactECharts option={item.chart} ref={chartRef} />;
+  };
 
   return (
     <div className="mb-8 flex w-full flex-col gap-4 p-2">
@@ -75,7 +87,8 @@ const Details = () => {
                     <CarouselItem key={index} className="m-auto">
                       <div className="w-full border-2 border-solid border-baseGraySlateSolid4 bg-surfaceDefault p-6 text-center shadow-basicLg max-sm:p-2">
                         <div className="lg:p-10">
-                          <BarChart options={item.chart} height={'450px'} />
+                          {renderChart(item)}{' '}
+                          {/* Call the renderChart function */}
                         </div>
                         <div className="flex items-center justify-between gap-2 max-sm:flex-wrap">
                           <div className="flex flex-col gap-1 py-2 text-start">
