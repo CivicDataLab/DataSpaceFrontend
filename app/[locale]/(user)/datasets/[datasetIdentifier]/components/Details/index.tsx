@@ -1,6 +1,8 @@
 import React, { useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import assam_geojson from '@/geo_json/assam_geojson';
+import { renderGeoJSON } from '@/geo_json/render_geojson';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
@@ -19,7 +21,6 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import assam_geojson from '@/geo_json/assam_geojson';
 
 const charts = graphql(`
   query chartsData($datasetId: UUID!) {
@@ -60,9 +61,12 @@ const Details = () => {
   );
 
   const renderChart = (item: any) => {
-    if (item.chartType === 'ASSAM_DISTRICT') {
+    if (item.chartType === 'ASSAM_DISTRICT' || item.chartType === 'ASSAM_RC') {
       // Register the map
-      echarts.registerMap(item.chartType.toLowerCase(), assam_geojson);
+      echarts.registerMap(
+        item.chartType.toLowerCase(),
+        renderGeoJSON(item.chartType.toLowerCase())
+      );
     }
 
     return <ReactECharts option={item.chart} ref={chartRef} />;
