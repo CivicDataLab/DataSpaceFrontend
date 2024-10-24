@@ -20,6 +20,7 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
 const UseCaseDetails: any = graphql(`
@@ -37,6 +38,10 @@ const UseCaseDetails: any = graphql(`
       datasets {
         title
         id
+        categories {
+          name
+        }
+        modified
       }
       contactEmail
       status
@@ -102,11 +107,20 @@ const Publish = () => {
       errorType: 'critical',
     },
 
-    // {
-    //   name: 'Assign',
-    //   data: UseCaseData.data.useCases,
-    //   error: '',
-    // },
+    {
+      name: 'Assign',
+      data: UseCaseData?.data?.useCases[0]?.datasets,
+      error:
+        UseCaseData.data && UseCaseData.data?.useCases[0]?.datasets.length === 0
+          ? 'No datasets assigned. Please assign to continue.'
+          : '',
+    },
+  ];
+
+  const columns = [
+    { accessorKey: 'title', header: 'Title' },
+    { accessorKey: 'category', header: 'Category' },
+    { accessorKey: 'modified', header: 'Last Modified' },
   ];
 
   const PrimaryDetails = [
@@ -127,6 +141,17 @@ const Publish = () => {
       value: UseCaseData.data?.useCases[0]?.contactEmail,
     },
   ];
+
+  const generateTableData = (list: Array<any>) => {
+    return list.map((item) => {
+      return {
+        title: item.title,
+        id: item.id,
+        category: item.categories[0]?.name,
+        modified: formatDate(item.modified),
+      };
+    });
+  };
 
   return (
     <>
@@ -178,36 +203,48 @@ const Publish = () => {
                       }}
                     >
                       <div className=" py-4">
-                        <div className="flex flex-col gap-4 px-8 py-4">
-                          {PrimaryDetails.map(
-                            (item, index) =>
-                              item.value && (
-                                <div
-                                  className="flex flex-wrap gap-2"
-                                  key={index}
-                                >
-                                  <Text
-                                    className="lg:basis-1/6"
-                                    variant="bodyMd"
+                        {item.name === 'Assign' ? (
+                          <Table
+                            columns={columns}
+                            rows={generateTableData(item.data)}
+                            hideFooter
+                          />
+                        ) : (
+                          <div className="flex flex-col gap-4 px-8 py-4">
+                            {PrimaryDetails.map(
+                              (item, index) =>
+                                item.value && (
+                                  <div
+                                    className="flex flex-wrap gap-2"
+                                    key={index}
                                   >
-                                    {item.label}:
-                                  </Text>
-                                  <Text
-                                    variant="bodyMd"
-                                    className="lg:basis-4/5"
-                                  >
-                                    {item.value}
-                                  </Text>
-                                </div>
-                              )
-                          )}
-                        </div>
+                                    <Text
+                                      className="lg:basis-1/6"
+                                      variant="bodyMd"
+                                    >
+                                      {item.label}:
+                                    </Text>
+                                    <Text
+                                      variant="bodyMd"
+                                      className="lg:basis-4/5"
+                                    >
+                                      {item.value}
+                                    </Text>
+                                  </div>
+                                )
+                            )}
+                          </div>
+                        )}
                       </div>
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
               ))}
-              <Button className="m-auto w-fit" onClick={() => mutate()}>
+              <Button
+                className="m-auto w-fit"
+                onClick={() => mutate()}
+                disabled={UseCaseData?.data?.useCases[0]?.datasets.length <= 0}
+              >
                 Publish
               </Button>
             </>
