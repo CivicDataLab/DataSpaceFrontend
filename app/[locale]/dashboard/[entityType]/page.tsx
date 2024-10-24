@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useParams, usePathname } from 'next/navigation';
+import { notFound, useParams, usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Icon, Text } from 'opub-ui';
 
@@ -57,6 +57,13 @@ const Page = () => {
       }
     )
   );
+
+  if (
+    process.env.NEXT_PUBLIC_DATASPACE_FEATURE_ENABLED !== 'true' &&
+    params.entityType === 'dataspace'
+  ) {
+    return notFound();
+  }
 
   return (
     <div className=" bg-surfaceDefault">

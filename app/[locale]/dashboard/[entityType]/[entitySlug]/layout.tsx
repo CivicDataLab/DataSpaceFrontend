@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useParams } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { SidebarNavItem } from '@/types';
 
 import { cn } from '@/lib/utils';
@@ -16,8 +16,14 @@ interface DashboardLayoutProps {
 
 export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
   const [isOpened, setIsOpened] = React.useState(false);
-
   const params = useParams<{ entityType: string; entitySlug: string }>();
+
+  if (
+    process.env.NEXT_PUBLIC_DATASPACE_FEATURE_ENABLED !== 'true' &&
+    params.entityType === 'dataspace'
+  ) {
+    return notFound();
+  }
 
   const orgSidebarNav: Array<SidebarNavItem> = [
     {
@@ -31,8 +37,6 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       icon: 'userList',
     },
   ];
-
-  const entitySlug = params.entitySlug;
 
   return (
     <>
@@ -55,7 +59,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           ' bg-surfaceDefault p-4 md:flex'
         )}
       >
-        <DashboardNav items={orgSidebarNav} entitySlug={entitySlug} />
+        <DashboardNav items={orgSidebarNav} entitySlug={params.entitySlug} />
 
         <div className="z-1 basis-2 md:hidden">
           <MobileDashboardNav

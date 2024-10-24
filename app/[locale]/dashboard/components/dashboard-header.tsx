@@ -9,12 +9,14 @@ export function DashboardHeader({ currentPath }: { currentPath: string }) {
       selected: currentPath.indexOf('user') >= 0,
       disabled: false,
     },
-    {
-      label: 'My Data Spaces',
-      url: `/dashboard/dataspace`,
-      selected: currentPath.indexOf('dataspace') >= 0,
-      disabled: false,
-    },
+    process.env.NEXT_PUBLIC_DATASPACE_FEATURE_ENABLED === 'true'
+      ? {
+          label: 'My Data Spaces',
+          url: `/dashboard/dataspace`,
+          selected: currentPath.indexOf('dataspace') >= 0,
+          disabled: false,
+        }
+      : null,
     {
       label: 'My Organizations',
       url: `/dashboard/organization`,
@@ -29,7 +31,7 @@ export function DashboardHeader({ currentPath }: { currentPath: string }) {
   };
 
   const initialTabLabel =
-    userDashboardOptions.find((option) => option.selected)?.label ||
+    userDashboardOptions.find((option) => option?.selected)?.label ||
     'My Datasets';
 
   return (
@@ -41,16 +43,18 @@ export function DashboardHeader({ currentPath }: { currentPath: string }) {
         <div>
           <Tabs defaultValue={initialTabLabel}>
             <TabList fitted>
-              {userDashboardOptions.map((item, index) => (
-                <Tab
-                  value={item.label}
-                  key={index}
-                  onClick={() => handleTabClick(item.url)}
-                  disabled={item.disabled}
-                >
-                  {item.label}
-                </Tab>
-              ))}
+              {userDashboardOptions
+                .filter((item) => item !== null)
+                .map((item, index) => (
+                  <Tab
+                    value={item.label}
+                    key={index}
+                    onClick={() => handleTabClick(item.url)}
+                    disabled={item.disabled}
+                  >
+                    {item.label}
+                  </Tab>
+                ))}
             </TabList>
           </Tabs>
         </div>
