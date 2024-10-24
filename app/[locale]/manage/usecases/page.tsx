@@ -47,7 +47,7 @@ const AddUseCase: any = graphql(`
 export default function DatasetPage({
   params,
 }: {
-  params: { organizationId: string; locale: string };
+  params: { organizationId: string };
 }) {
   const router = useRouter();
 
@@ -97,8 +97,7 @@ export default function DatasetPage({
     error: any;
   } = useMutation(
     [`delete_Usecase`],
-    (data: { id: string }) =>
-      GraphQL(deleteUseCase, {}, { useCaseId: data.id }),
+    (data: { id: string }) => GraphQL(deleteUseCase,{}, { useCaseId: data.id }),
     {
       onSuccess: () => {
         toast(`Deleted UseCase successfully`);
@@ -114,12 +113,10 @@ export default function DatasetPage({
     mutate: any;
     isLoading: boolean;
     error: any;
-  } = useMutation([`delete_Usecase`], () => GraphQL(AddUseCase, {}, []), {
+  } = useMutation([`delete_Usecase`], () => GraphQL(AddUseCase,{}, []), {
     onSuccess: (response: any) => {
       toast(`UseCase created successfully`);
-      router.push(
-        `/${params.locale}/manage/usecases/edit/${response.addUseCase.id}/details`
-      );
+      router.push(`/manage/usecases/edit/${response.addUseCase.id}/details`);
       AllUseCases.refetch();
     },
     onError: (err: any) => {
@@ -135,7 +132,7 @@ export default function DatasetPage({
         <LinkButton
           kind="tertiary"
           size="medium"
-          href={`/${params.locale}/manage/usecases/edit/${row.original.id}/details`}
+          href={`/manage/usecases/edit/${row.original.id}/details`}
         >
           {row.original.title}
         </LinkButton>
