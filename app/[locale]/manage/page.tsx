@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+
 import { Loading } from '@/components/loading';
 
-
 const Manage = () => {
+  const params = useParams();
   const router = useRouter();
 
   useEffect(() => {
     // Redirect to the Use Cases page
-    router.push('/manage/usecases');
+    router.push(`/${params.locale}/manage/usecases`);
   }, [router]);
 
   return (
