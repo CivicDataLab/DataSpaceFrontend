@@ -49,7 +49,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           ' bg-surfaceDefault p-4 md:flex'
         )}
       >
-        <DashboardNav items={orgSidebarNav} organizationId={organizationId} />
+        <DashboardNav items={orgSidebarNav} entitySlug={organizationId} />
 
         <div className="z-1 basis-2 md:hidden">
           <MobileDashboardNav
