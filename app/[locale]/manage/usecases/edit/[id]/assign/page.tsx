@@ -50,7 +50,7 @@ const Assign = () => {
 
   const UseCaseDetails: { data: any; isLoading: boolean; refetch: any } =
     useQuery(
-      [`UseCase_Details`],
+      [`UseCase_Details`, params.id],
       () =>
         GraphQL(
           FetchUseCaseDetails,
@@ -85,13 +85,16 @@ const Assign = () => {
       .catch((err) => {
         console.error(err);
       });
-  }, [UseCaseDetails.data]);
+  }, []);
+
+
 
   const columns = [
     { accessorKey: 'title', header: 'Title' },
     { accessorKey: 'category', header: 'Category' },
     { accessorKey: 'modified', header: 'Last Modified' },
   ];
+
 
   const generateTableData = (list: Array<any>) => {
     return list.map((item) => {
@@ -130,7 +133,7 @@ const Assign = () => {
 
   return (
     <>
-      {UseCaseDetails?.data?.useCases[0] &&
+      {UseCaseDetails?.data?.useCases[0]?.datasets?.length >= 0 &&
       data.length > 0 &&
       !UseCaseDetails.isLoading ? (
         <>
@@ -150,11 +153,9 @@ const Assign = () => {
           <DataTable
             columns={columns}
             rows={generateTableData(data)}
-            defaultSelectedRows={
-              UseCaseDetails?.data?.useCases[0]?.datasets?.length > 0
-                ? formattedData(UseCaseDetails?.data?.useCases[0]?.datasets)
-                : []
-            }
+            defaultSelectedRows={formattedData(
+              UseCaseDetails?.data?.useCases[0]?.datasets
+            )}
             onRowSelectionChange={(selected) => {
               setSelectedRows(Array.isArray(selected) ? selected : []); // Ensure selected is always an array
             }}
