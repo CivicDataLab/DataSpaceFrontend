@@ -9,14 +9,16 @@ export function DashboardHeader({ currentPath }: { currentPath: string }) {
       selected: currentPath.indexOf('user') >= 0,
       disabled: false,
     },
-    process.env.NEXT_PUBLIC_DATASPACE_FEATURE_ENABLED === 'true'
-      ? {
-          label: 'My Data Spaces',
-          url: `/dashboard/dataspace`,
-          selected: currentPath.indexOf('dataspace') >= 0,
-          disabled: false,
-        }
-      : null,
+    ...(process.env.NEXT_PUBLIC_DATASPACE_FEATURE_ENABLED === 'true'
+      ? [
+          {
+            label: 'My Data Spaces',
+            url: `/dashboard/dataspace`,
+            selected: currentPath.indexOf('dataspace') >= 0,
+            disabled: false,
+          },
+        ]
+      : []),
     {
       label: 'My Organizations',
       url: `/dashboard/organization`,
