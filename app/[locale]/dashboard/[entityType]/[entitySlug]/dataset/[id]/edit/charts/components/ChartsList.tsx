@@ -82,7 +82,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
     isLoading,
     refetch,
   }: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`chartDetails_${params.id}`],
+    [`chartDetails_${params.id}`, type],
     () =>
       GraphQL(
         chartDetailsQuery,
@@ -98,7 +98,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
   const [filteredRows, setFilteredRows] = useState<any[]>([]);
 
   useEffect(() => {
-    refetch();
+    // refetch();
     if (data?.getChartData) {
       setFilteredRows(data.getChartData);
     }
@@ -160,7 +160,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
       ),
     {
       onSuccess: (res: any) => {
-        toast('Resource Chart Image Created Successfully');
+        toast('Resource ChartImage Created Successfully');
         refetch();
         setType('img');
         setImageId(res.addResourceChartImage.id);
@@ -274,7 +274,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
                   resourceChartImageMutation.mutate({ dataset: params.id })
                 }
               >
-                Add Image
+                Add ChartImage
               </Button>
             </div>
           </div>
