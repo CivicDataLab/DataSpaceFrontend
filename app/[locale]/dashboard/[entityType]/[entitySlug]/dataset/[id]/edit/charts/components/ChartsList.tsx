@@ -22,13 +22,21 @@ interface ChartsListProps {
   setType: any;
   type: any;
   setChartId: any;
+  setImageId: any;
 }
 const chartDetailsQuery: any = graphql(`
-  query chartsDetails($datasetId: UUID!) {
-    chartsDetails(datasetId: $datasetId) {
-      id
-      name
-      chartType
+  query ChartDetails($datasetId: UUID!) {
+    getChartData(datasetId: $datasetId) {
+      __typename
+      ... on TypeResourceChart {
+        name
+        id
+        chartType
+      }
+      ... on TypeResourceChartImage {
+        name
+        id
+      }
     }
   }
 `);
@@ -39,14 +47,29 @@ const deleteResourceChart: any = graphql(`
   }
 `);
 
+const deleteResourceChartImage: any = graphql(`
+  mutation deleteResourceChartImage($resourceChartImageId: String!) {
+    deleteResourceChartImage(resourceChartImageId: $resourceChartImageId)
+  }
+`);
 
-
-
+const AddResourceChartImage: any = graphql(`
+  mutation GenerateResourceChartImage($dataset: UUID!) {
+    addResourceChartImage(dataset: $dataset) {
+      __typename
+      ... on TypeResourceChartImage {
+        id
+        name
+      }
+    }
+  }
+`);
 
 const ChartsList: React.FC<ChartsListProps> = ({
   setType,
   type,
   setChartId,
+  setImageId,
 }) => {
   const params = useParams<{
     entityType: string;
@@ -76,24 +99,73 @@ const ChartsList: React.FC<ChartsListProps> = ({
 
   useEffect(() => {
     refetch();
-    if (data?.chartsDetails) {
-      setFilteredRows(data.chartsDetails);
+    if (data?.getChartData) {
+      setFilteredRows(data.getChartData);
     }
   }, [data, type]);
 
-  const { mutate, isLoading: deleteLoading } = useMutation(
-    (data: { chartId: UUID }) =>
+  const deleteResourceChartmutation: { mutate: any; isLoading: any } =
+    useMutation(
+      (data: { chartId: UUID }) =>
+        GraphQL(
+          deleteResourceChart,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          data
+        ),
+      {
+        onSuccess: () => {
+          toast('Chart Deleted Successfully');
+          refetch();
+        },
+        onError: (err: any) => {
+          toast(`Received ${err} while deleting chart `);
+        },
+      }
+    );
+
+  const deleteResourceChartImagemutation: { mutate: any; isLoading: any } =
+    useMutation(
+      (data: { resourceChartImageId: string }) =>
+        GraphQL(
+          deleteResourceChartImage,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          data
+        ),
+      {
+        onSuccess: () => {
+          toast('ChartImage Deleted Successfully');
+          refetch();
+        },
+        onError: (err: any) => {
+          toast(`Received ${err} while deleting chart `);
+        },
+      }
+    );
+
+  const resourceChartImageMutation: {
+    mutate: any;
+    isLoading: any;
+  } = useMutation(
+    (data: { dataset: UUID }) =>
       GraphQL(
-        deleteResourceChart,
+        AddResourceChartImage,
         {
           [params.entityType]: params.entitySlug,
         },
         data
       ),
     {
-      onSuccess: () => {
-        toast('Chart Deleted Successfully');
+      onSuccess: (res: any) => {
+        toast('Resource Chart Image Created Successfully');
         refetch();
+        setType('img');
+        setImageId(res.addResourceChartImage.id);
+
+        // setImageId(res.id);
       },
       onError: (err: any) => {
         toast(`Received ${err} while deleting chart `);
@@ -102,8 +174,13 @@ const ChartsList: React.FC<ChartsListProps> = ({
   );
 
   const handleChart = (row: any) => {
-    setChartId(row.original.id);
-    setType('visualize');
+    if (row.original.__typename === 'TypeResourceChart') {
+      setChartId(row.original.id);
+      setType('visualize');
+    } else {
+      setType('img');
+      setImageId(row.original.id);
+    }
   };
 
   const generateColumnData = () => {
@@ -133,7 +210,15 @@ const ChartsList: React.FC<ChartsListProps> = ({
               size="medium"
               icon={Icons.delete}
               color="interactive"
-              onClick={() => mutate({ chartId: row.original.id })}
+              onClick={() => {
+                row.original.__typename === 'TypeResourceChart'
+                  ? deleteResourceChartmutation.mutate({
+                      chartId: row.original.id,
+                    })
+                  : deleteResourceChartImagemutation.mutate({
+                      resourceChartImageId: row.original.id,
+                    });
+              }}
             >
               Delete
             </IconButton>
@@ -143,11 +228,14 @@ const ChartsList: React.FC<ChartsListProps> = ({
     ];
   };
 
-  const generateTableData = (accessModel: any[]) => {
-    return accessModel?.map((item: any) => ({
+  const generateTableData = (data: any[]) => {
+    return data?.map((item: any) => ({
       name: item.name,
-      type: toTitleCase(item.chartType.split('_').join(' ').toLowerCase()),
+      type: item.chartType
+        ? toTitleCase(item.chartType.split('_').join(' ').toLowerCase())
+        : 'Image',
       id: item.id,
+      typename: item.__typename,
     }));
   };
 
@@ -162,7 +250,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
   return (
     <>
       {' '}
-      {!data || isLoading || deleteLoading ? (
+      {!data || isLoading || deleteResourceChartmutation.isLoading ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
@@ -181,7 +269,13 @@ const ChartsList: React.FC<ChartsListProps> = ({
               <Button onClick={(e) => setType('visualize')}>
                 Visualize Data
               </Button>
-              <Button onClick={(e) => setType('img')}>Add Image</Button>
+              <Button
+                onClick={(e) =>
+                  resourceChartImageMutation.mutate({ dataset: params.id })
+                }
+              >
+                Add Image
+              </Button>
             </div>
           </div>
           <DataTable
