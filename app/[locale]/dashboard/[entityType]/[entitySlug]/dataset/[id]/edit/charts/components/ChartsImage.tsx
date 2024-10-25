@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { graphql } from '@/gql';
 import {
   Button,
   Divider,
@@ -13,9 +14,29 @@ import { Icons } from '@/components/icons';
 
 interface ImageProps {
   setType: any;
+  setImageId: any;
+  imageId: any;
 }
 
-const ChartsImage: React.FC<ImageProps> = ({ setType }) => {
+const getResourceChartImageDetails: any = graphql(`
+  query resourceChartImage($filters: ResourceChartImageFilter) {
+    resourceChartImages(filters: $filters) {
+      id
+      name
+      description
+      image {
+        name
+        path
+      }
+    }
+  }
+`);
+
+const ChartsImage: React.FC<ImageProps> = ({
+  setType,
+  setImageId,
+  imageId,
+}) => {
   console.log(setType);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
