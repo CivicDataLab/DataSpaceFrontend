@@ -98,7 +98,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
   const [filteredRows, setFilteredRows] = useState<any[]>([]);
 
   useEffect(() => {
-    // refetch();
+    refetch();
     if (data?.getChartData) {
       setFilteredRows(data.getChartData);
     }
