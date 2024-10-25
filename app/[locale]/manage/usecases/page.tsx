@@ -1,17 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
+import { useRouter } from 'next/navigation';
 import { Button, DataTable, Icon, IconButton, Text, toast } from 'opub-ui';
+import { useEffect, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
-import { GraphQL } from '@/lib/api';
-import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
+import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import { GraphQL } from '@/lib/api';
 import { ActionBar } from '../../dashboard/[entityType]/[entitySlug]/dataset/components/action-bar';
 import { Navigation } from '../../dashboard/[entityType]/[entitySlug]/dataset/components/navigate-org-datasets';
 
@@ -51,7 +50,7 @@ export default function DatasetPage({
 }) {
   const router = useRouter();
 
-  const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
+  const [navigationTab, setNavigationTab] = useState('tab');
 
   let navigationOptions = [
     {
@@ -97,7 +96,8 @@ export default function DatasetPage({
     error: any;
   } = useMutation(
     [`delete_Usecase`],
-    (data: { id: string }) => GraphQL(deleteUseCase,{}, { useCaseId: data.id }),
+    (data: { id: string }) =>
+      GraphQL(deleteUseCase, {}, { useCaseId: data.id }),
     {
       onSuccess: () => {
         toast(`Deleted UseCase successfully`);
@@ -113,7 +113,7 @@ export default function DatasetPage({
     mutate: any;
     isLoading: boolean;
     error: any;
-  } = useMutation([`delete_Usecase`], () => GraphQL(AddUseCase,{}, []), {
+  } = useMutation([`delete_Usecase`], () => GraphQL(AddUseCase, {}, []), {
     onSuccess: (response: any) => {
       toast(`UseCase created successfully`);
       router.push(`/manage/usecases/edit/${response.addUseCase.id}/details`);
