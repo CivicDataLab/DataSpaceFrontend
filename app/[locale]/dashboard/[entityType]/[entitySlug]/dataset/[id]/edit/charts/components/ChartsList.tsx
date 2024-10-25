@@ -241,7 +241,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
 
   const handleSearchChange = (e: string) => {
     const searchTerm = e.toLowerCase();
-    const filtered = data?.chartsDetails.filter((row: any) =>
+    const filtered = data?.getChartData.filter((row: any) =>
       row.name.toLowerCase().includes(searchTerm)
     );
     setFilteredRows(filtered || []);
