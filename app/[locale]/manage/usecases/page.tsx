@@ -97,7 +97,8 @@ export default function DatasetPage({
     error: any;
   } = useMutation(
     [`delete_Usecase`],
-    (data: { id: string }) => GraphQL(deleteUseCase,{}, { useCaseId: data.id }),
+    (data: { id: string }) =>
+      GraphQL(deleteUseCase, {}, { useCaseId: data.id }),
     {
       onSuccess: () => {
         toast(`Deleted UseCase successfully`);
@@ -113,7 +114,7 @@ export default function DatasetPage({
     mutate: any;
     isLoading: boolean;
     error: any;
-  } = useMutation([`delete_Usecase`], () => GraphQL(AddUseCase,{}, []), {
+  } = useMutation([`delete_Usecase`], () => GraphQL(AddUseCase, {}, []), {
     onSuccess: (response: any) => {
       toast(`UseCase created successfully`);
       router.push(`/manage/usecases/edit/${response.addUseCase.id}/details`);

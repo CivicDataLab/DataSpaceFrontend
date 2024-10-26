@@ -6,10 +6,10 @@ import { SidebarNavItem } from '@/types';
 
 import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
-
-import styles from '../dashboard/components/styles.module.scss';
-import { MobileDashboardNav } from '../dashboard/components/mobile-dashboard-nav';
 import { DashboardNav } from '../dashboard/components/dashboard-nav';
+import { MobileDashboardNav } from '../dashboard/components/mobile-dashboard-nav';
+import styles from '../dashboard/components/styles.module.scss';
+import LoadingPage from '../dashboard/loading';
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -26,13 +26,12 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       href: `/manage/usecases`,
       icon: 'datasetEdit',
     },
-   
   ];
 
   const organizationId = params.organizationId;
 
   return (
-    <>
+    <React.Suspense fallback={<LoadingPage />}>
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
@@ -40,7 +39,6 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
             href: '',
             label: 'Manage',
           },
-         
         ]}
       />
       <div
@@ -60,6 +58,6 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
         </div>
         <div className={cn(styles.Main)}>{children}</div>
       </div>
-    </>
+    </React.Suspense>
   );
 }
