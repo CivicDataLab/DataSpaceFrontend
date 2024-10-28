@@ -1,30 +1,31 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   TypeCategory,
   TypeDataset,
-  TypeDatasetMetadata,
   TypeMetadata,
   TypeTag,
-  UpdateMetadataInput,
+  UpdateMetadataInput
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import {
-  Button,
   Combobox,
   Divider,
   Form,
   FormLayout,
+  Icon,
   Input,
-  Select,
+  Spinner,
   Text,
-  toast,
+  toast
 } from 'opub-ui';
 
-import { GraphQL } from '@/lib/api';
+import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import { GraphQL } from '@/lib/api';
+import { useEffect, useState } from 'react';
 import DatasetLoading from '../../../components/loading-dataset';
 
 const categoriesListQueryDoc: any = graphql(`
@@ -109,7 +110,6 @@ const updateMetadataMutationDoc: any = graphql(`
 `);
 
 export function EditMetadata({ id }: { id: string }) {
-  const router = useRouter();
   const params = useParams<{
     entityType: string;
     entitySlug: string;
@@ -193,20 +193,15 @@ export function EditMetadata({ id }: { id: string }) {
     {
       onSuccess: () => {
         toast('Details updated successfully!');
-
         queryClient.invalidateQueries({
           queryKey: [
             `metadata_values_query_${params.id}`,
             `metadata_fields_list_${id}`,
           ],
         });
-
-        getMetaDataListQuery.refetch();
+        // getMetaDataListQuery.refetch();
         getDatasetMetadata.refetch();
-
-        router.push(
-          `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${id}/edit/publish`
-        );
+       
       },
       onError: (err: any) => {
         toast('Error:  ' + err.message.split(':')[0]);
@@ -215,8 +210,6 @@ export function EditMetadata({ id }: { id: string }) {
   );
 
   const defaultValuesPrepFn = (dataset: TypeDataset) => {
-    // Function to set default values for the form
-
     let defaultVal: {
       [key: string]: any;
     } = {};
@@ -224,7 +217,6 @@ export function EditMetadata({ id }: { id: string }) {
     dataset?.metadata.length > 0 &&
       dataset?.metadata?.map((field) => {
         if (field.metadataItem.dataType === 'MULTISELECT') {
-          // Convert comma-separated string to array of {label, value} objects
           defaultVal[field.metadataItem.id] = field.value
             .split(', ')
             .map((value: string) => ({
@@ -236,10 +228,10 @@ export function EditMetadata({ id }: { id: string }) {
         }
       });
 
-    defaultVal['description'] = dataset.description || '';
+    defaultVal['description'] = dataset?.description || '';
 
     defaultVal['categories'] =
-      dataset.categories?.map((category: TypeCategory) => {
+      dataset?.categories?.map((category: TypeCategory) => {
         return {
           label: category.name,
           value: category.id,
@@ -247,7 +239,7 @@ export function EditMetadata({ id }: { id: string }) {
       }) || [];
 
     defaultVal['tags'] =
-      dataset.tags?.map((tag: TypeTag) => {
+      dataset?.tags?.map((tag: TypeTag) => {
         return {
           label: tag.value,
           value: tag.id,
@@ -257,9 +249,65 @@ export function EditMetadata({ id }: { id: string }) {
     return defaultVal;
   };
 
-  function renderInputField(metadataFormItem: any, getMetaDataListQuery: any) {
-    // Check the data type and return the corresponding input
+  const [formData, setFormData] = useState(defaultValuesPrepFn(getDatasetMetadata?.data?.datasets[0]));
+  const [previousFormData, setPreviousFormData] = useState(formData);
 
+  useEffect(() => {
+    if (getDatasetMetadata.data?.datasets[0]) {
+      const updatedData = defaultValuesPrepFn(getDatasetMetadata.data.datasets[0]);
+      setFormData(updatedData);
+      setPreviousFormData(updatedData);
+    }
+  }, [getDatasetMetadata.data]);
+
+  const handleChange = (field: string, value: any) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      [field]: value,
+    }));
+  };
+
+  const handleSave = (updatedData: any) => {
+    if (JSON.stringify(updatedData) !== JSON.stringify(previousFormData)) {
+      setPreviousFormData(updatedData);
+
+      const transformedValues = Object.keys(updatedData)?.reduce(
+        (acc: any, key) => {
+          acc[key] = Array.isArray(updatedData[key])
+            ? updatedData[key]
+                .map((item: any) => item.value || item)
+                .join(', ')
+            : updatedData[key];
+          return acc;
+        },
+        {}
+      );
+      updateMetadataMutation.mutate({
+        UpdateMetadataInput: {
+          dataset: id,
+          metadata: [
+            ...Object.keys(transformedValues)
+              .filter(
+                (valueItem) =>
+                  !['categories', 'description', 'tags'].includes(valueItem)
+              )
+              .map((key) => {
+                return {
+                  id: key,
+                  value: transformedValues[key] || '',
+                };
+              }),
+          ],
+          description: updatedData.description || '',
+          tags: updatedData.tags?.map((item: any) => item.label) || [],
+          categories:
+            updatedData.categories?.map((item: any) => item.value) || [],
+        },
+      });
+    }
+  };
+
+  function renderInputField(metadataFormItem: any) {
     if (metadataFormItem.dataType === 'STRING') {
       return (
         <div
@@ -269,27 +317,9 @@ export function EditMetadata({ id }: { id: string }) {
           <Input
             name={metadataFormItem.id}
             label={metadataFormItem.label}
-            disabled={
-              getMetaDataListQuery.isLoading || !metadataFormItem.enabled
-            }
-          />
-        </div>
-      );
-    }
-
-    if (metadataFormItem.dataType === 'DATE') {
-      return (
-        <div
-          key={metadataFormItem.id}
-          className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"
-        >
-          <Input
-            type="date"
-            name={metadataFormItem.id}
-            label={metadataFormItem.label}
-            disabled={
-              getMetaDataListQuery.isLoading || !metadataFormItem.enabled
-            }
+            value={formData[metadataFormItem.id] || ''}
+            onChange={(e) => handleChange(metadataFormItem.id, e)}
+            onBlur={() => handleSave(formData)} // Save on blur
           />
         </div>
       );
@@ -301,17 +331,25 @@ export function EditMetadata({ id }: { id: string }) {
           key={metadataFormItem.id}
           className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"
         >
-          <Select
+          <Combobox
             name={metadataFormItem.id}
-            options={metadataFormItem.options.map((option: string) => ({
-              value: option,
+            list={metadataFormItem.options.map((option: string) => ({
               label: option,
+              value: option,
             }))}
             label={metadataFormItem.label}
+            displaySelected
+            onChange={(value) => {
+              handleChange(metadataFormItem.id, value);
+              handleSave({ ...formData, [metadataFormItem.id]: value }); // Save on change
+            }}
           />
         </div>
       );
     }
+
+    
+
     if (metadataFormItem.dataType === 'MULTISELECT') {
       const prefillData = metadataFormItem.value ? metadataFormItem.value : [];
 
@@ -331,6 +369,10 @@ export function EditMetadata({ id }: { id: string }) {
             label={metadataFormItem.label}
             displaySelected
             selectedValue={prefillData}
+            onChange={(value) => {
+              handleChange(metadataFormItem.id, value);
+              handleSave({ ...formData, [metadataFormItem.id]: value }); // Save on change
+            }}
           />
         </div>
       );
@@ -344,16 +386,41 @@ export function EditMetadata({ id }: { id: string }) {
           <Input
             name={metadataFormItem.id}
             type="url"
+            value={formData[metadataFormItem.id] || ''}
             label={metadataFormItem.label}
             disabled={
               getMetaDataListQuery.isLoading || !metadataFormItem.enabled
             }
+            onChange={(e) => handleChange(metadataFormItem.id, e)}
+            onBlur={() => handleSave(formData)} // Save on blur
           />
         </div>
       );
     }
 
-    // Add more conditions if there are other data types you want to handle
+    if (metadataFormItem.dataType === 'DATE') {
+      return (
+        <div
+          key={metadataFormItem.id}
+          className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2"
+        >
+          <Input
+            type="date"
+            name={metadataFormItem.id}
+            value={formData[metadataFormItem.id] || ''}
+            label={metadataFormItem.label}
+            disabled={
+              getMetaDataListQuery.isLoading || !metadataFormItem.enabled
+            }
+            onChange={(e) => handleChange(metadataFormItem.id, e)}
+            onBlur={() => handleSave(formData)} // Save on blur
+          />
+        </div>
+      );
+    }
+
+
+    // Add more conditions for other data types as needed
     return null;
   }
 
@@ -363,56 +430,24 @@ export function EditMetadata({ id }: { id: string }) {
       !getCategoriesList?.isLoading &&
       !getDatasetMetadata.isLoading ? (
         <Form
-          onSubmit={(values) => {
-            const transformedValues = Object.keys(values)?.reduce(
-              (acc: any, key) => {
-                acc[key] = Array.isArray(values[key])
-                  ? values[key]
-                      .map((item: any) => item.value || item)
-                      .join(', ')
-                  : values[key];
-                return acc;
-              },
-              {}
-            );
-
-            // Call the mutation to save both the static and dynamic metadata
-            updateMetadataMutation.mutate({
-              UpdateMetadataInput: {
-                dataset: id,
-                metadata: [
-                  ...Object.keys(transformedValues)
-                    .filter(
-                      (valueItem) =>
-                        !['categories', 'description', 'tags'].includes(
-                          valueItem
-                        )
-                    )
-                    .map((key) => {
-                      return {
-                        id: key,
-                        value: transformedValues[key] || '',
-                      };
-                    }),
-                ],
-                description: values.description || '',
-                tags: values.tags?.map((item: any) => item.label) || [],
-                categories:
-                  values.categories?.map((item: any) => item.value) || [],
-              },
-            });
-          }}
+         
           formOptions={{
             resetOptions: {
               keepValues: true,
               keepDirtyValues: true,
             },
-            defaultValues: defaultValuesPrepFn(
-              getDatasetMetadata?.data?.datasets[0]
-            ),
+            defaultValues: formData,
           }}
         >
           <>
+          <div className="flex justify-end gap-2">
+            <Text color="highlight">Auto Save </Text>
+            {updateMetadataMutation.isLoading ? (
+              <Spinner />
+            ) : (
+              <Icon source={Icons.checkmark} />
+            )}
+          </div>
             <div className="pt-3">
               <FormLayout>
                 <div className="w-full py-4 pr-4">
@@ -421,6 +456,9 @@ export function EditMetadata({ id }: { id: string }) {
                     multiline
                     name="description"
                     label={'Description'}
+                    value={formData.description}
+                    onChange={(e) => handleChange('description', e)}
+                    onBlur={() => handleSave(formData)} // Save on blur
                   />
                 </div>
 
@@ -437,21 +475,27 @@ export function EditMetadata({ id }: { id: string }) {
                       })}
                       label="Tags"
                       creatable
+                      onChange={(value) => {
+                        handleChange('tags', value);
+                        handleSave({ ...formData, tags: value }); // Save on change
+                      }}
                     />
                   </div>
                   <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
-                    {
-                      <Combobox
-                        displaySelected
-                        label="Categories"
-                        list={getCategoriesList.data?.categories?.map(
-                          (item: TypeCategory) => {
-                            return { label: item.name, value: item.id };
-                          }
-                        )}
-                        name="categories"
-                      />
-                    }
+                    <Combobox
+                      displaySelected
+                      label="Categories"
+                      list={getCategoriesList.data?.categories?.map(
+                        (item: TypeCategory) => {
+                          return { label: item.name, value: item.id };
+                        }
+                      )}
+                      name="categories"
+                      onChange={(value) => {
+                        handleChange('categories', value);
+                        handleSave({ ...formData, categories: value }); // Save on change
+                      }}
+                    />
                   </div>
                 </div>
 
@@ -474,10 +518,7 @@ export function EditMetadata({ id }: { id: string }) {
                     <div className="flex flex-wrap">
                       {getMetaDataListQuery?.data?.metadata?.map(
                         (metadataFormItem: TypeMetadata) => {
-                          return renderInputField(
-                            metadataFormItem,
-                            getMetaDataListQuery
-                          );
+                          return renderInputField(metadataFormItem);
                         }
                       )}
                     </div>
@@ -490,22 +531,7 @@ export function EditMetadata({ id }: { id: string }) {
             <div className="mt-8">
               <Divider />
             </div>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <Button
-                id="exitAfterSave"
-                disabled
-                loading={updateMetadataMutation.isLoading}
-              >
-                Save & Exit
-              </Button>
-              <Button
-                id="proceedAfterSave"
-                submit
-                loading={updateMetadataMutation.isLoading}
-              >
-                Save & Proceed
-              </Button>
-            </div>
+           
           </>
         </Form>
       ) : (
