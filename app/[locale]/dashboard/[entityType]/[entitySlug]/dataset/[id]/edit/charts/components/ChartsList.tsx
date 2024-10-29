@@ -65,7 +65,7 @@ const AddResourceChartImage: any = graphql(`
   }
 `);
 
-const AddResourceImage: any = graphql(`
+const AddResourceChart: any = graphql(`
   mutation GenerateResourceChart($resource: UUID!) {
     addResourceChart(resource: $resource) {
       __typename
@@ -207,13 +207,13 @@ const ChartsList: React.FC<ChartsListProps> = ({
     )
   );
 
-  const resourceChartImage: {
+  const resourceChart: {
     mutate: any;
     isLoading: any;
   } = useMutation(
     (data: { resource: UUID }) =>
       GraphQL(
-        AddResourceImage,
+        AddResourceChart,
         {
           [params.entityType]: params.entitySlug,
         },
@@ -329,7 +329,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
             <div className="flex gap-3">
               <Button
                 onClick={(e) =>
-                  resourceChartImage.mutate({
+                  resourceChart.mutate({
                     resource: resourceList.data.datasetResources[0].id,
                   })
                 }
