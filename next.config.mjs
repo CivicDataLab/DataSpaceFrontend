@@ -7,9 +7,21 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const jiti = createJiti(fileURLToPath(import.meta.url));
 jiti('./env');
 
+const backendUrl = new URL(process.env.NEXT_PUBLIC_BACKEND_URL);
+
+
 const withNextIntl = createNextIntlPlugin();
 const nextConfig = withNextIntl({
   transpilePackages: ['opub-ui'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: backendUrl.hostname,
+        pathname: '/api/download/chart_image/**',
+      },
+    ],
+  },
 });
 
 export default withSentryConfig(nextConfig, {
