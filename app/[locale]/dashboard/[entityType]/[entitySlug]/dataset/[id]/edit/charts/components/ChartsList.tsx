@@ -65,6 +65,28 @@ const AddResourceChartImage: any = graphql(`
   }
 `);
 
+const AddResourceImage: any = graphql(`
+  mutation GenerateResourceChart($resource: UUID!) {
+    addResourceChart(resource: $resource) {
+      __typename
+      ... on TypeResourceChart {
+        id
+        name
+      }
+    }
+  }
+`);
+
+const datasetResourceList: any = graphql(`
+  query all_resources($datasetId: UUID!) {
+    datasetResources(datasetId: $datasetId) {
+      id
+      type
+      name
+    }
+  }
+`);
+
 const ChartsList: React.FC<ChartsListProps> = ({
   setType,
   type,
@@ -173,10 +195,49 @@ const ChartsList: React.FC<ChartsListProps> = ({
     }
   );
 
+  // AddResourceImage
+
+  const resourceList: { data: any } = useQuery([`charts_${params.id}`], () =>
+    GraphQL(
+      datasetResourceList,
+      {
+        [params.entityType]: params.entitySlug,
+      },
+      { datasetId: params.id }
+    )
+  );
+
+  const resourceChartImage: {
+    mutate: any;
+    isLoading: any;
+  } = useMutation(
+    (data: { resource: UUID }) =>
+      GraphQL(
+        AddResourceImage,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        data
+      ),
+    {
+      onSuccess: (res: any) => {
+        toast('Resource Chart Created Successfully');
+        refetch();
+        setType('visualize');
+        setChartId(res.addResourceChart.id);
+
+        // setImageId(res.id);
+      },
+      onError: (err: any) => {
+        toast(`Received ${err} while deleting chart `);
+      },
+    }
+  );
+
   const handleChart = (row: any) => {
-    if (row.original.__typename === 'TypeResourceChart') {
-      setChartId(row.original.id);
+    if (row.original.typename === 'TypeResourceChart') {
       setType('visualize');
+      setChartId(row.original.id);
     } else {
       setType('img');
       setImageId(row.original.id);
@@ -266,7 +327,13 @@ const ChartsList: React.FC<ChartsListProps> = ({
               onChange={(e) => handleSearchChange(e)}
             />
             <div className="flex gap-3">
-              <Button onClick={(e) => setType('visualize')}>
+              <Button
+                onClick={(e) =>
+                  resourceChartImage.mutate({
+                    resource: resourceList.data.datasetResources[0].id,
+                  })
+                }
+              >
                 Visualize Data
               </Button>
               <Button
