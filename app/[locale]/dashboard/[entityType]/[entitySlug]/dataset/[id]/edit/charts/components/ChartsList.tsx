@@ -272,7 +272,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
               icon={Icons.delete}
               color="interactive"
               onClick={() => {
-                row.original.__typename === 'TypeResourceChart'
+                row.original.typename === 'TypeResourceChart'
                   ? deleteResourceChartmutation.mutate({
                       chartId: row.original.id,
                     })
