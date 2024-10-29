@@ -1,3 +1,4 @@
+import { UUID } from 'crypto';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { renderGeoJSON } from '@/geo_json/render_geojson';
@@ -123,6 +124,18 @@ const getResourceChartDetails: any = graphql(`
   }
 `);
 
+const CreateResourceChart: any = graphql(`
+  mutation GenerateResourceChart($resource: UUID!) {
+    addResourceChart(resource: $resource) {
+      __typename
+      ... on TypeResourceChart {
+        id
+        name
+      }
+    }
+  }
+`);
+
 const ChartsVisualize: React.FC<VisualizationProps> = ({
   setType,
   chartId,
@@ -153,10 +166,6 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         },
         {
           chartDetailsId: chartId,
-
-          options: {
-            skip: chartId === '',
-          },
         }
       ),
     {}
@@ -177,6 +186,33 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           datasetId: params.id,
         }
       )
+  );
+
+  const resourceChart: {
+    mutate: any;
+    isLoading: any;
+  } = useMutation(
+    (data: { resource: UUID }) =>
+      GraphQL(
+        CreateResourceChart,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        data
+      ),
+    {
+      onSuccess: (res: any) => {
+        toast('Resource Chart Created Successfully');
+        refetch();
+        setIsSheetOpen(false);
+        setType('visualize');
+        setChartId(res.addResourceChart.id);
+        chartsListRefetch();
+      },
+      onError: (err: any) => {
+        toast(`Received ${err} while deleting chart `);
+      },
+    }
   );
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -203,15 +239,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
 
   useEffect(() => {
     if (data) {
-      if (!chartId && data?.datasetResources.length) {
-        // Set initial resource schema and chart data
-        const initialResource = data?.datasetResources[0];
-        setResourceSchema(initialResource.schema || []);
-        setChartData((prevData) => ({
-          ...prevData,
-          resource: initialResource.id,
-        }));
-      } else if (chartData.resource) {
+     if (chartData.resource) {
         const resource = data?.datasetResources.find(
           (resource: any) => resource.id === chartData.resource
         );
@@ -355,13 +383,11 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
                   <Text variant="bodyLg">Select Charts</Text>
                   <div className="flex items-center gap-3">
                     <Button
-                      className=" h-fit w-fit"
-                      size="medium"
-                      onClick={(e) => {
-                        setChartData(initialChartData);
-                        setChartId('');
-                        setIsSheetOpen(false);
-                      }}
+                      onClick={(e) =>
+                        resourceChart.mutate({
+                          resource: data?.datasetResources[0].id,
+                        })
+                      }
                     >
                       Visualize Data
                     </Button>

@@ -1,12 +1,11 @@
-import React, { useRef } from 'react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import assam_geojson from '@/geo_json/assam_geojson';
 import { renderGeoJSON } from '@/geo_json/render_geojson';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts/core';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   Button,
   Carousel,
@@ -18,22 +17,36 @@ import {
   Spinner,
   Text,
 } from 'opub-ui';
+import { useRef } from 'react';
 
-import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import { GraphQL } from '@/lib/api';
 
-const charts = graphql(`
-  query chartsData($datasetId: UUID!) {
-    chartsDetails(datasetId: $datasetId) {
-      aggregateType
-      chartType
-      description
-      id
-      name
-      showLegend
-      xAxisLabel
-      yAxisLabel
-      chart
+const DetailsQuery: any = graphql(`
+  query ChartDetailsQuery($datasetId: UUID!) {
+    getChartData(datasetId: $datasetId) {
+      __typename
+      ... on TypeResourceChart {
+        aggregateType
+        chartType
+        description
+        id
+        name
+        showLegend
+        xAxisLabel
+        yAxisLabel
+        chart
+      }
+      ... on TypeResourceChartImage {
+        name
+        id
+        description
+        image {
+          name
+          path
+          url
+        }
+      }
     }
   }
 `);
@@ -42,23 +55,11 @@ const Details = () => {
   const params = useParams();
   const chartRef = useRef<ReactECharts>(null);
 
-  const {
-    data,
-    isLoading,
-    refetch,
-  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`chartdata_${params.datasetIdentifier}`],
-    () =>
-      GraphQL(
-        charts,
-        {
-          // Entity Headers if present
-        },
-        {
-          datasetId: params.datasetIdentifier,
-        }
-      )
+  const { data, isLoading }: { data: any; isLoading: any } = useQuery(
+    [`chartDetails_${params.id}`],
+    () => GraphQL(DetailsQuery, {}, { datasetId: params.datasetIdentifier })
   );
+
 
   const renderChart = (item: any) => {
     if (item.chartType === 'ASSAM_DISTRICT' || item.chartType === 'ASSAM_RC') {
@@ -78,7 +79,7 @@ const Details = () => {
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
-      ) : data?.chartsDetails?.length > 0 ? (
+      ) : data?.getChartData?.length > 0 ? (
         <>
           <Text variant="bodyLg" className="mx-6 lg:mx-0">
             Visualizations
@@ -87,11 +88,21 @@ const Details = () => {
             <Carousel className="w-full">
               <div className=" px-12">
                 <CarouselContent className="flex-grow">
-                  {data?.chartsDetails.map((item: any, index: any) => (
+                  {data?.getChartData.map((item: any, index: any) => (
                     <CarouselItem key={index} className="m-auto">
                       <div className="w-full border-2 border-solid border-baseGraySlateSolid4 bg-surfaceDefault p-6 text-center shadow-basicLg max-sm:p-2">
                         <div className="lg:p-10">
-                          {renderChart(item)}{' '}
+                          {item.__typename === 'TypeResourceChart' ? (
+                            renderChart(item)
+                          ) : (
+                            <Image
+                              src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/chart_image/${item.id}`}
+                              alt={''}
+                              width={300}
+                              height={300}
+                              unoptimized
+                            />
+                          )}
                           {/* Call the renderChart function */}
                         </div>
                         <div className="flex items-center justify-between gap-2 max-sm:flex-wrap">
