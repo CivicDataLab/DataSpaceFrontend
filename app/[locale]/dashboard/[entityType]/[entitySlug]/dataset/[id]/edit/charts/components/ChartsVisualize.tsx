@@ -223,7 +223,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
 
   useEffect(() => {
     if (chartId && chartDetails?.resourceChart) {
-      refetch();
+      // refetch();
       updateChartData(chartDetails.resourceChart);
     }
   }, [chartId, chartDetails]);
