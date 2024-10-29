@@ -40,6 +40,24 @@ const getResourceChartImageDetails: any = graphql(`
   }
 `);
 
+
+const getDatasetResourceChartImageDetails: any = graphql(`
+  query resourceChartImages($datasetId: UUID!) {
+    datasetResourceCharts(datasetId: $datasetId) {
+      id
+      name
+      description
+      image {
+        name
+        path
+      }
+    }
+  }
+`);
+
+
+
+
 const AddResourceChartimage: any = graphql(`
   mutation GenerateResourceChartimage($dataset: UUID!) {
     addResourceChartImage(dataset: $dataset) {
@@ -96,6 +114,24 @@ const ChartsImage: React.FC<ImageProps> = ({
       {}
     );
 
+  const {
+    data: chartImagesList,
+    refetch: listrefetch,
+  }: { data: any; refetch: any } = useQuery(
+    [`chartslist_${params.id}`, imageId],
+    () =>
+      GraphQL(
+        getDatasetResourceChartImageDetails,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        {
+          datasetId: params.id
+        }
+      ),
+    {}
+  );
+
   const resourceChartImageMutation: {
     mutate: any;
     isLoading: any;
@@ -147,8 +183,6 @@ const ChartsImage: React.FC<ImageProps> = ({
     }
   }, [chartImageDetails]);
 
-
-
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { data: ResourceChartImageInputPartial }) =>
       GraphQL(UpdateChartImageMutation, {}, data),
@@ -157,6 +191,7 @@ const ChartsImage: React.FC<ImageProps> = ({
         toast('ChartImage updated successfully');
         // Optionally, reset form or perform other actions
         refetch();
+        listrefetch();
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -181,6 +216,7 @@ const ChartsImage: React.FC<ImageProps> = ({
       });
       {
         refetch();
+        listrefetch();
       }
     },
     []
@@ -248,6 +284,26 @@ const ChartsImage: React.FC<ImageProps> = ({
                       </Button>
                     </div>
                   </div>
+                  {chartImagesList?.datasetResourceCharts.map(
+                    (item: any, index: any) => (
+                      <div
+                        key={index}
+                        className={`rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6 py-3 ${imageId === item.id ? ' bg-baseGraySlateSolid5' : ''}`}
+                      >
+                        <Button
+                          kind={'tertiary'}
+                          className="flex w-full justify-start"
+                          disabled={imageId === item.id}
+                          onClick={() => {
+                            setImageId(item.id);
+                            setIsSheetOpen(false);
+                          }}
+                        >
+                          {item.name}
+                        </Button>
+                      </div>
+                    )
+                  )}
                 </div>
               </Sheet.Content>
             </Sheet>
