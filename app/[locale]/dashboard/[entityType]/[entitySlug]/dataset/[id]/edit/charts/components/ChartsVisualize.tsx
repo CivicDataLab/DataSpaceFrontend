@@ -221,7 +221,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     name: '',
     description: '',
     chartType: 'BAR_VERTICAL',
-    resource: data?.datasetResources[0].id,
+    resource: data?.datasetResources[0]?.id,
     xAxisColumn: '',
     xAxisLabel: '',
     yAxisColumn: '',
@@ -239,7 +239,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
 
   useEffect(() => {
     if (data) {
-      if (chartData.resource) {
+     if (chartData.resource) {
         const resource = data?.datasetResources.find(
           (resource: any) => resource.id === chartData.resource
         );
@@ -325,7 +325,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           showLegend: updatedData.showLegend,
           xAxisLabel: updatedData.xAxisLabel,
           yAxisLabel: updatedData.yAxisLabel,
-          resource: updatedData.resource || data?.datasetResources[0].id,
+          resource: updatedData.resource || data?.datasetResources[0]?.id,
           xAxisColumn: updatedData.xAxisColumn,
           yAxisColumn: updatedData.yAxisColumn,
           regionColumn: updatedData.regionColumn,
@@ -472,7 +472,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
                 value: resource.id,
               }))}
               value={chartData.resource}
-              defaultValue={data?.datasetResources[0].id}
+              defaultValue={data?.datasetResources[0]?.id}
               label="Select Resources"
               onBlur={() => handleSave(chartData)}
               onChange={(e) => handleResourceChange(e)}
