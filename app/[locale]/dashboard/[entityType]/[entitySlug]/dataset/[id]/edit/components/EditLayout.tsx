@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
@@ -13,7 +13,6 @@ import {
   FormLayout,
   Icon,
   Input,
-  Spinner,
   Tab,
   TabList,
   Tabs,
@@ -54,7 +53,7 @@ const updateDatasetTitleMutationDoc: any = graphql(`
 `);
 
 interface LayoutProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
   params: { id: string };
 }
 
@@ -126,9 +125,7 @@ export function EditLayout({ children, params }: LayoutProps) {
   return (
     <div className="flex h-full flex-col lg:mt-8">
       {getDatasetTitleRes.isLoading ? (
-        <div className="flex flex-row items-center justify-center">
-          <Spinner size={24} />
-        </div>
+        <></>
       ) : (
         <Header
           dataset={getDatasetTitleRes?.data?.datasets[0]}
@@ -257,56 +254,71 @@ const Navigation = ({
   organization: string;
   entityType: string;
 }) => {
+  const router = useRouter();
+
   let links = [
     {
       label: 'Resources',
+      id: 'resources',
       url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/resources`,
-      selected: pathItem === 'resources',
+      // selected: pathItem === 'resources',
     },
     ...(process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true'
       ? [
           {
             label: 'Access Models',
+            id: 'access',
             url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/access?list=true`,
-            selected: pathItem === 'access',
+            // selected: pathItem === 'access',
           },
         ]
       : []),
     {
       label: 'Charts',
+      id: 'charts',
       url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/charts?type=list`,
-      selected: pathItem === 'charts',
+      // selected: pathItem === 'charts',
     },
     {
       label: 'Metadata',
+      id: 'metadata',
       url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/metadata`,
-      selected: pathItem === 'metadata',
+      // selected: pathItem === 'metadata',
     },
     {
       label: 'Publish',
+      id: 'publish',
       url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/publish`,
-      selected: pathItem === 'publish',
+      // selected: pathItem === 'publish',
     },
   ];
 
-  const router = useRouter();
+  const [selectedTab, setSelectedTab] = useState(pathItem || 'distributions');
 
-  const handleTabClick = (url: string) => {
-    router.replace(url);
+  const handleTabClick = (item: {
+    label: string;
+    url: string;
+    // selected: boolean;
+  }) => {
+    if (item.label !== selectedTab) {
+      setSelectedTab(item.label);
+      router.replace(item.url);
+    }
   };
 
-  const initialTabLabel =
-    links.find((option) => option.selected)?.label || 'Distributions';
+  useEffect(() => {
+    setSelectedTab(pathItem); // Update selected tab on path change
+  }, [pathItem]);
 
   return (
     <div>
-      <Tabs defaultValue={initialTabLabel}>
+      <Tabs value={selectedTab}>
         <TabList fitted>
           {links.map((item, index) => (
             <Tab
-              value={item.label}
+              value={item.id}
               key={index}
-              onClick={() => handleTabClick(item.url)}
+              onClick={() => handleTabClick(item)}
             >
               {item.label}
             </Tab>
