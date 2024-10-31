@@ -3,12 +3,15 @@
 import React from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { SidebarNavItem } from '@/types';
+import { useQuery } from '@tanstack/react-query';
 
+import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { DashboardNav } from '../../components/dashboard-nav';
 import { MobileDashboardNav } from '../../components/mobile-dashboard-nav';
 import styles from '../../components/styles.module.scss';
+import { getDataSpaceDetailsQryDoc, getOrgDetailsQryDoc } from './schema';
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -17,6 +20,17 @@ interface DashboardLayoutProps {
 export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
   const [isOpened, setIsOpened] = React.useState(false);
   const params = useParams<{ entityType: string; entitySlug: string }>();
+
+  const EntityDetailsQryRes: { data: any; isLoading: boolean; error: any } =
+    useQuery([`entity_details_${params.entityType}`], () =>
+      GraphQL(
+        params.entityType === 'organization'
+          ? getOrgDetailsQryDoc
+          : getDataSpaceDetailsQryDoc,
+        {},
+        { filters: { slug: params.entitySlug } }
+      )
+    );
 
   if (
     process.env.NEXT_PUBLIC_DATASPACE_FEATURE_ENABLED !== 'true' &&
@@ -56,7 +70,11 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           },
           {
             href: '',
-            label: `${params.entitySlug}`,
+            label:
+              (params.entityType === 'organization'
+                ? EntityDetailsQryRes.data?.organisations[0]
+                : EntityDetailsQryRes.data?.dataspaces[0]
+              )?.name || params.entitySlug,
           },
         ]}
       />
@@ -66,7 +84,14 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           ' bg-surfaceDefault p-4 md:flex'
         )}
       >
-        <DashboardNav items={orgSidebarNav} entitySlug={params.entitySlug} />
+        <DashboardNav
+          items={orgSidebarNav}
+          entityDetails={
+            params.entityType === 'organization'
+              ? EntityDetailsQryRes.data?.organisations[0]
+              : EntityDetailsQryRes.data?.dataspaces[0]
+          }
+        />
 
         <div className="z-1 basis-2 md:hidden">
           <MobileDashboardNav
