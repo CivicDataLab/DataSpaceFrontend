@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useParams } from 'next/navigation';
 import { SidebarNavItem } from '@/types';
 
 import { cn } from '@/lib/utils';
@@ -18,8 +17,6 @@ interface DashboardLayoutProps {
 export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
   const [isOpened, setIsOpened] = React.useState(false);
 
-  const params = useParams<{ organizationId: string }>();
-
   const orgSidebarNav: Array<SidebarNavItem> = [
     {
       title: 'Use Cases',
@@ -27,8 +24,6 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       icon: 'datasetEdit',
     },
   ];
-
-  const organizationId = params.organizationId;
 
   return (
     <React.Suspense fallback={<LoadingPage />}>
@@ -47,7 +42,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           ' bg-surfaceDefault p-4 md:flex'
         )}
       >
-        <DashboardNav items={orgSidebarNav} entitySlug={organizationId} />
+        <DashboardNav items={orgSidebarNav} />
 
         <div className="z-1 basis-2 md:hidden">
           <MobileDashboardNav
