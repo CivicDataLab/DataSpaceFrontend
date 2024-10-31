@@ -9,12 +9,15 @@ jiti('./env');
 
 const backendUrl = new URL(process.env.NEXT_PUBLIC_BACKEND_URL);
 
-
 const withNextIntl = createNextIntlPlugin();
 const nextConfig = withNextIntl({
   transpilePackages: ['opub-ui'],
   images: {
     remotePatterns: [
+      {
+        protocol: new URL(process.env.BACKEND_URL).protocol.slice(0, -1),
+        hostname: new URL(process.env.BACKEND_URL).hostname,
+      },
       {
         protocol: 'https',
         hostname: backendUrl.hostname,
@@ -46,7 +49,7 @@ export default withSentryConfig(
     // This can increase your server load as well as your hosting bill.
     // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
     // side errors will fail.
-    tunnelRoute: '/api/sentry-monitoring',
+    // tunnelRoute: "/monitoring",
 
     // Hides source maps from generated client bundles
     hideSourceMaps: true,
@@ -58,7 +61,7 @@ export default withSentryConfig(
     // See the following for more information:
     // https://docs.sentry.io/product/crons/
     // https://vercel.com/docs/cron-jobs
-    // automaticVercelMonitors: true,
+    automaticVercelMonitors: true,
   },
   process.env.SENTRY_FEATURE_ENABLED
 );
