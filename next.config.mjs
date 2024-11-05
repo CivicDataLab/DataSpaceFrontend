@@ -7,7 +7,7 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const jiti = createJiti(fileURLToPath(import.meta.url));
 jiti('./env');
 
-const backendUrl = new URL(process.env.NEXT_PUBLIC_BACKEND_URL);
+// const backendUrl = new URL(process.env.NEXT_PUBLIC_BACKEND_URL);
 
 const withNextIntl = createNextIntlPlugin();
 const nextConfig = withNextIntl({
@@ -18,11 +18,11 @@ const nextConfig = withNextIntl({
         protocol: new URL(process.env.BACKEND_URL).protocol.slice(0, -1),
         hostname: new URL(process.env.BACKEND_URL).hostname,
       },
-      {
-        protocol: 'https',
-        hostname: backendUrl.hostname,
-        pathname: '/api/download/chart_image/**',
-      },
+      // {
+      //   protocol: 'https',
+      //   hostname: backendUrl.hostname,
+      //   pathname: '/api/download/chart_image/**',
+      // },
     ],
   },
 });
