@@ -2,139 +2,28 @@ import { UUID } from 'crypto';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { renderGeoJSON } from '@/geo_json/render_geojson';
-import { graphql } from '@/gql';
-import {
-  AggregateType,
-  ChartTypes,
-  ResourceChartInput,
-} from '@/gql/generated/graphql';
+import { ResourceChartInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts/core';
-import {
-  Button,
-  Checkbox,
-  Divider,
-  Icon,
-  Select,
-  Sheet,
-  Spinner,
-  Text,
-  TextField,
-  toast,
-} from 'opub-ui';
+import { Button, Divider, Icon, Sheet, Spinner, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import {
+  chartDetailsQuery,
+  createChart,
+  CreateResourceChart,
+  datasetResource,
+  getResourceChartDetails,
+} from '../queries';
+import ChartForm from './ChartForm';
 
 interface VisualizationProps {
   setType: any;
   setChartId: any;
   chartId: any;
 }
-
-const datasetResource: any = graphql(`
-  query allresources($datasetId: UUID!) {
-    datasetResources(datasetId: $datasetId) {
-      id
-      type
-      name
-      description
-      schema {
-        fieldName
-        id
-      }
-    }
-  }
-`);
-
-const chartDetailsQuery: any = graphql(`
-  query chartsDetails($datasetId: UUID!) {
-    chartsDetails(datasetId: $datasetId) {
-      id
-      name
-      chartType
-    }
-  }
-`);
-
-const createChart: any = graphql(`
-  mutation editResourceChart($chartInput: ResourceChartInput!) {
-    editResourceChart(chartInput: $chartInput) {
-      __typename
-      ... on TypeResourceChart {
-        aggregateType
-        chartType
-        description
-        id
-        resource {
-          id
-          name
-        }
-        name
-        showLegend
-        xAxisLabel
-        yAxisLabel
-        regionColumn {
-          id
-        }
-        valueColumn {
-          id
-        }
-        chart
-        xAxisColumn {
-          id
-        }
-        yAxisColumn {
-          id
-        }
-      }
-    }
-  }
-`);
-
-const getResourceChartDetails: any = graphql(`
-  query resourceChart($chartDetailsId: UUID!) {
-    resourceChart(chartDetailsId: $chartDetailsId) {
-      aggregateType
-      chartType
-      description
-      id
-      name
-      showLegend
-      xAxisLabel
-      yAxisLabel
-      regionColumn {
-        id
-      }
-      valueColumn {
-        id
-      }
-      chart
-      xAxisColumn {
-        id
-      }
-      yAxisColumn {
-        id
-      }
-      resource {
-        id
-      }
-    }
-  }
-`);
-
-const CreateResourceChart: any = graphql(`
-  mutation GenerateResourceChart($resource: UUID!) {
-    addResourceChart(resource: $resource) {
-      __typename
-      ... on TypeResourceChart {
-        id
-        name
-      }
-    }
-  }
-`);
 
 const ChartsVisualize: React.FC<VisualizationProps> = ({
   setType,
@@ -146,18 +35,21 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     entitySlug: string;
     id: string;
   }>();
-  const { data }: { data: any } = useQuery([`charts_${params.id}`], () =>
-    GraphQL(
-      datasetResource,
-      {
-        [params.entityType]: params.entitySlug,
-      },
-      { datasetId: params.id }
-    )
+
+  const { data: resourceData }: { data: any } = useQuery(
+    [`charts_${params.id}`],
+    () =>
+      GraphQL(
+        datasetResource,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        { datasetId: params.id }
+      )
   );
 
   const { data: chartDetails, refetch }: { data: any; refetch: any } = useQuery(
-    [`chartsdata_${params.id}`],
+    [`chartdata_${params.id}`],
     () =>
       GraphQL(
         getResourceChartDetails,
@@ -170,6 +62,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       ),
     {}
   );
+
   const {
     data: chartsList,
     isLoading,
@@ -218,19 +111,23 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const initialChartData = {
     chartId: '',
-    name: '',
     description: '',
-    chartType: 'BAR_VERTICAL',
-    resource: data?.datasetResources[0]?.id,
-    xAxisColumn: '',
-    xAxisLabel: '',
-    yAxisColumn: '',
-    yAxisLabel: '',
-    aggregateType: 'SUM',
-    showLegend: false,
+    filters: [],
+    name: '',
+    options: {
+      aggregateType: '',
+      regionColumn: '',
+      showLegend: false,
+      timeColumn: '',
+      valueColumn: '',
+      xAxisColumn: '',
+      xAxisLabel: '',
+      yAxisColumn: [],
+      yAxisLabel: '',
+    },
+    resource: resourceData?.datasetResources[0]?.id,
+    type: 'BAR_VERTICAL',
     chart: '',
-    regionColumn: '',
-    valueColumn: '',
   };
 
   const [chartData, setChartData] = useState(initialChartData);
@@ -238,16 +135,19 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   const [resourceSchema, setResourceSchema] = useState<any[]>([]);
 
   useEffect(() => {
-    if (data) {
-     if (chartData.resource) {
-        const resource = data?.datasetResources.find(
+    if (resourceData) {
+      if (chartData.resource) {
+        const resource = resourceData?.datasetResources.find(
           (resource: any) => resource.id === chartData.resource
         );
+
         setResourceSchema(resource?.schema || []);
         handleChange('resource', chartData.resource);
       }
     }
-  }, [data, chartId, chartData.resource]);
+  }, [resourceData, chartId, chartData.resource]);
+
+  console.log(chartData, chartDetails?.resourceChart);
 
   useEffect(() => {
     if (chartId && chartDetails?.resourceChart) {
@@ -266,27 +166,37 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         renderGeoJSON(resourceChart.chartType.toLowerCase())
       );
     }
+
     const updatedData = {
-      aggregateType: resourceChart.aggregateType as AggregateType,
-      chartType: resourceChart.chartType as ChartTypes,
-      description: resourceChart.description,
-      name: resourceChart.name,
       chartId: resourceChart.id,
-      showLegend: resourceChart.showLegend,
-      xAxisLabel: resourceChart.xAxisLabel,
-      yAxisLabel: resourceChart.yAxisLabel,
-      resource: resourceChart.resource.id,
-      xAxisColumn: resourceChart.xAxisColumn?.id || '',
-      yAxisColumn: resourceChart.yAxisColumn?.id || '',
+      description: resourceChart.description,
+      filters: resourceChart.filters || [],
+      name: resourceChart.name || '',
+      options: {
+        aggregateType: resourceChart?.options?.aggregateType,
+        regionColumn: resourceChart?.options?.regionColumn,
+        showLegend: resourceChart?.options?.showLegend,
+        timeColumn: resourceChart?.options?.timeColumn,
+        valueColumn: resourceChart?.options?.valueColumn,
+        xAxisColumn: resourceChart?.options?.xAxisColumn?.id,
+        xAxisLabel: resourceChart?.options?.xAxisLabel,
+        yAxisColumn: resourceChart?.options?.yAxisColumn?.map((col: any) => ({
+          fieldName: col.field,
+        })),
+        yAxisLabel: resourceChart?.options?.yAxisLabel,
+      },
+      resource: resourceChart.resource?.id,
+      type: resourceChart.chartType,
       chart: resourceChart.chart,
-      regionColumn: resourceChart.regionColumn?.id || '',
-      valueColumn: resourceChart.valueColumn?.id || '',
     };
     setChartData(updatedData);
     setPreviousChartData(updatedData);
   };
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
+  const {
+    mutate,
+    isLoading: editMutationLoading,
+  } = useMutation(
     (chartInput: { chartInput: ResourceChartInput }) =>
       GraphQL(
         createChart,
@@ -315,43 +225,65 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       setPreviousChartData(updatedData);
       const inputChartId = updatedData.chartId || chartId || null;
 
-      mutate({
-        chartInput: {
-          aggregateType: updatedData.aggregateType as AggregateType,
-          type: updatedData.chartType as ChartTypes,
-          description: updatedData.description,
-          name: updatedData.name,
-          chartId: inputChartId,
-          showLegend: updatedData.showLegend,
-          xAxisLabel: updatedData.xAxisLabel,
-          yAxisLabel: updatedData.yAxisLabel,
-          resource: updatedData.resource || data?.datasetResources[0]?.id,
-          xAxisColumn: updatedData.xAxisColumn,
-          yAxisColumn: updatedData.yAxisColumn,
-          regionColumn: updatedData.regionColumn,
-          valueColumn: updatedData.valueColumn,
+      console.log(
+        {
+          chartInput: {
+            chartId: inputChartId,
+            description: updatedData.description,
+            filters: updatedData.filters || [],
+            name: updatedData.name,
+            options: {
+              aggregateType: updatedData.aggregateType,
+              regionColumn: updatedData.regionColumn,
+              showLegend: updatedData.showLegend,
+              timeColumn: updatedData.timeColumn,
+              valueColumn: updatedData.valueColumn,
+              xAxisColumn: updatedData.xAxisColumn,
+              xAxisLabel: updatedData.xAxisLabel,
+              yAxisColumn: updatedData.options.yAxisColumn?.map((col: any) => ({
+                fieldName: col.field,
+              })),
+              yAxisLabel: updatedData.yAxisLabel,
+            },
+            resource:
+              updatedData.resource || resourceData?.datasetResources[0]?.id,
+            type: updatedData.chartType,
+          },
         },
-      });
+        'log'
+      );
     }
   };
 
   const handleChange = useCallback((field: string, value: any) => {
-    setChartData((prevData) => ({
-      ...prevData,
-      [field]: value,
-    }));
+    setChartData((prevData) => {
+      if (field === 'options') {
+        return {
+          ...prevData,
+          options: {
+            ...prevData.options,
+            ...value,
+          },
+        };
+      }
+      return {
+        ...prevData,
+        [field]: value,
+      };
+    });
   }, []);
 
   const handleResourceChange = useCallback(
     (resourceId: string) => {
-      const selectedResource = data?.datasetResources.find(
+      const selectedResource = resourceData?.datasetResources.find(
         (resource: any) => resource.id === resourceId
       );
       setResourceSchema(selectedResource?.schema || []);
       handleChange('resource', resourceId);
     },
-    [data]
+    [resourceData]
   );
+
   const chartRef = useRef<ReactECharts>(null);
 
   return (
@@ -385,7 +317,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
                     <Button
                       onClick={(e) =>
                         resourceChart.mutate({
-                          resource: data?.datasetResources[0].id,
+                          resource: resourceData?.datasetResources[0].id,
                         })
                       }
                     >
@@ -431,155 +363,262 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
               <Icon source={Icons.checkmark} />
             )}
           </div>
-          <TextField
-            onChange={(e) => handleChange('name', e)}
-            value={chartData.name}
-            label="Chart Name"
-            name="name"
-            required
-            helpText="To know about best practices for naming Visualizations go to our User Guide"
-            onBlur={() => handleSave(chartData)}
+          <ChartForm
+            chartData={chartData}
+            resourceData={resourceData}
+            resourceSchema={resourceSchema}
+            handleChange={handleChange}
+            handleResourceChange={handleResourceChange}
+            handleSave={handleSave}
           />
-          <TextField
-            onChange={(e) => handleChange('description', e)}
-            label="Description"
-            value={chartData.description}
-            name="description"
-            multiline={4}
-            onBlur={() => handleSave(chartData)}
-          />
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Select
-              name="chartType"
-              value={chartData.chartType}
-              options={[
-                { label: 'Bar Vertical', value: 'BAR_VERTICAL' },
-                { label: 'Bar Horizontal', value: 'BAR_HORIZONTAL' },
-                { label: 'Line', value: 'LINE' },
-                { label: 'Assam District', value: 'ASSAM_DISTRICT' },
-                { label: 'ASSAM RC', value: 'ASSAM_RC' },
-              ]}
-              label="Select Chart Type"
-              defaultValue={'BAR_VERTICAL'}
-              // placeholder="Select"
-              onBlur={() => handleSave(chartData)}
-              onChange={(e) => handleChange('chartType', e)}
-            />
-            <Select
-              name="resource"
-              options={data?.datasetResources.map((resource: any) => ({
-                label: resource.name,
-                value: resource.id,
-              }))}
-              value={chartData.resource}
-              defaultValue={data?.datasetResources[0]?.id}
-              label="Select Resources"
-              onBlur={() => handleSave(chartData)}
-              onChange={(e) => handleResourceChange(e)}
-            />
-            {chartData.chartType !== 'ASSAM_DISTRICT' &&
-            chartData.chartType !== 'ASSAM_RC' ? (
-              <>
-                <Select
-                  name="xAxisColumn"
-                  options={resourceSchema?.map((field: any) => ({
-                    label: field.fieldName,
-                    value: field.id,
-                  }))}
-                  label="X-axis Column"
-                  value={chartData.xAxisColumn}
-                  placeholder="Select"
-                  onBlur={() => handleSave(chartData)}
-                  onChange={(e) => handleChange('xAxisColumn', e)}
-                />
-                <TextField
-                  onChange={(e) => handleChange('xAxisLabel', e)}
-                  label="X-axis Label"
-                  value={chartData.xAxisLabel}
-                  name="xAxisLabel"
-                  onBlur={() => handleSave(chartData)}
-                  required
-                />
-                <Select
-                  name="yAxisColumn"
-                  options={resourceSchema?.map((field: any) => ({
-                    label: field.fieldName,
-                    value: field.id,
-                  }))}
-                  value={chartData.yAxisColumn}
-                  label="Y-axis Column"
-                  onBlur={() => handleSave(chartData)}
-                  placeholder="Select"
-                  onChange={(e) => handleChange('yAxisColumn', e)}
-                />
-                <TextField
-                  onChange={(e) => handleChange('yAxisLabel', e)}
-                  label="Y-axis Label"
-                  name="yAxisLabel"
-                  value={chartData.yAxisLabel}
-                  onBlur={() => handleSave(chartData)}
-                  required
-                />
-              </>
-            ) : (
-              <>
-                <Select
-                  name="regionColumn"
-                  options={resourceSchema?.map((field: any) => ({
-                    label: field.fieldName,
-                    value: field.id,
-                  }))}
-                  label="Region Column"
-                  value={chartData.regionColumn}
-                  placeholder="Select"
-                  onBlur={() => handleSave(chartData)}
-                  onChange={(e) => handleChange('regionColumn', e)}
-                />
-                <Select
-                  name="valueColumn"
-                  options={resourceSchema?.map((field: any) => ({
-                    label: field.fieldName,
-                    value: field.id,
-                  }))}
-                  value={chartData.valueColumn}
-                  label="Value Column"
-                  onBlur={() => handleSave(chartData)}
-                  placeholder="Select"
-                  onChange={(e) => handleChange('valueColumn', e)}
-                />
-              </>
-            )}
-            <Select
-              name="aggregateType"
-              options={[
-                { label: 'None', value: 'NONE' },
-                { label: 'Sum', value: 'SUM' },
-                { label: 'Average', value: 'AVERAGE' },
-                { label: 'Count', value: 'COUNT' },
-              ]}
-              label="Aggregate"
-              value={chartData.aggregateType}
-              defaultValue="SUM"
-              onBlur={() => handleSave(chartData)}
-              onChange={(e) => handleChange('aggregateType', e)}
-            />
-            <div className=" pt-7">
-              <Checkbox
-                name="legend"
-                value={chartData.showLegend.toString()}
-                checked={chartData.showLegend}
-                onBlur={() => handleSave(chartData)}
-                onChange={(e) => handleChange('showLegend', e)}
-              >
-                Show Legend (Legend values will be taken from resource)
-              </Checkbox>
-            </div>
-          </div>
           <div className="mb-6 flex flex-col gap-6 p-8 text-center">
             <Text>Preview</Text>
-            {Object?.keys(chartData.chart).length > 0 && (
-              <ReactECharts option={chartData.chart} ref={chartRef} />
-            )}
+              <ReactECharts option={{
+        "animation": true,
+        "animationThreshold": 2000,
+        "animationDuration": 1000,
+        "animationEasing": "cubicOut",
+        "animationDelay": 0,
+        "animationDurationUpdate": 300,
+        "animationEasingUpdate": "cubicOut",
+        "animationDelayUpdate": 0,
+        "aria": {
+          "enabled": false
+        },
+        "color": [
+          "#5470c6",
+          "#91cc75",
+          "#fac858",
+          "#ee6666",
+          "#73c0de",
+          "#3ba272",
+          "#fc8452",
+          "#9a60b4",
+          "#ea7ccc"
+        ],
+        "series": [
+          {
+            "type": "bar",
+            "legendHoverLink": true,
+            "data": [
+              2,
+              1,
+              6
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
+            "label": {
+              "show": true,
+              "position": "inside",
+              "color": "#000",
+              "distance": 0,
+              "rotate": 90,
+              "margin": 8,
+              "fontSize": 12,
+              "align": "center",
+              "verticalAlign": "middle"
+            },
+            "itemStyle": {}
+          },
+          {
+            "type": "bar",
+            "legendHoverLink": true,
+            "data": [
+              3,
+              2,
+              5
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
+            "label": {
+              "show": true,
+              "position": "inside",
+              "color": "#000",
+              "distance": 0,
+              "rotate": 90,
+              "margin": 8,
+              "fontSize": 12,
+              "align": "center",
+              "verticalAlign": "middle"
+            },
+            "itemStyle": {}
+          },
+          {
+            "type": "bar",
+            "legendHoverLink": true,
+            "data": [
+              4,
+              5,
+              9
+            ],
+            "realtimeSort": false,
+            "showBackground": false,
+            "stackStrategy": "samesign",
+            "cursor": "pointer",
+            "barMinHeight": 0,
+            "barCategoryGap": "20%",
+            "barGap": "30%",
+            "large": false,
+            "largeThreshold": 400,
+            "seriesLayoutBy": "column",
+            "datasetIndex": 0,
+            "clip": true,
+            "zlevel": 0,
+            "z": 2,
+            "label": {
+              "show": true,
+              "position": "inside",
+              "color": "#000",
+              "distance": 0,
+              "rotate": 90,
+              "margin": 8,
+              "fontSize": 12,
+              "align": "center",
+              "verticalAlign": "middle"
+            },
+            "itemStyle": {}
+          }
+        ],
+        "legend": [
+          {
+            "data": [],
+            "selected": {},
+            "show": true,
+            "padding": 5,
+            "itemGap": 10,
+            "itemWidth": 25,
+            "itemHeight": 14,
+            "backgroundColor": "transparent",
+            "borderColor": "#ccc",
+            "borderWidth": 1,
+            "borderRadius": 0,
+            "pageButtonItemGap": 5,
+            "pageButtonPosition": "end",
+            "pageFormatter": "{current}/{total}",
+            "pageIconColor": "#2f4554",
+            "pageIconInactiveColor": "#aaa",
+            "pageIconSize": 15,
+            "animationDurationUpdate": 800,
+            "selector": false,
+            "selectorPosition": "auto",
+            "selectorItemGap": 7,
+            "selectorButtonGap": 10
+          }
+        ],
+        "tooltip": {
+          "show": true,
+          "trigger": "item",
+          "triggerOn": "mousemove|click",
+          "axisPointer": {
+            "type": "line"
+          },
+          "showContent": true,
+          "alwaysShowContent": false,
+          "showDelay": 0,
+          "hideDelay": 100,
+          "enterable": false,
+          "confine": false,
+          "appendToBody": false,
+          "transitionDuration": 0.4,
+          "textStyle": {
+            "fontSize": 14
+          },
+          "borderWidth": 0,
+          "padding": 5,
+          "order": "seriesAsc"
+        },
+        "xAxis": [
+          {
+            "type": "category",
+            "name": "Xaxis",
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "gridIndex": 0,
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+              "show": true,
+              "lineStyle": {
+                "show": true,
+                "width": 1,
+                "opacity": 1,
+                "curveness": 0,
+                "type": "solid"
+              }
+            },
+            "data": [
+              2020,
+              2021,
+              2022
+            ]
+          }
+        ],
+        "yAxis": [
+          {
+            "type": "value",
+            "name": "Yaxis",
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "gridIndex": 0,
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+              "show": true,
+              "lineStyle": {
+                "show": true,
+                "width": 1,
+                "opacity": 1,
+                "curveness": 0,
+                "type": "solid"
+              }
+            }
+          }
+        ],
+        "title": [
+          {
+            "show": true,
+            "target": "blank",
+            "subtarget": "blank",
+            "padding": 5,
+            "itemGap": 10,
+            "textAlign": "auto",
+            "textVerticalAlign": "auto",
+            "triggerEvent": false
+          }
+        ]
+      }} ref={chartRef} />
           </div>
         </div>
       </div>
