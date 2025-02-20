@@ -214,14 +214,14 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       name: resourceChart.name || '',
       options: {
         aggregateType: resourceChart?.options?.aggregateType,
-        regionColumn: resourceChart?.options?.regionColumn,
+        regionColumn: resourceChart?.options?.regionColumn?.id,
         showLegend: resourceChart?.options?.showLegend,
         timeColumn: resourceChart?.options?.timeColumn,
-        valueColumn: resourceChart?.options?.valueColumn,
+        valueColumn: resourceChart?.options?.valueColumn?.id,
         xAxisColumn: resourceChart?.options?.xAxisColumn?.id,
         xAxisLabel: resourceChart?.options?.xAxisLabel,
         yAxisColumn: resourceChart?.options?.yAxisColumn?.map((col: any) => ({
-          fieldName: col.field,
+          fieldName: col.field.id,
           label: col.label,
           color: col.color,
         })),
@@ -324,29 +324,36 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   const handleSave = useCallback(
     (updatedData: ChartData) => {
       if (JSON.stringify(previousChartData) !== JSON.stringify(updatedData)) {
+
+        const validYAxisColumns = updatedData.options.yAxisColumn.filter(
+          col => col.fieldName && col.fieldName.trim() !== ''
+        );
+        
         const chartInput: ResourceChartInput = {
           chartId: updatedData.chartId,
           description: updatedData.description,
           filters: updatedData.filters,
           name: updatedData.name,
-          options: updatedData.options,
+          options: {
+            ...updatedData.options,
+            yAxisColumn: validYAxisColumns
+          },
           resource: updatedData.resource,
           type: updatedData.type as ChartTypes,
         };
 
-        // mutate(
-        //   { chartInput },
-        //   {
-        //     onSuccess: (data) => {
-        //       setChartData((prev) => ({
-        //         ...prev,
-        //         chart: data.createChart.chart,
-        //       }));
-        //     },
-        //   }
-        // );
+        mutate(
+          { chartInput },
+          {
+            onSuccess: (data) => {
+              setChartData((prev) => ({
+                ...prev,
+                chart: data.chart,
+              }));
+            },
+          }
+        );
 
-        console.log(chartInput);
         setPreviousChartData(updatedData);
       }
     },
@@ -400,7 +407,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           />
           <div className="mb-6 flex flex-col gap-6 p-8 text-center">
             <Text>Preview</Text>
-            {chartData.chart && Object.keys(chartData.chart).length > 0 && (
+            {chartData.chart &&  Object.keys(chartData.chart).length > 0 && (
               <ReactECharts option={chartData.chart} ref={chartRef} />
             )}
           </div>
