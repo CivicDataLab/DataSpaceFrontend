@@ -2,7 +2,6 @@ import { UUID } from 'crypto';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { renderGeoJSON } from '@/geo_json/render_geojson';
-import { ResourceChartInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts/core';
@@ -18,6 +17,47 @@ import {
   getResourceChartDetails,
 } from '../queries';
 import ChartForm from './ChartForm';
+import { ChartTypes } from '@/gql/generated/graphql';
+import ChartHeader from './ChartHeader';
+
+interface YAxisColumnItem {
+  fieldName: string;
+  label: string;
+  color: string;
+}
+
+interface ChartOptions {
+  aggregateType: string;
+  regionColumn?: string;
+  showLegend: boolean;
+  timeColumn?: string;
+  valueColumn?: string;
+  xAxisColumn: string;
+  xAxisLabel: string;
+  yAxisColumn: YAxisColumnItem[];
+  yAxisLabel: string;
+}
+
+interface ChartData {
+  chartId: string;
+  description: string;
+  filters: any[];
+  name: string;
+  options: ChartOptions;
+  resource: string;
+  type: ChartTypes;
+  chart: any;
+}
+
+interface ResourceChartInput {
+  chartId: string;
+  description: string;
+  filters: any[];
+  name: string;
+  options: ChartOptions;
+  resource: string;
+  type: ChartTypes;
+}
 
 interface VisualizationProps {
   setType: any;
@@ -109,29 +149,31 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   );
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const initialChartData = {
+  const [chartData, setChartData] = useState<ChartData>({
     chartId: '',
     description: '',
     filters: [],
     name: '',
     options: {
-      aggregateType: '',
-      regionColumn: '',
-      showLegend: false,
-      timeColumn: '',
-      valueColumn: '',
+      aggregateType: 'SUM',
+      showLegend: true,
       xAxisColumn: '',
       xAxisLabel: '',
-      yAxisColumn: [],
+      yAxisColumn: [{ fieldName: '', label: '', color: '' }],
       yAxisLabel: '',
+      regionColumn: '',
+      valueColumn: '',
+      timeColumn: '',
     },
-    resource: resourceData?.datasetResources[0]?.id,
-    type: 'BAR_VERTICAL',
-    chart: '',
-  };
+    resource: '',
+    type: ChartTypes.BarVertical,
+    chart: {},
+  });
 
-  const [chartData, setChartData] = useState(initialChartData);
-  const [previousChartData, setPreviousChartData] = useState(initialChartData);
+  const [previousChartData, setPreviousChartData] = useState<ChartData | null>(
+    null
+  );
+
   const [resourceSchema, setResourceSchema] = useState<any[]>([]);
 
   useEffect(() => {
@@ -146,8 +188,6 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       }
     }
   }, [resourceData, chartId, chartData.resource]);
-
-  console.log(chartData, chartDetails?.resourceChart);
 
   useEffect(() => {
     if (chartId && chartDetails?.resourceChart) {
@@ -167,7 +207,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       );
     }
 
-    const updatedData = {
+    const updatedData: ChartData = {
       chartId: resourceChart.id,
       description: resourceChart.description,
       filters: resourceChart.filters || [],
@@ -182,16 +222,77 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         xAxisLabel: resourceChart?.options?.xAxisLabel,
         yAxisColumn: resourceChart?.options?.yAxisColumn?.map((col: any) => ({
           fieldName: col.field,
+          label: col.label,
+          color: col.color,
         })),
         yAxisLabel: resourceChart?.options?.yAxisLabel,
       },
       resource: resourceChart.resource?.id,
-      type: resourceChart.chartType,
+      type: resourceChart.chartType as ChartTypes,
       chart: resourceChart.chart,
     };
     setChartData(updatedData);
     setPreviousChartData(updatedData);
   };
+
+  const getDefaultOptions = (chartType: ChartTypes) => {
+    const baseOptions = {
+      aggregateType: 'SUM',
+      showLegend: true,
+      xAxisColumn: '',
+      xAxisLabel: '',
+      yAxisLabel: '',
+    };
+
+    switch (chartType) {
+      case ChartTypes.AssamDistrict:
+      case ChartTypes.AssamRc:
+        return {
+          ...baseOptions,
+          regionColumn: '',
+          valueColumn: '',
+          timeColumn: '',
+          yAxisColumn: [],
+        };
+      case ChartTypes.BarVertical:
+      case ChartTypes.BarHorizontal:
+        return {
+          ...baseOptions,
+          yAxisColumn: [{ fieldName: '', label: '', color: '#000000' }],
+        };
+      default:
+        return {
+          ...baseOptions,
+          yAxisColumn: [{ fieldName: '', label: '', color: '#000000' }],
+        };
+    }
+  };
+
+  const handleChange = useCallback((field: string, value: any) => {
+    setChartData((prevData) => {
+      if (field === 'type') {
+        const newType = value as ChartTypes;
+        return {
+          ...prevData,
+          type: newType,
+          options: getDefaultOptions(newType),
+        };
+      }
+      if (field === 'options') {
+        return {
+          ...prevData,
+          options: {
+            ...prevData.options,
+            ...value,
+          },
+        };
+      }
+      return {
+        ...prevData,
+        [field]: value,
+      };
+    });
+  }, []);
 
   const {
     mutate,
@@ -220,68 +321,48 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     }
   );
 
-  const handleSave = (updatedData: any) => {
-    if (JSON.stringify(chartData) !== JSON.stringify(previousChartData)) {
-      setPreviousChartData(updatedData);
-      const inputChartId = updatedData.chartId || chartId || null;
-
-      console.log(
-        {
-          chartInput: {
-            chartId: inputChartId,
-            description: updatedData.description,
-            filters: updatedData.filters || [],
-            name: updatedData.name,
-            options: {
-              aggregateType: updatedData.aggregateType,
-              regionColumn: updatedData.regionColumn,
-              showLegend: updatedData.showLegend,
-              timeColumn: updatedData.timeColumn,
-              valueColumn: updatedData.valueColumn,
-              xAxisColumn: updatedData.xAxisColumn,
-              xAxisLabel: updatedData.xAxisLabel,
-              yAxisColumn: updatedData.options.yAxisColumn?.map((col: any) => ({
-                fieldName: col.field,
-              })),
-              yAxisLabel: updatedData.yAxisLabel,
-            },
-            resource:
-              updatedData.resource || resourceData?.datasetResources[0]?.id,
-            type: updatedData.chartType,
-          },
-        },
-        'log'
-      );
-    }
-  };
-
-  const handleChange = useCallback((field: string, value: any) => {
-    setChartData((prevData) => {
-      if (field === 'options') {
-        return {
-          ...prevData,
-          options: {
-            ...prevData.options,
-            ...value,
-          },
+  const handleSave = useCallback(
+    (updatedData: ChartData) => {
+      if (JSON.stringify(previousChartData) !== JSON.stringify(updatedData)) {
+        const chartInput: ResourceChartInput = {
+          chartId: updatedData.chartId,
+          description: updatedData.description,
+          filters: updatedData.filters,
+          name: updatedData.name,
+          options: updatedData.options,
+          resource: updatedData.resource,
+          type: updatedData.type as ChartTypes,
         };
+
+        // mutate(
+        //   { chartInput },
+        //   {
+        //     onSuccess: (data) => {
+        //       setChartData((prev) => ({
+        //         ...prev,
+        //         chart: data.createChart.chart,
+        //       }));
+        //     },
+        //   }
+        // );
+
+        console.log(chartInput);
+        setPreviousChartData(updatedData);
       }
-      return {
-        ...prevData,
-        [field]: value,
-      };
-    });
-  }, []);
+    },
+    [previousChartData]
+  );
 
   const handleResourceChange = useCallback(
-    (resourceId: string) => {
-      const selectedResource = resourceData?.datasetResources.find(
-        (resource: any) => resource.id === resourceId
+    (value: string) => {
+      const resource = resourceData?.datasetResources.find(
+        (r: any) => r.id === value
       );
-      setResourceSchema(selectedResource?.schema || []);
-      handleChange('resource', resourceId);
+      if (resource) {
+        handleChange('resource', resource.id);
+      }
     },
-    [resourceData]
+    [resourceData, handleChange]
   );
 
   const chartRef = useRef<ReactECharts>(null);
@@ -289,70 +370,16 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   return (
     <>
       <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-6">
-          <Button
-            onClick={() => {
-              setType('list');
-              setChartId('');
-            }}
-            kind="tertiary"
-            className="flex text-start"
-          >
-            <span className="flex items-center gap-2">
-              <Icon source={Icons.back} color="interactive" size={24} />
-              <Text color="interactive">Charts Listing</Text>
-            </span>
-          </Button>
-          <Sheet open={isSheetOpen}>
-            <Sheet.Trigger>
-              <Button onClick={() => setIsSheetOpen(true)}>
-                Select Charts
-              </Button>
-            </Sheet.Trigger>
-            <Sheet.Content side="bottom">
-              <div className="flex flex-col gap-6 p-10">
-                <div className="flex items-center justify-between">
-                  <Text variant="bodyLg">Select Charts</Text>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      onClick={(e) =>
-                        resourceChart.mutate({
-                          resource: resourceData?.datasetResources[0].id,
-                        })
-                      }
-                    >
-                      Visualize Data
-                    </Button>
-                    <Button
-                      kind="tertiary"
-                      onClick={() => setIsSheetOpen(false)}
-                    >
-                      <Icon source={Icons.cross} size={24} />
-                    </Button>
-                  </div>
-                </div>
-                {chartsList?.chartsDetails.map((item: any, index: any) => (
-                  <div
-                    key={index}
-                    className={`rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6 py-3 ${chartId === item.id ? ' bg-baseGraySlateSolid5' : ''}`}
-                  >
-                    <Button
-                      kind={'tertiary'}
-                      className="flex w-full justify-start"
-                      disabled={chartId === item.id}
-                      onClick={() => {
-                        setChartId(item.id);
-                        setIsSheetOpen(false);
-                      }}
-                    >
-                      {item.name}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </Sheet.Content>
-          </Sheet>
-        </div>
+        <ChartHeader
+          setType={setType}
+          setChartId={setChartId}
+          isSheetOpen={isSheetOpen}
+          setIsSheetOpen={setIsSheetOpen}
+          resourceChart={resourceChart}
+          resourceData={resourceData}
+          chartsList={chartsList}
+          chartId={chartId}
+        />
         <Divider />
         <div className="mt-8 flex flex-col gap-8">
           <div className="flex justify-end gap-2">
@@ -373,252 +400,9 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           />
           <div className="mb-6 flex flex-col gap-6 p-8 text-center">
             <Text>Preview</Text>
-              <ReactECharts option={{
-        "animation": true,
-        "animationThreshold": 2000,
-        "animationDuration": 1000,
-        "animationEasing": "cubicOut",
-        "animationDelay": 0,
-        "animationDurationUpdate": 300,
-        "animationEasingUpdate": "cubicOut",
-        "animationDelayUpdate": 0,
-        "aria": {
-          "enabled": false
-        },
-        "color": [
-          "#5470c6",
-          "#91cc75",
-          "#fac858",
-          "#ee6666",
-          "#73c0de",
-          "#3ba272",
-          "#fc8452",
-          "#9a60b4",
-          "#ea7ccc"
-        ],
-        "series": [
-          {
-            "type": "bar",
-            "legendHoverLink": true,
-            "data": [
-              2,
-              1,
-              6
-            ],
-            "realtimeSort": false,
-            "showBackground": false,
-            "stackStrategy": "samesign",
-            "cursor": "pointer",
-            "barMinHeight": 0,
-            "barCategoryGap": "20%",
-            "barGap": "30%",
-            "large": false,
-            "largeThreshold": 400,
-            "seriesLayoutBy": "column",
-            "datasetIndex": 0,
-            "clip": true,
-            "zlevel": 0,
-            "z": 2,
-            "label": {
-              "show": true,
-              "position": "inside",
-              "color": "#000",
-              "distance": 0,
-              "rotate": 90,
-              "margin": 8,
-              "fontSize": 12,
-              "align": "center",
-              "verticalAlign": "middle"
-            },
-            "itemStyle": {}
-          },
-          {
-            "type": "bar",
-            "legendHoverLink": true,
-            "data": [
-              3,
-              2,
-              5
-            ],
-            "realtimeSort": false,
-            "showBackground": false,
-            "stackStrategy": "samesign",
-            "cursor": "pointer",
-            "barMinHeight": 0,
-            "barCategoryGap": "20%",
-            "barGap": "30%",
-            "large": false,
-            "largeThreshold": 400,
-            "seriesLayoutBy": "column",
-            "datasetIndex": 0,
-            "clip": true,
-            "zlevel": 0,
-            "z": 2,
-            "label": {
-              "show": true,
-              "position": "inside",
-              "color": "#000",
-              "distance": 0,
-              "rotate": 90,
-              "margin": 8,
-              "fontSize": 12,
-              "align": "center",
-              "verticalAlign": "middle"
-            },
-            "itemStyle": {}
-          },
-          {
-            "type": "bar",
-            "legendHoverLink": true,
-            "data": [
-              4,
-              5,
-              9
-            ],
-            "realtimeSort": false,
-            "showBackground": false,
-            "stackStrategy": "samesign",
-            "cursor": "pointer",
-            "barMinHeight": 0,
-            "barCategoryGap": "20%",
-            "barGap": "30%",
-            "large": false,
-            "largeThreshold": 400,
-            "seriesLayoutBy": "column",
-            "datasetIndex": 0,
-            "clip": true,
-            "zlevel": 0,
-            "z": 2,
-            "label": {
-              "show": true,
-              "position": "inside",
-              "color": "#000",
-              "distance": 0,
-              "rotate": 90,
-              "margin": 8,
-              "fontSize": 12,
-              "align": "center",
-              "verticalAlign": "middle"
-            },
-            "itemStyle": {}
-          }
-        ],
-        "legend": [
-          {
-            "data": [],
-            "selected": {},
-            "show": true,
-            "padding": 5,
-            "itemGap": 10,
-            "itemWidth": 25,
-            "itemHeight": 14,
-            "backgroundColor": "transparent",
-            "borderColor": "#ccc",
-            "borderWidth": 1,
-            "borderRadius": 0,
-            "pageButtonItemGap": 5,
-            "pageButtonPosition": "end",
-            "pageFormatter": "{current}/{total}",
-            "pageIconColor": "#2f4554",
-            "pageIconInactiveColor": "#aaa",
-            "pageIconSize": 15,
-            "animationDurationUpdate": 800,
-            "selector": false,
-            "selectorPosition": "auto",
-            "selectorItemGap": 7,
-            "selectorButtonGap": 10
-          }
-        ],
-        "tooltip": {
-          "show": true,
-          "trigger": "item",
-          "triggerOn": "mousemove|click",
-          "axisPointer": {
-            "type": "line"
-          },
-          "showContent": true,
-          "alwaysShowContent": false,
-          "showDelay": 0,
-          "hideDelay": 100,
-          "enterable": false,
-          "confine": false,
-          "appendToBody": false,
-          "transitionDuration": 0.4,
-          "textStyle": {
-            "fontSize": 14
-          },
-          "borderWidth": 0,
-          "padding": 5,
-          "order": "seriesAsc"
-        },
-        "xAxis": [
-          {
-            "type": "category",
-            "name": "Xaxis",
-            "show": true,
-            "scale": false,
-            "nameLocation": "end",
-            "nameGap": 15,
-            "gridIndex": 0,
-            "inverse": false,
-            "offset": 0,
-            "splitNumber": 5,
-            "minInterval": 0,
-            "splitLine": {
-              "show": true,
-              "lineStyle": {
-                "show": true,
-                "width": 1,
-                "opacity": 1,
-                "curveness": 0,
-                "type": "solid"
-              }
-            },
-            "data": [
-              2020,
-              2021,
-              2022
-            ]
-          }
-        ],
-        "yAxis": [
-          {
-            "type": "value",
-            "name": "Yaxis",
-            "show": true,
-            "scale": false,
-            "nameLocation": "end",
-            "nameGap": 15,
-            "gridIndex": 0,
-            "inverse": false,
-            "offset": 0,
-            "splitNumber": 5,
-            "minInterval": 0,
-            "splitLine": {
-              "show": true,
-              "lineStyle": {
-                "show": true,
-                "width": 1,
-                "opacity": 1,
-                "curveness": 0,
-                "type": "solid"
-              }
-            }
-          }
-        ],
-        "title": [
-          {
-            "show": true,
-            "target": "blank",
-            "subtarget": "blank",
-            "padding": 5,
-            "itemGap": 10,
-            "textAlign": "auto",
-            "textVerticalAlign": "auto",
-            "triggerEvent": false
-          }
-        ]
-      }} ref={chartRef} />
+            {chartData.chart && Object.keys(chartData.chart).length > 0 && (
+              <ReactECharts option={chartData.chart} ref={chartRef} />
+            )}
           </div>
         </div>
       </div>
