@@ -47,6 +47,8 @@ export const getResourceChartDetails = graphql(`
             id
             fieldName
           }
+          label
+          color
         }
         showLegend
         xAxisLabel
@@ -88,6 +90,8 @@ export const createChart = graphql(`
               id
               fieldName
             }
+            label
+            color
           }
           showLegend
           xAxisLabel
