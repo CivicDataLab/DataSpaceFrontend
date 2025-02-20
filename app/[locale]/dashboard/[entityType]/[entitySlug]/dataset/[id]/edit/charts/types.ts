@@ -44,6 +44,7 @@ export interface ResourceChartInput {
 export interface ResourceSchema {
   fieldName: string;
   id: string;
+  format: string
 }
 
 export interface Resource {
