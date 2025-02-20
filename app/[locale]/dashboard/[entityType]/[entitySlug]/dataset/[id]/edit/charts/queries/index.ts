@@ -10,6 +10,7 @@ export const datasetResource = graphql(`
       schema {
         fieldName
         id
+        format
       }
     }
   }
