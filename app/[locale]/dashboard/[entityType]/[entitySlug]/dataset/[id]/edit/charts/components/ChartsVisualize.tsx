@@ -88,9 +88,6 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       )
   );
 
-
-  
-
   const { data: chartDetails, refetch }: { data: any; refetch: any } = useQuery(
     [`chartdata_${params.id}`],
     () =>
@@ -179,8 +176,6 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
 
   const [resourceSchema, setResourceSchema] = useState<any[]>([]);
 
-
-
   useEffect(() => {
     if (chartId && chartDetails?.resourceChart) {
       const resource = resourceData?.datasetResources?.find(
@@ -219,7 +214,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       options: {
         aggregateType: resourceChart?.options?.aggregateType,
         regionColumn: resourceChart?.options?.regionColumn?.id,
-        showLegend: resourceChart?.options?.showLegend,
+        showLegend: resourceChart?.options?.showLegend || true,
         timeColumn: resourceChart?.options?.timeColumn,
         valueColumn: resourceChart?.options?.valueColumn?.id,
         xAxisColumn: resourceChart?.options?.xAxisColumn?.id,
@@ -298,6 +293,8 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     });
   }, []);
 
+  
+
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (chartInput: { chartInput: ResourceChartInput }) =>
       GraphQL(
@@ -324,7 +321,6 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
 
   const handleSave = useCallback(
     (updatedData: ChartData) => {
-      
       if (JSON.stringify(previousChartData) !== JSON.stringify(updatedData)) {
         // Filter out empty Y-axis columns
         const validYAxisColumns = updatedData.options.yAxisColumn.filter(
@@ -347,26 +343,26 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         // Store current type before mutation
         const currentType = updatedData.type;
 
-          mutate(
-            { chartInput },
-            {
-              onSuccess: (data) => {
-                setChartData((prev) => ({
-                  ...prev,
-                  chart: data.chart,
-                  type: currentType, // Preserve the type from before mutation
-                  options: {
-                    ...prev.options,
-                    yAxisColumn: validYAxisColumns,
-                  },
-                }));
-              },
-            }
-          );
-          setPreviousChartData({
-            ...updatedData,
-            type: currentType, // Ensure previousChartData also has correct type
-          });
+        mutate(
+          { chartInput },
+          {
+            onSuccess: (data) => {
+              setChartData((prev) => ({
+                ...prev,
+                chart: data.chart,
+                type: currentType, // Preserve the type from before mutation
+                options: {
+                  ...prev.options,
+                  yAxisColumn: validYAxisColumns,
+                },
+              }));
+            },
+          }
+        );
+        setPreviousChartData({
+          ...updatedData,
+          type: currentType, // Ensure previousChartData also has correct type
+        });
       }
     },
     [previousChartData, mutate]
