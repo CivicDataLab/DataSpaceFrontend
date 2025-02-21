@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ChartTypes } from '@/gql/generated/graphql';
 import { Button, Checkbox, Select, TextField } from 'opub-ui';
 
@@ -32,6 +32,16 @@ const ChartForm: React.FC<ChartFormProps> = ({
     chartData.type === ChartTypes.BarHorizontal ||
     chartData.type === ChartTypes.Line ||
     chartData.type === ChartTypes.Multiline;
+
+
+  useEffect(() => {
+    if (!chartData.options.yAxisColumn || chartData.options.yAxisColumn.length === 0) {
+      handleChange('options', {
+        ...chartData.options,
+        yAxisColumn: [{ fieldName: '', label: '', color: '' }],
+      });
+    }
+  }, [chartData.options.yAxisColumn]);
 
   const handleYAxisColumnChange = (
     index: number,
@@ -70,7 +80,31 @@ const ChartForm: React.FC<ChartFormProps> = ({
     });
   };
 
-console.log(chartData, "data");
+  const updateChartData = (field: string, value: any) => {
+    
+    if (field === 'type') {
+      const newData = {
+        ...chartData,
+        type: value,
+        options: {
+          ...chartData.options,
+          yAxisColumn: chartData.options.yAxisColumn.length > 0 
+            ? chartData.options.yAxisColumn 
+            : [{ fieldName: '', label: '', color: '' }],
+        },
+      };
+      handleChange(field, value);
+      handleSave(newData); // Pass the new data directly
+    } else {
+      const newData = {
+        ...chartData,
+        [field]: value,
+      };
+      handleChange(field, value);
+      handleSave(newData);
+    }
+  };
+
 
   return (
     <div className="flex flex-col gap-4">
@@ -99,7 +133,7 @@ console.log(chartData, "data");
         label="Chart Type"
         value={chartData.type}
         onBlur={() => handleSave(chartData)}
-        onChange={(e) => handleChange('type', e)}
+        onChange={(e) => updateChartData('type', e)}
         placeholder="Select"
       />
       <Select
@@ -128,7 +162,20 @@ console.log(chartData, "data");
       >
         Show Legend
       </Checkbox>
-
+      <Select
+        name="aggregateType"
+        options={[
+          { label: 'None', value: 'NONE' },
+          { label: 'Sum', value: 'SUM' },
+          { label: 'Average', value: 'AVERAGE' },
+          { label: 'Count', value: 'COUNT' },
+        ]}
+        label="Aggregate"
+        value={chartData.options.aggregateType}
+        defaultValue="SUM"
+        onBlur={() => handleSave(chartData)}
+        onChange={(e) => handleChange('options', { ...chartData.options, aggregateType: e })}
+      />
       {!isAssamChart && (
         <>
           <Select
@@ -181,10 +228,12 @@ console.log(chartData, "data");
                 <div key={index} className="flex items-end gap-4">
                   <Select
                     name={`yAxisColumn-${index}`}
-                    options={resourceSchema?.map((field) => ({
-                      label: field.fieldName,
-                      value: field.id,
-                    }))}
+                    options={resourceSchema
+                      ?.filter(field => field.format.toUpperCase() === 'INTEGER' )
+                      .map((field) => ({
+                        label: field.fieldName,
+                        value: field.id,
+                      }))}
                     label="Y-axis Column"
                     value={column.fieldName}
                     onChange={(e) =>
@@ -203,7 +252,7 @@ console.log(chartData, "data");
                   <input
                     name={`yAxisColor-${index}`}
                     type="Color"
-                    value={column.color}
+                    value={column.color || '#000000'}
                     onChange={(e: any) => {
                       handleYAxisColumnChange(index, 'color', e.target.value);
                     }}

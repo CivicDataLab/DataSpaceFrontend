@@ -2,6 +2,7 @@ import { UUID } from 'crypto';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { renderGeoJSON } from '@/geo_json/render_geojson';
+import { ChartTypes } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts/core';
@@ -17,7 +18,6 @@ import {
   getResourceChartDetails,
 } from '../queries';
 import ChartForm from './ChartForm';
-import { ChartTypes } from '@/gql/generated/graphql';
 import ChartHeader from './ChartHeader';
 
 interface YAxisColumnItem {
@@ -177,17 +177,28 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   const [resourceSchema, setResourceSchema] = useState<any[]>([]);
 
   useEffect(() => {
-    if (resourceData) {
-      if (chartData.resource) {
-        const resource = resourceData?.datasetResources.find(
-          (resource: any) => resource.id === chartData.resource
-        );
-
-        setResourceSchema(resource?.schema || []);
-        handleChange('resource', chartData.resource);
+    if (resourceData && chartData.resource) {
+      const resource = resourceData?.datasetResources.find(
+        (resource: any) => resource.id === chartData.resource
+      );
+      if (resource) {
+        setResourceSchema(resource.schema || []);
+      } else {
+        setResourceSchema([]); // Reset if not found
       }
     }
-  }, [resourceData, chartId, chartData.resource]);
+  }, [resourceData, chartData.resource]);
+  useEffect(() => {
+    if (chartId && chartDetails?.resourceChart) {
+      const resource = resourceData?.datasetResources?.find(
+        (r: any) => r.id === chartDetails.resourceChart.resource?.id
+      );
+
+      if (resource) {
+        setResourceSchema(resource.schema || []);
+      }
+    }
+  }, [chartId, chartDetails, resourceData]);
 
   useEffect(() => {
     if (chartId && chartDetails?.resourceChart) {
@@ -294,10 +305,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     });
   }, []);
 
-  const {
-    mutate,
-    isLoading: editMutationLoading,
-  } = useMutation(
+  const { mutate, isLoading: editMutationLoading } = useMutation(
     (chartInput: { chartInput: ResourceChartInput }) =>
       GraphQL(
         createChart,
@@ -323,12 +331,13 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
 
   const handleSave = useCallback(
     (updatedData: ChartData) => {
+      
       if (JSON.stringify(previousChartData) !== JSON.stringify(updatedData)) {
-
+        // Filter out empty Y-axis columns
         const validYAxisColumns = updatedData.options.yAxisColumn.filter(
-          col => col.fieldName && col.fieldName.trim() !== ''
+          (col) => col.fieldName && col.fieldName.trim() !== ''
         );
-        
+
         const chartInput: ResourceChartInput = {
           chartId: updatedData.chartId,
           description: updatedData.description,
@@ -336,28 +345,38 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           name: updatedData.name,
           options: {
             ...updatedData.options,
-            yAxisColumn: validYAxisColumns
+            yAxisColumn: validYAxisColumns,
           },
           resource: updatedData.resource,
-          type: updatedData.type as ChartTypes,
+          type: updatedData.type,
         };
 
-        mutate(
-          { chartInput },
-          {
-            onSuccess: (data) => {
-              setChartData((prev) => ({
-                ...prev,
-                chart: data.chart,
-              }));
-            },
-          }
-        );
+        // Store current type before mutation
+        const currentType = updatedData.type;
 
-        setPreviousChartData(updatedData);
+          mutate(
+            { chartInput },
+            {
+              onSuccess: (data) => {
+                setChartData((prev) => ({
+                  ...prev,
+                  chart: data.chart,
+                  type: currentType, // Preserve the type from before mutation
+                  options: {
+                    ...prev.options,
+                    yAxisColumn: validYAxisColumns,
+                  },
+                }));
+              },
+            }
+          );
+          setPreviousChartData({
+            ...updatedData,
+            type: currentType, // Ensure previousChartData also has correct type
+          });
       }
     },
-    [previousChartData]
+    [previousChartData, mutate]
   );
 
   const handleResourceChange = useCallback(
@@ -407,7 +426,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           />
           <div className="mb-6 flex flex-col gap-6 p-8 text-center">
             <Text>Preview</Text>
-            {chartData.chart &&  Object.keys(chartData.chart).length > 0 && (
+            {chartData.chart && Object.keys(chartData.chart).length > 0 && (
               <ReactECharts option={chartData.chart} ref={chartRef} />
             )}
           </div>
