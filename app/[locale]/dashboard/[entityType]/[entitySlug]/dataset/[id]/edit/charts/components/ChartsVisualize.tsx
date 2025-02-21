@@ -214,7 +214,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       options: {
         aggregateType: resourceChart?.options?.aggregateType,
         regionColumn: resourceChart?.options?.regionColumn?.id,
-        showLegend: resourceChart?.options?.showLegend || true,
+        showLegend: resourceChart?.options?.showLegend ,
         timeColumn: resourceChart?.options?.timeColumn,
         valueColumn: resourceChart?.options?.valueColumn?.id,
         xAxisColumn: resourceChart?.options?.xAxisColumn?.id,
