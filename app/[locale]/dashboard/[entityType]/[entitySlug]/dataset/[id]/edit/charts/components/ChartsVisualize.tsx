@@ -88,6 +88,9 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       )
   );
 
+
+  
+
   const { data: chartDetails, refetch }: { data: any; refetch: any } = useQuery(
     [`chartdata_${params.id}`],
     () =>
@@ -210,7 +213,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
 
     const updatedData: ChartData = {
       chartId: resourceChart.id,
-      description: resourceChart.description,
+      description: resourceChart.description || '',
       filters: resourceChart.filters || [],
       name: resourceChart.name || '',
       options: {
