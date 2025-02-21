@@ -151,7 +151,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
       <Checkbox
         name="legend"
         value={chartData.options.showLegend?.toString()}
-        checked={chartData.options.showLegend}
+        checked={chartData.options.showLegend ?? true}
         onBlur={() => handleSave(chartData)}
         onChange={(e) =>
           handleChange('options', {
