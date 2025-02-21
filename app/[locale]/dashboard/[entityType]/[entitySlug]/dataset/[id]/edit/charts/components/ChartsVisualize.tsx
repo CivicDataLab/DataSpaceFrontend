@@ -176,18 +176,8 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
 
   const [resourceSchema, setResourceSchema] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (resourceData && chartData.resource) {
-      const resource = resourceData?.datasetResources.find(
-        (resource: any) => resource.id === chartData.resource
-      );
-      if (resource) {
-        setResourceSchema(resource.schema || []);
-      } else {
-        setResourceSchema([]); // Reset if not found
-      }
-    }
-  }, [resourceData, chartData.resource]);
+
+
   useEffect(() => {
     if (chartId && chartDetails?.resourceChart) {
       const resource = resourceData?.datasetResources?.find(
