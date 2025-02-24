@@ -37,6 +37,11 @@ export const getResourceChartDetails = graphql(`
         id
       }
       chart
+      filters {
+        column
+        operator
+        value
+      }
       options {
         aggregateType
         xAxisColumn {
@@ -80,6 +85,11 @@ export const createChart = graphql(`
           name
         }
         name
+        filters {
+        column
+        operator
+        value
+      }
         options {
           aggregateType
           xAxisColumn {
@@ -111,8 +121,6 @@ export const createChart = graphql(`
     }
   }
 `);
-
-
 
 export const CreateResourceChart: any = graphql(`
   mutation GenerateResourceChart($resource: UUID!) {
