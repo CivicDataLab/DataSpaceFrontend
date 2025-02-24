@@ -25,6 +25,11 @@ interface YAxisColumnItem {
   label: string;
   color: string;
 }
+interface ChartFilters {
+  column: string;
+  operator: string;
+  value: string;
+}
 
 interface ChartOptions {
   aggregateType: string;
@@ -41,7 +46,7 @@ interface ChartOptions {
 interface ChartData {
   chartId: string;
   description: string;
-  filters: any[];
+  // filters: any[];
   name: string;
   options: ChartOptions;
   resource: string;
@@ -52,7 +57,7 @@ interface ChartData {
 interface ResourceChartInput {
   chartId: string;
   description: string;
-  filters: any[];
+  // filters: ChartFilters[];
   name: string;
   options: ChartOptions;
   resource: string;
@@ -152,7 +157,13 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   const [chartData, setChartData] = useState<ChartData>({
     chartId: '',
     description: '',
-    filters: [],
+    // filters: [
+    //   {
+    //     column: '',
+    //     operator: '==',
+    //     value: '',
+    //   },
+    // ],
     name: '',
     options: {
       aggregateType: 'SUM',
@@ -188,12 +199,14 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     }
   }, [chartId, chartDetails, resourceData]);
 
+
   useEffect(() => {
     if (chartId && chartDetails?.resourceChart) {
       refetch();
       updateChartData(chartDetails.resourceChart);
     }
   }, [chartId, chartDetails]);
+
 
   const updateChartData = (resourceChart: any) => {
     if (
@@ -209,7 +222,14 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     const updatedData: ChartData = {
       chartId: resourceChart.id,
       description: resourceChart.description || '',
-      filters: resourceChart.filters || [],
+      // filters:
+      //   resourceChart.filters?.length > 0
+      //     ? resourceChart.filters.map((filter: any) => ({
+      //         column: filter.column,
+      //         operator: filter.operator,
+      //         value: filter.value,
+      //       }))
+      //     : [{ column: '', operator: '==', value: '' }],
       name: resourceChart.name || '',
       options: {
         aggregateType: resourceChart?.options?.aggregateType,
@@ -293,8 +313,6 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     });
   }, []);
 
-  
-
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (chartInput: { chartInput: ResourceChartInput }) =>
       GraphQL(
@@ -330,7 +348,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         const chartInput: ResourceChartInput = {
           chartId: updatedData.chartId,
           description: updatedData.description,
-          filters: updatedData.filters,
+          // filters: updatedData.filters,
           name: updatedData.name,
           options: {
             ...updatedData.options,
@@ -359,9 +377,14 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
             },
           }
         );
+
         setPreviousChartData({
           ...updatedData,
           type: currentType, // Ensure previousChartData also has correct type
+          // filters:
+          //   updatedData.filters?.length > 0
+          //     ? updatedData.filters
+          //     : [{ column: '', operator: '==', value: '' }],
         });
       }
     },

@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { ChartTypes } from '@/gql/generated/graphql';
 import { Button, Checkbox, Select, Text, TextField } from 'opub-ui';
-
 import { ChartData, ResourceData, ResourceSchema } from '../types';
 
 interface ChartFormProps {
@@ -45,6 +44,20 @@ const ChartForm: React.FC<ChartFormProps> = ({
     }
   }, [chartData.options.yAxisColumn]);
 
+  
+
+  // useEffect(() => {
+  //   if (
+  //     !chartData.filters ||
+  //     chartData.filters.length === 0
+  //   ) {
+  //     handleChange('filters', {
+  //       ...chartData,
+  //       // filters: [{ column: '', operator: '==', value: '' }],
+  //     });
+  //   }
+  // }, [chartData.filters]);
+
   const handleYAxisColumnChange = (
     index: number,
     field: string,
@@ -82,6 +95,33 @@ const ChartForm: React.FC<ChartFormProps> = ({
     });
   };
 
+  // const handlefilterColumnChange = (
+  //   index: number,
+  //   field: string,
+  //   value: any
+  // ) => {
+  //   const currentFilters = Array.isArray(chartData.filters) ? chartData.filters : [];
+  //   const newFiltersColumns = [...currentFilters];
+  //   newFiltersColumns[index] = {
+  //     ...newFiltersColumns[index],
+  //     [field]: value,
+  //   };
+  //   handleChange('filters', newFiltersColumns); // Changed this line
+  // };
+  // const addFilterColumn = () => {
+  //   const currentFilters = Array.isArray(chartData.filters) ? chartData.filters : [];
+  //   const newFiltersColumns = [
+  //     ...currentFilters,
+  //     { column: '', operator: '==', value: '' },
+  //   ];
+  //   handleChange('filters', newFiltersColumns);
+  // };
+
+  // const removeFilterColumn = (index: number) => {
+  //   const currentFilters = Array.isArray(chartData.filters) ? chartData.filters : [];
+  //   const newFiltersColumns = currentFilters.filter((_, i) => i !== index);
+  //   handleChange('filters', newFiltersColumns);
+  // };
   const updateChartData = (field: string, value: any) => {
     if (field === 'type') {
       const newData = {
@@ -233,7 +273,6 @@ const ChartForm: React.FC<ChartFormProps> = ({
 
           {(isBarOrLineChart || isGroupedChart) && (
             <div className="flex flex-row flex-wrap justify-between  gap-4">
-              
               <div className="flex flex-col gap-4 ">
                 {chartData?.options?.yAxisColumn?.map((column, index) => (
                   <div
@@ -293,7 +332,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
                 ))}
               </div>
               {isGroupedChart && (
-                <Button className="h-fit w-fit mt-4" onClick={addYAxisColumn}>
+                <Button className="mt-4 h-fit w-fit" onClick={addYAxisColumn}>
                   Add Y-axis Column
                 </Button>
               )}
@@ -340,6 +379,71 @@ const ChartForm: React.FC<ChartFormProps> = ({
           />
         </>
       )}
+
+      {/* <div className="flex flex-row flex-wrap justify-between  gap-4">
+        <div className="flex flex-col gap-4 ">
+        {Array.isArray(chartData?.filters) && chartData?.filters?.map((column, index) => (
+            <div
+              key={index}
+              className="flex flex-wrap items-end gap-4 lg:flex-nowrap"
+            >
+              <Select
+                name={`Column-${index}`}
+                options={resourceSchema.map((field) => ({
+                  label: field.fieldName,
+                  value: field.id,
+                }))}
+                label="Column"
+                className={`w-36`} 
+                value={column.fieldName}
+                onChange={(e) => handlefilterColumnChange(index, 'column', e)}
+                onBlur={() => handleSave(chartData)}
+                placeholder="Select"
+              />
+              <Select
+                name={`operator-${index}`}
+                className={`w-36`} 
+                options={[
+                  { label: 'Equal to', value: '==' },
+                  { label: 'Not Equal to', value: '!=' },
+                  { label: 'Less than', value: '<' },
+                  { label: 'Greater than', value: '>' },
+                  { label: 'In', value: 'in' },
+                  { label: 'Not In', value: 'not in' },
+                  { label: 'Less than or Equal to', value: '<=' },
+                  { label: 'Greater than or Equal to', value: '>=' },
+
+                ]}
+                label="Operator"
+                value={column.operator}
+                defaultValue="Equal to"
+                onChange={(e) => handlefilterColumnChange(index, 'operator', e)}
+                onBlur={() => handleSave(chartData)}
+              />
+
+              <TextField
+                name={`Value-${index}`}
+                value={column.value}
+                label="Value"
+                onChange={(e: any) => {
+                  handlefilterColumnChange(index, 'value', e);
+                }}
+                onBlur={() => handleSave(chartData)}
+              />
+              { index > 0 && (
+                <Button onClick={() => removeFilterColumn(index)}>
+                  Remove
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+        { (
+          <Button className="mt-4 h-fit w-fit" onClick={addFilterColumn}>
+            Add Filter Column
+          </Button>
+        )}
+      </div> */}
     </div>
   );
 };
