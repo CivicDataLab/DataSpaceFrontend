@@ -8,6 +8,11 @@ export interface YAxisColumnItem {
   color: string;
 }
 
+export interface ChartFilters{
+  column: string;
+  operator: string;
+  value: string;
+}
 export interface ChartOptions {
   aggregateType: string;
   regionColumn?: string;
@@ -23,7 +28,7 @@ export interface ChartOptions {
 export interface ChartData {
   chartId: string;
   description: string;
-  filters: any[];
+  // filters: any[];
   name: string;
   options: ChartOptions;
   resource: string;
@@ -34,7 +39,7 @@ export interface ChartData {
 export interface ResourceChartInput {
   chartId: string;
   description: string;
-  filters: any[];
+  filters: ChartFilters[];
   name: string;
   options: ChartOptions;
   resource: string;
