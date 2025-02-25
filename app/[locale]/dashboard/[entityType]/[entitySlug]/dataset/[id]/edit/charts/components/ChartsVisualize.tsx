@@ -82,7 +82,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   }>();
 
   const { data: resourceData }: { data: any } = useQuery(
-    [`charts_${params.id}`],
+    [`res_charts_${params.id}`],
     () =>
       GraphQL(
         datasetResource,
@@ -198,15 +198,13 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       }
     }
   }, [chartId, chartDetails, resourceData]);
-
-
+  
   useEffect(() => {
     if (chartId && chartDetails?.resourceChart) {
       refetch();
       updateChartData(chartDetails.resourceChart);
     }
   }, [chartId, chartDetails]);
-
 
   const updateChartData = (resourceChart: any) => {
     if (
