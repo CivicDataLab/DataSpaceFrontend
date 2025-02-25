@@ -1,11 +1,12 @@
+import { useRef } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { renderGeoJSON } from '@/geo_json/render_geojson';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts/core';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import {
   Button,
   Carousel,
@@ -17,24 +18,19 @@ import {
   Spinner,
   Text,
 } from 'opub-ui';
-import { useRef } from 'react';
 
-import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
+import { Icons } from '@/components/icons';
 
 const DetailsQuery: any = graphql(`
   query ChartDetailsQuery($datasetId: UUID!) {
     getChartData(datasetId: $datasetId) {
       __typename
       ... on TypeResourceChart {
-        aggregateType
         chartType
         description
         id
         name
-        showLegend
-        xAxisLabel
-        yAxisLabel
         chart
       }
       ... on TypeResourceChartImage {
@@ -59,7 +55,6 @@ const Details = () => {
     [`chartDetails_${params.id}`],
     () => GraphQL(DetailsQuery, {}, { datasetId: params.datasetIdentifier })
   );
-
 
   const renderChart = (item: any) => {
     if (item.chartType === 'ASSAM_DISTRICT' || item.chartType === 'ASSAM_RC') {

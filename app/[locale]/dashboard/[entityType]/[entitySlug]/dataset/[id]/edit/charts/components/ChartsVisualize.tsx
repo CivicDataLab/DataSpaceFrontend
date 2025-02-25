@@ -2,139 +2,73 @@ import { UUID } from 'crypto';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { renderGeoJSON } from '@/geo_json/render_geojson';
-import { graphql } from '@/gql';
-import {
-  AggregateType,
-  ChartTypes,
-  ResourceChartInput,
-} from '@/gql/generated/graphql';
+import { ChartTypes } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts/core';
-import {
-  Button,
-  Checkbox,
-  Divider,
-  Icon,
-  Select,
-  Sheet,
-  Spinner,
-  Text,
-  TextField,
-  toast,
-} from 'opub-ui';
+import { Button, Divider, Icon, Sheet, Spinner, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import {
+  chartDetailsQuery,
+  createChart,
+  CreateResourceChart,
+  datasetResource,
+  getResourceChartDetails,
+} from '../queries';
+import ChartForm from './ChartForm';
+import ChartHeader from './ChartHeader';
+
+interface YAxisColumnItem {
+  fieldName: string;
+  label: string;
+  color: string;
+}
+interface ChartFilters {
+  column: string;
+  operator: string;
+  value: string;
+}
+
+interface ChartOptions {
+  aggregateType: string;
+  regionColumn?: string;
+  showLegend: boolean;
+  timeColumn?: string;
+  valueColumn?: string;
+  xAxisColumn: string;
+  xAxisLabel: string;
+  yAxisColumn: YAxisColumnItem[];
+  yAxisLabel: string;
+}
+
+interface ChartData {
+  chartId: string;
+  description: string;
+  // filters: any[];
+  name: string;
+  options: ChartOptions;
+  resource: string;
+  type: ChartTypes;
+  chart: any;
+}
+
+interface ResourceChartInput {
+  chartId: string;
+  description: string;
+  // filters: ChartFilters[];
+  name: string;
+  options: ChartOptions;
+  resource: string;
+  type: ChartTypes;
+}
 
 interface VisualizationProps {
   setType: any;
   setChartId: any;
   chartId: any;
 }
-
-const datasetResource: any = graphql(`
-  query allresources($datasetId: UUID!) {
-    datasetResources(datasetId: $datasetId) {
-      id
-      type
-      name
-      description
-      schema {
-        fieldName
-        id
-      }
-    }
-  }
-`);
-
-const chartDetailsQuery: any = graphql(`
-  query chartsDetails($datasetId: UUID!) {
-    chartsDetails(datasetId: $datasetId) {
-      id
-      name
-      chartType
-    }
-  }
-`);
-
-const createChart: any = graphql(`
-  mutation editResourceChart($chartInput: ResourceChartInput!) {
-    editResourceChart(chartInput: $chartInput) {
-      __typename
-      ... on TypeResourceChart {
-        aggregateType
-        chartType
-        description
-        id
-        resource {
-          id
-          name
-        }
-        name
-        showLegend
-        xAxisLabel
-        yAxisLabel
-        regionColumn {
-          id
-        }
-        valueColumn {
-          id
-        }
-        chart
-        xAxisColumn {
-          id
-        }
-        yAxisColumn {
-          id
-        }
-      }
-    }
-  }
-`);
-
-const getResourceChartDetails: any = graphql(`
-  query resourceChart($chartDetailsId: UUID!) {
-    resourceChart(chartDetailsId: $chartDetailsId) {
-      aggregateType
-      chartType
-      description
-      id
-      name
-      showLegend
-      xAxisLabel
-      yAxisLabel
-      regionColumn {
-        id
-      }
-      valueColumn {
-        id
-      }
-      chart
-      xAxisColumn {
-        id
-      }
-      yAxisColumn {
-        id
-      }
-      resource {
-        id
-      }
-    }
-  }
-`);
-
-const CreateResourceChart: any = graphql(`
-  mutation GenerateResourceChart($resource: UUID!) {
-    addResourceChart(resource: $resource) {
-      __typename
-      ... on TypeResourceChart {
-        id
-        name
-      }
-    }
-  }
-`);
 
 const ChartsVisualize: React.FC<VisualizationProps> = ({
   setType,
@@ -146,18 +80,21 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     entitySlug: string;
     id: string;
   }>();
-  const { data }: { data: any } = useQuery([`charts_${params.id}`], () =>
-    GraphQL(
-      datasetResource,
-      {
-        [params.entityType]: params.entitySlug,
-      },
-      { datasetId: params.id }
-    )
+
+  const { data: resourceData }: { data: any } = useQuery(
+    [`charts_${params.id}`],
+    () =>
+      GraphQL(
+        datasetResource,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        { datasetId: params.id }
+      )
   );
 
   const { data: chartDetails, refetch }: { data: any; refetch: any } = useQuery(
-    [`chartsdata_${params.id}`],
+    [`chartdata_${params.id}`],
     () =>
       GraphQL(
         getResourceChartDetails,
@@ -170,6 +107,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       ),
     {}
   );
+
   const {
     data: chartsList,
     isLoading,
@@ -216,38 +154,51 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   );
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const initialChartData = {
+  const [chartData, setChartData] = useState<ChartData>({
     chartId: '',
-    name: '',
     description: '',
-    chartType: 'BAR_VERTICAL',
-    resource: data?.datasetResources[0]?.id,
-    xAxisColumn: '',
-    xAxisLabel: '',
-    yAxisColumn: '',
-    yAxisLabel: '',
-    aggregateType: 'SUM',
-    showLegend: false,
-    chart: '',
-    regionColumn: '',
-    valueColumn: '',
-  };
+    // filters: [
+    //   {
+    //     column: '',
+    //     operator: '==',
+    //     value: '',
+    //   },
+    // ],
+    name: '',
+    options: {
+      aggregateType: 'SUM',
+      showLegend: true,
+      xAxisColumn: '',
+      xAxisLabel: '',
+      yAxisColumn: [{ fieldName: '', label: '', color: '' }],
+      yAxisLabel: '',
+      regionColumn: '',
+      valueColumn: '',
+      timeColumn: '',
+    },
+    resource: '',
+    type: ChartTypes.BarVertical,
+    chart: {},
+  });
 
-  const [chartData, setChartData] = useState(initialChartData);
-  const [previousChartData, setPreviousChartData] = useState(initialChartData);
+  const [previousChartData, setPreviousChartData] = useState<ChartData | null>(
+    null
+  );
+
   const [resourceSchema, setResourceSchema] = useState<any[]>([]);
 
   useEffect(() => {
-    if (data) {
-     if (chartData.resource) {
-        const resource = data?.datasetResources.find(
-          (resource: any) => resource.id === chartData.resource
-        );
-        setResourceSchema(resource?.schema || []);
-        handleChange('resource', chartData.resource);
+    if (chartId && chartDetails?.resourceChart) {
+      const resource = resourceData?.datasetResources?.find(
+        (r: any) => r.id === chartDetails.resourceChart.resource?.id
+      );
+
+      if (resource) {
+        setResourceSchema(resource.schema || []);
       }
     }
-  }, [data, chartId, chartData.resource]);
+  }, [chartId, chartDetails, resourceData]);
+
 
   useEffect(() => {
     if (chartId && chartDetails?.resourceChart) {
@@ -255,6 +206,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       updateChartData(chartDetails.resourceChart);
     }
   }, [chartId, chartDetails]);
+
 
   const updateChartData = (resourceChart: any) => {
     if (
@@ -266,25 +218,100 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         renderGeoJSON(resourceChart.chartType.toLowerCase())
       );
     }
-    const updatedData = {
-      aggregateType: resourceChart.aggregateType as AggregateType,
-      chartType: resourceChart.chartType as ChartTypes,
-      description: resourceChart.description,
-      name: resourceChart.name,
+
+    const updatedData: ChartData = {
       chartId: resourceChart.id,
-      showLegend: resourceChart.showLegend,
-      xAxisLabel: resourceChart.xAxisLabel,
-      yAxisLabel: resourceChart.yAxisLabel,
-      resource: resourceChart.resource.id,
-      xAxisColumn: resourceChart.xAxisColumn?.id || '',
-      yAxisColumn: resourceChart.yAxisColumn?.id || '',
+      description: resourceChart.description || '',
+      // filters:
+      //   resourceChart.filters?.length > 0
+      //     ? resourceChart.filters.map((filter: any) => ({
+      //         column: filter.column,
+      //         operator: filter.operator,
+      //         value: filter.value,
+      //       }))
+      //     : [{ column: '', operator: '==', value: '' }],
+      name: resourceChart.name || '',
+      options: {
+        aggregateType: resourceChart?.options?.aggregateType,
+        regionColumn: resourceChart?.options?.regionColumn?.id,
+        showLegend: resourceChart?.options?.showLegend ?? true,
+        timeColumn: resourceChart?.options?.timeColumn,
+        valueColumn: resourceChart?.options?.valueColumn?.id,
+        xAxisColumn: resourceChart?.options?.xAxisColumn?.id,
+        xAxisLabel: resourceChart?.options?.xAxisLabel,
+        yAxisColumn: resourceChart?.options?.yAxisColumn?.map((col: any) => ({
+          fieldName: col.field.id,
+          label: col.label,
+          color: col.color,
+        })),
+        yAxisLabel: resourceChart?.options?.yAxisLabel,
+      },
+      resource: resourceChart.resource?.id,
+      type: resourceChart.chartType as ChartTypes,
       chart: resourceChart.chart,
-      regionColumn: resourceChart.regionColumn?.id || '',
-      valueColumn: resourceChart.valueColumn?.id || '',
     };
     setChartData(updatedData);
     setPreviousChartData(updatedData);
   };
+
+  const getDefaultOptions = (chartType: ChartTypes) => {
+    const baseOptions = {
+      aggregateType: 'SUM',
+      showLegend: true,
+      xAxisColumn: '',
+      xAxisLabel: '',
+      yAxisLabel: '',
+    };
+
+    switch (chartType) {
+      case ChartTypes.AssamDistrict:
+      case ChartTypes.AssamRc:
+        return {
+          ...baseOptions,
+          regionColumn: '',
+          valueColumn: '',
+          timeColumn: '',
+          yAxisColumn: [],
+        };
+      case ChartTypes.BarVertical:
+      case ChartTypes.BarHorizontal:
+        return {
+          ...baseOptions,
+          yAxisColumn: [{ fieldName: '', label: '', color: '#000000' }],
+        };
+      default:
+        return {
+          ...baseOptions,
+          yAxisColumn: [{ fieldName: '', label: '', color: '#000000' }],
+        };
+    }
+  };
+
+  const handleChange = useCallback((field: string, value: any) => {
+    setChartData((prevData) => {
+      if (field === 'type') {
+        const newType = value as ChartTypes;
+        return {
+          ...prevData,
+          type: newType,
+          options: getDefaultOptions(newType),
+        };
+      }
+      if (field === 'options') {
+        return {
+          ...prevData,
+          options: {
+            ...prevData.options,
+            ...value,
+          },
+        };
+      }
+      return {
+        ...prevData,
+        [field]: value,
+      };
+    });
+  }, []);
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (chartInput: { chartInput: ResourceChartInput }) =>
@@ -310,117 +337,87 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     }
   );
 
-  const handleSave = (updatedData: any) => {
-    if (JSON.stringify(chartData) !== JSON.stringify(previousChartData)) {
-      setPreviousChartData(updatedData);
-      const inputChartId = updatedData.chartId || chartId || null;
+  const handleSave = useCallback(
+    (updatedData: ChartData) => {
+      if (JSON.stringify(previousChartData) !== JSON.stringify(updatedData)) {
+        // Filter out empty Y-axis columns
+        const validYAxisColumns = updatedData.options.yAxisColumn.filter(
+          (col) => col.fieldName && col.fieldName.trim() !== ''
+        );
 
-      mutate({
-        chartInput: {
-          aggregateType: updatedData.aggregateType as AggregateType,
-          type: updatedData.chartType as ChartTypes,
+        const chartInput: ResourceChartInput = {
+          chartId: updatedData.chartId,
           description: updatedData.description,
+          // filters: updatedData.filters,
           name: updatedData.name,
-          chartId: inputChartId,
-          showLegend: updatedData.showLegend,
-          xAxisLabel: updatedData.xAxisLabel,
-          yAxisLabel: updatedData.yAxisLabel,
-          resource: updatedData.resource || data?.datasetResources[0]?.id,
-          xAxisColumn: updatedData.xAxisColumn,
-          yAxisColumn: updatedData.yAxisColumn,
-          regionColumn: updatedData.regionColumn,
-          valueColumn: updatedData.valueColumn,
-        },
-      });
-    }
-  };
+          options: {
+            ...updatedData.options,
+            yAxisColumn: validYAxisColumns,
+          },
+          resource: updatedData.resource,
+          type: updatedData.type,
+        };
 
-  const handleChange = useCallback((field: string, value: any) => {
-    setChartData((prevData) => ({
-      ...prevData,
-      [field]: value,
-    }));
-  }, []);
+        // Store current type before mutation
+        const currentType = updatedData.type;
+
+        mutate(
+          { chartInput },
+          {
+            onSuccess: (data) => {
+              setChartData((prev) => ({
+                ...prev,
+                chart: data.chart,
+                type: currentType, // Preserve the type from before mutation
+                options: {
+                  ...prev.options,
+                  yAxisColumn: validYAxisColumns,
+                },
+              }));
+            },
+          }
+        );
+
+        setPreviousChartData({
+          ...updatedData,
+          type: currentType, // Ensure previousChartData also has correct type
+          // filters:
+          //   updatedData.filters?.length > 0
+          //     ? updatedData.filters
+          //     : [{ column: '', operator: '==', value: '' }],
+        });
+      }
+    },
+    [previousChartData, mutate]
+  );
 
   const handleResourceChange = useCallback(
-    (resourceId: string) => {
-      const selectedResource = data?.datasetResources.find(
-        (resource: any) => resource.id === resourceId
+    (value: string) => {
+      const resource = resourceData?.datasetResources.find(
+        (r: any) => r.id === value
       );
-      setResourceSchema(selectedResource?.schema || []);
-      handleChange('resource', resourceId);
+      if (resource) {
+        handleChange('resource', resource.id);
+      }
     },
-    [data]
+    [resourceData, handleChange]
   );
+
   const chartRef = useRef<ReactECharts>(null);
 
   return (
     <>
       <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-6">
-          <Button
-            onClick={() => {
-              setType('list');
-              setChartId('');
-            }}
-            kind="tertiary"
-            className="flex text-start"
-          >
-            <span className="flex items-center gap-2">
-              <Icon source={Icons.back} color="interactive" size={24} />
-              <Text color="interactive">Charts Listing</Text>
-            </span>
-          </Button>
-          <Sheet open={isSheetOpen}>
-            <Sheet.Trigger>
-              <Button onClick={() => setIsSheetOpen(true)}>
-                Select Charts
-              </Button>
-            </Sheet.Trigger>
-            <Sheet.Content side="bottom">
-              <div className="flex flex-col gap-6 p-10">
-                <div className="flex items-center justify-between">
-                  <Text variant="bodyLg">Select Charts</Text>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      onClick={(e) =>
-                        resourceChart.mutate({
-                          resource: data?.datasetResources[0].id,
-                        })
-                      }
-                    >
-                      Visualize Data
-                    </Button>
-                    <Button
-                      kind="tertiary"
-                      onClick={() => setIsSheetOpen(false)}
-                    >
-                      <Icon source={Icons.cross} size={24} />
-                    </Button>
-                  </div>
-                </div>
-                {chartsList?.chartsDetails.map((item: any, index: any) => (
-                  <div
-                    key={index}
-                    className={`rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6 py-3 ${chartId === item.id ? ' bg-baseGraySlateSolid5' : ''}`}
-                  >
-                    <Button
-                      kind={'tertiary'}
-                      className="flex w-full justify-start"
-                      disabled={chartId === item.id}
-                      onClick={() => {
-                        setChartId(item.id);
-                        setIsSheetOpen(false);
-                      }}
-                    >
-                      {item.name}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </Sheet.Content>
-          </Sheet>
-        </div>
+        <ChartHeader
+          setType={setType}
+          setChartId={setChartId}
+          isSheetOpen={isSheetOpen}
+          setIsSheetOpen={setIsSheetOpen}
+          resourceChart={resourceChart}
+          resourceData={resourceData}
+          chartsList={chartsList}
+          chartId={chartId}
+        />
         <Divider />
         <div className="mt-8 flex flex-col gap-8">
           <div className="flex justify-end gap-2">
@@ -431,153 +428,17 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
               <Icon source={Icons.checkmark} />
             )}
           </div>
-          <TextField
-            onChange={(e) => handleChange('name', e)}
-            value={chartData.name}
-            label="Chart Name"
-            name="name"
-            required
-            helpText="To know about best practices for naming Visualizations go to our User Guide"
-            onBlur={() => handleSave(chartData)}
+          <ChartForm
+            chartData={chartData}
+            resourceData={resourceData}
+            resourceSchema={resourceSchema}
+            handleChange={handleChange}
+            handleResourceChange={handleResourceChange}
+            handleSave={handleSave}
           />
-          <TextField
-            onChange={(e) => handleChange('description', e)}
-            label="Description"
-            value={chartData.description}
-            name="description"
-            multiline={4}
-            onBlur={() => handleSave(chartData)}
-          />
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Select
-              name="chartType"
-              value={chartData.chartType}
-              options={[
-                { label: 'Bar Vertical', value: 'BAR_VERTICAL' },
-                { label: 'Bar Horizontal', value: 'BAR_HORIZONTAL' },
-                { label: 'Line', value: 'LINE' },
-                { label: 'Assam District', value: 'ASSAM_DISTRICT' },
-                { label: 'ASSAM RC', value: 'ASSAM_RC' },
-              ]}
-              label="Select Chart Type"
-              defaultValue={'BAR_VERTICAL'}
-              // placeholder="Select"
-              onBlur={() => handleSave(chartData)}
-              onChange={(e) => handleChange('chartType', e)}
-            />
-            <Select
-              name="resource"
-              options={data?.datasetResources.map((resource: any) => ({
-                label: resource.name,
-                value: resource.id,
-              }))}
-              value={chartData.resource}
-              defaultValue={data?.datasetResources[0]?.id}
-              label="Select Resources"
-              onBlur={() => handleSave(chartData)}
-              onChange={(e) => handleResourceChange(e)}
-            />
-            {chartData.chartType !== 'ASSAM_DISTRICT' &&
-            chartData.chartType !== 'ASSAM_RC' ? (
-              <>
-                <Select
-                  name="xAxisColumn"
-                  options={resourceSchema?.map((field: any) => ({
-                    label: field.fieldName,
-                    value: field.id,
-                  }))}
-                  label="X-axis Column"
-                  value={chartData.xAxisColumn}
-                  placeholder="Select"
-                  onBlur={() => handleSave(chartData)}
-                  onChange={(e) => handleChange('xAxisColumn', e)}
-                />
-                <TextField
-                  onChange={(e) => handleChange('xAxisLabel', e)}
-                  label="X-axis Label"
-                  value={chartData.xAxisLabel}
-                  name="xAxisLabel"
-                  onBlur={() => handleSave(chartData)}
-                  required
-                />
-                <Select
-                  name="yAxisColumn"
-                  options={resourceSchema?.map((field: any) => ({
-                    label: field.fieldName,
-                    value: field.id,
-                  }))}
-                  value={chartData.yAxisColumn}
-                  label="Y-axis Column"
-                  onBlur={() => handleSave(chartData)}
-                  placeholder="Select"
-                  onChange={(e) => handleChange('yAxisColumn', e)}
-                />
-                <TextField
-                  onChange={(e) => handleChange('yAxisLabel', e)}
-                  label="Y-axis Label"
-                  name="yAxisLabel"
-                  value={chartData.yAxisLabel}
-                  onBlur={() => handleSave(chartData)}
-                  required
-                />
-              </>
-            ) : (
-              <>
-                <Select
-                  name="regionColumn"
-                  options={resourceSchema?.map((field: any) => ({
-                    label: field.fieldName,
-                    value: field.id,
-                  }))}
-                  label="Region Column"
-                  value={chartData.regionColumn}
-                  placeholder="Select"
-                  onBlur={() => handleSave(chartData)}
-                  onChange={(e) => handleChange('regionColumn', e)}
-                />
-                <Select
-                  name="valueColumn"
-                  options={resourceSchema?.map((field: any) => ({
-                    label: field.fieldName,
-                    value: field.id,
-                  }))}
-                  value={chartData.valueColumn}
-                  label="Value Column"
-                  onBlur={() => handleSave(chartData)}
-                  placeholder="Select"
-                  onChange={(e) => handleChange('valueColumn', e)}
-                />
-              </>
-            )}
-            <Select
-              name="aggregateType"
-              options={[
-                { label: 'None', value: 'NONE' },
-                { label: 'Sum', value: 'SUM' },
-                { label: 'Average', value: 'AVERAGE' },
-                { label: 'Count', value: 'COUNT' },
-              ]}
-              label="Aggregate"
-              value={chartData.aggregateType}
-              defaultValue="SUM"
-              onBlur={() => handleSave(chartData)}
-              onChange={(e) => handleChange('aggregateType', e)}
-            />
-            <div className=" pt-7">
-              <Checkbox
-                name="legend"
-                value={chartData.showLegend.toString()}
-                checked={chartData.showLegend}
-                onBlur={() => handleSave(chartData)}
-                onChange={(e) => handleChange('showLegend', e)}
-              >
-                Show Legend (Legend values will be taken from resource)
-              </Checkbox>
-            </div>
-          </div>
           <div className="mb-6 flex flex-col gap-6 p-8 text-center">
             <Text>Preview</Text>
-            {Object?.keys(chartData.chart).length > 0 && (
+            {chartData.chart && Object.keys(chartData.chart).length > 0 && (
               <ReactECharts option={chartData.chart} ref={chartRef} />
             )}
           </div>
