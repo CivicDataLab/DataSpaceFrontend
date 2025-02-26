@@ -46,7 +46,7 @@ interface ChartOptions {
 interface ChartData {
   chartId: string;
   description: string;
-  // filters: any[];
+  filters: any[];
   name: string;
   options: ChartOptions;
   resource: string;
@@ -57,7 +57,7 @@ interface ChartData {
 interface ResourceChartInput {
   chartId: string;
   description: string;
-  // filters: ChartFilters[];
+  filters: ChartFilters[];
   name: string;
   options: ChartOptions;
   resource: string;
@@ -148,7 +148,12 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         chartsListRefetch();
       },
       onError: (err: any) => {
-        toast(`Received ${err} while deleting chart `);
+        toast(`Received ${err} while deleting chart `,{
+          action:{
+            label:'undo',
+            onClick: ()=>{}
+          }
+        });
       },
     }
   );
@@ -157,20 +162,20 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   const [chartData, setChartData] = useState<ChartData>({
     chartId: '',
     description: '',
-    // filters: [
-    //   {
-    //     column: '',
-    //     operator: '==',
-    //     value: '',
-    //   },
-    // ],
+    filters: [
+      {
+        column: '',
+        operator: '==',
+        value: '',
+      },
+    ],
     name: '',
     options: {
       aggregateType: 'SUM',
       showLegend: true,
       xAxisColumn: '',
       xAxisLabel: '',
-      yAxisColumn: [{ fieldName: '', label: '', color: '' }],
+      yAxisColumn: [{ fieldName: '', label: '', color: '#000000' }],
       yAxisLabel: '',
       regionColumn: '',
       valueColumn: '',
@@ -220,14 +225,14 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     const updatedData: ChartData = {
       chartId: resourceChart.id,
       description: resourceChart.description || '',
-      // filters:
-      //   resourceChart.filters?.length > 0
-      //     ? resourceChart.filters.map((filter: any) => ({
-      //         column: filter.column,
-      //         operator: filter.operator,
-      //         value: filter.value,
-      //       }))
-      //     : [{ column: '', operator: '==', value: '' }],
+      filters:
+        resourceChart.filters?.length > 0
+          ? resourceChart.filters.map((filter: any) => ({
+              column: filter.column.id,
+              operator: filter.operator,
+              value: filter.value,
+            }))
+          : [{ column: '', operator: '==', value: '' }],
       name: resourceChart.name || '',
       options: {
         aggregateType: resourceChart?.options?.aggregateType,
@@ -330,7 +335,11 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         refetch();
       },
       onError: (err: any) => {
-        toast(`Received ${err} during resource chart saving`);
+        toast(`Received ${err} during resource chart saving`,{
+          action:{
+            label:'undo',
+            onClick: ()=>{}
+          }});
       },
     }
   );
@@ -346,7 +355,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         const chartInput: ResourceChartInput = {
           chartId: updatedData.chartId,
           description: updatedData.description,
-          // filters: updatedData.filters,
+          filters: updatedData.filters,
           name: updatedData.name,
           options: {
             ...updatedData.options,
@@ -379,10 +388,10 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         setPreviousChartData({
           ...updatedData,
           type: currentType, // Ensure previousChartData also has correct type
-          // filters:
-          //   updatedData.filters?.length > 0
-          //     ? updatedData.filters
-          //     : [{ column: '', operator: '==', value: '' }],
+          filters:
+            updatedData.filters?.length > 0
+              ? updatedData.filters
+              : [{ column: '', operator: '==', value: '' }],
         });
       }
     },

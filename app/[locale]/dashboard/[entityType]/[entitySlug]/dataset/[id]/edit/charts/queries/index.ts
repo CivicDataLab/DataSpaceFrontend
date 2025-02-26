@@ -38,7 +38,10 @@ export const getResourceChartDetails = graphql(`
       }
       chart
       filters {
-        column
+        column {
+          id
+          fieldName
+        }
         operator
         value
       }
@@ -86,10 +89,13 @@ export const createChart = graphql(`
         }
         name
         filters {
-        column
-        operator
-        value
-      }
+          column {
+            id
+            fieldName
+          }
+          operator
+          value
+        }
         options {
           aggregateType
           xAxisColumn {
