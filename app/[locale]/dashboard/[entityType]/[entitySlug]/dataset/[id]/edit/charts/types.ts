@@ -28,7 +28,7 @@ export interface ChartOptions {
 export interface ChartData {
   chartId: string;
   description: string;
-  // filters: any[];
+  filters: any[];
   name: string;
   options: ChartOptions;
   resource: string;

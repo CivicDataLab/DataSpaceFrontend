@@ -39,24 +39,24 @@ const ChartForm: React.FC<ChartFormProps> = ({
     ) {
       handleChange('options', {
         ...chartData.options,
-        yAxisColumn: [{ fieldName: '', label: '', color: '' }],
+        yAxisColumn: [{ fieldName: '', label: '', color: '#000000' }],
       });
     }
   }, [chartData.options.yAxisColumn]);
 
   
 
-  // useEffect(() => {
-  //   if (
-  //     !chartData.filters ||
-  //     chartData.filters.length === 0
-  //   ) {
-  //     handleChange('filters', {
-  //       ...chartData,
-  //       // filters: [{ column: '', operator: '==', value: '' }],
-  //     });
-  //   }
-  // }, [chartData.filters]);
+  useEffect(() => {
+    if (
+      !chartData.filters ||
+      chartData.filters.length === 0
+    ) {
+      handleChange('filters', {
+        ...chartData,
+        filters: [{ column: '', operator: '==', value: '' }],
+      });
+    }
+  }, [chartData.filters]);
 
   const handleYAxisColumnChange = (
     index: number,
@@ -77,7 +77,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
   const addYAxisColumn = () => {
     const newYAxisColumns = [
       ...(chartData.options.yAxisColumn ?? []),
-      { fieldName: '', label: '', color: '' },
+      { fieldName: '', label: '', color: '#000000' },
     ];
     handleChange('options', {
       ...chartData.options,
@@ -93,35 +93,37 @@ const ChartForm: React.FC<ChartFormProps> = ({
       ...chartData.options,
       yAxisColumn: newYAxisColumns,
     });
+    handleSave(chartData)
   };
 
-  // const handlefilterColumnChange = (
-  //   index: number,
-  //   field: string,
-  //   value: any
-  // ) => {
-  //   const currentFilters = Array.isArray(chartData.filters) ? chartData.filters : [];
-  //   const newFiltersColumns = [...currentFilters];
-  //   newFiltersColumns[index] = {
-  //     ...newFiltersColumns[index],
-  //     [field]: value,
-  //   };
-  //   handleChange('filters', newFiltersColumns); // Changed this line
-  // };
-  // const addFilterColumn = () => {
-  //   const currentFilters = Array.isArray(chartData.filters) ? chartData.filters : [];
-  //   const newFiltersColumns = [
-  //     ...currentFilters,
-  //     { column: '', operator: '==', value: '' },
-  //   ];
-  //   handleChange('filters', newFiltersColumns);
-  // };
+  const handlefilterColumnChange = (
+    index: number,
+    field: string,
+    value: any
+  ) => {
+    const currentFilters = Array.isArray(chartData.filters) ? chartData.filters : [];
+    const newFiltersColumns = [...currentFilters];
+    newFiltersColumns[index] = {
+      ...newFiltersColumns[index],
+      [field]: value,
+    };
+    handleChange('filters', newFiltersColumns); // Changed this line
+  };
+  const addFilterColumn = () => {
+    const currentFilters = Array.isArray(chartData.filters) ? chartData.filters : [];
+    const newFiltersColumns = [
+      ...currentFilters,
+      { column: '', operator: '==', value: '' },
+    ];
+    handleChange('filters', newFiltersColumns);
+  };
 
-  // const removeFilterColumn = (index: number) => {
-  //   const currentFilters = Array.isArray(chartData.filters) ? chartData.filters : [];
-  //   const newFiltersColumns = currentFilters.filter((_, i) => i !== index);
-  //   handleChange('filters', newFiltersColumns);
-  // };
+  const removeFilterColumn = (index: number) => {
+    const currentFilters = Array.isArray(chartData.filters) ? chartData.filters : [];
+    const newFiltersColumns = currentFilters.filter((_, i) => i !== index);
+    handleChange('filters', newFiltersColumns);
+    handleSave(chartData)
+  };
   const updateChartData = (field: string, value: any) => {
     if (field === 'type') {
       const newData = {
@@ -132,7 +134,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
           yAxisColumn:
             chartData.options.yAxisColumn.length > 0
               ? chartData.options.yAxisColumn
-              : [{ fieldName: '', label: '', color: '' }],
+              : [{ fieldName: '', label: '', color: '#000000' }],
         },
       };
       handleChange(field, value);
@@ -197,7 +199,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
             { label: 'Sum', value: 'SUM' },
             { label: 'Average', value: 'AVERAGE' },
             { label: 'Count', value: 'COUNT' },
-          ]}
+          ]}  
           label="Aggregate"
           value={chartData.options.aggregateType}
           defaultValue="SUM"
@@ -380,7 +382,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
         </>
       )}
 
-      {/* <div className="flex flex-row flex-wrap justify-between  gap-4">
+      <div className="flex flex-row flex-wrap justify-between  gap-4">
         <div className="flex flex-col gap-4 ">
         {Array.isArray(chartData?.filters) && chartData?.filters?.map((column, index) => (
             <div
@@ -430,7 +432,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
                 }}
                 onBlur={() => handleSave(chartData)}
               />
-              { index > 0 && (
+              {(
                 <Button onClick={() => removeFilterColumn(index)}>
                   Remove
                 </Button>
@@ -438,12 +440,12 @@ const ChartForm: React.FC<ChartFormProps> = ({
             </div>
           ))}
         </div>
-        { (
+        {(
           <Button className="mt-4 h-fit w-fit" onClick={addFilterColumn}>
             Add Filter Column
           </Button>
         )}
-      </div> */}
+      </div> 
     </div>
   );
 };
