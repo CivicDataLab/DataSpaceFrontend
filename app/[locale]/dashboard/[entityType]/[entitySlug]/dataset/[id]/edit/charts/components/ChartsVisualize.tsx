@@ -228,7 +228,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       filters:
         resourceChart.filters?.length > 0
           ? resourceChart.filters.map((filter: any) => ({
-              column: filter.column,
+              column: filter.column.id,
               operator: filter.operator,
               value: filter.value,
             }))
