@@ -25,12 +25,13 @@ const ChartForm: React.FC<ChartFormProps> = ({
     chartData.type === ChartTypes.AssamRc;
   const isGroupedChart =
     chartData.type === ChartTypes.GroupedBarVertical ||
-    chartData.type === ChartTypes.GroupedBarHorizontal;
+    chartData.type === ChartTypes.GroupedBarHorizontal||
+    chartData.type === ChartTypes.Multiline;
+
   const isBarOrLineChart =
     chartData.type === ChartTypes.BarVertical ||
     chartData.type === ChartTypes.BarHorizontal ||
-    chartData.type === ChartTypes.Line ||
-    chartData.type === ChartTypes.Multiline;
+    chartData.type === ChartTypes.Line 
 
   useEffect(() => {
     if (
@@ -45,6 +46,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
   }, [chartData.options.yAxisColumn]);
 
   
+console.log(chartData);
 
   useEffect(() => {
     if (
@@ -397,7 +399,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
                 }))}
                 label="Column"
                 className={`w-36`} 
-                value={column.fieldName}
+                value={column.column}
                 onChange={(e) => handlefilterColumnChange(index, 'column', e)}
                 onBlur={() => handleSave(chartData)}
                 placeholder="Select"
