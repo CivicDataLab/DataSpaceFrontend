@@ -9,14 +9,16 @@ jiti('./env');
 
 // const backendUrl = new URL(process.env.NEXT_PUBLIC_BACKEND_URL);
 
+const backendUrl = new URL(process.env.BACKEND_URL);
+
 const withNextIntl = createNextIntlPlugin();
 const nextConfig = withNextIntl({
   transpilePackages: ['opub-ui'],
   images: {
     remotePatterns: [
       {
-        protocol: new URL(process.env.BACKEND_URL).protocol.slice(0, -1),
-        hostname: new URL(process.env.BACKEND_URL).hostname,
+        protocol: backendUrl.protocol.slice(0, -1),
+        hostname: backendUrl.hostname,
       },
       // {
       //   protocol: 'https',
