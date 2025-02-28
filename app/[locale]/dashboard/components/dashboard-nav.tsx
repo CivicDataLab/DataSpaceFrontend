@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -17,10 +17,25 @@ interface DashboardNavProps {
 }
 export function DashboardNav({
   items,
-  entitySlug,
-}: DashboardNavProps & { entitySlug?: string }) {
-  const [isCollapsed, setIsCollapsed] = React.useState(false);
+  entityDetails,
+}: DashboardNavProps & { entityDetails?: any }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const [isImageValid, setIsImageValid] = useState(() => {
+    return entityDetails?.logo ? true : false;
+  });
   const path = usePathname();
+
+  useEffect(() => {
+    if (
+      entityDetails &&
+      (typeof entityDetails.logo === 'undefined' || entityDetails.logo === null)
+    ) {
+      setIsImageValid(false);
+    } else {
+      setIsImageValid(true);
+    }
+  }, [entityDetails]);
 
   useMetaKeyPress('b', () => setIsCollapsed((e) => !e));
 
@@ -39,17 +54,31 @@ export function DashboardNav({
       )}
     >
       <nav className={cn('flex flex-col gap-2')}>
-        {entitySlug && !isCollapsed ? (
+        {entityDetails && !isCollapsed ? (
           <>
             <div className="flex flex-col items-center justify-center px-4 py-8">
-              <Image
-                height={140}
-                width={140}
-                src={'/obi.jpg'}
-                alt={'Organisation ID'}
-              />
+              {isImageValid ? (
+                <Image
+                  height={140}
+                  width={140}
+                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${entityDetails?.logo?.url}`}
+                  alt={`${entityDetails?.name} logo`}
+                  onError={() => {
+                    setIsImageValid(false);
+                  }}
+                  className="object-contain"
+                />
+              ) : (
+                <Image
+                  height={140}
+                  width={140}
+                  src={'/fallback.svg'}
+                  alt={'fallback logo'}
+                  className="fill-current bg-baseGraySlateSolid6 object-contain text-baseGraySlateSolid6"
+                />
+              )}
               <Text variant="headingMd" fontWeight="medium" className="py-2">
-                {entitySlug}
+                {entityDetails?.name}
               </Text>
               <Link href={'/dashboard'}>
                 <Text variant="headingXs" color="interactive">

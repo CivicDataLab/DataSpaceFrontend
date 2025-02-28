@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, useParams, usePathname } from 'next/navigation';
@@ -20,41 +21,20 @@ const Page = () => {
 
   const params = useParams<{ entityType: string }>();
 
-  const allOrganizationsList: {
+  const allEntitiesList: {
     data: any;
     isLoading: boolean;
     error: any;
     isError: boolean;
-  } = useQuery([`all_organizations_list_page`], () =>
+  } = useQuery([`all_enitites_list_${params.entityType}`], () =>
     GraphQL(
-      allOrganizationsListingDoc,
+      params.entityType === 'organization'
+        ? allOrganizationsListingDoc
+        : allDataSpacesListingDoc,
       {
         // Entity Headers if present
       },
-      {
-        options: {
-          skip: params.entityType !== 'organization',
-        },
-      }
-    )
-  );
-
-  const allDataSpacesList: {
-    data: any;
-    isLoading: boolean;
-    error: any;
-    isError: boolean;
-  } = useQuery([`all_dataspaces_list_page`], () =>
-    GraphQL(
-      allDataSpacesListingDoc,
-      {
-        // Entity Headers if present
-      },
-      {
-        options: {
-          skip: params.entityType !== 'dataspace',
-        },
-      }
+      []
     )
   );
 
@@ -88,48 +68,21 @@ const Page = () => {
       </div>
       <div className="m-auto flex w-11/12 flex-col">
         <DashboardHeader currentPath={pathname} />
-        {allDataSpacesList.isLoading || allOrganizationsList.isLoading ? (
+        {allEntitiesList.isLoading ? (
           <LoadingPage />
         ) : (
           <div className={cn(styles.Main)}>
             <div className="flex flex-wrap  gap-24">
               {[
                 ...(params.entityType === 'organization'
-                  ? allOrganizationsList.data.organisations
-                  : allDataSpacesList.data.dataspaces),
-              ]?.map((orgItem) => (
-                <div
-                  key={orgItem.slug}
-                  className="flex  max-w-64 flex-col items-center gap-3 rounded-2 border-2 border-solid border-baseGraySlateSolid4 px-4 py-5 text-center"
-                >
-                  <Link
-                    href={`/dashboard/${params.entityType}/${orgItem.slug}/dataset`}
-                    id={orgItem.slug}
-                  >
-                    <div className="border-var(--border-radius-5)  rounded-2 ">
-                      <Image
-                        src={'/obi.jpg'}
-                        width={200}
-                        height={200}
-                        alt={'Organization Logo'}
-                      />
-                    </div>
-
-                    {/* <LinkButton
-                  href={`/dashboard/organization/${orgItem.slug}/dataset`}
-                >
-                  Manage Datasets
-                </LinkButton>
-                <LinkButton
-                  href={`/dashboard/organization/${orgItem.slug}/consumers`}
-                >
-                  Manage Consumers
-                </LinkButton> */}
-                  </Link>
-                  <div>
-                    <Text variant="headingMd">{orgItem.name}</Text>
-                  </div>
-                </div>
+                  ? allEntitiesList.data.organisations
+                  : allEntitiesList.data.dataspaces),
+              ]?.map((entityItem) => (
+                <EntityCard
+                  key={entityItem.slug}
+                  entityItem={entityItem}
+                  params={params}
+                />
               ))}
               <div className="flex h-72 w-56 flex-col items-center justify-center gap-3 rounded-2 bg-baseGraySlateSolid6 p-4">
                 <Icon source={Icons.plus} size={40} color="success" />
@@ -146,3 +99,50 @@ const Page = () => {
 };
 
 export default Page;
+
+const EntityCard = ({ key, entityItem, params }: any) => {
+  const [isImageValid, setIsImageValid] = useState(() => {
+    return entityItem.logo ? true : false;
+  });
+  return (
+    <div
+      key={key}
+      className="flex h-72 w-56 flex-col items-center gap-3 rounded-2 border-2 border-solid border-baseGraySlateSolid4 px-4 py-5 text-center"
+    >
+      <div className="flex h-full w-full items-center justify-center rounded-2">
+        <Link
+          href={`/dashboard/${params.entityType}/${entityItem.slug}/dataset`}
+          id={entityItem.slug}
+        >
+          <div className="border-var(--border-radius-5) rounded-2">
+            {isImageValid ? (
+              <Image
+                height={160}
+                width={160}
+                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${entityItem.logo.url}`}
+                alt={`${entityItem.name} logo`}
+                onError={() => {
+                  setIsImageValid(false);
+                }}
+                className="object-contain"
+              />
+            ) : (
+              <Image
+                height={160}
+                width={160}
+                src={'/fallback.svg'}
+                alt={`fallback logo`}
+                className="fill-current object-contain text-baseGraySlateSolid6"
+              />
+            )}
+          </div>
+        </Link>
+      </div>
+      <div>
+        <Text variant="headingMd" className="text-center">
+          {entityItem.name}
+        </Text>
+      </div>
+    </div>
+  );
+};
