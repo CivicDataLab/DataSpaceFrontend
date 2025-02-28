@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Button, Tag, Text, Tooltip } from 'opub-ui';
+import { Button, Icon, Tag, Text, Tooltip } from 'opub-ui';
 
 import { formatDateString } from '@/lib/utils';
+import { Icons } from '@/components/icons';
 
 interface MetadataItem {
   label: string;
@@ -19,6 +20,7 @@ interface Dataset {
   tags: string[];
   categories: string[];
   formats: string[];
+  has_charts: boolean,
   title: string;
   description: string;
   created: string; // ISO 8601 date string
@@ -27,8 +29,6 @@ interface Dataset {
 }
 
 const Cards = ({ data }: { data: Dataset }) => {
-
-  
   function getMetadataValue(data: Dataset, label: string): string | null {
     const metadataEntry = data.metadata.find(
       (entry) => entry.metadata_item.label === label
@@ -109,7 +109,6 @@ const Cards = ({ data }: { data: Dataset }) => {
                       {getMetadataValue(data, 'Update Frequency') || 'NA'}
                     </Text>
                   </div>
-                  
                 </span>
               </div>
 
@@ -147,29 +146,35 @@ const Cards = ({ data }: { data: Dataset }) => {
                 </div>
               </div>
             </div>
-            <div className="mt-2 flex flex-wrap gap-3 lg:gap-6">
-              {data.formats?.length > 0 && (
-                <span className="flex items-center gap-4 py-1 pr-2 lg:w-2/5">
-                  {data.formats.map((fileType, index) => (
-                    
-                    <Tag key={index} background-color="#E1F0FF">
-                      {fileType}
-                    </Tag>
-                  ))}
-                </span>
-              )}
+            <div className="mt-2 flex flex-wrap  gap-3 lg:gap-6">
+              <div className="flex items-center gap-1 align-middle lg:w-2/5">
+                {data.formats?.length > 0 && (
+                  <span className="flex items-center gap-4 py-1 pr-2 ">
+                    {data.formats.map((fileType, index) => (
+                      <Tag key={index} background-color="#E1F0FF">
+                        {fileType}
+                      </Tag>
+                    ))}
+                  </span>
+                )}
+
+              {data.has_charts &&  <Icon source={Icons.chart} size={20} />}
+              </div>
 
               {data?.categories.length > 0 && (
-                <span className="flex gap-2 flex-wrap py-1 pr-2">
+                <span className="flex flex-wrap gap-2 py-1 pr-2">
                   {data?.categories.map((category, index) => (
-                   <div
-                   key={index}
-                   className="rounded-1 px-2 py-1 text-75 border-1"
-                   style={{ borderColor: '#95E79E', borderWidth: '2px', borderStyle: 'solid' }}
-                 >
-                   {category}
-                 </div>
-                 
+                    <div
+                      key={index}
+                      className="rounded-1 border-1 px-2 py-1 text-75"
+                      style={{
+                        borderColor: '#95E79E',
+                        borderWidth: '2px',
+                        borderStyle: 'solid',
+                      }}
+                    >
+                      {category}
+                    </div>
                   ))}
                 </span>
               )}
