@@ -40,6 +40,7 @@ import {
   IconUserCog,
   IconUsers,
   IconX,
+  IconChartBar
   // TablerIconsProps,
 } from '@tabler/icons-react';
 
@@ -88,4 +89,5 @@ export const Icons: {
   userSettings: IconUserCog,
   arrowDiagonal: IconArrowsDiagonal,
   verticalDots: IconDotsVertical,
+  chart:IconChartBar
 };
