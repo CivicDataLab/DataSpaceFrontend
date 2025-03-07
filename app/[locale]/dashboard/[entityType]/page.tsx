@@ -119,7 +119,7 @@ const EntityCard = ({ entityItem, params }: any) => {
               <Image
                 height={160}
                 width={160}
-                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${entityItem?.logo.url}`}
+                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityItem?.logo.url}`}
                 alt={`${entityItem.name} logo`}
                 onError={() => {
                   setIsImageValid(false);
