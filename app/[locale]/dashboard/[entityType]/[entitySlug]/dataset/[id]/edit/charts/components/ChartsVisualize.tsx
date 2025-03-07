@@ -226,8 +226,8 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       chartId: resourceChart.id,
       description: resourceChart.description || '',
       filters:
-        resourceChart.filters?.length > 0
-          ? resourceChart.filters.map((filter: any) => ({
+        resourceChart.chartFilters?.length > 0
+          ? resourceChart.chartFilters.map((filter: any) => ({
               column: filter.column?.id,
               operator: filter.operator,
               value: filter.value,
@@ -235,19 +235,19 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           : [{ column: '', operator: '==', value: '' }],
       name: resourceChart.name || '',
       options: {
-        aggregateType: resourceChart?.options?.aggregateType,
-        regionColumn: resourceChart?.options?.regionColumn?.id,
-        showLegend: resourceChart?.options?.showLegend ?? true,
-        timeColumn: resourceChart?.options?.timeColumn,
-        valueColumn: resourceChart?.options?.valueColumn?.id,
-        xAxisColumn: resourceChart?.options?.xAxisColumn?.id,
-        xAxisLabel: resourceChart?.options?.xAxisLabel,
-        yAxisColumn: resourceChart?.options?.yAxisColumn?.map((col: any) => ({
+        aggregateType: resourceChart?.chartOptions?.aggregateType,
+        regionColumn: resourceChart?.chartOptions?.regionColumn?.id,
+        showLegend: resourceChart?.chartOptions?.showLegend ?? true,
+        timeColumn: resourceChart?.chartOptions?.timeColumn,
+        valueColumn: resourceChart?.chartOptions?.valueColumn?.id,
+        xAxisColumn: resourceChart?.chartOptions?.xAxisColumn?.id,
+        xAxisLabel: resourceChart?.chartOptions?.xAxisLabel,
+        yAxisColumn: resourceChart?.chartOptions?.yAxisColumn?.map((col: any) => ({
           fieldName: col.field.id,
           label: col.label,
           color: col.color,
         })),
-        yAxisLabel: resourceChart?.options?.yAxisLabel,
+        yAxisLabel: resourceChart?.chartOptions?.yAxisLabel,
       },
       resource: resourceChart.resource?.id,
       type: resourceChart.chartType as ChartTypes,
@@ -445,8 +445,8 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           />
           <div className="mb-6 flex flex-col gap-6 p-8 text-center">
             <Text>Preview</Text>
-            {chartData.chart && Object.keys(chartData.chart).length > 0 && (
-              <ReactECharts option={chartData.chart} ref={chartRef} />
+            {chartData.chart?.options && Object.keys(chartData.chart?.options).length > 0 && (
+              <ReactECharts option={chartData.chart?.options} ref={chartRef} />
             )}
           </div>
         </div>

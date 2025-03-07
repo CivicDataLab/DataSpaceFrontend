@@ -61,7 +61,7 @@ export function DashboardNav({
                 <Image
                   height={140}
                   width={140}
-                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${entityDetails?.logo?.url}`}
+                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityDetails?.logo?.url}`}
                   alt={`${entityDetails?.name} logo`}
                   onError={() => {
                     setIsImageValid(false);

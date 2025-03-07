@@ -40,7 +40,6 @@ const getResourceChartImageDetails: any = graphql(`
   }
 `);
 
-
 const getDatasetResourceChartImageDetails: any = graphql(`
   query resourceChartImages($datasetId: UUID!) {
     datasetResourceCharts(datasetId: $datasetId) {
@@ -55,9 +54,6 @@ const getDatasetResourceChartImageDetails: any = graphql(`
   }
 `);
 
-
-
-
 const AddResourceChartimage: any = graphql(`
   mutation GenerateResourceChartimage($dataset: UUID!) {
     addResourceChartImage(dataset: $dataset) {
@@ -71,9 +67,10 @@ const AddResourceChartimage: any = graphql(`
 `);
 
 const UpdateChartImageMutation: any = graphql(`
-  mutation updateChartImage($data: ResourceChartImageInputPartial!) {
-    updateResourceChartImage(data: $data) {
+  mutation updateChartImage($input: ResourceChartImageInputPartial!) {
+    updateResourceChartImage(input: $input) {
       __typename
+        ... on TypeResourceChartImage {{}
       id
       name
       description
@@ -81,6 +78,7 @@ const UpdateChartImageMutation: any = graphql(`
         name
         path
       }
+}
     }
   }
 `);
@@ -126,7 +124,7 @@ const ChartsImage: React.FC<ImageProps> = ({
           [params.entityType]: params.entitySlug,
         },
         {
-          datasetId: params.id
+          datasetId: params.id,
         }
       ),
     {}

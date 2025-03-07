@@ -48,7 +48,7 @@ const deleteResourceChart: any = graphql(`
 `);
 
 const deleteResourceChartImage: any = graphql(`
-  mutation deleteResourceChartImage($resourceChartImageId: String!) {
+  mutation deleteResourceChartImage($resourceChartImageId: UUID!) {
     deleteResourceChartImage(resourceChartImageId: $resourceChartImageId)
   }
 `);

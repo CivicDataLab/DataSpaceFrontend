@@ -72,7 +72,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
             href: '',
             label:
               (params.entityType === 'organization'
-                ? EntityDetailsQryRes.data?.organisations[0]
+                ? EntityDetailsQryRes.data?.organizations[0]
                 : EntityDetailsQryRes.data?.dataspaces[0]
               )?.name || params.entitySlug,
           },
@@ -88,7 +88,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           items={orgSidebarNav}
           entityDetails={
             params.entityType === 'organization'
-              ? EntityDetailsQryRes.data?.organisations[0]
+              ? EntityDetailsQryRes.data?.organizations[0]
               : EntityDetailsQryRes.data?.dataspaces[0]
           }
         />

@@ -31,7 +31,9 @@ const DetailsQuery: any = graphql(`
         description
         id
         name
-        chart
+        chart {
+          options
+        }
       }
       ... on TypeResourceChartImage {
         name
@@ -65,7 +67,7 @@ const Details = () => {
       );
     }
 
-    return <ReactECharts option={item.chart} ref={chartRef} />;
+    return <ReactECharts option={item.chart.options} ref={chartRef} />;
   };
 
   return (

@@ -2,7 +2,7 @@ import { graphql } from '@/gql';
 
 export const getOrgDetailsQryDoc: any = graphql(`
   query getOrgDetailsQry($filters: OrganizationFilter) {
-    organisations(filters: $filters) {
+    organizations(filters: $filters) {
       id
       name
       logo {

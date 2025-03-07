@@ -2,7 +2,7 @@ import { graphql } from '@/gql';
 
 export const allOrganizationsListingDoc: any = graphql(`
   query allOrganizationsListingDoc {
-    organisations {
+    organizations {
       id
       name
       logo {
