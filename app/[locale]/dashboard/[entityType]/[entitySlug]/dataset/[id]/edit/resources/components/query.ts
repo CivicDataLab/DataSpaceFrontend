@@ -12,8 +12,8 @@ export const createResourceFilesDoc: any = graphql(`
 `);
 
 export const updateSchema: any = graphql(`
-  mutation updateSchema($input: SchemaUpdateInput!) {
-    updateSchema(input: $input) {
+  mutation updateSchema($schemaUpdateInput: SchemaUpdateInput!) {
+    updateFileResourceSchema(schemaUpdateInput: $schemaUpdateInput) {
       __typename
       ... on TypeResource {
         id
