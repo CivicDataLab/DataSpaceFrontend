@@ -73,17 +73,16 @@ const Page = () => {
         ) : (
           <div className={cn(styles.Main)}>
             <div className="flex flex-wrap  gap-24">
-              {[
-                ...(params.entityType === 'organization'
-                  ? allEntitiesList.data.organisations
-                  : allEntitiesList.data.dataspaces),
-              ]?.map((entityItem) => (
-                <EntityCard
-                  key={entityItem.slug}
-                  entityItem={entityItem}
-                  params={params}
-                />
-              ))}
+              {(params.entityType === 'organization'
+                ? allEntitiesList.data.organizations
+                : allEntitiesList.data.dataspaces
+              )?.map((entityItem: any) => {
+                return (
+                  <div key={entityItem.name}>
+                    <EntityCard entityItem={entityItem} params={params} />
+                  </div>
+                );
+              })}
               <div className="flex h-72 w-56 flex-col items-center justify-center gap-3 rounded-2 bg-baseGraySlateSolid6 p-4">
                 <Icon source={Icons.plus} size={40} color="success" />
                 <Text alignment="center" variant="headingMd">
@@ -100,18 +99,19 @@ const Page = () => {
 
 export default Page;
 
-const EntityCard = ({ key, entityItem, params }: any) => {
+const EntityCard = ({ entityItem, params }: any) => {
   const [isImageValid, setIsImageValid] = useState(() => {
-    return entityItem.logo ? true : false;
+    return entityItem?.logo ? true : false;
   });
+
   return (
     <div
-      key={key}
+      key={entityItem.name}
       className="flex h-72 w-56 flex-col items-center gap-3 rounded-2 border-2 border-solid border-baseGraySlateSolid4 px-4 py-5 text-center"
     >
       <div className="flex h-full w-full items-center justify-center rounded-2">
         <Link
-          href={`/dashboard/${params.entityType}/${entityItem.slug}/dataset`}
+          href={`/dashboard/${params.entityType}/${entityItem?.slug}/dataset`}
           id={entityItem.slug}
         >
           <div className="border-var(--border-radius-5) rounded-2">
@@ -119,7 +119,7 @@ const EntityCard = ({ key, entityItem, params }: any) => {
               <Image
                 height={160}
                 width={160}
-                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${entityItem.logo.url}`}
+                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${entityItem?.logo.url}`}
                 alt={`${entityItem.name} logo`}
                 onError={() => {
                   setIsImageValid(false);
