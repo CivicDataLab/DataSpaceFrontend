@@ -10,7 +10,7 @@ import { Button, Spinner, Tag, Text } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 
-const datasetResourceQuery = graphql(`
+const datasetResourceQuery: any = graphql(`
   query datasetResources($datasetId: UUID!) {
     datasetResources(datasetId: $datasetId) {
       id
@@ -19,18 +19,7 @@ const datasetResourceQuery = graphql(`
       type
       name
       description
-      accessModels {
-        name
-        description
-        type
-        modelResources {
-          fields {
-            format
-            fieldName
-            description
-          }
-        }
-      }
+
       schema {
         fieldName
         id
@@ -47,7 +36,7 @@ const datasetResourceQuery = graphql(`
 const Resources = () => {
   const params = useParams();
 
-  const { data, isLoading } = useQuery(
+  const getResourceDetails: { data: any; isLoading: boolean } = useQuery(
     [`resources_${params.datasetIdentifier}`],
     () =>
       GraphQL(
@@ -87,62 +76,68 @@ const Resources = () => {
         }));
       }
     });
-  }, [data]);
+  }, [getResourceDetails.data]);
 
   return (
     <div className="w-full">
-      {isLoading ? (
+      {getResourceDetails.isLoading ? (
         <div className="mt-8 flex justify-center">
           <Spinner />
         </div>
-      ) : data && data?.datasetResources?.length > 0 ? (
+      ) : getResourceDetails.data &&
+        getResourceDetails.data?.datasetResources?.length > 0 ? (
         <>
           <Text variant="bodyLg" className="mx-6 lg:mx-0">
             Downloadable Resources
           </Text>
           <div className="mx-6 mt-5 flex flex-col gap-8 bg-surfaceDefault p-6 lg:mx-0">
-            {data?.datasetResources.map((item: any, index: number) => (
-              <div key={index} className="flex flex-wrap justify-between gap-4">
-                <div className="gap flex flex-col lg:w-4/5">
-                  <div className="item flex items-center gap-2">
-                    <Text variant="headingMd">{item.name}</Text>
-                    <Tag>{item.fileDetails.format}</Tag>
+            {getResourceDetails.data?.datasetResources.map(
+              (item: any, index: number) => (
+                <div
+                  key={index}
+                  className="flex flex-wrap justify-between gap-4"
+                >
+                  <div className="gap flex flex-col lg:w-4/5">
+                    <div className="item flex items-center gap-2">
+                      <Text variant="headingMd">{item.name}</Text>
+                      <Tag>{item.fileDetails.format}</Tag>
+                    </div>
+                    <div>
+                      <Text>Updated:</Text>
+                      <Text>{formatDate(item.modified)}</Text>
+                    </div>
+                    <div className="flex flex-col">
+                      <div
+                        ref={(el) => (descriptionRefs.current[index] = el)}
+                        className={!showMore[index] ? 'line-clamp-2' : ''}
+                      >
+                        <Text>{item.description}</Text>
+                      </div>
+                      {isDescriptionLong[index] && (
+                        <Button
+                          className="self-start p-2"
+                          onClick={() => toggleShowMore(index)}
+                          variant="interactive"
+                          size="slim"
+                          kind="tertiary"
+                        >
+                          {showMore[index] ? 'Show less' : 'Show more'}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div>
-                    <Text>Updated:</Text>
-                    <Text>{formatDate(item.modified)}</Text>
-                  </div>
-                  <div className="flex flex-col">
-                    <div
-                      ref={(el) => (descriptionRefs.current[index] = el)}
-                      className={!showMore[index] ? 'line-clamp-2' : ''}
+                    <Link
+                      href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${item.id}`}
+                      target="_blank"
+                      className="flex justify-center"
                     >
-                      <Text>{item.description}</Text>
-                    </div>
-                    {isDescriptionLong[index] && (
-                      <Button
-                        className="self-start p-2"
-                        onClick={() => toggleShowMore(index)}
-                        variant="interactive"
-                        size="slim"
-                        kind="tertiary"
-                      >
-                        {showMore[index] ? 'Show less' : 'Show more'}
-                      </Button>
-                    )}
+                      <Button>Download</Button>
+                    </Link>
                   </div>
                 </div>
-                <div>
-                  <Link
-                    href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${item.id}`}
-                    target="_blank"
-                    className="flex justify-center"
-                  >
-                    <Button>Download</Button>
-                  </Link>
-                </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
         </>
       ) : (
