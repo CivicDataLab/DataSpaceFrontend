@@ -67,7 +67,7 @@ const Details = () => {
       );
     }
 
-    return <ReactECharts option={item.chart.options} ref={chartRef} />;
+    return <ReactECharts option={item?.chart?.options} ref={chartRef} />;
   };
 
   return (
@@ -89,7 +89,8 @@ const Details = () => {
                     <CarouselItem key={index} className="m-auto">
                       <div className="w-full border-2 border-solid border-baseGraySlateSolid4 bg-surfaceDefault p-6 text-center shadow-basicLg max-sm:p-2">
                         <div className="lg:p-10">
-                          {item.__typename === 'TypeResourceChart' ? (
+                          {item.__typename === 'TypeResourceChart' &&
+                          item?.chart?.options ? (
                             renderChart(item)
                           ) : (
                             <Image
