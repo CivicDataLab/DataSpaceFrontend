@@ -73,11 +73,8 @@ const editaccessModel: any = graphql(`
 const getAccessModelDetails: any = graphql(`
   query accessModel($accessModelId: UUID!) {
     accessModel(accessModelId: $accessModelId) {
-      modelResources {
-        fields {
-          id
-          fieldName
-        }
+      resourceFields {
+        fields
         resource {
           id
           name
