@@ -17,8 +17,8 @@ import Card from '../../datasets/components/Card';
 import Filter from '../../datasets/components/FIlter/Filter';
 
 const categoryQueryDoc: any = graphql(`
-  query CategoryDetails($filters: CategoryFilter) {
-    categories(filters: $filters) {
+  query CategoryDetails($id: UUID!) {
+    category(id: $id) {
       id
       name
       description
