@@ -23,7 +23,7 @@ import { GraphQL } from '@/lib/api';
 import { formatDate, toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
-const datasetSummaryQuery = graphql(`
+const datasetSummaryQuery:any = graphql(`
   query datasetsSummary($filters: DatasetFilter) {
     datasets(filters: $filters) {
       metadata {
@@ -44,22 +44,6 @@ const datasetSummaryQuery = graphql(`
           id
           format
           description
-        }
-      }
-      accessModels {
-        id
-        name
-        description
-        type
-        created
-        modified
-        modelResources {
-          resource {
-            name
-            description
-            id
-            type
-          }
         }
       }
       tags {
@@ -179,7 +163,7 @@ const Page = () => {
     id: string;
   }>();
 
-  const { data, isLoading, refetch } = useQuery([`summary_${params.id}`], () =>
+  const getDatasetsSummary:{ data:any, isLoading:any, refetch:any } = useQuery([`summary_${params.id}`], () =>
     GraphQL(
       datasetSummaryQuery,
       {
@@ -190,15 +174,15 @@ const Page = () => {
   );
 
   useEffect(() => {
-    refetch();
+    getDatasetsSummary.refetch();
   });
 
   const Summary = [
     {
       name: 'Resource',
-      data: data?.datasets[0]?.resources,
+      data: getDatasetsSummary.data?.datasets[0]?.resources,
       error:
-        data && data?.datasets[0]?.resources.length === 0
+      getDatasetsSummary.data && getDatasetsSummary.data?.datasets[0]?.resources.length === 0
           ? 'No Resources found. Please add to continue.'
           : '',
       errorType: 'critical',
@@ -207,9 +191,9 @@ const Page = () => {
       ? [
           {
             name: 'Access Type',
-            data: data?.datasets[0]?.accessModels,
+            data: getDatasetsSummary.data?.datasets[0]?.accessModels,
             error:
-              data && data?.datasets[0]?.accessModels.length === 0
+            getDatasetsSummary.data && getDatasetsSummary.data?.datasets[0]?.accessModels.length === 0
                 ? 'No Access Type found. Please add to continue.'
                 : '',
             errorType: 'critical',
@@ -218,18 +202,18 @@ const Page = () => {
       : []),
     {
       name: 'Metadata',
-      data: data?.datasets[0]?.metadata,
+      data: getDatasetsSummary.data?.datasets[0]?.metadata,
       error: '',
     },
   ];
 
   const PrimaryMetadata = [
-    { label: 'Dataset Name', value: data?.datasets[0].title },
-    { label: 'Description', value: data?.datasets[0].description },
-    { label: 'Date of Creation', value: formatDate(data?.datasets[0].created) },
+    { label: 'Dataset Name', value: getDatasetsSummary.data?.datasets[0].title },
+    { label: 'Description', value: getDatasetsSummary.data?.datasets[0].description },
+    { label: 'Date of Creation', value: formatDate(getDatasetsSummary.data?.datasets[0].created) },
     {
       label: 'Date of Last Update',
-      value: formatDate(data?.datasets[0].modified),
+      value: formatDate(getDatasetsSummary.data?.datasets[0].modified),
     },
   ];
   const router = useRouter();
@@ -269,7 +253,7 @@ const Page = () => {
           </Text>
         </div>
         <div className=" flex flex-col gap-10 pt-6">
-          {isLoading || mutationLoading ? (
+          {getDatasetsSummary.isLoading || mutationLoading ? (
             <div className=" mt-8 flex justify-center">
               <Spinner />
             </div>
@@ -356,7 +340,7 @@ const Page = () => {
                                 Tags:
                               </Text>
                               <div className="flex gap-2 lg:basis-4/5">
-                                {data?.datasets[0].tags.map(
+                                {getDatasetsSummary.data?.datasets[0].tags.map(
                                   (item: any, index: any) => (
                                     <Tag key={index}>{item.value}</Tag>
                                   )
@@ -373,9 +357,9 @@ const Page = () => {
               <Button
                 className="m-auto w-fit"
                 disabled={
-                  !data?.datasets[0]?.resources.length ||
+                  !getDatasetsSummary.data?.datasets[0]?.resources.length ||
                   (process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true' &&
-                    !data?.datasets[0]?.accessModels.length)
+                    !getDatasetsSummary.data?.datasets[0]?.accessModels.length)
                 }
                 onClick={() => mutate()}
               >
