@@ -29,7 +29,7 @@ const FetchUseCaseDetails: any = graphql(`
 `);
 
 const AssignUsecaseDatasets: any = graphql(`
-  mutation assignDatasets($useCaseId: Int!, $datasetIds: [UUID!]!) {
+  mutation assignDatasets($useCaseId: String!, $datasetIds: [UUID!]!) {
     updateUsecaseDatasets(useCaseId: $useCaseId, datasetIds: $datasetIds) {
       ... on TypeUseCase {
         id

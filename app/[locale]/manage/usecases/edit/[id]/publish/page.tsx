@@ -51,7 +51,7 @@ const UseCaseDetails: any = graphql(`
 `);
 
 const publishUseCaseMutation: any = graphql(`
-  mutation publishUseCase($useCaseId: Int!) {
+  mutation publishUseCase($useCaseId: String!) {
     publishUseCase(useCaseId: $useCaseId) {
       ... on TypeUseCase {
         id
