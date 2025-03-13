@@ -12,8 +12,9 @@ import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
 import { Loading } from '@/components/loading';
-import { ActionBar } from '../../dashboard/[entityType]/[entitySlug]/dataset/components/action-bar';
-import { Navigation } from '../../dashboard/[entityType]/[entitySlug]/dataset/components/navigate-org-datasets';
+import { Navigation } from '../dataset/components/navigate-org-datasets';
+import { ActionBar } from '../dataset/components/action-bar';
+
 
 const allUseCases: any = graphql(`
   query UseCasesData($filters: UseCaseFilter, $order: UseCaseOrder) {
