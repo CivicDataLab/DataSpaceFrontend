@@ -19,7 +19,11 @@ const datasetResourceQuery: any = graphql(`
       type
       name
       description
-
+      previewData {
+        columns
+        rows
+      }
+      previewEnabled
       schema {
         fieldName
         id
@@ -100,7 +104,7 @@ const Resources = () => {
                   <div className="gap flex flex-col lg:w-4/5">
                     <div className="item flex items-center gap-2">
                       <Text variant="headingMd">{item.name}</Text>
-                      <Tag>{item.fileDetails.format}</Tag>
+                      <Tag>{item.fileDetails?.format}</Tag>
                     </div>
                     <div>
                       <Text>Updated:</Text>
