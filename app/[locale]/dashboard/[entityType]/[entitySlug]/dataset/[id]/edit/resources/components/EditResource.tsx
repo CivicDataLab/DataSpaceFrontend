@@ -1,29 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { graphql } from '@/gql';
 import {
   CreateFileResourceInput,
   SchemaUpdateInput,
   UpdateFileResourceInput,
 } from '@/gql/generated/graphql';
-import { IconTrash } from '@tabler/icons-react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  parseAsBoolean,
-  parseAsString,
-  useQueryState,
-} from 'next-usequerystate';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { parseAsString, useQueryState } from 'next-usequerystate';
 import {
   Button,
-  ButtonGroup,
   Checkbox,
   Combobox,
-  DataTable,
   Dialog,
   Divider,
   DropZone,
   Icon,
-  IconButton,
   Select,
   Spinner,
   Text,
@@ -178,10 +169,24 @@ export const EditResource = ({ refetch, list }: EditProps) => {
   const [resourceDesc, setResourceDesc] = React.useState(
     getResourceObject(resourceId)?.description
   );
+  const [previewEnable, setPreviewEnable] = useState(true);
+
+  const [previewDetails, setPreviewDetails] = useState({
+    startEntry: 0,
+    endEntry: 0,
+    isAllEntries: true,
+  });
 
   React.useEffect(() => {
     setResourceName(getResourceObject(resourceId)?.label);
     setResourceDesc(getResourceObject(resourceId)?.description);
+    setPreviewEnable(getResourceObject(resourceId)?.previewEnable ?? true);
+    setPreviewDetails({
+      startEntry: getResourceObject(resourceId)?.previewDetails.startEntry ?? 0,
+      endEntry: getResourceObject(resourceId)?.previewDetails.endEntry ?? 0,
+      isAllEntries:
+        getResourceObject(resourceId)?.previewDetails.isAllEntries ?? true,
+    });
 
     //fix this later
   }, [JSON.stringify(list), resourceId]);
@@ -230,7 +235,7 @@ export const EditResource = ({ refetch, list }: EditProps) => {
   const fileInput = (
     <div className="flex">
       <Text className="break-all">
-        {getResourceObject(resourceId)?.fileDetails.file.name.replace(
+        {getResourceObject(resourceId)?.fileDetails?.file.name.replace(
           'resources/',
           ''
         )}{' '}
@@ -242,12 +247,35 @@ export const EditResource = ({ refetch, list }: EditProps) => {
     setResourceId('');
   };
 
+  const handlePreviewDetailsChange = (
+    field: string,
+    value: string | boolean
+  ) => {
+    if (field === 'isAllEntries' && value) {
+      setPreviewDetails({
+        startEntry: 0,
+        endEntry: 0,
+        isAllEntries: true,
+      });
+    } else {
+      setPreviewDetails((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
+  };
   const saveResource = () => {
     updateResourceMutation.mutate({
       fileResourceInput: {
         id: resourceId,
         description: resourceDesc || '',
         name: resourceName || '',
+        previewEnabled: previewEnable,
+        previewDetails: {
+          startEntry: +previewDetails.startEntry || 0,
+          endEntry: +previewDetails.endEntry || 0,
+          isAllEntries: previewDetails.isAllEntries,
+        },
       },
       isResetSchema: false,
     });
@@ -357,6 +385,7 @@ export const EditResource = ({ refetch, list }: EditProps) => {
             multiline={4}
           />
         </div>
+
         <div className="flex w-1/5 flex-col justify-between border-1 border-solid border-baseGraySlateSolid7 p-3 ">
           {fileInput}
 
@@ -371,71 +400,55 @@ export const EditResource = ({ refetch, list }: EditProps) => {
           </DropZone>
         </div>
       </div>
-      {/* <div className=" my-8 flex items-center gap-4 border-1 border-solid border-baseGraySlateSolid7 px-7 py-4 ">
-        <div className="flex w-1/6 items-center justify-center gap-1">
-          <Checkbox name="checkbox" onChange={() => console.log('hi')}>
-            Enabel Preview
-          </Checkbox>
-          <Icon source={Icons.info} />
-        </div>
+      <div className="my-8 flex items-center gap-8 align-middle">
+        <Checkbox
+          name={'previewEnabled'}
+          checked={previewEnable}
+          onChange={() => setPreviewEnable(!previewEnable)}
+        >
+          Preview Enabled
+        </Checkbox>
 
-        <div className="h-[70px] w-[2px] bg-baseGraySlateSolid7"></div>
-
-        <div className="flex items-center gap-5 px-8">
-          <Text>
-            Select Rows to be <br /> shown in the Preview
-          </Text>
-          <Combobox
-            name="geo_list"
-            label="From Row Number"
-            placeholder="Search Locations"
-            list={[
-              {
-                label:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-                value:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-              },
-              {
-                label:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-                value:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-              },
-            ]}
-            displaySelected
-            required
-            error="This field is required"
-          />
-          <Combobox
-            name="to_row_number"
-            label="To Row Number"  
-            placeholder="Search Locations"
-            list={[
-              {
-                label:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-                value:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-              },
-              {
-                label:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-                value:
-                  'Temperature and Precipitation (2011) Shimla Himachal Pradesh.xls',
-              },
-            ]}
-            displaySelected
-            required
-            error="This field is required"
-          />
-        </div>
-        <div className="h-[70px] w-[2px] bg-baseGraySlateSolid7"></div>
-        <div className="flex w-1/6 justify-center ">
-          <Text>See Preview</Text>
-        </div>
-      </div>*/}
-      <div className="my-8">
+        {previewEnable && (
+          <>
+            <Checkbox
+              name={'isAllEntries'}
+              checked={previewDetails.isAllEntries}
+              onChange={() =>
+                handlePreviewDetailsChange(
+                  'isAllEntries',
+                  !previewDetails.isAllEntries
+                )
+              }
+            >
+              Show all entries
+            </Checkbox>
+            {!previewDetails.isAllEntries && (
+              <>
+                <TextField
+                  value={previewDetails.startEntry.toString()}
+                  label="Start Entry"
+                  name="startEntry"
+                  onChange={(value) =>
+                    handlePreviewDetailsChange('startEntry', value)
+                  }
+                  type="number"
+                />
+                <TextField
+                  value={previewDetails.endEntry.toString()}
+                  label="End Entry"
+                  name="endEntry"
+                  onChange={(value) =>
+                    handlePreviewDetailsChange('endEntry', value)
+                  }
+                  type="number"
+                />
+              </>
+            )}
+          </>
+        )}
+      </div>
+      <div className="my-4">
         <div className="flex flex-wrap justify-between">
           <Text>Fields in the Resource</Text>
           <Button
