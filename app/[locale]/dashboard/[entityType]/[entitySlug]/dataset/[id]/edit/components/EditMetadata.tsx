@@ -1,15 +1,16 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   TypeCategory,
   TypeDataset,
   TypeMetadata,
   TypeTag,
-  UpdateMetadataInput
+  UpdateMetadataInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
 import {
   Combobox,
   Divider,
@@ -19,13 +20,12 @@ import {
   Input,
   Spinner,
   Text,
-  toast
+  toast,
 } from 'opub-ui';
 
+import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
-import { GraphQL } from '@/lib/api';
-import { useEffect, useState } from 'react';
 import DatasetLoading from '../../../components/loading-dataset';
 
 const categoriesListQueryDoc: any = graphql(`
@@ -181,15 +181,18 @@ export function EditMetadata({ id }: { id: string }) {
     )
   );
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const updateMetadataMutation = useMutation(
-    (data: { UpdateMetadataInput: UpdateMetadataInput }) =>
-      GraphQL(
+    async (data: { UpdateMetadataInput: UpdateMetadataInput }) => {
+      return GraphQL(
         updateMetadataMutationDoc,
         {
           [params.entityType]: params.entitySlug,
         },
         data
-      ),
+      );
+    },
     {
       onSuccess: () => {
         toast('Details updated successfully!');
@@ -199,11 +202,13 @@ export function EditMetadata({ id }: { id: string }) {
             `metadata_fields_list_${id}`,
           ],
         });
-        // getMetaDataListQuery.refetch();
         getDatasetMetadata.refetch();
-       
       },
       onError: (err: any) => {
+        if (err.name === 'AbortError') {
+          console.log('Request aborted, skipping error toast');
+          return;
+        }
         toast('Error:  ' + err.message.split(':')[0]);
       },
     }
@@ -249,12 +254,16 @@ export function EditMetadata({ id }: { id: string }) {
     return defaultVal;
   };
 
-  const [formData, setFormData] = useState(defaultValuesPrepFn(getDatasetMetadata?.data?.datasets[0]));
+  const [formData, setFormData] = useState(
+    defaultValuesPrepFn(getDatasetMetadata?.data?.datasets[0])
+  );
   const [previousFormData, setPreviousFormData] = useState(formData);
 
   useEffect(() => {
     if (getDatasetMetadata.data?.datasets[0]) {
-      const updatedData = defaultValuesPrepFn(getDatasetMetadata.data.datasets[0]);
+      const updatedData = defaultValuesPrepFn(
+        getDatasetMetadata.data.datasets[0]
+      );
       setFormData(updatedData);
       setPreviousFormData(updatedData);
     }
@@ -271,39 +280,50 @@ export function EditMetadata({ id }: { id: string }) {
     if (JSON.stringify(updatedData) !== JSON.stringify(previousFormData)) {
       setPreviousFormData(updatedData);
 
+      // Abort previous request if it exists
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Create a new abort controller
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       const transformedValues = Object.keys(updatedData)?.reduce(
         (acc: any, key) => {
           acc[key] = Array.isArray(updatedData[key])
-            ? updatedData[key]
-                .map((item: any) => item.value || item)
-                .join(', ')
+            ? updatedData[key].map((item: any) => item.value || item).join(', ')
             : updatedData[key];
           return acc;
         },
         {}
       );
-      updateMetadataMutation.mutate({
-        UpdateMetadataInput: {
-          dataset: id,
-          metadata: [
-            ...Object.keys(transformedValues)
-              .filter(
-                (valueItem) =>
-                  !['categories', 'description', 'tags'].includes(valueItem)
-              )
-              .map((key) => {
-                return {
-                  id: key,
-                  value: transformedValues[key] || '',
-                };
-              }),
-          ],
-          description: updatedData.description || '',
-          tags: updatedData.tags?.map((item: any) => item.label) || [],
-          categories:
-            updatedData.categories?.map((item: any) => item.value) || [],
+      updateMetadataMutation.mutate(
+        {
+          UpdateMetadataInput: {
+            dataset: id,
+            metadata: [
+              ...Object.keys(transformedValues)
+                .filter(
+                  (valueItem) =>
+                    !['categories', 'description', 'tags'].includes(valueItem)
+                )
+                .map((key) => {
+                  return {
+                    id: key,
+                    value: transformedValues[key] || '',
+                  };
+                }),
+            ],
+            description: updatedData.description || '',
+            tags: updatedData.tags?.map((item: any) => item.label) || [],
+            categories:
+              updatedData.categories?.map((item: any) => item.value) || [],
+          },
+          
         },
-      });
+      
+      );
     }
   };
 
@@ -347,8 +367,6 @@ export function EditMetadata({ id }: { id: string }) {
         </div>
       );
     }
-
-    
 
     if (metadataFormItem.dataType === 'MULTISELECT') {
       const prefillData = metadataFormItem.value ? metadataFormItem.value : [];
@@ -419,7 +437,6 @@ export function EditMetadata({ id }: { id: string }) {
       );
     }
 
-
     // Add more conditions for other data types as needed
     return null;
   }
@@ -430,7 +447,6 @@ export function EditMetadata({ id }: { id: string }) {
       !getCategoriesList?.isLoading &&
       !getDatasetMetadata.isLoading ? (
         <Form
-         
           formOptions={{
             resetOptions: {
               keepValues: true,
@@ -440,14 +456,14 @@ export function EditMetadata({ id }: { id: string }) {
           }}
         >
           <>
-          <div className="flex justify-end gap-2">
-            <Text color="highlight">Auto Save </Text>
-            {updateMetadataMutation.isLoading ? (
-              <Spinner />
-            ) : (
-              <Icon source={Icons.checkmark} />
-            )}
-          </div>
+            <div className="flex justify-end gap-2">
+              <Text color="highlight">Auto Save </Text>
+              {updateMetadataMutation.isLoading ? (
+                <Spinner />
+              ) : (
+                <Icon source={Icons.checkmark} />
+              )}
+            </div>
             <div className="pt-3">
               <FormLayout>
                 <div className="w-full py-4 pr-4">
@@ -531,7 +547,6 @@ export function EditMetadata({ id }: { id: string }) {
             <div className="mt-8">
               <Divider />
             </div>
-           
           </>
         </Form>
       ) : (
