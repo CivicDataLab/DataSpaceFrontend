@@ -10,7 +10,7 @@ interface MetadataProps {
 }
 
 const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
-  const filteredMetadataArray = data.metadata.filter(
+  const filteredMetadataArray = data?.metadata.filter(
     (item: any) =>
       item.metadataItem.label !== 'Source Website' &&
       item.metadataItem.label !== 'Github Repo Link' &&
@@ -31,7 +31,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
         )}
       </div>
       <div className="flex flex-col gap-5 align-baseline">
-        {filteredMetadataArray.map((item: any, index: any) => (
+        {filteredMetadataArray?.map((item: any, index: any) => (
           <div
             className="flex items-center gap-2 border-b-2 border-solid border-baseGraySlateSolid6 pb-2"
             key={index}

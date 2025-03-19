@@ -14,13 +14,13 @@ interface PrimaryDataProps {
 }
 
 const PrimaryData: React.FC<PrimaryDataProps> = ({ data, isLoading }) => {
-  const sourceMetadata = data.metadata.find(
+  const sourceMetadata = data?.metadata.find(
     (item: any) => item.metadataItem.label === 'Source'
   );
-  const sourceLink = data.metadata.find(
+  const sourceLink = data?.metadata.find(
     (item: any) => item.metadataItem.label === 'Source Website'
   );
-  const githubLink = data.metadata.find(
+  const githubLink = data?.metadata.find(
     (item: any) => item.metadataItem.label === 'Github Repo Link'
   );
 
