@@ -180,7 +180,7 @@ export const EditResource = ({ refetch, list }: EditProps) => {
   React.useEffect(() => {
     setResourceName(getResourceObject(resourceId)?.label);
     setResourceDesc(getResourceObject(resourceId)?.description);
-    setPreviewEnable(getResourceObject(resourceId)?.previewEnable ?? true);
+    setPreviewEnable(getResourceObject(resourceId)?.previewEnabled ?? true);
     setPreviewDetails({
       startEntry: getResourceObject(resourceId)?.previewDetails.startEntry ?? 0,
       endEntry: getResourceObject(resourceId)?.previewDetails.endEntry ?? 0,

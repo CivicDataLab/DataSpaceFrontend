@@ -17,7 +17,7 @@ export interface TListItem {
   description: string;
   dataset: any;
   fileDetails: any;
-  previewEnable: boolean
+  previewEnabled: boolean
   previewDetails: {
     startEntry: 0,
     endEntry: 0,
@@ -54,7 +54,7 @@ export function DistibutionPage({
         description: item.description,
         dataset: item.dataset?.pk,
         fileDetails: item.fileDetails,
-        previewEnable: item.previewEnable,
+        previewEnabled: item.previewEnabled,
         previewDetails: {
           startEntry: item.previewDetails?.startEntry,
           endEntry: item.previewDetails?.endEntry,
