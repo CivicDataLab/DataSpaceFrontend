@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
 import { Session } from 'next-auth';
@@ -8,22 +9,13 @@ import { signIn, signOut, useSession } from 'next-auth/react';
 import {
   Avatar,
   Button,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
   Divider,
-  Icon,
   IconButton,
   Popover,
-  SearchInput,
   Spinner,
   Text,
 } from 'opub-ui';
 
-import { Icons } from '@/components/icons';
 import Sidebar from './sidebar';
 
 const profileLinks = [
@@ -55,25 +47,54 @@ export function MainNav({ hideSearch = false }) {
     return <LogginOutPage />;
   }
 
+  const Navigation = [
+    {
+      title: 'All Data',
+      href: '/datasets',
+    },
+    {
+      title: 'Sectors',
+      href: '/categories',
+    },
+    {
+      title: 'Use Cases',
+      href: '#',
+    },
+    {
+      title: 'Publishers',
+      href: '#',
+    },
+    {
+      title: 'Tools',
+      href: '#',
+    },
+  ];
+
   return (
     <nav>
       <div className="flex items-center justify-between gap-4">
-        <div className="flex gap-1">
+        <div className="flex items-center gap-1">
           <div className="lg:hidden">
-            <Sidebar />
+            <Sidebar
+              data={Navigation}
+              session={session}
+              status={status}
+              keycloakSessionLogOut={keycloakSessionLogOut}
+              signIn={signIn}
+            />
           </div>
           <Link href="/">
             <div className="flex items-center gap-2">
-              <Icon source={Icons.logo} size={24} color="success" />
-              <Text variant="headingLg" className="text-surfaceDefault" as="h1">
+              <Image src={'/logo.png'} width={38} height={38} alt="logo" />
+              <Text variant="headingXl" className="text-surfaceDefault" as="h1">
                 CivicDataSpace
               </Text>
             </div>
           </Link>
         </div>
 
-        <div className="flex items-center gap-4">
-          {!hideSearch && (
+        <div className="flex items-center gap-8">
+          {/* {!hideSearch && (
             <SearchInput
               placeholder="Search"
               name="Search"
@@ -113,35 +134,26 @@ export function MainNav({ hideSearch = false }) {
               }
             />
           )}
-          <div className="hidden min-w-[102px] lg:block">
-            <Link href={'/datasets'}>
-              <Text
-                variant="headingSm"
-                as="h1"
-                className=" text-surfaceDefault"
-              >
-                Dataset Listing
-              </Text>
-            </Link>
+          */}
+          <div className="flex items-center gap-5">
+            {Navigation.map((item, index) => (
+              <div className="hidden lg:block" key={index}>
+                <Link href={item.href}>
+                  <Text
+                    variant="headingMd"
+                    as="h1"
+                    className="uppercase text-surfaceDefault"
+                  >
+                    {item.title}
+                  </Text>
+                </Link>
+              </div>
+            ))}
           </div>
-
-          <div className="hidden min-w-[102px] lg:block">
-            <Link href={'/categories'}>
-              <Text
-                variant="headingSm"
-                as="h1"
-                className=" text-surfaceDefault"
-              >
-                Categories
-              </Text>
-            </Link>
-          </div>
-
           {status === 'loading' ? (
-            <div className="min-w-[112px]" />
+            <Spinner />
           ) : (
-            <div className="flex min-w-[112px] shrink-0 items-center justify-end gap-4">
-              <Icon source={Icons.notification} color="onBgDefault" />
+            <div className=" hidden lg:block">
               {session?.user ? (
                 <ProfileContent
                   session={session}
@@ -150,12 +162,16 @@ export function MainNav({ hideSearch = false }) {
               ) : (
                 <Button
                   onClick={() => {
-                    console.log(process.env.NEXTAUTH_URL,process.env.NEXT_PUBLIC_NEXTAUTH_URL)
+                    console.log(
+                      process.env.NEXTAUTH_URL,
+                      process.env.NEXT_PUBLIC_NEXTAUTH_URL
+                    );
                     signIn('keycloak');
                   }}
                   kind="secondary"
+                  variant="success"
                 >
-                  Log In
+                  <Text variant="headingMd">LOGIN / SIGN UP</Text>
                 </Button>
               )}
             </div>
@@ -166,7 +182,7 @@ export function MainNav({ hideSearch = false }) {
   );
 }
 
-const ProfileContent = ({
+export const ProfileContent = ({
   session,
   keycloakSessionLogOut,
 }: {
@@ -186,7 +202,7 @@ const ProfileContent = ({
           <Button
             kind="tertiary"
             size="slim"
-            className="rounded-full hover:no-underline"
+            className="rounded-full  hover:no-underline"
           >
             <Avatar
               showInitials
@@ -241,19 +257,11 @@ const ProfileContent = ({
 
 const LogginOutPage = () => {
   return (
-    <div className="h-screen w-screen overflow-hidden">
-      <Link href="/">
-        <div className="flex items-center gap-2 pt-[6px]">
-          <Icon source={Icons.logo} size={24} color="success" />
-          <Text variant="headingLg" as="h1">
-            OPub
-          </Text>
-        </div>
-      </Link>
-      <div className="flex h-full w-full flex-col items-center justify-center gap-1">
-        <Spinner />
-        <Text variant="headingLg">Logging out</Text>
-      </div>
+    <div className=" flex items-center justify-end gap-4">
+      <Spinner color="surface" />
+      <Text variant="headingLg" color="onBgDefault">
+        Logging out...
+      </Text>
     </div>
   );
 };
