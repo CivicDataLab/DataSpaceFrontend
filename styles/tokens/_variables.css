@@ -86,6 +86,7 @@
   --base-pure-white: #ffffff;
   --base-pure-black: #000000;
   --blue-primary-color: #22699D;
+  --orange-secondary-color:#FDB557;
   --text-default: var(--base-gray-slate-solid-12);
   --text-medium: var(--base-gray-slate-solid-11);
   --text-subdued: #3e4346;
