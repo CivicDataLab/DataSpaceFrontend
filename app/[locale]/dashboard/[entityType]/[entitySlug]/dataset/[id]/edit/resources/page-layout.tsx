@@ -17,6 +17,12 @@ export interface TListItem {
   description: string;
   dataset: any;
   fileDetails: any;
+  previewEnabled: boolean
+  previewDetails: {
+    startEntry: 0,
+    endEntry: 0,
+    isAllEntries: boolean
+  }
 }
 
 export function DistibutionPage({
@@ -48,6 +54,12 @@ export function DistibutionPage({
         description: item.description,
         dataset: item.dataset?.pk,
         fileDetails: item.fileDetails,
+        previewEnabled: item.previewEnabled,
+        previewDetails: {
+          startEntry: item.previewDetails?.startEntry,
+          endEntry: item.previewDetails?.endEntry,
+          isAllEntries: item.previewDetails?.isAllEntries
+        }
       }))) ||
     [];
 

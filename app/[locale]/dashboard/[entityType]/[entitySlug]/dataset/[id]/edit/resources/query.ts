@@ -8,6 +8,16 @@ export const getReourceDoc = graphql(`
         dataset {
           pk
         }
+        previewData {
+          columns
+          rows
+        }
+        previewDetails {
+          endEntry
+          isAllEntries
+          startEntry
+        }
+        previewEnabled
         schema {
           id
           fieldName

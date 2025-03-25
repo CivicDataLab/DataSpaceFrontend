@@ -1,20 +1,10 @@
-import React from 'react';
-import { useParams } from 'next/navigation';
-import { graphql } from '@/gql';
-import { SchemaUpdateInput } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import {
-  Button,
   DataTable,
-  Icon,
   Select,
-  Spinner,
-  Text,
-  TextField,
+  TextField
 } from 'opub-ui';
+import React from 'react';
 
-import { GraphQL } from '@/lib/api';
-import { Icons } from '@/components/icons';
 
 const DescriptionCell = ({
   value,
@@ -138,7 +128,7 @@ export const ResourceSchema = ({ setSchema, data }: any) => {
           <DataTable
             columns={generateColumnData()}
             rows={generateTableData(data)}
-            hideFooter={true}
+            hideFooter={false}
             hideSelection
           />
         ):<div className="mt-8 flex justify-center">Click on Reset Fields</div>}
