@@ -21,7 +21,7 @@ export default function Layout({ children }: UserLayoutProps) {
 
   return (
     <div className="flex h-full grow flex-col">
-      <header className="relative z-2 p-6 lg:px-10 lg:py-6 shadow-elementTopNav bg-primaryBlue">
+      <header className="relative z-2 p-6 lg:px-10 lg:py-6 bg-primaryBlue">
         <MainNav hideSearch={hideSearch} />
       </header>
       <>{children}</>
