@@ -1,12 +1,8 @@
 'use client';
 
-import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
 import { notFound, usePathname } from 'next/navigation';
-import { Icon, Text } from 'opub-ui';
+import React from 'react';
 
-import { Icons } from '@/components/icons';
 import MainFooter from '../dashboard/components/main-footer';
 import { MainNav } from '../dashboard/components/main-nav';
 
@@ -25,12 +21,7 @@ export default function Layout({ children }: UserLayoutProps) {
 
   return (
     <div className="flex h-full grow flex-col">
-      <header
-        className="relative z-2 px-4 py-3 shadow-elementTopNav"
-        style={{
-          backgroundColor: 'var( --background-alpha-medium)',
-        }}
-      >
+      <header className="relative z-2 p-6 lg:px-10 lg:py-6 shadow-elementTopNav bg-primaryBlue">
         <MainNav hideSearch={hideSearch} />
       </header>
       <>{children}</>

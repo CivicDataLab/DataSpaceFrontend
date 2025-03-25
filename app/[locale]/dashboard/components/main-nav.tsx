@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
 import { Session } from 'next-auth';
 import { signIn, signOut, useSession } from 'next-auth/react';
@@ -15,7 +17,6 @@ import {
   CommandItem,
   CommandList,
   Divider,
-  Icon,
   IconButton,
   Popover,
   SearchInput,
@@ -34,6 +35,8 @@ const profileLinks = [
 ];
 
 export function MainNav({ hideSearch = false }) {
+  const pathname = usePathname();
+
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const searchRef = React.useRef<HTMLInputElement>(null);
   const { data: session, status } = useSession();
@@ -55,93 +58,123 @@ export function MainNav({ hideSearch = false }) {
     return <LogginOutPage />;
   }
 
+  const Navigation = [
+    {
+      title: 'All Data',
+      href: '/datasets',
+    },
+    {
+      title: 'Sectors',
+      href: '/categories',
+    },
+    {
+      title: 'Use Cases',
+      href: '#',
+    },
+    {
+      title: 'Publishers',
+      href: '#',
+    },
+    {
+      title: 'Tools',
+      href: '#',
+    },
+  ];
+
   return (
     <nav>
       <div className="flex items-center justify-between gap-4">
-        <div className="flex gap-1">
+        <div className="flex items-center gap-1">
           <div className="lg:hidden">
-            <Sidebar />
+            <Sidebar
+              data={Navigation}
+              session={session}
+              status={status}
+              keycloakSessionLogOut={keycloakSessionLogOut}
+              signIn={signIn}
+            />
           </div>
           <Link href="/">
             <div className="flex items-center gap-2">
-              <Icon source={Icons.logo} size={24} color="success" />
-              <Text variant="headingLg" className="text-surfaceDefault" as="h1">
+              <div className="group relative h-[38px] w-[38px] overflow-hidden">
+                {/* Static Logo */}
+                <div className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0">
+                  <Image
+                    src="/globe_logo.png"
+                    alt="Logo"
+                    layout="fill"
+                    objectFit="contain"
+                  />
+                </div>
+
+                {/* Globe GIF on Hover */}
+                <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <Image
+                    src="/globe.gif"
+                    alt="Globe"
+                    layout="fill"
+                    objectFit="contain"
+                  />
+                </div>
+              </div>
+              <Text variant="headingXl" className="text-surfaceDefault" as="h1">
                 CivicDataSpace
               </Text>
             </div>
           </Link>
         </div>
 
-        <div className="flex items-center gap-4">
-          {!hideSearch && (
-            <SearchInput
-              placeholder="Search"
-              name="Search"
-              className="hidden h-8 w-full max-w-[350px] md:block"
-              label="Search"
-              ref={searchRef}
-              suffix={
-                <div className="relative">
-                  <Divider
-                    orientation="vertical"
-                    className="absolute left-[-4px] top-[3px] h-6"
-                  />
-                  <IconButton
-                    size="slim"
-                    icon={Icons.terminal}
-                    withTooltip
-                    onClick={() => setCommandOpen(true)}
-                  >
-                    Command palette
-                  </IconButton>
+        <div className="flex items-center gap-8">
+          <div className="relative">
+            <IconButton
+              size="slim"
+              icon={Icons.search}
+              withTooltip
+              color="onBgDefault"
+              onClick={() => setCommandOpen(true)}
+            >
+              Search
+            </IconButton>
 
-                  <CommandDialog
-                    open={commandOpen}
-                    onOpenChange={setCommandOpen}
-                  >
-                    <CommandInput placeholder="search..." />
-                    <CommandList>
-                      <CommandEmpty>No results found</CommandEmpty>
-                      <CommandGroup heading="Suggestions">
-                        <CommandItem>Create Dataset</CommandItem>
-                        <CommandItem>Create new Organisation</CommandItem>
-                        <CommandItem>Go to profile</CommandItem>
-                      </CommandGroup>
-                    </CommandList>
-                  </CommandDialog>
-                </div>
-              }
-            />
-          )}
-          <div className="hidden min-w-[102px] lg:block">
-            <Link href={'/datasets'}>
-              <Text
-                variant="headingSm"
-                as="h1"
-                className=" text-surfaceDefault"
-              >
-                Dataset Listing
-              </Text>
-            </Link>
+            <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
+              <CommandInput placeholder="search..." />
+              <CommandList>
+                <CommandEmpty>No results found</CommandEmpty>
+                <CommandGroup heading="Suggestions">
+                  <CommandItem>
+                    <Link href="/datasets">Explore Datasets</Link>
+                  </CommandItem>
+                  <CommandItem>
+                    <Link href="/dashboard/user/datasets">Go to User Dashboard</Link>
+                  </CommandItem>
+                </CommandGroup>
+              </CommandList>
+            </CommandDialog>
           </div>
 
-          <div className="hidden min-w-[102px] lg:block">
-            <Link href={'/categories'}>
-              <Text
-                variant="headingSm"
-                as="h1"
-                className=" text-surfaceDefault"
-              >
-                Categories
-              </Text>
-            </Link>
+          <div className="flex items-center gap-5">
+            {Navigation.map((item, index) => (
+              <div className="hidden lg:block" key={index}>
+                <Link href={item.href}>
+                  <Text
+                    variant="headingMd"
+                    as="h1"
+                    className={`uppercase ${
+                      pathname === item.href
+                        ? 'text-[#84DCCF]'
+                        : 'text-surfaceDefault'
+                    }`}
+                  >
+                    {item.title}
+                  </Text>
+                </Link>
+              </div>
+            ))}
           </div>
-
           {status === 'loading' ? (
-            <div className="min-w-[112px]" />
+            <Spinner />
           ) : (
-            <div className="flex min-w-[112px] shrink-0 items-center justify-end gap-4">
-              <Icon source={Icons.notification} color="onBgDefault" />
+            <div className=" hidden lg:block">
               {session?.user ? (
                 <ProfileContent
                   session={session}
@@ -150,12 +183,16 @@ export function MainNav({ hideSearch = false }) {
               ) : (
                 <Button
                   onClick={() => {
-                    console.log(process.env.NEXTAUTH_URL,process.env.NEXT_PUBLIC_NEXTAUTH_URL)
+                    console.log(
+                      process.env.NEXTAUTH_URL,
+                      process.env.NEXT_PUBLIC_NEXTAUTH_URL
+                    );
                     signIn('keycloak');
                   }}
                   kind="secondary"
+                  variant="success"
                 >
-                  Log In
+                  <Text variant="headingMd">LOGIN / SIGN UP</Text>
                 </Button>
               )}
             </div>
@@ -166,7 +203,7 @@ export function MainNav({ hideSearch = false }) {
   );
 }
 
-const ProfileContent = ({
+export const ProfileContent = ({
   session,
   keycloakSessionLogOut,
 }: {
@@ -186,7 +223,7 @@ const ProfileContent = ({
           <Button
             kind="tertiary"
             size="slim"
-            className="rounded-full hover:no-underline"
+            className="rounded-full  hover:no-underline"
           >
             <Avatar
               showInitials
@@ -241,19 +278,11 @@ const ProfileContent = ({
 
 const LogginOutPage = () => {
   return (
-    <div className="h-screen w-screen overflow-hidden">
-      <Link href="/">
-        <div className="flex items-center gap-2 pt-[6px]">
-          <Icon source={Icons.logo} size={24} color="success" />
-          <Text variant="headingLg" as="h1">
-            OPub
-          </Text>
-        </div>
-      </Link>
-      <div className="flex h-full w-full flex-col items-center justify-center gap-1">
-        <Spinner />
-        <Text variant="headingLg">Logging out</Text>
-      </div>
+    <div className=" flex items-center justify-end gap-4">
+      <Spinner color="surface" />
+      <Text variant="headingLg" color="onBgDefault">
+        Logging out...
+      </Text>
     </div>
   );
 };

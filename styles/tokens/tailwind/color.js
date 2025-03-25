@@ -273,4 +273,6 @@ module.exports = {
   borderFocus: '#FFFFFF03',
   transparent: '#FFFFFF00',
   borderOnBGSubdued: 'var(--base-gray-slate-solid-11)',
+  primaryBlue: 'var(--blue-primary-color)',
+  secondaryOrange: 'var(--orange-secondary-color)'
 };
