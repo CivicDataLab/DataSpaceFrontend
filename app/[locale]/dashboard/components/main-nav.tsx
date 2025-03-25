@@ -3,19 +3,28 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
 import { Session } from 'next-auth';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import {
   Avatar,
   Button,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
   Divider,
   IconButton,
   Popover,
+  SearchInput,
   Spinner,
   Text,
 } from 'opub-ui';
 
+import { Icons } from '@/components/icons';
 import Sidebar from './sidebar';
 
 const profileLinks = [
@@ -26,6 +35,8 @@ const profileLinks = [
 ];
 
 export function MainNav({ hideSearch = false }) {
+  const pathname = usePathname();
+
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const searchRef = React.useRef<HTMLInputElement>(null);
   const { data: session, status } = useSession();
@@ -85,7 +96,9 @@ export function MainNav({ hideSearch = false }) {
           </div>
           <Link href="/">
             <div className="flex items-center gap-2">
-              <Image src={'/logo.png'} width={38} height={38} alt="logo" />
+              <div className="group relative h-[38px] w-[38px] overflow-hidden">
+                <Image src={'/logo.png'} width={38} height={38} alt="logo" />
+              </div>
               <Text variant="headingXl" className="text-surfaceDefault" as="h1">
                 CivicDataSpace
               </Text>
@@ -94,47 +107,35 @@ export function MainNav({ hideSearch = false }) {
         </div>
 
         <div className="flex items-center gap-8">
-          {/* {!hideSearch && (
-            <SearchInput
-              placeholder="Search"
-              name="Search"
-              className="hidden h-8 w-full max-w-[350px] md:block"
-              label="Search"
-              ref={searchRef}
-              suffix={
-                <div className="relative">
-                  <Divider
-                    orientation="vertical"
-                    className="absolute left-[-4px] top-[3px] h-6"
-                  />
-                  <IconButton
-                    size="slim"
-                    icon={Icons.terminal}
-                    withTooltip
-                    onClick={() => setCommandOpen(true)}
-                  >
-                    Command palette
-                  </IconButton>
+          <div className="relative">
+            <IconButton
+              size="slim"
+              icon={Icons.search}
+              withTooltip
+              color="onBgDefault"
+              onClick={() => setCommandOpen(true)}
+            >
+              Search
+            </IconButton>
 
-                  <CommandDialog
-                    open={commandOpen}
-                    onOpenChange={setCommandOpen}
-                  >
-                    <CommandInput placeholder="search..." />
-                    <CommandList>
-                      <CommandEmpty>No results found</CommandEmpty>
-                      <CommandGroup heading="Suggestions">
-                        <CommandItem>Create Dataset</CommandItem>
-                        <CommandItem>Create new Organisation</CommandItem>
-                        <CommandItem>Go to profile</CommandItem>
-                      </CommandGroup>
-                    </CommandList>
-                  </CommandDialog>
-                </div>
-              }
-            />
-          )}
-          */}
+            <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
+              <CommandInput placeholder="search..." />
+              <CommandList>
+                <CommandEmpty>No results found</CommandEmpty>
+                <CommandGroup heading="Suggestions">
+                  <CommandItem>
+                    <Link href="/datasets">Explore Datasets</Link>
+                  </CommandItem>
+                  <CommandItem>
+                    <Link href="/dashboard/user/datasets">
+                      Go to User Dashboard
+                    </Link>
+                  </CommandItem>
+                </CommandGroup>
+              </CommandList>
+            </CommandDialog>
+          </div>
+
           <div className="flex items-center gap-5">
             {Navigation.map((item, index) => (
               <div className="hidden lg:block" key={index}>
@@ -142,7 +143,11 @@ export function MainNav({ hideSearch = false }) {
                   <Text
                     variant="headingMd"
                     as="h1"
-                    className="uppercase text-surfaceDefault"
+                    className={`uppercase ${
+                      pathname === item.href
+                        ? 'text-[#84DCCF]'
+                        : 'text-surfaceDefault'
+                    }`}
                   >
                     {item.title}
                   </Text>
