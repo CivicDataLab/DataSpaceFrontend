@@ -97,7 +97,25 @@ export function MainNav({ hideSearch = false }) {
           <Link href="/">
             <div className="flex items-center gap-2">
               <div className="group relative h-[38px] w-[38px] overflow-hidden">
-                <Image src={'/logo.png'} width={38} height={38} alt="logo" />
+                {/* Static Logo */}
+                <div className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0">
+                  <Image
+                    src="/globe_logo.png"
+                    alt="Logo"
+                    layout="fill"
+                    objectFit="contain"
+                  />
+                </div>
+
+                {/* Globe GIF on Hover */}
+                <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <Image
+                    src="/globe.gif"
+                    alt="Globe"
+                    layout="fill"
+                    objectFit="contain"
+                  />
+                </div>
               </div>
               <Text variant="headingXl" className="text-surfaceDefault" as="h1">
                 CivicDataSpace
@@ -127,9 +145,7 @@ export function MainNav({ hideSearch = false }) {
                     <Link href="/datasets">Explore Datasets</Link>
                   </CommandItem>
                   <CommandItem>
-                    <Link href="/dashboard/user/datasets">
-                      Go to User Dashboard
-                    </Link>
+                    <Link href="/dashboard/user/datasets">Go to User Dashboard</Link>
                   </CommandItem>
                 </CommandGroup>
               </CommandList>
