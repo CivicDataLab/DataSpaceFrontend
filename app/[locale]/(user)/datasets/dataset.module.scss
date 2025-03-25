@@ -3,4 +3,9 @@
     width: 80%;
     height: 36px;
   }
+/* In your global CSS/SCSS file */
+ div[class*="Input-module_Backdrop"] {
+  border-top-color: var(--border-subdued) ;
+  border-radius: 8px;
+}
 }
