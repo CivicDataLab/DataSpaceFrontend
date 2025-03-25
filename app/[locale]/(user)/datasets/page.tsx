@@ -43,7 +43,6 @@ interface QueryParams {
   filters: FilterOptions;
   query?: string;
   sort?: string; // Adding sort to QueryParams
-
 }
 
 type Action =
@@ -61,7 +60,6 @@ const initialState: QueryParams = {
   filters: {},
   query: '',
   sort: 'recent', // Default sort is set to recent
-
 };
 
 const queryReducer = (state: QueryParams, action: Action): QueryParams => {
@@ -141,7 +139,7 @@ const useUrlParams = (
     const searchParam = queryParams.query
       ? `&query=${encodeURIComponent(queryParams.query)}`
       : '';
-      const sortParam = queryParams.sort
+    const sortParam = queryParams.sort
       ? `&sort=${encodeURIComponent(queryParams.sort)}`
       : '';
     const variablesString = `?${filtersString}&size=${queryParams.pageSize}&page=${queryParams.currentPage}${searchParam}${sortParam}`;
@@ -235,9 +233,10 @@ const DatasetsListing = () => {
     },
     {}
   );
+  const pageSizeOptions = [5, 10, 20];
 
   return (
-    <main className="bg-surfaceDefault">
+    <main className=" bg-greyExtralight">
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
@@ -249,43 +248,72 @@ const DatasetsListing = () => {
           <Spinner />
         </div>
       ) : (
-        <section className="mx-5 md:mx-8 lg:mx-10">
-          <div className="my-4 flex flex-wrap items-center justify-between gap-6 rounded-2 bg-baseBlueSolid4 p-2">
-            <div>
-              <Text>
+        <section className="m-5 md:m-8 lg:m-10">
+          <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-5 rounded-2 p-2">
+            {/* <div>
+              <Text
+                className="text-primaryBlue"
+                variant="bodyLg"
+                fontWeight="semibold"
+              >
                 Showing {datasetDetails?.length} of {count} Datasets
               </Text>
-            </div>
-            <div className=" w-full max-w-[550px] md:block">
+            </div> */}
+            <div className=" w-full md:block">
               <SearchInput
                 label="Search"
                 name="Search"
                 className={cn(Styles.Search)}
-                placeholder="Search datasets"
+                placeholder="Search for Data"
                 onSubmit={(value) => handleSearch(value)}
                 onClear={(value) => handleSearch(value)}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Text variant="bodyLg" className="font-bold text-baseBlueSolid8">
-                Sort by:
-              </Text>
-              <Select
-                label=""
-                labelInline
-                name="select"
-                onChange={handleSortChange}
-                options={[
-                  {
-                    label: 'Recent',
-                    value: 'recent',
-                  },
-                  {
-                    label: 'Alphabetical',
-                    value: 'alphabetical',
-                  },
-                ]}
-              />
+            <div className='flex gap-5'>
+              <div className="flex items-center gap-2">
+                <Text
+                  variant="bodyLg"
+                  fontWeight="semibold"
+                  className="whitespace-nowrap text-primaryBlue"
+                >
+                  Sort by:
+                </Text>
+                <Select
+                  label=""
+                  labelInline
+                  name="select"
+                  onChange={handleSortChange}
+                  options={[
+                    {
+                      label: 'Recent',
+                      value: 'recent',
+                    },
+                    {
+                      label: 'Alphabetical',
+                      value: 'alphabetical',
+                    },
+                  ]}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Text
+                  variant="bodyLg"
+                  fontWeight="semibold"
+                  className="whitespace-nowrap text-primaryBlue"
+                >
+                  Rows:
+                </Text>
+                <Select
+                  label=""
+                  labelInline
+                  name="select"
+                  onChange={(e) => handlePageSizeChange(+e)}
+                  options={pageSizeOptions.map((value) => ({
+                    value: String(value),
+                    label: String(value),
+                  }))}
+                />
+              </div>
             </div>
             <Tray
               size="narrow"
@@ -309,7 +337,7 @@ const DatasetsListing = () => {
               />
             </Tray>
           </div>
-          <div className="row mb-16 flex gap-5">
+          <div className="row mg:mt-8 mb-16 mt-5 flex gap-5 lg:mt-10">
             <div className="hidden min-w-64 max-w-64 lg:block">
               <Filter
                 options={filterOptions}
@@ -319,18 +347,23 @@ const DatasetsListing = () => {
             </div>
 
             <div className="flex w-full flex-col px-2">
-              <div className="flex gap-2 border-b-2 border-solid border-baseGraySlateSolid4 pb-4">
-                {Object.entries(queryParams.filters).map(([category, values]) =>
-                  values.filter(value => category !== 'sort').map((value) => (
-                    <Pill
-                      key={`${category}-${value}`}
-                      onRemove={() => handleRemoveFilter(category, value)}
-                    >
-                      {value}
-                    </Pill>
-                  ))
-                )}
-              </div>
+              {Object.keys(queryParams.filters).length > 1 && (
+                <div className="flex gap-2 border-b-2 border-solid border-baseGraySlateSolid4 pb-4">
+                  {Object.entries(queryParams.filters).map(
+                    ([category, values]) =>
+                      values
+                        .filter((value) => category !== 'sort')
+                        .map((value) => (
+                          <Pill
+                            key={`${category}-${value}`}
+                            onRemove={() => handleRemoveFilter(category, value)}
+                          >
+                            {value}
+                          </Pill>
+                        ))
+                  )}
+                </div>
+              )}
 
               <div className="flex flex-col gap-6">
                 {facets && datasetDetails?.length > 0 && (
