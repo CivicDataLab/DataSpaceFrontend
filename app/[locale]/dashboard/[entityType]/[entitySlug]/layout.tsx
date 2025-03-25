@@ -50,6 +50,11 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       href: `/dashboard/${params.entityType}/${params.entitySlug}/consumers`,
       icon: 'userList',
     },
+    {
+      title: 'UseCases',
+      href: `/dashboard/${params.entityType}/${params.entitySlug}/usecases`,
+      icon: 'userList',
+    }
   ];
 
   return (

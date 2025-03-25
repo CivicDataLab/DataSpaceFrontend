@@ -80,7 +80,7 @@ export function DashboardNav({
               <Text variant="headingMd" fontWeight="medium" className="py-2">
                 {entityDetails?.name}
               </Text>
-              <Link href={'/dashboard'}>
+              <Link href={'/dashboard/organization'}>
                 <Text variant="headingXs" color="interactive">
                   {' '}
                   Go back to Dashboard{' '}
