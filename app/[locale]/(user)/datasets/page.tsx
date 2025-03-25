@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { fetchDatasets } from '@/fetch';
 import {
   Button,
+  Divider,
   Pill,
   SearchInput,
   Select,
@@ -249,7 +250,7 @@ const DatasetsListing = () => {
         </div>
       ) : (
         <section className="m-5 md:m-8 lg:m-10">
-          <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-5 rounded-2 p-2">
+          <div className="flex flex-wrap items-center justify-between gap-5 rounded-2 p-2 lg:flex-nowrap">
             {/* <div>
               <Text
                 className="text-primaryBlue"
@@ -269,7 +270,7 @@ const DatasetsListing = () => {
                 onClear={(value) => handleSearch(value)}
               />
             </div>
-            <div className='flex gap-5'>
+            <div className="flex gap-5">
               <div className="flex items-center gap-2">
                 <Text
                   variant="bodyLg"
@@ -346,23 +347,30 @@ const DatasetsListing = () => {
               />
             </div>
 
-            <div className="flex w-full flex-col px-2">
-              {Object.keys(queryParams.filters).length > 1 && (
-                <div className="flex gap-2 border-b-2 border-solid border-baseGraySlateSolid4 pb-4">
-                  {Object.entries(queryParams.filters).map(
-                    ([category, values]) =>
-                      values
-                        .filter((value) => category !== 'sort')
-                        .map((value) => (
-                          <Pill
-                            key={`${category}-${value}`}
-                            onRemove={() => handleRemoveFilter(category, value)}
-                          >
-                            {value}
-                          </Pill>
-                        ))
-                  )}
-                </div>
+            <div className="flex w-full flex-col gap-4 px-2">
+              {Object.values(queryParams.filters).filter(
+                (value) => Array.isArray(value) && value.length !== 0
+              ).length > 1 && (
+                <>
+                  <div className="flex gap-2">
+                    {Object.entries(queryParams.filters).map(
+                      ([category, values]) =>
+                        values
+                          .filter((value) => category !== 'sort')
+                          .map((value) => (
+                            <Pill
+                              key={`${category}-${value}`}
+                              onRemove={() =>
+                                handleRemoveFilter(category, value)
+                              }
+                            >
+                              {value}
+                            </Pill>
+                          ))
+                    )}
+                  </div>
+                  <Divider className=" h-1 bg-surfaceDefault" />
+                </>
               )}
 
               <div className="flex flex-col gap-6">
