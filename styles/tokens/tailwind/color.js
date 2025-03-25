@@ -274,5 +274,6 @@ module.exports = {
   transparent: '#FFFFFF00',
   borderOnBGSubdued: 'var(--base-gray-slate-solid-11)',
   primaryBlue: 'var(--blue-primary-color)',
-  secondaryOrange: 'var(--orange-secondary-color)'
+  secondaryOrange: 'var(--orange-secondary-color)',
+  greyExtralight: 'var( --grey-extralight)',
 };
