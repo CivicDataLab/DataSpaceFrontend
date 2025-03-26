@@ -275,5 +275,6 @@ module.exports = {
   borderOnBGSubdued: 'var(--base-gray-slate-solid-11)',
   primaryBlue: 'var(--blue-primary-color)',
   secondaryOrange: 'var(--orange-secondary-color)',
-  greyExtralight: 'var( --grey-extralight)',
+  greyExtralight: 'var(--grey-extralight)',
+  white: 'var(--white)'
 };
