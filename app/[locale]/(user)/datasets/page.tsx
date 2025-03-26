@@ -1,11 +1,15 @@
 'use client';
 
 import React, { useEffect, useReducer, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fetchDatasets } from '@/fetch';
 import {
   Button,
+  ButtonGroup,
+  Card,
   Divider,
+  Icon,
   Pill,
   SearchInput,
   Select,
@@ -16,8 +20,8 @@ import {
 
 import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
+import { Icons } from '@/components/icons';
 import GraphqlPagination from '../../dashboard/components/GraphqlPagination/graphqlPagination';
-import Card from './components/Card';
 import Filter from './components/FIlter/Filter';
 import Styles from './dataset.module.scss';
 
@@ -183,6 +187,7 @@ const DatasetsListing = () => {
   const count = facets?.total ?? 0;
   const datasetDetails = facets?.results ?? [];
   const [queryParams, setQueryParams] = useReducer(queryReducer, initialState);
+  const [view, setView] = useState<'collapsed' | 'expanded'>('collapsed');
 
   useUrlParams(queryParams, setQueryParams, setVariables);
 
@@ -234,7 +239,8 @@ const DatasetsListing = () => {
     },
     {}
   );
-  const pageSizeOptions = [5, 10, 20];
+  const pageSizeOptions = [9, 18, 36];
+  console.log(datasetDetails);
 
   return (
     <main className=" bg-greyExtralight">
@@ -251,15 +257,6 @@ const DatasetsListing = () => {
       ) : (
         <section className="m-5 md:m-8 lg:m-10">
           <div className="flex flex-wrap items-center justify-between gap-5 rounded-2 p-2 lg:flex-nowrap">
-            {/* <div>
-              <Text
-                className="text-primaryBlue"
-                variant="bodyLg"
-                fontWeight="semibold"
-              >
-                Showing {datasetDetails?.length} of {count} Datasets
-              </Text>
-            </div> */}
             <div className=" w-full md:block">
               <SearchInput
                 label="Search"
@@ -270,7 +267,34 @@ const DatasetsListing = () => {
                 onClear={(value) => handleSearch(value)}
               />
             </div>
-            <div className="flex gap-5">
+            <div className="flex flex-wrap justify-between gap-5 lg:flex-nowrap lg:justify-normal">
+              <div className="flex items-center gap-2">
+                <Text
+                  variant="bodyLg"
+                  fontWeight="semibold"
+                  className="whitespace-nowrap text-primaryBlue"
+                >
+                  View:
+                </Text>
+                <ButtonGroup noWrap spacing="tight">
+                  <Button
+                    kind={view === 'collapsed' ? 'secondary' : 'tertiary'}
+                    size="slim"
+                    className=" h-fit w-fit"
+                    onClick={() => setView('collapsed')}
+                  >
+                    <Icon source={Icons.grid} />
+                  </Button>
+                  <Button
+                    onClick={() => setView('expanded')}
+                    kind={view === 'expanded' ? 'secondary' : 'tertiary'}
+                    className=" h-fit w-fit"
+                    size="slim"
+                  >
+                    <Icon source={Icons.list} />
+                  </Button>
+                </ButtonGroup>
+              </div>
               <div className="flex items-center gap-2">
                 <Text
                   variant="bodyLg"
@@ -315,28 +339,28 @@ const DatasetsListing = () => {
                   }))}
                 />
               </div>
+              <Tray
+                size="narrow"
+                open={open}
+                onOpenChange={setOpen}
+                trigger={
+                  <Button
+                    kind="secondary"
+                    className="lg:hidden"
+                    onClick={() => setOpen(true)}
+                  >
+                    Filter
+                  </Button>
+                }
+              >
+                <Filter
+                  setOpen={setOpen}
+                  options={filterOptions}
+                  setSelectedOptions={handleFilterChange}
+                  selectedOptions={queryParams.filters}
+                />
+              </Tray>
             </div>
-            <Tray
-              size="narrow"
-              open={open}
-              onOpenChange={setOpen}
-              trigger={
-                <Button
-                  kind="secondary"
-                  className="lg:hidden"
-                  onClick={() => setOpen(true)}
-                >
-                  Filter
-                </Button>
-              }
-            >
-              <Filter
-                setOpen={setOpen}
-                options={filterOptions}
-                setSelectedOptions={handleFilterChange}
-                selectedOptions={queryParams.filters}
-              />
-            </Tray>
           </div>
           <div className="row mg:mt-8 mb-16 mt-5 flex gap-5 lg:mt-10">
             <div className="hidden min-w-64 max-w-64 lg:block">
@@ -373,21 +397,65 @@ const DatasetsListing = () => {
                 </>
               )}
 
-              <div className="flex flex-col gap-6">
-                {facets && datasetDetails?.length > 0 && (
-                  <GraphqlPagination
-                    totalRows={count}
-                    pageSize={queryParams.pageSize}
-                    currentPage={queryParams.currentPage}
-                    onPageChange={handlePageChange}
-                    onPageSizeChange={handlePageSizeChange}
-                  >
-                    {datasetDetails.map((item: any, index: any) => (
-                      <Card key={index} data={item} />
-                    ))}
-                  </GraphqlPagination>
-                )}
-              </div>
+              {facets && datasetDetails?.length > 0 && (
+                <GraphqlPagination
+                  totalRows={count}
+                  pageSize={queryParams.pageSize}
+                  currentPage={queryParams.currentPage}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  view={view}
+                >
+                  {datasetDetails.map((item: any, index: any) => {
+                    const commonProps = {
+                      key: `${item.id}-${view}`,
+                      title: item.title,
+                      description: item.description,
+                      metadataContent: [
+                        {
+                          icon: Icons.calendar,
+                          label: 'Date',
+                          value: '19 July 2024',
+                        },
+                        {
+                          icon: Icons.download,
+                          label: 'Download',
+                          value: '500',
+                        },
+                        {
+                          icon: Icons.globe,
+                          label: 'Geography',
+                          value: 'India',
+                        },
+                      ],
+                      tag: item.tags,
+                      formats: item.formats,
+                      footerContent: [
+                        {
+                          icon: '',
+                          label: 'Sectors',
+                        },
+                        {
+                          icon: '',
+                          label: 'Published by',
+                        },
+                      ],
+                    };
+
+                    return (
+                      <Link href={`/datasets/${item.id}`} key={item.id}>
+                        <Card
+                          {...commonProps}
+                          variation={
+                            view === 'expanded' ? 'expanded' : 'collapsed'
+                          }
+                          iconColor="warning"
+                        />
+                      </Link>
+                    );
+                  })}
+                </GraphqlPagination>
+              )}
             </div>
           </div>
         </section>
