@@ -1,9 +1,7 @@
 'use client';
 
-import React, { useEffect, useReducer, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { fetchDatasets } from '@/fetch';
+import { useRouter } from 'next/navigation';
 import {
   Button,
   ButtonGroup,
@@ -17,10 +15,11 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
+import React, { useEffect, useReducer, useState } from 'react';
 
-import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
+import { cn } from '@/lib/utils';
 import GraphqlPagination from '../../dashboard/components/GraphqlPagination/graphqlPagination';
 import Filter from './components/FIlter/Filter';
 import Styles from './dataset.module.scss';
@@ -243,7 +242,7 @@ const DatasetsListing = () => {
   console.log(datasetDetails);
 
   return (
-    <main className=" bg-greyExtralight">
+    <main >
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
@@ -408,7 +407,6 @@ const DatasetsListing = () => {
                 >
                   {datasetDetails.map((item: any, index: any) => {
                     const commonProps = {
-                      key: `${item.id}-${view}`,
                       title: item.title,
                       description: item.description,
                       metadataContent: [
@@ -443,15 +441,15 @@ const DatasetsListing = () => {
                     };
 
                     return (
-                      <Link href={`/datasets/${item.id}`} key={item.id}>
-                        <Card
-                          {...commonProps}
-                          variation={
-                            view === 'expanded' ? 'expanded' : 'collapsed'
-                          }
-                          iconColor="warning"
-                        />
-                      </Link>
+                      <Card
+                        {...commonProps}
+                        key={item.id}
+                        variation={
+                          view === 'expanded' ? 'expanded' : 'collapsed'
+                        }
+                        iconColor="warning"
+                        href={`/datasets/${item.id}`}
+                      />
                     );
                   })}
                 </GraphqlPagination>
