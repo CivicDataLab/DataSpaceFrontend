@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -49,7 +49,11 @@ const DetailsQuery: any = graphql(`
   }
 `);
 
-const Details = () => {
+interface DetailsProps {
+  setShowcharts: (vars:boolean) => void;
+}
+
+const Details: React.FC<DetailsProps> = ({ setShowcharts }) => {
   const params = useParams();
   const chartRef = useRef<ReactECharts>(null);
 
@@ -58,6 +62,10 @@ const Details = () => {
     () => GraphQL(DetailsQuery, {}, { datasetId: params.datasetIdentifier })
   );
 
+  useEffect(() => {
+   setShowcharts(false)
+  }, [data]);
+  
   const renderChart = (item: any) => {
     if (item.chartType === 'ASSAM_DISTRICT' || item.chartType === 'ASSAM_RC') {
       // Register the map
@@ -71,16 +79,13 @@ const Details = () => {
   };
 
   return (
-    <div className="mb-8 flex w-full flex-col gap-4 p-2">
+    <div className="mt-10 flex w-full flex-col gap-4 p-2">
       {isLoading ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
       ) : data?.getChartData?.length > 0 ? (
         <>
-          <Text variant="bodyLg" className="mx-6 lg:mx-0">
-            Visualizations
-          </Text>
           <div className="relative w-full ">
             <Carousel className="w-full">
               <div className=" px-12">
@@ -137,10 +142,10 @@ const Details = () => {
                 </CarouselContent>
               </div>
               <div className="absolute inset-y-0 left-0 flex  items-center">
-                <CarouselPrevious />
+                <CarouselPrevious className=" bg-secondaryOrange" />
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center">
-                <CarouselNext />
+                <CarouselNext className=" bg-secondaryOrange" />
               </div>
             </Carousel>
           </div>

@@ -21,6 +21,7 @@ const datasetQuery = graphql(`
         value
       }
       id
+      downloadCount
       title
       description
       created
@@ -40,6 +41,14 @@ const datasetQuery = graphql(`
         name
         description
       }
+      organization {
+        name
+        logo {
+          url
+        }
+        slug
+        id
+      }
       categories {
         name
       }
@@ -49,8 +58,7 @@ const datasetQuery = graphql(`
 `);
 
 const DatasetDetailsPage = () => {
-  const [open, setOpen] = useState(false);
-  const primaryDataRef = useRef<HTMLDivElement>(null); // Explicitly specify the type of ref
+  const [showCharts, setShowcharts] = useState(true);
 
   const params = useParams();
 
@@ -65,7 +73,7 @@ const DatasetDetailsPage = () => {
   );
 
   return (
-    <main style={{ background: '#F0F9F1' }}>
+    <main className=" bg-surfaceDefault">
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
@@ -73,41 +81,33 @@ const DatasetDetailsPage = () => {
           { href: '#', label: 'Dataset Details' },
         ]}
       />
-      <div className="flex w-full gap-7 md:px-8 lg:px-8">
-        <div className="w-full flex-grow py-8 ">
-          <div className=" flex flex-col gap-5  ">
-            <div ref={primaryDataRef} className="flex flex-col gap-4">
-              {isLoading ? (
-                <div className=" mt-8 flex justify-center">
-                  <Spinner />
-                </div>
-              ) : (
-                <PrimaryData
-                  data={data && data?.datasets[0]}
-                  isLoading={isLoading}
-                />
-              )}
+      <div className="flex">
+        <div className="w-full gap-10 border-r-2 border-solid border-greyExtralight p-6  lg:p-10 lg:w-3/4">
+          {isLoading ? (
+            <div className=" mt-8 flex justify-center">
+              <Spinner />
             </div>
-          </div>
-          <div className=" mt-5 flex w-full">
-            <div className="w-full lg:w-9/12">
-              <Details />
-              <Resources />
+          ) : (
+            <PrimaryData
+              data={data && data?.datasets[0]}
+              isLoading={isLoading}
+            />
+          )}
+          <Details setShowcharts={setShowcharts} />
+        </div>
+        <div className=" hidden  w-1/4 gap-10 py-10 px-7 lg:block">
+          {isLoading ? (
+            <div className=" mt-8 flex justify-center">
+              <Spinner />
             </div>
-            <div className=" hidden flex-col gap-8 border-l-2 border-solid border-baseGraySlateSolid3 py-6 pl-7 lg:flex ">
-              {isLoading ? (
-                <div className=" mt-8 flex justify-center">
-                  <Spinner />
-                </div>
-              ) : (
-                <div>
-                  <Metadata data={data && data?.datasets[0]} />
-                </div>
-              )}
+          ) : (
+            <div>
+              <Metadata data={data && data?.datasets[0]} />
             </div>
-          </div>
+          )}
         </div>
       </div>
+      <Resources />
     </main>
   );
 };
