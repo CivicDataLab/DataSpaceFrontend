@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   Accordion,
   AccordionContent,
@@ -16,13 +15,12 @@ import {
   Icon,
   Spinner,
   Table,
-  Tag,
-  Text,
+  Text
 } from 'opub-ui';
+import { useEffect, useRef, useState } from 'react';
 
-import { GraphQL } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import { GraphQL } from '@/lib/api';
 
 const datasetResourceQuery: any = graphql(`
   query datasetResources($datasetId: UUID!) {
@@ -68,35 +66,7 @@ const Resources = () => {
       )
   );
 
-  // Use an object to manage the expanded state for each resource individually
-  const [showMore, setShowMore] = useState<{ [key: number]: boolean }>({});
-  const [isDescriptionLong, setIsDescriptionLong] = useState<{
-    [key: number]: boolean;
-  }>({});
 
-  const descriptionRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  // Toggle showMore for a specific resource
-  const toggleShowMore = (index: number) => {
-    setShowMore((prevState) => ({
-      ...prevState,
-      [index]: !prevState[index],
-    }));
-  };
-
-  // Measure the height of the description and set the `isDescriptionLong` flag accordingly
-  useEffect(() => {
-    descriptionRefs.current.forEach((descriptionElement, index) => {
-      if (descriptionElement) {
-        const isLong =
-          descriptionElement.scrollHeight > descriptionElement.clientHeight;
-        setIsDescriptionLong((prevState) => ({
-          ...prevState,
-          [index]: isLong,
-        }));
-      }
-    });
-  }, [getResourceDetails.data]);
 
   const generateColumnData = () => {
     return [
@@ -212,7 +182,7 @@ const Resources = () => {
   const [isexpanded, setIsexpanded] = useState(false);
   const toggleDescription = () => setIsexpanded(!isexpanded);
   return (
-    <div className="w-full lg:px-28 lg:py-10 p-6">
+    <div >
       {getResourceDetails.isLoading ? (
         <div className="mt-8 flex justify-center">
           <Spinner />
@@ -232,7 +202,7 @@ const Resources = () => {
               (item: any, index: number) => (
                 <div
                   key={index}
-                  className="mx-6 mt-5 flex flex-col gap-6 border-1 border-solid border-greyExtralight bg-surfaceDefault p-6 lg:mx-0"
+                  className="mt-5 flex flex-col gap-6 border-1 border-solid border-greyExtralight bg-surfaceDefault p-6 lg:mx-0"
                 >
                   <div className="flex flex-wrap justify-between gap-4">
                     <div className="flex w-full flex-col gap-4 ">

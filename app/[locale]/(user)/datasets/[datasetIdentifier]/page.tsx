@@ -82,7 +82,7 @@ const DatasetDetailsPage = () => {
         ]}
       />
       <div className="flex">
-        <div className="w-full gap-10 border-r-2 border-solid border-greyExtralight p-6  lg:p-10 lg:w-3/4">
+        <div className="w-full gap-10 border-r-2 border-solid border-greyExtralight p-6  lg:w-3/4 lg:p-10">
           {isLoading ? (
             <div className=" mt-8 flex justify-center">
               <Spinner />
@@ -93,9 +93,15 @@ const DatasetDetailsPage = () => {
               isLoading={isLoading}
             />
           )}
-          <Details setShowcharts={setShowcharts} />
+          <div className="mt-10">
+            {showCharts ? (
+              <Details setShowcharts={setShowcharts} />
+            ) : (
+              <Resources />
+            )}
+          </div>
         </div>
-        <div className=" hidden  w-1/4 gap-10 py-10 px-7 lg:block">
+        <div className=" hidden  w-1/4 gap-10 px-7 py-10 lg:block">
           {isLoading ? (
             <div className=" mt-8 flex justify-center">
               <Spinner />
@@ -107,7 +113,11 @@ const DatasetDetailsPage = () => {
           )}
         </div>
       </div>
-      <Resources />
+      {showCharts && (
+        <div className="w-full p-6 lg:px-28 lg:py-10">
+          <Resources />
+        </div>
+      )}
     </main>
   );
 };
