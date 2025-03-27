@@ -418,7 +418,7 @@ const DatasetsListing = () => {
                         {
                           icon: Icons.download,
                           label: 'Download',
-                          value: '500',
+                          value: item.download_count.toString(),
                         },
                         {
                           icon: Icons.globe,
