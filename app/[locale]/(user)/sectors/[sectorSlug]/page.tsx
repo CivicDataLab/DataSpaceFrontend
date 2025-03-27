@@ -16,9 +16,9 @@ import { Loading } from '@/components/loading';
 import Card from '../../datasets/components/Card';
 import Filter from '../../datasets/components/FIlter/Filter';
 
-const categoryQueryDoc: any = graphql(`
-  query CategoryDetails($filters: CategoryFilter) {
-    categories(filters: $filters) {
+const sectorQueryDoc: any = graphql(`
+  query CategoryDetails($filters: SectorFilter) {
+    sectors(filters: $filters) {
       id
       name
       description
@@ -165,14 +165,14 @@ const useUrlParams = (
   }, [queryParams, setVariables, router]);
 };
 
-const CategoryDetailsPage = ({ params }: { params: { categorySlug: any } }) => {
+const SectorDetailsPage = ({ params }: { params: { categorySlug: any } }) => {
   const getCategoryDetails: {
     data: any;
     isLoading: boolean;
     isError: boolean;
   } = useQuery([`get_category_details_${params.categorySlug}`], () =>
     GraphQL(
-      categoryQueryDoc,
+      sectorQueryDoc,
       {
         // Entity Headers if present
       },
@@ -243,11 +243,11 @@ const CategoryDetailsPage = ({ params }: { params: { categorySlug: any } }) => {
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
-          { href: '/categories', label: 'Categories' },
+          { href: '/sectors', label: 'Sectors' },
           {
             href: '#',
             label:
-              getCategoryDetails.data?.categories[0].name ||
+              getCategoryDetails.data?.sectors[0].name ||
               params.categorySlug,
           },
         ]}
@@ -275,14 +275,14 @@ const CategoryDetailsPage = ({ params }: { params: { categorySlug: any } }) => {
                 // className="text-baseIndigoAlpha4"
                 fontWeight="bold"
               >
-                {getCategoryDetails.data?.categories[0].name ||
+                {getCategoryDetails.data?.sectors[0].name ||
                   params.categorySlug}
               </Text>
               <Text variant="bodyLg">
-                {getCategoryDetails.data?.categories[0].datasetCount} Datasets
+                {getCategoryDetails.data?.sectors[0].datasetCount} Datasets
               </Text>
               <Text variant="bodyMd">
-                {getCategoryDetails.data?.categories[0].description ||
+                {getCategoryDetails.data?.sectors[0].description ||
                   'No description available.'}
               </Text>
             </div>
@@ -399,4 +399,4 @@ const CategoryDetailsPage = ({ params }: { params: { categorySlug: any } }) => {
   );
 };
 
-export default CategoryDetailsPage;
+export default SectorDetailsPage;

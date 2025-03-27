@@ -65,7 +65,7 @@ export function MainNav({ hideSearch = false }) {
     },
     {
       title: 'Sectors',
-      href: '/categories',
+      href: '/sectors',
     },
     {
       title: 'Use Cases',

@@ -91,7 +91,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             variant="bodyLg"
             fontWeight="medium"
           >
-            {data.categories[0].name}
+            {data.sectors[0].name}
           </Text>
         </div>
         {Metadata.map((item, index) => (
@@ -110,10 +110,10 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
         <div className="flex flex-col gap-4">
           <Text variant="bodyMd">Description</Text>
           <Text variant="bodyMd">
-            {data.description.length > 260 && !isexpanded
+            {data.description?.length > 260 && !isexpanded
               ? `${data.description.slice(0, 260)}...`
               : data.description}
-            {data.description.length > 260 && (
+            {data.description?.length > 260 && (
               <Button
                 kind="tertiary"
                 size="slim"

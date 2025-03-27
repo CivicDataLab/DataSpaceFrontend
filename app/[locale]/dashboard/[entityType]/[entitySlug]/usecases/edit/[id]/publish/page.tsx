@@ -38,7 +38,7 @@ const UseCaseDetails: any = graphql(`
       datasets {
         title
         id
-        categories {
+        sectors {
           name
         }
         modified
@@ -119,7 +119,7 @@ const Publish = () => {
 
   const columns = [
     { accessorKey: 'title', header: 'Title' },
-    { accessorKey: 'category', header: 'Category' },
+    { accessorKey: 'sector', header: 'Sector' },
     { accessorKey: 'modified', header: 'Last Modified' },
   ];
 
@@ -147,7 +147,7 @@ const Publish = () => {
       return {
         title: item.title,
         id: item.id,
-        category: item.categories[0]?.name,
+        category: item.sectors[0]?.name,
         modified: formatDate(item.modified),
       };
     });

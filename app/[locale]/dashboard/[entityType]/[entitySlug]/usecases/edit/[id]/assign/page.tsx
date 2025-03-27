@@ -20,7 +20,7 @@ const FetchUseCaseDetails: any = graphql(`
         id
         title
         modified
-        categories {
+        sectors {
           name
         }
       }
@@ -72,7 +72,7 @@ const Assign = () => {
       return {
         title: item.title,
         id: item.id,
-        category: item.categories[0]?.name || 'N/A', // Safeguard in case of missing category
+        category: item.sectors[0]?.name || 'N/A', // Safeguard in case of missing category
         modified: formatDate(item.modified),
       };
     });
@@ -101,7 +101,7 @@ const Assign = () => {
       return {
         title: item.title,
         id: item.id,
-        category: item.categories[0],
+        category: item.sectors[0],
         modified: formatDate(item.modified),
       };
     });
