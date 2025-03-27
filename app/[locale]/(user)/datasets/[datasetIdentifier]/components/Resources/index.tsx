@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   Accordion,
   AccordionContent,
@@ -12,14 +11,16 @@ import {
   AccordionTrigger,
   Button,
   Dialog,
+  Format,
+  Icon,
   Spinner,
   Table,
-  Tag,
-  Text,
+  Text
 } from 'opub-ui';
+import { useEffect, useRef, useState } from 'react';
 
+import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
 
 const datasetResourceQuery: any = graphql(`
   query datasetResources($datasetId: UUID!) {
@@ -34,6 +35,7 @@ const datasetResourceQuery: any = graphql(`
         columns
         rows
       }
+      noOfEntries
       previewEnabled
       schema {
         fieldName
@@ -64,35 +66,7 @@ const Resources = () => {
       )
   );
 
-  // Use an object to manage the expanded state for each resource individually
-  const [showMore, setShowMore] = useState<{ [key: number]: boolean }>({});
-  const [isDescriptionLong, setIsDescriptionLong] = useState<{
-    [key: number]: boolean;
-  }>({});
 
-  const descriptionRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  // Toggle showMore for a specific resource
-  const toggleShowMore = (index: number) => {
-    setShowMore((prevState) => ({
-      ...prevState,
-      [index]: !prevState[index],
-    }));
-  };
-
-  // Measure the height of the description and set the `isDescriptionLong` flag accordingly
-  useEffect(() => {
-    descriptionRefs.current.forEach((descriptionElement, index) => {
-      if (descriptionElement) {
-        const isLong =
-          descriptionElement.scrollHeight > descriptionElement.clientHeight;
-        setIsDescriptionLong((prevState) => ({
-          ...prevState,
-          [index]: isLong,
-        }));
-      }
-    });
-  }, [getResourceDetails.data]);
 
   const generateColumnData = () => {
     return [
@@ -103,9 +77,9 @@ const Resources = () => {
           return (
             <Dialog>
               <Dialog.Trigger>
-                <Button kind="tertiary">View All Columns</Button>
+                <Button kind="tertiary" className=' text-secondaryOrange underline'>View All Columns</Button>
               </Dialog.Trigger>
-              <Dialog.Content title={'Fields'} limitHeight>
+              <Dialog.Content title={'All Columns'} limitHeight>
                 <Table
                   columns={[
                     {
@@ -178,11 +152,11 @@ const Resources = () => {
           return (
             <Dialog>
               <Dialog.Trigger>
-                <Button kind="tertiary" disabled={!previewData}>
+                <Button kind="tertiary" disabled={!previewData} className=' text-secondaryOrange underline'>
                   Preview
                 </Button>
               </Dialog.Trigger>
-              <Dialog.Content title={'Fields'} limitHeight large>
+              <Dialog.Content title={'Preview'} limitHeight large>
                 {previewData && (
                   <Table columns={previewColumns} rows={previewRows} />
                 )}
@@ -198,81 +172,109 @@ const Resources = () => {
     return [
       {
         schema: data?.schema,
-        rowsLength: data?.previewData?.rows?.length || 'Na',
+        rowsLength: data?.noOfEntries || 'Na',
         format: data?.fileDetails?.format || 'Na',
         size: Math.round(data?.fileDetails?.size / 1024).toFixed(2) + 'KB',
         preview: data?.previewData,
       },
     ];
   };
-
+  const [isexpanded, setIsexpanded] = useState(false);
+  const toggleDescription = () => setIsexpanded(!isexpanded);
   return (
-    <div className="w-full">
+    <div >
       {getResourceDetails.isLoading ? (
         <div className="mt-8 flex justify-center">
           <Spinner />
         </div>
       ) : getResourceDetails.data &&
         getResourceDetails.data?.datasetResources?.length > 0 ? (
-        <>
-          <Text variant="bodyLg" className="mx-6 lg:mx-0">
-            Downloadable Resources
-          </Text>
+        <div className=" flex flex-col gap-8">
+          <div className="flex flex-col gap-1">
+            <Text variant="heading2xl">Files in this Dataset </Text>
+            <Text variant="headingLg" fontWeight="regular">
+              All files associated with this Dataset which can be
+              downloaded{' '}
+            </Text>
+          </div>
           <div>
             {getResourceDetails.data?.datasetResources.map(
               (item: any, index: number) => (
                 <div
                   key={index}
-                  className="mx-6 mt-5 flex flex-col gap-6 bg-surfaceDefault p-6 lg:mx-0"
+                  className="mt-5 flex flex-col gap-6 border-1 border-solid border-greyExtralight bg-surfaceDefault p-6 lg:mx-0"
                 >
                   <div className="flex flex-wrap justify-between gap-4">
-                    <div className="gap flex flex-col lg:w-4/5">
-                      <div className="item flex items-center gap-2">
+                    <div className="flex w-full flex-col gap-4 ">
+                      <div className=" flex items-center justify-between gap-2">
                         <Text variant="headingMd">{item.name}</Text>
                         {item.fileDetails?.format && (
-                          <Tag>{item.fileDetails?.format}</Tag>
+                          <Format fileType={item.fileDetails?.format} />
                         )}
                       </div>
-                      <div>
-                        <Text>Updated:</Text>
-                        <Text>{formatDate(item.modified)}</Text>
+                      <div className="lg:w-3/4">
+                        <Text className=' hidden lg:block'>
+                          {item.description.length > 260 && !isexpanded
+                            ? `${item.description.slice(0, 260)}...`
+                            : item.description}
+                          {item.description.length > 260 && (
+                            <Button
+                              kind="tertiary"
+                              size="slim"
+                              onClick={toggleDescription}
+                              className="text-blue-600 w-fit"
+                            >
+                              {isexpanded ? 'See Less' : 'See More'}
+                            </Button>
+                          )}
+                        </Text>
+                        <Text className=' lg:hidden block'>
+                          {item.description.length > 160 && !isexpanded
+                            ? `${item.description.slice(0, 160)}...`
+                            : item.description}
+                          {item.description.length > 160 && (
+                            <Button
+                              kind="tertiary"
+                              size="slim"
+                              onClick={toggleDescription}
+                              className="text-blue-600 w-fit"
+                            >
+                              {isexpanded ? 'See Less' : 'See More'}
+                            </Button>
+                          )}
+                        </Text>
                       </div>
-                    </div>
-                    <div>
-                      <Link
-                        href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${item.id}`}
-                        target="_blank"
-                        className="flex justify-center"
-                      >
-                        <Button>Download</Button>
-                      </Link>
                     </div>
                   </div>
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="item-1" className=" border-none">
-                      <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex flex-col lg:w-3/4">
-                          <div
-                            ref={(el) => (descriptionRefs.current[index] = el)}
-                            className={!showMore[index] ? 'line-clamp-2' : ''}
-                          >
-                            <Text>{item.description}</Text>
-                          </div>
-                          {isDescriptionLong[index] && (
-                            <Button
-                              className="self-start p-2"
-                              onClick={() => toggleShowMore(index)}
-                              variant="interactive"
-                              size="slim"
-                              kind="tertiary"
-                            >
-                              {showMore[index] ? 'Show less' : 'Show more'}
-                            </Button>
-                          )}
-                        </div>
+                      <div className="flex flex-wrap items-center justify-end gap-4">
                         <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 p-0 hover:no-underline">
-                          View Details
+                          <Text className=" text-secondaryOrange">
+                            {' '}
+                            View Details
+                          </Text>
                         </AccordionTrigger>
+                        <div>
+                          <Link
+                            href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${item.id}`}
+                            target="_blank"
+                            className="flex justify-center"
+                          >
+                            <Button kind="tertiary">
+                              <div className="flex gap-1">
+                                <Text className=" text-secondaryOrange">
+                                  {' '}
+                                  Download
+                                </Text>
+                                <Icon
+                                  source={Icons.download}
+                                  size={20}
+                                />
+                              </div>
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
                       <AccordionContent
                         className="flex w-full flex-col py-5"
@@ -285,6 +287,7 @@ const Resources = () => {
                           columns={generateColumnData()}
                           rows={generateTableData(item)}
                           hideFooter
+                          
                         />
                       </AccordionContent>
                     </AccordionItem>
@@ -293,7 +296,7 @@ const Resources = () => {
               )
             )}
           </div>
-        </>
+        </div>
       ) : (
         ''
       )}

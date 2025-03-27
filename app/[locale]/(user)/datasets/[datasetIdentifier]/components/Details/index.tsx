@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -49,7 +49,11 @@ const DetailsQuery: any = graphql(`
   }
 `);
 
-const Details = () => {
+interface DetailsProps {
+  setShowcharts: (vars: boolean) => void;
+}
+
+const Details: React.FC<DetailsProps> = ({ setShowcharts }) => {
   const params = useParams();
   const chartRef = useRef<ReactECharts>(null);
 
@@ -57,6 +61,12 @@ const Details = () => {
     [`chartDetails_${params.id}`],
     () => GraphQL(DetailsQuery, {}, { datasetId: params.datasetIdentifier })
   );
+
+  useEffect(() => {
+    if (data && data?.getChartData.length <= 0) {
+      setShowcharts(false);
+    }
+  }, [data]);
 
   const renderChart = (item: any) => {
     if (item.chartType === 'ASSAM_DISTRICT' || item.chartType === 'ASSAM_RC') {
@@ -70,17 +80,17 @@ const Details = () => {
     return <ReactECharts option={item?.chart?.options} ref={chartRef} />;
   };
 
+  const [isexpanded, setIsexpanded] = useState(false);
+  const toggleDescription = () => setIsexpanded(!isexpanded);
+
   return (
-    <div className="mb-8 flex w-full flex-col gap-4 p-2">
+    <div className=" flex w-full flex-col gap-4 p-2">
       {isLoading ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
       ) : data?.getChartData?.length > 0 ? (
         <>
-          <Text variant="bodyLg" className="mx-6 lg:mx-0">
-            Visualizations
-          </Text>
           <div className="relative w-full ">
             <Carousel className="w-full">
               <div className=" px-12">
@@ -106,12 +116,26 @@ const Details = () => {
                         <div className="flex items-center justify-between gap-2 max-sm:flex-wrap">
                           <div className="flex flex-col gap-1 py-2 text-start">
                             <Text className="font-semi-bold">{item.name}</Text>
-                            <Text>{item.description}</Text>
+                            <Text className=" hidden lg:block">
+                              {item.description.length > 260 && !isexpanded
+                                ? `${item.description.slice(0, 260)}...`
+                                : item.description}
+                              {item.description.length > 260 && (
+                                <Button
+                                  kind="tertiary"
+                                  size="slim"
+                                  onClick={toggleDescription}
+                                  className="text-blue-600 w-fit"
+                                >
+                                  {isexpanded ? 'See Less' : 'See More'}
+                                </Button>
+                              )}
+                            </Text>
                           </div>
                           <div className="flex gap-2">
                             <Button kind="secondary" className="p-2">
                               <Icon
-                                source={Icons.share}
+                                source={Icons.diagonal}
                                 size={20}
                                 color="default"
                               />
@@ -137,10 +161,10 @@ const Details = () => {
                 </CarouselContent>
               </div>
               <div className="absolute inset-y-0 left-0 flex  items-center">
-                <CarouselPrevious />
+                <CarouselPrevious className=" bg-secondaryOrange" />
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center">
-                <CarouselNext />
+                <CarouselNext className=" bg-secondaryOrange" />
               </div>
             </Carousel>
           </div>

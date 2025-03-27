@@ -74,7 +74,7 @@ export function DashboardNav({
                   width={140}
                   src={'/fallback.svg'}
                   alt={'fallback logo'}
-                  className="fill-current bg-baseGraySlateSolid6 object-contain text-baseGraySlateSolid6"
+                  className="fill-current object-contain text-baseGraySlateSolid6"
                 />
               )}
               <Text variant="headingMd" fontWeight="medium" className="py-2">

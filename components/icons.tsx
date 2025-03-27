@@ -9,6 +9,7 @@ import {
   IconBrandGithub,
   IconBrandLinkedin,
   IconBrandTwitter,
+  IconCalendar,
   IconChartBar,
   IconCheck,
   IconCircleCheckFilled,
@@ -24,6 +25,8 @@ import {
   IconFileUpload,
   IconFolder,
   IconInfoCircle,
+  IconLayoutGrid,
+  IconLayoutList,
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
   IconLink,
@@ -40,6 +43,7 @@ import {
   IconTrash,
   IconUserCog,
   IconUsers,
+  IconWorld,
   IconX,
   // TablerIconsProps,
 } from '@tabler/icons-react';
@@ -90,4 +94,9 @@ export const Icons: {
   arrowDiagonal: IconArrowsDiagonal,
   verticalDots: IconDotsVertical,
   chart: IconChartBar,
+  list: IconLayoutList,
+  grid: IconLayoutGrid,
+  calendar: IconCalendar,
+  globe: IconWorld,
+  diagonal: IconArrowsDiagonal
 };

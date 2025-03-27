@@ -1,10 +1,15 @@
 'use client';
 
 import React, { useEffect, useReducer, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fetchDatasets } from '@/fetch';
 import {
   Button,
+  ButtonGroup,
+  Card,
+  Divider,
+  Icon,
   Pill,
   SearchInput,
   Select,
@@ -15,8 +20,8 @@ import {
 
 import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
+import { Icons } from '@/components/icons';
 import GraphqlPagination from '../../dashboard/components/GraphqlPagination/graphqlPagination';
-import Card from './components/Card';
 import Filter from './components/FIlter/Filter';
 import Styles from './dataset.module.scss';
 
@@ -43,7 +48,6 @@ interface QueryParams {
   filters: FilterOptions;
   query?: string;
   sort?: string; // Adding sort to QueryParams
-
 }
 
 type Action =
@@ -61,7 +65,6 @@ const initialState: QueryParams = {
   filters: {},
   query: '',
   sort: 'recent', // Default sort is set to recent
-
 };
 
 const queryReducer = (state: QueryParams, action: Action): QueryParams => {
@@ -141,7 +144,7 @@ const useUrlParams = (
     const searchParam = queryParams.query
       ? `&query=${encodeURIComponent(queryParams.query)}`
       : '';
-      const sortParam = queryParams.sort
+    const sortParam = queryParams.sort
       ? `&sort=${encodeURIComponent(queryParams.sort)}`
       : '';
     const variablesString = `?${filtersString}&size=${queryParams.pageSize}&page=${queryParams.currentPage}${searchParam}${sortParam}`;
@@ -184,6 +187,7 @@ const DatasetsListing = () => {
   const count = facets?.total ?? 0;
   const datasetDetails = facets?.results ?? [];
   const [queryParams, setQueryParams] = useReducer(queryReducer, initialState);
+  const [view, setView] = useState<'collapsed' | 'expanded'>('collapsed');
 
   useUrlParams(queryParams, setQueryParams, setVariables);
 
@@ -235,9 +239,11 @@ const DatasetsListing = () => {
     },
     {}
   );
+  const pageSizeOptions = [9, 18, 36];
+  console.log(datasetDetails);
 
   return (
-    <main className="bg-surfaceDefault">
+    <main className=" bg-greyExtralight">
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
@@ -249,67 +255,114 @@ const DatasetsListing = () => {
           <Spinner />
         </div>
       ) : (
-        <section className="mx-5 md:mx-8 lg:mx-10">
-          <div className="my-4 flex flex-wrap items-center justify-between gap-6 rounded-2 bg-baseBlueSolid4 p-2">
-            <div>
-              <Text>
-                Showing {datasetDetails?.length} of {count} Datasets
-              </Text>
-            </div>
-            <div className=" w-full max-w-[550px] md:block">
+        <section className="m-5 md:m-8 lg:m-10">
+          <div className="flex flex-wrap items-center justify-between gap-5 rounded-2 p-2 lg:flex-nowrap">
+            <div className=" w-full md:block">
               <SearchInput
                 label="Search"
                 name="Search"
                 className={cn(Styles.Search)}
-                placeholder="Search datasets"
+                placeholder="Search for Data"
                 onSubmit={(value) => handleSearch(value)}
                 onClear={(value) => handleSearch(value)}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Text variant="bodyLg" className="font-bold text-baseBlueSolid8">
-                Sort by:
-              </Text>
-              <Select
-                label=""
-                labelInline
-                name="select"
-                onChange={handleSortChange}
-                options={[
-                  {
-                    label: 'Recent',
-                    value: 'recent',
-                  },
-                  {
-                    label: 'Alphabetical',
-                    value: 'alphabetical',
-                  },
-                ]}
-              />
-            </div>
-            <Tray
-              size="narrow"
-              open={open}
-              onOpenChange={setOpen}
-              trigger={
-                <Button
-                  kind="secondary"
-                  className="lg:hidden"
-                  onClick={() => setOpen(true)}
+            <div className="flex flex-wrap justify-between gap-5 lg:flex-nowrap lg:justify-normal">
+              <div className="flex items-center gap-2">
+                <Text
+                  variant="bodyLg"
+                  fontWeight="semibold"
+                  className="whitespace-nowrap text-primaryBlue"
                 >
-                  Filter
-                </Button>
-              }
-            >
-              <Filter
-                setOpen={setOpen}
-                options={filterOptions}
-                setSelectedOptions={handleFilterChange}
-                selectedOptions={queryParams.filters}
-              />
-            </Tray>
+                  View:
+                </Text>
+                <ButtonGroup noWrap spacing="tight">
+                  <Button
+                    kind={view === 'collapsed' ? 'secondary' : 'tertiary'}
+                    size="slim"
+                    className=" h-fit w-fit"
+                    onClick={() => setView('collapsed')}
+                  >
+                    <Icon source={Icons.grid} />
+                  </Button>
+                  <Button
+                    onClick={() => setView('expanded')}
+                    kind={view === 'expanded' ? 'secondary' : 'tertiary'}
+                    className=" h-fit w-fit"
+                    size="slim"
+                  >
+                    <Icon source={Icons.list} />
+                  </Button>
+                </ButtonGroup>
+              </div>
+              <div className="flex items-center gap-2">
+                <Text
+                  variant="bodyLg"
+                  fontWeight="semibold"
+                  className="whitespace-nowrap text-primaryBlue"
+                >
+                  Sort by:
+                </Text>
+                <Select
+                  label=""
+                  labelInline
+                  name="select"
+                  onChange={handleSortChange}
+                  options={[
+                    {
+                      label: 'Recent',
+                      value: 'recent',
+                    },
+                    {
+                      label: 'Alphabetical',
+                      value: 'alphabetical',
+                    },
+                  ]}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Text
+                  variant="bodyLg"
+                  fontWeight="semibold"
+                  className="whitespace-nowrap text-primaryBlue"
+                >
+                  Rows:
+                </Text>
+                <Select
+                  label=""
+                  labelInline
+                  name="select"
+                  onChange={(e) => handlePageSizeChange(+e)}
+                  options={pageSizeOptions.map((value) => ({
+                    value: String(value),
+                    label: String(value),
+                  }))}
+                />
+              </div>
+              <Tray
+                size="narrow"
+                open={open}
+                onOpenChange={setOpen}
+                trigger={
+                  <Button
+                    kind="secondary"
+                    className="lg:hidden"
+                    onClick={() => setOpen(true)}
+                  >
+                    Filter
+                  </Button>
+                }
+              >
+                <Filter
+                  setOpen={setOpen}
+                  options={filterOptions}
+                  setSelectedOptions={handleFilterChange}
+                  selectedOptions={queryParams.filters}
+                />
+              </Tray>
+            </div>
           </div>
-          <div className="row mb-16 flex gap-5">
+          <div className="row mg:mt-8 mb-16 mt-5 flex gap-5 lg:mt-10">
             <div className="hidden min-w-64 max-w-64 lg:block">
               <Filter
                 options={filterOptions}
@@ -318,35 +371,91 @@ const DatasetsListing = () => {
               />
             </div>
 
-            <div className="flex w-full flex-col px-2">
-              <div className="flex gap-2 border-b-2 border-solid border-baseGraySlateSolid4 pb-4">
-                {Object.entries(queryParams.filters).map(([category, values]) =>
-                  values.filter(value => category !== 'sort').map((value) => (
-                    <Pill
-                      key={`${category}-${value}`}
-                      onRemove={() => handleRemoveFilter(category, value)}
-                    >
-                      {value}
-                    </Pill>
-                  ))
-                )}
-              </div>
+            <div className="flex w-full flex-col gap-4 px-2">
+              {Object.values(queryParams.filters).filter(
+                (value) => Array.isArray(value) && value.length !== 0
+              ).length > 1 && (
+                <>
+                  <div className="flex gap-2">
+                    {Object.entries(queryParams.filters).map(
+                      ([category, values]) =>
+                        values
+                          .filter((value) => category !== 'sort')
+                          .map((value) => (
+                            <Pill
+                              key={`${category}-${value}`}
+                              onRemove={() =>
+                                handleRemoveFilter(category, value)
+                              }
+                            >
+                              {value}
+                            </Pill>
+                          ))
+                    )}
+                  </div>
+                  <Divider className=" h-1 bg-surfaceDefault" />
+                </>
+              )}
 
-              <div className="flex flex-col gap-6">
-                {facets && datasetDetails?.length > 0 && (
-                  <GraphqlPagination
-                    totalRows={count}
-                    pageSize={queryParams.pageSize}
-                    currentPage={queryParams.currentPage}
-                    onPageChange={handlePageChange}
-                    onPageSizeChange={handlePageSizeChange}
-                  >
-                    {datasetDetails.map((item: any, index: any) => (
-                      <Card key={index} data={item} />
-                    ))}
-                  </GraphqlPagination>
-                )}
-              </div>
+              {facets && datasetDetails?.length > 0 && (
+                <GraphqlPagination
+                  totalRows={count}
+                  pageSize={queryParams.pageSize}
+                  currentPage={queryParams.currentPage}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  view={view}
+                >
+                  {datasetDetails.map((item: any, index: any) => {
+                    const commonProps = {
+                      key: `${item.id}-${view}`,
+                      title: item.title,
+                      description: item.description,
+                      metadataContent: [
+                        {
+                          icon: Icons.calendar,
+                          label: 'Date',
+                          value: '19 July 2024',
+                        },
+                        {
+                          icon: Icons.download,
+                          label: 'Download',
+                          value: '500',
+                        },
+                        {
+                          icon: Icons.globe,
+                          label: 'Geography',
+                          value: 'India',
+                        },
+                      ],
+                      tag: item.tags,
+                      formats: item.formats,
+                      footerContent: [
+                        {
+                          icon: '',
+                          label: 'Sectors',
+                        },
+                        {
+                          icon: '',
+                          label: 'Published by',
+                        },
+                      ],
+                    };
+
+                    return (
+                      <Link href={`/datasets/${item.id}`} key={item.id}>
+                        <Card
+                          {...commonProps}
+                          variation={
+                            view === 'expanded' ? 'expanded' : 'collapsed'
+                          }
+                          iconColor="warning"
+                        />
+                      </Link>
+                    );
+                  })}
+                </GraphqlPagination>
+              )}
             </div>
           </div>
         </section>
