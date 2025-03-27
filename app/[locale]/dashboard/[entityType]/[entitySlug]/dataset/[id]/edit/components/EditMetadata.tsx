@@ -2,9 +2,9 @@
 
 import { graphql } from '@/gql';
 import {
-  TypeCategory,
   TypeDataset,
   TypeMetadata,
+  TypeSector,
   TypeTag,
   UpdateMetadataInput
 } from '@/gql/generated/graphql';
@@ -28,9 +28,9 @@ import { GraphQL } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import DatasetLoading from '../../../components/loading-dataset';
 
-const categoriesListQueryDoc: any = graphql(`
-  query CategoryList {
-    categories {
+const sectorsListQueryDoc: any = graphql(`
+  query SectorList {
+    sectors {
       id
       name
     }
@@ -56,7 +56,7 @@ const datasetMetadataQueryDoc: any = graphql(`
         id
         value
       }
-      categories {
+      sectors {
         id
         name
       }
@@ -139,10 +139,10 @@ export function EditMetadata({ id }: { id: string }) {
     }
   );
 
-  const getCategoriesList: { data: any; isLoading: boolean; error: any } =
-    useQuery([`categories_list_query`], () =>
+  const getSectorsList: { data: any; isLoading: boolean; error: any } =
+    useQuery([`sectors_list_query`], () =>
       GraphQL(
-        categoriesListQueryDoc,
+        sectorsListQueryDoc,
         {
           [params.entityType]: params.entitySlug,
         },
@@ -230,11 +230,11 @@ export function EditMetadata({ id }: { id: string }) {
 
     defaultVal['description'] = dataset?.description || '';
 
-    defaultVal['categories'] =
-      dataset?.categories?.map((category: TypeCategory) => {
+    defaultVal['sectors'] =
+      dataset?.sectors?.map((sector: TypeSector) => {
         return {
-          label: category.name,
-          value: category.id,
+          label: sector.name,
+          value: sector.id,
         };
       }) || [];
 
@@ -289,7 +289,7 @@ export function EditMetadata({ id }: { id: string }) {
             ...Object.keys(transformedValues)
               .filter(
                 (valueItem) =>
-                  !['categories', 'description', 'tags'].includes(valueItem)
+                  !['sectors', 'description', 'tags'].includes(valueItem)
               )
               .map((key) => {
                 return {
@@ -300,8 +300,8 @@ export function EditMetadata({ id }: { id: string }) {
           ],
           description: updatedData.description || '',
           tags: updatedData.tags?.map((item: any) => item.label) || [],
-          categories:
-            updatedData.categories?.map((item: any) => item.value) || [],
+          sectors:
+            updatedData.sectors?.map((item: any) => item.value) || [],
         },
       });
     }
@@ -427,7 +427,7 @@ export function EditMetadata({ id }: { id: string }) {
   return (
     <>
       {!getTagsList?.isLoading &&
-      !getCategoriesList?.isLoading &&
+      !getSectorsList?.isLoading &&
       !getDatasetMetadata.isLoading ? (
         <Form
          
@@ -484,16 +484,16 @@ export function EditMetadata({ id }: { id: string }) {
                   <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
                     <Combobox
                       displaySelected
-                      label="Categories"
-                      list={getCategoriesList.data?.categories?.map(
-                        (item: TypeCategory) => {
+                      label="Sectors"
+                      list={getSectorsList.data?.sectors?.map(
+                        (item: TypeSector) => {
                           return { label: item.name, value: item.id };
                         }
                       )}
-                      name="categories"
+                      name="sectors"
                       onChange={(value) => {
-                        handleChange('categories', value);
-                        handleSave({ ...formData, categories: value }); // Save on change
+                        handleChange('sectors', value);
+                        handleSave({ ...formData, sectors: value }); // Save on change
                       }}
                     />
                   </div>

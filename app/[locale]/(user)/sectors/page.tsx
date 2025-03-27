@@ -11,9 +11,9 @@ import BreadCrumbs from '@/components/BreadCrumbs';
 import { ErrorPage } from '@/components/error';
 import { Loading } from '@/components/loading';
 
-const categoriesListQueryDoc: any = graphql(`
-  query CategoriesList {
-    categories {
+const sectorsListQueryDoc: any = graphql(`
+  query SectorsList {
+    sectors {
       id
       name
       description
@@ -23,15 +23,15 @@ const categoriesListQueryDoc: any = graphql(`
   }
 `);
 
-const CategoriesListingPage = () => {
-  const getCategoriesList: {
+const SectorsListingPage = () => {
+  const getSectorsList: {
     data: any;
     isLoading: boolean;
     error: any;
     isError: boolean;
-  } = useQuery([`categories_list_page`], () =>
+  } = useQuery([`sectors_list_page`], () =>
     GraphQL(
-      categoriesListQueryDoc,
+      sectorsListQueryDoc,
       {
         // Entity Headers if present
       },
@@ -44,35 +44,35 @@ const CategoriesListingPage = () => {
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
-          { href: '#', label: 'Categories' },
+          { href: '#', label: 'Sectors' },
         ]}
       />
       <>
-        {getCategoriesList.isLoading ? (
+        {getSectorsList.isLoading ? (
           <Loading />
-        ) : getCategoriesList.data?.categories.length > 0 ? (
+        ) : getSectorsList.data?.sectors.length > 0 ? (
           <>
             <div className="flex h-screen w-full flex-col gap-2 px-28 pt-10">
               <Text variant="heading3xl" as="h1">
-                Categories
+                Sectors
               </Text>
               <div className="flex flex-wrap justify-between pt-8">
-                {getCategoriesList.data?.categories.map((category: any) => (
-                  <Link href={`/categories/${category.slug}`} key={category.id}>
+                {getSectorsList.data?.sectors.map((sectors: any) => (
+                  <Link href={`/sectors/${sectors.slug}`} key={sectors.id}>
                     <div className="md::w-72 mb-7 flex flex-row items-center gap-3 rounded-2 border-borderDefault bg-basePureWhite p-3 shadow-basicLg sm:w-72 lg:w-72 xl:w-72">
                       <div className="flex items-center justify-center rounded-1 bg-baseGraySlateSolid2 p-2">
                         <Image
                           src={'/obi.jpg'}
                           width={40}
                           height={40}
-                          alt={'Category Logo'}
+                          alt={'Sectors Logo'}
                         />
                       </div>
                       <div className="flex flex-col gap-1">
                         <Text variant="bodyMd" fontWeight="semibold">
-                          {category.name}
+                          {sectors.name}
                         </Text>
-                        <Text>{category.datasetCount} Dataset(s)</Text>
+                        <Text>{sectors.datasetCount} Dataset(s)</Text>
                       </div>
                     </div>
                   </Link>
@@ -80,7 +80,7 @@ const CategoriesListingPage = () => {
               </div>
             </div>
           </>
-        ) : getCategoriesList.isError ? (
+        ) : getSectorsList.isError ? (
           <ErrorPage />
         ) : (
           <></>
@@ -90,4 +90,4 @@ const CategoriesListingPage = () => {
   );
 };
 
-export default CategoriesListingPage;
+export default SectorsListingPage;

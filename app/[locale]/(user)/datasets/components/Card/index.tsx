@@ -18,7 +18,7 @@ interface Dataset {
   id: string;
   metadata: MetadataEntry[];
   tags: string[];
-  categories: string[];
+  sectors: string[];
   formats: string[];
   has_charts: boolean,
   title: string;
@@ -161,9 +161,9 @@ const Cards = ({ data }: { data: Dataset }) => {
               {data.has_charts &&  <Icon source={Icons.chart} size={20} />}
               </div>
 
-              {data?.categories.length > 0 && (
+              {data?.sectors.length > 0 && (
                 <span className="flex flex-wrap gap-2 py-1 pr-2">
-                  {data?.categories.map((category, index) => (
+                  {data?.sectors.map((category, index) => (
                     <div
                       key={index}
                       className="rounded-1 border-1 px-2 py-1 text-75"

@@ -49,7 +49,7 @@ const datasetQuery = graphql(`
         slug
         id
       }
-      categories {
+      sectors {
         name
       }
       formats
