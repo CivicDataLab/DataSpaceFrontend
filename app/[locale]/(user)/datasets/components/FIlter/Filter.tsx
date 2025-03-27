@@ -33,7 +33,7 @@ const Filter: React.FC<FilterProps> = ({
   };
 
   return (
-    <div className="rounded-4 bg-surfaceDefault px-4 py-6">
+    <div className="rounded-4 bg-surfaceDefault px-4 py-6 shadow-card">
       <div className="mb-5 flex justify-between">
         <div className="flex w-full justify-between">
           <div>
