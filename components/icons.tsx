@@ -98,4 +98,5 @@ export const Icons: {
   grid: IconLayoutGrid,
   calendar: IconCalendar,
   globe: IconWorld,
+  diagonal: IconArrowsDiagonal
 };
