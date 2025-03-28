@@ -282,21 +282,27 @@ const DatasetsListing = () => {
               />
             </div>
             <div className="flex flex-wrap justify-between gap-3 lg:flex-nowrap lg:justify-normal lg:gap-5">
-              <div className="items-center gap-2 hidden lg:flex">
+              <div className="hidden items-center gap-2 lg:flex">
                 <ButtonGroup noWrap spacing="tight">
                   <Button
-                    kind={view === 'collapsed' ? 'secondary' : 'tertiary'}
+                    kind={'tertiary'}
                     className=" h-fit w-fit"
                     onClick={() => setView('collapsed')}
                   >
-                    <Icon source={Icons.grid} />
+                    <Icon
+                      source={Icons.grid}
+                      color={view === 'collapsed' ? 'highlight' : 'default'}
+                    />
                   </Button>
                   <Button
                     onClick={() => setView('expanded')}
-                    kind={view === 'expanded' ? 'secondary' : 'tertiary'}
+                    kind={'tertiary'}
                     className=" h-fit w-fit"
                   >
-                    <Icon source={Icons.list} />
+                    <Icon
+                      source={Icons.list}
+                      color={view === 'expanded' ? 'highlight' : 'default'}
+                    />
                   </Button>
                 </ButtonGroup>
               </div>
@@ -392,7 +398,6 @@ const DatasetsListing = () => {
                           ))
                     )}
                   </div>
-                  <Divider className=" h-1 bg-surfaceDefault" />
                 </>
               )}
 

@@ -305,7 +305,7 @@ const SectorDetailsPage = ({ params }: { params: { categorySlug: any } }) => {
         <Loading />
       ) : (
         <div className="min-h-screen">
-          <div className="m-auto flex w-11/12 flex-wrap items-center gap-10 p-6 lg:items-start ">
+          <div className="m-auto flex w-11/12 flex-wrap items-center gap-10 p-6 lg:flex-nowrap lg:items-start lg:pb-10 lg:pt-16 ">
             <div className="flex flex-col items-center justify-center rounded-2 bg-baseGraySlateSolid2 p-2">
               <Image
                 src={'/obi.jpg'}
@@ -333,7 +333,7 @@ const SectorDetailsPage = ({ params }: { params: { categorySlug: any } }) => {
               </Text>
             </div>
           </div>
-          <div className="m-5 md:m-8 lg:m-10">
+          <div className="m-5 md:m-8 lg:m-10 ">
             <div className="flex flex-wrap items-center justify-between gap-5 rounded-2 p-2 lg:flex-nowrap">
               <div className=" w-full md:block">
                 <SearchInput
@@ -346,21 +346,27 @@ const SectorDetailsPage = ({ params }: { params: { categorySlug: any } }) => {
                 />
               </div>
               <div className="flex flex-wrap justify-between gap-3 lg:flex-nowrap lg:justify-normal lg:gap-5">
-                <div className="hidden lg:flex items-center gap-2">
+                <div className="hidden items-center gap-2 lg:flex">
                   <ButtonGroup noWrap spacing="tight">
                     <Button
-                      kind={view === 'collapsed' ? 'secondary' : 'tertiary'}
+                      kind={'tertiary'}
                       className=" h-fit w-fit"
                       onClick={() => setView('collapsed')}
                     >
-                      <Icon source={Icons.grid} />
+                      <Icon
+                        source={Icons.grid}
+                        color={view === 'collapsed' ? 'highlight' : 'default'}
+                      />
                     </Button>
                     <Button
                       onClick={() => setView('expanded')}
-                      kind={view === 'expanded' ? 'secondary' : 'tertiary'}
+                      kind={'tertiary'}
                       className=" h-fit w-fit"
                     >
-                      <Icon source={Icons.list} />
+                      <Icon
+                        source={Icons.list}
+                        color={view === 'expanded' ? 'highlight' : 'default'}
+                      />
                     </Button>
                   </ButtonGroup>
                 </div>
@@ -456,7 +462,6 @@ const SectorDetailsPage = ({ params }: { params: { categorySlug: any } }) => {
                             ))
                       )}
                     </div>
-                    <Divider className=" h-1 bg-surfaceDefault" />
                   </>
                 )}
 
