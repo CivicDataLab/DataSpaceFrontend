@@ -282,7 +282,7 @@ const DatasetsListing = () => {
               />
             </div>
             <div className="flex flex-wrap justify-between gap-3 lg:flex-nowrap lg:justify-normal lg:gap-5">
-              <div className="flex items-center gap-2">
+              <div className="items-center gap-2 hidden lg:flex">
                 <ButtonGroup noWrap spacing="tight">
                   <Button
                     kind={view === 'collapsed' ? 'secondary' : 'tertiary'}
