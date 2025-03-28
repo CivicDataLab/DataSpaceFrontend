@@ -96,7 +96,7 @@ export function MainNav({ hideSearch = false }) {
           </div>
           <Link href="/">
             <div className="flex items-center gap-2">
-              <div className="group relative h-[38px] w-[38px] overflow-hidden">
+              <div className="group relative h-[38px] rounded-full w-[38px] overflow-hidden">
                 {/* Static Logo */}
                 <div className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0">
                   <Image
