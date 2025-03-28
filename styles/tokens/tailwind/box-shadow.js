@@ -18,5 +18,5 @@ module.exports = {
   elementCard: 'var(--shadow-element-card)',
   elementTopNav: 'var(--shadow-element-topnav)',
   elementFocus: 'var(--shadow-element-focus)',
-  card: 'var(--shadow-element-card)',
+  card: 'var(--shadow-card)',
 };

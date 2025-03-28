@@ -307,7 +307,7 @@
   --border-width-1: var(--space-025);
   --border-width-2: var(--space-05);
   --border-width-4: var(--space-1);
-  --shadow-element-card: 0px 0px 12px 0px rgba(0, 0, 0, 0.16);
+  --shadow-card: 0px 0px 12px 0px rgba(0, 0, 0, 0.16);
   --shadow-modal:
     0px 26px 80px 0px rgba(0, 0, 0, 0.2), 0px 0px 1px 0px rgba(0, 0, 0, 0.2);
   --shadow-layer:
