@@ -12,8 +12,7 @@ import {
   SearchInput,
   Select,
   Spinner,
-  Text,
-  Tray,
+  Tray
 } from 'opub-ui';
 import React, { useEffect, useReducer, useState } from 'react';
 
@@ -47,6 +46,7 @@ interface QueryParams {
   filters: FilterOptions;
   query?: string;
   sort?: string; // Adding sort to QueryParams
+  order?: string; // Adding sort to QueryParams
 }
 
 type Action =
@@ -56,6 +56,7 @@ type Action =
   | { type: 'REMOVE_FILTER'; payload: { category: string; value: string } }
   | { type: 'SET_QUERY'; payload: string }
   | { type: 'SET_SORT'; payload: string } // Add action to set sort
+  | { type: 'SET_ORDER'; payload: string } // Add action to set sort
   | { type: 'INITIALIZE'; payload: QueryParams };
 
 const initialState: QueryParams = {
@@ -64,6 +65,7 @@ const initialState: QueryParams = {
   filters: {},
   query: '',
   sort: 'recent', // Default sort is set to recent
+  order: '',
 };
 
 const queryReducer = (state: QueryParams, action: Action): QueryParams => {
@@ -96,6 +98,9 @@ const queryReducer = (state: QueryParams, action: Action): QueryParams => {
     }
     case 'SET_SORT': {
       return { ...state, sort: action.payload };
+    }
+    case 'SET_ORDER': {
+      return { ...state, order: action.payload };
     }
     case 'INITIALIZE': {
       return { ...state, ...action.payload };
@@ -146,7 +151,10 @@ const useUrlParams = (
     const sortParam = queryParams.sort
       ? `&sort=${encodeURIComponent(queryParams.sort)}`
       : '';
-    const variablesString = `?${filtersString}&size=${queryParams.pageSize}&page=${queryParams.currentPage}${searchParam}${sortParam}`;
+    const orderParam = queryParams.order
+      ? `&order=${encodeURIComponent(queryParams.order)}`
+      : '';
+    const variablesString = `?${filtersString}&size=${queryParams.pageSize}&page=${queryParams.currentPage}${searchParam}${sortParam}${orderParam}`;
     setVariables(variablesString);
 
     const currentUrl = new URL(window.location.href);
@@ -170,6 +178,11 @@ const useUrlParams = (
       currentUrl.searchParams.set('sort', queryParams.sort);
     } else {
       currentUrl.searchParams.delete('sort');
+    }
+    if (queryParams.order) {
+      currentUrl.searchParams.set('order', queryParams.order);
+    } else {
+      currentUrl.searchParams.delete('order');
     }
     router.push(currentUrl.toString());
   }, [queryParams, setVariables, router]);
@@ -226,6 +239,10 @@ const DatasetsListing = () => {
     setQueryParams({ type: 'SET_SORT', payload: sortOption });
   };
 
+  const handleOrderChange = (sortOrder: string) => {
+    setQueryParams({ type: 'SET_ORDER', payload: sortOrder });
+  };
+
   const aggregations: Aggregations = facets?.aggregations || {};
 
   const filterOptions = Object.entries(aggregations).reduce(
@@ -238,11 +255,9 @@ const DatasetsListing = () => {
     },
     {}
   );
-  const pageSizeOptions = [9, 18, 36];
-  console.log(datasetDetails);
 
   return (
-    <main >
+    <main className=" bg-surfaceDefault">
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
@@ -261,24 +276,16 @@ const DatasetsListing = () => {
                 label="Search"
                 name="Search"
                 className={cn(Styles.Search)}
-                placeholder="Search for Data"
+                placeholder="Start typing to search for any Dataset"
                 onSubmit={(value) => handleSearch(value)}
                 onClear={(value) => handleSearch(value)}
               />
             </div>
-            <div className="flex flex-wrap justify-between gap-5 lg:flex-nowrap lg:justify-normal">
+            <div className="flex flex-wrap justify-between gap-3 lg:gap-5 lg:flex-nowrap lg:justify-normal">
               <div className="flex items-center gap-2">
-                <Text
-                  variant="bodyLg"
-                  fontWeight="semibold"
-                  className="whitespace-nowrap text-primaryBlue"
-                >
-                  View:
-                </Text>
                 <ButtonGroup noWrap spacing="tight">
                   <Button
                     kind={view === 'collapsed' ? 'secondary' : 'tertiary'}
-                    size="slim"
                     className=" h-fit w-fit"
                     onClick={() => setView('collapsed')}
                   >
@@ -288,20 +295,31 @@ const DatasetsListing = () => {
                     onClick={() => setView('expanded')}
                     kind={view === 'expanded' ? 'secondary' : 'tertiary'}
                     className=" h-fit w-fit"
-                    size="slim"
                   >
                     <Icon source={Icons.list} />
                   </Button>
                 </ButtonGroup>
               </div>
               <div className="flex items-center gap-2">
-                <Text
-                  variant="bodyLg"
-                  fontWeight="semibold"
-                  className="whitespace-nowrap text-primaryBlue"
-                >
-                  Sort by:
-                </Text>
+                {queryParams.sort === 'desc' ? (
+                  <Button
+                    onClick={() => handleOrderChange('desc')}
+                    kind={'tertiary'}
+                    className=" h-fit w-fit"
+                  >
+                    <Icon source={Icons.sort} className=" scale-x-[-1]" />
+                  </Button>
+                ) : (
+                  <Button
+                    kind={'tertiary'}
+                    className=" h-fit w-fit"
+                    onClick={() => handleOrderChange('asc')}
+                  >
+                    <Icon source={Icons.sort} />
+                  </Button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
                 <Select
                   label=""
                   labelInline
@@ -319,25 +337,7 @@ const DatasetsListing = () => {
                   ]}
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <Text
-                  variant="bodyLg"
-                  fontWeight="semibold"
-                  className="whitespace-nowrap text-primaryBlue"
-                >
-                  Rows:
-                </Text>
-                <Select
-                  label=""
-                  labelInline
-                  name="select"
-                  onChange={(e) => handlePageSizeChange(+e)}
-                  options={pageSizeOptions.map((value) => ({
-                    value: String(value),
-                    label: String(value),
-                  }))}
-                />
-              </div>
+
               <Tray
                 size="narrow"
                 open={open}
