@@ -67,23 +67,16 @@ export function MainNav({ hideSearch = false }) {
       title: 'Sectors',
       href: '/sectors',
     },
+   
     {
-      title: 'Use Cases',
-      href: '#',
-    },
-    {
-      title: 'Publishers',
-      href: '#',
-    },
-    {
-      title: 'Tools',
+      title: 'About us',
       href: '#',
     },
   ];
 
   return (
-    <nav>
-      <div className="flex items-center justify-between gap-4">
+    <nav className='pt-6 px-6 lg:px-10 lg:pt-6 '>
+      <div className="flex items-center justify-between gap-4 pb-6 border-b-1 border-surfaceDefault border-solid">
         <div className="flex items-center gap-1">
           <div className="lg:hidden">
             <Sidebar
