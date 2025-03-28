@@ -10,6 +10,9 @@ import { GraphQL } from '@/lib/api';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { ErrorPage } from '@/components/error';
 import { Loading } from '@/components/loading';
+import { cn } from '@/lib/utils';
+import Styles from '../datasets/dataset.module.scss';
+
 
 const sectorsListQueryDoc: any = graphql(`
   query SectorsList {
@@ -105,7 +108,7 @@ const SectorsListingPage = () => {
                   <div className="flex flex-wrap gap-6 lg:flex-nowrap">
                     <SearchInput
                       label={''}
-                      className="w-full"
+                      className={cn('w-full',Styles.Search)}                     
                       name={'Start typing to search for any sector'}
                     />
                     <div className="flex items-center gap-2">
