@@ -54,7 +54,7 @@ const Footer: React.FC<FooterProps> = ({
   };
 
   return (
-    <div className="flex w-auto mt-4 items-center gap-8 overflow-x-auto bg-surfaceDefault rounded-4 px-4 py-2 sm:px-6 sm:py-4 md:justify-end lg:justify-end">
+    <div className="flex w-auto shadow-card mt-4 items-center gap-8 overflow-x-auto bg-surfaceDefault rounded-4 px-4 py-2 sm:px-6 sm:py-4 md:justify-end lg:justify-end">
       <Select
         labelInline
         label="Rows: "
