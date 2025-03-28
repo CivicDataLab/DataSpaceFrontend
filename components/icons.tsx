@@ -45,6 +45,7 @@ import {
   IconUsers,
   IconWorld,
   IconX,
+  IconArrowsSort
   // TablerIconsProps,
 } from '@tabler/icons-react';
 
@@ -98,5 +99,6 @@ export const Icons: {
   grid: IconLayoutGrid,
   calendar: IconCalendar,
   globe: IconWorld,
-  diagonal: IconArrowsDiagonal
+  diagonal: IconArrowsDiagonal,
+  sort: IconArrowsSort
 };
