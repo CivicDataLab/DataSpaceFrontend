@@ -23,7 +23,7 @@ import { GraphQL } from '@/lib/api';
 import { formatDate, toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
-const datasetSummaryQuery:any = graphql(`
+const datasetSummaryQuery: any = graphql(`
   query datasetsSummary($filters: DatasetFilter) {
     datasets(filters: $filters) {
       metadata {
@@ -49,6 +49,10 @@ const datasetSummaryQuery:any = graphql(`
       tags {
         id
         value
+      }
+      sectors {
+        id
+        name
       }
       id
       title
@@ -163,15 +167,16 @@ const Page = () => {
     id: string;
   }>();
 
-  const getDatasetsSummary:{ data:any, isLoading:any, refetch:any } = useQuery([`summary_${params.id}`], () =>
-    GraphQL(
-      datasetSummaryQuery,
-      {
-        [params.entityType]: params.entitySlug,
-      },
-      { filters: { id: params.id } }
-    )
-  );
+  const getDatasetsSummary: { data: any; isLoading: any; refetch: any } =
+    useQuery([`summary_${params.id}`], () =>
+      GraphQL(
+        datasetSummaryQuery,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        { filters: { id: params.id } }
+      )
+    );
 
   useEffect(() => {
     getDatasetsSummary.refetch();
@@ -182,7 +187,8 @@ const Page = () => {
       name: 'Resource',
       data: getDatasetsSummary.data?.datasets[0]?.resources,
       error:
-      getDatasetsSummary.data && getDatasetsSummary.data?.datasets[0]?.resources.length === 0
+        getDatasetsSummary.data &&
+        getDatasetsSummary.data?.datasets[0]?.resources.length === 0
           ? 'No Resources found. Please add to continue.'
           : '',
       errorType: 'critical',
@@ -193,7 +199,8 @@ const Page = () => {
             name: 'Access Type',
             data: getDatasetsSummary.data?.datasets[0]?.accessModels,
             error:
-            getDatasetsSummary.data && getDatasetsSummary.data?.datasets[0]?.accessModels.length === 0
+              getDatasetsSummary.data &&
+              getDatasetsSummary.data?.datasets[0]?.accessModels.length === 0
                 ? 'No Access Type found. Please add to continue.'
                 : '',
             errorType: 'critical',
@@ -208,9 +215,18 @@ const Page = () => {
   ];
 
   const PrimaryMetadata = [
-    { label: 'Dataset Name', value: getDatasetsSummary.data?.datasets[0].title },
-    { label: 'Description', value: getDatasetsSummary.data?.datasets[0].description },
-    { label: 'Date of Creation', value: formatDate(getDatasetsSummary.data?.datasets[0].created) },
+    {
+      label: 'Dataset Name',
+      value: getDatasetsSummary.data?.datasets[0].title,
+    },
+    {
+      label: 'Description',
+      value: getDatasetsSummary.data?.datasets[0].description,
+    },
+    {
+      label: 'Date of Creation',
+      value: formatDate(getDatasetsSummary.data?.datasets[0].created),
+    },
     {
       label: 'Date of Last Update',
       value: formatDate(getDatasetsSummary.data?.datasets[0].modified),
@@ -240,6 +256,27 @@ const Page = () => {
     }
   );
 
+  const isPublishDisabled = (dataset: any) => {
+    if (!dataset) return true;
+
+    const hasResources = dataset.resources.length > 0;
+    const hasAccessModels = dataset.accessModels?.length > 0;
+    const isAccessModelEnabled =
+      process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true';
+    const hasRequiredMetadata =
+      dataset.sectors.length > 0 &&
+      dataset.description.length > 10 &&
+      dataset.tags.length > 0;
+
+    // No resources
+    if (!hasResources) return true;
+
+    // Access model check if enabled
+    if (isAccessModelEnabled && !hasAccessModels) return true;
+
+    // Required metadata check
+    return !hasRequiredMetadata;
+  };
   return (
     <>
       <div className=" w-full py-6">
@@ -337,6 +374,18 @@ const Page = () => {
                             ))}
                             <div className="flex flex-wrap gap-2">
                               <Text className="lg:basis-1/6" variant="bodyMd">
+                                Sectors:
+                              </Text>
+                              <div className="flex gap-2 lg:basis-4/5">
+                                {getDatasetsSummary.data?.datasets[0]?.sectors?.map(
+                                  (item: any, index: any) => (
+                                    <Tag key={index}>{item.name}</Tag>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Text className="lg:basis-1/6" variant="bodyMd">
                                 Tags:
                               </Text>
                               <div className="flex gap-2 lg:basis-4/5">
@@ -356,11 +405,9 @@ const Page = () => {
               ))}
               <Button
                 className="m-auto w-fit"
-                disabled={
-                  !getDatasetsSummary.data?.datasets[0]?.resources.length ||
-                  (process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true' &&
-                    !getDatasetsSummary.data?.datasets[0]?.accessModels.length)
-                }
+                disabled={isPublishDisabled(
+                  getDatasetsSummary.data?.datasets[0]
+                )}
                 onClick={() => mutate()}
               >
                 Publish
