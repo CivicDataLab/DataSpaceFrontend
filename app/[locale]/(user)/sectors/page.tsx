@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import { Text } from 'opub-ui';
+import { Divider, SearchInput, Select, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import BreadCrumbs from '@/components/BreadCrumbs';
@@ -52,31 +52,125 @@ const SectorsListingPage = () => {
           <Loading />
         ) : getSectorsList.data?.sectors.length > 0 ? (
           <>
-            <div className="flex h-screen w-full flex-col gap-2 px-28 pt-10">
-              <Text variant="heading3xl" as="h1">
-                Sectors
-              </Text>
-              <div className="flex flex-wrap justify-between pt-8">
-                {getSectorsList.data?.sectors.map((sectors: any) => (
-                  <Link href={`/sectors/${sectors.slug}`} key={sectors.id}>
-                    <div className="md::w-72 mb-7 flex flex-row items-center gap-3 rounded-2 border-borderDefault bg-basePureWhite p-3 shadow-basicLg sm:w-72 lg:w-72 xl:w-72">
-                      <div className="flex items-center justify-center rounded-1 bg-baseGraySlateSolid2 p-2">
-                        <Image
-                          src={'/obi.jpg'}
-                          width={40}
-                          height={40}
-                          alt={'Sectors Logo'}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <Text variant="bodyMd" fontWeight="semibold">
-                          {sectors.name}
-                        </Text>
-                        <Text>{sectors.datasetCount} Dataset(s)</Text>
-                      </div>
+            <div className="w-full">
+              <div className=" bg-primaryBlue">
+                <div className="m-auto flex w-11/12 flex-col-reverse  items-center gap-8  p-6 lg:flex-row ">
+                  <div className="flex flex-col gap-6 ">
+                    <Text variant="heading3xl" color="onBgDefault">
+                      Our Sectors
+                    </Text>
+                    <Text
+                      variant="headingLg"
+                      color="onBgDefault"
+                      fontWeight="regular"
+                    >
+                      We try to enables our users to create and participate in
+                      sectoral data collaboratives, amplifying the reach and
+                      impact of high-value datasets and sectoral use cases at
+                      various levels, including national, sub-national, and
+                      regional.
+                    </Text>{' '}
+                  </div>
+                  <div className="flex items-center justify-center gap-2 px-3 ">
+                    <Image
+                      src={'/s2.png'}
+                      alt={'s1'}
+                      width={130}
+                      height={100}
+                      className="h-auto w-[80px] sm:w-[100px] md:w-[120px] lg:w-[130px]"
+                      priority
+                    />
+                    <Image
+                      src={'/s3.png'}
+                      alt={'s1'}
+                      width={230}
+                      height={100}
+                      className="h-auto w-[140px] sm:w-[180px] md:w-[200px] lg:w-[230px]"
+                      priority
+                    />
+                    <Image
+                      src={'/s1.png'}
+                      alt={'s1'}
+                      width={130}
+                      height={100}
+                      className="h-auto w-[80px] sm:w-[100px] md:w-[120px] lg:w-[130px]"
+                      priority
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className=" m-auto my-10 flex w-11/12 flex-col gap-5 p-6 lg:gap-10">
+                <div className="flex w-full flex-col justify-center gap-6">
+                  <Text variant="heading3xl">Explore Sectors</Text>
+                  <div className="flex flex-wrap gap-6 lg:flex-nowrap">
+                    <SearchInput
+                      label={''}
+                      className="w-full"
+                      name={'Start typing to search for any sector'}
+                    />
+                    <div className="flex items-center gap-2">
+                      <Text
+                        variant="bodyLg"
+                        fontWeight="semibold"
+                        className="whitespace-nowrap text-secondaryOrange"
+                      >
+                        Sort :
+                      </Text>
+                      <Select
+                        label=""
+                        labelInline
+                        name="select"
+                        options={[
+                          {
+                            label: 'Recent',
+                            value: 'recent',
+                          },
+                          {
+                            label: 'Alphabetical',
+                            value: 'alphabetical',
+                          },
+                        ]}
+                      />
                     </div>
-                  </Link>
-                ))}
+                  </div>
+                </div>
+                <div className="grid w-full grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
+                  {getSectorsList.data?.sectors.map((sectors: any) => (
+                    <Link href={`/sectors/${sectors.slug}`} key={sectors.id}>
+                      <div className="flex w-full items-center gap-5 rounded-4 bg-surfaceDefault p-7 shadow-card">
+                        <div className="flex gap-4">
+                          <Image
+                            src={'/obi.jpg'}
+                            width={80}
+                            height={80}
+                            alt={'Sectors Logo'}
+                          />
+                        </div>
+                        <div className="flex w-full flex-col gap-3">
+                          <div className='flex flex-col gap-2'>
+                            <Text
+                              variant="headingLg"
+                              fontWeight="semibold"
+                                                          >
+                              {sectors.name}
+                            </Text>
+                            <Divider />
+                          </div>
+                          <div className="flex gap-1">
+                            <Text
+                              variant="bodyMd"
+                              fontWeight="bold"
+                              className=" text-primaryBlue"
+                            >
+                              {sectors.datasetCount}
+                            </Text>
+                            <Text variant="bodyMd">Datasets</Text>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           </>
