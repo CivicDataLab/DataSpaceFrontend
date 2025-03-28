@@ -1,7 +1,8 @@
 'use client';
 
-import { fetchDatasets } from '@/fetch';
+import React, { useEffect, useReducer, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { fetchDatasets } from '@/fetch';
 import {
   Button,
   ButtonGroup,
@@ -12,13 +13,12 @@ import {
   SearchInput,
   Select,
   Spinner,
-  Tray
+  Tray,
 } from 'opub-ui';
-import React, { useEffect, useReducer, useState } from 'react';
 
+import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
-import { cn } from '@/lib/utils';
 import GraphqlPagination from '../../dashboard/components/GraphqlPagination/graphqlPagination';
 import Filter from './components/FIlter/Filter';
 import Styles from './dataset.module.scss';
@@ -45,8 +45,8 @@ interface QueryParams {
   currentPage: number;
   filters: FilterOptions;
   query?: string;
-  sort?: string; // Adding sort to QueryParams
-  order?: string; // Adding sort to QueryParams
+  sort?: string;
+  order?: string;
 }
 
 type Action =
@@ -60,7 +60,7 @@ type Action =
   | { type: 'INITIALIZE'; payload: QueryParams };
 
 const initialState: QueryParams = {
-  pageSize: 5,
+  pageSize: 9,
   currentPage: 1,
   filters: {},
   query: '',
@@ -130,7 +130,7 @@ const useUrlParams = (
     });
 
     const initialParams: QueryParams = {
-      pageSize: sizeParam ? Number(sizeParam) : 5,
+      pageSize: sizeParam ? Number(sizeParam) : 9,
       currentPage: pageParam ? Number(pageParam) : 1,
       filters,
       query: urlParams.get('query') || '',
@@ -281,7 +281,7 @@ const DatasetsListing = () => {
                 onClear={(value) => handleSearch(value)}
               />
             </div>
-            <div className="flex flex-wrap justify-between gap-3 lg:gap-5 lg:flex-nowrap lg:justify-normal">
+            <div className="flex flex-wrap justify-between gap-3 lg:flex-nowrap lg:justify-normal lg:gap-5">
               <div className="flex items-center gap-2">
                 <ButtonGroup noWrap spacing="tight">
                   <Button
@@ -301,23 +301,23 @@ const DatasetsListing = () => {
                 </ButtonGroup>
               </div>
               <div className="flex items-center gap-2">
-                {queryParams.sort === 'desc' ? (
-                  <Button
-                    onClick={() => handleOrderChange('desc')}
-                    kind={'tertiary'}
-                    className=" h-fit w-fit"
-                  >
-                    <Icon source={Icons.sort} className=" scale-x-[-1]" />
-                  </Button>
-                ) : (
-                  <Button
-                    kind={'tertiary'}
-                    className=" h-fit w-fit"
-                    onClick={() => handleOrderChange('asc')}
-                  >
-                    <Icon source={Icons.sort} />
-                  </Button>
-                )}
+                <Button
+                  onClick={() =>
+                    handleOrderChange(
+                      queryParams.order === 'asc' ? 'desc' : 'asc'
+                    )
+                  }
+                  kind="tertiary"
+                  className="h-fit w-fit"
+                  aria-label={`Sort ${queryParams.order === 'asc' ? 'descending' : 'ascending'}`}
+                >
+                  <Icon
+                    source={Icons.sort}
+                    className={cn(
+                      queryParams.order === 'asc' && 'scale-x-[-1]'
+                    )}
+                  />
+                </Button>
               </div>
               <div className="flex items-center gap-2">
                 <Select
