@@ -67,23 +67,16 @@ export function MainNav({ hideSearch = false }) {
       title: 'Sectors',
       href: '/sectors',
     },
+   
     {
-      title: 'Use Cases',
-      href: '#',
-    },
-    {
-      title: 'Publishers',
-      href: '#',
-    },
-    {
-      title: 'Tools',
+      title: 'About us',
       href: '#',
     },
   ];
 
   return (
-    <nav>
-      <div className="flex items-center justify-between gap-4">
+    <nav className='pt-6 px-6 lg:px-10 lg:pt-6 '>
+      <div className="flex items-center justify-between gap-4 pb-6 border-b-1 border-surfaceDefault border-solid">
         <div className="flex items-center gap-1">
           <div className="lg:hidden">
             <Sidebar
@@ -96,7 +89,7 @@ export function MainNav({ hideSearch = false }) {
           </div>
           <Link href="/">
             <div className="flex items-center gap-2">
-              <div className="group relative h-[38px] w-[38px] overflow-hidden">
+              <div className="group relative h-[38px] rounded-full w-[38px] overflow-hidden">
                 {/* Static Logo */}
                 <div className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0">
                   <Image
@@ -190,9 +183,9 @@ export function MainNav({ hideSearch = false }) {
                     signIn('keycloak');
                   }}
                   kind="secondary"
-                  variant="success"
+                  className=' bg-tertiaryAccent'
                 >
-                  <Text variant="headingMd">LOGIN / SIGN UP</Text>
+                  <Text variant="headingMd" >LOGIN / SIGN UP</Text>
                 </Button>
               )}
             </div>
@@ -278,9 +271,9 @@ export const ProfileContent = ({
 
 const LogginOutPage = () => {
   return (
-    <div className=" flex items-center justify-end gap-4">
+    <div className=" flex items-center bg-surfaceDefault p-2 justify-end gap-4">
       <Spinner color="surface" />
-      <Text variant="headingLg" color="onBgDefault">
+      <Text variant="headingLg" >
         Logging out...
       </Text>
     </div>

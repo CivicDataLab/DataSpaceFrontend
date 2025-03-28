@@ -145,7 +145,7 @@ export function EditLayout({ children, params }: LayoutProps) {
             entityType={routerParams.entityType.toString()}
           />
         </div>
-        <div className="bg-surface shadow-card border-l-divider rounded-tl-none  my-6  flex-grow">
+        <div className="bg-surface border-l-divider rounded-tl-none  my-6  flex-grow">
           {children}
         </div>
       </div>
