@@ -247,8 +247,7 @@ const SectorDetailsPage = ({ params }: { params: { categorySlug: any } }) => {
           {
             href: '#',
             label:
-              getCategoryDetails.data?.sectors[0].name ||
-              params.categorySlug,
+              getCategoryDetails.data?.sectors[0].name || params.categorySlug,
           },
         ]}
       />
@@ -259,7 +258,7 @@ const SectorDetailsPage = ({ params }: { params: { categorySlug: any } }) => {
         <Loading />
       ) : (
         <div className="min-h-screen">
-          <div className="flex flex-col items-center gap-8 py-3 lg:flex-row lg:px-28 lg:py-10">
+          <div className="m-auto flex w-11/12 flex-wrap items-center gap-10 p-6 lg:items-start ">
             <div className="flex flex-col items-center justify-center rounded-2 bg-baseGraySlateSolid2 p-2">
               <Image
                 src={'/obi.jpg'}
@@ -268,20 +267,20 @@ const SectorDetailsPage = ({ params }: { params: { categorySlug: any } }) => {
                 alt={`${params.categorySlug} Logo`}
               />
             </div>
-            <div className="flex flex-col gap-4 p-2">
+            <div className="flex-start flex flex-col gap-4 p-2">
               <Text
                 variant="heading3xl"
-                as="h1"
-                // className="text-baseIndigoAlpha4"
+                className=" text-primaryBlue"
                 fontWeight="bold"
               >
                 {getCategoryDetails.data?.sectors[0].name ||
                   params.categorySlug}
               </Text>
-              <Text variant="bodyLg">
-                {getCategoryDetails.data?.sectors[0].datasetCount} Datasets
-              </Text>
-              <Text variant="bodyMd">
+              <Text
+                variant="headingLg"
+                className=" text-primaryBlue"
+                fontWeight="regular"
+              >
                 {getCategoryDetails.data?.sectors[0].description ||
                   'No description available.'}
               </Text>
