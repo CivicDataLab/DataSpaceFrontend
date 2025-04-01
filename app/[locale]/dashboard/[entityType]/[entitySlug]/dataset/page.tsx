@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
-import { DataTable, IconButton, toast } from 'opub-ui';
+import { Button, DataTable, IconButton, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
@@ -50,6 +50,19 @@ const deleteDatasetMutationDoc: any = graphql(`
   }
 `);
 
+const unPublishDataset: any = graphql(`
+  mutation unPublishDatasetMutation($datasetId: UUID!) {
+    unPublishDataset(datasetId: $datasetId) {
+      __typename
+      ... on TypeDataset {
+        id
+        title
+        created
+      }
+    }
+  }
+`);
+
 export default function DatasetPage({
   params,
 }: {
@@ -71,6 +84,7 @@ export default function DatasetPage({
       selected: navigationTab === 'published',
     },
   ];
+
 
   const AllDatasetsQuery: { data: any; isLoading: boolean; refetch: any } =
     useQuery(
@@ -124,7 +138,6 @@ export default function DatasetPage({
       },
     }
   );
-
   const CreateDatasetMutation: { mutate: any; isLoading: boolean; error: any } =
     useMutation(
       () =>
@@ -146,6 +159,30 @@ export default function DatasetPage({
         },
       }
     );
+  const UnpublishDatasetMutation: {
+    mutate: any;
+    isLoading: boolean;
+    error: any;
+  } = useMutation(
+    [`unpublish_dataset`],
+    (data: { datasetId: string }) =>
+      GraphQL(
+        unPublishDataset,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        { datasetId: data.datasetId }
+      ),
+    {
+      onSuccess: () => {
+        toast(`Unpublished dataset successfully`);
+        AllDatasetsQuery.refetch();
+      },
+      onError: (err: any) => {
+        toast('Error:  ' + err.message.split(':')[0]);
+      },
+    }
+  );
 
   const datasetsListColumns = [
     {
@@ -166,20 +203,33 @@ export default function DatasetPage({
     {
       accessorKey: 'delete',
       header: 'Delete',
-      cell: ({ row }: any) => (
-        <IconButton
-          size="medium"
-          icon={Icons.delete}
-          color="interactive"
-          onClick={() => {
-            DeleteDatasetMutation.mutate({
-              datasetId: row.original?.id,
-            });
-          }}
-        >
-          Delete
-        </IconButton>
-      ),
+      cell: ({ row }: any) =>
+        navigationTab === 'published' ? (
+          <Button
+            size="medium"
+            kind='tertiary'
+            onClick={() => {
+              UnpublishDatasetMutation.mutate({
+                datasetId: row.original?.id,
+              });
+            }}
+          >
+            Unpublish
+          </Button>
+        ) : (
+          <IconButton
+            size="medium"
+            icon={Icons.delete}
+            color="interactive"
+            onClick={() => {
+              DeleteDatasetMutation.mutate({
+                datasetId: row.original?.id,
+              });
+            }}
+          >
+            Delete
+          </IconButton>
+        ),
     },
   ];
 
