@@ -22,8 +22,8 @@ const nextConfig = withNextIntl({
         hostname: backendUrl.hostname,
       },
       {
-        domains: [platformUrl.hostname],
-        unoptimized: true,
+        protocol: platformUrl.protocol.slice(0, -1),
+        hostname: platformUrl.hostname
       },
     ],
   },
