@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { GraphQL } from '@/lib/api';
-import { graphql } from '@/gql';
 import { fetchDatasets } from '@/fetch';
+import { graphql } from '@/gql';
+import { useQuery } from '@tanstack/react-query';
+
+import { GraphQL } from '@/lib/api';
 import { ErrorPage } from '@/components/error';
 import { Loading } from '@/components/loading';
 import ListingComponent from '../../components/ListingComponent';
@@ -20,15 +21,15 @@ const sectorQueryDoc = graphql(`
   }
 `);
 
-const SectorDetailsPage = ({ params }: { params: { categorySlug: string } }) => {
+const SectorDetailsPage = ({
+  params,
+}: {
+  params: { categorySlug: string };
+}) => {
   const { data, isLoading, isError } = useQuery(
     [`get_category_details_${params.categorySlug}`],
     () =>
-      GraphQL(
-        sectorQueryDoc,
-        {},
-        { filters: { slug: params.categorySlug } }
-      )
+      GraphQL(sectorQueryDoc, {}, { filters: { slug: params.categorySlug } })
   );
 
   if (isError) return <ErrorPage />;
@@ -48,7 +49,8 @@ const SectorDetailsPage = ({ params }: { params: { categorySlug: string } }) => 
       breadcrumbData={breadcrumbData}
       categoryName={sector?.name}
       categoryDescription={sector?.description ?? undefined}
-      categoryImage="/obi.jpg"
+      categoryImage={`/Sectors/${sector.name}.svg`}
+      
     />
   );
 };

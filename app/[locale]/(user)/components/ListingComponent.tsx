@@ -282,7 +282,7 @@ const ListingComponent: React.FC<ListingProps> = ({
           {categoryImage && (
             <div className="flex flex-col items-center justify-center rounded-2 bg-baseGraySlateSolid2 p-2">
               <Image
-                src={categoryImage}
+                src={`/Sectors/${categoryName}.svg`}
                 width={164}
                 height={164}
                 alt={`${categoryName} Logo`}
@@ -416,7 +416,7 @@ const ListingComponent: React.FC<ListingProps> = ({
 
           <div className="flex w-full flex-col gap-4 px-2">
             {Object.values(queryParams.filters).filter(
-              (value) => Array.isArray(value) && value.length !== 0
+              (value) => Array.isArray(value) 
             ).length > 1 && (
               <div className="flex gap-2">
                 {Object.entries(queryParams.filters).map(([category, values]) =>
@@ -467,8 +467,8 @@ const ListingComponent: React.FC<ListingProps> = ({
                     tag: item.tags,
                     formats: item.formats,
                     footerContent: [
-                      { icon: '', label: 'Sectors' },
-                      { icon: '', label: 'Published by' },
+                      { icon: `/Sectors/${item.sectors[0]}.svg`, label: 'Sectors' },
+                      { icon: '/fallback.svg', label: 'Published by' },
                     ],
                   };
 

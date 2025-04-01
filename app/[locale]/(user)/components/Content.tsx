@@ -1,44 +1,58 @@
-'use client';
+'use client'
 
-import { IconBrandTabler } from '@tabler/icons-react';
-import { useTranslations } from 'next-intl';
-import { Button, ButtonGroup, Icon, Text } from 'opub-ui';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { SearchInput, Text } from 'opub-ui';
 
-import { Icons } from '@/components/icons';
+import { cn } from '@/lib/utils';
+import Styles from '../page.module.scss';
 
-export function Content() {
-  const t = useTranslations('home');
-
+export const Content = () => {
+  const router = useRouter();
+  const handleSearch = (value: string) => {
+    if (value) {
+      router.push(`/datasets?query=${encodeURIComponent(value)}`);
+    }
+  };
   return (
-    <>
-      <IconBrandTabler size={64} color="black" />
-      <Text variant="heading4xl" as="h1" alignment="center">
-        {t('title')}
-      </Text>
-      <Text
-        color="subdued"
-        variant="bodyLg"
-        as="p"
-        alignment="center"
-        className="mb-4"
-      >
-        {t('subtitle')}
-      </Text>
-      <ButtonGroup>
-        <Button variant="interactive" kind="secondary" url="/chart">
-          <Text variant="headingMd">Go to Charts</Text>
-        </Button>
-        <Button
-          variant="interactive"
-          kind="primary"
-          url="/dashboard/user/datasets"
-          icon={<Icon source={Icons.share} color="onBgDefault" />}
-        >
-          <Text color="onBgDefault" variant="headingMd">
-            {t('cta')}
-          </Text>
-        </Button>
-      </ButtonGroup>
-    </>
+    <main>
+      <div className="flex items-center justify-center gap-20 bg-primaryBlue p-8 lg:p-16">
+        <div className="flex flex-col gap-11">
+          <div className="flex flex-col">
+            <Text variant="heading3xl" color="onBgDefault">
+              Collaborate to advance
+            </Text>
+            <Text
+              variant="heading3xl"
+              color="onBgDefault"
+              className=" text-tertiaryAccent"
+            >
+              Data-driven Impact and Action
+            </Text>
+            <Text variant="heading3xl" color="onBgDefault">
+              with CivicDataLab{' '}
+            </Text>
+          </div>
+          <div className="w-full">
+            <SearchInput
+              className={cn(Styles.Search)}
+              onSubmit={handleSearch}
+              label={''}
+              placeholder="Search for any data"
+              name={''}
+              withButton
+            />
+          </div>
+        </div>
+        <div className=" hidden lg:block">
+          <Image
+            src={'/homepage_illustartion.png'}
+            width={500}
+            height={400}
+            alt="illustartion"
+          />
+        </div>
+      </div>
+    </main>
   );
-}
+};

@@ -1,9 +1,13 @@
 import { Content } from './components/Content';
+import Datasets from './components/Datasets';
+import Sectors from './components/Sectors';
 
 export default async function Home() {
   return (
-    <div className="flex h-screen w-full flex-col items-center justify-center gap-2">
+    <div className="bg-surfaceDefault">
       <Content />
+      <Datasets />
+      <Sectors/>
     </div>
   );
 }
