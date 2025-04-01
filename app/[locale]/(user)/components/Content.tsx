@@ -50,6 +50,7 @@ export const Content = () => {
             width={500}
             height={400}
             alt="illustartion"
+            unoptimized
           />
         </div>
       </div>
