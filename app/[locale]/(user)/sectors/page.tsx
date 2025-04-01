@@ -7,12 +7,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Divider, SearchInput, Select, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { ErrorPage } from '@/components/error';
 import { Loading } from '@/components/loading';
-import { cn } from '@/lib/utils';
 import Styles from '../datasets/dataset.module.scss';
-
 
 const sectorsListQueryDoc: any = graphql(`
   query SectorsList {
@@ -41,6 +40,13 @@ const SectorsListingPage = () => {
       []
     )
   );
+
+  function capitalizeWords(name: any) {
+    return name
+      .split('-') // Split by '-'
+      .map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize each word
+      .join('+'); // Join with '+'
+  }
 
   return (
     <main className="bg-baseGraySlateSolid2">
@@ -108,7 +114,7 @@ const SectorsListingPage = () => {
                   <div className="flex flex-wrap gap-6 lg:flex-nowrap">
                     <SearchInput
                       label={''}
-                      className={cn('w-full',Styles.Search)}                     
+                      className={cn('w-full', Styles.Search)}
                       name={'Start typing to search for any sector'}
                     />
                     <div className="flex items-center gap-2">
@@ -139,22 +145,22 @@ const SectorsListingPage = () => {
                 </div>
                 <div className="grid w-full grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
                   {getSectorsList.data?.sectors.map((sectors: any) => (
-                    <Link href={`/sectors/${sectors.slug}`} key={sectors.id}>
+                    <Link
+                      href={`/sectors/${sectors.slug}?sectors=${capitalizeWords(sectors.slug)}`}
+                      key={sectors.id}
+                    >
                       <div className="flex w-full items-center gap-5 rounded-4 bg-surfaceDefault p-7 shadow-card">
                         <div className="flex gap-4">
                           <Image
-                            src={'/obi.jpg'}
+                            src={`/Sectors/${sectors.name}.svg`}
                             width={80}
                             height={80}
                             alt={'Sectors Logo'}
                           />
                         </div>
                         <div className="flex w-full flex-col gap-3">
-                          <div className='flex flex-col gap-2'>
-                            <Text
-                              variant="headingLg"
-                              fontWeight="semibold"
-                                                          >
+                          <div className="flex flex-col gap-2">
+                            <Text variant="headingLg" fontWeight="semibold">
                               {sectors.name}
                             </Text>
                             <Divider />
