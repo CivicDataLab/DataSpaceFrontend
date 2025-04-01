@@ -10,6 +10,7 @@ jiti('./env');
 // const backendUrl = new URL(process.env.NEXT_PUBLIC_BACKEND_URL);
 
 const backendUrl = new URL(process.env.BACKEND_URL);
+const platformUrl = new URL(process.env.NEXT_PUBLIC_PLATFORM_URL); // Use NEXT_PUBLIC_ for client-side access
 
 const withNextIntl = createNextIntlPlugin();
 const nextConfig = withNextIntl({
@@ -20,11 +21,10 @@ const nextConfig = withNextIntl({
         protocol: backendUrl.protocol.slice(0, -1),
         hostname: backendUrl.hostname,
       },
-      // {
-      //   protocol: 'https',
-      //   hostname: backendUrl.hostname,
-      //   pathname: '/api/download/chart_image/**',
-      // },
+      {
+        domains: [platformUrl.hostname],
+        unoptimized: true,
+      },
     ],
   },
 });
