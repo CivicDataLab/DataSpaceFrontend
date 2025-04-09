@@ -52,10 +52,10 @@ const Datasets = () => {
   const router = useRouter();
 
   return (
-    <div className="p-4 my-5 lg:p-16">
-      <div className="flex flex-col gap-2  px-2">
+    <div className=" container my-5 lg:p-16">
+      <div className="flex flex-col gap-2 p-3  lg:p-0 md:p-0 ">
         <Text variant="heading3xl">Recent Datasets</Text>
-        <div className="flex justify-between flex-wrap gap-2">
+        <div className="flex flex-wrap justify-between gap-2 ">
           <Text variant="headingLg" fontWeight="medium">
             Recently updated and trending Datasets on CivicDataSpace
           </Text>
@@ -76,7 +76,7 @@ const Datasets = () => {
 
           <CarouselContent className="p-4 ">
             {isLoading ? (
-              <div className='p-8'>
+              <div className="p-8">
                 <Spinner />
               </div>
             ) : (
