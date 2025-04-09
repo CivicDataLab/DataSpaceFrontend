@@ -17,30 +17,28 @@ const sectorQueryDoc = graphql(`
       name
       description
       datasetCount
+      slug
     }
   }
 `);
 
-const SectorDetailsPage = ({
-  params,
-}: {
-  params: { categorySlug: string };
-}) => {
+const SectorDetailsPage = ({ params }: { params: { sectorSlug: string } }) => {
   const { data, isLoading, isError } = useQuery(
-    [`get_category_details_${params.categorySlug}`],
-    () =>
-      GraphQL(sectorQueryDoc, {}, { filters: { slug: params.categorySlug } })
+    [`get_category_details_${params.sectorSlug}`],
+    () => GraphQL(sectorQueryDoc, {}, { filters: { slug: params.sectorSlug } })
   );
 
   if (isError) return <ErrorPage />;
   if (isLoading) return <Loading />;
 
-  const sector = data?.sectors[0];
+  const sector = data?.sectors.filter(
+    (item) => item.slug === params.sectorSlug
+  )[0];
 
   const breadcrumbData = [
     { href: '/', label: 'Home' },
     { href: '/sectors', label: 'Sectors' },
-    { href: '#', label: sector?.name || params.categorySlug },
+    { href: '#', label: sector?.name || params.sectorSlug },
   ];
 
   return (
@@ -50,7 +48,6 @@ const SectorDetailsPage = ({
       categoryName={sector?.name}
       categoryDescription={sector?.description ?? undefined}
       categoryImage={`/Sectors/${sector.name}.svg`}
-      
     />
   );
 };

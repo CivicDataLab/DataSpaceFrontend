@@ -204,6 +204,8 @@ const ListingComponent: React.FC<ListingProps> = ({
   categoryDescription,
   categoryImage,
 }) => {
+  console.log(categoryName);
+  
   const [facets, setFacets] = useState<{
     results: any[];
     total: number;
