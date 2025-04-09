@@ -39,6 +39,9 @@ jobs:
       - name: Rename .next to .next2
         run: mv .next .next2
 
+      - name: Rename public to public2
+        run: mv public public2  
+
       - name: Send .next2 to EC2
         uses: appleboy/scp-action@master
         with:
@@ -47,10 +50,20 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           source: .next2
           target: DataExchange/DataExFrontend
+
+      - name: Send public2 to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_DS }}
+          username: ${{ secrets.EC2_USERNAME_DS }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          source: public2
+          target: DataExchange/DataExFrontend    
+      
       - name: Update with new Build
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST_DS }}
           username: ${{ secrets.EC2_USERNAME_DS }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          script: rm -rf DataExchange/DataExFrontend/.next; mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next; /home/ubuntu/.nvm/versions/node/v20.11.1/bin/pm2 restart dataspace
+          script: rm -rf DataExchange/DataExFrontend/.next; rm -rf DataExchange/DataExFrontend/public; mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next; mv DataExchange/DataExFrontend/public2 DataExchange/DataExFrontend/public; /home/ubuntu/.nvm/versions/node/v20.11.1/bin/pm2 restart dataspace
