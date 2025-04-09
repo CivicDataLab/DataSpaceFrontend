@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -46,7 +46,7 @@ export const Content = () => {
         </div>
         <div className=" hidden lg:block">
           <Image
-            src={'/homepage_illustration.png'}
+            src="/homepage_illustration.png"
             width={500}
             height={400}
             alt="illustration"
