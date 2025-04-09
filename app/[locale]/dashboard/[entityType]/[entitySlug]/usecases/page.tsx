@@ -12,9 +12,8 @@ import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
 import { Loading } from '@/components/loading';
-import { Navigation } from '../dataset/components/navigate-org-datasets';
 import { ActionBar } from '../dataset/components/action-bar';
-
+import { Navigation } from '../dataset/components/navigate-org-datasets';
 
 const allUseCases: any = graphql(`
   query UseCasesData($filters: UseCaseFilter, $order: UseCaseOrder) {
@@ -48,7 +47,7 @@ const AddUseCase: any = graphql(`
 export default function DatasetPage({
   params,
 }: {
-  params: { organizationId: string };
+  params: { entityType: string; entitySlug: string };
 }) {
   const router = useRouter();
 
@@ -118,7 +117,7 @@ export default function DatasetPage({
   } = useMutation([`delete_Usecase`], () => GraphQL(AddUseCase, {}, []), {
     onSuccess: (response: any) => {
       toast(`UseCase created successfully`);
-      router.push(`/manage/usecases/edit/${response.addUseCase.id}/details`);
+      router.push(`/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${response.addUseCase.id}/details`);
       AllUseCases.refetch();
     },
     onError: (err: any) => {
@@ -134,7 +133,7 @@ export default function DatasetPage({
         <LinkButton
           kind="tertiary"
           size="medium"
-          href={`/manage/usecases/edit/${row.original.id}/details`}
+          href={`/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${row.original.id}/details`}
         >
           {row.original.title}
         </LinkButton>

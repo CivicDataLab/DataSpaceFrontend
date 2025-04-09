@@ -84,11 +84,11 @@ const Publish = () => {
   const router = useRouter();
 
   const { mutate, isLoading: mutationLoading } = useMutation(
-    () => GraphQL(publishUseCaseMutation, {}, { useCaseId: +params.id }),
+    () => GraphQL(publishUseCaseMutation, {}, { useCaseId: params.id }),
     {
       onSuccess: (data: any) => {
         toast('UseCase Published Successfully');
-        router.push(`/manage/usecases`);
+        router.push(`/dashboard/${params.entityType}/${params.entitySlug}/usecases`);
       },
       onError: (err: any) => {
         toast(`Received ${err} on dataset publish `);
@@ -147,7 +147,7 @@ const Publish = () => {
       return {
         title: item.title,
         id: item.id,
-        category: item.sectors[0]?.name,
+        sector: item.sectors[0]?.name,
         modified: formatDate(item.modified),
       };
     });

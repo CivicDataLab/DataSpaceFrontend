@@ -22,17 +22,17 @@ const EditUseCase = ({ children }: LayoutProps) => {
   const links = [
     {
       label: 'Details',
-      url: `/manage/usecases/edit/${params.id}/details`,
+      url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/details`,
       selected: pathItem === 'details',
     },
     {
       label: 'Assign',
-      url: `/manage/usecases/edit/${params.id}/assign`,
+      url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/assign`,
       selected: pathItem === 'assign',
     },
     {
       label: 'Publish',
-      url: `/manage/usecases/edit/${params.id}/publish`,
+      url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/publish`,
       selected: pathItem === 'publish',
     },
   ];

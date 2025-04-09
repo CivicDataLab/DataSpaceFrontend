@@ -113,7 +113,7 @@ const Assign = () => {
         AssignUsecaseDatasets,
         {},
         {
-          useCaseId: +params.id,
+          useCaseId: params.id,
           datasetIds: Array.isArray(selectedRow)
             ? selectedRow.map((row: any) => row.id)
             : [],
@@ -123,7 +123,7 @@ const Assign = () => {
       onSuccess: (data: any) => {
         toast('Dataset Assigned Successfully');
         UseCaseDetails.refetch();
-        router.push(`/manage/usecases/edit/${params.id}/publish`);
+        router.push(`/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/publish`);
       },
       onError: (err: any) => {
         toast(`Received ${err} on dataset publish `);
