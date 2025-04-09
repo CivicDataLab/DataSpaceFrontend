@@ -22,8 +22,10 @@ const nextConfig = withNextIntl({
         hostname: backendUrl.hostname,
       },
       {
-        protocol: platformUrl.protocol.slice(0, -1),
-        hostname: platformUrl.hostname
+        protocol: platformUrl.protocol.replace(':', ''),
+        hostname: platformUrl.hostname,
+        port: platformUrl.port || '', // empty string if no port
+        pathname: '/**',
       },
     ],
   },
