@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { SearchInput, Text } from 'opub-ui';
-
 import { cn } from '@/lib/utils';
 import Styles from '../page.module.scss';
 
@@ -45,8 +44,8 @@ export const Content = () => {
           </div>
         </div>
         <div className=" hidden lg:block">
-          <Image
-            src="/homepage.jpeg"
+          <img
+            src="/homepage.png"
             width={500}
             height={400}
             alt="illustration"
