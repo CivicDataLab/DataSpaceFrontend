@@ -46,7 +46,7 @@ export const Content = () => {
         </div>
         <div className=" hidden lg:block">
           <Image
-            src="/homepage_illustration.png"
+            src="/globe_logo.png"
             width={500}
             height={400}
             alt="illustration"
