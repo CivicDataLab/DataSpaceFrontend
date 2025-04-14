@@ -102,8 +102,6 @@ const UseCaseDetailPage = () => {
       refetchOnReconnect: true,
     }
   );
-  const [open, setOpen] = useState(false);
-
 
   return (
     <div>
@@ -121,11 +119,11 @@ const UseCaseDetailPage = () => {
             ]}
           />
           <div className="flex flex-row  bg-surfaceDefault ">
-            <div className="w-full lg:w-3/4 border-r-2 border-solid border-greyExtralight p-8 lg:p-10">
-              <PrimaryDetails data={UseCaseDetails} />
+            <div className="w-full border-r-2 border-solid border-greyExtralight p-8 lg:w-3/4 lg:p-10">
+              <PrimaryDetails data={UseCaseDetails} isLoading={isLoading} />
             </div>
             <div className="hidden lg:block lg:w-1/4">
-              <Metadata data={UseCaseDetails} setOpen={setOpen} />
+              <Metadata data={UseCaseDetails} />
             </div>
           </div>
         </>

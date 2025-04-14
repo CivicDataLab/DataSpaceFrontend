@@ -1,16 +1,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Divider, Text } from 'opub-ui';
+import { Button, Divider, Icon, Text } from 'opub-ui';
 
 import { formatDate } from '@/lib/utils';
+import { Icons } from '@/components/icons';
 
-const Metadata = ({ data, setOpen }: { data: any; setOpen: any }) => {
-  console.log(
-    data.useCase.metadata?.find(
-      (meta: any) => meta.metadataItem?.label === 'SDG Goal'
-    )?.value
-  );
-
+const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
   const metadata = [
     {
       label: 'Publisher',
@@ -23,7 +18,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen: any }) => {
           href={data.useCase.website}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline text-primaryBlue"
+          className="text-primaryBlue underline"
         >
           Visit Website
         </Link>
@@ -33,7 +28,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen: any }) => {
       label: 'Contact',
       value: (
         <Link
-          className="underline text-primaryBlue"
+          className="text-primaryBlue underline"
           href={`mailto:${data.useCase.contactEmail}`}
         >
           Contact Publisher{' '}
@@ -54,7 +49,15 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen: any }) => {
     },
     {
       label: 'Sectors',
-      value: data.useCase.sectors[0]?.name || 'N/A', // Use optional chaining to prevent errors
+      value: (
+        <Image
+          src={`/Sectors/${data.useCase.sectors[0].name}.svg`}
+          alt={data.useCase.sectors[0]?.name || ''}
+          width={52}
+          height={52}
+          className="h-full w-full border-1 border-solid border-greyExtralight p-1"
+        />
+      ),
     },
     {
       label: 'SDG Goals',
@@ -78,13 +81,13 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen: any }) => {
           </Text>
           <Text variant="bodyLg">METADATA</Text>
         </div>
-        {/* <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between">
           {setOpen && (
             <Button onClick={() => setOpen(false)} kind="tertiary">
               <Icon source={Icons.cross} size={24} color="default" />
             </Button>
           )}
-        </div> */}
+        </div>
       </div>
       <Divider />
       <div className=" flex flex-col gap-8">

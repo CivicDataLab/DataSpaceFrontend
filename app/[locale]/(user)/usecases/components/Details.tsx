@@ -1,9 +1,14 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import Image from 'next/image';
-import { Tag, Text } from 'opub-ui';
+import { Button, Icon, Spinner, Tag, Text, Tray } from 'opub-ui';
 
-const PrimaryDetails = ({ data }: { data: any }) => {
+import { Icons } from '@/components/icons';
+import Metadata from './Metadata';
 
+const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
+  const [open, setOpen] = useState(false);
 
   return (
     <div>
@@ -17,7 +22,39 @@ const PrimaryDetails = ({ data }: { data: any }) => {
           </div>
         ))}
       </div>
-      <div className=" mt-10">
+      <div
+        className="mt-6 flex sm:block md:block lg:hidden"
+        title="About the Dataset"
+      >
+        <Tray
+          size="narrow"
+          open={open}
+          onOpenChange={setOpen}
+          trigger={
+            <div>
+              <Button
+                kind="tertiary"
+                className="lg:hidden"
+                onClick={(e) => setOpen(true)}
+              >
+                <div className="flex items-center gap-2 py-2">
+                  <Icon source={Icons.info} size={24} color="default" />
+                  <Text>Metadata</Text>
+                </div>
+              </Button>
+            </div>
+          }
+        >
+          {isLoading ? (
+            <div className=" mt-8 flex justify-center">
+              <Spinner />
+            </div>
+          ) : (
+            <Metadata data={data} setOpen={setOpen} />
+          )}
+        </Tray>
+      </div>
+      <div className="mt-6 lg:mt-10">
         <Image
           src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.useCase.logo?.path.replace('/code/files/', '')}`}
           alt={data.useCase.title}
@@ -27,7 +64,7 @@ const PrimaryDetails = ({ data }: { data: any }) => {
         />
       </div>
       <div className="container">
-        <div className=" mt-14">
+        <div className="mt-6 lg:mt-10">
           <Text variant="heading2xl">GEOGRAPHIES</Text>
           <div className="mt-4">
             <Tag>
@@ -39,11 +76,12 @@ const PrimaryDetails = ({ data }: { data: any }) => {
             </Tag>
           </div>
         </div>
-        <div className=" mt-14">
+        <div className="mt-6 lg:mt-10">
           <Text variant="heading2xl">Summary</Text>
           <div className="mt-4">
-          <Text variant="headingLg" fontWeight='regular'>{data.useCase.summary}</Text>
-
+            <Text variant="headingLg" fontWeight="regular">
+              {data.useCase.summary}
+            </Text>
           </div>
         </div>
       </div>
