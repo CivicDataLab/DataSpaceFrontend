@@ -13,7 +13,7 @@ const EditUseCase = ({ children }: LayoutProps) => {
   const params = useParams();
 
 
-  const layoutList = ['details', 'assign', 'publish'];
+  const layoutList = ['details', 'assign', 'publish','metadata'];
 
   const pathItem = layoutList.find(function (v) {
     return pathName.indexOf(v) >= 0;
@@ -24,6 +24,11 @@ const EditUseCase = ({ children }: LayoutProps) => {
       label: 'Details',
       url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/details`,
       selected: pathItem === 'details',
+    },
+    {
+      label: 'Metadata',
+      url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/metadata`,
+      selected: pathItem === 'metadata',
     },
     {
       label: 'Assign',
