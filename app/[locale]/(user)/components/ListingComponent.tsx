@@ -14,7 +14,7 @@ import {
   Tray,
 } from 'opub-ui';
 
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import Filter from '../datasets/components/FIlter/Filter';
@@ -453,7 +453,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                       {
                         icon: Icons.calendar,
                         label: 'Date',
-                        value: '19 July 2024',
+                        value: formatDate(item.modified),
                       },
                       {
                         icon: Icons.download,
