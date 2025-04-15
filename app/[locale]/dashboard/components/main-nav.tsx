@@ -121,7 +121,7 @@ export function MainNav({ hideSearch = false }) {
         </div>
 
         <div className="flex items-center gap-8">
-          <div className="relative">
+          <div className="relative hidden lg:block">
             <IconButton
               size="slim"
               icon={Icons.search}
