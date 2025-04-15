@@ -50,13 +50,22 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     {
       label: 'Sectors',
       value: (
-        <Image
-          src={`/Sectors/${data.useCase.sectors[0].name}.svg`}
-          alt={data.useCase.sectors[0]?.name || ''}
-          width={52}
-          height={52}
-          className="h-full w-full border-1 border-solid border-greyExtralight p-1"
-        />
+        <div className="flex flex-wrap  gap-2">
+          {data.useCase.sectors.length > 0 ? (
+            data.useCase.sectors.map((sector: any, index: number) => (
+              <Image
+                key={index}
+                src={`/Sectors/${sector.name}.svg`}
+                alt={sector.name || ''}
+                width={52}
+                height={52}
+                className="border-1 border-solid border-greyExtralight p-1"
+              />
+            ))
+          ) : (
+            <span>N/A</span> // Fallback if no sectors are available
+          )}
+        </div>
       ),
     },
     {
@@ -112,7 +121,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
         </div>
         <div className="flex flex-col gap-8">
           {metadata.map((item, index) => (
-            <div key={index} className="flex items-center gap-2">
+            <div key={index} className="flex gap-2">
               <Text
                 className="min-w-[120px]  basis-1/4 uppercase"
                 variant="bodyMd"
