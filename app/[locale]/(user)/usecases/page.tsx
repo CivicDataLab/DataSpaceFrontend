@@ -65,7 +65,6 @@ const UseCasesListingPage = () => {
       }
     )
   );
-  console.log(getUseCasesList.data);
   
 
   return (
