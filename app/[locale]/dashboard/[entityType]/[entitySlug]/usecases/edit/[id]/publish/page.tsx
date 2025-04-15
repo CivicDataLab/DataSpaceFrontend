@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -10,11 +9,9 @@ import {
   AccordionItem,
   AccordionTrigger,
   Button,
-  Dialog,
   Icon,
   Spinner,
   Table,
-  Tag,
   Text,
   toast,
 } from 'opub-ui';
@@ -28,8 +25,26 @@ const UseCaseDetails: any = graphql(`
     useCases(filters: $filters) {
       id
       title
-      description
+      summary
       website
+      metadata {
+        metadataItem {
+          id
+          label
+          dataType
+        }
+        id
+        value
+      }
+      sectors {
+        id
+        name
+      }
+      runningStatus
+      tags {
+        id
+        value
+      }
       logo {
         name
         path
@@ -88,7 +103,9 @@ const Publish = () => {
     {
       onSuccess: (data: any) => {
         toast('UseCase Published Successfully');
-        router.push(`/dashboard/${params.entityType}/${params.entitySlug}/usecases`);
+        router.push(
+          `/dashboard/${params.entityType}/${params.entitySlug}/usecases`
+        );
       },
       onError: (err: any) => {
         toast(`Received ${err} on dataset publish `);
@@ -103,6 +120,15 @@ const Publish = () => {
       error:
         UseCaseData.data && UseCaseData.data?.useCases[0]?.length > 0
           ? 'No Details found. Please add to continue.'
+          : '',
+      errorType: 'critical',
+    },
+    {
+      name: 'Metadata',
+      data: UseCaseData.data?.useCases,
+      error:
+        UseCaseData.data && UseCaseData.data?.useCases[0]?.metadata.length === 0
+          ? 'No Metadata found. Please add to continue.'
           : '',
       errorType: 'critical',
     },
@@ -125,7 +151,12 @@ const Publish = () => {
 
   const PrimaryDetails = [
     { label: 'Title', value: UseCaseData.data?.useCases[0]?.title },
-    { label: 'Description', value: UseCaseData.data?.useCases[0]?.description },
+    { label: 'Summary', value: UseCaseData.data?.useCases[0]?.summary },
+    {
+      label: 'running Status',
+      value: UseCaseData.data?.useCases[0]?.runningStatus,
+    },
+
     {
       label: 'Logo',
       value:
@@ -142,8 +173,17 @@ const Publish = () => {
     },
   ];
 
+  const MetadataDetails = [
+    { label: 'Sector', value: UseCaseData.data?.useCases[0]?.sectors[0]?.name },
+    { label: 'Tags', value: UseCaseData.data?.useCases[0]?.tags[0]?.value },
+    ...(UseCaseData.data?.useCases[0]?.metadata?.map((meta: any) => ({
+      label: meta.metadataItem?.label,
+      value: meta.value,
+    })) || []),
+  ];
+
   const generateTableData = (list: Array<any>) => {
-    return list.map((item) => {
+    return list?.map((item) => {
       return {
         title: item.title,
         id: item.id,
@@ -209,9 +249,34 @@ const Publish = () => {
                             rows={generateTableData(item.data)}
                             hideFooter
                           />
-                        ) : (
+                        ) : item.name === 'Details' ? (
                           <div className="flex flex-col gap-4 px-8 py-4">
                             {PrimaryDetails.map(
+                              (item, index) =>
+                                item.value && (
+                                  <div
+                                    className="flex flex-wrap gap-2"
+                                    key={index}
+                                  >
+                                    <Text
+                                      className="lg:basis-1/6"
+                                      variant="bodyMd"
+                                    >
+                                      {item.label}:
+                                    </Text>
+                                    <Text
+                                      variant="bodyMd"
+                                      className="lg:basis-4/5"
+                                    >
+                                      {item.value}
+                                    </Text>
+                                  </div>
+                                )
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-4 px-8 py-4">
+                            {MetadataDetails.map(
                               (item, index) =>
                                 item.value && (
                                   <div

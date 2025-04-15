@@ -1,14 +1,24 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UseCaseInputPartial } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { DropZone, Icon, Spinner, Text, TextField, toast } from 'opub-ui'; // Assuming you are using these components
+import { useParams, useRouter } from 'next/navigation';
+import {
+  DropZone,
+  Icon,
+  Select,
+  Spinner,
+  Text,
+  TextField,
+  toast
+} from 'opub-ui';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { GraphQL } from '@/lib/api';
+// Assuming you are using these components
+
 import { Icons } from '@/components/icons';
+import { GraphQL } from '@/lib/api';
 
 const UpdateUseCaseMutation: any = graphql(`
   mutation updateUseCase($data: UseCaseInputPartial!) {
@@ -16,10 +26,11 @@ const UpdateUseCaseMutation: any = graphql(`
       __typename
       id
       title
-      description
+      summary
       created
       modified
       website
+      runningStatus
       slug
       status
     }
@@ -31,13 +42,14 @@ const FetchUseCase: any = graphql(`
     useCases(filters: $filters) {
       id
       title
-      description
+      summary
       website
       logo {
         name
         path
         url
       }
+      runningStatus
       contactEmail
       status
       slug
@@ -46,18 +58,26 @@ const FetchUseCase: any = graphql(`
 `);
 
 const Details = () => {
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
 
   const router = useRouter();
 
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_UseCaseData`],
     () =>
-      GraphQL(FetchUseCase,{}, {
-        filters: {
-          id: params.id,
-        },
-      }),
+      GraphQL(
+        FetchUseCase,
+        {},
+        {
+          filters: {
+            id: params.id,
+          },
+        }
+      ),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
@@ -67,16 +87,35 @@ const Details = () => {
   const UsecasesData =
     UseCaseData?.data?.useCases.length > 0 && UseCaseData?.data?.useCases[0];
 
-
   const initialFormData = {
     title: '',
-    description: '',
+    summary: '',
     logo: null,
     website: '',
     contactEmail: '',
     slug: '',
     status: '',
+    runningStatus: null,
   };
+
+  const runningStatus = [
+    {
+      label: 'Intitated',
+      value: 'INITIATED',
+    },
+    {
+      label: 'On Going',
+      value: 'ON_GOING',
+    },
+    {
+      label: 'Completed',
+      value: 'COMPLETED',
+    },
+    {
+      label: 'Cancelled',
+      value: 'CANCELLED',
+    },
+  ];
 
   const [formData, setFormData] = useState(initialFormData);
 
@@ -87,12 +126,13 @@ const Details = () => {
       // Ensure UsecasesData is available
       const updatedData = {
         title: UsecasesData.title || '', // Fallback to empty string if undefined
-        description: UsecasesData.description || '',
+        summary: UsecasesData.summary || '',
         logo: UsecasesData.logo || null,
         website: UsecasesData.website || '',
         contactEmail: UsecasesData.contactEmail || '',
         slug: UsecasesData.slug || '',
         status: UsecasesData.status || '',
+        runningStatus: UsecasesData.runningStatus || null,
       };
       setFormData(updatedData);
       setPreviousFormData(updatedData);
@@ -101,7 +141,7 @@ const Details = () => {
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { data: UseCaseInputPartial }) =>
-      GraphQL(UpdateUseCaseMutation, {},data),
+      GraphQL(UpdateUseCaseMutation, {}, data),
     {
       onSuccess: () => {
         toast('Use case updated successfully');
@@ -138,16 +178,18 @@ const Details = () => {
   );
 
   const handleSave = (updatedData: any) => {
-    if (JSON.stringify(formData) !== JSON.stringify(previousFormData)) {
+    
+    if (JSON.stringify(updatedData) !== JSON.stringify(previousFormData)) {
       setPreviousFormData(updatedData);
 
       mutate({
         data: {
           id: params.id.toString(),
           title: updatedData.title,
-          description: updatedData.description,
+          summary: updatedData.summary,
           website: updatedData.website,
           contactEmail: updatedData.contactEmail,
+          runningStatus: updatedData.runningStatus,
         },
       });
     }
@@ -171,11 +213,11 @@ const Details = () => {
         </div>
         <div>
           <TextField
-            label="Description"
-            name="description"
-            value={formData.description}
+            label="Summary"
+            name="summary"
+            value={formData.summary}
             multiline={3}
-            onChange={(e) => handleChange('description', e)}
+            onChange={(e) => handleChange('summary', e)}
             onBlur={() => handleSave(formData)}
           />
         </div>
@@ -191,6 +233,21 @@ const Details = () => {
               }
             />
           </DropZone>
+        </div>
+        <div>
+          <Select
+            name={'runningStatus'}
+            options={runningStatus?.map((item) => ({
+              label: item.label,
+              value: item.value,
+            }))}
+            label="Running Status"
+            value={formData?.runningStatus? formData.runningStatus : ''}
+            onChange={(value: any) => {
+              handleChange('runningStatus', value);
+              handleSave(formData); // Save on change
+            }}
+          />
         </div>
         <div>
           <TextField

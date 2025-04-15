@@ -14,7 +14,6 @@ interface PrimaryDataProps {
 }
 
 const PrimaryData: React.FC<PrimaryDataProps> = ({ data, isLoading }) => {
-  console.log(data);
 
   const [open, setOpen] = useState(false);
 

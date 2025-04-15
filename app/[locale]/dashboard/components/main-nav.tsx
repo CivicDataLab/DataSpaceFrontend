@@ -67,7 +67,10 @@ export function MainNav({ hideSearch = false }) {
       title: 'Sectors',
       href: '/sectors',
     },
-   
+    {
+      title: 'Use Cases',
+      href: '/usecases',
+    },
     {
       title: 'About us',
       href: '#',
@@ -76,7 +79,7 @@ export function MainNav({ hideSearch = false }) {
 
   return (
     <nav className='pt-6 px-6 lg:px-10 lg:pt-6 '>
-      <div className="flex items-center justify-between gap-4 pb-6 border-b-1 border-surfaceDefault border-solid">
+      <div className="flex items-center justify-between gap-4 pb-6 ">
         <div className="flex items-center gap-1">
           <div className="lg:hidden">
             <Sidebar
@@ -118,7 +121,7 @@ export function MainNav({ hideSearch = false }) {
         </div>
 
         <div className="flex items-center gap-8">
-          <div className="relative">
+          <div className="relative hidden lg:block">
             <IconButton
               size="slim"
               icon={Icons.search}
