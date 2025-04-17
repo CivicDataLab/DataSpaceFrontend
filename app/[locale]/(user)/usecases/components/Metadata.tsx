@@ -6,6 +6,7 @@ import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
 const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
+
   const metadata = [
     {
       label: 'Publisher',
@@ -70,10 +71,27 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     },
     {
       label: 'SDG Goals',
-      value:
-        data.useCase.metadata?.find(
-          (meta: any) => meta.metadataItem?.label === 'SDG Goal'
-        )?.value || 'N/A',
+      value: (
+        <div className="flex flex-wrap  gap-2">
+          {data.useCase.metadata.length > 0 ? (
+            data.useCase.metadata
+              ?.find((meta: any) => meta.metadataItem?.label === 'SDG Goal')
+              ?.value.split(', ')
+              .map((item: any, index: number) => (
+                <Image
+                  key={index}
+                  src={`/SDG/${item}.png`}
+                  alt={item || ''}
+                  width={60}
+                  height={60}
+                  className="border-1 border-solid border-greyExtralight p-1"
+                />
+              ))
+          ) : (
+            <span>N/A</span>
+          )}
+        </div>
+      ),
     },
   ];
 
