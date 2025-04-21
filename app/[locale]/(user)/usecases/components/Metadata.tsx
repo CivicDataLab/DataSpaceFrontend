@@ -80,7 +80,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
               .map((item: any, index: number) => (
                 <Image
                   key={index}
-                  src={`/SDG/${item}.png`}
+                  src={`/SDG/${item}.svg`}
                   alt={item || ''}
                   width={60}
                   height={60}
