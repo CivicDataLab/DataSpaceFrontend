@@ -276,10 +276,11 @@ const ListingComponent: React.FC<ListingProps> = ({
   return (
     <div className="bg-basePureWhite">
       <BreadCrumbs data={breadcrumbData} />
+      <div className='container'>
 
       {/* Optional Category Header */}
       {(categoryName || categoryDescription || categoryImage) && (
-        <div className="m-auto flex w-11/12 flex-wrap items-center gap-6 lg:gap-10 p-6 lg:flex-nowrap lg:items-start lg:pb-10 lg:pt-16">
+        <div className="flex  flex-wrap items-center justify-center gap-6 lg:gap-10 p-6 lg:flex-nowrap lg:items-start lg:pb-10 lg:pt-14">
           {categoryImage && (
             <div className="flex flex-col items-center justify-center rounded-2 bg-baseGraySlateSolid2 p-2">
               <Image
@@ -316,7 +317,7 @@ const ListingComponent: React.FC<ListingProps> = ({
       {/* Optional Header Component */}
       {headerComponent}
 
-      <div className="m-5 md:m-8 lg:m-10">
+      <div className="py-8 lg:py-10">
         <div className="flex flex-wrap items-center justify-between gap-5 rounded-2 p-2 lg:flex-nowrap">
           <div className="w-full md:block">
             <SearchInput
@@ -488,6 +489,7 @@ const ListingComponent: React.FC<ListingProps> = ({
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

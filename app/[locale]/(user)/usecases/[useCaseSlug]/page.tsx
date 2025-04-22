@@ -121,22 +121,22 @@ const UseCaseDetailPage = () => {
             ]}
           />
           <div className=" bg-onSurfaceDefault">
-            <div className="flex flex-row">
-              <div className="w-full border-r-2 border-solid border-greyExtralight p-8 lg:w-3/4 lg:p-10">
+            <div className="flex flex-row container">
+              <div className="w-full border-r-2 border-solid border-greyExtralight py-8 lg:pr-8 pr-8 lg:w-3/4 lg:py-10">
                 <PrimaryDetails data={UseCaseDetails} isLoading={isLoading} />
               </div>
               <div className="hidden lg:block lg:w-1/4">
                 <Metadata data={UseCaseDetails} />
               </div>
             </div>
-            <div className="p-8 lg:p-14">
-              <div className=" flex flex-col gap-1">
+            <div className="py-8 lg:py-14 container">
+              <div className=" flex flex-col gap-1 ">
                 <Text variant="heading3xl">Datasets in this Use Case</Text>
                 <Text variant="headingLg" fontWeight="regular">
                   All Datasets related to this Use Case
                 </Text>
               </div>
-              <div className="grid w-full grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid  grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3 ">
                 {datasets.length > 0 &&
                   datasets.map(
                     (dataset: TypeDataset) => (

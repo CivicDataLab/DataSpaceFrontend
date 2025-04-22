@@ -63,7 +63,7 @@ const SectorsListingPage = () => {
           <>
             <div className="w-full">
               <div className=" bg-primaryBlue">
-                <div className="m-auto flex w-11/12 flex-col-reverse  items-center gap-8  p-6 lg:flex-row ">
+                <div className=" container flex flex-col-reverse items-center gap-8 py-10 lg:flex-row ">
                   <div className="flex flex-col gap-6 ">
                     <Text variant="heading3xl" color="onBgDefault">
                       Our Sectors
@@ -108,7 +108,7 @@ const SectorsListingPage = () => {
                   </div>
                 </div>
               </div>
-              <div className=" m-auto my-10 flex w-11/12 flex-col gap-5 p-6 lg:gap-10">
+              <div className="container flex flex-col gap-5 py-10 lg:gap-10">
                 <div className="flex w-full flex-col justify-center gap-6">
                   <Text variant="heading3xl">Explore Sectors</Text>
                   <div className="flex flex-wrap gap-6 lg:flex-nowrap">

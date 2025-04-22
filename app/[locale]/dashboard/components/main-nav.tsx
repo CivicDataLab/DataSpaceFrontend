@@ -78,8 +78,8 @@ export function MainNav({ hideSearch = false }) {
   ];
 
   return (
-    <nav className='pt-6 px-6 lg:px-10 lg:pt-6 '>
-      <div className="flex items-center justify-between gap-4 pb-6 ">
+    <nav className='lg:p-10 lg:pb-6 p-6 '>
+      <div className="flex items-center justify-between gap-4  ">
         <div className="flex items-center gap-1">
           <div className="lg:hidden">
             <Sidebar

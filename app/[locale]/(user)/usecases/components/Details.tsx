@@ -63,7 +63,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
           className="h-full w-full"
         />
       </div>
-      <div className=' lg:p-4'>
+      <div className=' lg:pr-4'>
         <div className="mt-6 lg:mt-10">
           <Text variant="heading2xl">GEOGRAPHIES</Text>
           <div className="mt-4">
