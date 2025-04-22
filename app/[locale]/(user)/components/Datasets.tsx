@@ -52,7 +52,7 @@ const Datasets = () => {
   const router = useRouter();
 
   return (
-    <div className=" container my-5 lg:p-16">
+    <div className=" container pt-10 lg:pt-20 md:px-8">
       <div className="flex flex-col gap-2 p-3  lg:p-0 md:p-0 ">
         <Text variant="heading3xl">Recent Datasets</Text>
         <div className="flex flex-wrap justify-between gap-2 ">

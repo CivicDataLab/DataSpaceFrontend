@@ -14,9 +14,9 @@ export const Content = () => {
     }
   };
   return (
-    <main className='bg-primaryBlue p-8 lg:p-16'>
+    <main className='bg-primaryBlue  py-10 lg:py-20 md:px-8'>
       <div className="flex items-center container justify-center gap-20 ">
-        <div className="flex flex-col gap-11">
+        <div className="flex flex-col lg:w-2/5 gap-11">
           <div className="flex flex-col">
             <Text variant="heading3xl" color="onBgDefault">
               Collaborate to advance

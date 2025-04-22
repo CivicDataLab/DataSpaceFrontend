@@ -36,7 +36,7 @@ const Sectors = () => {
       .join('+'); // Join with '+'
   }
   return (
-    <div className="container my-5 p-8 lg:p-16">
+    <div className="container py-10 lg:py-20 md:px-8">
       <div className="flex flex-col gap-2 px-2 lg:px-0 md:px-0">
         <Text variant="heading3xl">Explore Sectors</Text>
         <div className="flex flex-wrap justify-between gap-2">
