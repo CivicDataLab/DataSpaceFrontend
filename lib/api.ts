@@ -15,7 +15,7 @@ export async function GraphQL<TResult, TVariables>(
   const session = await getSession();
 
   const headers = {
-    ...(session ? { Authorization: session?.access_token } : {}),
+    ...(session ? { Authorization: `Bearer ${session?.access_token}` } : {}),
     ...entityHeaders,
   };
 
