@@ -1,8 +1,8 @@
 import { graphql } from '@/gql';
 
 export const getOrgDetailsQryDoc: any = graphql(`
-  query getOrgDetailsQry($filters: OrganizationFilter) {
-    organizations(filters: $filters) {
+  query getOrgDetailsQry($slug: String) {
+    organizations(slug: $slug) {
       id
       name
       logo {

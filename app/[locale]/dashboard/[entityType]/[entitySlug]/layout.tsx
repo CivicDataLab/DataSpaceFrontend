@@ -28,7 +28,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           ? getOrgDetailsQryDoc
           : getDataSpaceDetailsQryDoc,
         {},
-        { filters: { slug: params.entitySlug } }
+        {  slug: params.entitySlug  }
       )
     );
 
