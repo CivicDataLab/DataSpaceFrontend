@@ -71,17 +71,13 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
             label:
               params.entityType === 'organization'
                 ? 'My Organizations'
-                : 'My DataSpaces',
+                : 'My Dashboard',
           },
-          {
+          params.entityType === 'organization' ? {
             href: '',
-            label:
-              (params.entityType === 'organization'
-                ? EntityDetailsQryRes.data?.organizations[0]
-                : EntityDetailsQryRes.data?.dataspaces[0]
-              )?.name || params.entitySlug,
-          },
-        ]}
+            label: (EntityDetailsQryRes.data?.organizations[0])?.name || params.entitySlug,
+          } : null,
+        ].filter(item => item !== null)}
       />
       <div
         className={cn(
@@ -94,7 +90,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           entityDetails={
             params.entityType === 'organization'
               ? EntityDetailsQryRes.data?.organizations[0]
-              : EntityDetailsQryRes.data?.dataspaces[0]
+              : params.entitySlug
           }
         />
 

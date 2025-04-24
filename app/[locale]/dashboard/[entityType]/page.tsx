@@ -1,20 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, useParams, usePathname } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
 import { Icon, Text } from 'opub-ui';
+import { useState } from 'react';
 
-import { GraphQL } from '@/lib/api';
-import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
-import { DashboardHeader } from '../components/dashboard-header';
+import { GraphQL } from '@/lib/api';
+import { cn } from '@/lib/utils';
 import LoadingPage from '../loading';
 import styles from './../components/styles.module.scss';
-import { allDataSpacesListingDoc, allOrganizationsListingDoc } from './schema';
+import { allOrganizationsListingDoc } from './schema';
 
 const Page = () => {
   const pathname = usePathname();
@@ -28,23 +27,18 @@ const Page = () => {
     isError: boolean;
   } = useQuery([`all_enitites_list_${params.entityType}`], () =>
     GraphQL(
-      params.entityType === 'organization'
-        ? allOrganizationsListingDoc
-        : allDataSpacesListingDoc,
+      allOrganizationsListingDoc,
       {
         // Entity Headers if present
       },
       []
     )
   );
-
   if (
-    process.env.NEXT_PUBLIC_DATASPACE_FEATURE_ENABLED !== 'true' &&
-    params.entityType === 'dataspace'
+    params.entityType !== 'organization'
   ) {
     return notFound();
   }
-
   return (
     <div className=" bg-surfaceDefault">
       <div>
@@ -52,42 +46,42 @@ const Page = () => {
           data={[
             { href: '/', label: 'Home' },
             {
-              href: '/dashboard/user/datasets',
+              href: '/dashboard',
               label: 'User Dashboard',
             },
             {
               href: '#',
               label: pathname.includes('organization')
                 ? 'My Organizations'
-                : pathname.includes('dataspace')
-                  ? 'My Data Spaces'
-                  : 'My Personal Datasets',
+                : 'My Personal Datasets',
             },
           ]}
         />
       </div>
       <div className="m-auto flex w-11/12 flex-col">
-        <DashboardHeader currentPath={pathname} />
-        {allEntitiesList.isLoading ? (
+        {!allEntitiesList.isLoading ? (
           <LoadingPage />
         ) : (
-          <div className={cn(styles.Main)}>
-            <div className="flex flex-wrap  gap-24">
-              {(params.entityType === 'organization'
-                ? allEntitiesList.data.organizations
-                : allEntitiesList.data.dataspaces
-              )?.map((entityItem: any) => {
+          <div className="container mb-40 ">
+            <div className=" flex flex-col gap-6 py-10">
+              <Text variant="headingXl"> My Organization</Text>
+            </div>
+
+            <div className={cn(styles.Main)}>
+              <div className="flex flex-wrap  gap-24">
+                {/* {allEntitiesList.data.organizations?.map((entityItem: any) => {
                 return (
                   <div key={entityItem.name}>
                     <EntityCard entityItem={entityItem} params={params} />
                   </div>
                 );
-              })}
-              <div className="flex h-72 w-56 flex-col items-center justify-center gap-3 rounded-2 bg-baseGraySlateSolid6 p-4">
-                <Icon source={Icons.plus} size={40} color="success" />
-                <Text alignment="center" variant="headingMd">
-                  {`Add New ${params.entityType === 'organization' ? 'Organization' : 'Data Space'}`}
-                </Text>
+              })} */}
+                <div className="flex h-72 w-56 flex-col items-center justify-center gap-3 rounded-2 bg-baseGraySlateSolid6 p-4">
+                  <Icon source={Icons.plus} size={40} color="success" />
+                  <Text alignment="center" variant="headingMd">
+                    Add New Organization
+                  </Text>
+                </div>
               </div>
             </div>
           </div>

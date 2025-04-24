@@ -30,7 +30,7 @@ import Sidebar from './sidebar';
 const profileLinks = [
   {
     label: 'Dashboard',
-    href: '/dashboard/user/datasets',
+    href: '/dashboard',
   },
 ];
 
@@ -141,7 +141,7 @@ export function MainNav({ hideSearch = false }) {
                     <Link href="/datasets">Explore Datasets</Link>
                   </CommandItem>
                   <CommandItem>
-                    <Link href="/dashboard/user/datasets">Go to User Dashboard</Link>
+                    <Link href="/dashboard">Go to User Dashboard</Link>
                   </CommandItem>
                 </CommandGroup>
               </CommandList>
