@@ -78,7 +78,7 @@ export function DashboardNav({
                 />
               )}
               <Text variant="headingMd" fontWeight="medium" className="py-2">
-                {entityDetails?.name}
+                {entityDetails?.name || entityDetails}
               </Text>
               <Link href={'/dashboard/organization'}>
                 <Text variant="headingXs" color="interactive">
