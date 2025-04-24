@@ -76,8 +76,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           params.entityType === 'organization' ? {
             href: '',
             label: (EntityDetailsQryRes.data?.organizations[0])?.name || params.entitySlug,
-          } : null,
-        ].filter(item => item !== null)}
+          } : {href: '', label:''}]}
       />
       <div
         className={cn(
