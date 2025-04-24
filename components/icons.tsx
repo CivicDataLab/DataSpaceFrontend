@@ -104,5 +104,7 @@ export const Icons: {
   calendar: IconCalendar,
   globe: IconWorld,
   diagonal: IconArrowsDiagonal,
-  sort: IconArrowsSort
+  sort: IconArrowsSort,
+  user: IconUser,
+  userGroup:IconUsersGroup
 };
