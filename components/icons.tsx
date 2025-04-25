@@ -45,7 +45,10 @@ import {
   IconUsers,
   IconWorld,
   IconX,
-  IconArrowsSort
+  IconArrowsSort,
+  IconUser,
+  IconUsersGroup,
+  IconCircleCheck,
   // TablerIconsProps,
 } from '@tabler/icons-react';
 
@@ -58,6 +61,7 @@ export const Icons: {
   arrowRight: IconArrowRight,
   back: IconArrowLeft,
   check: IconCircleCheckFilled,
+  checkUnfilled: IconCircleCheck,
   collapse: IconLayoutSidebarLeftCollapse,
   construction: IconBarrierBlock,
   cross: IconX,
