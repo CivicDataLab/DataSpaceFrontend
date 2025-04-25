@@ -122,7 +122,7 @@ const UseCaseDetailPage = () => {
           />
           <div className=" bg-onSurfaceDefault">
             <div className="flex flex-row container">
-              <div className="w-full border-r-2 border-solid border-greyExtralight py-8 lg:pr-8 pr-8 lg:w-3/4 lg:py-10">
+              <div className="w-full lg:border-r-2 border-solid border-greyExtralight py-8 lg:pr-8 pr-8 lg:w-3/4 lg:py-10">
                 <PrimaryDetails data={UseCaseDetails} isLoading={isLoading} />
               </div>
               <div className="hidden lg:block lg:w-1/4">

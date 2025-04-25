@@ -73,12 +73,12 @@ export function MainNav({ hideSearch = false }) {
     },
     {
       title: 'About us',
-      href: '#',
+      href: '/about-us',
     },
   ];
 
   return (
-    <nav className='lg:p-10 lg:pb-6 p-6 '>
+    <nav className='p-4 lg:p-6'>
       <div className="flex items-center justify-between gap-4  ">
         <div className="flex items-center gap-1">
           <div className="lg:hidden">
