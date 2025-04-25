@@ -49,9 +49,10 @@ const TitleBar = ({
             <Button
               kind="tertiary"
               onClick={() => {
-                title !== titleData && onSave(titleData);
+                onSave(titleData);
                 setEdit(!edit);
               }}
+              disabled={title === titleData}
             >
               Save
             </Button>
