@@ -73,8 +73,10 @@ export const authOptions: AuthOptions = {
     },
     async session({ session, token }: { session: Session; token: JWT }) {
       // Send properties to the client
-      session.access_token = encrypt(token.access_token as string);
-      session.id_token = encrypt(token.id_token as string);
+      // session.access_token = encrypt(token.access_token as string);
+      // session.id_token = encrypt(token.id_token as string);
+      session.access_token = (token.access_token as string);
+      session.id_token = (token.id_token as string);
       session.roles = (
         token.decoded as {
           realm_access: { roles: string[] };
