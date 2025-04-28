@@ -81,11 +81,6 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       selected: pathItem === 'details',
     },
     {
-      label: 'Metadata',
-      url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/metadata`,
-      selected: pathItem === 'metadata',
-    },
-    {
       label: 'Assign',
       url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/assign`,
       selected: pathItem === 'assign',
