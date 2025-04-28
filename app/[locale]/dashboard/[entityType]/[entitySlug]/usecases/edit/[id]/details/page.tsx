@@ -1,24 +1,17 @@
 'use client';
 
+import React, { useCallback, useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UseCaseInputPartial } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
-import {
-  DropZone,
-  Icon,
-  Select,
-  Spinner,
-  Text,
-  TextField,
-  toast
-} from 'opub-ui';
-import React, { useCallback, useEffect, useState } from 'react';
+import { DropZone, Select, TextField, toast } from 'opub-ui';
 
 // Assuming you are using these components
 
-import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
+import { useEditStatus } from '../../context';
+import Metadata from '../metadata/page';
 
 const UpdateUseCaseMutation: any = graphql(`
   mutation updateUseCase($data: UseCaseInputPartial!) {
@@ -161,10 +154,6 @@ const Details = () => {
     }));
   }, []);
 
-  // const handleFileChange = (file: File | null) => {
-  //   setFormData((prev: any) => ({ ...prev, logo: file }));
-  //   saveData({ ...formData, logo: file }); // Auto-save on file change
-  // };
   const onDrop = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
       mutate({
@@ -178,7 +167,6 @@ const Details = () => {
   );
 
   const handleSave = (updatedData: any) => {
-    
     if (JSON.stringify(updatedData) !== JSON.stringify(previousFormData)) {
       setPreviousFormData(updatedData);
 
@@ -194,23 +182,15 @@ const Details = () => {
       });
     }
   };
+  const { setStatus } = useEditStatus();
+
+  useEffect(() => {
+    setStatus(editMutationLoading ? 'loading' : 'success'); // update based on mutation state
+  }, [editMutationLoading]);
 
   return (
     <div className="mt-3 rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
-      <div className="flex justify-end gap-2">
-        <Text color="highlight">Auto Save </Text>
-        {editMutationLoading ? <Spinner /> : <Icon source={Icons.checkmark} />}
-      </div>
       <div className=" flex flex-col gap-5">
-        <div>
-          <TextField
-            label="Title"
-            name="title"
-            value={formData.title}
-            onChange={(e) => handleChange('title', e)}
-            onBlur={() => handleSave(formData)}
-          />
-        </div>
         <div>
           <TextField
             label="Summary"
@@ -221,19 +201,8 @@ const Details = () => {
             onBlur={() => handleSave(formData)}
           />
         </div>
-        <div>
-          <DropZone
-            label={!UsecasesData?.logo ? 'Logo' : 'Change Logo'}
-            onDrop={onDrop}
-            name={'Logo'}
-          >
-            <DropZone.FileUpload
-              actionTitle={
-                UsecasesData && UsecasesData?.logo?.name.split('/').pop()
-              }
-            />
-          </DropZone>
-        </div>
+
+        <Metadata />
         <div>
           <Select
             name={'runningStatus'}
@@ -242,14 +211,28 @@ const Details = () => {
               value: item.value,
             }))}
             label="Running Status"
-            value={formData?.runningStatus? formData.runningStatus : ''}
+            value={formData?.runningStatus ? formData.runningStatus : ''}
             onChange={(value: any) => {
               handleChange('runningStatus', value);
-              handleSave(formData); // Save on change
+              handleSave({ ...formData, runningStatus: value }); // Save on change
             }}
           />
         </div>
         <div>
+          <DropZone
+            label={!UsecasesData?.logo ? 'Logo' : 'Change Logo'}
+            onDrop={onDrop}
+            name={'Logo'}
+          >
+            <DropZone.FileUpload
+              actionHint="Only one image can be added. Recommended resolution of 16:9 - (1280x720), (1920x1080) - Supported File Types: PNG/JPG/SVG "
+              actionTitle={
+                UsecasesData && UsecasesData?.logo?.name.split('/').pop()
+              }
+            />
+          </DropZone>
+        </div>
+        {/* <div>
           <TextField
             label="Website"
             name="website"
@@ -268,7 +251,7 @@ const Details = () => {
             onChange={(e) => handleChange('contactEmail', e)}
             onBlur={() => handleSave(formData)}
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );
