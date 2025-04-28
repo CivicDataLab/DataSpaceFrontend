@@ -124,16 +124,6 @@ const Publish = () => {
       errorType: 'critical',
     },
     {
-      name: 'Metadata',
-      data: UseCaseData.data?.useCases,
-      error:
-        UseCaseData.data && UseCaseData.data?.useCases[0]?.metadata.length === 0
-          ? 'No Metadata found. Please add to continue.'
-          : '',
-      errorType: 'critical',
-    },
-
-    {
       name: 'Assign',
       data: UseCaseData?.data?.useCases[0]?.datasets,
       error:
@@ -171,9 +161,6 @@ const Publish = () => {
       label: 'Contact Email',
       value: UseCaseData.data?.useCases[0]?.contactEmail,
     },
-  ];
-
-  const MetadataDetails = [
     { label: 'Sector', value: UseCaseData.data?.useCases[0]?.sectors[0]?.name },
     { label: 'Tags', value: UseCaseData.data?.useCases[0]?.tags[0]?.value },
     ...(UseCaseData.data?.useCases[0]?.metadata?.map((meta: any) => ({
@@ -276,28 +263,7 @@ const Publish = () => {
                           </div>
                         ) : (
                           <div className="flex flex-col gap-4 px-8 py-4">
-                            {MetadataDetails.map(
-                              (item, index) =>
-                                item.value && (
-                                  <div
-                                    className="flex flex-wrap gap-2"
-                                    key={index}
-                                  >
-                                    <Text
-                                      className="lg:basis-1/6"
-                                      variant="bodyMd"
-                                    >
-                                      {item.label}:
-                                    </Text>
-                                    <Text
-                                      variant="bodyMd"
-                                      className="lg:basis-4/5"
-                                    >
-                                      {item.value}
-                                    </Text>
-                                  </div>
-                                )
-                            )}
+                            <></>
                           </div>
                         )}
                       </div>
