@@ -35,7 +35,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
   const pathName = usePathname();
   const params = useParams();
 
-  const layoutList = ['details', 'assign', 'publish', 'metadata'];
+  const layoutList = ['details', 'contributors', 'assign', 'publish'];
 
   const pathItem = layoutList.find(function (v) {
     return pathName.indexOf(v) >= 0;
@@ -76,14 +76,19 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
 
   const links = [
     {
-      label: 'Details',
+      label: 'Use Case Details',
       url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/details`,
       selected: pathItem === 'details',
     },
     {
-      label: 'Assign',
+      label: 'Datasets',
       url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/assign`,
       selected: pathItem === 'assign',
+    },
+    {
+      label: 'Contributors',
+      url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/contributors`,
+      selected: pathItem === 'contributors',
     },
     {
       label: 'Publish',
@@ -115,6 +120,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
               value={item.label}
               key={index}
               onClick={() => handleTabClick(item.url)}
+              className='uppercase'
             >
               {item.label}
             </Tab>
