@@ -332,7 +332,6 @@ const Metadata = () => {
   return (
     <div>
       <div>
-       
         <div className="flex flex-wrap">
           <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
             <Combobox

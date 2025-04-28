@@ -189,8 +189,8 @@ const Details = () => {
   }, [editMutationLoading]);
 
   return (
-    <div className="mt-3 rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
-      <div className=" flex flex-col gap-5">
+    <div>
+      <div className=" flex flex-col gap-6">
         <div>
           <TextField
             label="Summary"
