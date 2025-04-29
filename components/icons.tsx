@@ -49,6 +49,7 @@ import {
   IconUser,
   IconUsersGroup,
   IconCircleCheck,
+  IconSettings
   // TablerIconsProps,
 } from '@tabler/icons-react';
 
@@ -106,5 +107,6 @@ export const Icons: {
   diagonal: IconArrowsDiagonal,
   sort: IconArrowsSort,
   user: IconUser,
-  userGroup:IconUsersGroup
+  userGroup:IconUsersGroup,
+  setting:IconSettings,
 };
