@@ -73,7 +73,7 @@ export function DashboardNav({
                 <Image
                   height={140}
                   width={140}
-                  src={path.includes('self') ? '/profile.jpg' : '/fallback.svg'}
+                  src={path.includes('self') ? '/profile.png' : '/fallback.svg'}
                   alt={'fallback logo'}
                   className="fill-current object-contain text-baseGraySlateSolid6"
                 />
