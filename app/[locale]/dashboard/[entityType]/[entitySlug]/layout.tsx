@@ -11,7 +11,7 @@ import BreadCrumbs from '@/components/BreadCrumbs';
 import { DashboardNav } from '../../components/dashboard-nav';
 import { MobileDashboardNav } from '../../components/mobile-dashboard-nav';
 import styles from '../../components/styles.module.scss';
-import { getDataSpaceDetailsQryDoc, getOrgDetailsQryDoc } from './schema';
+import { getOrgDetailsQryDoc } from './schema';
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -24,11 +24,9 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
   const EntityDetailsQryRes: { data: any; isLoading: boolean; error: any } =
     useQuery([`entity_details_${params.entityType}`], () =>
       GraphQL(
-        params.entityType === 'organization'
-          ? getOrgDetailsQryDoc
-          : getDataSpaceDetailsQryDoc,
+        params.entityType === 'organization' && getOrgDetailsQryDoc,
         {},
-        {  slug: params.entitySlug  }
+        { slug: params.entitySlug }
       )
     );
 
@@ -46,37 +44,51 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       icon: 'datasetEdit',
     },
     {
-      title: 'Manage Consumers',
-      href: `/dashboard/${params.entityType}/${params.entitySlug}/consumers`,
-      icon: 'userList',
-    },
-    {
       title: 'UseCases',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/usecases`,
       icon: 'userList',
-    }
+    },
+    {
+      title: 'Profile',
+      href: `/dashboard/${params.entityType}/${params.entitySlug}/profile`,
+      icon: 'setting',
+    },
   ];
 
   return (
     <>
       <BreadCrumbs
-        data={[
-          { href: '/', label: 'Home' },
-          {
-            href: '/dashboard/user/datasets',
-            label: 'User Dashboard',
-          },
-          {
-            href: `/dashboard/${params.entityType}`,
-            label:
-              params.entityType === 'organization'
-                ? 'My Organizations'
-                : 'My Dashboard',
-          },
-          params.entityType === 'organization' ? {
-            href: '',
-            label: (EntityDetailsQryRes.data?.organizations[0])?.name || params.entitySlug,
-          } : {href: '', label:''}]}
+        data={
+          params.entityType === 'organization'
+            ? [
+                { href: '/', label: 'Home' },
+                {
+                  href: '/dashboard',
+                  label: 'User Dashboard',
+                },
+                {
+                  href: `/dashboard/${params.entityType}`,
+                  label: 'My Organizations',
+                },
+                {
+                  href: '',
+                  label:
+                    EntityDetailsQryRes.data?.organizations[0]?.name ||
+                    params.entitySlug,
+                },
+              ]
+            : [
+                { href: '/', label: 'Home' },
+                {
+                  href: '/dashboard',
+                  label: 'User Dashboard',
+                },
+                {
+                  href: `/dashboard/`,
+                  label: 'My Dashboard',
+                },
+              ]
+        }
       />
       <div
         className={cn(
@@ -89,7 +101,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           entityDetails={
             params.entityType === 'organization'
               ? EntityDetailsQryRes.data?.organizations[0]
-              : params.entitySlug
+              : params.entitySlug.toLocaleLowerCase()
           }
         />
 
