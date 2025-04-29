@@ -18,20 +18,3 @@ export const getOrgDetailsQryDoc: any = graphql(`
   }
 `);
 
-export const getDataSpaceDetailsQryDoc: any = graphql(`
-  query getDataSpaceDetailsQry($filters: DataSpaceFilter) {
-    dataspaces(filters: $filters) {
-      id
-      name
-      logo {
-        name
-        path
-        size
-        url
-        width
-        height
-      }
-      slug
-    }
-  }
-`);
