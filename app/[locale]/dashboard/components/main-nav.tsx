@@ -1,12 +1,11 @@
 'use client';
 
-import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
 import { Session } from 'next-auth';
 import { signIn, signOut, useSession } from 'next-auth/react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   Avatar,
   Button,
@@ -19,12 +18,16 @@ import {
   Divider,
   IconButton,
   Popover,
-  SearchInput,
   Spinner,
-  Text,
+  Text
 } from 'opub-ui';
+import React, { useEffect } from 'react';
 
 import { Icons } from '@/components/icons';
+import { useDashboardStore } from '@/config/store';
+import { GraphQL } from '@/lib/api';
+import { UserDetailsQryDoc } from '../[entityType]/[entitySlug]/schema';
+import { allOrganizationsListingDoc } from '../[entityType]/schema';
 import Sidebar from './sidebar';
 
 const profileLinks = [
@@ -41,6 +44,8 @@ export function MainNav({ hideSearch = false }) {
   const searchRef = React.useRef<HTMLInputElement>(null);
   const { data: session, status } = useSession();
   const [commandOpen, setCommandOpen] = React.useState(false);
+  const { setUserDetails, setAllEntityDetails, userDetails, allEntityDetails } =
+    useDashboardStore();
 
   useMetaKeyPress('k', () => setCommandOpen((e) => !e));
 
@@ -53,6 +58,45 @@ export function MainNav({ hideSearch = false }) {
       console.error(err);
     }
   }
+
+  const handleSignIn = async () => {
+    try {
+      // First attempt sign in
+      await signIn('keycloak', { 
+        redirect: true,
+        callbackUrl: '/dashboard'
+      });
+      
+      // The above will redirect automatically, no need for additional code
+      // If redirect is needed manually, we can use:
+      // router.push('/dashboard');
+      
+    } catch (error) {
+      console.error('Sign in error:', error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (session?.user) {
+        try {
+          // Fetch both queries in parallel
+          const [userDetailsRes, entityDetailsRes] = await Promise.all([
+            GraphQL(UserDetailsQryDoc, {}, []),
+            GraphQL(allOrganizationsListingDoc, {}, [])
+          ]);
+
+          // Update store with results
+          setUserDetails(userDetailsRes);
+          setAllEntityDetails(entityDetailsRes);
+        } catch (queryError) {
+          console.error('Error fetching data:', queryError);
+        }
+      }
+    };
+
+    fetchData();
+  }, [session]);
 
   if (isLoggingOut) {
     return <LogginOutPage />;
@@ -77,8 +121,9 @@ export function MainNav({ hideSearch = false }) {
     },
   ];
 
+
   return (
-    <nav className='p-4 lg:p-6'>
+    <nav className="p-4 lg:p-6">
       <div className="flex items-center justify-between gap-4  ">
         <div className="flex items-center gap-1">
           <div className="lg:hidden">
@@ -92,7 +137,7 @@ export function MainNav({ hideSearch = false }) {
           </div>
           <Link href="/">
             <div className="flex items-center gap-2">
-              <div className="group relative h-[38px] rounded-full w-[38px] overflow-hidden">
+              <div className="group relative h-[38px] w-[38px] overflow-hidden rounded-full">
                 {/* Static Logo */}
                 <div className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0">
                   <Image
@@ -179,16 +224,12 @@ export function MainNav({ hideSearch = false }) {
               ) : (
                 <Button
                   onClick={() => {
-                    console.log(
-                      process.env.NEXTAUTH_URL,
-                      process.env.NEXT_PUBLIC_NEXTAUTH_URL
-                    );
-                    signIn('keycloak');
+                    handleSignIn();
                   }}
                   kind="secondary"
-                  className=' bg-tertiaryAccent'
+                  className=" bg-tertiaryAccent"
                 >
-                  <Text variant="headingMd" >LOGIN / SIGN UP</Text>
+                  <Text variant="headingMd">LOGIN / SIGN UP</Text>
                 </Button>
               )}
             </div>
@@ -274,11 +315,9 @@ export const ProfileContent = ({
 
 const LogginOutPage = () => {
   return (
-    <div className=" flex items-center bg-surfaceDefault p-2 justify-end gap-4">
+    <div className=" flex items-center justify-end gap-4 bg-surfaceDefault p-2">
       <Spinner color="surface" />
-      <Text variant="headingLg" >
-        Logging out...
-      </Text>
+      <Text variant="headingLg">Logging out...</Text>
     </div>
   );
 };

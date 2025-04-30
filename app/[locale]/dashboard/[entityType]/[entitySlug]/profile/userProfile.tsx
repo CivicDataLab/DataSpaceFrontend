@@ -4,37 +4,11 @@ import React, { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UpdateUserInput } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { Button, DropZone, Text, TextField, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-
-const UserDetails: any = graphql(`
-  query userDetails {
-    me {
-      bio
-      email
-      firstName
-      lastName
-      profilePicture {
-        name
-        path
-        url
-      }
-      username
-      id
-      organizationMemberships {
-        organization {
-          name
-          id
-        }
-        role {
-          name
-        }
-      }
-    }
-  }
-`);
+import { useDashboardStore } from '@/config/store';
 
 const updateUserMutation: any = graphql(`
   mutation updateUser($input: UpdateUserInput!) {
@@ -60,21 +34,19 @@ const updateUserMutation: any = graphql(`
 const UserProfile = () => {
   const params = useParams<{ entitySlug: string }>();
 
-  const userDetails: any = useQuery([`user_details_${params.entitySlug}`], () =>
-    GraphQL(UserDetails, {}, [])
-  );
+  const { setUserDetails, userDetails } = useDashboardStore();
 
   useEffect(() => {
-    if (userDetails.data) {
+    if (userDetails && userDetails?.me) {
       setFormData({
-        firstName: userDetails.data?.me?.firstName,
-        lastName: userDetails.data?.me?.lastName,
-        email: userDetails.data?.me?.email,
-        bio: userDetails.data?.me?.bio,
-        profilePicture: userDetails.data?.me?.profilePicture,
+        firstName: userDetails?.me?.firstName,
+        lastName: userDetails?.me?.lastName,
+        email: userDetails?.me?.email,
+        bio: userDetails?.me?.bio,
+        profilePicture: userDetails?.me?.profilePicture,
       });
     }
-  }, [userDetails.data]);
+  }, [userDetails]);
 
   const initialFormData = {
     firstName: '',
@@ -97,6 +69,10 @@ const UserProfile = () => {
           bio: res?.updateUser?.bio,
           profilePicture: res?.updateUser?.profilePicture,
         });
+        setUserDetails({
+          ...userDetails,
+          me: res.updateUser,
+        });
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -106,9 +82,7 @@ const UserProfile = () => {
 
   const [formData, setFormData] = React.useState(initialFormData);
 
-
   const handleSave = () => {
-
     // Create mutation input with only changed fields
     const inputData: UpdateUserInput = {
       firstName: formData.firstName,

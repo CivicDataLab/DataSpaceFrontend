@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { SidebarNavItem } from '@/types';
 import { useQuery } from '@tanstack/react-query';
+import { create } from 'zustand';
 
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -12,6 +13,7 @@ import { DashboardNav } from '../../components/dashboard-nav';
 import { MobileDashboardNav } from '../../components/mobile-dashboard-nav';
 import styles from '../../components/styles.module.scss';
 import { getOrgDetailsQryDoc } from './schema';
+import { useDashboardStore } from '@/config/store';
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -20,15 +22,23 @@ interface DashboardLayoutProps {
 export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
   const [isOpened, setIsOpened] = React.useState(false);
   const params = useParams<{ entityType: string; entitySlug: string }>();
+  const { setEntityDetails, entityDetails, userDetails } = useDashboardStore();
 
   const EntityDetailsQryRes: { data: any; isLoading: boolean; error: any } =
     useQuery([`entity_details_${params.entityType}`], () =>
       GraphQL(
         params.entityType === 'organization' && getOrgDetailsQryDoc,
         {},
-        {  slug: params.entitySlug  }
+        { slug: params.entitySlug }
       )
     );
+
+  useEffect(() => {
+    if (EntityDetailsQryRes.data) {
+      setEntityDetails(EntityDetailsQryRes.data);
+    }
+  }, [EntityDetailsQryRes.data]);
+
 
   if (
     process.env.NEXT_PUBLIC_DATASPACE_FEATURE_ENABLED !== 'true' &&
@@ -100,9 +110,10 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           items={orgSidebarNav}
           entityDetails={
             params.entityType === 'organization'
-              ? EntityDetailsQryRes.data?.organizations[0]
-              : params.entitySlug.toLocaleLowerCase()
+              ? entityDetails?.organizations[0]
+              : userDetails?.me
           }
+          type={params.entityType}
         />
 
         <div className="z-1 basis-2 md:hidden">

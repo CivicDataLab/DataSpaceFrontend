@@ -1,33 +1,15 @@
-import React, { useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   ApiOrganizationOrganizationTypesEnum,
   OrganizationInputPartial,
 } from '@/gql/generated/graphql';
 import { useOrganizationTypes } from '@/hooks/useOrganizationTypes';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, DropZone, Select, Text, TextField, toast } from 'opub-ui';
-
 import { GraphQL } from '@/lib/api';
-
-const OrgDetails: any = graphql(`
-  query orgDetails($slug: String) {
-    organizations(slug: $slug) {
-      id
-      name
-      logo {
-        name
-        path
-      }
-      homepage
-      organizationTypes
-      contactEmail
-      description
-      slug
-    }
-  }
-`);
+import { useMutation } from '@tanstack/react-query';
+import { useParams, useRouter } from 'next/navigation';
+import { Button, DropZone, Select, Text, TextField, toast } from 'opub-ui';
+import React, { useEffect } from 'react';
+import { useDashboardStore } from '@/config/store';
 
 const organizationUpdateMutation: any = graphql(`
   mutation updateOrganization($input: OrganizationInputPartial!) {
@@ -52,31 +34,25 @@ const organizationUpdateMutation: any = graphql(`
 `);
 
 const OrgProfile = () => {
-  const params = useParams<{ entitySlug: string }>();
+  const params = useParams<{ entitySlug: string; entityType: string }>();
+  const router = useRouter();
+  const { setEntityDetails, entityDetails } = useDashboardStore();
 
-  const orgDetails: any = useQuery([`org_details_${params.entitySlug}`], () =>
-    GraphQL(
-      OrgDetails,
-      {},
-      {
-        slug: params.entitySlug,
-      }
-    )
-  );
   const { organizationTypes } = useOrganizationTypes();
+
   useEffect(() => {
-    if (orgDetails.data) {
+    if (entityDetails && entityDetails.organizations) {
       setFormData({
-        name: orgDetails.data?.organizations[0].name,
-        contactEmail: orgDetails.data?.organizations[0].contactEmail,
-        organizationTypes: orgDetails.data?.organizations[0].organizationTypes,
-        homepage: orgDetails.data?.organizations[0].homepage,
-        description: orgDetails.data?.organizations[0].description,
-        logo: orgDetails.data?.organizations[0].logo,
-        id: orgDetails.data?.organizations[0].id,
+        name: entityDetails?.organizations[0].name,
+        contactEmail: entityDetails?.organizations[0].contactEmail,
+        organizationTypes: entityDetails?.organizations[0].organizationTypes,
+        homepage: entityDetails?.organizations[0].homepage,
+        description: entityDetails?.organizations[0].description,
+        logo: entityDetails?.organizations[0].logo,
+        id: entityDetails?.organizations[0].id,
       });
     }
-  }, [orgDetails.data]);
+  }, [entityDetails?.organizations]);
 
   const initialFormData = {
     name: '',
@@ -105,12 +81,20 @@ const OrgProfile = () => {
           logo: res?.updateOrganization?.logo,
           id: res?.updateOrganization?.id,
         });
+        setEntityDetails({
+          organizations: [formData],
+        });
+        if (res?.updateOrganization?.slug && res.updateOrganization.slug !== params.entitySlug) {
+          const newPath = `/dashboard/${params.entityType}/${res.updateOrganization.slug}/profile`;
+          router.replace(newPath);
+        }
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
       },
     }
   );
+
   const handleSave = () => {
     // Create mutation input with only changed fields
     const inputData: OrganizationInputPartial = {
@@ -128,7 +112,11 @@ const OrgProfile = () => {
     }
 
     mutate({ input: inputData });
+
+
   };
+
+  
   return (
     <div>
       <div>
