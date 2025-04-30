@@ -1,24 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, useParams, usePathname } from 'next/navigation';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, Dialog, DropZone, Icon, Select, Text, TextField, toast } from 'opub-ui';
+import { useState } from 'react';
 
-import { GraphQL } from '@/lib/api';
-import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
-import LoadingPage from '../loading';
-import styles from './../components/styles.module.scss';
-import { allOrganizationsListingDoc, organizationCreationMutation } from './schema';
 import { ApiOrganizationOrganizationTypesEnum, OrganizationInput } from '@/gql/generated/graphql';
 import { useOrganizationTypes } from '@/hooks/useOrganizationTypes';
-
-
-
+import { GraphQL } from '@/lib/api';
+import { cn } from '@/lib/utils';
+import LoadingPage from '../loading';
+import styles from './../components/styles.module.scss';
+import { useDashboardStore } from './[entitySlug]/layout';
+import { organizationCreationMutation } from './schema';
 
 const Page = () => {
   const pathname = usePathname();
@@ -26,23 +24,7 @@ const Page = () => {
 
   const params = useParams<{ entityType: string }>();
 
-  const allEntitiesList: {
-    data: any;
-    isLoading: boolean;
-    error: any;
-    isError: boolean;
-    refetch: any
-  } = useQuery([`all_enitites_list_${params.entityType}`], () =>
-    GraphQL(
-      allOrganizationsListingDoc,
-      {
-        // Entity Headers if present
-      },
-      []
-    )
-  );
-
-
+  const { allEntityDetails, setAllEntityDetails } = useDashboardStore();
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -58,18 +40,27 @@ const Page = () => {
   const [formData, setFormData] = useState(initialFormData);
 
 
-
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (input: { input: OrganizationInput }) =>
       GraphQL(organizationCreationMutation, {}, input),
     {
-      onSuccess: () => {
+      onSuccess: (res: any) => {
         toast('Organization created successfully');
         // Optionally, reset form or perform other actions
         setIsOpen(false);
         setFormData(initialFormData);
-
-        allEntitiesList.refetch();
+        setAllEntityDetails({
+          ...allEntityDetails,
+          organizations: [
+            ...(allEntityDetails?.organizations || []),
+            {
+              id: res.createOrganization.id,
+              name: res.createOrganization.name,
+              slug: res.createOrganization.slug,
+              logo: res.createOrganization.logo
+            }
+          ]
+        });
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -99,7 +90,7 @@ const Page = () => {
           ]}
         />
       <div className="m-auto flex w-11/12  flex-col">
-        {allEntitiesList.isLoading ? (
+        {allEntityDetails?.organizations?.length === 0 ? (
           <LoadingPage />
         ) : (
           <div className="container mb-40 ">
@@ -109,7 +100,7 @@ const Page = () => {
 
             <div className={cn(styles.Main)}>
               <div className="flex flex-wrap gap-6 md:gap-10 lg:gap-24">
-                {allEntitiesList?.data?.organizations?.map((entityItem: any) => {
+                {allEntityDetails?.organizations?.map((entityItem: any) => {
                   return (
                     <div key={entityItem.name}>
                       <EntityCard entityItem={entityItem} params={params} />
