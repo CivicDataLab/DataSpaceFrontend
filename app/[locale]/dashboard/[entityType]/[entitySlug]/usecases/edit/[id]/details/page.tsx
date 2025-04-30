@@ -26,6 +26,8 @@ const UpdateUseCaseMutation: any = graphql(`
       runningStatus
       slug
       status
+      startedOn
+      completedOn
     }
   }
 `);
@@ -46,6 +48,8 @@ const FetchUseCase: any = graphql(`
       contactEmail
       status
       slug
+      startedOn
+      completedOn
     }
   }
 `);
@@ -89,6 +93,8 @@ const Details = () => {
     slug: '',
     status: '',
     runningStatus: null,
+    startedOn: null,
+    completedOn: null,
   };
 
   const runningStatus = [
@@ -126,6 +132,8 @@ const Details = () => {
         slug: UsecasesData.slug || '',
         status: UsecasesData.status || '',
         runningStatus: UsecasesData.runningStatus || null,
+        startedOn: UsecasesData.startedOn || '',
+        completedOn: UsecasesData.completedOn || '',
       };
       setFormData(updatedData);
       setPreviousFormData(updatedData);
@@ -136,10 +144,16 @@ const Details = () => {
     (data: { data: UseCaseInputPartial }) =>
       GraphQL(UpdateUseCaseMutation, {}, data),
     {
-      onSuccess: () => {
+      onSuccess: (res: any) => {
         toast('Use case updated successfully');
-        // Optionally, reset form or perform other actions
-        UseCaseData.refetch();
+        setFormData((prev) => ({
+          ...prev,
+          ...res.updateUseCase,
+        }));
+        setPreviousFormData((prev) => ({
+          ...prev,
+          ...res.updateUseCase,
+        }));
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -178,6 +192,8 @@ const Details = () => {
           website: updatedData.website,
           contactEmail: updatedData.contactEmail,
           runningStatus: updatedData.runningStatus,
+          startedOn: (updatedData.startedOn as Date) || null,
+          completedOn: (updatedData.completedOn as Date) || null,
         },
       });
     }
@@ -203,20 +219,52 @@ const Details = () => {
         </div>
 
         <Metadata />
-        <div>
-          <Select
-            name={'runningStatus'}
-            options={runningStatus?.map((item) => ({
-              label: item.label,
-              value: item.value,
-            }))}
-            label="Running Status"
-            value={formData?.runningStatus ? formData.runningStatus : ''}
-            onChange={(value: any) => {
-              handleChange('runningStatus', value);
-              handleSave({ ...formData, runningStatus: value }); // Save on change
-            }}
-          />
+        <div className="flex flex-wrap gap-6 md:flex-nowrap lg:flex-nowrap">
+          <div className="w-full">
+            <TextField
+              label="Started On"
+              name="startedOn"
+              type="date"
+              value={formData.startedOn || ''}
+              onChange={(e) => {
+                handleChange('startedOn', e);
+                handleSave({ ...formData, startedOn: e });
+              }}
+            />
+          </div>
+
+          <div className="w-full">
+            <Select
+              name={'runningStatus'}
+              options={runningStatus?.map((item) => ({
+                label: item.label,
+                value: item.value,
+              }))}
+              label="Running Status"
+              value={formData?.runningStatus ? formData.runningStatus : ''}
+              onChange={(value: any) => {
+                handleChange('runningStatus', value);
+                handleSave({ ...formData, runningStatus: value });
+              }}
+            />
+          </div>
+          <div className="w-full">
+            <TextField
+              label="Completed On"
+              name="completedOn"
+              type="date"
+              min={formData.startedOn || ''}
+              disabled={
+                formData.runningStatus === 'COMPLETED' ||
+                formData.runningStatus === 'CANCELLED'
+              }
+              value={formData.completedOn || ''}
+              onChange={(e) => {
+                handleChange('completedOn', e),
+                  handleSave({ ...formData, completedOn: e });
+              }}
+            />
+          </div>
         </div>
         <div>
           <DropZone
