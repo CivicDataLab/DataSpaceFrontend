@@ -15,7 +15,7 @@ import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import LoadingPage from '../loading';
 import styles from './../components/styles.module.scss';
-import { useDashboardStore } from './[entitySlug]/layout';
+import { useDashboardStore } from '@/config/store';
 import { organizationCreationMutation } from './schema';
 
 const Page = () => {

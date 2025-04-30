@@ -9,7 +9,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, DropZone, Select, Text, TextField, toast } from 'opub-ui';
 import React, { useEffect } from 'react';
-import { useDashboardStore } from '../layout';
+import { useDashboardStore } from '@/config/store';
 
 const organizationUpdateMutation: any = graphql(`
   mutation updateOrganization($input: OrganizationInputPartial!) {
@@ -82,8 +82,7 @@ const OrgProfile = () => {
           id: res?.updateOrganization?.id,
         });
         setEntityDetails({
-          ...entityDetails,
-          organizations: [res?.updateOrganization],
+          organizations: [formData],
         });
         if (res?.updateOrganization?.slug && res.updateOrganization.slug !== params.entitySlug) {
           const newPath = `/dashboard/${params.entityType}/${res.updateOrganization.slug}/profile`;
@@ -95,6 +94,7 @@ const OrgProfile = () => {
       },
     }
   );
+
   const handleSave = () => {
     // Create mutation input with only changed fields
     const inputData: OrganizationInputPartial = {
