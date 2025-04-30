@@ -13,8 +13,38 @@ export const getOrgDetailsQryDoc: any = graphql(`
         width
         height
       }
+      homepage
+      organizationTypes
+      contactEmail
+      description
       slug
     }
   }
 `);
 
+export const UserDetailsQryDoc: any = graphql(`
+  query userDetails {
+    me {
+      bio
+      email
+      firstName
+      lastName
+      profilePicture {
+        name
+        path
+        url
+      }
+      username
+      id
+      organizationMemberships {
+        organization {
+          name
+          id
+        }
+        role {
+          name
+        }
+      }
+    }
+  }
+`);
