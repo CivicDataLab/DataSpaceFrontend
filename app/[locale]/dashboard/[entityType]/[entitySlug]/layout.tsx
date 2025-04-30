@@ -26,7 +26,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       GraphQL(
         params.entityType === 'organization' && getOrgDetailsQryDoc,
         {},
-        { slug: params.entitySlug }
+        {  slug: params.entitySlug  }
       )
     );
 
