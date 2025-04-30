@@ -1,17 +1,19 @@
 'use client';
 
+import Link from 'next/link';
 import { Icon, Text } from 'opub-ui';
 
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
-import Link from 'next/link';
+import { useDashboardStore } from './[entityType]/[entitySlug]/layout';
 
 const UserDashboard = () => {
+  const { userDetails, allEntityDetails } = useDashboardStore();
   const list = [
     {
       label: 'My Dashboard',
       icon: Icons.user,
-      path: '/dashboard/self/sanjay/dataset',
+      path: `/dashboard/self/${userDetails?.me?.firstName}_${userDetails?.me?.id}/dataset`,
     },
     {
       label: 'Organizations',
@@ -19,6 +21,7 @@ const UserDashboard = () => {
       path: '/dashboard/organization',
     },
   ];
+
 
   return (
     <>
@@ -34,16 +37,16 @@ const UserDashboard = () => {
 
       <div className="container mb-40 ">
         <div className=" flex flex-col gap-6 py-10">
-          <Text variant='headingXl'> User Dashboard</Text>
+          <Text variant="headingXl"> User Dashboard</Text>
         </div>
-        <div className="flex items-center lg:flex-nowrap md:flex-nowrap flex-wrap gap-6">
+        <div className="flex flex-wrap items-center gap-6 md:flex-nowrap lg:flex-nowrap">
           {list.map((item, index) => (
             <Link
-              key={index}   
+              key={index}
               href={item.path}
-              className=" rounded-4 flex w-full min-h-56 max-h-56  p-4 justify-center flex-col items-center gap-3 bg-greyExtralight "
+              className=" flex max-h-56 min-h-56 w-full flex-col  items-center justify-center gap-3 rounded-4 bg-greyExtralight p-4 "
             >
-              <Icon source={item.icon} size={60} color='highlight' />
+              <Icon source={item.icon} size={60} color="highlight" />
               <Text variant="headingLg">{item.label}</Text>
             </Link>
           ))}
