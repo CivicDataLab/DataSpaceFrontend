@@ -28,6 +28,11 @@ const UpdateUseCaseMutation: any = graphql(`
       status
       startedOn
       completedOn
+      logo {
+        name
+        path
+        url
+      }
     }
   }
 `);
@@ -87,7 +92,7 @@ const Details = () => {
   const initialFormData = {
     title: '',
     summary: '',
-    logo: null,
+    logo: null as File | null,
     website: '',
     contactEmail: '',
     slug: '',
@@ -268,15 +273,16 @@ const Details = () => {
         </div>
         <div>
           <DropZone
-            label={!UsecasesData?.logo ? 'Logo' : 'Change Logo'}
+            label={!formData?.logo ? 'Logo' : 'Change Logo'}
             onDrop={onDrop}
             name={'Logo'}
           >
             <DropZone.FileUpload
               actionHint="Only one image can be added. Recommended resolution of 16:9 - (1280x720), (1920x1080) - Supported File Types: PNG/JPG/SVG "
               actionTitle={
-                UsecasesData && UsecasesData?.logo?.name.split('/').pop()
-              }
+                formData.logo
+                ? formData.logo.name.split('/').pop()
+                : 'Name of the logo'              }
             />
           </DropZone>
         </div>
