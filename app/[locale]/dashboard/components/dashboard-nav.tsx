@@ -44,11 +44,12 @@ export function DashboardNav({
   }
 
   const sidebarIcon = isCollapsed ? Icons.expand : Icons.collapse;
+
   return (
     <aside
       className={cn(
         'overflow-hidden bg-surfaceDefault ',
-        ' z-1 mb-10 hidden shrink-0 basis-[260px]  rounded-2 border-2  border-solid  border-baseGraySlateSolid6 shadow-insetBasic md:block',
+        'mb-10 hidden shrink-0 basis-[260px]  rounded-2 border-2  border-solid  border-baseGraySlateSolid6 shadow-insetBasic md:block',
         isCollapsed && 'basis-[60px]',
         styles.Collapse
       )}
@@ -56,7 +57,7 @@ export function DashboardNav({
       <nav className={cn('flex flex-col gap-2')}>
         {entityDetails && !isCollapsed ? (
           <>
-            <div className="flex flex-col items-center justify-center px-4 py-8">
+            <div className="flex flex-col items-center justify-center gap-4 px-4 py-8">
               {isImageValid ? (
                 <Image
                   height={140}
@@ -72,20 +73,28 @@ export function DashboardNav({
                 <Image
                   height={140}
                   width={140}
-                  src={'/fallback.svg'}
+                  src={path.includes('self') ? '/profile.png' : '/fallback.svg'}
                   alt={'fallback logo'}
                   className="fill-current object-contain text-baseGraySlateSolid6"
                 />
               )}
-              <Text variant="headingMd" fontWeight="medium" className="py-2">
-                {entityDetails?.name}
-              </Text>
-              <Link href={'/dashboard/organization'}>
-                <Text variant="headingXs" color="interactive">
-                  {' '}
-                  Go back to Dashboard{' '}
+              <div className="flex flex-col items-center gap-3 text-center">
+                <Text variant="headingMd" fontWeight="medium">
+                  {entityDetails?.name || entityDetails}
                 </Text>
-              </Link>
+                <Link
+                  href={
+                    path.includes('self')
+                      ? '/dashboard'
+                      : '/dashboard/organization'
+                  }
+                >
+                  <Text variant="headingXs" color="interactive">
+                    {' '}
+                    Go back to Dashboard{' '}
+                  </Text>
+                </Link>
+              </div>
             </div>
             <Divider className="m-auto w-4/5" />
           </>
