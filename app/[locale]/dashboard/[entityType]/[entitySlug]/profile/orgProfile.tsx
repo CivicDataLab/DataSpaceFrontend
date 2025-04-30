@@ -5,11 +5,11 @@ import {
   ApiOrganizationOrganizationTypesEnum,
   OrganizationInputPartial,
 } from '@/gql/generated/graphql';
+import { useOrganizationTypes } from '@/hooks/useOrganizationTypes';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, DropZone, Select, Text, TextField, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { organizationTypes } from '../../page';
 
 const OrgDetails: any = graphql(`
   query orgDetails($slug: String) {
@@ -63,7 +63,7 @@ const OrgProfile = () => {
       }
     )
   );
-
+  const { organizationTypes } = useOrganizationTypes();
   useEffect(() => {
     if (orgDetails.data) {
       setFormData({
@@ -112,7 +112,6 @@ const OrgProfile = () => {
     }
   );
   const handleSave = () => {
-
     // Create mutation input with only changed fields
     const inputData: OrganizationInputPartial = {
       name: formData.name,
