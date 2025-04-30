@@ -98,8 +98,7 @@ const Page = () => {
     return notFound();
   }
   return (
-    <div className=" bg-surfaceDefault">
-      <div>
+      <>
         <BreadCrumbs
           data={[
             { href: '/', label: 'Home' },
@@ -115,8 +114,7 @@ const Page = () => {
             },
           ]}
         />
-      </div>
-      <div className="m-auto flex w-11/12 flex-col">
+      <div className="m-auto flex w-11/12  flex-col">
         {allEntitiesList.isLoading ? (
           <LoadingPage />
         ) : (
@@ -229,7 +227,7 @@ const Page = () => {
           </div>
         )}
       </div>
-    </div>
+      </>
   );
 };
 

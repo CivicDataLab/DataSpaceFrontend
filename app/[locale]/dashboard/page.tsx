@@ -21,7 +21,7 @@ const UserDashboard = () => {
   ];
 
   return (
-    <div>
+    <>
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
@@ -49,7 +49,7 @@ const UserDashboard = () => {
           ))}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
