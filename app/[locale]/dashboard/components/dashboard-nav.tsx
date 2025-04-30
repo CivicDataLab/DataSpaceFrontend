@@ -14,15 +14,17 @@ import styles from '../dashboard.module.scss';
 
 interface DashboardNavProps {
   items: SidebarNavItem[];
+  type?: string;
 }
 export function DashboardNav({
   items,
   entityDetails,
+  type,
 }: DashboardNavProps & { entityDetails?: any }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const [isImageValid, setIsImageValid] = useState(() => {
-    return entityDetails?.logo ? true : false;
+    return type === 'organization' && entityDetails?.logo ? true : type === 'self' && entityDetails?.profilePicture ? true : false;
   });
   const path = usePathname();
 
@@ -45,6 +47,7 @@ export function DashboardNav({
 
   const sidebarIcon = isCollapsed ? Icons.expand : Icons.collapse;
 
+
   return (
     <aside
       className={cn(
@@ -62,7 +65,7 @@ export function DashboardNav({
                 <Image
                   height={140}
                   width={140}
-                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityDetails?.logo?.url}`}
+                  src={ type === 'organization' ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityDetails?.logo?.url}` : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityDetails?.profilePicture?.url}` }
                   alt={`${entityDetails?.name} logo`}
                   onError={() => {
                     setIsImageValid(false);
@@ -80,7 +83,7 @@ export function DashboardNav({
               )}
               <div className="flex flex-col items-center gap-3 text-center">
                 <Text variant="headingMd" fontWeight="medium">
-                  {entityDetails?.name || entityDetails}
+                  {entityDetails?.name || entityDetails.firstName}
                 </Text>
                 <Link
                   href={
