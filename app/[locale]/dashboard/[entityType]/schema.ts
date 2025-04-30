@@ -36,11 +36,24 @@ export const allDataSpacesListingDoc: any = graphql(`
   }
 `);
 
-
 export const organizationCreationMutation: any = graphql(`
-   mutation createOrganization($input: OrganizationInput!) {
+  mutation createOrganization($input: OrganizationInput!) {
     createOrganization(input: $input) {
       __typename
+      ... on TypeOrganization {
+        id
+        name
+        logo {
+          name
+          path
+          url
+        }
+        homepage
+        organizationTypes
+        contactEmail
+        description
+        slug
+      }
     }
   }
-`)
+`);
