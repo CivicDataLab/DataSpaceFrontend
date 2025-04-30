@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
 import { Session } from 'next-auth';
 import { signIn, signOut, useSession } from 'next-auth/react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   Avatar,
   Button,
@@ -19,14 +18,14 @@ import {
   Divider,
   IconButton,
   Popover,
-  SearchInput,
   Spinner,
-  Text,
+  Text
 } from 'opub-ui';
+import React, { useEffect } from 'react';
 
-import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import { useDashboardStore } from '../[entityType]/[entitySlug]/layout';
+import { useDashboardStore } from '@/config/store';
+import { GraphQL } from '@/lib/api';
 import { UserDetailsQryDoc } from '../[entityType]/[entitySlug]/schema';
 import { allOrganizationsListingDoc } from '../[entityType]/schema';
 import Sidebar from './sidebar';

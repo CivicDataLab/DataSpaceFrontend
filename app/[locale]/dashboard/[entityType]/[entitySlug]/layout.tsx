@@ -13,24 +13,7 @@ import { DashboardNav } from '../../components/dashboard-nav';
 import { MobileDashboardNav } from '../../components/mobile-dashboard-nav';
 import styles from '../../components/styles.module.scss';
 import { getOrgDetailsQryDoc } from './schema';
-
-interface DashboardStore {
-  entityDetails: any;
-  userDetails: any;
-  setEntityDetails: (data: any) => void;
-  setUserDetails: (data: any) => void;
-  allEntityDetails: any;
-  setAllEntityDetails: (data: any) => void;
-}
-
-export const useDashboardStore = create<DashboardStore>((set) => ({
-  entityDetails: null,
-  userDetails: null,
-  setEntityDetails: (data) => set({ entityDetails: data }),
-  setUserDetails: (data) => set({ userDetails: data }),
-  allEntityDetails: null,
-  setAllEntityDetails: (data) => set({ allEntityDetails: data }),
-}));
+import { useDashboardStore } from '@/config/store';
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;

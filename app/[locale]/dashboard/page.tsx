@@ -5,7 +5,7 @@ import { Icon, Text } from 'opub-ui';
 
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
-import { useDashboardStore } from './[entityType]/[entitySlug]/layout';
+import { useDashboardStore } from '@/config/store';
 
 const UserDashboard = () => {
   const { userDetails, allEntityDetails } = useDashboardStore();

@@ -8,7 +8,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Button, DropZone, Text, TextField, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { useDashboardStore } from '../layout';
+import { useDashboardStore } from '@/config/store';
 
 const updateUserMutation: any = graphql(`
   mutation updateUser($input: UpdateUserInput!) {
