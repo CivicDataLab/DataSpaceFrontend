@@ -1,18 +1,16 @@
 'use client';
 
-import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
-import {
-  Button,
-  Icon,
-  Text
-} from 'opub-ui';
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { graphql } from '@/gql';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Button, Icon, Text, toast } from 'opub-ui';
 
-import { Icons } from '@/components/icons';
-import { Loading } from '@/components/loading';
 import { useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
+import { Icons } from '@/components/icons';
+import { Loading } from '@/components/loading';
+import { useEditStatus } from '../../context';
 import CustomCombobox from './CustomCombobox';
 
 const FetchUsers: any = graphql(`
@@ -25,9 +23,64 @@ const FetchUsers: any = graphql(`
   }
 `);
 
+const FetchUsecaseInfo: any = graphql(`
+  query useCaseinfo($filters: UseCaseFilter) {
+    useCases(filters: $filters) {
+      id
+      title
+      contributors {
+        id
+        fullName
+        username
+      }
+    }
+  }
+`);
+
+const AddContributors: any = graphql(`
+  mutation addContributorToUseCase($useCaseId: String!, $userId: ID!) {
+    addContributorToUseCase(useCaseId: $useCaseId, userId: $userId) {
+      __typename
+      ... on TypeUseCase {
+        id
+        title
+        contributors {
+          id
+          fullName
+          username
+        }
+      }
+    }
+  }
+`);
+
+const RemoveContributor: any = graphql(`
+  mutation removeContributorFromUseCase($useCaseId: String!, $userId: ID!) {
+    removeContributorFromUseCase(useCaseId: $useCaseId, userId: $userId) {
+      __typename
+      ... on TypeUseCase {
+        id
+        title
+        contributors {
+          id
+          fullName
+          username
+        }
+      }
+    }
+  }
+`);
+
 const Details = () => {
+  const params = useParams<{ id: string }>();
   const { allEntityDetails } = useDashboardStore();
   const [searchValue, setSearchValue] = useState('');
+  const [formData, setFormData] = useState({
+    contributors: [] as { label: string; value: string }[],
+    supporters: [] as { label: string; value: string }[],
+    partners: [] as { label: string; value: string }[],
+  });
+
   const Users: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_users`],
     () =>
@@ -45,23 +98,88 @@ const Details = () => {
     }
   );
 
+  const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
+    [`fetch_usecase_${params.id}`],
+    () =>
+      GraphQL(
+        FetchUsecaseInfo,
+        {},
+        {
+          filters: {
+            id: params.id,
+          },
+        }
+      ),
+    {
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+    }
+  );
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      contributors:
+        UseCaseData?.data?.useCases?.[0]?.contributors?.map((user: any) => ({
+          label: user.fullName,
+          value: user.id,
+        })) || [],
+    }));
+  }, [UseCaseData?.data]);
+
+  const {
+    mutate: addContributor,
+    isLoading: addContributorLoading,
+  } = useMutation(
+    (input: { useCaseId: string; userId: string }) =>
+      GraphQL(AddContributors, {}, input),
+    {
+      onSuccess: (res: any) => {
+        toast('Contributor added successfully');
+      },
+      onError: (error: any) => {
+        toast(`Error: ${error.message}`);
+      },
+    }
+  );
+
+  const {
+    mutate: removeContributor,
+    isLoading: removeContributorLoading,
+  } = useMutation(
+    (input: { useCaseId: string; userId: string }) =>
+      GraphQL(RemoveContributor, {}, input),
+    {
+      onSuccess: (res: any) => {
+        toast('Contributor removed successfully');
+      },
+      onError: (error: any) => {
+        toast(`Error: ${error.message}`);
+      },
+    }
+  );
+
   useEffect(() => {
     Users.refetch();
   }, [searchValue]);
-
-  const [formData, setFormData] = useState({
-    contributors: [] as { label: string; value: string }[],
-    supporters: [] as { label: string; value: string }[],
-    partners: [] as { label: string; value: string }[],
-  });
 
   const selectedContributors = formData.contributors;
 
   const options =
     Users?.data?.searchUsers?.map((user: any) => ({
       label: user.fullName,
-      value: user.fullName,
+      value: user.id,
     })) || [];
+
+  const { setStatus } = useEditStatus();
+
+  useEffect(() => {
+    setStatus(
+      addContributorLoading || removeContributorLoading
+        ? 'loading'
+        : 'success'
+    ); // update based on mutation state
+  }, [addContributorLoading, removeContributorLoading]);
 
   return (
     <div>
@@ -72,7 +190,7 @@ const Details = () => {
           <div>
             <Text variant="headingMd">CONTRIBUTORS</Text>
             <div className="mt-5 flex flex-wrap items-start gap-5 lg:flex-nowrap">
-              <div className="flex w-full items-end  flex-wrap gap-5  lg:flex-nowrap">
+              <div className="flex w-full flex-wrap  items-end gap-5  lg:flex-nowrap">
                 <div className="w-full lg:w-2/6">
                   <Text>Add Contributors</Text>
                   <CustomCombobox
@@ -91,7 +209,10 @@ const Details = () => {
                           ),
                         ],
                       }));
-
+                      addContributor({
+                        useCaseId: params.id,
+                        userId: value[0].value,
+                      });
                       setSearchValue(''); // clear input
                     }}
                     placeholder="Add Contributors"
@@ -104,14 +225,18 @@ const Details = () => {
                   {formData.contributors.map((item) => (
                     <div key={item.value}>
                       <Button
-                        onClick={() =>
+                        onClick={() => {
                           setFormData((prev) => ({
                             ...prev,
                             contributors: prev.contributors.filter(
                               (contributor) => contributor.value !== item.value
                             ),
-                          }))
-                        }
+                          }));
+                          removeContributor({
+                            useCaseId: params.id,
+                            userId: item.value,
+                          });
+                        }}
                         kind="tertiary"
                       >
                         <div className="flex items-center gap-2 rounded-2 p-2 ">
@@ -128,7 +253,7 @@ const Details = () => {
           <div>
             <Text variant="headingMd">SUPPORTED BY</Text>
             <div className="mt-5 flex flex-wrap items-start gap-5 lg:flex-nowrap">
-              <div className="flex w-full items-end flex-wrap gap-5  lg:flex-nowrap">
+              <div className="flex w-full flex-wrap items-end gap-5  lg:flex-nowrap">
                 <div className="w-full lg:w-2/6">
                   <Text>Add Supporters</Text>
                   <CustomCombobox
