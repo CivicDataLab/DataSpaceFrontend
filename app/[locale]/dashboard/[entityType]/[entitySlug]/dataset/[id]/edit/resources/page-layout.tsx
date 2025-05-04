@@ -48,7 +48,7 @@ export function DistibutionPage({
 
   const ResourceList: TListItem[] =
     (data &&
-      data?.datasets[0].resources.map((item: any) => ({
+      data?.datasets[0]?.resources.map((item: any) => ({
         label: item.name,
         value: item.id,
         description: item.description,
