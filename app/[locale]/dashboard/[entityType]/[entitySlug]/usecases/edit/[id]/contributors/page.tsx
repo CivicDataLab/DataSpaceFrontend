@@ -108,7 +108,7 @@ const Details = () => {
                           setFormData((prev) => ({
                             ...prev,
                             contributors: prev.contributors.filter(
-                              (item) => item.value !== item.value
+                              (contributor) => contributor.value !== item.value
                             ),
                           }))
                         }
@@ -164,7 +164,7 @@ const Details = () => {
                           setFormData((prev) => ({
                             ...prev,
                             supporters: prev.supporters.filter(
-                              (item) => item.value !== item.value
+                              (supporter) => supporter.value !== item.value
                             ),
                           }))
                         }
@@ -220,7 +220,7 @@ const Details = () => {
                           setFormData((prev) => ({
                             ...prev,
                             partners: prev.partners.filter(
-                              (item) => item.value !== item.value
+                              (partner) => partner.value !== item.value
                             ),
                           }))
                         }
