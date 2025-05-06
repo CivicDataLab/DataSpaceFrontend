@@ -42,6 +42,14 @@ const FetchUsecaseInfo: any = graphql(`
           name
         }
       }
+      partnerOrganizations{
+        id
+        name
+        logo{
+          url
+          name
+        }
+      }  
     }
   }
 `);
@@ -128,6 +136,54 @@ const RemoveSupporters: any = graphql(`
   }
 `);
 
+const AddPartners: any = graphql(`
+  mutation addPartnerOrganizationToUseCase(
+    $useCaseId: String!
+    $organizationId: ID!
+  ) {
+    addPartnerOrganizationToUseCase(
+      useCaseId: $useCaseId
+      organizationId: $organizationId
+    ) {
+      __typename
+      ... on TypeUseCaseOrganizationRelationship {
+        organization {
+          id
+          name
+          logo {
+            url
+            name
+          }
+        }
+      }
+    }
+  }
+`);
+
+const RemovePartners: any = graphql(`
+  mutation removePartnerOrganizationFromUseCase(
+    $useCaseId: String!
+    $organizationId: ID!
+  ) {
+    removePartnerOrganizationFromUseCase(
+      useCaseId: $useCaseId
+      organizationId: $organizationId
+    ) {
+      __typename
+      ... on TypeUseCaseOrganizationRelationship {
+        organization {
+          id
+          name
+          logo {
+            url
+            name
+          }
+        }
+      }
+    }
+  }
+`);
+
 const Details = () => {
   const params = useParams<{ id: string }>();
   const { allEntityDetails } = useDashboardStore();
@@ -176,6 +232,11 @@ const Details = () => {
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
+      partners:
+        UseCaseData?.data?.useCases?.[0]?.partnerOrganizations?.map((org: any) => ({
+          label: org.name,
+          value: org.id,
+        })) || [],
       supporters:
         UseCaseData?.data?.useCases?.[0]?.supportingOrganizations?.map((org: any) => ({
           label: org.name,
@@ -244,6 +305,33 @@ const Details = () => {
       }
     );
 
+  const { mutate: addPartner, isLoading: addPartnerLoading } = useMutation(
+    (input: { useCaseId: string; organizationId: string }) =>
+      GraphQL(AddPartners, {}, input),
+    {
+      onSuccess: (res: any) => {
+        toast('Partner added successfully');
+      },
+      onError: (error: any) => {
+        toast(`Error: ${error.message}`);
+      },
+    }
+  );
+
+  const { mutate: removePartner, isLoading: removePartnerLoading } =
+    useMutation(
+      (input: { useCaseId: string; organizationId: string }) =>
+        GraphQL(RemovePartners, {}, input),
+      {
+        onSuccess: (res: any) => {
+          toast('Partner removed successfully');
+        },
+        onError: (error: any) => {
+          toast(`Error: ${error.message}`);
+        },
+      }
+    );
+
   useEffect(() => {
     Users.refetch();
   }, [searchValue]);
@@ -263,7 +351,8 @@ const Details = () => {
       addContributorLoading ||
         removeContributorLoading ||
         addSupporterLoading ||
-        removeSupporterLoading
+        removeSupporterLoading ||
+        addPartnerLoading 
         ? 'loading'
         : 'success'
     ); // update based on mutation state
@@ -272,6 +361,7 @@ const Details = () => {
     removeContributorLoading,
     addSupporterLoading,
     removeSupporterLoading,
+    addPartnerLoading,
   ]);
 
 
@@ -393,15 +483,33 @@ const Details = () => {
               })
             )}
             selectedValues={formData.partners}
-            onChange={(newValues: any) =>
-              setFormData((prev) => ({ ...prev, partners: newValues }))
-            }
-            onRemove={(item: any) =>
+            onChange={(newValues: any) => {
+              const prevValues = formData.partners.map((item) => item.value);
+              const newlyAdded = newValues.find(
+                (item: any) => !prevValues.includes(item.value)
+              );
+            
+              setFormData((prev) => ({ ...prev, partners: newValues }));
+            
+              if (newlyAdded) {
+                addPartner({
+                  useCaseId: params.id,
+                  organizationId: newlyAdded.value,
+                });
+              }
+            }}
+            onRemove={(item: any) => {
               setFormData((prev) => ({
                 ...prev,
-                partners: prev.partners.filter((p) => p.value !== item.value),
-              }))
-            }
+                partners: prev.partners.filter(
+                  (s) => s.value !== item.value
+                ),
+              }));
+              removePartner({
+                useCaseId: params.id,
+                organizationId: item.value,
+              });
+            }}
           />
         </div>
       )}
