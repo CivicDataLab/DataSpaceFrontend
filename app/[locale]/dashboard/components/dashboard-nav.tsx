@@ -52,7 +52,7 @@ export function DashboardNav({
     <aside
       className={cn(
         'overflow-hidden bg-surfaceDefault ',
-        'mb-10 hidden shrink-0 basis-[260px]  rounded-2 border-2  border-solid  border-baseGraySlateSolid6 shadow-insetBasic md:block',
+        ' mb-10 hidden shrink-0 basis-[260px]  rounded-2 border-2  border-solid  border-baseGraySlateSolid6 shadow-insetBasic md:block',
         isCollapsed && 'basis-[60px]',
         styles.Collapse
       )}

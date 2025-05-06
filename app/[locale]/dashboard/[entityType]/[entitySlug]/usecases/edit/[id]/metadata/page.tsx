@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   MetadataModels,
@@ -12,10 +10,12 @@ import {
   UpdateUseCaseMetadataInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Combobox, Icon, Spinner, Text, toast } from 'opub-ui';
+import { useParams } from 'next/navigation';
+import { Combobox, Spinner, toast } from 'opub-ui';
+import { useEffect, useState } from 'react';
 
 import { GraphQL } from '@/lib/api';
-import { Icons } from '@/components/icons';
+import { useEditStatus } from '../../context';
 
 const FetchUseCasedetails: any = graphql(`
   query UseCasesDetails($filters: UseCaseFilter) {
@@ -110,6 +110,10 @@ const Metadata = () => {
     entitySlug: string;
     id: string;
   }>();
+
+  const { setStatus } = useEditStatus();
+
+  
 
   const useCaseData: { data: any; isLoading: boolean } = useQuery(
     [`fetch_UseCaseData_Metadata`],
@@ -222,6 +226,12 @@ const Metadata = () => {
     }
   );
 
+
+  useEffect(() => {
+    setStatus(updateUseCase.isLoading ? 'loading' : 'success'); // update based on mutation state
+  }, [updateUseCase.isLoading]);
+
+
   const handleChange = (field: string, value: any) => {
     setFormData((prevData) => ({
       ...prevData,
@@ -322,14 +332,6 @@ const Metadata = () => {
   return (
     <div>
       <div>
-        <div className="flex justify-end gap-2">
-          <Text color="highlight">Auto Save </Text>
-          {updateUseCase.isLoading ? (
-            <Spinner />
-          ) : (
-            <Icon source={Icons.checkmark} />
-          )}
-        </div>
         <div className="flex flex-wrap">
           <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
             <Combobox

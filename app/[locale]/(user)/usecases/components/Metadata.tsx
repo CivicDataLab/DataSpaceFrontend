@@ -12,25 +12,25 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       label: 'Publisher',
       value: data.useCase.publishers[0]?.name || 'N/A',
     },
-    {
-      label: 'Website',
-      value: (
-        <Link
-          href={data.useCase.website}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primaryBlue underline"
-        >
-          Visit Website
-        </Link>
-      ),
-    },
+    // {
+    //   label: 'Website',
+    //   value: (
+    //     <Link
+    //       href={data.useCase.website}
+    //       target="_blank"
+    //       rel="noopener noreferrer"
+    //       className="text-primaryBlue underline"
+    //     >
+    //       Visit Website
+    //     </Link>
+    //   ),
+    // },
     {
       label: 'Contact',
       value: (
         <Link
           className="text-primaryBlue underline"
-          href={`mailto:${data.useCase.contactEmail}`}
+          href={`mailto:${data.useCase.publishers[0]?.contactEmail}`}
         >
           Contact Publisher{' '}
         </Link>
@@ -42,7 +42,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     },
     {
       label: 'Status',
-      value: data.useCase.runningStatus || 'N/A',
+      value: data.useCase.runningStatus.split('_').join('') || 'N/A',
     },
     {
       label: 'Last Updated',

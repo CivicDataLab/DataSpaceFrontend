@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -45,6 +46,8 @@ const UseCaseDetails: any = graphql(`
         id
         value
       }
+      startedOn
+      completedOn
       logo {
         name
         path
@@ -61,6 +64,27 @@ const UseCaseDetails: any = graphql(`
       contactEmail
       status
       slug
+      contributors {
+        id
+        fullName
+        username
+      }
+      supportingOrganizations {
+        id
+        name
+        logo {
+          url
+          name
+        }
+      }
+      partnerOrganizations {
+        id
+        name
+        logo {
+          url
+          name
+        }
+      }
     }
   }
 `);
@@ -124,22 +148,17 @@ const Publish = () => {
       errorType: 'critical',
     },
     {
-      name: 'Metadata',
-      data: UseCaseData.data?.useCases,
-      error:
-        UseCaseData.data && UseCaseData.data?.useCases[0]?.metadata.length === 0
-          ? 'No Metadata found. Please add to continue.'
-          : '',
-      errorType: 'critical',
-    },
-
-    {
       name: 'Assign',
       data: UseCaseData?.data?.useCases[0]?.datasets,
       error:
         UseCaseData.data && UseCaseData.data?.useCases[0]?.datasets.length === 0
           ? 'No datasets assigned. Please assign to continue.'
           : '',
+    },
+    {
+      name: 'Contributors',
+      data: UseCaseData?.data?.useCases[0]?.length > 0,
+      error: '',
     },
   ];
 
@@ -150,36 +169,30 @@ const Publish = () => {
   ];
 
   const PrimaryDetails = [
-    { label: 'Title', value: UseCaseData.data?.useCases[0]?.title },
+    { label: 'Use Case Name', value: UseCaseData.data?.useCases[0]?.title },
     { label: 'Summary', value: UseCaseData.data?.useCases[0]?.summary },
     {
       label: 'running Status',
       value: UseCaseData.data?.useCases[0]?.runningStatus,
     },
-
+    { label: 'Started On', value: UseCaseData.data?.useCases[0]?.startedOn },
     {
-      label: 'Logo',
-      value:
-        UseCaseData.data &&
-        UseCaseData.data?.useCases[0]?.logo?.name.split('/').pop(),
+      label: 'Completed On',
+      value: UseCaseData.data?.useCases[0]?.completedOn,
     },
-    {
-      label: 'Website',
-      value: UseCaseData.data?.useCases[0]?.website,
-    },
-    {
-      label: 'Contact Email',
-      value: UseCaseData.data?.useCases[0]?.contactEmail,
-    },
-  ];
-
-  const MetadataDetails = [
     { label: 'Sector', value: UseCaseData.data?.useCases[0]?.sectors[0]?.name },
     { label: 'Tags', value: UseCaseData.data?.useCases[0]?.tags[0]?.value },
     ...(UseCaseData.data?.useCases[0]?.metadata?.map((meta: any) => ({
       label: meta.metadataItem?.label,
       value: meta.value,
     })) || []),
+  ];
+
+
+  const ContributorDetails = [
+    { label: 'Contributors', value: UseCaseData.data?.useCases[0]?.contributors.length>0 ? UseCaseData.data?.useCases[0]?.contributors.map((item: any) => item.fullName).join(', '):'No Contributors' },
+    { label: 'Supporters', value: UseCaseData.data?.useCases[0]?.supportingOrganizations.length>0 ? UseCaseData.data?.useCases[0]?.supportingOrganizations.map((item: any) => item.name).join(', '):'No Supporting Organizations' },
+    { label: 'Partners', value: UseCaseData.data?.useCases[0]?.partnerOrganizations.length>0 ? UseCaseData.data?.useCases[0]?.partnerOrganizations.map((item: any) => item.name).join(', '):'No Partner Organizations' },
   ];
 
   const generateTableData = (list: Array<any>) => {
@@ -251,53 +264,66 @@ const Publish = () => {
                           />
                         ) : item.name === 'Details' ? (
                           <div className="flex flex-col gap-4 px-8 py-4">
-                            {PrimaryDetails.map(
-                              (item, index) =>
-                                item.value && (
-                                  <div
-                                    className="flex flex-wrap gap-2"
-                                    key={index}
-                                  >
-                                    <Text
-                                      className="lg:basis-1/6"
-                                      variant="bodyMd"
+                            <>
+                              {PrimaryDetails.map(
+                                (item, index) =>
+                                  item.value && (
+                                    <div
+                                      className="flex flex-wrap gap-2"
+                                      key={index}
                                     >
-                                      {item.label}:
-                                    </Text>
-                                    <Text
-                                      variant="bodyMd"
-                                      className="lg:basis-4/5"
-                                    >
-                                      {item.value}
+                                      <div className="md:w-1/6 lg:w-1/6">
+                                        <Text variant="bodyMd">
+                                          {item.label}:
+                                        </Text>
+                                      </div>
+                                      <div>
+                                        <Text variant="bodyMd">
+                                          {item.value}
+                                        </Text>
+                                      </div>
+                                    </div>
+                                  )
+                              )}
+                              {UseCaseData.data?.useCases[0]?.logo && (
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <div className="md:w-1/6 lg:w-1/6">
+                                    <Text className="" variant="bodyMd">
+                                      Image:
                                     </Text>
                                   </div>
-                                )
-                            )}
+                                  <Image
+                                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${UseCaseData.data?.useCases[0]?.logo?.path.replace('/code/files/', '')}`}
+                                    alt={UseCaseData.data?.useCases[0]?.title}
+                                    width={240}
+                                    height={240}
+                                  />
+                                </div>
+                              )}
+                            </>
                           </div>
                         ) : (
                           <div className="flex flex-col gap-4 px-8 py-4">
-                            {MetadataDetails.map(
-                              (item, index) =>
-                                item.value && (
+                            {                         
+                              ContributorDetails.map(
+                                (item: any, index: number) => (
                                   <div
                                     className="flex flex-wrap gap-2"
                                     key={index}
                                   >
-                                    <Text
-                                      className="lg:basis-1/6"
-                                      variant="bodyMd"
-                                    >
-                                      {item.label}:
-                                    </Text>
-                                    <Text
-                                      variant="bodyMd"
-                                      className="lg:basis-4/5"
-                                    >
-                                      {item.value}
-                                    </Text>
+                                    <div className="md:w-1/6 lg:w-1/6">
+                                        <Text variant="bodyMd">
+                                          {item.label}:
+                                        </Text>
+                                      </div>
+                                    <div>
+                                      <Text variant="bodyMd">
+                                        {item.value}
+                                      </Text>
+                                    </div>
                                   </div>
                                 )
-                            )}
+                              )}
                           </div>
                         )}
                       </div>

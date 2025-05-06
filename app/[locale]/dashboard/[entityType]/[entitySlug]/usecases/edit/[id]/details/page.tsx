@@ -1,24 +1,17 @@
 'use client';
 
+import React, { useCallback, useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UseCaseInputPartial } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
-import {
-  DropZone,
-  Icon,
-  Select,
-  Spinner,
-  Text,
-  TextField,
-  toast
-} from 'opub-ui';
-import React, { useCallback, useEffect, useState } from 'react';
+import { DropZone, Select, TextField, toast } from 'opub-ui';
 
 // Assuming you are using these components
 
-import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
+import { useEditStatus } from '../../context';
+import Metadata from '../metadata/page';
 
 const UpdateUseCaseMutation: any = graphql(`
   mutation updateUseCase($data: UseCaseInputPartial!) {
@@ -33,6 +26,13 @@ const UpdateUseCaseMutation: any = graphql(`
       runningStatus
       slug
       status
+      startedOn
+      completedOn
+      logo {
+        name
+        path
+        url
+      }
     }
   }
 `);
@@ -53,6 +53,8 @@ const FetchUseCase: any = graphql(`
       contactEmail
       status
       slug
+      startedOn
+      completedOn
     }
   }
 `);
@@ -90,12 +92,14 @@ const Details = () => {
   const initialFormData = {
     title: '',
     summary: '',
-    logo: null,
+    logo: null as File | null,
     website: '',
     contactEmail: '',
     slug: '',
     status: '',
     runningStatus: null,
+    startedOn: null,
+    completedOn: null,
   };
 
   const runningStatus = [
@@ -133,6 +137,8 @@ const Details = () => {
         slug: UsecasesData.slug || '',
         status: UsecasesData.status || '',
         runningStatus: UsecasesData.runningStatus || null,
+        startedOn: UsecasesData.startedOn || '',
+        completedOn: UsecasesData.completedOn || '',
       };
       setFormData(updatedData);
       setPreviousFormData(updatedData);
@@ -143,10 +149,16 @@ const Details = () => {
     (data: { data: UseCaseInputPartial }) =>
       GraphQL(UpdateUseCaseMutation, {}, data),
     {
-      onSuccess: () => {
+      onSuccess: (res: any) => {
         toast('Use case updated successfully');
-        // Optionally, reset form or perform other actions
-        UseCaseData.refetch();
+        setFormData((prev) => ({
+          ...prev,
+          ...res.updateUseCase,
+        }));
+        setPreviousFormData((prev) => ({
+          ...prev,
+          ...res.updateUseCase,
+        }));
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -161,10 +173,6 @@ const Details = () => {
     }));
   }, []);
 
-  // const handleFileChange = (file: File | null) => {
-  //   setFormData((prev: any) => ({ ...prev, logo: file }));
-  //   saveData({ ...formData, logo: file }); // Auto-save on file change
-  // };
   const onDrop = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
       mutate({
@@ -178,7 +186,6 @@ const Details = () => {
   );
 
   const handleSave = (updatedData: any) => {
-    
     if (JSON.stringify(updatedData) !== JSON.stringify(previousFormData)) {
       setPreviousFormData(updatedData);
 
@@ -190,27 +197,21 @@ const Details = () => {
           website: updatedData.website,
           contactEmail: updatedData.contactEmail,
           runningStatus: updatedData.runningStatus,
+          startedOn: (updatedData.startedOn as Date) || null,
+          completedOn: (updatedData.completedOn as Date) || null,
         },
       });
     }
   };
+  const { setStatus } = useEditStatus();
+
+  useEffect(() => {
+    setStatus(editMutationLoading ? 'loading' : 'success'); // update based on mutation state
+  }, [editMutationLoading]);
 
   return (
-    <div className="mt-3 rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
-      <div className="flex justify-end gap-2">
-        <Text color="highlight">Auto Save </Text>
-        {editMutationLoading ? <Spinner /> : <Icon source={Icons.checkmark} />}
-      </div>
-      <div className=" flex flex-col gap-5">
-        <div>
-          <TextField
-            label="Title"
-            name="title"
-            value={formData.title}
-            onChange={(e) => handleChange('title', e)}
-            onBlur={() => handleSave(formData)}
-          />
-        </div>
+    <div>
+      <div className=" flex flex-col gap-6">
         <div>
           <TextField
             label="Summary"
@@ -221,35 +222,71 @@ const Details = () => {
             onBlur={() => handleSave(formData)}
           />
         </div>
+
+        <Metadata />
+        <div className="flex flex-wrap gap-6 md:flex-nowrap lg:flex-nowrap">
+          <div className="w-full">
+            <TextField
+              label="Started On"
+              name="startedOn"
+              type="date"
+              value={formData.startedOn || ''}
+              onChange={(e) => {
+                handleChange('startedOn', e);
+                handleSave({ ...formData, startedOn: e });
+              }}
+            />
+          </div>
+
+          <div className="w-full">
+            <Select
+              name={'runningStatus'}
+              options={runningStatus?.map((item) => ({
+                label: item.label,
+                value: item.value,
+              }))}
+              label="Running Status"
+              value={formData?.runningStatus ? formData.runningStatus : ''}
+              onChange={(value: any) => {
+                handleChange('runningStatus', value);
+                handleSave({ ...formData, runningStatus: value });
+              }}
+            />
+          </div>
+          <div className="w-full">
+            <TextField
+              label="Completed On"
+              name="completedOn"
+              type="date"
+              min={formData.startedOn || ''}
+              disabled={
+                formData.runningStatus === 'COMPLETED' ||
+                formData.runningStatus === 'CANCELLED'
+              }
+              value={formData.completedOn || ''}
+              onChange={(e) => {
+                handleChange('completedOn', e),
+                  handleSave({ ...formData, completedOn: e });
+              }}
+            />
+          </div>
+        </div>
         <div>
           <DropZone
-            label={!UsecasesData?.logo ? 'Logo' : 'Change Logo'}
+            label={!formData?.logo ? 'Logo' : 'Change Logo'}
             onDrop={onDrop}
             name={'Logo'}
           >
             <DropZone.FileUpload
+              actionHint="Only one image can be added. Recommended resolution of 16:9 - (1280x720), (1920x1080) - Supported File Types: PNG/JPG/SVG "
               actionTitle={
-                UsecasesData && UsecasesData?.logo?.name.split('/').pop()
-              }
+                formData.logo
+                ? formData.logo.name.split('/').pop()
+                : 'Name of the logo'              }
             />
           </DropZone>
         </div>
-        <div>
-          <Select
-            name={'runningStatus'}
-            options={runningStatus?.map((item) => ({
-              label: item.label,
-              value: item.value,
-            }))}
-            label="Running Status"
-            value={formData?.runningStatus? formData.runningStatus : ''}
-            onChange={(value: any) => {
-              handleChange('runningStatus', value);
-              handleSave(formData); // Save on change
-            }}
-          />
-        </div>
-        <div>
+        {/* <div>
           <TextField
             label="Website"
             name="website"
@@ -268,7 +305,7 @@ const Details = () => {
             onChange={(e) => handleChange('contactEmail', e)}
             onBlur={() => handleSave(formData)}
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );
