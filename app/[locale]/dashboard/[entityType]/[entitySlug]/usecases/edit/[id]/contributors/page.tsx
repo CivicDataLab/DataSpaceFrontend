@@ -12,6 +12,7 @@ import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
 import { useEditStatus } from '../../context';
 import CustomCombobox from './CustomCombobox';
+import EntitySection from './EntitySelection';
 
 const FetchUsers: any = graphql(`
   query searchUsers($limit: Int!, $searchTerm: String!) {
@@ -32,6 +33,14 @@ const FetchUsecaseInfo: any = graphql(`
         id
         fullName
         username
+      }
+      supportingOrganizations {
+        id
+        name
+        logo {
+          url
+          name
+        }
       }
     }
   }
@@ -65,6 +74,54 @@ const RemoveContributor: any = graphql(`
           id
           fullName
           username
+        }
+      }
+    }
+  }
+`);
+
+const AddSupporters: any = graphql(`
+  mutation addSupportingOrganizationToUseCase(
+    $useCaseId: String!
+    $organizationId: ID!
+  ) {
+    addSupportingOrganizationToUseCase(
+      useCaseId: $useCaseId
+      organizationId: $organizationId
+    ) {
+      __typename
+      ... on TypeUseCaseOrganizationRelationship {
+        organization {
+          id
+          name
+          logo {
+            url
+            name
+          }
+        }
+      }
+    }
+  }
+`);
+
+const RemoveSupporters: any = graphql(`
+  mutation removeSupportingOrganizationFromUseCase(
+    $useCaseId: String!
+    $organizationId: ID!
+  ) {
+    removeSupportingOrganizationFromUseCase(
+      useCaseId: $useCaseId
+      organizationId: $organizationId
+    ) {
+      __typename
+      ... on TypeUseCaseOrganizationRelationship {
+        organization {
+          id
+          name
+          logo {
+            url
+            name
+          }
         }
       }
     }
@@ -119,6 +176,11 @@ const Details = () => {
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
+      supporters:
+        UseCaseData?.data?.useCases?.[0]?.supportingOrganizations?.map((org: any) => ({
+          label: org.name,
+          value: org.id,
+        })) || [],
       contributors:
         UseCaseData?.data?.useCases?.[0]?.contributors?.map((user: any) => ({
           label: user.fullName,
@@ -127,15 +189,40 @@ const Details = () => {
     }));
   }, [UseCaseData?.data]);
 
-  const {
-    mutate: addContributor,
-    isLoading: addContributorLoading,
-  } = useMutation(
-    (input: { useCaseId: string; userId: string }) =>
-      GraphQL(AddContributors, {}, input),
+  const { mutate: addContributor, isLoading: addContributorLoading } =
+    useMutation(
+      (input: { useCaseId: string; userId: string }) =>
+        GraphQL(AddContributors, {}, input),
+      {
+        onSuccess: (res: any) => {
+          toast('Contributor added successfully');
+        },
+        onError: (error: any) => {
+          toast(`Error: ${error.message}`);
+        },
+      }
+    );
+
+  const { mutate: removeContributor, isLoading: removeContributorLoading } =
+    useMutation(
+      (input: { useCaseId: string; userId: string }) =>
+        GraphQL(RemoveContributor, {}, input),
+      {
+        onSuccess: (res: any) => {
+          toast('Contributor removed successfully');
+        },
+        onError: (error: any) => {
+          toast(`Error: ${error.message}`);
+        },
+      }
+    );
+
+  const { mutate: addSupporter, isLoading: addSupporterLoading } = useMutation(
+    (input: { useCaseId: string; organizationId: string }) =>
+      GraphQL(AddSupporters, {}, input),
     {
       onSuccess: (res: any) => {
-        toast('Contributor added successfully');
+        toast('Supporter added successfully');
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -143,21 +230,19 @@ const Details = () => {
     }
   );
 
-  const {
-    mutate: removeContributor,
-    isLoading: removeContributorLoading,
-  } = useMutation(
-    (input: { useCaseId: string; userId: string }) =>
-      GraphQL(RemoveContributor, {}, input),
-    {
-      onSuccess: (res: any) => {
-        toast('Contributor removed successfully');
-      },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`);
-      },
-    }
-  );
+  const { mutate: removeSupporter, isLoading: removeSupporterLoading } =
+    useMutation(
+      (input: { useCaseId: string; organizationId: string }) =>
+        GraphQL(RemoveSupporters, {}, input),
+      {
+        onSuccess: (res: any) => {
+          toast('Supporter removed successfully');
+        },
+        onError: (error: any) => {
+          toast(`Error: ${error.message}`);
+        },
+      }
+    );
 
   useEffect(() => {
     Users.refetch();
@@ -175,11 +260,20 @@ const Details = () => {
 
   useEffect(() => {
     setStatus(
-      addContributorLoading || removeContributorLoading
+      addContributorLoading ||
+        removeContributorLoading ||
+        addSupporterLoading ||
+        removeSupporterLoading
         ? 'loading'
         : 'success'
     ); // update based on mutation state
-  }, [addContributorLoading, removeContributorLoading]);
+  }, [
+    addContributorLoading,
+    removeContributorLoading,
+    addSupporterLoading,
+    removeSupporterLoading,
+  ]);
+
 
   return (
     <div>
@@ -196,23 +290,20 @@ const Details = () => {
                   <CustomCombobox
                     options={options}
                     selectedValue={selectedContributors}
-                    onChange={(value: any) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        contributors: [
-                          ...prev.contributors,
-                          ...value.filter(
-                            (val: any) =>
-                              !prev.contributors.some(
-                                (existing) => existing.value === val.value
-                              )
-                          ),
-                        ],
-                      }));
-                      addContributor({
-                        useCaseId: params.id,
-                        userId: value[0].value,
-                      });
+                    onChange={(newValues: any) => {
+                      const prevValues = formData.contributors.map((item) => item.value);
+                      const newlyAdded = newValues.find(
+                        (item: any) => !prevValues.includes(item.value)
+                      );
+                    
+                      setFormData((prev) => ({ ...prev, contributors: newValues }));
+                    
+                      if (newlyAdded) {
+                        addContributor({
+                          useCaseId: params.id,
+                          userId: newlyAdded.value,
+                        });
+                      }
                       setSearchValue(''); // clear input
                     }}
                     placeholder="Add Contributors"
@@ -250,118 +341,68 @@ const Details = () => {
               </div>
             </div>{' '}
           </div>
-          <div>
-            <Text variant="headingMd">SUPPORTED BY</Text>
-            <div className="mt-5 flex flex-wrap items-start gap-5 lg:flex-nowrap">
-              <div className="flex w-full flex-wrap items-end gap-5  lg:flex-nowrap">
-                <div className="w-full lg:w-2/6">
-                  <Text>Add Supporters</Text>
-                  <CustomCombobox
-                    options={(allEntityDetails?.organizations || [])?.map(
-                      (org: any) => ({
-                        label: org.name,
-                        value: org.name,
-                      })
-                    )}
-                    selectedValue={formData.supporters}
-                    onChange={(value: any) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        supporters: [
-                          ...prev.supporters,
-                          ...value.filter(
-                            (val: any) =>
-                              !prev.supporters.some(
-                                (existing) => existing.value === val.value
-                              )
-                          ),
-                        ],
-                      }));
-                    }}
-                    placeholder="Add Supporters"
-                  />
-                </div>
-                <div className="mt-3 flex flex-wrap gap-3 lg:mt-0">
-                  {formData.supporters.map((item) => (
-                    <div key={item.value}>
-                      <Button
-                        onClick={() =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            supporters: prev.supporters.filter(
-                              (supporter) => supporter.value !== item.value
-                            ),
-                          }))
-                        }
-                        kind="tertiary"
-                      >
-                        <div className="flex items-center gap-2 rounded-2 p-2 ">
-                          <Text>{item.label}</Text>
-                          <Icon source={Icons.cross} size={18} />
-                        </div>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div>
-            <Text variant="headingMd">PARTNERED BY</Text>
-            <div className="mt-5 flex flex-wrap items-start gap-5 lg:flex-nowrap">
-              <div className="flex w-full flex-wrap  items-end  gap-5  lg:flex-nowrap">
-                <div className="w-full lg:w-2/6">
-                  <Text>Add Partners</Text>
-                  <CustomCombobox
-                    options={(allEntityDetails?.organizations || [])?.map(
-                      (org: any) => ({
-                        label: org.name,
-                        value: org.name,
-                      })
-                    )}
-                    selectedValue={formData.partners}
-                    onChange={(value: any) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        partners: [
-                          ...prev.partners,
-                          ...value.filter(
-                            (val: any) =>
-                              !prev.partners.some(
-                                (existing) => existing.value === val.value
-                              )
-                          ),
-                        ],
-                      }));
-                    }}
-                    placeholder="Add Partners"
-                  />
-                </div>
-                <div className="mt-3 flex flex-wrap gap-3 lg:mt-0">
-                  {formData.partners.map((item) => (
-                    <div key={item.value}>
-                      <Button
-                        onClick={() =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            partners: prev.partners.filter(
-                              (partner) => partner.value !== item.value
-                            ),
-                          }))
-                        }
-                        kind="tertiary"
-                      >
-                        <div className="flex items-center gap-2 rounded-2 p-2 ">
-                          <Text>{item.label}</Text>
-                          <Icon source={Icons.cross} size={18} />
-                        </div>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+
+          <EntitySection
+            title="SUPPORTED BY"
+            label="Add Supporters"
+            placeholder="Add Supporters"
+            options={(allEntityDetails?.organizations || [])?.map(
+              (org: any) => ({
+                label: org.name,
+                value: org.id,
+              })
+            )}
+            selectedValues={formData.supporters}
+            onChange={(newValues: any) => {
+              const prevValues = formData.supporters.map((item) => item.value);
+              const newlyAdded = newValues.find(
+                (item: any) => !prevValues.includes(item.value)
+              );
+            
+              setFormData((prev) => ({ ...prev, supporters: newValues }));
+            
+              if (newlyAdded) {
+                addSupporter({
+                  useCaseId: params.id,
+                  organizationId: newlyAdded.value,
+                });
+              }
+            }}
+            onRemove={(item: any) => {
+              setFormData((prev) => ({
+                ...prev,
+                supporters: prev.supporters.filter(
+                  (s) => s.value !== item.value
+                ),
+              }));
+              removeSupporter({
+                useCaseId: params.id,
+                organizationId: item.value,
+              });
+            }}
+          />
+          
+          <EntitySection
+            title="PARTNERED BY"
+            label="Add Partners"
+            placeholder="Add Partners"
+            options={(allEntityDetails?.organizations || [])?.map(
+              (org: any) => ({
+                label: org.name,
+                value: org.id,
+              })
+            )}
+            selectedValues={formData.partners}
+            onChange={(newValues: any) =>
+              setFormData((prev) => ({ ...prev, partners: newValues }))
+            }
+            onRemove={(item: any) =>
+              setFormData((prev) => ({
+                ...prev,
+                partners: prev.partners.filter((p) => p.value !== item.value),
+              }))
+            }
+          />
         </div>
       )}
     </div>
