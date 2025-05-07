@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Button, Icon, Spinner, Text, TextField } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
+import { useDatasetEditStatus } from '../dataset/[id]/edit/context';
 import { useEditStatus } from '../usecases/edit/context';
 
 interface TitleBarProps {
@@ -11,7 +12,8 @@ interface TitleBarProps {
   goBackURL: string;
   onSave: (data: any) => void;
   loading: boolean;
-}
+  status: 'loading' | 'success';
+  setStatus: (s: 'loading' | 'success') => void;}
 
 const TitleBar = ({
   label,
@@ -19,13 +21,14 @@ const TitleBar = ({
   goBackURL,
   onSave,
   loading,
+  status,
+  setStatus,
 }: TitleBarProps) => {
   const [edit, setEdit] = useState(false);
   const [titleData, setTitleData] = useState(title);
-  const { status, setStatus } = useEditStatus();
 
   useEffect(() => {
-    setStatus(loading ? 'loading' : 'success'); // update based on mutation state
+    setStatus(loading ? 'loading' : 'success');
   }, [loading]);
 
   return (
@@ -73,7 +76,9 @@ const TitleBar = ({
       <div className="flex flex-wrap items-center gap-6 lg:flex-nowrap">
         <div className="flex flex-wrap items-center gap-2">
           {' '}
-          <Text>{status === 'loading' ? 'Saving...' : 'All Changes Saved'}</Text>
+          <Text>
+            {status === 'loading' ? 'Saving...' : 'All Changes Saved'}
+          </Text>
           {status === 'loading' ? (
             <Spinner size={20} />
           ) : (
