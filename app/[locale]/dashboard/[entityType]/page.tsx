@@ -90,7 +90,7 @@ const Page = () => {
           ]}
         />
       <div className="m-auto flex w-11/12  flex-col">
-        {allEntityDetails?.organizations?.length === 0 ? (
+        {allEntityDetails?.organizations.length < 0 ? (
           <LoadingPage />
         ) : (
           <div className="container mb-40 ">
