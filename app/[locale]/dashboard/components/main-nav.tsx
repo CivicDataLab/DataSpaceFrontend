@@ -315,7 +315,7 @@ export const ProfileContent = ({
 
 const LogginOutPage = () => {
   return (
-    <div className=" flex items-center justify-end gap-4 bg-surfaceDefault p-2">
+    <div className=" flex items-center justify-end gap-4 bg-surfaceDefault p-5 lg:p-7">
       <Spinner color="surface" />
       <Text variant="headingLg">Logging out...</Text>
     </div>
