@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { EditLayout } from './components/EditLayout';
+import { DatasetEditStatusProvider } from './context';
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -11,5 +12,9 @@ export default async function Layout({
   children,
   params,
 }: DashboardLayoutProps) {
-  return <EditLayout params={params}>{children}</EditLayout>;
+  return (
+    <DatasetEditStatusProvider>
+      <EditLayout params={params}>{children}</EditLayout>
+    </DatasetEditStatusProvider>
+  );
 }
