@@ -126,12 +126,11 @@ export function EditLayout({ children, params }: LayoutProps) {
           label={'DATASET NAME'}
           title={getDatasetTitleRes?.data?.datasets[0]?.title}
           goBackURL={`/dashboard/${routerParams.entityType}/${routerParams.entitySlug}/dataset`}
-          onSave={(e) =>
+          onSave={(val) =>
             updateDatasetTitleMutation.mutate({
               updateDatasetInput: {
                 dataset: routerParams.id,
-                title: e.title,
-                tags: [],
+                title: val,
               },
             })
           }
