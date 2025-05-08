@@ -109,8 +109,10 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
         );
       },
       onError: (err: any) => {
-        console.log('Error ::: ', err);
-      },
+        toast(err.message || String(err));
+        setFile([])
+      }
+      
     }
   );
 
@@ -215,23 +217,21 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
 
   return (
     <div className="mt-3">
-      <div className="my-8 flex justify-between flex-wrap items-center gap-6 ">
-        <div className='flex items-center flex-wrap gap-2'>
-        <Text>
-          Showing {filteredRows.length} of {filteredRows.length} Data Files
-        </Text>
-        <SearchInput
-          placeholder="Search in Resources"
-          label="Search"
-          name="Search"
-          onChange={(e) => handleSearchChange(e)}
-        />
+      <div className="my-8 flex flex-wrap items-center justify-between gap-6 ">
+        <div className="flex flex-wrap items-center gap-2">
+          <Text>
+            Showing {filteredRows.length} of {filteredRows.length} Data Files
+          </Text>
+          <SearchInput
+            placeholder="Search in Resources"
+            label="Search"
+            name="Search"
+            onChange={(e) => handleSearchChange(e)}
+          />
         </div>
         <Dialog>
           <Dialog.Trigger>
-            <Button size="medium" >
-              ADD NEW DATA FILE
-            </Button>
+            <Button size="medium">ADD NEW DATA FILE</Button>
           </Dialog.Trigger>
           <Dialog.Content title={'Add New Resource'}>
             {createResourceMutation.isLoading ? (
