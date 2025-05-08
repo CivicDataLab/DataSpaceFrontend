@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import {
   CreateFileResourceInput,
@@ -16,6 +16,7 @@ import {
   DropZone,
   Icon,
   Select,
+  Sheet,
   Spinner,
   Text,
   TextField,
@@ -24,6 +25,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import { useDatasetEditStatus } from '../../context';
 import { TListItem } from '../page-layout';
 import {
   createResourceFilesDoc,
@@ -32,6 +34,7 @@ import {
   updateResourceDoc,
   updateSchema,
 } from './query';
+import ResourceHeader from './ResourceHeader';
 import { ResourceSchema } from './ResourceSchema';
 
 interface EditProps {
@@ -73,7 +76,8 @@ export const EditResource = ({ refetch, list }: EditProps) => {
         refetch();
       },
       onError: (err: any) => {
-        console.log('Error ::: ', err);
+        toast(err.message || String(err));
+        setFile([]);
       },
     }
   );
@@ -158,6 +162,7 @@ export const EditResource = ({ refetch, list }: EditProps) => {
       },
     }
   );
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const getResourceObject = (resourceId: string) => {
     return list.find((item: TListItem) => item.value === resourceId);
@@ -166,10 +171,8 @@ export const EditResource = ({ refetch, list }: EditProps) => {
   const [resourceName, setResourceName] = React.useState(
     getResourceObject(resourceId)?.label
   );
-  const [resourceDesc, setResourceDesc] = React.useState(
-    getResourceObject(resourceId)?.description
-  );
-  const [previewEnable, setPreviewEnable] = useState(true);
+
+  const [previewEnable, setPreviewEnable] = useState(false);
 
   const [previewDetails, setPreviewDetails] = useState({
     startEntry: 0,
@@ -179,7 +182,6 @@ export const EditResource = ({ refetch, list }: EditProps) => {
 
   React.useEffect(() => {
     setResourceName(getResourceObject(resourceId)?.label);
-    setResourceDesc(getResourceObject(resourceId)?.description);
     setPreviewEnable(getResourceObject(resourceId)?.previewEnabled ?? true);
     setPreviewDetails({
       startEntry: getResourceObject(resourceId)?.previewDetails.startEntry ?? 0,
@@ -193,8 +195,7 @@ export const EditResource = ({ refetch, list }: EditProps) => {
 
   const handleResourceChange = (e: any) => {
     setResourceId(e, { shallow: false });
-    setResourceName(getResourceObject(e)?.label);
-    setResourceDesc(getResourceObject(e)?.description);
+    refetch();
   };
 
   const [file, setFile] = React.useState<File[]>([]);
@@ -208,6 +209,7 @@ export const EditResource = ({ refetch, list }: EditProps) => {
         },
       });
       setFile((files) => [...files, ...acceptedFiles]);
+      setIsSheetOpen(false);
     },
     []
   );
@@ -264,16 +266,18 @@ export const EditResource = ({ refetch, list }: EditProps) => {
       }));
     }
   };
+
+  console.log(previewEnable);
+
   const saveResource = () => {
     updateResourceMutation.mutate({
       fileResourceInput: {
         id: resourceId,
-        description: resourceDesc || '',
         name: resourceName || '',
-        previewEnabled: previewEnable,
+        previewEnabled: true,
         previewDetails: {
-          startEntry: +previewDetails.startEntry || 0,
-          endEntry: +previewDetails.endEntry || 0,
+          startEntry: 5,
+          endEntry: 5,
           isAllEntries: previewDetails.isAllEntries,
         },
       },
@@ -293,123 +297,93 @@ export const EditResource = ({ refetch, list }: EditProps) => {
     }
   };
 
+  const { setStatus } = useDatasetEditStatus();
+
+  useEffect(() => {
+    setStatus(updateResourceMutation.isLoading ? 'loading' : 'success'); // update based on mutation state
+  }, [updateResourceMutation.isLoading]);
+
   return (
-    <div className=" bg-basePureWhite px-6 py-8">
-      <div className="flex items-center gap-6">
-        <Text>Resource Name :</Text>
-        <div className=" w-3/6">
-          <Select
-            label="Resource List"
-            labelHidden
-            options={list}
-            value={getResourceObject(resourceId)?.value}
-            onChange={(e) => {
-              handleResourceChange(e);
-            }}
-            name="Resource List"
-          />
-        </div>
-        <Dialog>
-          <Dialog.Trigger>
-            <Button className=" mx-5">ADD NEW RESOURCE</Button>
-          </Dialog.Trigger>
-          <Dialog.Content title={'Add New Resource'}>
-            <DropZone name="file_upload" allowMultiple={true} onDrop={dropZone}>
-              {uploadedFile}
-              {file.length === 0 && <DropZone.FileUpload />}
-            </DropZone>
-          </Dialog.Content>
-        </Dialog>
-        <Button
-          className=" w-1/5 justify-end"
-          size="medium"
-          kind="tertiary"
-          variant="interactive"
-          onClick={listViewFunction}
-        >
-          <div className="flex items-center gap-2">
-            <Text color="interactive">
-              Go back to <br />
-              Resource List
-            </Text>
-            <Icon source={Icons.cross} color="interactive" />
-          </div>
-        </Button>
-      </div>
+    <div className=" rounded-4 border-2 border-solid border-greyExtralight px-6 py-8">
+      <ResourceHeader
+        listViewFunction={listViewFunction}
+        isSheetOpen={isSheetOpen}
+        setIsSheetOpen={setIsSheetOpen}
+        dropZone={dropZone}
+        uploadedFile={uploadedFile}
+        file={file}
+        list={list}
+        resourceId={resourceId}
+        handleResourceChange={handleResourceChange}
+      />
+
       <Divider className="mb-8 mt-6" />
-      <div className="flex justify-center">
-        <Button
-          className="w-1/3"
-          loading={updateResourceMutation.isLoading}
-          onClick={saveResource}
-        >
-          SAVE RESOURCE
-        </Button>
-      </div>
-      <div className="mt-8 flex items-stretch gap-10">
-        <div className="flex w-4/5 flex-col">
-          <div className="mb-10 flex gap-6 ">
-            <div className="w-2/3">
-              <TextField
-                value={resourceName}
-                onChange={(text) => setResourceName(text)}
-                label="Resource Name"
-                name="a"
-                required
-                helpText="To know about best practices for naming Resources go to our User Guide"
-              />
-            </div>
-            <div className="w-1/3">
-              <Combobox
-                name="geo_list"
-                label="Data Standard Followed"
-                placeholder="Search Locations"
-                list={[
-                  {
-                    label: 'v3',
-                    value: 'v3',
-                  },
-                ]}
-                displaySelected
-                required
-                error="This field is required"
-              />
+
+      <div className="mt-8 flex flex-wrap items-stretch gap-10 md:flex-nowrap lg:flex-nowrap">
+        <div className="flex w-full flex-col gap-3 md:w-3/5 lg:w-4/5">
+          <div>
+            <TextField
+              value={resourceName}
+              onChange={(text) => setResourceName(text)}
+              onBlur={saveResource}
+              multiline={2}
+              label="Data File Name"
+              name="a"
+              required
+            />
+          </div>
+          <div>
+            <Text className=" underline">
+              Good practices for naming Data Files
+            </Text>
+            <div>
+              <ol className="list-decimal pl-6">
+                <li>Try to include as many keywords as possible in the name</li>
+                <li>Mention the date or time period of the Data File</li>
+                <li>Mention the geography if applicable</li>
+                <li>
+                  Follow a similar format for naming all Data Files in a Dataset
+                </li>
+              </ol>
             </div>
           </div>
-          <TextField
-            key={resourceId}
-            value={resourceDesc}
-            onChange={(text) => setResourceDesc(text)}
-            label="Resource Description"
-            name="resourceDesc"
-            multiline={4}
-          />
         </div>
-
-        <div className="flex w-1/5 flex-col justify-between border-1 border-solid border-baseGraySlateSolid7 p-3 ">
-          {fileInput}
-
-          <DropZone
-            name="file_upload"
-            allowMultiple={false}
-            onDrop={onDrop}
-            className="w-full border-none bg-baseGraySlateSolid5"
-            label="Change file for this resource"
-          >
-            <DropZone.FileUpload />
-          </DropZone>
+        <div className="md:1/3 flex w-2/5 flex-col justify-between lg:w-1/4">
+          <Text className="pb-1">File associated with Data File</Text>
+          <div className="  rounded-2 border-1 border-solid border-baseGraySlateSolid7 p-3 ">
+            {fileInput}
+            <div className="mt-4 lg:mt-8">
+              <DropZone
+                name="file_upload"
+                allowMultiple={false}
+                onDrop={onDrop}
+                className="h-40 w-full  border-none bg-baseGraySlateSolid5"
+                label="Change file for this Data File"
+              >
+                <DropZone.FileUpload />
+              </DropZone>
+            </div>
+          </div>
         </div>
       </div>
+
       <div className="my-8 flex items-center gap-8 align-middle">
         <Checkbox
           name={'previewEnabled'}
           checked={previewEnable}
-          onChange={() => setPreviewEnable(!previewEnable)}
+          onChange={() => {
+            setPreviewEnable(previewEnable === false ? true : false);
+            saveResource();
+          }}
         >
           Preview Enabled
         </Checkbox>
 
-        {previewEnable && (
+        <Button kind="tertiary" disabled={!previewEnable}>
+          See Preview
+        </Button>
+
+        {/* {previewEnable && (
           <>
             <Checkbox
               name={'isAllEntries'}
@@ -446,7 +420,7 @@ export const EditResource = ({ refetch, list }: EditProps) => {
               </>
             )}
           </>
-        )}
+        )} */}
       </div>
       <div className="my-4">
         <div className="flex flex-wrap justify-between">
