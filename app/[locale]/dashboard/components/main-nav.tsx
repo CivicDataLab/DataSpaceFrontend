@@ -1,11 +1,12 @@
 'use client';
 
-import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
-import { Session } from 'next-auth';
-import { signIn, signOut, useSession } from 'next-auth/react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
+import { Session } from 'next-auth';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import {
   Avatar,
   Button,
@@ -19,13 +20,12 @@ import {
   IconButton,
   Popover,
   Spinner,
-  Text
+  Text,
 } from 'opub-ui';
-import React, { useEffect } from 'react';
 
-import { Icons } from '@/components/icons';
 import { useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
+import { Icons } from '@/components/icons';
 import { UserDetailsQryDoc } from '../[entityType]/[entitySlug]/schema';
 import { allOrganizationsListingDoc } from '../[entityType]/schema';
 import Sidebar from './sidebar';
@@ -62,41 +62,41 @@ export function MainNav({ hideSearch = false }) {
   const handleSignIn = async () => {
     try {
       // First attempt sign in
-      await signIn('keycloak', { 
+      await signIn('keycloak', {
         redirect: true,
-        callbackUrl: '/dashboard'
+        callbackUrl: '/dashboard',
       });
-      
+
       // The above will redirect automatically, no need for additional code
       // If redirect is needed manually, we can use:
       // router.push('/dashboard');
-      
     } catch (error) {
       console.error('Sign in error:', error);
     }
   };
 
+  const [hasFetched, setHasFetched] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
-      if (session?.user) {
+      if (session?.user && !hasFetched) {
         try {
-          // Fetch both queries in parallel
           const [userDetailsRes, entityDetailsRes] = await Promise.all([
             GraphQL(UserDetailsQryDoc, {}, []),
-            GraphQL(allOrganizationsListingDoc, {}, [])
+            GraphQL(allOrganizationsListingDoc, {}, []),
           ]);
 
-          // Update store with results
           setUserDetails(userDetailsRes);
           setAllEntityDetails(entityDetailsRes);
-        } catch (queryError) {
-          console.error('Error fetching data:', queryError);
+          setHasFetched(true);
+        } catch (err) {
+          console.error('Error fetching user/org data:', err);
         }
       }
     };
 
     fetchData();
-  }, [session]);
+  }, [session, hasFetched]);
 
   if (isLoggingOut) {
     return <LogginOutPage />;
@@ -120,7 +120,6 @@ export function MainNav({ hideSearch = false }) {
       href: '/about-us',
     },
   ];
-
 
   return (
     <nav className="p-4 lg:p-6">
