@@ -192,12 +192,12 @@ const Navigation = ({
           },
         ]
       : []),
-    {
-      label: 'Charts',
-      id: 'charts',
-      url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/charts?type=list`,
-      // selected: pathItem === 'charts',
-    },
+    // {
+    //   label: 'Charts',
+    //   id: 'charts',
+    //   url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/charts?type=list`,
+    //   // selected: pathItem === 'charts',
+    // },
 
     {
       label: 'Publish',
