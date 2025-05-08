@@ -215,21 +215,22 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
 
   return (
     <div className="mt-3">
-      <div className="my-8 flex items-center gap-6 px-4">
+      <div className="my-8 flex justify-between flex-wrap items-center gap-6 ">
+        <div className='flex items-center flex-wrap gap-2'>
         <Text>
-          Showing {filteredRows.length} of {filteredRows.length} resources
+          Showing {filteredRows.length} of {filteredRows.length} Data Files
         </Text>
         <SearchInput
-          className="w-1/2 "
           placeholder="Search in Resources"
           label="Search"
           name="Search"
           onChange={(e) => handleSearchChange(e)}
         />
+        </div>
         <Dialog>
           <Dialog.Trigger>
-            <Button size="medium" className=" mx-5">
-              ADD NEW RESOURCE
+            <Button size="medium" >
+              ADD NEW DATA FILE
             </Button>
           </Dialog.Trigger>
           <Dialog.Content title={'Add New Resource'}>
