@@ -14,8 +14,8 @@ import PrimaryData from './components/PrimaryData';
 import Resources from './components/Resources';
 
 const datasetQuery = graphql(`
-  query datasets($filters: DatasetFilter) {
-    datasets(filters: $filters) {
+  query getDataset($datasetId: UUID!) {
+    getDataset(datasetId: $datasetId) {
       tags {
         id
         value
@@ -68,7 +68,7 @@ const DatasetDetailsPage = () => {
       {
         // Entity Headers if present
       },
-      { filters: { id: params.datasetIdentifier } }
+      { datasetId: params.datasetIdentifier }
     )
   );
 
@@ -89,7 +89,7 @@ const DatasetDetailsPage = () => {
             </div>
           ) : (
             <PrimaryData
-              data={data && data?.datasets[0]}
+              data={data && data?.getDataset}
               isLoading={isLoading}
             />
           )}
@@ -108,7 +108,7 @@ const DatasetDetailsPage = () => {
             </div>
           ) : (
             <div>
-              <Metadata data={data && data?.datasets[0]} />
+              <Metadata data={data && data?.getDataset} />
             </div>
           )}
         </div>
