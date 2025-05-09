@@ -1,15 +1,15 @@
 'use client';
 
+import React from 'react';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UseCaseInputPartial } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useParams, usePathname, useRouter } from 'next/navigation';
 import { Tab, TabList, Tabs, toast } from 'opub-ui';
-import React from 'react';
 
 import { GraphQL } from '@/lib/api';
 import TitleBar from '../../components/title-bar';
-import { EditStatusProvider } from './context';
+import { EditStatusProvider, useEditStatus } from './context';
 
 const UpdateUseCaseTitleMutation: any = graphql(`
   mutation updateUseCaseTitle($data: UseCaseInputPartial!) {
@@ -72,8 +72,6 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     }
   );
 
-  
-
   const links = [
     {
       label: 'Use Case Details',
@@ -104,14 +102,18 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
   const initialTabLabel =
     links.find((option) => option.selected)?.label || 'Details';
 
+  const { status, setStatus } = useEditStatus();
+
   return (
     <div className="mt-8 flex h-full flex-col gap-6">
       <TitleBar
         label={'USE CASE NAME'}
         title={UseCaseData?.data?.useCases[0]?.title}
-        goBackURL={ `/dashboard/${params.entityType}/${params.entitySlug}/usecases`}
-        onSave={(e) => mutate({ data: { title: e, id : params.id.toString() } })}
+        goBackURL={`/dashboard/${params.entityType}/${params.entitySlug}/usecases`}
+        onSave={(e) => mutate({ data: { title: e, id: params.id.toString() } })}
         loading={editMutationLoading}
+        status={status}
+        setStatus={setStatus}
       />
       <Tabs defaultValue={initialTabLabel}>
         <TabList fitted>
@@ -120,7 +122,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
               value={item.label}
               key={index}
               onClick={() => handleTabClick(item.url)}
-              className='uppercase'
+              className="uppercase"
             >
               {item.label}
             </Tab>

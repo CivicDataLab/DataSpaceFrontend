@@ -151,7 +151,7 @@ export default function DatasetPage({
       {
         onSuccess: (data: any) => {
           router.push(
-            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/resources`
+            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/metadata`
           );
         },
         onError: (err: any) => {
@@ -192,7 +192,7 @@ export default function DatasetPage({
         <LinkButton
           kind="tertiary"
           size="medium"
-          href={`/dashboard/${params.entityType}/${params.entitySlug}/dataset/${row.original.id}/edit/resources`}
+          href={`/dashboard/${params.entityType}/${params.entitySlug}/dataset/${row.original.id}/edit/metadata`}
         >
           {row.original.title}
         </LinkButton>

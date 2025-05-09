@@ -1,27 +1,20 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useParams, usePathname, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UpdateDatasetInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import {
-  Button,
-  Divider,
-  Form,
-  FormLayout,
-  Icon,
-  Input,
   Tab,
   TabList,
   Tabs,
-  Text,
-  toast,
+  toast
 } from 'opub-ui';
+import { ReactNode, useEffect, useState } from 'react';
 
 import { GraphQL } from '@/lib/api';
-import { Icons } from '@/components/icons';
+import TitleBar from '../../../../components/title-bar';
+import { useDatasetEditStatus } from '../context';
 
 const datasetQueryDoc: any = graphql(`
   query datasetTitleQuery($filters: DatasetFilter) {
@@ -57,7 +50,7 @@ interface LayoutProps {
   params: { id: string };
 }
 
-const layoutList = ['metadata', 'access', 'charts', 'resources', 'publish'];
+const layoutList = ['metadata', 'resources', 'publish'];
 
 export function EditLayout({ children, params }: LayoutProps) {
   // const { data } = useQuery([`dataset_layout_${params.id}`], () =>
@@ -117,6 +110,8 @@ export function EditLayout({ children, params }: LayoutProps) {
     return pathName.indexOf(v) >= 0;
   });
 
+  const { status, setStatus } = useDatasetEditStatus();
+
   // if not from the layoutList, return children
   if (!pathItem) {
     return <>{children}</>;
@@ -127,13 +122,21 @@ export function EditLayout({ children, params }: LayoutProps) {
       {getDatasetTitleRes.isLoading ? (
         <></>
       ) : (
-        <Header
-          dataset={getDatasetTitleRes?.data?.datasets[0]}
-          orgId={routerParams.entitySlug}
-          saveTitle={updateDatasetTitleMutation.mutate}
-          editMode={editMode}
-          setEditMode={setEditMode}
-          entityType={routerParams.entityType}
+        <TitleBar
+          label={'DATASET NAME'}
+          title={getDatasetTitleRes?.data?.datasets[0]?.title}
+          goBackURL={`/dashboard/${routerParams.entityType}/${routerParams.entitySlug}/dataset`}
+          onSave={(val) =>
+            updateDatasetTitleMutation.mutate({
+              updateDatasetInput: {
+                dataset: routerParams.id,
+                title: val,
+              },
+            })
+          }
+          loading={updateDatasetTitleMutation.isLoading}
+          status={status}
+          setStatus={setStatus}
         />
       )}
       <div className="lg:flex-column mt-4 flex flex-col">
@@ -153,96 +156,6 @@ export function EditLayout({ children, params }: LayoutProps) {
   );
 }
 
-const Header = ({
-  dataset,
-  orgId,
-  saveTitle,
-  editMode,
-  setEditMode,
-  entityType,
-}: any) => {
-  return (
-    <>
-      <div className="mb-3 flex flex-wrap-reverse items-center justify-between gap-4 md:gap-4 lg:flex-nowrap lg:gap-12">
-        {!editMode ? (
-          <div className="flex items-center gap-4">
-            <Text variant="headingSm" color="subdued">
-              DATASET NAME : <b>{dataset?.title}</b>
-            </Text>
-            <Button
-              kind="tertiary"
-              icon={
-                <Icon source={Icons.pencil} size={16} color="interactive" />
-              }
-              onClick={() => setEditMode(true)}
-            >
-              edit
-            </Button>
-          </div>
-        ) : (
-          <div className="flex-grow">
-            <Form
-              onSubmit={(values: any) =>
-                saveTitle({
-                  updateDatasetInput: {
-                    dataset: dataset.id,
-                    title: values.title,
-                    description: '',
-                    tags: [],
-                  },
-                })
-              }
-            >
-              <FormLayout>
-                <div className="flex flex-wrap items-center gap-4">
-                  <Text variant="headingSm" color="subdued">
-                    DATASET NAME :
-                  </Text>
-                  <div className="flex-grow">
-                    <Input
-                      name="title"
-                      labelHidden
-                      label="Datset Title"
-                      defaultValue={
-                        dataset?.title !== ''
-                          ? dataset?.title
-                          : `Untitled - ${new Date(
-                              dataset?.created
-                            ).toLocaleDateString('en-IN', {
-                              month: 'long',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })}`
-                      }
-                    />
-                  </div>
-                  <div className="flex flex-row gap-4">
-                    <Button submit kind="primary">
-                      Save
-                    </Button>
-
-                    <Button kind="tertiary" onClick={() => setEditMode(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </FormLayout>
-            </Form>
-          </div>
-        )}
-
-        <Link href={`/dashboard/${entityType}/${orgId}/dataset`}>
-          <Text className="flex gap-1" color="interactive">
-            Go back to Drafts{' '}
-            <Icon source={Icons.cross} size={20} color="interactive" />
-          </Text>
-        </Link>
-      </div>
-      <Divider />
-    </>
-  );
-};
-
 const Navigation = ({
   id,
   pathItem,
@@ -258,7 +171,13 @@ const Navigation = ({
 
   let links = [
     {
-      label: 'Resources',
+      label: 'Metadata',
+      id: 'metadata',
+      url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/metadata`,
+      // selected: pathItem === 'metadata',
+    },
+    {
+      label: 'Data Files',
       id: 'resources',
       url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/resources`,
       // selected: pathItem === 'resources',
@@ -273,18 +192,13 @@ const Navigation = ({
           },
         ]
       : []),
-    {
-      label: 'Charts',
-      id: 'charts',
-      url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/charts?type=list`,
-      // selected: pathItem === 'charts',
-    },
-    {
-      label: 'Metadata',
-      id: 'metadata',
-      url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/metadata`,
-      // selected: pathItem === 'metadata',
-    },
+    // {
+    //   label: 'Charts',
+    //   id: 'charts',
+    //   url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/charts?type=list`,
+    //   // selected: pathItem === 'charts',
+    // },
+
     {
       label: 'Publish',
       id: 'publish',
