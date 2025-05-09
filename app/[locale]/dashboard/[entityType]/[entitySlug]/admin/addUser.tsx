@@ -1,8 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { AddUserToOrganizationInput } from '@/gql/generated/graphql';
+import {
+  AddRemoveUserToOrganizationInput,
+  AssignOrganizationRoleInput,
+} from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, Dialog, Label, Select, toast } from 'opub-ui';
 
@@ -11,7 +15,7 @@ import { toTitleCase } from '@/lib/utils';
 import { FetchUsers } from '../usecases/edit/[id]/contributors/query';
 
 const addUserDoc: any = graphql(`
-  mutation addUserToOrganization($input: AddUserToOrganizationInput!) {
+  mutation addUserToOrganization($input: AddRemoveUserToOrganizationInput!) {
     addUserToOrganization(input: $input) {
       __typename
       ... on TypeOrganizationMembership {
@@ -33,22 +37,34 @@ const allRolesDoc: any = graphql(`
   }
 `);
 
+const updateUser: any = graphql(`
+  mutation assignOrganizationRole($input: AssignOrganizationRoleInput!) {
+    assignOrganizationRole(input: $input) {
+      success
+      message
+    }
+  }
+`);
+
 const AddUser = ({
   setIsOpen,
   selectedUser,
-  title,
   isOpen,
-  refetchUsers,
   isEdit,
+  setRefetch,
 }: {
   setIsOpen: (isOpen: boolean) => void;
   selectedUser: any;
-  title: string;
   isOpen: boolean;
-  refetchUsers: any;
   isEdit: boolean;
+  setRefetch: (refetch: boolean) => void;
 }) => {
   const [searchValue, setSearchValue] = useState('');
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
 
   const Users: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_users_list`],
@@ -67,11 +83,16 @@ const AddUser = ({
     }
   );
 
-
-
   const RolesList: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_UseCaseData`],
-    () => GraphQL(allRolesDoc, {}, [])
+    () =>
+      GraphQL(
+        allRolesDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        []
+      )
   );
 
   useEffect(() => {
@@ -88,8 +109,14 @@ const AddUser = ({
   }, [selectedUser]);
 
   const { mutate, isLoading: addUserLoading } = useMutation(
-    (input: { input: AddUserToOrganizationInput }) =>
-      GraphQL(addUserDoc, {}, input),
+    (input: { input: AddRemoveUserToOrganizationInput }) =>
+      GraphQL(
+        addUserDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        input
+      ),
     {
       onSuccess: (res: any) => {
         toast('User added successfully');
@@ -99,10 +126,32 @@ const AddUser = ({
           userId: '',
           roleId: '',
         });
-        refetchUsers();
+        setRefetch(true);
       },
       onError: (err: any) => {
         toast('Failed to add user');
+      },
+    }
+  );
+
+  const { mutate: updateMutate, isLoading: updateUserLoading } = useMutation(
+    (input: { input: AssignOrganizationRoleInput }) =>
+      GraphQL(updateUser, {
+        [params.entityType]: params.entitySlug,
+      }, input),
+    {
+      onSuccess: (res: any) => {
+        toast('User updated successfully');
+        // Optionally, reset form or perform other actions
+        setIsOpen(false);
+        setFormData({
+          userId: '',
+          roleId: '',
+        });
+        setRefetch(true);
+      },
+      onError: (err: any) => {
+        toast('Failed to update user');
       },
     }
   );
@@ -134,13 +183,12 @@ const AddUser = ({
     setIsDropdownOpen(false); // Close dropdown
   };
 
-
   return (
     <div>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         {isOpen && (
           <Dialog.Content
-            title={isEdit ? "Edit Admin / Member": "Add Admin / Member"}
+            title={isEdit ? 'Edit Admin / Member' : 'Add Admin / Member'}
             className="h-72 overflow-y-auto"
           >
             <div className="m-auto mb-6 flex flex-col gap-6">
@@ -151,6 +199,7 @@ const AddUser = ({
                   id="combobox"
                   disabled={isEdit}
                   value={searchValue}
+                  autoComplete='off'
                   onChange={handleInputChange}
                   className="border border-gray-100 placeholder:text-sm mt-1 block w-full px-3 py-1"
                   placeholder={'Select user'}
@@ -159,7 +208,7 @@ const AddUser = ({
                   <div className="border border-gray-300 rounded-md shadow-lg  absolute left-0 right-0 z-1 mt-2 max-h-60 overflow-y-auto rounded-2 bg-white px-1 py-2 shadow-basicXl">
                     {filteredOptions.map((option: any) => (
                       <div
-                        key={option.value}
+                        key={option.id}
                         className="cursor-pointer rounded-2 px-4 py-2 hover:bg-baseGraySlateSolid3"
                         onClick={() => handleSelectOption(option)}
                       >
@@ -192,10 +241,10 @@ const AddUser = ({
                 className="m-auto"
                 onClick={() => {
                   setIsOpen(false);
-                  mutate({ input: formData });
+                  isEdit ? updateMutate({ input: formData }) : mutate({ input: formData });
                 }}
               >
-                {isEdit ? "Update" : "Add"}
+                {isEdit ? 'Update' : 'Add'}
               </Button>
             </div>
           </Dialog.Content>
