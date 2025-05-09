@@ -6,6 +6,7 @@ import { SidebarNavItem } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import { create } from 'zustand';
 
+import { useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
@@ -13,7 +14,6 @@ import { DashboardNav } from '../../components/dashboard-nav';
 import { MobileDashboardNav } from '../../components/mobile-dashboard-nav';
 import styles from '../../components/styles.module.scss';
 import { getOrgDetailsQryDoc } from './schema';
-import { useDashboardStore } from '@/config/store';
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
@@ -39,7 +39,6 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [EntityDetailsQryRes.data]);
 
-
   if (
     process.env.NEXT_PUBLIC_DATASPACE_FEATURE_ENABLED !== 'true' &&
     params.entityType === 'dataspace'
@@ -53,6 +52,16 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       href: `/dashboard/${params.entityType}/${params.entitySlug}/dataset`,
       icon: 'datasetEdit',
     },
+
+    ...(params.entityType === 'organization'
+      ? [
+          {
+            title: 'Admin & Members',
+            href: `/dashboard/${params.entityType}/${params.entitySlug}/admin`,
+            icon: 'userList',
+          },
+        ]
+      : []),
     {
       title: 'UseCases',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/usecases`,
