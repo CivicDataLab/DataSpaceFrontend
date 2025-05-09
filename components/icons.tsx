@@ -49,7 +49,9 @@ import {
   IconUser,
   IconUsersGroup,
   IconCircleCheck,
-  IconSettings
+  IconSettings,
+  IconStar,
+  IconBulb
   // TablerIconsProps,
 } from '@tabler/icons-react';
 
@@ -109,4 +111,6 @@ export const Icons: {
   user: IconUser,
   userGroup:IconUsersGroup,
   setting:IconSettings,
+  star:IconStar,
+  light:IconBulb
 };

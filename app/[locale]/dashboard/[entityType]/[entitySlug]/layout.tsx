@@ -58,14 +58,14 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           {
             title: 'Admin & Members',
             href: `/dashboard/${params.entityType}/${params.entitySlug}/admin`,
-            icon: 'userList',
+            icon: 'star',
           },
         ]
       : []),
     {
       title: 'UseCases',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/usecases`,
-      icon: 'userList',
+      icon: 'light',
     },
     {
       title: 'Profile',
