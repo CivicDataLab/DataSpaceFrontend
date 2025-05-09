@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { graphql } from '@/gql';
 import {
   CreateFileResourceInput,
   SchemaUpdateInput,
@@ -25,6 +26,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import { Loading } from '@/components/loading';
 import { useDatasetEditStatus } from '../../context';
 import { TListItem } from '../page-layout';
 import {
@@ -39,14 +41,71 @@ import { ResourceSchema } from './ResourceSchema';
 
 interface EditProps {
   refetch: () => void;
-  list: TListItem[];
+  allResources: TListItem[];
 }
 
-export const EditResource = ({ refetch, list }: EditProps) => {
+const resourceDetails: any = graphql(`
+  query resourceById($resourceId: UUID!) {
+    resourceById(resourceId: $resourceId) {
+      id
+      dataset {
+        pk
+      }
+      previewData {
+        columns
+        rows
+      }
+      previewDetails {
+        endEntry
+        isAllEntries
+        startEntry
+      }
+      previewEnabled
+      schema {
+        id
+        fieldName
+        format
+        description
+      }
+      type
+      name
+      description
+      created
+      fileDetails {
+        id
+        resource {
+          pk
+        }
+        file {
+          name
+          path
+          url
+        }
+        size
+        created
+        modified
+      }
+    }
+  }
+`);
+
+export const EditResource = ({ refetch, allResources }: EditProps) => {
   const params = useParams();
 
   const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
   const [schema, setSchema] = React.useState([]);
+
+  const resourceDetailsQuery = useQuery<any>(
+    [`fetch_resource_details_${resourceId}`],
+    () =>
+      GraphQL(
+        resourceDetails,
+        {
+          // Entity Headers if present
+        },
+        { resourceId: resourceId }
+      )
+  );
 
   const updateResourceMutation = useMutation(
     (data: {
@@ -131,7 +190,7 @@ export const EditResource = ({ refetch, list }: EditProps) => {
         });
       },
       onError: (err: any) => {
-        console.log('Error ::: ', err);
+        toast('Error ::: ', err);
       },
     }
   );
@@ -164,12 +223,8 @@ export const EditResource = ({ refetch, list }: EditProps) => {
   );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const getResourceObject = (resourceId: string) => {
-    return list.find((item: TListItem) => item.value === resourceId);
-  };
-
   const [resourceName, setResourceName] = React.useState(
-    getResourceObject(resourceId)?.label
+    resourceDetailsQuery.data?.resourceById.name
   );
 
   const [previewEnable, setPreviewEnable] = useState(false);
@@ -181,17 +236,22 @@ export const EditResource = ({ refetch, list }: EditProps) => {
   });
 
   React.useEffect(() => {
-    setResourceName(getResourceObject(resourceId)?.label);
-    setPreviewEnable(getResourceObject(resourceId)?.previewEnabled ?? true);
+    setResourceName(resourceDetailsQuery.data?.resourceById.name);
+    setPreviewEnable(
+      resourceDetailsQuery.data?.resourceById.previewEnabled ?? true
+    );
     setPreviewDetails({
-      startEntry: getResourceObject(resourceId)?.previewDetails.startEntry ?? 0,
-      endEntry: getResourceObject(resourceId)?.previewDetails.endEntry ?? 0,
+      startEntry:
+        resourceDetailsQuery.data?.resourceById.previewDetails?.startEntry ?? 0,
+      endEntry:
+        resourceDetailsQuery.data?.resourceById.previewDetails?.endEntry ?? 0,
       isAllEntries:
-        getResourceObject(resourceId)?.previewDetails.isAllEntries ?? true,
+        resourceDetailsQuery.data?.resourceById.previewDetails?.isAllEntries ??
+        true,
     });
 
     //fix this later
-  }, [JSON.stringify(list), resourceId]);
+  }, [resourceDetailsQuery.data]);
 
   const handleResourceChange = (e: any) => {
     setResourceId(e, { shallow: false });
@@ -237,7 +297,7 @@ export const EditResource = ({ refetch, list }: EditProps) => {
   const fileInput = (
     <div className="flex">
       <Text className="break-all">
-        {getResourceObject(resourceId)?.fileDetails?.file.name.replace(
+        {resourceDetailsQuery.data?.resourceById.fileDetails?.file.name.replace(
           'resources/',
           ''
         )}{' '}
@@ -266,8 +326,6 @@ export const EditResource = ({ refetch, list }: EditProps) => {
       }));
     }
   };
-
-  console.log(previewEnable);
 
   const saveResource = () => {
     updateResourceMutation.mutate({
@@ -303,87 +361,94 @@ export const EditResource = ({ refetch, list }: EditProps) => {
     setStatus(updateResourceMutation.isLoading ? 'loading' : 'success'); // update based on mutation state
   }, [updateResourceMutation.isLoading]);
 
+
+
   return (
-    <div className=" rounded-4 border-2 border-solid border-greyExtralight px-6 py-8">
-      <ResourceHeader
-        listViewFunction={listViewFunction}
-        isSheetOpen={isSheetOpen}
-        setIsSheetOpen={setIsSheetOpen}
-        dropZone={dropZone}
-        uploadedFile={uploadedFile}
-        file={file}
-        list={list}
-        resourceId={resourceId}
-        handleResourceChange={handleResourceChange}
-      />
+    <div>
+      {resourceDetailsQuery.data?.resourceById ? (
+        <div className=" rounded-4 border-2 border-solid border-greyExtralight px-6 py-8">
+          <ResourceHeader
+            listViewFunction={listViewFunction}
+            isSheetOpen={isSheetOpen}
+            setIsSheetOpen={setIsSheetOpen}
+            dropZone={dropZone}
+            uploadedFile={uploadedFile}
+            file={file}
+            list={allResources}
+            resourceId={resourceId}
+            handleResourceChange={handleResourceChange}
+          />
 
-      <Divider className="mb-8 mt-6" />
+          <Divider className="mb-8 mt-6" />
 
-      <div className="mt-8 flex flex-wrap items-stretch gap-10 md:flex-nowrap lg:flex-nowrap">
-        <div className="flex w-full flex-col gap-3 md:w-3/5 lg:w-4/5">
-          <div>
-            <TextField
-              value={resourceName}
-              onChange={(text) => setResourceName(text)}
-              onBlur={saveResource}
-              multiline={2}
-              label="Data File Name"
-              name="a"
-              required
-            />
-          </div>
-          <div>
-            <Text className=" underline">
-              Good practices for naming Data Files
-            </Text>
-            <div>
-              <ol className="list-decimal pl-6">
-                <li>Try to include as many keywords as possible in the name</li>
-                <li>Mention the date or time period of the Data File</li>
-                <li>Mention the geography if applicable</li>
-                <li>
-                  Follow a similar format for naming all Data Files in a Dataset
-                </li>
-              </ol>
+          <div className="mt-8 flex flex-wrap items-stretch gap-10 md:flex-nowrap lg:flex-nowrap">
+            <div className="flex w-full flex-col gap-3 md:w-3/5 lg:w-4/5">
+              <div>
+                <TextField
+                  value={resourceName}
+                  onChange={(text) => setResourceName(text)}
+                  onBlur={saveResource}
+                  multiline={2}
+                  label="Data File Name"
+                  name="a"
+                  required
+                />
+              </div>
+              <div>
+                <Text className=" underline">
+                  Good practices for naming Data Files
+                </Text>
+                <div>
+                  <ol className="list-decimal pl-6">
+                    <li>
+                      Try to include as many keywords as possible in the name
+                    </li>
+                    <li>Mention the date or time period of the Data File</li>
+                    <li>Mention the geography if applicable</li>
+                    <li>
+                      Follow a similar format for naming all Data Files in a
+                      Dataset
+                    </li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+            <div className="md:1/3 flex w-2/5 flex-col justify-between lg:w-1/4">
+              <Text className="pb-1">File associated with Data File</Text>
+              <div className="  rounded-2 border-1 border-solid border-baseGraySlateSolid7 p-3 ">
+                {fileInput}
+                <div className="mt-4 lg:mt-8">
+                  <DropZone
+                    name="file_upload"
+                    allowMultiple={false}
+                    onDrop={onDrop}
+                    className="h-40 w-full  border-none bg-baseGraySlateSolid5"
+                    label="Change file for this Data File"
+                  >
+                    <DropZone.FileUpload />
+                  </DropZone>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="md:1/3 flex w-2/5 flex-col justify-between lg:w-1/4">
-          <Text className="pb-1">File associated with Data File</Text>
-          <div className="  rounded-2 border-1 border-solid border-baseGraySlateSolid7 p-3 ">
-            {fileInput}
-            <div className="mt-4 lg:mt-8">
-              <DropZone
-                name="file_upload"
-                allowMultiple={false}
-                onDrop={onDrop}
-                className="h-40 w-full  border-none bg-baseGraySlateSolid5"
-                label="Change file for this Data File"
-              >
-                <DropZone.FileUpload />
-              </DropZone>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="my-8 flex items-center gap-8 align-middle">
-        <Checkbox
-          name={'previewEnabled'}
-          checked={previewEnable}
-          onChange={() => {
-            setPreviewEnable(previewEnable === false ? true : false);
-            saveResource();
-          }}
-        >
-          Preview Enabled
-        </Checkbox>
+          <div className="my-8 flex items-center gap-8 align-middle">
+            <Checkbox
+              name={'previewEnabled'}
+              checked={previewEnable}
+              onChange={() => {
+                setPreviewEnable(previewEnable === false ? true : false);
+                saveResource();
+              }}
+            >
+              Preview Enabled
+            </Checkbox>
 
-        <Button kind="tertiary" disabled={!previewEnable}>
-          See Preview
-        </Button>
+            <Button kind="tertiary" disabled={!previewEnable}>
+              See Preview
+            </Button>
 
-        {/* {previewEnable && (
+            {/* {previewEnable && (
           <>
             <Checkbox
               name={'isAllEntries'}
@@ -421,53 +486,57 @@ export const EditResource = ({ refetch, list }: EditProps) => {
             )}
           </>
         )} */}
-      </div>
-      <div className="my-4">
-        <div className="flex flex-wrap justify-between">
-          <Text>Fields in the Resource</Text>
-          <Button
-            size="medium"
-            kind="tertiary"
-            variant="basic"
-            onClick={() =>
-              schemaMutation.mutate({
-                resourceId: resourceId,
-              })
-            }
-          >
-            <div className="flex items-center gap-1">
-              <Text>Reset Fields</Text>{' '}
-              <Icon source={Icons.info} color="interactive" />
-            </div>
-          </Button>
-        </div>
-        <Text variant="headingXs" as="span" fontWeight="regular">
-          The Field settings apply to the Resource on a master level and can not
-          be changed in Access Models.
-        </Text>
-        {schemaQuery.isLoading || schemaMutation.isLoading ? (
-          <div className=" mt-8 flex justify-center">
-            <Spinner size={30} />
           </div>
-        ) : resourceId &&
-          schemaQuery.data?.datasetResources?.filter(
-            (item: any) => item.id === resourceId
-          ).length > 0 ? (
-          <ResourceSchema
-            setSchema={setSchema}
-            data={
+          <div className="my-4">
+            <div className="flex flex-wrap justify-between">
+              <Text>Fields in the Resource</Text>
+              <Button
+                size="medium"
+                kind="tertiary"
+                variant="basic"
+                onClick={() =>
+                  schemaMutation.mutate({
+                    resourceId: resourceId,
+                  })
+                }
+              >
+                <div className="flex items-center gap-1">
+                  <Text>Reset Fields</Text>{' '}
+                  <Icon source={Icons.info} color="interactive" />
+                </div>
+              </Button>
+            </div>
+            <Text variant="headingXs" as="span" fontWeight="regular">
+              The Field settings apply to the Resource on a master level and can
+              not be changed in Access Models.
+            </Text>
+            {schemaQuery.isLoading || schemaMutation.isLoading ? (
+              <div className=" mt-8 flex justify-center">
+                <Spinner size={30} />
+              </div>
+            ) : resourceId &&
               schemaQuery.data?.datasetResources?.filter(
                 (item: any) => item.id === resourceId
-              )[0]?.schema
-            }
-          />
-        ) : (
-          <div className="my-8 flex justify-center">
-            {' '}
-            Click on Reset Fields{' '}
+              ).length > 0 ? (
+              <ResourceSchema
+                setSchema={setSchema}
+                data={
+                  schemaQuery.data?.datasetResources?.filter(
+                    (item: any) => item.id === resourceId
+                  )[0]?.schema
+                }
+              />
+            ) : (
+              <div className="my-8 flex justify-center">
+                {' '}
+                Click on Reset Fields{' '}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <Loading />
+      )}
     </div>
   );
 };
