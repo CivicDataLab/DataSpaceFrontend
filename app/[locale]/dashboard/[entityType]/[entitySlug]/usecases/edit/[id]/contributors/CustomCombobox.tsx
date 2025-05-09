@@ -53,6 +53,7 @@ const CustomCombobox: React.FC<CustomComboboxProps> = ({
       <input
         type="text"
         id="combobox"
+        autoComplete='off'
         value={searchValue}
         onChange={handleInputChange}
         className="mt-1 block w-full px-3 py-1 border border-gray-100 placeholder:text-sm"
