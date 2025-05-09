@@ -9,7 +9,7 @@ import { GraphQL } from '@/lib/api';
 import { EditResource } from './components/EditResource';
 import { ResourceDropzone } from './components/ResourceDropzone';
 import { ResourceListView } from './components/ResourceListView';
-import { getReourceDoc } from './query';
+import { getResourceDoc } from './query';
 
 export interface TListItem {
   label: string;
@@ -17,12 +17,6 @@ export interface TListItem {
   description: string;
   dataset: any;
   fileDetails: any;
-  previewEnabled: boolean
-  previewDetails: {
-    startEntry: 0,
-    endEntry: 0,
-    isAllEntries: boolean
-  }
 }
 
 export function DistibutionPage({
@@ -34,7 +28,7 @@ export function DistibutionPage({
     [`fetch_resources_${params.id}`],
     () =>
       GraphQL(
-        getReourceDoc,
+        getResourceDoc,
         {
           [params.entityType]: params.entitySlug,
         },
@@ -54,12 +48,7 @@ export function DistibutionPage({
         description: item.description,
         dataset: item.dataset?.pk,
         fileDetails: item.fileDetails,
-        previewEnabled: item.previewEnabled,
-        previewDetails: {
-          startEntry: item.previewDetails?.startEntry,
-          endEntry: item.previewDetails?.endEntry,
-          isAllEntries: item.previewDetails?.isAllEntries
-        }
+       
       }))) ||
     [];
 
@@ -78,7 +67,7 @@ export function DistibutionPage({
             {data && ResourceList.length > 0 ? (
               <>
                 {resourceId ? (
-                  <EditResource refetch={refetch} list={ResourceList} />
+                  <EditResource refetch={refetch} allResources={ResourceList}/>
                 ) : (
                   <ResourceListView
                     refetch={refetch}
