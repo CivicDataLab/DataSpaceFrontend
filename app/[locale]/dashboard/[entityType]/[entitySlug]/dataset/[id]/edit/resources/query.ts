@@ -1,28 +1,12 @@
 import { graphql } from '@/gql';
 
-export const getReourceDoc = graphql(`
+export const getResourceDoc = graphql(`
   query getResources($filters: DatasetFilter) {
     datasets(filters: $filters) {
       resources {
         id
         dataset {
           pk
-        }
-        previewData {
-          columns
-          rows
-        }
-        previewDetails {
-          endEntry
-          isAllEntries
-          startEntry
-        }
-        previewEnabled
-        schema {
-          id
-          fieldName
-          format
-          description
         }
         type
         name
