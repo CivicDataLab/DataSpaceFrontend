@@ -1,8 +1,7 @@
-import React from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
 import { useMutation } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Button,
   DataTable,
@@ -13,11 +12,12 @@ import {
   Text,
   toast,
 } from 'opub-ui';
+import React from 'react';
 
-import { GraphQL } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import { GraphQL } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 import { createResourceFilesDoc, updateResourceList } from './query';
 
 type FilteredRow = {
@@ -67,7 +67,7 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
         });
       },
       onError: (err: any) => {
-        console.log('Error ::: ', err);
+        toast( err);
       },
     }
   );
@@ -109,7 +109,7 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
         );
       },
       onError: (err: any) => {
-        toast(err.message || String(err));
+        toast(err);
         setFile([])
       }
       
