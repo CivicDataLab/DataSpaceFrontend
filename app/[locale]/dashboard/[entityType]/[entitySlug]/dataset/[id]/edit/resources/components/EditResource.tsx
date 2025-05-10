@@ -1,5 +1,3 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   CreateFileResourceInput,
@@ -8,27 +6,26 @@ import {
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
+import { useParams } from 'next/navigation';
 import {
   Button,
   Checkbox,
-  Combobox,
-  Dialog,
   Divider,
   DropZone,
   Icon,
-  Select,
-  Sheet,
   Spinner,
   Text,
   TextField,
-  toast,
+  toast
 } from 'opub-ui';
+import React, { useEffect, useState } from 'react';
 
-import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import { GraphQL } from '@/lib/api';
 import { useDatasetEditStatus } from '../../context';
 import { TListItem } from '../page-layout';
+import PreviewData from './PreviewData';
 import {
   createResourceFilesDoc,
   fetchSchema,
@@ -106,7 +103,24 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
         { resourceId: resourceId }
       )
   );
-
+  const schemaMutation = useMutation(
+    (data: { resourceId: string }) =>
+      GraphQL(
+        resetSchema,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
+    {
+      onSuccess: () => {
+        schemaQuery.refetch();
+      },
+      onError: (err: any) => {
+        toast(err);
+      },
+    }
+  );
   const updateResourceMutation = useMutation(
     (data: {
       fileResourceInput: UpdateFileResourceInput;
@@ -132,30 +146,11 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
             resourceId: resourceId,
           });
         }
-        refetch();
+        resourceDetailsQuery.refetch();
       },
       onError: (err: any) => {
         toast(err.message || String(err));
         setFile([]);
-      },
-    }
-  );
-
-  const schemaMutation = useMutation(
-    (data: { resourceId: string }) =>
-      GraphQL(
-        resetSchema,
-        {
-          // Entity Headers if present
-        },
-        data
-      ),
-    {
-      onSuccess: () => {
-        schemaQuery.refetch();
-      },
-      onError: (err: any) => {
-        console.log('Error ::: ', err);
       },
     }
   );
@@ -217,11 +212,18 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
         refetch();
       },
       onError: (err: any) => {
-        console.log('Error ::: ', err);
+        toast(err.message, {
+          action: {
+            label: 'Dismiss',
+            onClick: () => {},
+          },
+        });
+        setFile([]);
       },
     }
   );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const [resourceName, setResourceName] = React.useState(
     resourceDetailsQuery.data?.resourceById.name
@@ -232,25 +234,32 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
   const [previewDetails, setPreviewDetails] = useState({
     startEntry: 0,
     endEntry: 0,
-    isAllEntries: true,
+    isAllEntries: false,
+  });
+  const [previewData, setPreviewData] = useState({
+    rows: [],
+    columns: [],
   });
 
+  
   React.useEffect(() => {
-    setResourceName(resourceDetailsQuery.data?.resourceById.name);
-    setPreviewEnable(
-      resourceDetailsQuery.data?.resourceById.previewEnabled ?? true
-    );
+    const ResourceData = resourceDetailsQuery.data?.resourceById;
+    setResourceName(ResourceData?.name);
+    setPreviewEnable(ResourceData?.previewEnabled );
     setPreviewDetails({
-      startEntry:
-        resourceDetailsQuery.data?.resourceById.previewDetails?.startEntry ?? 0,
-      endEntry:
-        resourceDetailsQuery.data?.resourceById.previewDetails?.endEntry ?? 0,
-      isAllEntries:
-        resourceDetailsQuery.data?.resourceById.previewDetails?.isAllEntries ??
-        true,
+      startEntry: ResourceData?.previewDetails?.startEntry ?? 0,
+      endEntry: ResourceData?.previewDetails?.endEntry ?? 0,
+      isAllEntries: ResourceData?.previewDetails?.isAllEntries ?? false,
     });
-
-    //fix this later
+    setPreviewData({
+      rows: ResourceData?.previewData?.rows,
+      columns: ResourceData?.previewData?.columns,
+    });
+    if (ResourceData?.schema?.length === 0) {
+      schemaMutation.mutate({
+        resourceId: resourceId,
+      });
+    }
   }, [resourceDetailsQuery.data]);
 
   const handleResourceChange = (e: any) => {
@@ -284,16 +293,36 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
 
   const onDrop = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
-      updateResourceMutation.mutate({
-        fileResourceInput: {
-          id: resourceId,
-          file: acceptedFiles[0],
+      updateResourceMutation.mutate(
+        {
+          fileResourceInput: {
+            id: resourceId,
+            file: acceptedFiles[0],
+          },
+          isResetSchema: true,
         },
-        isResetSchema: true,
-      });
+        {
+          onSuccess: () => {
+            // Automatically trigger schema mutation after file upload
+            schemaMutation.mutate(
+              {
+                resourceId: resourceId,
+              },
+              {
+                onSuccess: () => {
+                  toast('Schema updated successfully');
+                  schemaQuery.refetch();
+                },
+              }
+            );
+            resourceDetailsQuery.refetch();
+          },
+        }
+      );
     },
-    []
+    [resourceId]
   );
+
   const fileInput = (
     <div className="flex">
       <Text className="break-all">
@@ -332,7 +361,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       fileResourceInput: {
         id: resourceId,
         name: resourceName || '',
-        previewEnabled: true,
+        previewEnabled: previewEnable,
         previewDetails: {
           startEntry: 5,
           endEntry: 5,
@@ -341,18 +370,19 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       },
       isResetSchema: false,
     });
-    if (schema.length > 0) {
-      const updatedScheme = schema.map((item) => {
-        const { fieldName, ...rest } = item as any;
-        return rest;
-      });
-      updateSchemaMutation.mutate({
-        input: {
-          resource: resourceId,
-          updates: updatedScheme,
-        },
-      });
-    }
+    // to fix schema update
+    // if (schema.length > 0) {
+    //   const updatedScheme = schema.map((item) => {
+    //     const { fieldName, ...rest } = item as any;
+    //     return rest;
+    //   });
+    //   updateSchemaMutation.mutate({
+    //     input: {
+    //       resource: resourceId,
+    //       updates: updatedScheme,
+    //     },
+    //   });
+    // }
   };
 
   const { setStatus } = useDatasetEditStatus();
@@ -360,8 +390,6 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
   useEffect(() => {
     setStatus(updateResourceMutation.isLoading ? 'loading' : 'success'); // update based on mutation state
   }, [updateResourceMutation.isLoading]);
-
-
 
   return (
     <div>
@@ -413,7 +441,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
                 </div>
               </div>
             </div>
-            <div className="md:1/3 flex w-2/5 flex-col justify-between lg:w-1/4">
+            <div className="flex  flex-col justify-between lg:w-1/4">
               <Text className="pb-1">File associated with Data File</Text>
               <div className="  rounded-2 border-1 border-solid border-baseGraySlateSolid7 p-3 ">
                 {fileInput}
@@ -443,11 +471,17 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
             >
               Preview Enabled
             </Checkbox>
-
-            <Button kind="tertiary" disabled={!previewEnable}>
-              See Preview
-            </Button>
-
+            <div>
+              <Button
+                kind="tertiary"
+                disabled={!previewEnable}
+                onClick={() => {
+                  setShowPreview(!showPreview);
+                }}
+              >
+                {showPreview ? 'Hide Preview' : 'See Preview'}
+              </Button>
+            </div>
             {/* {previewEnable && (
           <>
             <Checkbox
@@ -487,6 +521,12 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
           </>
         )} */}
           </div>
+            {showPreview && previewEnable && previewData && (
+              <PreviewData
+                isPreview={previewEnable}
+                previewData={previewData}
+              />
+            )}
           <div className="my-4">
             <div className="flex flex-wrap justify-between">
               <Text>Fields in the Resource</Text>
