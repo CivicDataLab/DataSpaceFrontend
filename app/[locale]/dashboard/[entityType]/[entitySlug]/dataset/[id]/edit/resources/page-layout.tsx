@@ -34,10 +34,6 @@ export function DistibutionPage({
         },
         { filters: { id: params.id } }
       ),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
   );
 
   const ResourceList: TListItem[] =
