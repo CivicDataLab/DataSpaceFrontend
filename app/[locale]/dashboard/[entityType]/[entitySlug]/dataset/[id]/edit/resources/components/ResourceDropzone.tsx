@@ -1,13 +1,11 @@
-import React from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
-import { graphql } from '@/gql';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
-import { Button, DropZone, Text } from 'opub-ui';
+import { useParams } from 'next/navigation';
+import { Button, DropZone, Text, toast } from 'opub-ui';
+import React from 'react';
 
 import { GraphQL } from '@/lib/api';
-import { bytesToSize } from '@/lib/utils';
 import { createResourceFilesDoc } from './query';
 
 export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
@@ -36,7 +34,8 @@ export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
         setResourceId(data.createFileResources[0].id);
       },
       onError: (err: any) => {
-        console.log('Error ::: ', err);
+        toast(err.message);
+        setFile([]);
       },
     }
   );
