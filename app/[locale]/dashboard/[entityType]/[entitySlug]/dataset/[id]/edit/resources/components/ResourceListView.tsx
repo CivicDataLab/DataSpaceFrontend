@@ -1,7 +1,8 @@
+import React, { useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
 import { useMutation } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
-import { useParams, useRouter } from 'next/navigation';
 import {
   Button,
   DataTable,
@@ -12,12 +13,11 @@ import {
   Text,
   toast,
 } from 'opub-ui';
-import React from 'react';
 
-import { Icons } from '@/components/icons';
-import { Loading } from '@/components/loading';
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
+import { Icons } from '@/components/icons';
+import { Loading } from '@/components/loading';
 import { createResourceFilesDoc, updateResourceList } from './query';
 
 type FilteredRow = {
@@ -43,6 +43,11 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
     id: string;
   }>();
 
+
+  useEffect(() => {
+    refetch();
+  }, [resourceId]);
+
   const updateResourceMutation = useMutation(
     (data: { resourceId: string }) =>
       GraphQL(
@@ -67,11 +72,12 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
         });
       },
       onError: (err: any) => {
-        toast( err);
+        toast(err);
       },
     }
   );
 
+  
   const createResourceMutation = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(
@@ -110,9 +116,8 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
       },
       onError: (err: any) => {
         toast(err);
-        setFile([])
-      }
-      
+        setFile([]);
+      },
     }
   );
 
@@ -181,6 +186,20 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
   const [filteredRows, setFilteredRows] = React.useState<FilteredRow[]>(
     table.rows
   );
+
+
+  useEffect(() => {
+    const updatedRows =
+      data.map((item: any) => ({
+        name_of_resource: item.name,
+        type: item.type,
+        date_added: formatDate(item.created),
+        id: item.id,
+      })) || [];
+  
+    setFilteredRows(updatedRows);
+  }, [data]);
+  
 
   const handleSearchChange = (e: string) => {
     const searchTerm = e.toLowerCase();
