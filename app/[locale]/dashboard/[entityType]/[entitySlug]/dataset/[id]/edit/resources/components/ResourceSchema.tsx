@@ -1,10 +1,5 @@
-import {
-  DataTable,
-  Select,
-  TextField
-} from 'opub-ui';
 import React from 'react';
-
+import { DataTable, Select, TextField } from 'opub-ui';
 
 const DescriptionCell = ({
   value,
@@ -17,7 +12,7 @@ const DescriptionCell = ({
 }) => {
   const [description, setDescription] = React.useState(value || '');
 
-  const handleChange = (e:any) => {
+  const handleChange = (e: any) => {
     setDescription(e?.target?.value);
     handleFieldChange('description', e?.target?.value, rowIndex);
   };
@@ -34,8 +29,12 @@ const DescriptionCell = ({
   );
 };
 
-export const ResourceSchema = ({ setSchema, data }: any) => {
-
+export const ResourceSchema = ({
+  setSchema,
+  data,
+  mutate,
+  resourceId,
+}: any) => {
   const [updatedData, setUpdatedData] = React.useState<any>(data);
 
   React.useEffect(() => {
@@ -49,17 +48,32 @@ export const ResourceSchema = ({ setSchema, data }: any) => {
     newValue: string,
     rowIndex: any
   ) => {
-    setUpdatedData((prev: any) => {
-      const newData = [...prev];
-      newData[rowIndex] = {
-        ...newData[rowIndex],
-        [field]: newValue,
-      };
-      return newData;
-    });
+    const newData = [...updatedData];
+    newData[rowIndex] = {
+      ...newData[rowIndex],
+      [field]: newValue,
+    };
+    
+    setUpdatedData(newData);
+    setSchema(newData);
+    handleSave(newData);
   };
 
-  setSchema(updatedData);
+  const handleSave = (newdata: any) => {
+    const isSchemaChanged = JSON.stringify(newdata) !== JSON.stringify(data);
+    if (isSchemaChanged) {
+      mutate({
+        schemaUpdateInput: {
+          resource: resourceId,
+          updates: newdata?.map((item: any) => {
+            const { fieldName, ...rest } = item;
+            return rest;
+          }),
+        },
+      });
+    }
+  };
+
   const options = [
     {
       label: 'Integer',
@@ -127,11 +141,13 @@ export const ResourceSchema = ({ setSchema, data }: any) => {
         {data && data.length > 0 ? (
           <DataTable
             columns={generateColumnData()}
-            rows={generateTableData(data)}
+            rows={generateTableData(updatedData)}
             hideFooter={false}
             hideSelection
           />
-        ):<div className="mt-8 flex justify-center">Click on Reset Fields</div>}
+        ) : (
+          <div className="mt-8 flex justify-center">Click on Reset Fields</div>
+        )}
       </div>
     </>
   );
