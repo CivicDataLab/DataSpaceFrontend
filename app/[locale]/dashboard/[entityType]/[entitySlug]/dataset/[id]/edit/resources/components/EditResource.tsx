@@ -1,3 +1,5 @@
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   CreateFileResourceInput,
@@ -6,7 +8,6 @@ import {
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
-import { useParams } from 'next/navigation';
 import {
   Button,
   Checkbox,
@@ -16,19 +17,17 @@ import {
   Spinner,
   Text,
   TextField,
-  toast
+  toast,
 } from 'opub-ui';
-import React, { useEffect, useState } from 'react';
 
+import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
-import { GraphQL } from '@/lib/api';
 import { useDatasetEditStatus } from '../../context';
 import { TListItem } from '../page-layout';
 import PreviewData from './PreviewData';
 import {
   createResourceFilesDoc,
-  fetchSchema,
   resetSchema,
   updateResourceDoc,
   updateSchema,
@@ -101,7 +100,10 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
           // Entity Headers if present
         },
         { resourceId: resourceId }
-      )
+      ),
+      {
+        enabled: !!resourceId,
+      }
   );
   const schemaMutation = useMutation(
     (data: { resourceId: string }) =>
@@ -113,8 +115,9 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
         data
       ),
     {
-      onSuccess: () => {
-        schemaQuery.refetch();
+      onSuccess: (data: any) => {
+        setSchema(data.resetFileResourceSchema.schema);
+        refetch();
       },
       onError: (err: any) => {
         toast(err);
@@ -155,16 +158,6 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
     }
   );
 
-  const schemaQuery = useQuery<any>([`fetch_schema_${params.id}`], () =>
-    GraphQL(
-      fetchSchema,
-      {
-        // Entity Headers if present
-      },
-      { datasetId: params.id }
-    )
-  );
-
   const updateSchemaMutation = useMutation(
     (data: { input: SchemaUpdateInput }) =>
       GraphQL(
@@ -176,7 +169,6 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       ),
     {
       onSuccess: () => {
-        schemaQuery.refetch();
         toast('Schema Updated Successfully', {
           action: {
             label: 'Dismiss',
@@ -208,8 +200,8 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
             onClick: () => {},
           },
         });
-        schemaQuery.refetch();
-        refetch();
+        //
+        resourceDetailsQuery.refetch();
       },
       onError: (err: any) => {
         toast(err.message, {
@@ -223,12 +215,12 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
     }
   );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
 
   const [resourceName, setResourceName] = React.useState(
     resourceDetailsQuery.data?.resourceById.name
   );
 
+  const [showPreview, setShowPreview] = useState(false);
   const [previewEnable, setPreviewEnable] = useState(false);
 
   const [previewDetails, setPreviewDetails] = useState({
@@ -241,11 +233,11 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
     columns: [],
   });
 
-  
+
   React.useEffect(() => {
     const ResourceData = resourceDetailsQuery.data?.resourceById;
     setResourceName(ResourceData?.name);
-    setPreviewEnable(ResourceData?.previewEnabled );
+    setPreviewEnable(ResourceData?.previewEnabled);
     setPreviewDetails({
       startEntry: ResourceData?.previewDetails?.startEntry ?? 0,
       endEntry: ResourceData?.previewDetails?.endEntry ?? 0,
@@ -255,6 +247,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       rows: ResourceData?.previewData?.rows,
       columns: ResourceData?.previewData?.columns,
     });
+    setSchema(ResourceData?.schema);
     if (ResourceData?.schema?.length === 0) {
       schemaMutation.mutate({
         resourceId: resourceId,
@@ -311,7 +304,6 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
               {
                 onSuccess: () => {
                   toast('Schema updated successfully');
-                  schemaQuery.refetch();
                 },
               }
             );
@@ -346,7 +338,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       setPreviewDetails({
         startEntry: 0,
         endEntry: 0,
-        isAllEntries: true,
+        isAllEntries: false,
       });
     } else {
       setPreviewDetails((prev) => ({
@@ -370,26 +362,17 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       },
       isResetSchema: false,
     });
-    // to fix schema update
-    // if (schema.length > 0) {
-    //   const updatedScheme = schema.map((item) => {
-    //     const { fieldName, ...rest } = item as any;
-    //     return rest;
-    //   });
-    //   updateSchemaMutation.mutate({
-    //     input: {
-    //       resource: resourceId,
-    //       updates: updatedScheme,
-    //     },
-    //   });
-    // }
   };
 
   const { setStatus } = useDatasetEditStatus();
 
   useEffect(() => {
-    setStatus(updateResourceMutation.isLoading ? 'loading' : 'success'); // update based on mutation state
-  }, [updateResourceMutation.isLoading]);
+    setStatus(
+      updateResourceMutation.isLoading || updateSchemaMutation.isLoading
+        ? 'loading'
+        : 'success'
+    ); // update based on mutation state
+  }, [updateResourceMutation.isLoading, updateSchemaMutation.isLoading]);
 
   return (
     <div>
@@ -465,8 +448,21 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
               name={'previewEnabled'}
               checked={previewEnable}
               onChange={() => {
-                setPreviewEnable(previewEnable === false ? true : false);
-                saveResource();
+                const newValue = !previewEnable;
+                setPreviewEnable(newValue);
+                updateResourceMutation.mutate({
+                  fileResourceInput: {
+                    id: resourceId,
+                    name: resourceName || '',
+                    previewEnabled: newValue, // use new value here
+                    previewDetails: {
+                      startEntry: 5,
+                      endEntry: 5,
+                      isAllEntries: previewDetails.isAllEntries,
+                    },
+                  },
+                  isResetSchema: false,
+                });
               }}
             >
               Preview Enabled
@@ -521,12 +517,9 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
           </>
         )} */}
           </div>
-            {showPreview && previewEnable && previewData && (
-              <PreviewData
-                isPreview={previewEnable}
-                previewData={previewData}
-              />
-            )}
+          {showPreview && previewEnable && previewData && (
+            <PreviewData isPreview={previewEnable} previewData={previewData} />
+          )}
           <div className="my-4">
             <div className="flex flex-wrap justify-between">
               <Text>Fields in the Resource</Text>
@@ -550,21 +543,16 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
               The Field settings apply to the Resource on a master level and can
               not be changed in Access Models.
             </Text>
-            {schemaQuery.isLoading || schemaMutation.isLoading ? (
+            {schemaMutation.isLoading ? (
               <div className=" mt-8 flex justify-center">
                 <Spinner size={30} />
               </div>
-            ) : resourceId &&
-              schemaQuery.data?.datasetResources?.filter(
-                (item: any) => item.id === resourceId
-              ).length > 0 ? (
+            ) : resourceId && schema?.length > 0 ? (
               <ResourceSchema
                 setSchema={setSchema}
-                data={
-                  schemaQuery.data?.datasetResources?.filter(
-                    (item: any) => item.id === resourceId
-                  )[0]?.schema
-                }
+                data={schema}
+                mutate={updateSchemaMutation.mutate}
+                resourceId={resourceId}
               />
             ) : (
               <div className="my-8 flex justify-center">
