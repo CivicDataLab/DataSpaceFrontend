@@ -101,9 +101,9 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
         },
         { resourceId: resourceId }
       ),
-      {
-        enabled: !!resourceId,
-      }
+    {
+      enabled: !!resourceId,
+    }
   );
   const schemaMutation = useMutation(
     (data: { resourceId: string }) =>
@@ -233,6 +233,9 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
     columns: [],
   });
 
+  useEffect(() => {
+    resourceDetailsQuery.refetch();
+  }, []);
 
   React.useEffect(() => {
     const ResourceData = resourceDetailsQuery.data?.resourceById;
