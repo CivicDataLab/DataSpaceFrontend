@@ -18,6 +18,10 @@ export const getOrgDetailsQryDoc: any = graphql(`
       contactEmail
       description
       slug
+      githubProfile
+      linkedinProfile
+      twitterProfile
+      location
     }
   }
 `);
@@ -35,6 +39,10 @@ export const UserDetailsQryDoc: any = graphql(`
         url
       }
       username
+      githubProfile
+      linkedinProfile
+      twitterProfile
+      location
       id
       organizationMemberships {
         organization {
