@@ -1,15 +1,16 @@
+import React, { useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   ApiOrganizationOrganizationTypesEnum,
   OrganizationInputPartial,
 } from '@/gql/generated/graphql';
 import { useOrganizationTypes } from '@/hooks/useOrganizationTypes';
-import { GraphQL } from '@/lib/api';
 import { useMutation } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
 import { Button, DropZone, Select, Text, TextField, toast } from 'opub-ui';
-import React, { useEffect } from 'react';
+
 import { useDashboardStore } from '@/config/store';
+import { GraphQL } from '@/lib/api';
 
 const organizationUpdateMutation: any = graphql(`
   mutation updateOrganization($input: OrganizationInputPartial!) {
@@ -23,6 +24,10 @@ const organizationUpdateMutation: any = graphql(`
           path
           url
         }
+        linkedinProfile
+        githubProfile
+        twitterProfile
+        location
         homepage
         organizationTypes
         contactEmail
@@ -50,6 +55,10 @@ const OrgProfile = () => {
         description: entityDetails?.organizations[0].description,
         logo: entityDetails?.organizations[0].logo,
         id: entityDetails?.organizations[0].id,
+        linkedinProfile: entityDetails?.organizations[0].linkedinProfile,
+        githubProfile: entityDetails?.organizations[0].githubProfile,
+        twitterProfile: entityDetails?.organizations[0].twitterProfile,
+        location: entityDetails?.organizations[0].location,
       });
     }
   }, [entityDetails?.organizations]);
@@ -62,6 +71,10 @@ const OrgProfile = () => {
     description: '',
     logo: null as File | null,
     id: '',
+    linkedinProfile: '',
+    githubProfile: '',
+    twitterProfile: '',
+    location: '',
   };
 
   const [formData, setFormData] = React.useState(initialFormData);
@@ -80,11 +93,18 @@ const OrgProfile = () => {
           description: res?.updateOrganization?.description,
           logo: res?.updateOrganization?.logo,
           id: res?.updateOrganization?.id,
+          linkedinProfile: res?.updateOrganization?.linkedinProfile,
+          githubProfile: res?.updateOrganization?.githubProfile,
+          twitterProfile: res?.updateOrganization?.twitterProfile,
+          location: res?.updateOrganization?.location,
         });
         setEntityDetails({
           organizations: [formData],
         });
-        if (res?.updateOrganization?.slug && res.updateOrganization.slug !== params.entitySlug) {
+        if (
+          res?.updateOrganization?.slug &&
+          res.updateOrganization.slug !== params.entitySlug
+        ) {
           const newPath = `/dashboard/${params.entityType}/${res.updateOrganization.slug}/profile`;
           router.replace(newPath);
         }
@@ -104,6 +124,10 @@ const OrgProfile = () => {
       homepage: formData.homepage,
       description: formData.description,
       id: formData.id,
+      linkedinProfile: formData.linkedinProfile,
+      githubProfile: formData.githubProfile,
+      twitterProfile: formData.twitterProfile,
+      location: formData.location,
     };
 
     // Only add logo if it has changed
@@ -112,11 +136,8 @@ const OrgProfile = () => {
     }
 
     mutate({ input: inputData });
-
-
   };
 
-  
   return (
     <div>
       <div>
@@ -163,8 +184,50 @@ const OrgProfile = () => {
             <TextField
               label="Homepage"
               name="homepage"
+              type="url"
               value={formData.homepage}
               onChange={(e) => setFormData({ ...formData, homepage: e })}
+            />
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-6  lg:flex-nowrap">
+          <div className="w-full">
+            <TextField
+              label="Linkedin Profile"
+              type="url"
+              name="linkedinProfile"
+              value={formData.linkedinProfile}
+              onChange={(e) => setFormData({ ...formData, linkedinProfile: e })}
+            />
+          </div>
+
+          <div className="w-full">
+            <TextField
+              label="Github Profile"
+              type="url"
+              name="githubProfile"
+              value={formData.githubProfile}
+              onChange={(e) => setFormData({ ...formData, githubProfile: e })}
+            />
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-6  lg:flex-nowrap">
+          <div className="w-full">
+            <TextField
+              label="Twitter Profile"
+              name="twitterProfile"
+              type="url"
+              value={formData.twitterProfile}
+              onChange={(e) => setFormData({ ...formData, twitterProfile: e })}
+            />
+          </div>
+
+          <div className="w-full">
+            <TextField
+              label="Location"
+              name="location"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e })}
             />
           </div>
         </div>
