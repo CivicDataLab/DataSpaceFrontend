@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { graphql } from '@/gql';
 import {
   CreateFileResourceInput,
   SchemaUpdateInput,
@@ -10,13 +11,9 @@ import { parseAsString, useQueryState } from 'next-usequerystate';
 import {
   Button,
   Checkbox,
-  Combobox,
-  Dialog,
   Divider,
   DropZone,
   Icon,
-  Select,
-  Sheet,
   Spinner,
   Text,
   TextField,
@@ -25,11 +22,12 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import { Loading } from '@/components/loading';
 import { useDatasetEditStatus } from '../../context';
 import { TListItem } from '../page-layout';
+import PreviewData from './PreviewData';
 import {
   createResourceFilesDoc,
-  fetchSchema,
   resetSchema,
   updateResourceDoc,
   updateSchema,
@@ -39,15 +37,93 @@ import { ResourceSchema } from './ResourceSchema';
 
 interface EditProps {
   refetch: () => void;
-  list: TListItem[];
+  allResources: TListItem[];
 }
 
-export const EditResource = ({ refetch, list }: EditProps) => {
+const resourceDetails: any = graphql(`
+  query resourceById($resourceId: UUID!) {
+    resourceById(resourceId: $resourceId) {
+      id
+      dataset {
+        pk
+      }
+      previewData {
+        columns
+        rows
+      }
+      previewDetails {
+        endEntry
+        isAllEntries
+        startEntry
+      }
+      previewEnabled
+      schema {
+        id
+        fieldName
+        format
+        description
+      }
+      type
+      name
+      description
+      created
+      fileDetails {
+        id
+        resource {
+          pk
+        }
+        file {
+          name
+          path
+          url
+        }
+        size
+        created
+        modified
+      }
+    }
+  }
+`);
+
+export const EditResource = ({ refetch, allResources }: EditProps) => {
   const params = useParams();
 
   const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
   const [schema, setSchema] = React.useState([]);
 
+  const resourceDetailsQuery = useQuery<any>(
+    [`fetch_resource_details_${resourceId}`],
+    () =>
+      GraphQL(
+        resourceDetails,
+        {
+          // Entity Headers if present
+        },
+        { resourceId: resourceId }
+      ),
+    {
+      enabled: !!resourceId,
+    }
+  );
+  const schemaMutation = useMutation(
+    (data: { resourceId: string }) =>
+      GraphQL(
+        resetSchema,
+        {
+          // Entity Headers if present
+        },
+        data
+      ),
+    {
+      onSuccess: (data: any) => {
+        setSchema(data.resetFileResourceSchema.schema);
+        refetch();
+      },
+      onError: (err: any) => {
+        toast(err);
+      },
+    }
+  );
   const updateResourceMutation = useMutation(
     (data: {
       fileResourceInput: UpdateFileResourceInput;
@@ -73,42 +149,13 @@ export const EditResource = ({ refetch, list }: EditProps) => {
             resourceId: resourceId,
           });
         }
-        refetch();
+        resourceDetailsQuery.refetch();
       },
       onError: (err: any) => {
         toast(err.message || String(err));
         setFile([]);
       },
     }
-  );
-
-  const schemaMutation = useMutation(
-    (data: { resourceId: string }) =>
-      GraphQL(
-        resetSchema,
-        {
-          // Entity Headers if present
-        },
-        data
-      ),
-    {
-      onSuccess: () => {
-        schemaQuery.refetch();
-      },
-      onError: (err: any) => {
-        console.log('Error ::: ', err);
-      },
-    }
-  );
-
-  const schemaQuery = useQuery<any>([`fetch_schema_${params.id}`], () =>
-    GraphQL(
-      fetchSchema,
-      {
-        // Entity Headers if present
-      },
-      { datasetId: params.id }
-    )
   );
 
   const updateSchemaMutation = useMutation(
@@ -122,7 +169,6 @@ export const EditResource = ({ refetch, list }: EditProps) => {
       ),
     {
       onSuccess: () => {
-        schemaQuery.refetch();
         toast('Schema Updated Successfully', {
           action: {
             label: 'Dismiss',
@@ -131,7 +177,7 @@ export const EditResource = ({ refetch, list }: EditProps) => {
         });
       },
       onError: (err: any) => {
-        console.log('Error ::: ', err);
+        toast('Error ::: ', err);
       },
     }
   );
@@ -154,44 +200,63 @@ export const EditResource = ({ refetch, list }: EditProps) => {
             onClick: () => {},
           },
         });
-        schemaQuery.refetch();
-        refetch();
+        //
+        resourceDetailsQuery.refetch();
       },
       onError: (err: any) => {
-        console.log('Error ::: ', err);
+        toast(err.message, {
+          action: {
+            label: 'Dismiss',
+            onClick: () => {},
+          },
+        });
+        setFile([]);
       },
     }
   );
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const getResourceObject = (resourceId: string) => {
-    return list.find((item: TListItem) => item.value === resourceId);
-  };
-
   const [resourceName, setResourceName] = React.useState(
-    getResourceObject(resourceId)?.label
+    resourceDetailsQuery.data?.resourceById.name
   );
 
+  const [showPreview, setShowPreview] = useState(false);
   const [previewEnable, setPreviewEnable] = useState(false);
 
   const [previewDetails, setPreviewDetails] = useState({
     startEntry: 0,
     endEntry: 0,
-    isAllEntries: true,
+    isAllEntries: false,
+  });
+  const [previewData, setPreviewData] = useState({
+    rows: [],
+    columns: [],
   });
 
-  React.useEffect(() => {
-    setResourceName(getResourceObject(resourceId)?.label);
-    setPreviewEnable(getResourceObject(resourceId)?.previewEnabled ?? true);
-    setPreviewDetails({
-      startEntry: getResourceObject(resourceId)?.previewDetails.startEntry ?? 0,
-      endEntry: getResourceObject(resourceId)?.previewDetails.endEntry ?? 0,
-      isAllEntries:
-        getResourceObject(resourceId)?.previewDetails.isAllEntries ?? true,
-    });
+  useEffect(() => {
+    resourceDetailsQuery.refetch();
+  }, []);
 
-    //fix this later
-  }, [JSON.stringify(list), resourceId]);
+  React.useEffect(() => {
+    const ResourceData = resourceDetailsQuery.data?.resourceById;
+    setResourceName(ResourceData?.name);
+    setPreviewEnable(ResourceData?.previewEnabled);
+    setPreviewDetails({
+      startEntry: ResourceData?.previewDetails?.startEntry ?? 0,
+      endEntry: ResourceData?.previewDetails?.endEntry ?? 0,
+      isAllEntries: ResourceData?.previewDetails?.isAllEntries ?? false,
+    });
+    setPreviewData({
+      rows: ResourceData?.previewData?.rows,
+      columns: ResourceData?.previewData?.columns,
+    });
+    setSchema(ResourceData?.schema);
+    if (ResourceData?.schema?.length === 0) {
+      schemaMutation.mutate({
+        resourceId: resourceId,
+      });
+    }
+  }, [resourceDetailsQuery.data]);
 
   const handleResourceChange = (e: any) => {
     setResourceId(e, { shallow: false });
@@ -224,20 +289,39 @@ export const EditResource = ({ refetch, list }: EditProps) => {
 
   const onDrop = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
-      updateResourceMutation.mutate({
-        fileResourceInput: {
-          id: resourceId,
-          file: acceptedFiles[0],
+      updateResourceMutation.mutate(
+        {
+          fileResourceInput: {
+            id: resourceId,
+            file: acceptedFiles[0],
+          },
+          isResetSchema: true,
         },
-        isResetSchema: true,
-      });
+        {
+          onSuccess: () => {
+            // Automatically trigger schema mutation after file upload
+            schemaMutation.mutate(
+              {
+                resourceId: resourceId,
+              },
+              {
+                onSuccess: () => {
+                  toast('Schema updated successfully');
+                },
+              }
+            );
+            resourceDetailsQuery.refetch();
+          },
+        }
+      );
     },
-    []
+    [resourceId]
   );
+
   const fileInput = (
     <div className="flex">
       <Text className="break-all">
-        {getResourceObject(resourceId)?.fileDetails?.file.name.replace(
+        {resourceDetailsQuery.data?.resourceById.fileDetails?.file.name.replace(
           'resources/',
           ''
         )}{' '}
@@ -257,7 +341,7 @@ export const EditResource = ({ refetch, list }: EditProps) => {
       setPreviewDetails({
         startEntry: 0,
         endEntry: 0,
-        isAllEntries: true,
+        isAllEntries: false,
       });
     } else {
       setPreviewDetails((prev) => ({
@@ -267,14 +351,12 @@ export const EditResource = ({ refetch, list }: EditProps) => {
     }
   };
 
-  console.log(previewEnable);
-
   const saveResource = () => {
     updateResourceMutation.mutate({
       fileResourceInput: {
         id: resourceId,
         name: resourceName || '',
-        previewEnabled: true,
+        previewEnabled: previewEnable,
         previewDetails: {
           startEntry: 5,
           endEntry: 5,
@@ -283,107 +365,123 @@ export const EditResource = ({ refetch, list }: EditProps) => {
       },
       isResetSchema: false,
     });
-    if (schema.length > 0) {
-      const updatedScheme = schema.map((item) => {
-        const { fieldName, ...rest } = item as any;
-        return rest;
-      });
-      updateSchemaMutation.mutate({
-        input: {
-          resource: resourceId,
-          updates: updatedScheme,
-        },
-      });
-    }
   };
 
   const { setStatus } = useDatasetEditStatus();
 
   useEffect(() => {
-    setStatus(updateResourceMutation.isLoading ? 'loading' : 'success'); // update based on mutation state
-  }, [updateResourceMutation.isLoading]);
+    setStatus(
+      updateResourceMutation.isLoading || updateSchemaMutation.isLoading
+        ? 'loading'
+        : 'success'
+    ); // update based on mutation state
+  }, [updateResourceMutation.isLoading, updateSchemaMutation.isLoading]);
 
   return (
-    <div className=" rounded-4 border-2 border-solid border-greyExtralight px-6 py-8">
-      <ResourceHeader
-        listViewFunction={listViewFunction}
-        isSheetOpen={isSheetOpen}
-        setIsSheetOpen={setIsSheetOpen}
-        dropZone={dropZone}
-        uploadedFile={uploadedFile}
-        file={file}
-        list={list}
-        resourceId={resourceId}
-        handleResourceChange={handleResourceChange}
-      />
+    <div>
+      {resourceDetailsQuery.data?.resourceById ? (
+        <div className=" rounded-4 border-2 border-solid border-greyExtralight px-6 py-8">
+          <ResourceHeader
+            listViewFunction={listViewFunction}
+            isSheetOpen={isSheetOpen}
+            setIsSheetOpen={setIsSheetOpen}
+            dropZone={dropZone}
+            uploadedFile={uploadedFile}
+            file={file}
+            list={allResources}
+            resourceId={resourceId}
+            handleResourceChange={handleResourceChange}
+          />
 
-      <Divider className="mb-8 mt-6" />
+          <Divider className="mb-8 mt-6" />
 
-      <div className="mt-8 flex flex-wrap items-stretch gap-10 md:flex-nowrap lg:flex-nowrap">
-        <div className="flex w-full flex-col gap-3 md:w-3/5 lg:w-4/5">
-          <div>
-            <TextField
-              value={resourceName}
-              onChange={(text) => setResourceName(text)}
-              onBlur={saveResource}
-              multiline={2}
-              label="Data File Name"
-              name="a"
-              required
-            />
+          <div className="mt-8 flex flex-wrap items-stretch gap-10 md:flex-nowrap lg:flex-nowrap">
+            <div className="flex w-full flex-col gap-3 md:w-3/5 lg:w-4/5">
+              <div>
+                <TextField
+                  value={resourceName}
+                  onChange={(text) => setResourceName(text)}
+                  onBlur={saveResource}
+                  multiline={2}
+                  label="Data File Name"
+                  name="a"
+                  required
+                />
+              </div>
+              <div>
+                <Text className=" underline">
+                  Good practices for naming Data Files
+                </Text>
+                <div>
+                  <ol className="list-decimal pl-6">
+                    <li>
+                      Try to include as many keywords as possible in the name
+                    </li>
+                    <li>Mention the date or time period of the Data File</li>
+                    <li>Mention the geography if applicable</li>
+                    <li>
+                      Follow a similar format for naming all Data Files in a
+                      Dataset
+                    </li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+            <div className="flex  flex-col justify-between lg:w-1/4">
+              <Text className="pb-1">File associated with Data File</Text>
+              <div className="  rounded-2 border-1 border-solid border-baseGraySlateSolid7 p-3 ">
+                {fileInput}
+                <div className="mt-4 lg:mt-8">
+                  <DropZone
+                    name="file_upload"
+                    allowMultiple={false}
+                    onDrop={onDrop}
+                    className="h-40 w-full  border-none bg-baseGraySlateSolid5"
+                    label="Change file for this Data File"
+                  >
+                    <DropZone.FileUpload />
+                  </DropZone>
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <Text className=" underline">
-              Good practices for naming Data Files
-            </Text>
+
+          <div className="my-8 flex items-center gap-8 align-middle">
+            <Checkbox
+              name={'previewEnabled'}
+              checked={previewEnable}
+              onChange={() => {
+                const newValue = !previewEnable;
+                setPreviewEnable(newValue);
+                updateResourceMutation.mutate({
+                  fileResourceInput: {
+                    id: resourceId,
+                    name: resourceName || '',
+                    previewEnabled: newValue, // use new value here
+                    previewDetails: {
+                      startEntry: 5,
+                      endEntry: 5,
+                      isAllEntries: previewDetails.isAllEntries,
+                    },
+                  },
+                  isResetSchema: false,
+                });
+              }}
+            >
+              Preview Enabled
+            </Checkbox>
             <div>
-              <ol className="list-decimal pl-6">
-                <li>Try to include as many keywords as possible in the name</li>
-                <li>Mention the date or time period of the Data File</li>
-                <li>Mention the geography if applicable</li>
-                <li>
-                  Follow a similar format for naming all Data Files in a Dataset
-                </li>
-              </ol>
-            </div>
-          </div>
-        </div>
-        <div className="md:1/3 flex w-2/5 flex-col justify-between lg:w-1/4">
-          <Text className="pb-1">File associated with Data File</Text>
-          <div className="  rounded-2 border-1 border-solid border-baseGraySlateSolid7 p-3 ">
-            {fileInput}
-            <div className="mt-4 lg:mt-8">
-              <DropZone
-                name="file_upload"
-                allowMultiple={false}
-                onDrop={onDrop}
-                className="h-40 w-full  border-none bg-baseGraySlateSolid5"
-                label="Change file for this Data File"
+              <Button
+                kind="tertiary"
+                disabled={!previewEnable}
+                onClick={() => {
+                  setShowPreview(!showPreview);
+                }}
               >
-                <DropZone.FileUpload />
-              </DropZone>
+                {showPreview ? 'Hide Preview' : 'See Preview'}
+              </Button>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="my-8 flex items-center gap-8 align-middle">
-        <Checkbox
-          name={'previewEnabled'}
-          checked={previewEnable}
-          onChange={() => {
-            setPreviewEnable(previewEnable === false ? true : false);
-            saveResource();
-          }}
-        >
-          Preview Enabled
-        </Checkbox>
-
-        <Button kind="tertiary" disabled={!previewEnable}>
-          See Preview
-        </Button>
-
-        {/* {previewEnable && (
+            {/* {previewEnable && (
           <>
             <Checkbox
               name={'isAllEntries'}
@@ -421,53 +519,55 @@ export const EditResource = ({ refetch, list }: EditProps) => {
             )}
           </>
         )} */}
-      </div>
-      <div className="my-4">
-        <div className="flex flex-wrap justify-between">
-          <Text>Fields in the Resource</Text>
-          <Button
-            size="medium"
-            kind="tertiary"
-            variant="basic"
-            onClick={() =>
-              schemaMutation.mutate({
-                resourceId: resourceId,
-              })
-            }
-          >
-            <div className="flex items-center gap-1">
-              <Text>Reset Fields</Text>{' '}
-              <Icon source={Icons.info} color="interactive" />
+          </div>
+          {showPreview && previewEnable && previewData && (
+            <PreviewData isPreview={previewEnable} previewData={previewData} />
+          )}
+          <div className="my-4">
+            <div className="flex flex-wrap justify-between">
+              <Text>Fields in the Resource</Text>
+              <Button
+                size="medium"
+                kind="tertiary"
+                variant="basic"
+                onClick={() =>
+                  schemaMutation.mutate({
+                    resourceId: resourceId,
+                  })
+                }
+              >
+                <div className="flex items-center gap-1">
+                  <Text>Reset Fields</Text>{' '}
+                  <Icon source={Icons.info} color="interactive" />
+                </div>
+              </Button>
             </div>
-          </Button>
+            <Text variant="headingXs" as="span" fontWeight="regular">
+              The Field settings apply to the Resource on a master level and can
+              not be changed in Access Models.
+            </Text>
+            {schemaMutation.isLoading ? (
+              <div className=" mt-8 flex justify-center">
+                <Spinner size={30} />
+              </div>
+            ) : resourceId && schema?.length > 0 ? (
+              <ResourceSchema
+                setSchema={setSchema}
+                data={schema}
+                mutate={updateSchemaMutation.mutate}
+                resourceId={resourceId}
+              />
+            ) : (
+              <div className="my-8 flex justify-center">
+                {' '}
+                Click on Reset Fields{' '}
+              </div>
+            )}
+          </div>
         </div>
-        <Text variant="headingXs" as="span" fontWeight="regular">
-          The Field settings apply to the Resource on a master level and can not
-          be changed in Access Models.
-        </Text>
-        {schemaQuery.isLoading || schemaMutation.isLoading ? (
-          <div className=" mt-8 flex justify-center">
-            <Spinner size={30} />
-          </div>
-        ) : resourceId &&
-          schemaQuery.data?.datasetResources?.filter(
-            (item: any) => item.id === resourceId
-          ).length > 0 ? (
-          <ResourceSchema
-            setSchema={setSchema}
-            data={
-              schemaQuery.data?.datasetResources?.filter(
-                (item: any) => item.id === resourceId
-              )[0]?.schema
-            }
-          />
-        ) : (
-          <div className="my-8 flex justify-center">
-            {' '}
-            Click on Reset Fields{' '}
-          </div>
-        )}
-      </div>
+      ) : (
+        <Loading />
+      )}
     </div>
   );
 };

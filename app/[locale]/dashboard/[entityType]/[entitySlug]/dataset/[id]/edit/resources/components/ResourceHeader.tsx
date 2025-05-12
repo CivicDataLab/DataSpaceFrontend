@@ -72,7 +72,7 @@ const ResourceHeader = ({
                   </Button>
                 </div>
               </div>
-              {list.map((item, index) => (
+              {list?.map((item, index) => (
                 <div
                   key={index}
                   className={`rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6 py-3 ${resourceId === item.value ? ' bg-baseGraySlateSolid5' : ''}`}
