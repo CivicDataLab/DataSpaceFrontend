@@ -13,7 +13,7 @@ import Metadata from './components/Metadata';
 import PrimaryData from './components/PrimaryData';
 import Resources from './components/Resources';
 
-const datasetQuery = graphql(`
+const datasetQuery: any = graphql(`
   query getDataset($datasetId: UUID!) {
     getDataset(datasetId: $datasetId) {
       tags {
@@ -62,14 +62,16 @@ const DatasetDetailsPage = () => {
 
   const params = useParams();
 
-  const { data, isLoading } = useQuery([`${params.datasetIdentifier}`], () =>
-    GraphQL(
-      datasetQuery,
-      {
-        // Entity Headers if present
-      },
-      { datasetId: params.datasetIdentifier }
-    )
+  const Datasetdetails: { data: any; isLoading: any } = useQuery(
+    [`${params.datasetIdentifier}`],
+    () =>
+      GraphQL(
+        datasetQuery,
+        {
+          // Entity Headers if present
+        },
+        { datasetId: params.datasetIdentifier }
+      )
   );
 
   return (
@@ -83,14 +85,14 @@ const DatasetDetailsPage = () => {
       />
       <div className="flex">
         <div className="w-full gap-10 border-r-2 border-solid border-greyExtralight p-6  lg:w-3/4 lg:p-10">
-          {isLoading ? (
+          {Datasetdetails.isLoading ? (
             <div className=" mt-8 flex justify-center">
               <Spinner />
             </div>
           ) : (
             <PrimaryData
-              data={data && data?.getDataset}
-              isLoading={isLoading}
+              data={Datasetdetails.data && Datasetdetails.data?.getDataset}
+              isLoading={Datasetdetails.isLoading}
             />
           )}
           <div className="mt-10">
@@ -102,13 +104,15 @@ const DatasetDetailsPage = () => {
           </div>
         </div>
         <div className=" hidden  w-1/4 gap-10 px-7 py-10 lg:block">
-          {isLoading ? (
+          {Datasetdetails.isLoading ? (
             <div className=" mt-8 flex justify-center">
               <Spinner />
             </div>
           ) : (
             <div>
-              <Metadata data={data && data?.getDataset} />
+              <Metadata
+                data={Datasetdetails.data && Datasetdetails.data?.getDataset}
+              />
             </div>
           )}
         </div>
