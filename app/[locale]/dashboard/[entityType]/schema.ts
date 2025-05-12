@@ -5,6 +5,10 @@ export const allOrganizationsListingDoc: any = graphql(`
     organizations {
       id
       name
+      githubProfile
+      linkedinProfile
+      twitterProfile
+      location
       logo {
         name
         path
@@ -53,6 +57,10 @@ export const organizationCreationMutation: any = graphql(`
         contactEmail
         description
         slug
+        githubProfile
+        linkedinProfile
+        twitterProfile
+        location
       }
     }
   }
