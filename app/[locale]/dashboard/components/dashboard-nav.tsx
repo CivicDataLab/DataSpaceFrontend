@@ -24,20 +24,28 @@ export function DashboardNav({
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const [isImageValid, setIsImageValid] = useState(() => {
-    return type === 'organization' && entityDetails?.logo ? true : type === 'self' && entityDetails?.profilePicture ? true : false;
+    if (type === 'organization') {
+      return !!entityDetails?.logo?.url;
+    } else if (type === 'self') {
+      return !!entityDetails?.profilePicture?.url;
+    }
+    return false;
   });
+
   const path = usePathname();
 
   useEffect(() => {
-    if (
-      entityDetails &&
-      (typeof entityDetails.logo === 'undefined' || entityDetails.logo === null)
-    ) {
+    if (!entityDetails) {
       setIsImageValid(false);
-    } else {
-      setIsImageValid(true);
+      return;
     }
-  }, [entityDetails]);
+
+    if (type === 'organization') {
+      setIsImageValid(!!entityDetails.logo?.url);
+    } else if (type === 'self') {
+      setIsImageValid(!!entityDetails.profilePicture?.url);
+    }
+  }, [entityDetails, type]);
 
   useMetaKeyPress('b', () => setIsCollapsed((e) => !e));
 
@@ -46,7 +54,6 @@ export function DashboardNav({
   }
 
   const sidebarIcon = isCollapsed ? Icons.expand : Icons.collapse;
-
 
   return (
     <aside
@@ -65,12 +72,16 @@ export function DashboardNav({
                 <Image
                   height={140}
                   width={140}
-                  src={ type === 'organization' ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityDetails?.logo?.url}` : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityDetails?.profilePicture?.url}` }
+                  src={
+                    type === 'organization'
+                      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityDetails?.logo?.url}`
+                      : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityDetails?.profilePicture?.url}`
+                  }
                   alt={`${entityDetails?.name} logo`}
                   onError={() => {
                     setIsImageValid(false);
                   }}
-                  className="object-contain"
+                  className={`${type === 'organization' ? 'object-contain' : 'object-cover rounded-full'}`}
                 />
               ) : (
                 <Image
