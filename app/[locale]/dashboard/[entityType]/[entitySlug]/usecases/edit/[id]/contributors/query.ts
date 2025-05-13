@@ -20,6 +20,9 @@ export const FetchUsers: any = graphql(`
           id
           fullName
           username
+          profilePicture {
+            url
+          }
         }
         supportingOrganizations {
           id

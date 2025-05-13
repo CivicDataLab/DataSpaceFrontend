@@ -281,14 +281,14 @@ const UseCaseDetailPage = () => {
                         Case
                       </Text>
                     </div>
-                    <div className="mt-8 flex flex-wrap items-center justify-start gap-2">
+                    <div className="mt-8 flex flex-wrap items-center justify-start gap-8">
                       {UseCaseDetails?.useCase?.contributors?.map(
                         (contributor: any) => (
                           <Image
                             alt={contributor.fullName}
                             width={120}
                             height={120}
-                            className="rounded-full"
+                            className="rounded-full object-cover"
                             key={contributor.id}
                             src={
                               contributor.profilePicture?.url
