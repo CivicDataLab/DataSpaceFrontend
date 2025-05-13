@@ -30,9 +30,11 @@ const datasetQuery: any = graphql(`
         metadataItem {
           id
           label
+          dataType
         }
         value
       }
+      license
       resources {
         id
         created
