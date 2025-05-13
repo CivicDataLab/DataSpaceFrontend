@@ -121,12 +121,12 @@
   --icon-subdued: var(--base-gray-slate-solid-10);
   --icon-disabled: var(--base-gray-slate-solid-9);
   --icon-critical: var(--base-red-solid-10);
-  --action-primary-basic-default: var(--base-violet-solid-9);
+  --action-primary-basic-default: var(--orange-secondary-color);
   --icon-warning: var(--base-amber-solid-10);
-  --action-primary-basic-hovered: var(--base-violet-solid-10);
+  --action-primary-basic-hovered: var(--orange-secondary-color);
   --icon-success: var(--base-green-solid-10);
   --icon-highlight: var(--base-violet-solid-10);
-  --action-primary-basic-pressed: var(--base-violet-solid-11);
+  --action-primary-basic-pressed: var(--orange-secondary-color);
   --action-primary-basic-depressed: var(--base-violet-solid-12);
   --icon-interactive: var(--base-indigo-solid-10);
   --icon-onbg-default: var(--base-gray-slate-solid-1);
