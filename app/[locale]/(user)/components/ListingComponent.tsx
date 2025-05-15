@@ -303,7 +303,6 @@ const ListingComponent: React.FC<ListingProps> = ({
             )}
             <Text
               variant="headingLg"
-              className="text-primaryBlue"
               fontWeight="regular"
             >
               {categoryDescription

@@ -139,7 +139,7 @@ const UseCasesListingPage = () => {
                   ]}
                   footerContent={[
                     {
-                      icon: `/Sectors/${item.sectors[0].name}.svg`,
+                      icon: `/Sectors/${item?.sectors[0]?.name}.svg`,
                       label: 'Sectors',
                     },
                     { icon: '/fallback.svg', label: 'Published by' },
