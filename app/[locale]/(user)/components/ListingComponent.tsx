@@ -299,18 +299,19 @@ const ListingComponent: React.FC<ListingProps> = ({
                   {categoryName}
                 </Text>
               )}
-              <Text
-                variant="headingLg"
-                className="text-primaryBlue"
-                fontWeight="regular"
-              >
-                {categoryDescription
-                  ? categoryDescription
-                  : 'No Description Provided'}
-              </Text>
-            </div>
+            
+            <Text
+              variant="headingLg"
+              fontWeight="regular"
+            >
+              {categoryDescription
+                ? categoryDescription
+                : 'No Description Provided'}
+            </Text>
           </div>
-        )}
+        </div>
+      )}
+
 
         {/* Optional Header Component */}
         {headerComponent}
