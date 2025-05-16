@@ -44,11 +44,12 @@ export function DashboardHeader({ currentPath }: { currentPath: string }) {
         </Text>
         <div>
           <Tabs defaultValue={initialTabLabel}>
-            <TabList fitted>
+            <TabList fitted border>
               {userDashboardOptions
                 .filter((item) => item !== null)
                 .map((item, index) => (
                   <Tab
+                    theme="dataSpace"
                     value={item.label}
                     key={index}
                     onClick={() => handleTabClick(item.url)}

@@ -1,16 +1,11 @@
 'use client';
 
+import { ReactNode, useEffect, useState } from 'react';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UpdateDatasetInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useParams, usePathname, useRouter } from 'next/navigation';
-import {
-  Tab,
-  TabList,
-  Tabs,
-  toast
-} from 'opub-ui';
-import { ReactNode, useEffect, useState } from 'react';
+import { Tab, TabList, Tabs, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import TitleBar from '../../../../components/title-bar';
@@ -227,9 +222,10 @@ const Navigation = ({
   return (
     <div>
       <Tabs value={selectedTab}>
-        <TabList fitted>
+        <TabList fitted border>
           {links.map((item, index) => (
             <Tab
+              theme="dataSpace"
               value={item.id}
               key={index}
               onClick={() => handleTabClick(item)}

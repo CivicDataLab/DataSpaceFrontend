@@ -18,9 +18,10 @@ export const Navigation = ({
   return (
     <div>
       <Tabs defaultValue="drafts">
-        <TabList fitted>
+        <TabList fitted border>
           {options.map((item, index) => (
             <Tab
+              theme="dataSpace"
               value={item.url}
               key={index}
               onClick={() => handleTabClick(item.url)}

@@ -116,9 +116,10 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
         setStatus={setStatus}
       />
       <Tabs defaultValue={initialTabLabel}>
-        <TabList fitted>
+        <TabList fitted border>
           {links.map((item, index) => (
             <Tab
+              theme="dataSpace"
               value={item.label}
               key={index}
               onClick={() => handleTabClick(item.url)}
