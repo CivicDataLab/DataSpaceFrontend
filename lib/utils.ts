@@ -103,3 +103,20 @@ export function formatDateString(
         year: 'numeric',
       });
 }
+
+
+export async function getWebsiteTitle(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    const html = await response.text();
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    const title = doc.querySelector('title');
+    return title?.innerText || null;
+  } catch (error) {
+    console.error('Failed to fetch website title:', error);
+    return null;
+  }
+}
