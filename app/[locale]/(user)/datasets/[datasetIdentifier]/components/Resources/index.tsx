@@ -15,9 +15,8 @@ import {
   Icon,
   Spinner,
   Table,
-  Text
+  Text,
 } from 'opub-ui';
-import { useEffect, useRef, useState } from 'react';
 
 import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
@@ -66,8 +65,6 @@ const Resources = () => {
       )
   );
 
-
-
   const generateColumnData = () => {
     return [
       {
@@ -77,7 +74,12 @@ const Resources = () => {
           return (
             <Dialog>
               <Dialog.Trigger>
-                <Button kind="tertiary" className=' text-secondaryOrange underline'>View All Columns</Button>
+                <Button
+                  kind="tertiary"
+                  className=" text-secondaryOrange underline"
+                >
+                  View All Columns
+                </Button>
               </Dialog.Trigger>
               <Dialog.Content title={'All Columns'} limitHeight>
                 <Table
@@ -152,7 +154,11 @@ const Resources = () => {
           return (
             <Dialog>
               <Dialog.Trigger>
-                <Button kind="tertiary" disabled={!previewData} className=' text-secondaryOrange underline'>
+                <Button
+                  kind="tertiary"
+                  disabled={!previewData}
+                  className=" text-secondaryOrange underline"
+                >
                   Preview
                 </Button>
               </Dialog.Trigger>
@@ -179,10 +185,8 @@ const Resources = () => {
       },
     ];
   };
-  const [isexpanded, setIsexpanded] = useState(false);
-  const toggleDescription = () => setIsexpanded(!isexpanded);
   return (
-    <div >
+    <div>
       {getResourceDetails.isLoading ? (
         <div className="mt-8 flex justify-center">
           <Spinner />
@@ -193,8 +197,7 @@ const Resources = () => {
           <div className="flex flex-col gap-1">
             <Text variant="heading2xl">Files in this Dataset </Text>
             <Text variant="headingLg" fontWeight="regular">
-              All files associated with this Dataset which can be
-              downloaded{' '}
+              All files associated with this Dataset which can be downloaded{' '}
             </Text>
           </div>
           <div>
@@ -211,38 +214,6 @@ const Resources = () => {
                         {item.fileDetails?.format && (
                           <Format fileType={item.fileDetails?.format} />
                         )}
-                      </div>
-                      <div className="lg:w-3/4">
-                        <Text className=' hidden lg:block'>
-                          {item.description.length > 260 && !isexpanded
-                            ? `${item.description.slice(0, 260)}...`
-                            : item.description}
-                          {item.description.length > 260 && (
-                            <Button
-                              kind="tertiary"
-                              size="slim"
-                              onClick={toggleDescription}
-                              className="text-blue-600 w-fit"
-                            >
-                              {isexpanded ? 'See Less' : 'See More'}
-                            </Button>
-                          )}
-                        </Text>
-                        <Text className=' lg:hidden block'>
-                          {item.description.length > 160 && !isexpanded
-                            ? `${item.description.slice(0, 160)}...`
-                            : item.description}
-                          {item.description.length > 160 && (
-                            <Button
-                              kind="tertiary"
-                              size="slim"
-                              onClick={toggleDescription}
-                              className="text-blue-600 w-fit"
-                            >
-                              {isexpanded ? 'See Less' : 'See More'}
-                            </Button>
-                          )}
-                        </Text>
                       </div>
                     </div>
                   </div>
@@ -267,10 +238,7 @@ const Resources = () => {
                                   {' '}
                                   Download
                                 </Text>
-                                <Icon
-                                  source={Icons.download}
-                                  size={20}
-                                />
+                                <Icon source={Icons.download} size={20} />
                               </div>
                             </Button>
                           </Link>
@@ -287,7 +255,6 @@ const Resources = () => {
                           columns={generateColumnData()}
                           rows={generateTableData(item)}
                           hideFooter
-                          
                         />
                       </AccordionContent>
                     </AccordionItem>
