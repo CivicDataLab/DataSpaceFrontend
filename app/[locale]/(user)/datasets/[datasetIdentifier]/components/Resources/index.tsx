@@ -1,9 +1,9 @@
 'use client';
 
-import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { graphql } from '@/gql';
+import { useQuery } from '@tanstack/react-query';
 import {
   Accordion,
   AccordionContent,
@@ -18,8 +18,8 @@ import {
   Text,
 } from 'opub-ui';
 
-import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
+import { Icons } from '@/components/icons';
 
 const datasetResourceQuery: any = graphql(`
   query datasetResources($datasetId: UUID!) {
@@ -76,7 +76,7 @@ const Resources = () => {
               <Dialog.Trigger>
                 <Button
                   kind="tertiary"
-                  className=" text-secondaryOrange underline"
+                  className=" text-secondaryText underline"
                 >
                   View All Columns
                 </Button>
@@ -157,7 +157,7 @@ const Resources = () => {
                 <Button
                   kind="tertiary"
                   disabled={!previewData}
-                  className=" text-secondaryOrange underline"
+                  className=" text-secondaryText underline"
                 >
                   Preview
                 </Button>
@@ -205,23 +205,23 @@ const Resources = () => {
               (item: any, index: number) => (
                 <div
                   key={index}
-                  className="mt-5 flex flex-col gap-6 border-1 border-solid border-greyExtralight bg-surfaceDefault p-6 lg:mx-0"
+                  className="mt-5 flex flex-col gap-6 border-1 border-solid border-greyExtralight bg-surfaceDefault p-4 lg:mx-0 lg:p-6"
                 >
                   <div className="flex flex-wrap justify-between gap-4">
                     <div className="flex w-full flex-col gap-4 ">
-                      <div className=" flex items-center justify-between gap-2">
-                        <Text variant="headingMd">{item.name}</Text>
-                        {item.fileDetails?.format && (
-                          <Format fileType={item.fileDetails?.format} />
-                        )}
+                      <div className=" flex flex-wrap items-center justify-between gap-2 lg:flex-nowrap">
+                        <div className="flex items-start gap-2 lg:items-center">
+                          {item.fileDetails?.format && (
+                            <Format fileType={item.fileDetails?.format} />
+                          )}
+                          <Text variant="headingMd">{item.name}</Text>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <Accordion type="single" collapsible className="w-full">
+                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="item-1" className=" border-none">
                       <div className="flex flex-wrap items-center justify-end gap-4">
                         <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 p-0 hover:no-underline">
-                          <Text className=" text-secondaryOrange">
+                          <Text className=" text-secondaryText">
                             {' '}
                             View Details
                           </Text>
@@ -234,7 +234,7 @@ const Resources = () => {
                           >
                             <Button kind="tertiary">
                               <div className="flex gap-1">
-                                <Text className=" text-secondaryOrange">
+                                <Text className=" text-primaryText" fontWeight='semibold'>
                                   {' '}
                                   Download
                                 </Text>
@@ -259,6 +259,8 @@ const Resources = () => {
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
+                    </div>
+                  </div>
                 </div>
               )
             )}
