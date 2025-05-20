@@ -1,7 +1,7 @@
 'use client';
 
-import { Button, Icon, Spinner, Tag, Text, Tray } from 'opub-ui';
 import React, { useState } from 'react';
+import { Button, Icon, Spinner, Tag, Text, Tray } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
 import Metadata from '../Metadata';
@@ -17,16 +17,7 @@ const PrimaryData: React.FC<PrimaryDataProps> = ({ data, isLoading }) => {
   return (
     <div>
       <div className="flex flex-col gap-4">
-        <div className="flex justify-between gap-2">
-          <Text variant="headingLg">{data?.title}</Text>
-          {data.downloadCount > 0 && (
-            <div className="flex gap-1">
-              <Text>{data.downloadCount}</Text>
-              <Icon source={Icons.download} size={18} color="warning" />
-            </div>
-          )}
-        </div>
-
+        <Text variant="headingLg">{data?.title}</Text>
         <div className="flex gap-2">
           {data?.tags.map((item: any, index: any) => (
             <Tag key={index}>{item.value}</Tag>
