@@ -164,6 +164,19 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             {getLicenseLabel(data.license)}
           </Text>
         </div>
+        {data.downloadCount > 0 && (
+          <div className="flex items-center gap-2 ">
+            <Text
+              className="min-w-[120px]  basis-1/4 uppercase"
+              variant="bodyMd"
+            >
+              Downloads
+            </Text>
+            <Text className="" variant="bodyLg" fontWeight="medium">
+              {data.downloadCount}
+            </Text>
+          </div>
+        )}
         <div className="flex flex-col gap-4">
           <Text variant="bodyMd">Description</Text>
           <Text variant="bodyMd">
