@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Divider, Icon, Text } from 'opub-ui';
 
+import { getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
 interface MetadataProps {
@@ -46,6 +47,27 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
     const option = licenseOptions.find((option) => option.value === value);
     return option ? option.label : value; // fallback to value if no match
   };
+
+  const [sourceTitle, setSourceTitle] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTitle = async () => {
+      try {
+        const urlItem = data.metadata.find(
+          (item: any) => item.metadataItem?.dataType === 'URL'
+        );
+
+        if (urlItem && urlItem.value) {
+          const title = await getWebsiteTitle(urlItem.value);
+          setSourceTitle(title);
+        }
+      } catch (error) {
+        console.error('Error fetching website title:', error);
+      }
+    };
+
+    fetchTitle();
+  }, [data.metadata]);
 
   return (
     <div className="flex flex-col gap-10">
@@ -114,7 +136,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
           </Text>
         </div>
         {Metadata.map((item: any, index: any) => (
-          <div className="flex items-center gap-2 " key={index}>
+          <div className="flex items-start gap-2 " key={index}>
             <Text
               className="min-w-[120px]  basis-1/4 uppercase"
               variant="bodyMd"
@@ -128,7 +150,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             ) : (
               <Link href={item.value} target="_blank">
                 <Text className="underline" color="highlight">
-                  Source
+                  {sourceTitle?.trim() ? sourceTitle : 'Source'}
                 </Text>
               </Link>
             )}
@@ -142,6 +164,19 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             {getLicenseLabel(data.license)}
           </Text>
         </div>
+        {data.downloadCount > 0 && (
+          <div className="flex items-center gap-2 ">
+            <Text
+              className="min-w-[120px]  basis-1/4 uppercase"
+              variant="bodyMd"
+            >
+              Downloads
+            </Text>
+            <Text className="" variant="bodyLg" fontWeight="medium">
+              {data.downloadCount}
+            </Text>
+          </div>
+        )}
         <div className="flex flex-col gap-4">
           <Text variant="bodyMd">Description</Text>
           <Text variant="bodyMd">

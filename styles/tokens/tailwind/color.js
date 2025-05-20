@@ -277,5 +277,7 @@ module.exports = {
   secondaryOrange: 'var(--orange-secondary-color)',
   greyExtralight: 'var(--grey-extralight)',
   white: 'var(--white)',
-  tertiaryAccent: 'var(--accent-tertiary-color)'
+  tertiaryAccent: 'var(--accent-tertiary-color)',
+  primaryText: 'var(--blue-primary-text)',
+  secondaryText: 'var(--orange-secondary-text)',
 };

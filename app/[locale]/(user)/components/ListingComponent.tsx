@@ -299,19 +299,15 @@ const ListingComponent: React.FC<ListingProps> = ({
                   {categoryName}
                 </Text>
               )}
-            
-            <Text
-              variant="headingLg"
-              fontWeight="regular"
-            >
-              {categoryDescription
-                ? categoryDescription
-                : 'No Description Provided'}
-            </Text>
-          </div>
-        </div>
-      )}
 
+              <Text variant="headingLg" fontWeight="regular">
+                {categoryDescription
+                  ? categoryDescription
+                  : 'No Description Provided'}
+              </Text>
+            </div>
+          </div>
+        )}
 
         {/* Optional Header Component */}
         {headerComponent}
@@ -357,7 +353,11 @@ const ListingComponent: React.FC<ListingProps> = ({
                 <Button
                   onClick={() =>
                     handleOrderChange(
-                      queryParams.order === 'asc' ? 'desc' : 'asc'
+                      queryParams.order === ''
+                        ? 'desc'
+                        : queryParams.order === 'desc'
+                          ? 'asc'
+                          : 'desc'
                     )
                   }
                   kind="tertiary"
@@ -367,7 +367,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                   <Icon
                     source={Icons.sort}
                     className={cn(
-                      queryParams.order === 'asc' && 'scale-x-[-1]'
+                      queryParams.order === 'desc' && 'scale-x-[-1]'
                     )}
                   />
                 </Button>

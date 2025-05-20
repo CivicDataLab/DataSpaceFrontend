@@ -1,12 +1,28 @@
-import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { IconBinary, IconBinaryTree } from '@tabler/icons-react';
 import { Icon, Text } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
 
 const MainFooter = () => {
+  const socialMedia = [
+    {
+      icon: Icons.twitter,
+      link: 'https://twitter.com/civicdatalab',
+    },
+    {
+      icon: Icons.linkedin,
+      link: 'https://www.linkedin.com/company/civicdatalab',
+    },
+    {
+      icon: Icons.facebook,
+      link: 'https://facebook.com/civicdatalab',
+    },
+    {
+      icon: Icons.github,
+      link: 'https://github.com/civicdatalab',
+    },
+  ];
   return (
     <>
       <div className="bg-primaryBlue">
@@ -36,22 +52,20 @@ const MainFooter = () => {
               </div>
 
               <div className=" flex gap-3">
-                <div className="  h-10  w-10 rounded-5 bg-secondaryOrange p-2">
-                  <Icon source={Icons.twitter} size={24} color="highlight" />
-                </div>
-                <div className="  h-10  w-10 rounded-5 bg-secondaryOrange p-2">
-                  <Icon source={Icons.linkedin} size={24} color="highlight" />
-                </div>
-                <div className="  h-10  w-10 rounded-5 bg-secondaryOrange p-2">
-                  <Icon source={Icons.facebook} size={24} color="highlight" />
-                </div>
-                <div className="  h-10  w-10 rounded-5 bg-secondaryOrange p-2">
-                  <Icon source={Icons.github} size={24} color="highlight" />
-                </div>
+                {socialMedia.map((item, index) => (
+                  <Link
+                    key={index}
+                    href={item.link}
+                    target="_blank"
+                    className="  h-10  w-10 rounded-5 bg-tertiaryAccent p-2"
+                  >
+                    <Icon source={item.icon} size={24} />
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
-          <div className=" flex flex-wrap gap-6 justify-between">
+          <div className=" flex flex-wrap justify-between gap-6">
             <div className=" flex  gap-6">
               <Link href={'#'}>
                 <Text color="onBgDefault"> About Us</Text>

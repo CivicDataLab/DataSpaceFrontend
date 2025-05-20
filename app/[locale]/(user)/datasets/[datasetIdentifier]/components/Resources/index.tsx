@@ -1,9 +1,9 @@
 'use client';
 
-import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { graphql } from '@/gql';
+import { useQuery } from '@tanstack/react-query';
 import {
   Accordion,
   AccordionContent,
@@ -15,12 +15,11 @@ import {
   Icon,
   Spinner,
   Table,
-  Text
+  Text,
 } from 'opub-ui';
-import { useEffect, useRef, useState } from 'react';
 
-import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
+import { Icons } from '@/components/icons';
 
 const datasetResourceQuery: any = graphql(`
   query datasetResources($datasetId: UUID!) {
@@ -66,8 +65,6 @@ const Resources = () => {
       )
   );
 
-
-
   const generateColumnData = () => {
     return [
       {
@@ -77,7 +74,12 @@ const Resources = () => {
           return (
             <Dialog>
               <Dialog.Trigger>
-                <Button kind="tertiary" className=' text-secondaryOrange underline'>View All Columns</Button>
+                <Button
+                  kind="tertiary"
+                  className=" text-secondaryText underline"
+                >
+                  View All Columns
+                </Button>
               </Dialog.Trigger>
               <Dialog.Content title={'All Columns'} limitHeight>
                 <Table
@@ -152,7 +154,11 @@ const Resources = () => {
           return (
             <Dialog>
               <Dialog.Trigger>
-                <Button kind="tertiary" disabled={!previewData} className=' text-secondaryOrange underline'>
+                <Button
+                  kind="tertiary"
+                  disabled={!previewData}
+                  className=" text-secondaryText underline"
+                >
                   Preview
                 </Button>
               </Dialog.Trigger>
@@ -179,10 +185,8 @@ const Resources = () => {
       },
     ];
   };
-  const [isexpanded, setIsexpanded] = useState(false);
-  const toggleDescription = () => setIsexpanded(!isexpanded);
   return (
-    <div >
+    <div>
       {getResourceDetails.isLoading ? (
         <div className="mt-8 flex justify-center">
           <Spinner />
@@ -193,8 +197,7 @@ const Resources = () => {
           <div className="flex flex-col gap-1">
             <Text variant="heading2xl">Files in this Dataset </Text>
             <Text variant="headingLg" fontWeight="regular">
-              All files associated with this Dataset which can be
-              downloaded{' '}
+              All files associated with this Dataset which can be downloaded{' '}
             </Text>
           </div>
           <div>
@@ -202,55 +205,23 @@ const Resources = () => {
               (item: any, index: number) => (
                 <div
                   key={index}
-                  className="mt-5 flex flex-col gap-6 border-1 border-solid border-greyExtralight bg-surfaceDefault p-6 lg:mx-0"
+                  className="mt-5 flex flex-col gap-6 border-1 border-solid border-greyExtralight bg-surfaceDefault p-4 lg:mx-0 lg:p-6"
                 >
                   <div className="flex flex-wrap justify-between gap-4">
                     <div className="flex w-full flex-col gap-4 ">
-                      <div className=" flex items-center justify-between gap-2">
-                        <Text variant="headingMd">{item.name}</Text>
-                        {item.fileDetails?.format && (
-                          <Format fileType={item.fileDetails?.format} />
-                        )}
-                      </div>
-                      <div className="lg:w-3/4">
-                        <Text className=' hidden lg:block'>
-                          {item.description.length > 260 && !isexpanded
-                            ? `${item.description.slice(0, 260)}...`
-                            : item.description}
-                          {item.description.length > 260 && (
-                            <Button
-                              kind="tertiary"
-                              size="slim"
-                              onClick={toggleDescription}
-                              className="text-blue-600 w-fit"
-                            >
-                              {isexpanded ? 'See Less' : 'See More'}
-                            </Button>
+                      <div className=" flex flex-wrap items-center justify-between gap-2 lg:flex-nowrap">
+                        <div className="flex items-start gap-2 lg:items-center">
+                          {item.fileDetails?.format && (
+                            <Format fileType={item.fileDetails?.format} />
                           )}
-                        </Text>
-                        <Text className=' lg:hidden block'>
-                          {item.description.length > 160 && !isexpanded
-                            ? `${item.description.slice(0, 160)}...`
-                            : item.description}
-                          {item.description.length > 160 && (
-                            <Button
-                              kind="tertiary"
-                              size="slim"
-                              onClick={toggleDescription}
-                              className="text-blue-600 w-fit"
-                            >
-                              {isexpanded ? 'See Less' : 'See More'}
-                            </Button>
-                          )}
-                        </Text>
+                          <Text variant="headingMd">{item.name}</Text>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <Accordion type="single" collapsible className="w-full">
+                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="item-1" className=" border-none">
                       <div className="flex flex-wrap items-center justify-end gap-4">
                         <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 p-0 hover:no-underline">
-                          <Text className=" text-secondaryOrange">
+                          <Text className=" text-secondaryText">
                             {' '}
                             View Details
                           </Text>
@@ -263,14 +234,11 @@ const Resources = () => {
                           >
                             <Button kind="tertiary">
                               <div className="flex gap-1">
-                                <Text className=" text-secondaryOrange">
+                                <Text className=" text-primaryText" fontWeight='semibold'>
                                   {' '}
                                   Download
                                 </Text>
-                                <Icon
-                                  source={Icons.download}
-                                  size={20}
-                                />
+                                <Icon source={Icons.download} size={20} />
                               </div>
                             </Button>
                           </Link>
@@ -287,11 +255,12 @@ const Resources = () => {
                           columns={generateColumnData()}
                           rows={generateTableData(item)}
                           hideFooter
-                          
                         />
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
+                    </div>
+                  </div>
                 </div>
               )
             )}

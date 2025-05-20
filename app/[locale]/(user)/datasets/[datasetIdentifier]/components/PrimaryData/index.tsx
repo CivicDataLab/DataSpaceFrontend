@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { Button, Icon, Spinner, Tag, Text, Tray } from 'opub-ui';
 
-import { handleRedirect } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import Metadata from '../Metadata';
 
@@ -14,7 +12,6 @@ interface PrimaryDataProps {
 }
 
 const PrimaryData: React.FC<PrimaryDataProps> = ({ data, isLoading }) => {
-
   const [open, setOpen] = useState(false);
 
   return (
