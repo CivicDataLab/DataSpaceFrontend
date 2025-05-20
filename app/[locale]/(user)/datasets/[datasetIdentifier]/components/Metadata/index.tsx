@@ -136,7 +136,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
           </Text>
         </div>
         {Metadata.map((item: any, index: any) => (
-          <div className="flex items-center gap-2 " key={index}>
+          <div className="flex items-start gap-2 " key={index}>
             <Text
               className="min-w-[120px]  basis-1/4 uppercase"
               variant="bodyMd"
