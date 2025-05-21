@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Icon, Sheet, Text } from 'opub-ui';
+
 import { Icons } from '@/components/icons';
 import { ResourceData } from '../types';
 
@@ -49,9 +50,7 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
       </Button>
       <Sheet open={isSheetOpen}>
         <Sheet.Trigger>
-          <Button onClick={() => setIsSheetOpen(true)}>
-            Select Charts
-          </Button>
+          <Button onClick={() => setIsSheetOpen(true)}>Select Charts</Button>
         </Sheet.Trigger>
         <Sheet.Content side="bottom">
           <div className="flex flex-col gap-6 p-10">
@@ -67,10 +66,7 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
                 >
                   Visualize Data
                 </Button>
-                <Button
-                  kind="tertiary"
-                  onClick={() => setIsSheetOpen(false)}
-                >
+                <Button kind="tertiary" onClick={() => setIsSheetOpen(false)}>
                   <Icon source={Icons.cross} size={24} />
                 </Button>
               </div>
@@ -78,10 +74,10 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
             {chartsList?.chartsDetails.map((item, index) => (
               <div
                 key={index}
-                  className={`rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6 py-3 ${chartId === item.id ? ' bg-baseGraySlateSolid5' : ''}`}
+                className={`rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6 py-3 ${chartId === item.id ? ' bg-baseGraySlateSolid5' : ''}`}
               >
                 <Button
-                    kind={'tertiary'}
+                  kind={'tertiary'}
                   className="flex w-full justify-start"
                   disabled={chartId === item.id}
                   onClick={() => {
