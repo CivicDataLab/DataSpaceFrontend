@@ -15,7 +15,7 @@ const PreviewData = ({ isPreview, previewData }: EditProps) => {
       header: column,
       cell: ({ cell }: any) => {
         const value = cell.getValue();
-        return <span>{value !== null ? value.toString() : 'N/A'}</span>;
+        return <span>{value !== null ? value?.toString() : 'N/A'}</span>;
       },
     })) || [];
 

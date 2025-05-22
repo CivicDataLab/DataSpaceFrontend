@@ -204,7 +204,6 @@ const Details = () => {
     setStatus(loadingStates.some(Boolean) ? 'loading' : 'success');
   }, loadingStates);
 
-
   return (
     <div>
       {Users?.isLoading || allEntityDetails?.organizations?.length === 0 ? (
@@ -249,7 +248,10 @@ const Details = () => {
                 </div>
                 <div className="mt-3 flex flex-wrap gap-3 lg:mt-0">
                   {formData.contributors.map((item) => (
-                    <div key={item.value} className='flex flex-col gap-2 items-center'>
+                    <div
+                      key={item.value}
+                      className="flex flex-col items-center gap-2"
+                    >
                       <Image
                         src={
                           UseCaseData.data.useCases[0]?.contributors?.find(
@@ -283,7 +285,7 @@ const Details = () => {
                         }}
                         kind="tertiary"
                       >
-                        <div className="flex items-center gap-2 rounded-2 p-2 bg-greyExtralight ">
+                        <div className="flex items-center gap-2 rounded-2 bg-greyExtralight p-2 ">
                           <Text>{item.label}</Text>
                           <Icon source={Icons.cross} size={18} />
                         </div>
@@ -299,7 +301,7 @@ const Details = () => {
             title="SUPPORTED BY"
             label="Add Supporters"
             placeholder="Add Supporters"
-            data={UseCaseData.data.useCases[0].supportingOrganizations}
+            data={UseCaseData?.data?.useCases[0]?.supportingOrganizations}
             options={(allEntityDetails?.organizations || [])?.map(
               (org: any) => ({
                 label: org.name,
@@ -340,7 +342,7 @@ const Details = () => {
             title="PARTNERED BY"
             label="Add Partners"
             placeholder="Add Partners"
-            data={UseCaseData.data.useCases[0].partnerOrganizations}
+            data={UseCaseData?.data?.useCases[0]?.partnerOrganizations}
             options={(allEntityDetails?.organizations || [])?.map(
               (org: any) => ({
                 label: org.name,
