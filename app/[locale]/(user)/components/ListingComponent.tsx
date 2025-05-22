@@ -17,9 +17,9 @@ import {
 import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
+import { Loading } from '@/components/loading';
 import Filter from '../datasets/components/FIlter/Filter';
 import Styles from '../datasets/dataset.module.scss';
-import { Loading } from '@/components/loading';
 
 // Interfaces
 interface Bucket {
@@ -450,6 +450,14 @@ const ListingComponent: React.FC<ListingProps> = ({
                   view={view}
                 >
                   {datasetDetails.map((item: any) => {
+                    const image = item.is_individual_dataset
+                      ? item?.user?.profile_picture
+                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
+                        : '/profile.png'
+                      : item?.organization?.logo
+                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
+                        : '/org.png';
+
                     const commonProps = {
                       title: item.title,
                       description: item.description,
@@ -477,7 +485,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                           icon: `/Sectors/${item.sectors[0]}.svg`,
                           label: 'Sectors',
                         },
-                        { icon: '/fallback.svg', label: 'Published by' },
+                        { icon: image, label: 'Published by' },
                       ],
                     };
 
@@ -495,7 +503,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                   })}
                 </GraphqlPagination>
               ) : (
-                <Loading/>
+                <Loading />
               )}
             </div>
           </div>
