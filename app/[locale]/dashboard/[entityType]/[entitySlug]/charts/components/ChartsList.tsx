@@ -1,7 +1,7 @@
 import { UUID } from 'crypto';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
@@ -112,6 +112,8 @@ const ChartsList: React.FC<ChartsListProps> = ({
     entitySlug: string;
     id: string;
   }>();
+
+  const router = useRouter();
 
   const [editorView, setEditorView] = useState(false);
 
@@ -250,11 +252,13 @@ const ChartsList: React.FC<ChartsListProps> = ({
 
   const handleChart = (row: any) => {
     if (row.original.typename === 'TypeResourceChart') {
-      setType('visualize');
-      setChartId(row.original.id);
+      router.push(
+        `/dashboard/${params.entityType}/${params.entitySlug}/charts/${row.original.id}?type=TypeResourceChart`
+      );
     } else {
-      setType('img');
-      setImageId(row.original.id);
+      router.push(
+        `/dashboard/${params.entityType}/${params.entitySlug}/charts/${row.original.id}?type=TypeResourceChartImage`
+      );
     }
   };
 
