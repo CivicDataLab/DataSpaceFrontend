@@ -2,11 +2,38 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import { graphql } from '@/gql';
+import { useQuery } from '@tanstack/react-query';
 import { Button, Select, Tab, TabList, Tabs, Text } from 'opub-ui';
 
+import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import TitleBar from '../../components/title-bar';
+
+const getResourceChartImageDetailsDoc: any = graphql(`
+  query getResourceChartImageDetails($imageId: UUID!) {
+    resourceChartImage(imageId: $imageId) {
+      description
+      dataset {
+        id
+        title
+        slug
+      }
+      id
+      name
+      image {
+        name
+        path
+        size
+        url
+        width
+        height
+      }
+      status
+    }
+  }
+`);
 
 const ChartDetails = () => {
   const params = useParams<{
@@ -15,12 +42,27 @@ const ChartDetails = () => {
     chartID: string;
   }>();
 
-  console.log('Chart ID provided :: ', params.chartID);
+  const searchParams = useSearchParams();
 
-  type LoadedChartType = 'TypeResourceChartImage' | 'TypeResourceChart';
+  const chartPreviewType = searchParams.get('type');
 
-  const [chartPreviewType, setChartPreviewType] =
-    useState<LoadedChartType>('TypeResourceChart');
+  const getResourceChartDetailsRes: {
+    data: any;
+    isLoading: boolean;
+    refetch: any;
+    error: any;
+    isError: boolean;
+  } = useQuery([`getResourceChartImageDetails_${params.chartID}`], () =>
+    GraphQL(
+      getResourceChartImageDetailsDoc,
+      {
+        [params.entityType]: params.entitySlug,
+      },
+      {
+        imageId: params.chartID,
+      }
+    )
+  );
 
   return (
     <div>
