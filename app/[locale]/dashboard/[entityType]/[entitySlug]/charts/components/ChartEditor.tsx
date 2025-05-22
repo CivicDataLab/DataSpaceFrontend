@@ -45,6 +45,10 @@ const createResourceChartImageDoc: any = graphql(`
 `);
 
 const ChartsEditor = ({ setEditorView }: { setEditorView: any }) => {
+  /*
+    Chart creation View in Listing Page to create either the image or the visualization
+  */
+
   const params = useParams<{ entityType: string; entitySlug: string }>();
 
   const allDatasetsRes: {
