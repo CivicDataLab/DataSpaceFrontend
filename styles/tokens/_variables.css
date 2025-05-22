@@ -124,7 +124,7 @@
   --icon-disabled: var(--base-gray-slate-solid-9);
   --icon-critical: var(--base-red-solid-10);
   --action-primary-basic-default: var(--orange-secondary-color);
-  --icon-warning: var(--base-amber-solid-10);
+  --icon-warning: var(--orange-secondary-text);
   --action-primary-basic-hovered: var(--orange-secondary-color);
   --icon-success: var(--base-green-solid-10);
   --icon-highlight: var(--base-violet-solid-10);

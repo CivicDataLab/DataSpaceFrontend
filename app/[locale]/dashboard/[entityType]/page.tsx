@@ -307,7 +307,7 @@ const EntityCard = ({ entityItem, params }: any) => {
               <Image
                 height={160}
                 width={160}
-                src={'/fallback.svg'}
+                src={'/org.png'}
                 alt={`fallback logo`}
                 className="fill-current object-contain text-baseGraySlateSolid6"
               />

@@ -17,6 +17,7 @@ import {
 import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
+import { Loading } from '@/components/loading';
 import Filter from '../datasets/components/FIlter/Filter';
 import Styles from '../datasets/dataset.module.scss';
 
@@ -312,103 +313,8 @@ const ListingComponent: React.FC<ListingProps> = ({
         {/* Optional Header Component */}
         {headerComponent}
 
-        <div className="py-8 lg:py-10">
-          <div className="flex flex-wrap items-center justify-between gap-5 rounded-2 p-2 lg:flex-nowrap">
-            <div className="w-full md:block">
-              <SearchInput
-                label="Search"
-                name="Search"
-                className={cn(Styles.Search)}
-                placeholder="Start typing to search for any Dataset"
-                onSubmit={(value) => handleSearch(value)}
-                onClear={(value) => handleSearch(value)}
-              />
-            </div>
-            <div className="flex flex-wrap justify-between gap-3 lg:flex-nowrap lg:justify-normal lg:gap-5">
-              <div className="hidden items-center gap-2 lg:flex">
-                <ButtonGroup noWrap spacing="tight">
-                  <Button
-                    kind={'tertiary'}
-                    className="h-fit w-fit"
-                    onClick={() => setView('collapsed')}
-                  >
-                    <Icon
-                      source={Icons.grid}
-                      color={view === 'collapsed' ? 'highlight' : 'default'}
-                    />
-                  </Button>
-                  <Button
-                    onClick={() => setView('expanded')}
-                    kind={'tertiary'}
-                    className="h-fit w-fit"
-                  >
-                    <Icon
-                      source={Icons.list}
-                      color={view === 'expanded' ? 'highlight' : 'default'}
-                    />
-                  </Button>
-                </ButtonGroup>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={() =>
-                    handleOrderChange(
-                      queryParams.order === ''
-                        ? 'desc'
-                        : queryParams.order === 'desc'
-                          ? 'asc'
-                          : 'desc'
-                    )
-                  }
-                  kind="tertiary"
-                  className="h-fit w-fit"
-                  aria-label={`Sort ${queryParams.order === 'asc' ? 'descending' : 'ascending'}`}
-                >
-                  <Icon
-                    source={Icons.sort}
-                    className={cn(
-                      queryParams.order === 'desc' && 'scale-x-[-1]'
-                    )}
-                  />
-                </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Select
-                  label=""
-                  labelInline
-                  name="select"
-                  onChange={handleSortChange}
-                  options={[
-                    { label: 'Recent', value: 'recent' },
-                    { label: 'Alphabetical', value: 'alphabetical' },
-                  ]}
-                />
-              </div>
-
-              <Tray
-                size="narrow"
-                open={open}
-                onOpenChange={setOpen}
-                trigger={
-                  <Button
-                    kind="secondary"
-                    className="lg:hidden"
-                    onClick={() => setOpen(true)}
-                  >
-                    Filter
-                  </Button>
-                }
-              >
-                <Filter
-                  setOpen={setOpen}
-                  options={filterOptions}
-                  setSelectedOptions={handleFilterChange}
-                  selectedOptions={queryParams.filters}
-                />
-              </Tray>
-            </div>
-          </div>
-          <div className="row mg:mt-8 mb-16 mt-5 flex gap-5 lg:mt-10">
+        <div className="mt-5 lg:mt-10">
+          <div className="row mb-16 flex gap-5 ">
             <div className="hidden min-w-64 max-w-64 lg:block">
               <Filter
                 options={filterOptions}
@@ -418,6 +324,101 @@ const ListingComponent: React.FC<ListingProps> = ({
             </div>
 
             <div className="flex w-full flex-col gap-4 px-2">
+              <div className="flex flex-wrap items-center justify-between gap-5 rounded-2 py-2 lg:flex-nowrap">
+                <div className="w-full md:block">
+                  <SearchInput
+                    label="Search"
+                    name="Search"
+                    className={cn(Styles.Search)}
+                    placeholder="Start typing to search for any Dataset"
+                    onSubmit={(value) => handleSearch(value)}
+                    onClear={(value) => handleSearch(value)}
+                  />
+                </div>
+                <div className="flex flex-wrap justify-between gap-3 lg:flex-nowrap lg:justify-normal lg:gap-5">
+                  <div className="hidden items-center gap-2 lg:flex">
+                    <ButtonGroup noWrap spacing="tight">
+                      <Button
+                        kind={'tertiary'}
+                        className="h-fit w-fit"
+                        onClick={() => setView('collapsed')}
+                      >
+                        <Icon
+                          source={Icons.grid}
+                          color={view === 'collapsed' ? 'highlight' : 'default'}
+                        />
+                      </Button>
+                      <Button
+                        onClick={() => setView('expanded')}
+                        kind={'tertiary'}
+                        className="h-fit w-fit"
+                      >
+                        <Icon
+                          source={Icons.list}
+                          color={view === 'expanded' ? 'highlight' : 'default'}
+                        />
+                      </Button>
+                    </ButtonGroup>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() =>
+                        handleOrderChange(
+                          queryParams.order === ''
+                            ? 'desc'
+                            : queryParams.order === 'desc'
+                              ? 'asc'
+                              : 'desc'
+                        )
+                      }
+                      kind="tertiary"
+                      className="h-fit w-fit"
+                      aria-label={`Sort ${queryParams.order === 'asc' ? 'descending' : 'ascending'}`}
+                    >
+                      <Icon
+                        source={Icons.sort}
+                        className={cn(
+                          queryParams.order === 'desc' && 'scale-x-[-1]'
+                        )}
+                      />
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      label=""
+                      labelInline
+                      name="select"
+                      onChange={handleSortChange}
+                      options={[
+                        { label: 'Recent', value: 'recent' },
+                        { label: 'Alphabetical', value: 'alphabetical' },
+                      ]}
+                    />
+                  </div>
+
+                  <Tray
+                    size="narrow"
+                    open={open}
+                    onOpenChange={setOpen}
+                    trigger={
+                      <Button
+                        kind="secondary"
+                        className="lg:hidden"
+                        onClick={() => setOpen(true)}
+                      >
+                        Filter
+                      </Button>
+                    }
+                  >
+                    <Filter
+                      setOpen={setOpen}
+                      options={filterOptions}
+                      setSelectedOptions={handleFilterChange}
+                      selectedOptions={queryParams.filters}
+                    />
+                  </Tray>
+                </div>
+              </div>
               {Object.entries(queryParams.filters).some(
                 ([key, value]) =>
                   key !== 'sort' && Array.isArray(value) && value.length > 0
@@ -439,7 +440,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                 </div>
               )}
 
-              {facets && datasetDetails?.length > 0 && (
+              {facets && datasetDetails?.length > 0 ? (
                 <GraphqlPagination
                   totalRows={count}
                   pageSize={queryParams.pageSize}
@@ -449,6 +450,14 @@ const ListingComponent: React.FC<ListingProps> = ({
                   view={view}
                 >
                   {datasetDetails.map((item: any) => {
+                    const image = item.is_individual_dataset
+                      ? item?.user?.profile_picture
+                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
+                        : '/profile.png'
+                      : item?.organization?.logo
+                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
+                        : '/org.png';
+
                     const commonProps = {
                       title: item.title,
                       description: item.description,
@@ -476,7 +485,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                           icon: `/Sectors/${item.sectors[0]}.svg`,
                           label: 'Sectors',
                         },
-                        { icon: '/fallback.svg', label: 'Published by' },
+                        { icon: image, label: 'Published by' },
                       ],
                     };
 
@@ -493,6 +502,8 @@ const ListingComponent: React.FC<ListingProps> = ({
                     );
                   })}
                 </GraphqlPagination>
+              ) : (
+                <Loading />
               )}
             </div>
           </div>

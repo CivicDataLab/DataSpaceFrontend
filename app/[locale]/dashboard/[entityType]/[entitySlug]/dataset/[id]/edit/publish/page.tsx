@@ -210,7 +210,13 @@ const Page = () => {
     {
       name: 'Metadata',
       data: getDatasetsSummary.data?.datasets[0]?.metadata,
-      error: '',
+      error:
+        getDatasetsSummary.data?.datasets[0]?.sectors.length === 0 ||
+        getDatasetsSummary.data?.datasets[0]?.sectors.length === 0 ||
+        getDatasetsSummary.data?.datasets[0]?.description.length === 0
+          ? 'Tags or Description or Sectors is missing. Please add to continue.'
+          : '',
+      errorType: 'critical',
     },
   ];
 
@@ -265,7 +271,7 @@ const Page = () => {
       process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true';
     const hasRequiredMetadata =
       dataset.sectors.length > 0 &&
-      dataset.description.length > 10 &&
+      dataset.description.length > 0 &&
       dataset.tags.length > 0;
 
     // No resources
@@ -273,6 +279,7 @@ const Page = () => {
 
     // Access model check if enabled
     if (isAccessModelEnabled && !hasAccessModels) return true;
+    console.log(hasRequiredMetadata);
 
     // Required metadata check
     return !hasRequiredMetadata;
