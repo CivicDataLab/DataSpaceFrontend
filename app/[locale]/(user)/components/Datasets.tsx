@@ -52,8 +52,8 @@ const Datasets = () => {
   const router = useRouter();
 
   return (
-    <div className=" container pt-10 lg:pt-20 md:px-8">
-      <div className="flex flex-col gap-2 p-3  lg:p-0 md:p-0 ">
+    <div className=" container pt-10 md:px-8 lg:pt-20">
+      <div className="flex flex-col gap-2 p-3  md:p-0 lg:p-0 ">
         <Text variant="heading3xl">Recent Datasets</Text>
         <div className="flex flex-wrap justify-between gap-2 ">
           <Text variant="headingLg" fontWeight="medium">
@@ -117,7 +117,16 @@ const Datasets = () => {
                         icon: `/Sectors/${item.sectors[0]}.svg`,
                         label: 'Sectors',
                       },
-                      { icon: '/fallback.svg', label: 'Published by' },
+                      {
+                        icon: item.is_individual_dataset
+                          ? item?.user?.profile_picture
+                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
+                            : '/profile.png'
+                          : item?.organization?.logo
+                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
+                            : '/org.png',
+                        label: 'Published by',
+                      },
                     ]}
                     variation={'collapsed'}
                     iconColor="warning"
