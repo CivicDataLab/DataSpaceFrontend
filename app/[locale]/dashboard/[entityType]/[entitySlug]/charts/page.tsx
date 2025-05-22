@@ -21,7 +21,6 @@ const Charts = () => {
       {type === 'list' ? (
         <ChartsList
           setType={setType}
-          type={type}
           setChartId={setChartId}
           setImageId={setImageId}
         />

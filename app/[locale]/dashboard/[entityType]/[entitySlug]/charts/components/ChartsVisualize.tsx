@@ -148,11 +148,11 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         chartsListRefetch();
       },
       onError: (err: any) => {
-        toast(`Received ${err} while deleting chart `,{
-          action:{
-            label:'undo',
-            onClick: ()=>{}
-          }
+        toast(`Received ${err} while deleting chart `, {
+          action: {
+            label: 'undo',
+            onClick: () => {},
+          },
         });
       },
     }
@@ -203,7 +203,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       }
     }
   }, [chartId, chartDetails, resourceData]);
-  
+
   useEffect(() => {
     if (chartId && chartDetails?.resourceChart) {
       refetch();
@@ -242,11 +242,13 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         valueColumn: resourceChart?.chartOptions?.valueColumn?.id,
         xAxisColumn: resourceChart?.chartOptions?.xAxisColumn?.id,
         xAxisLabel: resourceChart?.chartOptions?.xAxisLabel,
-        yAxisColumn: resourceChart?.chartOptions?.yAxisColumn?.map((col: any) => ({
-          fieldName: col.field.id,
-          label: col.label,
-          color: col.color,
-        })),
+        yAxisColumn: resourceChart?.chartOptions?.yAxisColumn?.map(
+          (col: any) => ({
+            fieldName: col.field.id,
+            label: col.label,
+            color: col.color,
+          })
+        ),
         yAxisLabel: resourceChart?.chartOptions?.yAxisLabel,
       },
       resource: resourceChart.resource?.id,
@@ -335,11 +337,12 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         refetch();
       },
       onError: (err: any) => {
-        toast(`Received ${err} during resource chart saving`,{
-          action:{
-            label:'undo',
-            onClick: ()=>{}
-          }});
+        toast(`Received ${err} during resource chart saving`, {
+          action: {
+            label: 'undo',
+            onClick: () => {},
+          },
+        });
       },
     }
   );
@@ -445,9 +448,13 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           />
           <div className="mb-6 flex flex-col gap-6 p-8 text-center">
             <Text>Preview</Text>
-            {chartData.chart?.options && Object.keys(chartData.chart?.options).length > 0 && (
-              <ReactECharts option={chartData.chart?.options} ref={chartRef} />
-            )}
+            {chartData.chart?.options &&
+              Object.keys(chartData.chart?.options).length > 0 && (
+                <ReactECharts
+                  option={chartData.chart?.options}
+                  ref={chartRef}
+                />
+              )}
           </div>
         </div>
       </div>

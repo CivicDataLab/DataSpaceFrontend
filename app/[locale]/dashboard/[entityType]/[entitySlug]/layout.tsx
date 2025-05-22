@@ -68,6 +68,11 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       icon: 'light',
     },
     {
+      title: 'Add & Manage Charts',
+      href: `/dashboard/${params.entityType}/${params.entitySlug}/charts`,
+      icon: 'chart',
+    },
+    {
       title: 'Profile',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/profile`,
       icon: 'setting',

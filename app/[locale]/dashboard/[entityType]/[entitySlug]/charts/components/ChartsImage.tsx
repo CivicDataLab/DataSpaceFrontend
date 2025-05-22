@@ -206,12 +206,12 @@ const ChartsImage: React.FC<ImageProps> = ({
 
   const onDrop = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
-      mutate({
-        data: {
-          id: imageId,
-          image: acceptedFiles[0],
-        },
-      });
+      // mutate({
+      //   data: {
+      //     id: imageId,
+      //     image: acceptedFiles[0],
+      //   },
+      // });
       {
         refetch();
         listrefetch();
@@ -224,13 +224,13 @@ const ChartsImage: React.FC<ImageProps> = ({
     if (JSON.stringify(formData) !== JSON.stringify(previousFormData)) {
       setPreviousFormData(updatedData);
 
-      mutate({
-        data: {
-          id: imageId,
-          name: updatedData.name,
-          description: updatedData.description,
-        },
-      });
+      // mutate({
+      //   data: {
+      //     id: imageId,
+      //     name: updatedData.name,
+      //     description: updatedData.description,
+      //   },
+      // });
     }
   };
 

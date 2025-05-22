@@ -1,7 +1,7 @@
 import { UUID } from 'crypto';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
@@ -17,25 +17,40 @@ import {
 import { GraphQL } from '@/lib/api';
 import { toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import ChartEditor from './ChartEditor';
 
 interface ChartsListProps {
   setType: any;
-  type: any;
   setChartId: any;
   setImageId: any;
 }
-const chartDetailsQuery: any = graphql(`
-  query ChartDetails($datasetId: UUID!) {
-    getChartData(datasetId: $datasetId) {
+
+const getAllCharts: any = graphql(`
+  query ChartList {
+    getChartData {
       __typename
       ... on TypeResourceChart {
         name
         id
         chartType
+        dataset {
+          title
+          slug
+          id
+        }
+        resource {
+          name
+          id
+        }
       }
       ... on TypeResourceChartImage {
         name
         id
+        dataset {
+          title
+          slug
+          id
+        }
       }
     }
   }
@@ -77,19 +92,18 @@ const AddResourceChart: any = graphql(`
   }
 `);
 
-const datasetResourceList: any = graphql(`
-  query all_resources($datasetId: UUID!) {
-    datasetResources(datasetId: $datasetId) {
-      id
-      type
-      name
-    }
-  }
-`);
+// const datasetResourceList: any = graphql(`
+//   query all_resources($datasetId: UUID!) {
+//     datasetResources(datasetId: $datasetId) {
+//       id
+//       type
+//       name
+//     }
+//   }
+// `);
 
 const ChartsList: React.FC<ChartsListProps> = ({
   setType,
-  type,
   setChartId,
   setImageId,
 }) => {
@@ -99,32 +113,34 @@ const ChartsList: React.FC<ChartsListProps> = ({
     id: string;
   }>();
 
-  const {
-    data,
-    isLoading,
-    refetch,
-  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`chartDetails_${params.id}`, type],
-    () =>
-      GraphQL(
-        chartDetailsQuery,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        {
-          datasetId: params.id,
-        }
-      )
+  const router = useRouter();
+
+  const [editorView, setEditorView] = useState(false);
+
+  const chartListRes: {
+    data: any;
+    isLoading: boolean;
+    refetch: any;
+    error: any;
+    isError: boolean;
+  } = useQuery([`chartList`], () =>
+    GraphQL(
+      getAllCharts,
+      {
+        [params.entityType]: params.entitySlug,
+      },
+      []
+    )
   );
 
   const [filteredRows, setFilteredRows] = useState<any[]>([]);
 
   useEffect(() => {
-    refetch();
-    if (data?.getChartData) {
-      setFilteredRows(data.getChartData);
+    chartListRes.refetch();
+    if (chartListRes.data?.getChartData) {
+      setFilteredRows(chartListRes.data.getChartData);
     }
-  }, [data, type]);
+  }, [chartListRes.data]);
 
   const deleteResourceChartmutation: { mutate: any; isLoading: any } =
     useMutation(
@@ -139,7 +155,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
       {
         onSuccess: () => {
           toast('Chart Deleted Successfully');
-          refetch();
+          chartListRes.refetch();
         },
         onError: (err: any) => {
           toast(`Received ${err} while deleting chart `);
@@ -160,7 +176,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
       {
         onSuccess: () => {
           toast('ChartImage Deleted Successfully');
-          refetch();
+          chartListRes.refetch();
         },
         onError: (err: any) => {
           toast(`Received ${err} while deleting chart `);
@@ -183,7 +199,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
     {
       onSuccess: (res: any) => {
         toast('Resource ChartImage Created Successfully');
-        refetch();
+        chartListRes.refetch();
         setType('img');
         setImageId(res.addResourceChartImage.id);
 
@@ -197,15 +213,15 @@ const ChartsList: React.FC<ChartsListProps> = ({
 
   // AddResourceImage
 
-  const resourceList: { data: any } = useQuery([`charts_${params.id}`], () =>
-    GraphQL(
-      datasetResourceList,
-      {
-        [params.entityType]: params.entitySlug,
-      },
-      { datasetId: params.id }
-    )
-  );
+  // const resourceList: { data: any } = useQuery([`charts_${params.id}`], () =>
+  //   GraphQL(
+  //     datasetResourceList,
+  //     {
+  //       [params.entityType]: params.entitySlug,
+  //     },
+  //     { datasetId: params.id }
+  //   )
+  // );
 
   const resourceChart: {
     mutate: any;
@@ -222,7 +238,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
     {
       onSuccess: (res: any) => {
         toast('Resource Chart Created Successfully');
-        refetch();
+        chartListRes.refetch();
         setType('visualize');
         setChartId(res.addResourceChart.id);
 
@@ -236,11 +252,13 @@ const ChartsList: React.FC<ChartsListProps> = ({
 
   const handleChart = (row: any) => {
     if (row.original.typename === 'TypeResourceChart') {
-      setType('visualize');
-      setChartId(row.original.id);
+      router.push(
+        `/dashboard/${params.entityType}/${params.entitySlug}/charts/${row.original.id}?type=TypeResourceChart`
+      );
     } else {
-      setType('img');
-      setImageId(row.original.id);
+      router.push(
+        `/dashboard/${params.entityType}/${params.entitySlug}/charts/${row.original.id}?type=TypeResourceChartImage`
+      );
     }
   };
 
@@ -262,6 +280,14 @@ const ChartsList: React.FC<ChartsListProps> = ({
       {
         accessorKey: 'type',
         header: 'Chart type',
+      },
+      {
+        accessorKey: 'dataset',
+        header: 'Dataset',
+      },
+      {
+        accessorKey: 'resource',
+        header: 'Resource',
       },
       {
         header: 'DELETE',
@@ -296,13 +322,15 @@ const ChartsList: React.FC<ChartsListProps> = ({
         ? toTitleCase(item.chartType.split('_').join(' ').toLowerCase())
         : 'Image',
       id: item.id,
+      resource: item.resource?.name || '',
+      dataset: item.dataset?.title || item.dataset?.id || '',
       typename: item.__typename,
     }));
   };
 
   const handleSearchChange = (e: string) => {
     const searchTerm = e.toLowerCase();
-    const filtered = data?.getChartData.filter((row: any) =>
+    const filtered = chartListRes.data?.getChartData.filter((row: any) =>
       row.name.toLowerCase().includes(searchTerm)
     );
     setFilteredRows(filtered || []);
@@ -310,11 +338,14 @@ const ChartsList: React.FC<ChartsListProps> = ({
 
   return (
     <>
-      {' '}
-      {!data || isLoading || deleteResourceChartmutation.isLoading ? (
+      {editorView ? (
+        <ChartEditor setEditorView={setEditorView} />
+      ) : chartListRes.isLoading || deleteResourceChartmutation.isLoading ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
+      ) : chartListRes.isError ? (
+        <>Error</>
       ) : (
         <>
           <div className=" my-6 flex flex-wrap items-center justify-between gap-3 px-3 py-4">
@@ -326,32 +357,21 @@ const ChartsList: React.FC<ChartsListProps> = ({
               name="Search"
               onChange={(e) => handleSearchChange(e)}
             />
-            <div className="flex gap-3">
-              <Button
-                onClick={(e) =>
-                  resourceChart.mutate({
-                    resource: resourceList.data.datasetResources[0].id,
-                  })
-                }
-              >
-                Visualize Data
-              </Button>
-              <Button
-                onClick={(e) =>
-                  resourceChartImageMutation.mutate({ dataset: params.id })
-                }
-              >
-                Add ChartImage
-              </Button>
+            <div className="flex justify-end gap-3">
+              <Button onClick={(e) => setEditorView(true)}>Add Chart</Button>
             </div>
           </div>
-          <DataTable
-            columns={generateColumnData()}
-            rows={generateTableData(filteredRows)}
-            hideSelection
-            truncate
-            hideFooter
-          />
+          {filteredRows.length > 0 ? (
+            <DataTable
+              columns={generateColumnData()}
+              rows={generateTableData(filteredRows)}
+              hideSelection
+              truncate
+              hideFooter
+            />
+          ) : (
+            <>No records found</>
+          )}
         </>
       )}
     </>
