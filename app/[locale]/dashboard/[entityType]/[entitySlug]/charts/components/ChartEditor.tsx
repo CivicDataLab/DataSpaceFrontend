@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { ResourceChartImageInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -111,6 +111,8 @@ const ChartImageUpload = ({
 
   const [selectedDataset, setSelectedDataset] = useState<any>(null);
 
+  const router = useRouter();
+
   const createResourceChartImageMutation: {
     mutate: any;
     isLoading: boolean;
@@ -126,8 +128,12 @@ const ChartImageUpload = ({
         { input: input }
       ),
     {
-      onSuccess: () => {
+      onSuccess: (resp: any) => {
         toast(`Created chart image successfully`);
+        // Navigate to chart image preview page
+        router.push(
+          `/dashboard/${params.entityType}/${params.entitySlug}/charts/${resp?.createResourceChartImage?.id}?type=TypeResourceChartImage`
+        );
       },
       onError: (err: any) => {
         toast('Error:  ' + err.message.split(':')[0]);
@@ -136,10 +142,9 @@ const ChartImageUpload = ({
   );
 
   const handleAddImage = () => {
-    console.log('Add Image :::', selectedDataset, files);
     if (selectedDataset && files) {
       createResourceChartImageMutation.mutate({
-        dataset: { set: selectedDataset },
+        dataset: selectedDataset,
         image: files,
       });
     }
@@ -178,7 +183,6 @@ const ChartImageUpload = ({
             label="Select Chart Image"
             accept=".png,.jpg,.jpeg,.svg,.tiff"
             onDrop={(val) => {
-              console.log('drop ::', val);
               setFiles(val[0]);
             }}
             outline
