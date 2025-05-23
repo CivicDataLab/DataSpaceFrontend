@@ -36,8 +36,8 @@ const Sectors = () => {
       .join('+'); // Join with '+'
   }
   return (
-    <div className="container py-10 lg:py-20 md:px-8">
-      <div className="flex flex-col gap-2 px-2 lg:px-0 md:px-0">
+    <div className="container pt-10 md:px-8 lg:pt-20">
+      <div className="flex flex-col gap-2 px-4 md:px-12 lg:px-12 ">
         <Text variant="heading3xl">Explore Sectors</Text>
         <div className="flex flex-wrap justify-between gap-2">
           <Text variant="headingLg" fontWeight="medium">
@@ -60,7 +60,7 @@ const Sectors = () => {
           <Spinner />
         </div>
       ) : (
-        <div className="mt-10 grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid w-full grid-cols-1 gap-6 px-4 md:grid-cols-2 md:px-12 lg:grid-cols-3 lg:px-12">
           {data?.sectors.map((sectors: any) => (
             <Link
               href={`/sectors/${sectors.slug}?sectors=${capitalizeWords(sectors.slug)}`}
