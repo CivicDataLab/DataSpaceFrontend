@@ -54,10 +54,10 @@ const Datasets = () => {
   return (
     <div className=" container pt-10 md:px-8 lg:pt-20">
       <div className="flex flex-col gap-2 p-3  md:p-0 lg:p-0 ">
-        <Text variant="heading3xl">Recent Datasets</Text>
+        <Text variant="heading3xl">Popular Datasets</Text>
         <div className="flex flex-wrap justify-between gap-2 ">
           <Text variant="headingLg" fontWeight="medium">
-            Recently updated and trending Datasets on CivicDataSpace
+            The most popular Datasets on CivicDataSpace{' '}
           </Text>
           <Button
             kind="primary"
