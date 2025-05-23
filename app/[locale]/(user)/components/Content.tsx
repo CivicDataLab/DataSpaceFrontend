@@ -44,8 +44,8 @@ export const Content = () => {
     'Urban Development',
   ];
   return (
-    <main className="bg-primaryBlue  py-10 md:px-8 lg:py-20">
-      <div className="container flex items-center justify-around gap-20 ">
+    <main className="bg-primaryBlue py-6 md:py-10 md:px-8 lg:py-20">
+      <div className="container md:px-12 px-10 lg:px-8 flex items-center justify-around gap-20 ">
         <div className="flex flex-col gap-11 lg:w-[49%]">
           <div className="flex flex-col">
             <Text variant="heading3xl" color="onBgDefault">
