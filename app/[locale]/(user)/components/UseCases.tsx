@@ -21,8 +21,11 @@ import { Icons } from '@/components/icons';
 import Styles from './datasets.module.scss';
 
 const useCasesListDoc: any = graphql(`
-  query TopUseCases($filters: UseCaseFilter) {
-    useCases(filters: $filters) {
+  query TopUseCases(
+    $filters: UseCaseFilter
+    $pagination: OffsetPaginationInput
+  ) {
+    useCases(filters: $filters, pagination: $pagination) {
       id
       title
       summary
@@ -70,6 +73,7 @@ const UseCasesListingPage = () => {
       {},
       {
         filters: { status: 'PUBLISHED' },
+        pagination: { limit: 6 },
       }
     )
   );
@@ -77,7 +81,7 @@ const UseCasesListingPage = () => {
 
   return (
     <div className=" container pt-10 md:px-8 lg:pt-20">
-      <div className="flex flex-col gap-2 p-3  md:p-0 lg:p-0 ">
+      <div className="flex flex-col gap-2 md:px-12 px-4 lg:px-12 ">
         <Text variant="heading3xl">Recent UseCases</Text>
         <div className="flex flex-wrap justify-between gap-2 ">
           <Text variant="headingLg" fontWeight="medium">
@@ -88,14 +92,14 @@ const UseCasesListingPage = () => {
             kind="primary"
             className=" bg-secondaryOrange text-basePureBlack"
             onClick={() => {
-              router.push('/datasets');
+              router.push('/usecases');
             }}
           >
             Explore all Use Cases
           </Button>
         </div>
       </div>
-      <div>
+      <div className='mt-12'>
         <Carousel className="flex w-full justify-between">
           <CarouselPrevious />
 
