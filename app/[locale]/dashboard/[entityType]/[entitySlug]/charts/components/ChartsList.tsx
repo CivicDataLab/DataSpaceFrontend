@@ -51,6 +51,7 @@ const getAllCharts: any = graphql(`
           slug
           id
         }
+        status
       }
     }
   }
@@ -290,6 +291,10 @@ const ChartsList: React.FC<ChartsListProps> = ({
         header: 'Resource',
       },
       {
+        accessorKey: 'status',
+        header: 'Status',
+      },
+      {
         header: 'DELETE',
         cell: ({ row }: any) => (
           <div className="text-center">
@@ -325,6 +330,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
       resource: item.resource?.name || '',
       dataset: item.dataset?.title || item.dataset?.id || '',
       typename: item.__typename,
+      status: item.status || 'NA',
     }));
   };
 
