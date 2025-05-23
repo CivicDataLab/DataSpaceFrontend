@@ -8,3 +8,13 @@
     }
   }
 }
+.UseCaseList {
+  a {
+    min-height: 460px;
+    max-height: 460px;
+    @media screen and (max-width: 1120px) {
+      min-height: 530px;
+      max-height: 530px;
+    }
+  }
+}
