@@ -12,7 +12,7 @@ import Details from './components/Details';
 import Metadata from './components/Metadata';
 import PrimaryData from './components/PrimaryData';
 import Resources from './components/Resources';
-import SimilarDatasets from './components/SimilarDatasets/page';
+import SimilarDatasets from './components/SimilarDatasets';
 
 const datasetQuery: any = graphql(`
   query getDataset($datasetId: UUID!) {
