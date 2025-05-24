@@ -233,8 +233,8 @@ const Details = () => {
               value={formData.startedOn || ''}
               onChange={(e) => {
                 handleChange('startedOn', e);
-                handleSave({ ...formData, startedOn: e });
               }}
+              onBlur={() => handleSave(formData)}
             />
           </div>
 
@@ -265,9 +265,9 @@ const Details = () => {
               }
               value={formData.completedOn || ''}
               onChange={(e) => {
-                handleChange('completedOn', e),
-                  handleSave({ ...formData, completedOn: e });
+                handleChange('completedOn', e);
               }}
+              onBlur={() => handleSave(formData)}
             />
           </div>
         </div>
@@ -281,8 +281,9 @@ const Details = () => {
               actionHint="Only one image can be added. Recommended resolution of 16:9 - (1280x720), (1920x1080) - Supported File Types: PNG/JPG/SVG "
               actionTitle={
                 formData.logo
-                ? formData.logo.name.split('/').pop()
-                : 'Name of the logo'              }
+                  ? formData.logo.name.split('/').pop()
+                  : 'Name of the logo'
+              }
             />
           </DropZone>
         </div>
