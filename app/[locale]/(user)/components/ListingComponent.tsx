@@ -279,9 +279,9 @@ const ListingComponent: React.FC<ListingProps> = ({
       <div className="container">
         {/* Optional Category Header */}
         {(categoryName || categoryDescription || categoryImage) && (
-          <div className="flex  flex-wrap items-center justify-center gap-6 p-6 lg:flex-nowrap lg:items-start lg:gap-10 lg:pb-10 lg:pt-14">
+          <div className="flex  flex-wrap items-center justify-center gap-6 py-6 lg:flex-nowrap lg:items-start lg:gap-10 lg:pb-10 lg:pt-14">
             {categoryImage && (
-              <div className="flex flex-col items-center justify-center rounded-2 bg-baseGraySlateSolid2 p-2">
+              <div className="flex flex-col items-center justify-center rounded-6 border-4 border-solid border-greyExtralight p-2">
                 <Image
                   src={`/Sectors/${categoryName}.svg`}
                   width={164}
@@ -290,10 +290,10 @@ const ListingComponent: React.FC<ListingProps> = ({
                 />
               </div>
             )}
-            <div className="flex-start flex flex-col gap-4 p-2">
+            <div className="flex-start flex flex-col gap-6 p-2">
               {categoryName && (
                 <Text
-                  variant="heading3xl"
+                  variant="heading2xl"
                   className="text-primaryBlue"
                   fontWeight="bold"
                 >
@@ -301,7 +301,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                 </Text>
               )}
 
-              <Text variant="headingLg" fontWeight="regular">
+              <Text variant="headingLg" fontWeight="regular" className=' leading-3 '>
                 {categoryDescription
                   ? categoryDescription
                   : 'No Description Provided'}

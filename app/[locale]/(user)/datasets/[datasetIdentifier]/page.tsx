@@ -12,6 +12,7 @@ import Details from './components/Details';
 import Metadata from './components/Metadata';
 import PrimaryData from './components/PrimaryData';
 import Resources from './components/Resources';
+import SimilarDatasets from './components/SimilarDatasets';
 
 const datasetQuery: any = graphql(`
   query getDataset($datasetId: UUID!) {
@@ -26,6 +27,14 @@ const datasetQuery: any = graphql(`
       description
       created
       modified
+      isIndividualDataset
+      user {
+        fullName
+        id
+        profilePicture {
+          url
+        }
+      }
       metadata {
         metadataItem {
           id
@@ -86,7 +95,7 @@ const DatasetDetailsPage = () => {
         ]}
       />
       <div className="flex">
-        <div className="w-full gap-10 border-r-2 border-solid border-greyExtralight p-6  lg:w-3/4 lg:p-10">
+        <div className="w-full gap-10 border-r-2 border-solid border-greyExtralight p-6 lg:w-3/4 lg:p-10">
           {Datasetdetails.isLoading ? (
             <div className=" mt-8 flex justify-center">
               <Spinner />
@@ -101,7 +110,10 @@ const DatasetDetailsPage = () => {
             {showCharts ? (
               <Details setShowcharts={setShowcharts} />
             ) : (
-              <Resources />
+              <>
+                <Resources />
+                <SimilarDatasets showCharts={showCharts} />
+              </>
             )}
           </div>
         </div>
@@ -120,10 +132,16 @@ const DatasetDetailsPage = () => {
         </div>
       </div>
       {showCharts && (
-        <div className="w-full p-6 lg:px-28 lg:py-10">
-          <Resources />
-        </div>
+        <>
+          <div className="w-full p-6 lg:px-10 lg:py-10">
+            <Resources />
+          </div>
+          <SimilarDatasets showCharts={showCharts} />
+        </>
       )}
+      {/* <div className="w-full p-6 lg:p-10 lg:py-10">
+        <SimilarDatasets />
+      </div> */}
     </main>
   );
 };

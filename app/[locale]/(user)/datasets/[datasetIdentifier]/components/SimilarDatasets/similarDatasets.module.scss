@@ -1,0 +1,10 @@
+.List {
+  a {
+    min-height: 330px;
+    max-height: 330px;
+    @media screen and (max-width: 1120px) {
+      min-height: 390px;
+      max-height: 390px;
+    }
+  }
+}
