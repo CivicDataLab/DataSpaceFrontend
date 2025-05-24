@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import { Button, ButtonGroup, Text } from 'opub-ui';
+import { Button, ButtonGroup, Spinner, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,7 @@ const getAllPublishers: any = graphql(`
       __typename
       ... on TypeOrganization {
         name
+        id
         logo {
           url
         }
@@ -26,6 +27,7 @@ const getAllPublishers: any = graphql(`
       }
       ... on TypeUser {
         fullName
+        id
         profilePicture {
           url
         }
@@ -68,7 +70,7 @@ const PublishersListingPage = () => {
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
-          { href: '#', label: 'Sectors' },
+          { href: '#', label: 'Publishers' },
         ]}
       />
       <>
@@ -124,6 +126,7 @@ const PublishersListingPage = () => {
                 </div>
               </div>
             </div>
+
             <div className="container flex flex-col gap-4 py-10 lg:gap-6">
               <Text variant="heading2xl" fontWeight="bold">
                 Explore Publishers
@@ -150,8 +153,15 @@ const PublishersListingPage = () => {
                   </div>
                 </ButtonGroup>
               </div>
-              {Details.data && Details.data.getPublishers.length > 0 && (
-                <PublisherCard data={filteredPublishers} />
+              {Details.isLoading ? (
+                <div className="m-4 flex justify-center">
+                  <Spinner />
+                </div>
+              ) : (
+                Details.data &&
+                Details.data.getPublishers.length > 0 && (
+                  <PublisherCard data={filteredPublishers} />
+                )
               )}
             </div>
           </div>

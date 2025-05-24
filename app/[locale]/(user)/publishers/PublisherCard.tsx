@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Text } from 'opub-ui';
 
 interface CardProps {
@@ -11,7 +12,8 @@ const PublisherCard: React.FC<CardProps> = ({ data }) => {
     <div className="my-10">
       <div className=" grid w-full grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3 lg:gap-16">
         {data.map((item: any, index: any) => (
-          <div
+          <Link
+            href={`/publishers/${item.id}`}
             key={index}
             className="flex flex-col gap-4 rounded-4 p-6 shadow-card"
           >
@@ -61,7 +63,7 @@ const PublisherCard: React.FC<CardProps> = ({ data }) => {
                 </Text>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
