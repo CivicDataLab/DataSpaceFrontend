@@ -69,6 +69,14 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
     fetchTitle();
   }, [data.metadata]);
 
+  const image = data.isIndividualDataset
+    ? data?.user?.profilePicture
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.user.profilePicture.url}`
+      : '/profile.png'
+    : data?.organization?.logo
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.organization.logo.url}`
+      : '/org.png';
+
   return (
     <div className="flex flex-col gap-10">
       <div className=" flex items-center justify-between">
@@ -93,34 +101,28 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
       <Divider />
       <div className=" flex flex-col gap-8">
         <div className=" hidden rounded-2 border-1 border-solid border-greyExtralight p-2 lg:block">
-          {data?.organization?.logo?.url ? (
-            <Image
-              height={140}
-              width={100}
-              src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.organization?.logo?.url}`}
-              alt={`${data.organization?.name} logo`}
-              className="w-full object-contain"
-            />
-          ) : (
-            <Image
-              height={140}
-              width={100}
-              src={'/fallback.svg'}
-              alt={'fallback logo'}
-              className="fill-current w-full object-contain"
-            />
-          )}
+          <Image
+            height={140}
+            width={100}
+            src={image}
+            alt={
+              data.isIndividualDataset ? 'Publisher logo' : 'Organization logo'
+            }
+            className="w-full object-contain"
+          />
         </div>
         <div className="flex items-center gap-2 ">
           <Text className="min-w-[120px]  basis-1/4 uppercase" variant="bodyMd">
-            Organization
+            {data.isIndividualDataset ? 'Publisher' : 'Organization'}
           </Text>
           <Text
             className="max-w-xs truncate "
             variant="bodyLg"
             fontWeight="medium"
           >
-            {data.organization.name}
+            {data.isIndividualDataset
+              ? data.user.fullName
+              : data.organization.name}
           </Text>
         </div>
         <div className="flex items-center gap-2 ">
