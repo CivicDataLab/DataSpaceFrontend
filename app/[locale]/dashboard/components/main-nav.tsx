@@ -116,6 +116,10 @@ export function MainNav({ hideSearch = false }) {
       href: '/usecases',
     },
     {
+      title: 'Publishers',
+      href: '/publishers',
+    },
+    {
       title: 'About us',
       href: '/about-us',
     },
