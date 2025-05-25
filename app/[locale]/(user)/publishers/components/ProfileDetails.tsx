@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Icon, Text } from 'opub-ui';
+import { Button, ButtonGroup, Icon, Text } from 'opub-ui';
 
-import { formatDate } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import Datasets from './Datasets';
+import UseCases from './UseCases';
 
 interface ProfileDetailsProps {
   data: any;
@@ -24,6 +26,15 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ data }) => {
       link: data?.githubProfile,
     },
   ].filter((item) => item.link?.trim());
+
+  const [type, setType] = useState<'usecases' | 'datasets'>('usecases');
+
+  type PublisherType = 'usecases' | 'datasets';
+  const publisherButtons: { key: PublisherType; label: string }[] = [
+    { key: 'usecases', label: 'Use Cases' },
+    { key: 'datasets', label: 'Datasets' },
+  ];
+
   return (
     <div>
       <div className="flex w-full flex-col gap-4 rounded-4 bg-surfaceDefault p-6">
@@ -49,6 +60,30 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ data }) => {
           ))}
         </div>
       </div>
+      <div className=" my-8">
+        <ButtonGroup>
+          <div className="flex flex-wrap gap-4">
+            {publisherButtons.map((btn) => (
+              <Button
+                key={btn.key}
+                onClick={() => setType(btn.key)}
+                className={cn(
+                  ' w-72 rounded-full py-3',
+                  type === btn.key
+                    ? 'bg-tertiaryAccent'
+                    : 'border-1 border-solid border-tertiaryAccent bg-surfaceDefault'
+                )}
+              >
+                <Text variant="headingLg" fontWeight="semibold">
+                  {btn.label}
+                </Text>
+              </Button>
+            ))}
+          </div>
+        </ButtonGroup>
+      </div>
+      {type === 'usecases' && <UseCases />}
+      {type === 'datasets' && <Datasets />}
     </div>
   );
 };
