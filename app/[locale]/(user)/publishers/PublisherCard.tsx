@@ -1,19 +1,24 @@
-import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Text } from 'opub-ui';
+import React from 'react';
+
 
 interface CardProps {
   data: any;
 }
 
 const PublisherCard: React.FC<CardProps> = ({ data }) => {
-  return (
+    return (
     <div className="my-10">
       <div className=" grid w-full grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3 lg:gap-16">
         {data.map((item: any, index: any) => (
           <Link
-            href={`/publishers/${item.id}`}
+            href={
+              item.__typename === 'TypeOrganization'
+                ? `/publishers/organization/${item.id}`
+                : `/publishers/${item.id}`
+            }
             key={index}
             className="flex flex-col gap-4 rounded-4 p-6 shadow-card"
           >
