@@ -34,6 +34,7 @@ import {
   IconLayoutSidebarLeftExpand,
   IconLink,
   IconLoader,
+  IconMapPin,
   IconMenu2,
   IconPencil,
   IconPhoto,
@@ -115,4 +116,5 @@ export const Icons: {
   photo: IconPhoto,
   star: IconStar,
   light: IconBulb,
+  location: IconMapPin,
 };
