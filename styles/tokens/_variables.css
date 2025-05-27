@@ -120,6 +120,7 @@
   --border-interactive-default: var(--base-blue-solid-8);
   --border-interactive-focused: var(--base-blue-solid-7);
   --icon-default: var(--base-gray-slate-solid-11);
+  --icon-inherit: var(--accent-tertiary-color);
   --icon-subdued: var(--base-gray-slate-solid-10);
   --icon-disabled: var(--base-gray-slate-solid-9);
   --icon-critical: var(--base-red-solid-10);
