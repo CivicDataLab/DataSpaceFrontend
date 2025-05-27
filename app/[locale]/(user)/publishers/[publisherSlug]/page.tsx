@@ -62,7 +62,7 @@ const PublisherPage = () => {
                   <Spinner color="highlight" />
                 </div>
               ) : (
-                <SidebarCard data={userInfo?.data?.userById} />
+                <SidebarCard data={userInfo?.data?.userById} type="Publisher" />
               )}
             </div>
             <div className="w-full">
@@ -71,7 +71,7 @@ const PublisherPage = () => {
                   <Spinner color="highlight" />
                 </div>
               ) : (
-                <ProfileDetails data={userInfo?.data?.userById} />
+                <ProfileDetails data={userInfo?.data?.userById} type="Publisher" />
               )}
             </div>
           </div>
