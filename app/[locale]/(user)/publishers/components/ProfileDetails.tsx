@@ -9,9 +9,10 @@ import UseCases from './UseCases';
 
 interface ProfileDetailsProps {
   data: any;
+  type: 'organization' | 'Publisher';
 }
 
-const ProfileDetails: React.FC<ProfileDetailsProps> = ({ data }) => {
+const ProfileDetails: React.FC<ProfileDetailsProps> = ({ data, type }) => {
   const socialMedia = [
     {
       icon: Icons.twitter,
@@ -27,7 +28,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ data }) => {
     },
   ].filter((item) => item.link?.trim());
 
-  const [type, setType] = useState<'usecases' | 'datasets'>('usecases');
+  const [tabType, setTabType] = useState<'usecases' | 'datasets'>('usecases');
 
   type PublisherType = 'usecases' | 'datasets';
   const publisherButtons: { key: PublisherType; label: string }[] = [
@@ -41,11 +42,16 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ data }) => {
         <div className="flex items-center gap-1 ">
           <Icon source={Icons.calendar} color="warning" />
           <Text variant="bodySm">
-            Joined on: {formatDate(data?.dateJoined)}
+            Joined on:{' '}
+            {type === 'organization'
+              ? formatDate(data?.created)
+              : formatDate(data?.dateJoined)}
           </Text>
         </div>
         <div>
-          <Text variant="bodySm">{data?.bio}</Text>
+          <Text variant="bodySm">
+            {type === 'organization' ? data?.description : data?.bio}
+          </Text>
         </div>
         <div className=" flex items-center gap-3">
           {socialMedia?.map((item: any, index: any) => (
@@ -66,10 +72,10 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ data }) => {
             {publisherButtons.map((btn) => (
               <Button
                 key={btn.key}
-                onClick={() => setType(btn.key)}
+                onClick={() => setTabType(btn.key)}
                 className={cn(
                   ' w-72 rounded-full py-3',
-                  type === btn.key
+                  tabType === btn.key
                     ? 'bg-tertiaryAccent'
                     : 'border-1 border-solid border-tertiaryAccent bg-surfaceDefault'
                 )}
@@ -82,8 +88,8 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ data }) => {
           </div>
         </ButtonGroup>
       </div>
-      {type === 'usecases' && <UseCases />}
-      {type === 'datasets' && <Datasets />}
+      {tabType === 'usecases' && <UseCases type={type} />}
+      {tabType === 'datasets' && <Datasets type={type} />}
     </div>
   );
 };
