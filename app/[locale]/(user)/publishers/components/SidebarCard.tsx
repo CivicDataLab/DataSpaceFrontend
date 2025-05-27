@@ -9,6 +9,7 @@ import { Icons } from '@/components/icons';
 
 interface SidebarCardProps {
   data: any;
+  type: 'organization' | 'Publisher';
 }
 const sectorsDoc: any = graphql(`
   query sectorInfo($userId: ID!) {
@@ -20,35 +21,75 @@ const sectorsDoc: any = graphql(`
   }
 `);
 
-const SidebarCard: React.FC<SidebarCardProps> = ({ data }) => {
-  const sectorInfo: any = useQuery([`${data.id}_sector`], () =>
-    GraphQL(
-      sectorsDoc,
-      {
-        // Entity Headers if present
-      },
-      { userId: data.id }
-    )
+const organizationDoc: any = graphql(`
+  query organizationInfo($organizationId: ID!) {
+    organizationContributedSectors(organizationId: $organizationId) {
+      id
+      name
+      slug
+    }
+  }
+`);
+
+const SidebarCard: React.FC<SidebarCardProps> = ({ data, type }) => {
+  const sectorInfo: any = useQuery(
+    [`${data.id}_sector`],
+    () =>
+      GraphQL(
+        sectorsDoc,
+        {
+          // Entity Headers if present
+        },
+        { userId: data.id }
+      ),
+    {
+      enabled: type === 'Publisher' && !!data?.id,
+    }
+  );
+
+  const organizationInfo: any = useQuery(
+    [`${data.id}_organization`],
+    () =>
+      GraphQL(
+        organizationDoc,
+        {
+          // Entity Headers if present
+        },
+        { organizationId: data.id }
+      ),
+    {
+      enabled: type === 'organization' && !!data?.id, // runs only if type is 'organization' and data.id exists
+    }
   );
 
   return (
     <div className="m-auto flex flex-col gap-4">
       <div>
-        <Image
-          src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data?.profilePicture?.url}`}
-          alt={data.fullName}
-          width={240}
-          height={240}
-          className="m-auto rounded-full object-cover"
-        />
+        {type === 'organization' ? (
+          <Image
+            src={`${data?.logo?.url ? process.env.NEXT_PUBLIC_BACKEND_URL + data?.logo?.url : '/org.png'}`}
+            alt={data.fullName}
+            width={168}
+            height={168}
+            className="m-auto rounded-4 bg-surfaceDefault object-contain p-4"
+          />
+        ) : (
+          <Image
+            src={`${data?.profilePicture?.url ? process.env.NEXT_PUBLIC_BACKEND_URL + data?.profilePicture?.url : '/profile.png'}`}
+            alt={data.fullName}
+            width={240}
+            height={240}
+            className="m-auto rounded-full object-cover"
+          />
+        )}
       </div>
       <div className="flex flex-col gap-4">
         <div className="pt-4">
           <Text variant="bodyLg" fontWeight="semibold" color="onBgDefault">
-            {data?.fullName}
+            {type === 'organization' ? data?.name : data?.fullName}
           </Text>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Text variant="bodySm" color="onBgDefault">
             {data?.publishedUseCasesCount} Use Cases
           </Text>
@@ -88,8 +129,25 @@ const SidebarCard: React.FC<SidebarCardProps> = ({ data }) => {
           )}
         </div>
         <div className="flex  flex-col gap-2">
-          {sectorInfo?.data &&
+          {type === 'Publisher' &&
+            sectorInfo?.data &&
             sectorInfo?.data.userContributedSectors.map(
+              (item: any, index: any) => (
+                <div className="flex items-center gap-2" key={index}>
+                  <Image
+                    src={`/Sectors/${item?.name}.svg`}
+                    alt="Sector Logo"
+                    width={32}
+                    height={32}
+                    className=" rounded-2 bg-surfaceDefault p-1"
+                  />
+                  <Text color="onBgDefault">{item?.name}</Text>
+                </div>
+              )
+            )}
+          {type === 'organization' &&
+            organizationInfo?.data &&
+            organizationInfo?.data.organizationContributedSectors.map(
               (item: any, index: any) => (
                 <div className="flex items-center gap-2" key={index}>
                   <Image
