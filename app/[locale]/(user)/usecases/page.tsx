@@ -20,6 +20,19 @@ const useCasesListQueryDoc: any = graphql(`
       summary
       slug
       datasetCount
+      isIndividualUsecase
+      user {
+        fullName
+        profilePicture {
+          url
+        }
+      }
+      organization {
+        name
+        logo {
+          url
+        }
+      }
       logo {
         path
       }
@@ -65,7 +78,6 @@ const UseCasesListingPage = () => {
       }
     )
   );
-  
 
   return (
     <main className="bg-baseGraySlateSolid2">
@@ -142,7 +154,16 @@ const UseCasesListingPage = () => {
                       icon: `/Sectors/${item?.sectors[0]?.name}.svg`,
                       label: 'Sectors',
                     },
-                    { icon: '/fallback.svg', label: 'Published by' },
+                    {
+                      icon: item.isIndividualUsecase
+                        ? item?.user?.profilePicture
+                          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
+                          : '/profile.png'
+                        : item?.organization?.logo
+                          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
+                          : '/org.png',
+                      label: 'Published by',
+                    },
                   ]}
                   imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo?.path.replace('/code/files/', '')}`}
                   description={item.summary}

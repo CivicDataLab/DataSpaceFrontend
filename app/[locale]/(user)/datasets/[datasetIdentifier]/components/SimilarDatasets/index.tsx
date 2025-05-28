@@ -94,7 +94,6 @@ const SimilarDatasets: React.FC<Props> = ({ showCharts }) => {
       )
   );
 
-  console.log(SimilatDatasetdetails?.data?.getDataset);
 
   return (
     <div className="py-4 md:py-10 lg:py-20">

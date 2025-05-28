@@ -31,6 +31,19 @@ const useCasesListDoc: any = graphql(`
       summary
       slug
       datasetCount
+      isIndividualUsecase
+      user {
+        fullName
+        profilePicture {
+          url
+        }
+      }
+      organization {
+        name
+        logo {
+          url
+        }
+      }
       logo {
         path
       }
@@ -81,7 +94,7 @@ const UseCasesListingPage = () => {
 
   return (
     <div className=" container pt-10 md:px-8 lg:pt-20">
-      <div className="flex flex-col gap-2 md:px-12 px-4 lg:px-12 ">
+      <div className="flex flex-col gap-2 px-4 md:px-12 lg:px-12 ">
         <Text variant="heading3xl">Recent UseCases</Text>
         <div className="flex flex-wrap justify-between gap-2 ">
           <Text variant="headingLg" fontWeight="medium">
@@ -99,7 +112,7 @@ const UseCasesListingPage = () => {
           </Button>
         </div>
       </div>
-      <div className='mt-12'>
+      <div className="mt-12">
         <Carousel className="flex w-full justify-between">
           <CarouselPrevious />
 
@@ -143,7 +156,16 @@ const UseCasesListingPage = () => {
                           icon: `/Sectors/${item?.sectors[0]?.name}.svg`,
                           label: 'Sectors',
                         },
-                        { icon: '/fallback.svg', label: 'Published by' },
+                        {
+                          icon: item.isIndividualUsecase
+                            ? item?.user?.profilePicture
+                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
+                              : '/profile.png'
+                            : item?.organization?.logo
+                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
+                              : '/org.png',
+                          label: 'Published by',
+                        },
                       ]}
                       imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo?.path.replace('/code/files/', '')}`}
                       description={item.summary}

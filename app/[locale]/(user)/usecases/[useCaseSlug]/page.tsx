@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { TypeDataset, TypeUseCase } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
-import { Avatar, Card, Spinner, Text } from 'opub-ui';
+import { Card, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
@@ -21,6 +21,21 @@ const UseCasedetails: any = graphql(`
       id
       title
       summary
+      isIndividualUsecase
+      user {
+        fullName
+        email
+        profilePicture {
+          url
+        }
+      }
+      organization {
+        name
+        contactEmail
+        logo {
+          url
+        }
+      }
       website
       metadata {
         metadataItem {
@@ -44,23 +59,30 @@ const UseCasedetails: any = graphql(`
         name
         contactEmail
         logo {
-          path
+          url
         }
       }
       logo {
         name
         path
-        url
       }
       datasets {
         title
         id
+        isIndividualDataset
+        user {
+          fullName
+          id
+          profilePicture {
+            url
+          }
+        }
         downloadCount
         description
         organization {
           name
           logo {
-            path
+            url
           }
         }
         metadata {
@@ -138,8 +160,7 @@ const UseCaseDetailPage = () => {
   const hasContributors =
     UseCaseDetails?.useCase?.contributors &&
     UseCaseDetails?.useCase?.contributors?.length > 0;
-
-
+  console.log(UseCaseDetails);
 
   return (
     <div>
@@ -159,7 +180,6 @@ const UseCaseDetailPage = () => {
           <div className=" bg-onSurfaceDefault">
             <div className="container flex flex-row">
               <div className="w-full border-solid border-greyExtralight py-8 pr-8 lg:w-3/4 lg:border-r-2 lg:py-10 lg:pr-8">
-
                 <PrimaryDetails data={UseCaseDetails} isLoading={isLoading} />
               </div>
               <div className="hidden lg:block lg:w-1/4">
@@ -208,7 +228,16 @@ const UseCaseDetailPage = () => {
                           icon: `/Sectors/${dataset.sectors[0].name}.svg`,
                           label: 'Sectors',
                         },
-                        { icon: '/fallback.svg', label: 'Published by' },
+                        {
+                          icon: dataset.isIndividualDataset
+                            ? dataset?.user?.profilePicture
+                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${dataset.user.profilePicture.url}`
+                              : '/profile.png'
+                            : dataset?.organization?.logo
+                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${dataset.organization.logo.url}`
+                              : '/org.png',
+                          label: 'Published by',
+                        },
                       ]}
                       description={dataset.description || ''}
                     />
@@ -216,94 +245,94 @@ const UseCaseDetailPage = () => {
               </div>
             </div>
           </div>
-          {(hasSupportingOrganizations || hasPartnerOrganizations || hasContributors) && (
+          {(hasSupportingOrganizations ||
+            hasPartnerOrganizations ||
+            hasContributors) && (
             <div className=" bg-primaryBlue">
               <div className="container flex flex-wrap gap-8 py-10 lg:flex-nowrap ">
                 {hasSupportingOrganizations && (
-                    <div className="w-full lg:w-2/4">
-                      <Text variant="heading2xl" color="onBgDefault">
-                        Supported by
-                      </Text>
-                      <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
-                        {UseCaseDetails?.useCase?.supportingOrganizations?.map(
-                          (org: any) => (
-                            <div
-                              key={org.id}
-                              className=" rounded-4 bg-surfaceDefault  p-4"
-                            >
-                              <Image
-                                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
-                                alt={org.name}
-                                width={140}
-                                height={100}
-                                className=" object-contain"
-                              />
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
-                {hasPartnerOrganizations && (
-                    <div className="w-full lg:w-2/4">
-                      <Text variant="heading2xl" color="onBgDefault">
-                        Partnered by
-                      </Text>
-                      <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
-                        {UseCaseDetails?.useCase?.partnerOrganizations?.map(
-                          (org: any) => (
-                            <div
-                              key={org.id}
-                              className=" rounded-4 bg-surfaceDefault  p-4"
-                            >
-                              <Image
-                                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
-                                alt={org.name}
-                                width={140}
-                                height={100}
-                                className=" object-contain"
-                              />
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
-              </div>
-              {hasContributors && (
-                  <div className="container py-10">
-                    <div className="flex flex-col">
-                      <Text variant="heading2xl" color="onBgDefault">
-                        Contributors{' '}
-                      </Text>
-                      <Text color="onBgDefault" variant="headingLg">
-                        Publisher and Contributors who have added to the Use
-                        Case
-                      </Text>
-                    </div>
-                    <div className="mt-8 flex flex-wrap items-center justify-start gap-8">
-                      {UseCaseDetails?.useCase?.contributors?.map(
-                        (contributor: any) => (
-                          <Image
-                            alt={contributor.fullName}
-                            width={120}
-                            height={120}
-                            className="rounded-full object-cover"
-                            key={contributor.id}
-                            src={
-                              contributor.profilePicture?.url
-                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${contributor.profilePicture?.url}`
-                                : '/profile.png'
-                            }
-                          />
+                  <div className="w-full lg:w-2/4">
+                    <Text variant="heading2xl" color="onBgDefault">
+                      Supported by
+                    </Text>
+                    <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
+                      {UseCaseDetails?.useCase?.supportingOrganizations?.map(
+                        (org: any) => (
+                          <div
+                            key={org.id}
+                            className=" rounded-4 bg-surfaceDefault  p-4"
+                          >
+                            <Image
+                              src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
+                              alt={org.name}
+                              width={140}
+                              height={100}
+                              className=" object-contain"
+                            />
+                          </div>
                         )
                       )}
                     </div>
                   </div>
                 )}
+                {hasPartnerOrganizations && (
+                  <div className="w-full lg:w-2/4">
+                    <Text variant="heading2xl" color="onBgDefault">
+                      Partnered by
+                    </Text>
+                    <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
+                      {UseCaseDetails?.useCase?.partnerOrganizations?.map(
+                        (org: any) => (
+                          <div
+                            key={org.id}
+                            className=" rounded-4 bg-surfaceDefault  p-4"
+                          >
+                            <Image
+                              src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
+                              alt={org.name}
+                              width={140}
+                              height={100}
+                              className=" object-contain"
+                            />
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {hasContributors && (
+                <div className="container py-10">
+                  <div className="flex flex-col">
+                    <Text variant="heading2xl" color="onBgDefault">
+                      Contributors{' '}
+                    </Text>
+                    <Text color="onBgDefault" variant="headingLg">
+                      Publisher and Contributors who have added to the Use Case
+                    </Text>
+                  </div>
+                  <div className="mt-8 flex flex-wrap items-center justify-start gap-8">
+                    {UseCaseDetails?.useCase?.contributors?.map(
+                      (contributor: any) => (
+                        <Image
+                          alt={contributor.fullName}
+                          width={120}
+                          height={120}
+                          className="rounded-full object-cover"
+                          key={contributor.id}
+                          src={
+                            contributor.profilePicture?.url
+                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${contributor.profilePicture?.url}`
+                              : '/profile.png'
+                          }
+                        />
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
-          <div className="mt-10 bg-surfaceDefault"></div>
         </>
       )}
     </div>
