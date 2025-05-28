@@ -121,7 +121,7 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
         )}
       >
         {PublishedUseCasesList.isLoading ? (
-          <div className=" mt-8 flex justify-center">
+          <div className=" flex w-fit justify-center rounded-2 bg-surfaceDefault p-4">
             <Spinner />
           </div>
         ) : (
