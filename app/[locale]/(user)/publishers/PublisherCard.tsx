@@ -1,15 +1,14 @@
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Text } from 'opub-ui';
-import React from 'react';
-
+import { Text, Tooltip } from 'opub-ui';
 
 interface CardProps {
   data: any;
 }
 
 const PublisherCard: React.FC<CardProps> = ({ data }) => {
-    return (
+  return (
     <div className="my-10">
       <div className=" grid w-full grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3 lg:gap-16">
         {data.map((item: any, index: any) => (
@@ -68,6 +67,23 @@ const PublisherCard: React.FC<CardProps> = ({ data }) => {
                 </Text>
               </div> */}
             </div>
+            {(item?.bio || item?.description) && (
+              <div>
+                <Tooltip
+                  content={
+                    item.__typename === 'TypeUser'
+                      ? item?.bio
+                      : item?.description
+                  }
+                >
+                  <Text>
+                    {item.__typename === 'TypeUser'
+                      ? item.bio.slice(0, 100) + '...'
+                      : item.description.slice(0, 100) + '...'}
+                  </Text>
+                </Tooltip>
+              </div>
+            )}
           </Link>
         ))}
       </div>

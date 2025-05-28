@@ -18,6 +18,7 @@ const getAllPublishers: any = graphql(`
       ... on TypeOrganization {
         name
         id
+        description
         logo {
           url
         }
@@ -28,6 +29,7 @@ const getAllPublishers: any = graphql(`
       ... on TypeUser {
         fullName
         id
+        bio
         profilePicture {
           url
         }
