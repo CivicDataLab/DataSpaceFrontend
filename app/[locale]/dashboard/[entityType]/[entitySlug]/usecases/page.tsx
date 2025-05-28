@@ -71,7 +71,9 @@ export default function DatasetPage({
     () =>
       GraphQL(
         allUseCases,
-        {},
+        {
+          [params.entityType]: params.entitySlug,
+        },
         {
           filters: {
             status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
@@ -98,7 +100,13 @@ export default function DatasetPage({
   } = useMutation(
     [`delete_Usecase`],
     (data: { id: string }) =>
-      GraphQL(deleteUseCase, {}, { useCaseId: data.id }),
+      GraphQL(
+        deleteUseCase,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        { useCaseId: data.id }
+      ),
     {
       onSuccess: () => {
         toast(`Deleted UseCase successfully`);
@@ -114,16 +122,29 @@ export default function DatasetPage({
     mutate: any;
     isLoading: boolean;
     error: any;
-  } = useMutation([`delete_Usecase`], () => GraphQL(AddUseCase, {}, []), {
-    onSuccess: (response: any) => {
-      toast(`UseCase created successfully`);
-      router.push(`/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${response.addUseCase.id}/details`);
-      AllUseCases.refetch();
-    },
-    onError: (err: any) => {
-      toast('Error:  ' + err.message.split(':')[0]);
-    },
-  });
+  } = useMutation(
+    [`delete_Usecase`],
+    () =>
+      GraphQL(
+        AddUseCase,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        []
+      ),
+    {
+      onSuccess: (response: any) => {
+        toast(`UseCase created successfully`);
+        router.push(
+          `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${response.addUseCase.id}/details`
+        );
+        AllUseCases.refetch();
+      },
+      onError: (err: any) => {
+        toast('Error:  ' + err.message.split(':')[0]);
+      },
+    }
+  );
 
   const datasetsListColumns = [
     {
