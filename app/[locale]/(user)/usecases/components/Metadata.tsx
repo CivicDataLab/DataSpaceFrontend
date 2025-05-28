@@ -6,33 +6,22 @@ import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
 const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
-
   const metadata = [
     {
-      label: 'Publisher',
-      value: data.useCase.publishers[0]?.name || 'N/A',
+      label: data.useCase.isIndividualUsecase ? 'Publisher' : 'Organization',
+      value: data.useCase.isIndividualUsecase
+        ? data.useCase.user.fullName
+        : data?.useCase.organization?.name,
     },
-    // {
-    //   label: 'Website',
-    //   value: (
-    //     <Link
-    //       href={data.useCase.website}
-    //       target="_blank"
-    //       rel="noopener noreferrer"
-    //       className="text-primaryBlue underline"
-    //     >
-    //       Visit Website
-    //     </Link>
-    //   ),
-    // },
     {
       label: 'Contact',
       value: (
         <Link
           className="text-primaryBlue underline"
-          href={`mailto:${data.useCase.publishers[0]?.contactEmail}`}
+          href={`${data.useCase.isIndividualUsecase ? `mailto:${data.useCase.user.email}` : `mailto:${data.useCase.organization.contactEmail}`}`}
         >
-          Contact Publisher{' '}
+          Contact{' '}
+          {data.useCase.isIndividualUsecase ? 'Publisher' : 'Organization'}
         </Link>
       ),
     },
@@ -94,6 +83,13 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       ),
     },
   ];
+  const image = data.useCase.isIndividualUsecase
+    ? data.useCase?.user?.profilePicture
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.useCase.user.profilePicture.url}`
+      : '/profile.png'
+    : data?.useCase.organization?.logo
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.useCase.organization.logo.url}`
+      : '/org.png';
 
   return (
     <div className="flex flex-col gap-10 px-7 py-10">
@@ -119,23 +115,17 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       <Divider />
       <div className=" flex flex-col gap-8">
         <div className=" hidden rounded-2 border-1 border-solid border-greyExtralight p-2 lg:block">
-          {data?.organization?.logo?.url ? (
-            <Image
-              height={140}
-              width={100}
-              src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.useCase.publishers[0]?.logo?.url}`}
-              alt={`${data.useCase.publishers?.name} logo`}
-              className="w-full object-contain"
-            />
-          ) : (
-            <Image
-              height={140}
-              width={100}
-              src={'/fallback.svg'}
-              alt={'fallback logo'}
-              className="fill-current w-full object-contain"
-            />
-          )}
+          <Image
+            height={140}
+            width={100}
+            src={image}
+            alt={
+              data.useCase.isIndividualUsecase
+                ? 'Publisher logo'
+                : 'Organization logo'
+            }
+            className="w-full object-contain"
+          />
         </div>
         <div className="flex flex-col gap-8">
           {metadata.map((item, index) => (
