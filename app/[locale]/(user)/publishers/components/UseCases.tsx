@@ -15,6 +15,19 @@ const userPublishedUseCasesDoc: any = graphql(`
       title
       summary
       slug
+      isIndividualUsecase
+      user {
+        fullName
+        profilePicture {
+          url
+        }
+      }
+      organization {
+        name
+        logo {
+          url
+        }
+      }
       metadata {
         metadataItem {
           id
@@ -100,7 +113,6 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
       ? PublishedUseCasesList.data?.organizationPublishedUseCases
       : PublishedUseCasesList.data?.userPublishedUseCases;
 
-
   return (
     <div>
       <div
@@ -145,7 +157,16 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
                   icon: `/Sectors/${item?.sectors[0]?.name}.svg`,
                   label: 'Sectors',
                 },
-                { icon: '/fallback.svg', label: 'Published by' },
+                {
+                  icon: item.isIndividualUsecase
+                    ? item?.user?.profilePicture
+                      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
+                      : '/profile.png'
+                    : item?.organization?.logo
+                      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
+                      : '/org.png',
+                  label: 'Published by',
+                },
               ]}
               description={item.summary}
               iconColor="warning"
