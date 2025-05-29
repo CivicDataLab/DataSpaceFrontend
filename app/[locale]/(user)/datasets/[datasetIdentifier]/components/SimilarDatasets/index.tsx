@@ -120,7 +120,7 @@ const SimilarDatasets: React.FC<Props> = ({ showCharts }) => {
                       <CarouselItem
                         key={item.id}
                         className={cn(
-                          'h-2/4 basis-full pl-4 sm:basis-1/2  lg:basis-1/3',
+                          'h-2/4 basis-full pl-4 md:basis-1/2  xl:basis-1/3',
                           Styles.List
                         )}
                       >
