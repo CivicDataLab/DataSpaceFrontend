@@ -104,7 +104,7 @@ const SimilarDatasets: React.FC<Props> = ({ showCharts }) => {
       ) : (
         <>
           <div
-            className={`flex flex-col gap-1  ${showCharts ? 'lg:px-10' : 'lg:px-0'}`}
+            className={`flex flex-col gap-1  ${showCharts ? ' px-6 lg:px-10' : ' lg:px-0'}`}
           >
             <Text variant="headingXl">Similar Datasets</Text>
             <Text variant="bodyLg">Similar Datasets that you may like </Text>
