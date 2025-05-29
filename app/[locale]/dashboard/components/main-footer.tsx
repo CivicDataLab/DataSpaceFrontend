@@ -67,15 +67,15 @@ const MainFooter = () => {
           </div>
           <div className=" flex flex-wrap justify-between gap-6">
             <div className=" flex  gap-6">
-              <Link href={'#'}>
+              <Link href={'/about-us'}>
                 <Text color="onBgDefault"> About Us</Text>
               </Link>
-              <Link href={'#'}>
+              {/* <Link href={'#'}>
                 <Text color="onBgDefault"> Sitemap</Text>
               </Link>
               <Link href={'#'}>
                 <Text color="onBgDefault"> Contact Us</Text>
-              </Link>
+              </Link> */}
             </div>
             <div className=" flex items-center gap-2">
               <Text color="onBgDefault"> made by</Text>
