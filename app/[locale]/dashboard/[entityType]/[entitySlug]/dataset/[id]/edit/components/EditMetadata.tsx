@@ -243,8 +243,10 @@ export function EditMetadata({ id }: { id: string }) {
               label: value,
               value: value,
             }));
-        } else {
+        } else if (!field.value) {
           defaultVal[field.metadataItem.id] = null;
+        } else {
+          defaultVal[field.metadataItem.id] = field.value;
         }
       });
 
@@ -272,7 +274,6 @@ export function EditMetadata({ id }: { id: string }) {
 
     return defaultVal;
   };
-
 
   const [formData, setFormData] = useState(
     defaultValuesPrepFn(getDatasetMetadata?.data?.datasets[0])
