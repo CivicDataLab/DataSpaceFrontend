@@ -102,6 +102,7 @@ const Details = () => {
       {
         onSuccess: (res: any) => {
           toast('Contributor added successfully');
+          UseCaseData.refetch();
         },
         onError: (error: any) => {
           toast(`Error: ${error.message}`);
@@ -129,6 +130,7 @@ const Details = () => {
     {
       onSuccess: (res: any) => {
         toast('Supporter added successfully');
+        UseCaseData.refetch();
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -156,6 +158,7 @@ const Details = () => {
     {
       onSuccess: (res: any) => {
         toast('Partner added successfully');
+        UseCaseData.refetch();
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
