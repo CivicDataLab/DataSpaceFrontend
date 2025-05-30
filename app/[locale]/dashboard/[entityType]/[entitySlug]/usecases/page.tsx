@@ -44,6 +44,19 @@ const AddUseCase: any = graphql(`
   }
 `);
 
+const unPublishUseCase: any = graphql(`
+  mutation unPublishUseCaseMutation($useCaseId: String!) {
+    unpublishUseCase(useCaseId: $useCaseId) {
+      __typename
+      ... on TypeUseCase {
+        id
+        title
+        created
+      }
+    }
+  }
+`);
+
 export default function DatasetPage({
   params,
 }: {
@@ -81,10 +94,7 @@ export default function DatasetPage({
           order: { modified: 'DESC' },
         }
       ),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
+    
   );
 
   useEffect(() => {
@@ -145,7 +155,30 @@ export default function DatasetPage({
       },
     }
   );
-
+  const UnpublishDatasetMutation: {
+    mutate: any;
+    isLoading: boolean;
+    error: any;
+  } = useMutation(
+    [`unpublish_usecase`],
+    (data: { id: string }) =>
+      GraphQL(
+        unPublishUseCase,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        { useCaseId: data.id }
+      ),
+    {
+      onSuccess: () => {
+        toast(`Unpublished usecase successfully`);
+        AllUseCases.refetch();
+      },
+      onError: (err: any) => {
+        toast('Error:  ' + err.message.split(':')[0]);
+      },
+    }
+  );
   const datasetsListColumns = [
     {
       accessorKey: 'title',
@@ -165,16 +198,25 @@ export default function DatasetPage({
     {
       accessorKey: 'delete',
       header: 'Delete',
-      cell: ({ row }: any) => {
-        // Log the row for debugging purposes
-
-        return (
+      cell: ({ row }: any) =>
+        navigationTab === 'published' ? (
+          <Button
+            size="medium"
+            kind="tertiary"
+            onClick={() => {
+              UnpublishDatasetMutation.mutate({
+                id: row.original?.id,
+              });
+            }}
+          >
+            Unpublish
+          </Button>
+        ) : (
           <IconButton
             size="medium"
             icon={Icons.delete}
             color="interactive"
             onClick={() => {
-              // Assuming DeleteUseCaseMutation is properly set up
               DeleteUseCaseMutation.mutate({
                 id: row.original?.id,
               });
@@ -182,8 +224,7 @@ export default function DatasetPage({
           >
             Delete
           </IconButton>
-        );
-      },
+        ),
     },
   ];
 
