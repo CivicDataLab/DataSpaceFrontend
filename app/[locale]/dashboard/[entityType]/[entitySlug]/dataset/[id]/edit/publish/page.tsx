@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -20,7 +21,7 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { formatDate, toTitleCase } from '@/lib/utils';
+import { formatDate, getWebsiteTitle, toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
 const datasetSummaryQuery: any = graphql(`
@@ -30,6 +31,7 @@ const datasetSummaryQuery: any = graphql(`
         metadataItem {
           id
           label
+          dataType
         }
         id
         value
@@ -279,11 +281,35 @@ const Page = () => {
 
     // Access model check if enabled
     if (isAccessModelEnabled && !hasAccessModels) return true;
-    console.log(hasRequiredMetadata);
 
     // Required metadata check
     return !hasRequiredMetadata;
   };
+
+  const [sourceTitle, setSourceTitle] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTitle = async () => {
+      try {
+        const urlItem = getDatasetsSummary.data?.datasets[0]?.metadata.find(
+          (item: any) => item.metadataItem?.dataType === 'URL'
+        );
+
+        if (urlItem && urlItem.value) {
+          const title = await getWebsiteTitle(urlItem.value);
+          setSourceTitle(title);
+        }
+      } catch (error) {
+        console.error('Error fetching website title:', error);
+      }
+    };
+
+    fetchTitle();
+  }, [
+    getDatasetsSummary.data?.datasets[0]?.metadata,
+    getDatasetsSummary.isLoading,
+  ]);
+
   return (
     <>
       <div className=" w-full py-6">
@@ -373,10 +399,27 @@ const Page = () => {
                                 <Text className="lg:basis-1/6" variant="bodyMd">
                                   {toTitleCase(item.metadataItem.label)}:
                                 </Text>
-                                <Text variant="bodyMd" className="lg:basis-4/5">
-                                  {' '}
-                                  {item.value === '' ? 'NA' : item.value}
-                                </Text>
+
+                                {item.metadataItem.dataType !== 'URL' ? (
+                                  <Text
+                                    variant="bodyMd"
+                                    className="lg:basis-4/5"
+                                  >
+                                    {' '}
+                                    {item.value === '' ? 'NA' : item.value}
+                                  </Text>
+                                ) : (
+                                  <Link href={item.value} target="_blank">
+                                    <Text
+                                      className="underline"
+                                      color="highlight"
+                                    >
+                                      {sourceTitle?.trim()
+                                        ? sourceTitle
+                                        : 'Source'}
+                                    </Text>
+                                  </Link>
+                                )}
                               </div>
                             ))}
                             <div className="flex flex-wrap gap-2">

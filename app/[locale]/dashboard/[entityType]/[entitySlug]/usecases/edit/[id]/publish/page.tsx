@@ -175,7 +175,7 @@ const Publish = () => {
     { label: 'Use Case Name', value: UseCaseData.data?.useCases[0]?.title },
     { label: 'Summary', value: UseCaseData.data?.useCases[0]?.summary },
     {
-      label: 'running Status',
+      label: 'Running Status',
       value: UseCaseData.data?.useCases[0]?.runningStatus,
     },
     { label: 'Started On', value: UseCaseData.data?.useCases[0]?.startedOn },

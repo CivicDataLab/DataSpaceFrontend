@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UseCaseInputPartial } from '@/gql/generated/graphql';
@@ -8,6 +7,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Tab, TabList, Tabs, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import StepNavigation from '../../components/StepNavigation';
 import TitleBar from '../../components/title-bar';
 import { EditStatusProvider, useEditStatus } from './context';
 
@@ -40,6 +40,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
   const pathItem = layoutList.find(function (v) {
     return pathName.indexOf(v) >= 0;
   });
+
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_UseCaseData`],
     () =>
@@ -57,6 +58,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       refetchOnReconnect: true,
     }
   );
+
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { data: UseCaseInputPartial }) =>
       GraphQL(UpdateUseCaseTitleMutation, {}, data),
@@ -100,7 +102,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
   };
 
   const initialTabLabel =
-    links.find((option) => option.selected)?.label || 'Details';
+    links.find((option) => option.selected)?.label || 'Use Case Details';
 
   const { status, setStatus } = useEditStatus();
 
@@ -115,7 +117,14 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
         status={status}
         setStatus={setStatus}
       />
-      <Tabs defaultValue={initialTabLabel}>
+      <Tabs
+        value={initialTabLabel}
+        onValueChange={(newValue) =>
+          handleTabClick(
+            links.find((link) => link.label === newValue)?.url || ''
+          )
+        }
+      >
         <TabList fitted border>
           {links.map((item, index) => (
             <Tab
@@ -130,8 +139,11 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
           ))}
         </TabList>
       </Tabs>
-      <div className="bg-surface border-l-divider rounded-tl-none flex-grow">
-        {children}
+      <div className="">{children}</div>
+      <div className="mb-6">
+        <StepNavigation
+          steps={['details', 'assign', 'contributors', 'publish']}
+        />
       </div>
     </div>
   );

@@ -104,7 +104,7 @@ const SimilarDatasets: React.FC<Props> = ({ showCharts }) => {
       ) : (
         <>
           <div
-            className={`flex flex-col gap-1  ${showCharts ? 'lg:px-10' : 'lg:px-0'}`}
+            className={`flex flex-col gap-1  ${showCharts ? ' px-6 lg:px-10' : ' lg:px-0'}`}
           >
             <Text variant="headingXl">Similar Datasets</Text>
             <Text variant="bodyLg">Similar Datasets that you may like </Text>
@@ -120,7 +120,7 @@ const SimilarDatasets: React.FC<Props> = ({ showCharts }) => {
                       <CarouselItem
                         key={item.id}
                         className={cn(
-                          'h-2/4 basis-full pl-4 sm:basis-1/2  lg:basis-1/3',
+                          'h-2/4 basis-full pl-4 md:basis-1/2  xl:basis-1/3',
                           Styles.List
                         )}
                       >

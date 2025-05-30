@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   MetadataModels,
@@ -10,9 +12,7 @@ import {
   UpdateUseCaseMetadataInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
 import { Combobox, Spinner, toast } from 'opub-ui';
-import { useEffect, useState } from 'react';
 
 import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
@@ -113,8 +113,6 @@ const Metadata = () => {
 
   const { setStatus } = useEditStatus();
 
-  
-
   const useCaseData: { data: any; isLoading: boolean } = useQuery(
     [`fetch_UseCaseData_Metadata`],
     () => GraphQL(FetchUseCasedetails, {}, { filters: { id: params.id } }),
@@ -146,13 +144,15 @@ const Metadata = () => {
     } = {};
 
     data?.metadata?.map((field) => {
-      if (field.metadataItem.dataType === 'MULTISELECT') {
+      if (field.metadataItem.dataType === 'MULTISELECT' && field.value !== '') {
         defaultVal[field.metadataItem.id] = field.value
           .split(', ')
           .map((value: string) => ({
             label: value,
             value: value,
           }));
+      } else if (!field.value) {
+        defaultVal[field.metadataItem.id] = [];
       } else {
         defaultVal[field.metadataItem.id] = field.value;
       }
@@ -226,11 +226,9 @@ const Metadata = () => {
     }
   );
 
-
   useEffect(() => {
     setStatus(updateUseCase.isLoading ? 'loading' : 'success'); // update based on mutation state
   }, [updateUseCase.isLoading]);
-
 
   const handleChange = (field: string, value: any) => {
     setFormData((prevData) => ({
@@ -279,7 +277,7 @@ const Metadata = () => {
     useCaseData.isLoading
   ) {
     return (
-      <div className='w-full h-36 flex items-center justify-center'>
+      <div className="flex h-36 w-full items-center justify-center">
         <Spinner />
       </div>
     );
@@ -308,14 +306,17 @@ const Metadata = () => {
     }
 
     if (metadataFormItem.dataType === 'MULTISELECT') {
+
       return (
         <div key={metadataFormItem.id} className="w-full py-4 pr-4 sm:w-1/2">
           <Combobox
             name={metadataFormItem.id}
-            list={metadataFormItem.options?.map((option: string) => ({
-              label: option,
-              value: option,
-            }))}
+            list={[
+              ...(metadataFormItem.options.map((option: string) => ({
+                label: option,
+                value: option,
+              })) || []),
+            ]}
             label={metadataFormItem.label}
             selectedValue={formData[metadataFormItem.id]}
             displaySelected

@@ -215,9 +215,7 @@ export function EditMetadata({ id }: { id: string }) {
             `metadata_fields_list_${id}`,
           ],
         });
-        const updatedData = defaultValuesPrepFn(
-          res.addUpdateDatasetMetadata
-        );
+        const updatedData = defaultValuesPrepFn(res.addUpdateDatasetMetadata);
         setFormData(updatedData);
         setPreviousFormData(updatedData);
         // getDatasetMetadata.refetch();
@@ -235,13 +233,18 @@ export function EditMetadata({ id }: { id: string }) {
 
     dataset?.metadata.length > 0 &&
       dataset?.metadata?.map((field) => {
-        if (field.metadataItem.dataType === 'MULTISELECT') {
+        if (
+          field.metadataItem.dataType === 'MULTISELECT' &&
+          field.value !== ''
+        ) {
           defaultVal[field.metadataItem.id] = field.value
             .split(', ')
             .map((value: string) => ({
               label: value,
               value: value,
             }));
+        } else if (!field.value) {
+          defaultVal[field.metadataItem.id] = null;
         } else {
           defaultVal[field.metadataItem.id] = field.value;
         }
