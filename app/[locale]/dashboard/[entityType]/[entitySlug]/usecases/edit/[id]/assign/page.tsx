@@ -123,7 +123,7 @@ const Assign = () => {
       onSuccess: (data: any) => {
         toast('Dataset Assigned Successfully');
         UseCaseDetails.refetch();
-        router.push(`/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/publish`);
+        router.push(`/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/contributors`);
       },
       onError: (err: any) => {
         toast(`Received ${err} on dataset publish `);
