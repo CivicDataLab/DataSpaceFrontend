@@ -85,7 +85,6 @@ export default function DatasetPage({
     },
   ];
 
-
   const AllDatasetsQuery: { data: any; isLoading: boolean; refetch: any } =
     useQuery(
       [`fetch_datasets_org_dashboard`],
@@ -155,7 +154,7 @@ export default function DatasetPage({
           );
         },
         onError: (err: any) => {
-          console.log('Error ::: ', err);
+          toast('Error:  ' + err.message.split(':')[0]);
         },
       }
     );
@@ -207,7 +206,7 @@ export default function DatasetPage({
         navigationTab === 'published' ? (
           <Button
             size="medium"
-            kind='tertiary'
+            kind="tertiary"
             onClick={() => {
               UnpublishDatasetMutation.mutate({
                 datasetId: row.original?.id,
