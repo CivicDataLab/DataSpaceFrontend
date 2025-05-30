@@ -10,6 +10,7 @@ import { Tab, TabList, Tabs, toast } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import TitleBar from '../../../../components/title-bar';
 import { useDatasetEditStatus } from '../context';
+import StepNavigation from '../../../../components/StepNavigation';
 
 const datasetQueryDoc: any = graphql(`
   query datasetTitleQuery($filters: DatasetFilter) {
@@ -146,6 +147,9 @@ export function EditLayout({ children, params }: LayoutProps) {
         <div className="bg-surface border-l-divider rounded-tl-none  my-6  flex-grow">
           {children}
         </div>
+      <div>
+        <StepNavigation steps={['metadata','resources','publish']}/>
+      </div>
       </div>
     </div>
   );

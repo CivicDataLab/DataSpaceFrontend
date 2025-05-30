@@ -210,7 +210,6 @@ const Details = () => {
   }, [editMutationLoading]);
 
   return (
-    <div>
       <div className=" flex flex-col gap-6">
         <div>
           <TextField
@@ -308,7 +307,6 @@ const Details = () => {
           />
         </div> */}
       </div>
-    </div>
   );
 };
 
