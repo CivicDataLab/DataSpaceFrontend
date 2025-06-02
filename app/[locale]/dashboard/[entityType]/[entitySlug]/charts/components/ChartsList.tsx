@@ -51,6 +51,7 @@ const getAllCharts: any = graphql(`
           slug
           id
         }
+        status
       }
     }
   }
@@ -68,29 +69,29 @@ const deleteResourceChartImage: any = graphql(`
   }
 `);
 
-const AddResourceChartImage: any = graphql(`
-  mutation GenerateResourceChartImage($dataset: UUID!) {
-    addResourceChartImage(dataset: $dataset) {
-      __typename
-      ... on TypeResourceChartImage {
-        id
-        name
-      }
-    }
-  }
-`);
+// const AddResourceChartImage: any = graphql(`
+//   mutation GenerateResourceChartImage($dataset: UUID!) {
+//     addResourceChartImage(dataset: $dataset) {
+//       __typename
+//       ... on TypeResourceChartImage {
+//         id
+//         name
+//       }
+//     }
+//   }
+// `);
 
-const AddResourceChart: any = graphql(`
-  mutation GenerateResourceChart($resource: UUID!) {
-    addResourceChart(resource: $resource) {
-      __typename
-      ... on TypeResourceChart {
-        id
-        name
-      }
-    }
-  }
-`);
+// const AddResourceChart: any = graphql(`
+//   mutation GenerateResourceChart($resource: UUID!) {
+//     addResourceChart(resource: $resource) {
+//       __typename
+//       ... on TypeResourceChart {
+//         id
+//         name
+//       }
+//     }
+//   }
+// `);
 
 // const datasetResourceList: any = graphql(`
 //   query all_resources($datasetId: UUID!) {
@@ -184,32 +185,32 @@ const ChartsList: React.FC<ChartsListProps> = ({
       }
     );
 
-  const resourceChartImageMutation: {
-    mutate: any;
-    isLoading: any;
-  } = useMutation(
-    (data: { dataset: UUID }) =>
-      GraphQL(
-        AddResourceChartImage,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        data
-      ),
-    {
-      onSuccess: (res: any) => {
-        toast('Resource ChartImage Created Successfully');
-        chartListRes.refetch();
-        setType('img');
-        setImageId(res.addResourceChartImage.id);
+  // const resourceChartImageMutation: {
+  //   mutate: any;
+  //   isLoading: any;
+  // } = useMutation(
+  //   (data: { dataset: UUID }) =>
+  //     GraphQL(
+  //       AddResourceChartImage,
+  //       {
+  //         [params.entityType]: params.entitySlug,
+  //       },
+  //       data
+  //     ),
+  //   {
+  //     onSuccess: (res: any) => {
+  //       toast('Resource ChartImage Created Successfully');
+  //       chartListRes.refetch();
+  //       setType('img');
+  //       setImageId(res.addResourceChartImage.id);
 
-        // setImageId(res.id);
-      },
-      onError: (err: any) => {
-        toast(`Received ${err} while deleting chart `);
-      },
-    }
-  );
+  //       // setImageId(res.id);
+  //     },
+  //     onError: (err: any) => {
+  //       toast(`Received ${err} while deleting chart `);
+  //     },
+  //   }
+  // );
 
   // AddResourceImage
 
@@ -223,32 +224,32 @@ const ChartsList: React.FC<ChartsListProps> = ({
   //   )
   // );
 
-  const resourceChart: {
-    mutate: any;
-    isLoading: any;
-  } = useMutation(
-    (data: { resource: UUID }) =>
-      GraphQL(
-        AddResourceChart,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        data
-      ),
-    {
-      onSuccess: (res: any) => {
-        toast('Resource Chart Created Successfully');
-        chartListRes.refetch();
-        setType('visualize');
-        setChartId(res.addResourceChart.id);
+  // const resourceChart: {
+  //   mutate: any;
+  //   isLoading: any;
+  // } = useMutation(
+  //   (data: { resource: UUID }) =>
+  //     GraphQL(
+  //       AddResourceChart,
+  //       {
+  //         [params.entityType]: params.entitySlug,
+  //       },
+  //       data
+  //     ),
+  //   {
+  //     onSuccess: (res: any) => {
+  //       toast('Resource Chart Created Successfully');
+  //       chartListRes.refetch();
+  //       setType('visualize');
+  //       setChartId(res.addResourceChart.id);
 
-        // setImageId(res.id);
-      },
-      onError: (err: any) => {
-        toast(`Received ${err} while deleting chart `);
-      },
-    }
-  );
+  //       // setImageId(res.id);
+  //     },
+  //     onError: (err: any) => {
+  //       toast(`Received ${err} while deleting chart `);
+  //     },
+  //   }
+  // );
 
   const handleChart = (row: any) => {
     if (row.original.typename === 'TypeResourceChart') {
@@ -290,6 +291,10 @@ const ChartsList: React.FC<ChartsListProps> = ({
         header: 'Resource',
       },
       {
+        accessorKey: 'status',
+        header: 'Status',
+      },
+      {
         header: 'DELETE',
         cell: ({ row }: any) => (
           <div className="text-center">
@@ -325,6 +330,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
       resource: item.resource?.name || '',
       dataset: item.dataset?.title || item.dataset?.id || '',
       typename: item.__typename,
+      status: item.status || 'NA',
     }));
   };
 
