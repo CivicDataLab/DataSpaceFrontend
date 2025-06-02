@@ -283,7 +283,7 @@ export default function DatasetPage({
                 className={twMerge('h-100 flex flex-col items-center gap-4')}
               >
                 <Icon
-                  source={Icons.addDataset}
+                  source={Icons.light}
                   color="interactive"
                   stroke={1}
                   size={80}

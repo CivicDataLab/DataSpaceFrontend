@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import { Card, Spinner } from 'opub-ui';
+import { Card, Icon, Spinner, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { cn, formatDate } from '@/lib/utils';
@@ -124,8 +124,7 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
           <div className=" flex w-fit justify-center rounded-2 bg-surfaceDefault p-4">
             <Spinner />
           </div>
-        ) : (
-          UseCaseData?.length > 0 &&
+        ) : UseCaseData?.length > 0 ? (
           UseCaseData?.map((item: any, index: any) => (
             <Card
               type={[
@@ -173,6 +172,23 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
               variation={'collapsed'}
             />
           ))
+        ) : (
+          <>
+            <div className="flex h-full w-full grow flex-col items-center justify-center rounded-2 bg-white p-10">
+              <div className={'h-100 flex flex-col items-center gap-4'}>
+                <Icon
+                  source={Icons.light}
+                  color="interactive"
+                  stroke={1}
+                  size={80}
+                />
+
+                <Text variant="headingSm" color="subdued">
+                  No use cases published yet
+                </Text>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

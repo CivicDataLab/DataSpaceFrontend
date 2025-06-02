@@ -1,7 +1,7 @@
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import { Card, Spinner } from 'opub-ui';
+import { Card, Icon, Spinner, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -140,8 +140,7 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
           <div className=" flex w-fit justify-center rounded-2 bg-surfaceDefault p-4">
             <Spinner />
           </div>
-        ) : (
-          DatasetData?.length > 0 &&
+        ) : DatasetData?.length > 0 ? (
           DatasetData?.map((item: any, index: any) => (
             <Card
               type={[
@@ -194,6 +193,23 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
               href={`/datasets/${item.id}`}
             />
           ))
+        ) : (
+          <>
+            <div className="flex h-full w-full grow flex-col items-center justify-center rounded-2 bg-white p-10">
+              <div className={'h-100 flex flex-col items-center gap-4'}>
+                <Icon
+                  source={Icons.addDataset}
+                  color="interactive"
+                  stroke={1}
+                  size={80}
+                />
+
+                <Text variant="headingSm" color="subdued">
+                  No datasets published yet
+                </Text>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>
