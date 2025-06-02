@@ -70,7 +70,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
     {
       title: 'Add & Manage Charts',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/charts`,
-      icon: 'chart',
+      icon: 'chartBar',
     },
     {
       title: 'Profile',
