@@ -243,7 +243,7 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
             Showing {filteredRows.length} of {filteredRows.length} Data Files
           </Text>
           <SearchInput
-            placeholder="Search in Resources"
+            placeholder="Search in Data Files"
             label="Search"
             name="Search"
             onChange={(e) => handleSearchChange(e)}

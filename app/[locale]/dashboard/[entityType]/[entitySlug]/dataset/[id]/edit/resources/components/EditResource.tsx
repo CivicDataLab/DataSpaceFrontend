@@ -537,7 +537,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
                 }
               >
                 <div className="flex items-center gap-1">
-                  <Text>Reset Fields</Text>{' '}
+                  <Text>Reset Formats</Text>{' '}
                   <Icon source={Icons.info} color="interactive" />
                 </div>
               </Button>
@@ -560,7 +560,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
             ) : (
               <div className="my-8 flex justify-center">
                 {' '}
-                Click on Reset Fields{' '}
+                Click on Reset Format{' '}
               </div>
             )}
           </div>
