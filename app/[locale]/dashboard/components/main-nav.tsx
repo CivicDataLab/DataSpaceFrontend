@@ -1,31 +1,26 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
 import { Session } from 'next-auth';
 import { signIn, signOut, useSession } from 'next-auth/react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Avatar,
   Button,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
+  Dialog,
   Divider,
   IconButton,
   Popover,
+  SearchInput,
   Spinner,
   Text,
 } from 'opub-ui';
+import React, { useEffect, useState } from 'react';
 
+import { Icons } from '@/components/icons';
 import { useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
-import { Icons } from '@/components/icons';
 import { UserDetailsQryDoc } from '../[entityType]/[entitySlug]/schema';
 import { allOrganizationsListingDoc } from '../[entityType]/schema';
 import Sidebar from './sidebar';
@@ -39,15 +34,13 @@ const profileLinks = [
 
 export function MainNav({ hideSearch = false }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
 
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
-  const searchRef = React.useRef<HTMLInputElement>(null);
   const { data: session, status } = useSession();
-  const [commandOpen, setCommandOpen] = React.useState(false);
-  const { setUserDetails, setAllEntityDetails, userDetails, allEntityDetails } =
-    useDashboardStore();
+  const { setUserDetails, setAllEntityDetails } = useDashboardStore();
 
-  useMetaKeyPress('k', () => setCommandOpen((e) => !e));
 
   async function keycloakSessionLogOut() {
     try {
@@ -125,6 +118,13 @@ export function MainNav({ hideSearch = false }) {
     },
   ];
 
+  const handleSearch = (value: string) => {
+    if (value) {
+      setIsOpen(false);
+
+      router.push(`/datasets?query=${encodeURIComponent(value)}`);
+    }
+  };
   return (
     <nav className="p-4 lg:p-6">
       <div className="flex items-center justify-between gap-4  ">
@@ -170,30 +170,29 @@ export function MainNav({ hideSearch = false }) {
 
         <div className="flex items-center gap-8">
           <div className="relative hidden lg:block">
-            <IconButton
-              size="slim"
-              icon={Icons.search}
-              withTooltip
-              color="onBgDefault"
-              onClick={() => setCommandOpen(true)}
-            >
-              Search
-            </IconButton>
-
-            <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
-              <CommandInput placeholder="search..." />
-              <CommandList>
-                <CommandEmpty>No results found</CommandEmpty>
-                <CommandGroup heading="Suggestions">
-                  <CommandItem>
-                    <Link href="/datasets">Explore Datasets</Link>
-                  </CommandItem>
-                  <CommandItem>
-                    <Link href="/dashboard">Go to User Dashboard</Link>
-                  </CommandItem>
-                </CommandGroup>
-              </CommandList>
-            </CommandDialog>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <Dialog.Trigger>
+                <IconButton
+                  size="slim"
+                  icon={Icons.search}
+                  withTooltip
+                  color="onBgDefault"
+                  onClick={() => setIsOpen(true)}
+                >
+                  Search
+                </IconButton>
+              </Dialog.Trigger>
+              <Dialog.Content title={'Search'}>
+                <div className="p-3">
+                  <SearchInput
+                    onSubmit={handleSearch}
+                    label={''}
+                    placeholder="Search for any data"
+                    name={''}
+                  />
+                </div>
+              </Dialog.Content>
+            </Dialog>
           </div>
 
           <div className="flex items-center gap-5">
