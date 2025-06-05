@@ -174,7 +174,7 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
               formats={item.formats}
               footerContent={[
                 {
-                  icon: `/Sectors/${item.sectors[0].name}.svg`,
+                  icon: `/Sectors/${item.sectors[0]?.name}.svg`,
                   label: 'Sectors',
                 },
                 {
