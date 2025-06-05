@@ -143,13 +143,17 @@ export default function DatasetPage({
         ),
       {
         onSuccess: (data: any) => {
+          if (data.addDataset.success) {
+            toast('Dataset created successfully!');
 
-          router.push(
-            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
-          );
-        },
-        onError: (err: any) => {
-          toast('Error:  ' + err.message.split(':')[0]);
+            router.push(
+              `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/metadata`
+            );
+          } else {
+            toast(
+              'Error: ' + data.addDataset.errors.fieldErrors[0].messages[0]
+            );
+          }
         },
       }
     );

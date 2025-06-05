@@ -99,6 +99,7 @@ const updateMetadataMutationDoc: any = graphql(`
       success
       errors {
         fieldErrors {
+          field
           messages
         }
       }
@@ -213,22 +214,27 @@ export function EditMetadata({ id }: { id: string }) {
       ),
     {
       onSuccess: (res: any) => {
-        toast('Details updated successfully!');
-        queryClient.invalidateQueries({
-          queryKey: [
-            `metadata_values_query_${params.id}`,
-            `metadata_fields_list_${id}`,
-          ],
-        });
-        const updatedData = defaultValuesPrepFn(
-          res.addUpdateDatasetMetadata.data
-        );
-        setFormData(updatedData);
-        setPreviousFormData(updatedData);
-        // getDatasetMetadata.refetch();
-      },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message);
+
+        if (res.addUpdateDatasetMetadata.success) {
+          toast('Details updated successfully!');
+          queryClient.invalidateQueries({
+            queryKey: [
+              `metadata_values_query_${params.id}`,
+              `metadata_fields_list_${id}`,
+            ],
+          });
+          const updatedData = defaultValuesPrepFn(
+            res.addUpdateDatasetMetadata.data
+          );
+          setFormData(updatedData);
+          setPreviousFormData(updatedData);
+          // getDatasetMetadata.refetch();
+        } else {
+          toast(
+            'Error: ' +
+              res.addUpdateDatasetMetadata.errors.fieldErrors[0].messages[0]
+          );
+        }
       },
     }
   );
@@ -317,6 +323,7 @@ export function EditMetadata({ id }: { id: string }) {
         },
         {}
       );
+
       updateMetadataMutation.mutate({
         UpdateMetadataInput: {
           dataset: id,
@@ -330,16 +337,16 @@ export function EditMetadata({ id }: { id: string }) {
                     'tags',
                     'isPublic',
                     'license',
-                  ].includes(valueItem)
+                  ].includes(valueItem) && transformedValues[valueItem] !== ''
               )
               .map((key) => {
                 return {
                   id: key,
-                  value: transformedValues[key] || '',
+                  value: transformedValues[key],
                 };
               }),
           ],
-          license: updatedData.license || '',
+          ...(updatedData.license && { license: updatedData.license }),
           accessType: updatedData.accessType || 'PUBLIC',
           description: updatedData.description || '',
           tags: updatedData.tags?.map((item: any) => item.label) || [],

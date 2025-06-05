@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation } from '@tanstack/react-query';
-import { Button, Icon, Text } from 'opub-ui';
+import { Button, Icon, Text, toast } from 'opub-ui';
 import { twMerge } from 'tailwind-merge';
 
 import { GraphQL } from '@/lib/api';
@@ -45,12 +45,16 @@ export const Content = ({
         ),
       {
         onSuccess: (data: any) => {
-          router.push(
-            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
-          );
-        },
-        onError: (err: any) => {
-          console.log('Error ::: ', err);
+          if (data.addDataset.success) {
+            toast('Dataset created successfully!');
+            router.push(
+              `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/metadata`
+            );
+          } else {
+            toast(
+              'Error: ' + data.addDataset.errors.fieldErrors[0].messages[0]
+            );
+          }
         },
       }
     );
