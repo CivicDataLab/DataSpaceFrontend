@@ -91,7 +91,7 @@ const Assign = () => {
 
   const columns = [
     { accessorKey: 'title', header: 'Title' },
-    { accessorKey: 'category', header: 'Category' },
+    { accessorKey: 'category', header: 'Sector' },
     { accessorKey: 'modified', header: 'Last Modified' },
   ];
 

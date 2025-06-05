@@ -210,83 +210,86 @@ const Details = () => {
   }, [editMutationLoading]);
 
   return (
-      <div className=" flex flex-col gap-6">
-        <div>
+    <div className=" flex flex-col gap-6">
+      <div>
+        <TextField
+          label="Summary *"
+          name="summary"
+          value={formData.summary}
+          multiline={7}
+          helpText="Character limit: 10000"
+          onChange={(e) => handleChange('summary', e)}
+          onBlur={() => handleSave(formData)}
+        />
+      </div>
+
+      <Metadata />
+      <div className="flex flex-wrap gap-6 md:flex-nowrap lg:flex-nowrap">
+        <div className="w-full">
           <TextField
-            label="Summary"
-            name="summary"
-            value={formData.summary}
-            multiline={3}
-            onChange={(e) => handleChange('summary', e)}
+            label="Started On"
+            name="startedOn"
+            type="date"
+            max={new Date().toISOString().split('T')[0]}
+            value={formData.startedOn || ''}
+            onChange={(e) => {
+              handleChange('startedOn', e);
+            }}
             onBlur={() => handleSave(formData)}
           />
         </div>
 
-        <Metadata />
-        <div className="flex flex-wrap gap-6 md:flex-nowrap lg:flex-nowrap">
-          <div className="w-full">
-            <TextField
-              label="Started On"
-              name="startedOn"
-              type="date"
-              value={formData.startedOn || ''}
-              onChange={(e) => {
-                handleChange('startedOn', e);
-              }}
-              onBlur={() => handleSave(formData)}
-            />
-          </div>
-
-          <div className="w-full">
-            <Select
-              name={'runningStatus'}
-              options={runningStatus?.map((item) => ({
-                label: item.label,
-                value: item.value,
-              }))}
-              label="Running Status"
-              value={formData?.runningStatus ? formData.runningStatus : ''}
-              onChange={(value: any) => {
-                handleChange('runningStatus', value);
-                handleSave({ ...formData, runningStatus: value });
-              }}
-            />
-          </div>
-          <div className="w-full">
-            <TextField
-              label="Completed On"
-              name="completedOn"
-              type="date"
-              min={formData.startedOn || ''}
-              disabled={
-                formData.runningStatus === 'COMPLETED' ||
-                formData.runningStatus === 'CANCELLED'
-              }
-              value={formData.completedOn || ''}
-              onChange={(e) => {
-                handleChange('completedOn', e);
-              }}
-              onBlur={() => handleSave(formData)}
-            />
-          </div>
+        <div className="w-full">
+          <Select
+            name={'runningStatus'}
+            options={runningStatus?.map((item) => ({
+              label: item.label,
+              value: item.value,
+            }))}
+            label="Running Status"
+            value={formData?.runningStatus ? formData.runningStatus : ''}
+            onChange={(value: any) => {
+              handleChange('runningStatus', value);
+              handleSave({ ...formData, runningStatus: value });
+            }}
+          />
         </div>
-        <div>
-          <DropZone
-            label={!formData?.logo ? 'Logo' : 'Change Logo'}
-            onDrop={onDrop}
-            name={'Logo'}
-          >
-            <DropZone.FileUpload
-              actionHint="Only one image can be added. Recommended resolution of 16:9 - (1280x720), (1920x1080) - Supported File Types: PNG/JPG/SVG "
-              actionTitle={
-                formData.logo
-                  ? formData.logo.name.split('/').pop()
-                  : 'Name of the logo'
-              }
-            />
-          </DropZone>
+        <div className="w-full">
+          <TextField
+            label="Completed On"
+            name="completedOn"
+            type="date"
+            max={new Date().toISOString().split('T')[0]}
+            min={formData.startedOn || ''}
+            disabled={
+              formData.runningStatus === 'COMPLETED' ||
+              formData.runningStatus === 'CANCELLED'
+            }
+            value={formData.completedOn || ''}
+            onChange={(e) => {
+              handleChange('completedOn', e);
+            }}
+            onBlur={() => handleSave(formData)}
+          />
         </div>
-        {/* <div>
+      </div>
+      <div>
+        <DropZone
+          label={!formData?.logo ? 'Logo *' : 'Change Logo *'}
+          onDrop={onDrop}
+          name={'Logo'}
+        >
+          <DropZone.FileUpload
+            actionHint="Only one image can be added. Recommended resolution of 16:9 - (1280x720), (1920x1080) - Supported File Types: PNG/JPG/SVG "
+            actionTitle={
+              formData.logo
+                ? formData.logo.name.split('/').pop()
+                : 'Name of the logo'
+            }
+          />
+        </DropZone>
+      </div>
+      {/* <div>
           <TextField
             label="Website"
             name="website"
@@ -306,7 +309,7 @@ const Details = () => {
             onBlur={() => handleSave(formData)}
           />
         </div> */}
-      </div>
+    </div>
   );
 };
 

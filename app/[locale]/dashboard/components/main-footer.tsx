@@ -29,17 +29,38 @@ const MainFooter = () => {
         <div className="flex flex-col gap-8 p-6 lg:px-28 lg:py-10">
           <div className="flex flex-wrap justify-between gap-8 ">
             {' '}
-            <div className="flex items-center gap-2">
-              <Image
-                src={'/globe_logo.png'}
-                width={38}
-                height={38}
-                alt="logo"
-              />
-              <Text variant="headingXl" className="text-surfaceDefault" as="h1">
-                CivicDataSpace
-              </Text>
-            </div>
+            <Link href="/">
+              <div className="flex items-center gap-2">
+                <div className="group relative h-[38px] w-[38px] overflow-hidden rounded-full">
+                  {/* Static Logo */}
+                  <div className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0">
+                    <Image
+                      src="/globe_logo.png"
+                      alt="Logo"
+                      layout="fill"
+                      objectFit="contain"
+                    />
+                  </div>
+
+                  {/* Globe GIF on Hover */}
+                  <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <Image
+                      src="/globe.gif"
+                      alt="Globe"
+                      layout="fill"
+                      objectFit="contain"
+                    />
+                  </div>
+                </div>
+                <Text
+                  variant="headingXl"
+                  className="text-surfaceDefault"
+                  as="h1"
+                >
+                  CivicDataSpace
+                </Text>
+              </div>
+            </Link>
             <div className=" flex flex-col  gap-2 lg:items-end">
               <div>
                 {' '}
@@ -70,12 +91,10 @@ const MainFooter = () => {
               <Link href={'/about-us'}>
                 <Text color="onBgDefault"> About Us</Text>
               </Link>
-              {/* <Link href={'#'}>
-                <Text color="onBgDefault"> Sitemap</Text>
-              </Link>
-              <Link href={'#'}>
+              <Link href={'mailto:info@civicdatalab.in'}>
                 <Text color="onBgDefault"> Contact Us</Text>
-              </Link> */}
+              </Link>
+            
             </div>
             <div className=" flex items-center gap-2">
               <Text color="onBgDefault"> made by</Text>

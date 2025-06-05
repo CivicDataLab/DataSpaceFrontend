@@ -225,7 +225,7 @@ const UseCaseDetailPage = () => {
                       href={`/datasets/${dataset.id}`}
                       footerContent={[
                         {
-                          icon: `/Sectors/${dataset.sectors[0].name}.svg`,
+                          icon: `/Sectors/${dataset.sectors[0]?.name}.svg`,
                           label: 'Sectors',
                         },
                         {

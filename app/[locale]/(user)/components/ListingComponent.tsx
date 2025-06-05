@@ -232,6 +232,14 @@ const ListingComponent: React.FC<ListingProps> = ({
     }
   }, [variables, fetchDatasets]);
 
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) return <Loading />;
+
   const handlePageChange = (newPage: number) => {
     setQueryParams({ type: 'SET_CURRENT_PAGE', payload: newPage });
   };
@@ -301,7 +309,11 @@ const ListingComponent: React.FC<ListingProps> = ({
                 </Text>
               )}
 
-              <Text variant="headingLg" fontWeight="regular" className=' leading-3 '>
+              <Text
+                variant="headingLg"
+                fontWeight="regular"
+                className=" leading-3 "
+              >
                 {categoryDescription
                   ? categoryDescription
                   : 'No Description Provided'}
@@ -440,7 +452,9 @@ const ListingComponent: React.FC<ListingProps> = ({
                 </div>
               )}
 
-              {facets && datasetDetails?.length > 0 ? (
+              {facets === null ? (
+                <Loading />
+              ) : facets.results.length > 0 ? (
                 <GraphqlPagination
                   totalRows={count}
                   pageSize={queryParams.pageSize}
@@ -503,7 +517,9 @@ const ListingComponent: React.FC<ListingProps> = ({
                   })}
                 </GraphqlPagination>
               ) : (
-                <Loading />
+                <div className="flex h-screen items-center justify-center">
+                  <Text variant="heading2xl">No datasets found</Text>
+                </div>
               )}
             </div>
           </div>

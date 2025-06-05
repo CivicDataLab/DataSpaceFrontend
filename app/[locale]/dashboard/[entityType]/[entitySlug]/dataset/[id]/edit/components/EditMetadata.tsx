@@ -96,8 +96,14 @@ const metadataQueryDoc: any = graphql(`
 const updateMetadataMutationDoc: any = graphql(`
   mutation SaveMetadata($UpdateMetadataInput: UpdateMetadataInput!) {
     addUpdateDatasetMetadata(updateMetadataInput: $UpdateMetadataInput) {
-      __typename
-      ... on TypeDataset {
+      success
+      errors {
+        fieldErrors {
+          field
+          messages
+        }
+      }
+      data {
         id
         description
         title
@@ -208,20 +214,26 @@ export function EditMetadata({ id }: { id: string }) {
       ),
     {
       onSuccess: (res: any) => {
-        toast('Details updated successfully!');
-        queryClient.invalidateQueries({
-          queryKey: [
-            `metadata_values_query_${params.id}`,
-            `metadata_fields_list_${id}`,
-          ],
-        });
-        const updatedData = defaultValuesPrepFn(res.addUpdateDatasetMetadata);
-        setFormData(updatedData);
-        setPreviousFormData(updatedData);
-        // getDatasetMetadata.refetch();
-      },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
+        if (res.addUpdateDatasetMetadata.success) {
+          toast('Details updated successfully!');
+          queryClient.invalidateQueries({
+            queryKey: [
+              `metadata_values_query_${params.id}`,
+              `metadata_fields_list_${id}`,
+            ],
+          });
+          const updatedData = defaultValuesPrepFn(
+            res.addUpdateDatasetMetadata.data
+          );
+          setFormData(updatedData);
+          setPreviousFormData(updatedData);
+          // getDatasetMetadata.refetch();
+        } else {
+          toast(
+            'Error: ' +
+              res.addUpdateDatasetMetadata.errors.fieldErrors[0].messages[0]
+          );
+        }
       },
     }
   );
@@ -310,6 +322,7 @@ export function EditMetadata({ id }: { id: string }) {
         },
         {}
       );
+
       updateMetadataMutation.mutate({
         UpdateMetadataInput: {
           dataset: id,
@@ -323,16 +336,16 @@ export function EditMetadata({ id }: { id: string }) {
                     'tags',
                     'isPublic',
                     'license',
-                  ].includes(valueItem)
+                  ].includes(valueItem) && transformedValues[valueItem] !== ''
               )
               .map((key) => {
                 return {
                   id: key,
-                  value: transformedValues[key] || '',
+                  value: transformedValues[key],
                 };
               }),
           ],
-          license: updatedData.license || '',
+          ...(updatedData.license && { license: updatedData.license }),
           accessType: updatedData.accessType || 'PUBLIC',
           description: updatedData.description || '',
           tags: updatedData.tags?.map((item: any) => item.label) || [],
@@ -425,6 +438,7 @@ export function EditMetadata({ id }: { id: string }) {
           <Input
             type="date"
             name={metadataFormItem.id}
+            max={new Date().toISOString().split('T')[0]}
             value={formData[metadataFormItem.id] || ''}
             label={metadataFormItem.label}
             disabled={
@@ -490,10 +504,11 @@ export function EditMetadata({ id }: { id: string }) {
                 <div className="w-full">
                   <TextField
                     key="description"
-                    multiline={3}
+                    multiline={4}
                     name="description"
-                    label={'Description'}
+                    label="Description *"
                     value={formData.description}
+                    helpText="Character limit: 1000"
                     onChange={(e) => handleChange('description', e)}
                     onBlur={() => handleSave(formData)} // Save on blur
                   />
@@ -501,7 +516,7 @@ export function EditMetadata({ id }: { id: string }) {
 
                 <Combobox
                   displaySelected
-                  label="Sectors"
+                  label="Sectors *"
                   list={getSectorsList.data?.sectors?.map(
                     (item: TypeSector) => {
                       return { label: item.name, value: item.id };
@@ -522,7 +537,7 @@ export function EditMetadata({ id }: { id: string }) {
                       value: item.id,
                     };
                   })}
-                  label="Tags"
+                  label="Tags *"
                   creatable
                   onChange={(value) => {
                     handleChange('tags', value);
@@ -567,9 +582,9 @@ export function EditMetadata({ id }: { id: string }) {
                     defaultChecked={false}
                     disabled
                   >
-                    <div className="flex flex-col gap-1">
-                      <Text>Restricted Access</Text>
-                      <Text>
+                    <div className="flex flex-col gap-1 " title='Coming Soon'>
+                      <Text className=' text-textDisabled'>Restricted Access</Text>
+                      <Text className=' text-iconDisabled'>
                         Users would require to request access to the dataset to
                         view and download it. Recommended for sensitive data.
                       </Text>

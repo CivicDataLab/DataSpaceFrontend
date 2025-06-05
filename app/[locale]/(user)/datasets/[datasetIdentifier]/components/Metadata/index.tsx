@@ -125,17 +125,26 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
               : data.organization.name}
           </Text>
         </div>
-        <div className="flex items-center gap-2 ">
+        <div className="flex gap-2 ">
           <Text className="min-w-[120px]  basis-1/4 uppercase" variant="bodyMd">
             Sector
           </Text>
-          <Text
-            className="max-w-xs truncate "
-            variant="bodyLg"
-            fontWeight="medium"
-          >
-            {data.sectors[0].name}
-          </Text>
+          <div className="flex flex-wrap gap-2">
+          {data.sectors.length > 0 ? (
+            data.sectors.map((sector: any, index: number) => (
+              <Image
+                key={index}
+                src={`/Sectors/${sector.name}.svg`}
+                alt={sector.name || ''}
+                width={52}
+                height={52}
+                className="border-1 border-solid border-greyExtralight p-1"
+              />
+            ))
+          ) : (
+            <span>N/A</span>
+          )}
+          </div>
         </div>
         {Metadata.map((item: any, index: any) => (
           <div className="flex items-start gap-2 " key={index}>
@@ -152,7 +161,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             ) : (
               <Link href={item.value} target="_blank">
                 <Text className="underline" color="highlight">
-                  {sourceTitle?.trim() ? sourceTitle : 'Source'}
+                  {sourceTitle?.trim() ? sourceTitle : 'Visit Website'}
                 </Text>
               </Link>
             )}

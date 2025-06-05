@@ -217,8 +217,11 @@ const Metadata = () => {
     (data: { updateMetadataInput: UpdateUseCaseMetadataInput }) =>
       GraphQL(UpdateUseCaseMetadataMutation, {}, data),
     {
-      onSuccess: () => {
+      onSuccess: (res: any) => {
         toast('Use case updated successfully');
+        const updatedData = defaultValuesPrepFn(res.addUpdateUsecaseMetadata);
+        setFormData(updatedData);
+        setPreviousFormData(updatedData);
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -306,7 +309,6 @@ const Metadata = () => {
     }
 
     if (metadataFormItem.dataType === 'MULTISELECT') {
-
       return (
         <div key={metadataFormItem.id} className="w-full py-4 pr-4 sm:w-1/2">
           <Combobox
@@ -317,7 +319,7 @@ const Metadata = () => {
                 value: option,
               })) || []),
             ]}
-            label={metadataFormItem.label}
+            label={metadataFormItem.label+ ' *'}
             selectedValue={formData[metadataFormItem.id]}
             displaySelected
             onChange={(value) => {
@@ -356,7 +358,7 @@ const Metadata = () => {
           <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
             <Combobox
               displaySelected
-              label="Sectors"
+              label="Sectors *"
               name="sectors"
               list={
                 getSectorsList?.data.sectors?.map((item: TypeSector) => ({

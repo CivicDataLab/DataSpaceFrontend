@@ -10,7 +10,6 @@ interface StepNavigationProps {
 const StepNavigation = ({ steps }: StepNavigationProps) => {
   const pathname = usePathname(); // Get the current URL path
   const router = useRouter();
-  console.log(pathname);
 
   // Find the current step's index based on the pathname (without query params)
   const currentIndex = steps.findIndex((step) =>

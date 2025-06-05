@@ -14,7 +14,7 @@ import Styles from '../page.module.scss';
 
 const useCasesListQueryDoc: any = graphql(`
   query UseCasesList($filters: UseCaseFilter) {
-    useCases(filters: $filters) {
+    publishedUseCases(filters: $filters) {
       id
       title
       summary
@@ -129,8 +129,8 @@ const UseCasesListingPage = () => {
             )}
           >
             {getUseCasesList &&
-              getUseCasesList?.data?.useCases.length > 0 &&
-              getUseCasesList?.data?.useCases.map((item: any, index: any) => (
+              getUseCasesList?.data?.publishedUseCases.length > 0 &&
+              getUseCasesList?.data?.publishedUseCases.map((item: any, index: any) => (
                 <Card
                   title={item.title}
                   key={index}

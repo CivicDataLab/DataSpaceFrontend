@@ -43,7 +43,6 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
     id: string;
   }>();
 
-
   useEffect(() => {
     refetch();
   }, [resourceId]);
@@ -77,7 +76,6 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
     }
   );
 
-  
   const createResourceMutation = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(
@@ -115,7 +113,12 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
         );
       },
       onError: (err: any) => {
-        toast(err);
+        toast(err.message, {
+          action: {
+            label: 'Dismiss',
+            onClick: () => {},
+          },
+        });
         setFile([]);
       },
     }
@@ -187,7 +190,6 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
     table.rows
   );
 
-
   useEffect(() => {
     const updatedRows =
       data.map((item: any) => ({
@@ -196,10 +198,9 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
         date_added: formatDate(item.created),
         id: item.id,
       })) || [];
-  
+
     setFilteredRows(updatedRows);
   }, [data]);
-  
 
   const handleSearchChange = (e: string) => {
     const searchTerm = e.toLowerCase();
@@ -242,7 +243,7 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
             Showing {filteredRows.length} of {filteredRows.length} Data Files
           </Text>
           <SearchInput
-            placeholder="Search in Resources"
+            placeholder="Search in Data Files"
             label="Search"
             name="Search"
             onChange={(e) => handleSearchChange(e)}

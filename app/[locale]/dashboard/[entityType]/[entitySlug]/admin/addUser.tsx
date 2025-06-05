@@ -136,9 +136,13 @@ const AddUser = ({
 
   const { mutate: updateMutate, isLoading: updateUserLoading } = useMutation(
     (input: { input: AssignOrganizationRoleInput }) =>
-      GraphQL(updateUser, {
-        [params.entityType]: params.entitySlug,
-      }, input),
+      GraphQL(
+        updateUser,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        input
+      ),
     {
       onSuccess: (res: any) => {
         toast('User updated successfully');
@@ -172,6 +176,12 @@ const AddUser = ({
   const filteredOptions = Users.data?.searchUsers;
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    if (value === '') {
+      setFormData({
+        userId: '',
+        roleId: formData.roleId,
+      });
+    }
     setSearchValue(value);
     setIsDropdownOpen(true); // Keep dropdown open while typing
     Users.refetch(); // Refetch when search term changes
@@ -193,13 +203,13 @@ const AddUser = ({
           >
             <div className="m-auto mb-6 flex flex-col gap-6">
               <div className="relative w-full">
-                <Label>Select User</Label>
+                <Label>Select User *</Label>
                 <input
                   type="text"
                   id="combobox"
                   disabled={isEdit}
                   value={searchValue}
-                  autoComplete='off'
+                  autoComplete="off"
                   onChange={handleInputChange}
                   className="border border-gray-100 placeholder:text-sm mt-1 block w-full px-3 py-1"
                   placeholder={'Select user'}
@@ -229,7 +239,7 @@ const AddUser = ({
                     label: toTitleCase(role.name),
                     value: role.id,
                   }))}
-                label="Select a role"
+                label="Select a role *"
                 helpText={RolesList.data?.roles
                   .filter((role: any) => role.id === formData.roleId)
                   .map((role: any) => role.description)}
@@ -239,9 +249,12 @@ const AddUser = ({
               <Button
                 kind="primary"
                 className="m-auto"
+                disabled={!formData.userId || !formData.roleId}
                 onClick={() => {
                   setIsOpen(false);
-                  isEdit ? updateMutate({ input: formData }) : mutate({ input: formData });
+                  isEdit
+                    ? updateMutate({ input: formData })
+                    : mutate({ input: formData });
                 }}
               >
                 {isEdit ? 'Update' : 'Add'}

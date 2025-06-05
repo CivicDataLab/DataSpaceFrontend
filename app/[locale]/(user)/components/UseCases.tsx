@@ -25,7 +25,7 @@ const useCasesListDoc: any = graphql(`
     $filters: UseCaseFilter
     $pagination: OffsetPaginationInput
   ) {
-    useCases(filters: $filters, pagination: $pagination) {
+    publishedUseCases(filters: $filters, pagination: $pagination) {
       id
       title
       summary
@@ -123,8 +123,8 @@ const UseCasesListingPage = () => {
           ) : (
             <CarouselContent className="p-4 ">
               {getUseCasesList &&
-                getUseCasesList?.data?.useCases.length > 0 &&
-                getUseCasesList?.data?.useCases.map((item: any, index: any) => (
+                getUseCasesList?.data?.publishedUseCases.length > 0 &&
+                getUseCasesList?.data?.publishedUseCases.map((item: any, index: any) => (
                   <CarouselItem
                     key={item.id}
                     className={cn(

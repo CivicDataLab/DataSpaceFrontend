@@ -79,7 +79,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
         <div className="mt-6 lg:mt-10">
           <Text variant="heading2xl">Summary</Text>
           <div className="mt-4">
-            <Text variant="headingLg" fontWeight="regular">
+            <Text variant="headingMd" fontWeight="regular">
               {data.useCase.summary}
             </Text>
           </div>

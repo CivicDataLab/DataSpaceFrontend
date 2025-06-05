@@ -145,8 +145,11 @@ const Publish = () => {
       name: 'Details',
       data: UseCaseData.data?.useCases,
       error:
-        UseCaseData.data && UseCaseData.data?.useCases[0]?.length > 0
-          ? 'No Details found. Please add to continue.'
+        UseCaseData.data?.useCases[0]?.sectors.length === 0 ||
+        UseCaseData.data?.useCases[0]?.summary.length === 0 ||
+        UseCaseData.data?.useCases[0]?.metadata.length === 0 ||
+        UseCaseData.data?.useCases[0]?.logo === null
+          ? 'Summary or SDG or Sectors or Logo is missing. Please add to continue.'
           : '',
       errorType: 'critical',
     },
@@ -236,6 +239,23 @@ const Publish = () => {
         modified: formatDate(item.modified),
       };
     });
+  };
+
+  const isPublishDisabled = (useCase: any) => {
+    if (!useCase) return true;
+
+    const hasDatasets = useCase?.datasets.length > 0;
+    const hasRequiredMetadata =
+      useCase.sectors.length > 0 &&
+      useCase?.summary.length > 0 &&
+      useCase?.metadata.length > 0 &&
+      useCase?.logo !== null;
+
+    // No datasets assigned
+    if (!hasDatasets) return true;
+
+    // Required metadata check
+    if (!hasRequiredMetadata) return true;
   };
 
   return (
@@ -424,7 +444,7 @@ const Publish = () => {
               <Button
                 className="m-auto w-fit"
                 onClick={() => mutate()}
-                disabled={UseCaseData?.data?.useCases[0]?.datasets.length <= 0}
+                disabled={isPublishDisabled(UseCaseData?.data?.useCases[0])}
               >
                 Publish
               </Button>

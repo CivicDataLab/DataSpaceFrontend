@@ -3,24 +3,25 @@
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { ActionBar } from './components/action-bar';
 import { Content } from './components/content';
 
 const createDatasetMutationDoc: any = graphql(`
-  mutation GenerateDatasetName {
+  mutation GenerateDatasetname {
     addDataset {
-      __typename
-      ... on TypeDataset {
-        id
-        created
-      }
-      ... on OperationInfo {
-        messages {
-          kind
-          message
+      success
+      errors {
+        fieldErrors {
+          messages
         }
+      }
+      data {
+        id
+        title
+        created
       }
     }
   }
@@ -46,16 +47,18 @@ export const Page = () => {
       ),
     {
       onSuccess: (data: any) => {
-        queryClient.invalidateQueries({
-          queryKey: [`create_dataset_${'52'}`],
-        });
+        if (data.addDataset.success) {
+          toast('Dataset created successfully!');
+          queryClient.invalidateQueries({
+            queryKey: [`create_dataset_${params.entityType}`],
+          });
 
-        router.push(
-          `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/metadata`
-        );
-      },
-      onError: (err: any) => {
-        console.log('Error ::: ', err);
+          router.push(
+            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
+          );
+        } else {
+          toast('Error: ' + data.addDataset.errors.fieldErrors[0].messages[0]);
+        }
       },
     }
   );
