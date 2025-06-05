@@ -582,9 +582,9 @@ export function EditMetadata({ id }: { id: string }) {
                     defaultChecked={false}
                     disabled
                   >
-                    <div className="flex flex-col gap-1">
-                      <Text>Restricted Access</Text>
-                      <Text>
+                    <div className="flex flex-col gap-1 " title='Coming Soon'>
+                      <Text className=' text-textDisabled'>Restricted Access</Text>
+                      <Text className=' text-iconDisabled'>
                         Users would require to request access to the dataset to
                         view and download it. Recommended for sensitive data.
                       </Text>
