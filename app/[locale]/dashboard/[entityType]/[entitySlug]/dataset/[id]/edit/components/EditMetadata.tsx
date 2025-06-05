@@ -214,7 +214,6 @@ export function EditMetadata({ id }: { id: string }) {
       ),
     {
       onSuccess: (res: any) => {
-
         if (res.addUpdateDatasetMetadata.success) {
           toast('Details updated successfully!');
           queryClient.invalidateQueries({
@@ -507,7 +506,7 @@ export function EditMetadata({ id }: { id: string }) {
                     key="description"
                     multiline={4}
                     name="description"
-                    label={'Description'}
+                    label="Description*"
                     value={formData.description}
                     helpText="Character limit: 1000"
                     onChange={(e) => handleChange('description', e)}
@@ -517,7 +516,7 @@ export function EditMetadata({ id }: { id: string }) {
 
                 <Combobox
                   displaySelected
-                  label="Sectors"
+                  label="Sectors*"
                   list={getSectorsList.data?.sectors?.map(
                     (item: TypeSector) => {
                       return { label: item.name, value: item.id };
@@ -538,7 +537,7 @@ export function EditMetadata({ id }: { id: string }) {
                       value: item.id,
                     };
                   })}
-                  label="Tags"
+                  label="Tags*"
                   creatable
                   onChange={(value) => {
                     handleChange('tags', value);
