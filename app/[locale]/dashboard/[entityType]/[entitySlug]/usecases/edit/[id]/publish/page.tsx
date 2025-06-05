@@ -140,7 +140,6 @@ const Publish = () => {
     }
   );
 
-
   const Summary = [
     {
       name: 'Details',
@@ -240,6 +239,23 @@ const Publish = () => {
         modified: formatDate(item.modified),
       };
     });
+  };
+
+  const isPublishDisabled = (useCase: any) => {
+    if (!useCase) return true;
+
+    const hasDatasets = useCase?.datasets.length > 0;
+    const hasRequiredMetadata =
+      useCase.sectors.length > 0 &&
+      useCase?.summary.length > 0 &&
+      useCase?.metadata.length > 0 &&
+      useCase?.logo !== null;
+
+    // No datasets assigned
+    if (!hasDatasets) return true;
+
+    // Required metadata check
+    if (!hasRequiredMetadata) return true;
   };
 
   return (
@@ -428,7 +444,7 @@ const Publish = () => {
               <Button
                 className="m-auto w-fit"
                 onClick={() => mutate()}
-                disabled={UseCaseData?.data?.useCases[0]?.datasets.length <= 0}
+                disabled={isPublishDisabled(UseCaseData?.data?.useCases[0])}
               >
                 Publish
               </Button>
