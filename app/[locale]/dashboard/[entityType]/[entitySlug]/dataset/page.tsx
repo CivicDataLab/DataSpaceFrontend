@@ -29,16 +29,16 @@ const allDatasetsQueryDoc: any = graphql(`
 const createDatasetMutationDoc: any = graphql(`
   mutation GenerateDatasetName {
     addDataset {
-      __typename
-      ... on TypeDataset {
-        id
-        created
-      }
-      ... on OperationInfo {
-        messages {
-          kind
-          message
+      success
+      errors {
+        fieldErrors {
+          messages
         }
+      }
+      data {
+        id
+        title
+        created
       }
     }
   }
@@ -86,25 +86,19 @@ export default function DatasetPage({
   ];
 
   const AllDatasetsQuery: { data: any; isLoading: boolean; refetch: any } =
-    useQuery(
-      [`fetch_datasets_org_dashboard`],
-      () =>
-        GraphQL(
-          allDatasetsQueryDoc,
-          {
-            [params.entityType]: params.entitySlug,
+    useQuery([`fetch_datasets_org_dashboard`], () =>
+      GraphQL(
+        allDatasetsQueryDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        {
+          filters: {
+            status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
           },
-          {
-            filters: {
-              status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
-            },
-            order: { modified: 'DESC' },
-          }
-        ),
-      {
-        refetchOnMount: true,
-        refetchOnReconnect: true,
-      }
+          order: { modified: 'DESC' },
+        }
+      )
     );
 
   useEffect(() => {
@@ -149,8 +143,9 @@ export default function DatasetPage({
         ),
       {
         onSuccess: (data: any) => {
+
           router.push(
-            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/metadata`
+            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
           );
         },
         onError: (err: any) => {

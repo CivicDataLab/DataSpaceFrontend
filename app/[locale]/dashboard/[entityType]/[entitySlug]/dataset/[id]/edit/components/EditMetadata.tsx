@@ -96,8 +96,13 @@ const metadataQueryDoc: any = graphql(`
 const updateMetadataMutationDoc: any = graphql(`
   mutation SaveMetadata($UpdateMetadataInput: UpdateMetadataInput!) {
     addUpdateDatasetMetadata(updateMetadataInput: $UpdateMetadataInput) {
-      __typename
-      ... on TypeDataset {
+      success
+      errors {
+        fieldErrors {
+          messages
+        }
+      }
+      data {
         id
         description
         title
@@ -215,13 +220,15 @@ export function EditMetadata({ id }: { id: string }) {
             `metadata_fields_list_${id}`,
           ],
         });
-        const updatedData = defaultValuesPrepFn(res.addUpdateDatasetMetadata);
+        const updatedData = defaultValuesPrepFn(
+          res.addUpdateDatasetMetadata.data
+        );
         setFormData(updatedData);
         setPreviousFormData(updatedData);
         // getDatasetMetadata.refetch();
       },
       onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
+        toast('Error:  ' + err.message);
       },
     }
   );
@@ -425,6 +432,7 @@ export function EditMetadata({ id }: { id: string }) {
           <Input
             type="date"
             name={metadataFormItem.id}
+            max={new Date().toISOString().split('T')[0]}
             value={formData[metadataFormItem.id] || ''}
             label={metadataFormItem.label}
             disabled={
@@ -490,10 +498,11 @@ export function EditMetadata({ id }: { id: string }) {
                 <div className="w-full">
                   <TextField
                     key="description"
-                    multiline={3}
+                    multiline={4}
                     name="description"
                     label={'Description'}
                     value={formData.description}
+                    helpText="Character limit: 1000"
                     onChange={(e) => handleChange('description', e)}
                     onBlur={() => handleSave(formData)} // Save on blur
                   />

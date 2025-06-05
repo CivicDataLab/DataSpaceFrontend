@@ -10,18 +10,18 @@ import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 
 const createDatasetMutationDoc: any = graphql(`
-  mutation GenerateDatasetName {
+  mutation Generate_Dataset_Name {
     addDataset {
-      __typename
-      ... on TypeDataset {
-        id
-        created
-      }
-      ... on OperationInfo {
-        messages {
-          kind
-          message
+      success
+      errors {
+        fieldErrors {
+          messages
         }
+      }
+      data {
+        id
+        title
+        created
       }
     }
   }
@@ -46,7 +46,7 @@ export const Content = ({
       {
         onSuccess: (data: any) => {
           router.push(
-            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/metadata`
+            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
           );
         },
         onError: (err: any) => {

@@ -9,18 +9,18 @@ import { ActionBar } from './components/action-bar';
 import { Content } from './components/content';
 
 const createDatasetMutationDoc: any = graphql(`
-  mutation GenerateDatasetName {
+  mutation GenerateDatasetname {
     addDataset {
-      __typename
-      ... on TypeDataset {
-        id
-        created
-      }
-      ... on OperationInfo {
-        messages {
-          kind
-          message
+      success
+      errors {
+        fieldErrors {
+          messages
         }
+      }
+      data {
+        id
+        title
+        created
       }
     }
   }
