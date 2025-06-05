@@ -161,7 +161,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             ) : (
               <Link href={item.value} target="_blank">
                 <Text className="underline" color="highlight">
-                  {sourceTitle?.trim() ? sourceTitle : 'Source'}
+                  {sourceTitle?.trim() ? sourceTitle : 'Visit Website'}
                 </Text>
               </Link>
             )}

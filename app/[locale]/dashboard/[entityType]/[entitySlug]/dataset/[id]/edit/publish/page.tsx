@@ -416,7 +416,7 @@ const Page = () => {
                                     >
                                       {sourceTitle?.trim()
                                         ? sourceTitle
-                                        : 'Source'}
+                                        : 'Visit Website'}
                                     </Text>
                                   </Link>
                                 )}
