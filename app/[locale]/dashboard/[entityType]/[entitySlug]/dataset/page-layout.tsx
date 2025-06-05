@@ -54,7 +54,7 @@ export const Page = () => {
           });
 
           router.push(
-            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/metadata`
+            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
           );
         } else {
           toast('Error: ' + data.addDataset.errors.fieldErrors[0].messages[0]);

@@ -147,7 +147,7 @@ export default function DatasetPage({
             toast('Dataset created successfully!');
 
             router.push(
-              `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.id}/edit/metadata`
+              `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
             );
           } else {
             toast(
