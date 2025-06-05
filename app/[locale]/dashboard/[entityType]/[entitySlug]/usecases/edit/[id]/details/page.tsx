@@ -213,7 +213,7 @@ const Details = () => {
     <div className=" flex flex-col gap-6">
       <div>
         <TextField
-          label="Summary"
+          label="Summary *"
           name="summary"
           value={formData.summary}
           multiline={7}
@@ -275,7 +275,7 @@ const Details = () => {
       </div>
       <div>
         <DropZone
-          label={!formData?.logo ? 'Logo' : 'Change Logo'}
+          label={!formData?.logo ? 'Logo *' : 'Change Logo *'}
           onDrop={onDrop}
           name={'Logo'}
         >

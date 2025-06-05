@@ -140,13 +140,17 @@ const Publish = () => {
     }
   );
 
+
   const Summary = [
     {
       name: 'Details',
       data: UseCaseData.data?.useCases,
       error:
-        UseCaseData.data && UseCaseData.data?.useCases[0]?.length > 0
-          ? 'No Details found. Please add to continue.'
+        UseCaseData.data?.useCases[0]?.sectors.length === 0 ||
+        UseCaseData.data?.useCases[0]?.summary.length === 0 ||
+        UseCaseData.data?.useCases[0]?.metadata.length === 0 ||
+        UseCaseData.data?.useCases[0]?.logo === null
+          ? 'Summary or SDG or Sectors or Logo is missing. Please add to continue.'
           : '',
       errorType: 'critical',
     },
