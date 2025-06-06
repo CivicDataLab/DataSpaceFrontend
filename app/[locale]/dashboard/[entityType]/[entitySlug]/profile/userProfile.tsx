@@ -105,7 +105,8 @@ const UserProfile = () => {
       formData.lastName &&
       formData.email &&
       formData.bio &&
-      formData.location;
+      formData.profilePicture;
+
 
     if (!formValidation) {
       toast('Please fill all the required fields');
