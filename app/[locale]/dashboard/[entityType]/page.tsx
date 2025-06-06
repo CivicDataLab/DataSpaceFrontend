@@ -1,14 +1,15 @@
 'use client';
 
+import { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { notFound, useParams, usePathname } from 'next/navigation';
 import {
   ApiOrganizationOrganizationTypesEnum,
   OrganizationInput,
 } from '@/gql/generated/graphql';
 import { useOrganizationTypes } from '@/hooks/useOrganizationTypes';
 import { useMutation } from '@tanstack/react-query';
-import Image from 'next/image';
-import Link from 'next/link';
-import { notFound, useParams, usePathname } from 'next/navigation';
 import {
   Button,
   Dialog,
@@ -17,16 +18,15 @@ import {
   Select,
   Text,
   TextField,
-  toast
+  toast,
 } from 'opub-ui';
-import { useState } from 'react';
 
-import BreadCrumbs from '@/components/BreadCrumbs';
-import { Icons } from '@/components/icons';
-import { Loading } from '@/components/loading';
 import { useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import BreadCrumbs from '@/components/BreadCrumbs';
+import { Icons } from '@/components/icons';
+import { Loading } from '@/components/loading';
 import styles from './../components/styles.module.scss';
 import { organizationCreationMutation } from './schema';
 
@@ -90,7 +90,20 @@ const Page = () => {
   if (params.entityType !== 'organization') {
     return notFound();
   }
-  
+  const handleSave = () => {
+    const formValidation =
+      formData.name &&
+      formData.description &&
+      formData.logo &&
+      formData.contactEmail;
+
+    if (!formValidation) {
+      toast('Please fill all the required fields');
+      return;
+    } else {
+      mutate({ input: formData });
+    }
+  };
   return (
     <>
       <BreadCrumbs
@@ -109,7 +122,8 @@ const Page = () => {
         ]}
       />
       <div className="m-auto flex w-11/12  flex-col">
-        {allEntityDetails?.organizations.length < 0 || allEntityDetails === null ? (
+        {allEntityDetails?.organizations.length < 0 ||
+        allEntityDetails === null ? (
           <Loading />
         ) : (
           <div className="container mb-40 ">
@@ -154,7 +168,7 @@ const Page = () => {
                         <div className="flex flex-col gap-6">
                           <div>
                             <TextField
-                              label="Organization Name"
+                              label="Organization Name *"
                               name="name"
                               value={formData.name}
                               onChange={(e) =>
@@ -164,7 +178,7 @@ const Page = () => {
                           </div>
                           <div>
                             <TextField
-                              label="Description"
+                              label="Description *"
                               multiline={4}
                               name="description"
                               value={formData.description}
@@ -204,7 +218,7 @@ const Page = () => {
                           </div>
                           <div>
                             <TextField
-                              label="Contact Email"
+                              label="Contact Email *"
                               name="contactEmail"
                               type="email"
                               value={formData.contactEmail}
@@ -214,7 +228,7 @@ const Page = () => {
                             />
                           </div>
                           <DropZone
-                            label={'Upload Logo'}
+                            label={'Upload Logo *'}
                             onDrop={(e) =>
                               setFormData({ ...formData, logo: e[0] })
                             }
@@ -257,9 +271,7 @@ const Page = () => {
                               setFormData({ ...formData, location: e })
                             }
                           />
-                          <Button onClick={() => mutate({ input: formData })}>
-                            Save
-                          </Button>
+                          <Button onClick={handleSave}>Save</Button>
                         </div>
                       </>
                     </Dialog.Content>

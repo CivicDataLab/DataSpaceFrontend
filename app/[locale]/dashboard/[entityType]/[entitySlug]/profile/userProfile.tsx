@@ -100,22 +100,34 @@ const UserProfile = () => {
 
   const handleSave = () => {
     // Create mutation input with only changed fields
-    const inputData: UpdateUserInput = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      bio: formData.bio,
-      email: formData.email,
-      githubProfile: formData.githubProfile,
-      linkedinProfile: formData.linkedinProfile,
-      twitterProfile: formData.twitterProfile,
-      location: formData.location,
-    };
+    const formValidation =
+      formData.firstName &&
+      formData.lastName &&
+      formData.email &&
+      formData.bio &&
+      formData.location;
 
-    // Only add logo if it has changed
-    if (formData.profilePicture instanceof File) {
-      inputData.profilePicture = formData.profilePicture;
+    if (!formValidation) {
+      toast('Please fill all the required fields');
+      return;
+    } else {
+      const inputData: UpdateUserInput = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        bio: formData.bio,
+        email: formData.email,
+        githubProfile: formData.githubProfile,
+        linkedinProfile: formData.linkedinProfile,
+        twitterProfile: formData.twitterProfile,
+        location: formData.location,
+      };
+
+      // Only add logo if it has changed
+      if (formData.profilePicture instanceof File) {
+        inputData.profilePicture = formData.profilePicture;
+      }
+      mutate({ input: inputData });
     }
-    mutate({ input: inputData });
   };
 
   return (
@@ -129,7 +141,7 @@ const UserProfile = () => {
             <div className="flex w-full flex-wrap gap-6 md:flex-nowrap lg:flex-nowrap">
               <div className="w-full">
                 <TextField
-                  label="First Name"
+                  label="First Name *"
                   name="firstName"
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e })}
@@ -137,7 +149,7 @@ const UserProfile = () => {
               </div>
               <div className="w-full">
                 <TextField
-                  label="Last Name"
+                  label="Last Name *"
                   name="lastName"
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e })}
@@ -147,7 +159,7 @@ const UserProfile = () => {
 
             <div className="w-full">
               <TextField
-                label="Email"
+                label="Email *"
                 name="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e })}
@@ -189,7 +201,7 @@ const UserProfile = () => {
         <div className="flex w-full flex-col gap-4 lg:flex-row">
           <div className="w-full">
             <TextField
-              label="Bio"
+              label="Bio *"
               name="bio"
               multiline={6}
               value={formData.bio}
@@ -198,7 +210,7 @@ const UserProfile = () => {
           </div>
           <div className="w-full">
             <DropZone
-              label={'Upload Profile Picture'}
+              label={'Upload Profile Picture *'}
               onDrop={(e) => setFormData({ ...formData, profilePicture: e[0] })}
               name={'Profile Picture'}
             >
