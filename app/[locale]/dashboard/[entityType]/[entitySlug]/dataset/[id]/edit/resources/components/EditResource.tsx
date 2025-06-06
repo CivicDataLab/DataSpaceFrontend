@@ -358,7 +358,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
         name: resourceName || '',
         previewEnabled: previewEnable,
         previewDetails: {
-          startEntry: 5,
+          startEntry: 1,
           endEntry: 5,
           isAllEntries: previewDetails.isAllEntries,
         },
@@ -446,7 +446,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
             </div>
           </div>
 
-          <div className="my-8 flex items-center gap-8 align-middle">
+          <div className="mt-8 mb-4 flex items-center gap-8 align-middle">
             <Checkbox
               name={'previewEnabled'}
               checked={previewEnable}
@@ -459,7 +459,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
                     name: resourceName || '',
                     previewEnabled: newValue, // use new value here
                     previewDetails: {
-                      startEntry: 5,
+                      startEntry: 1,
                       endEntry: 5,
                       isAllEntries: previewDetails.isAllEntries,
                     },
@@ -523,7 +523,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
           {showPreview && previewEnable && previewData && (
             <PreviewData isPreview={previewEnable} previewData={previewData} />
           )}
-          <div className="my-4">
+          <div className="my-8">
             <div className="flex flex-wrap justify-between">
               <Text>Fields in the Resource</Text>
               <Button
