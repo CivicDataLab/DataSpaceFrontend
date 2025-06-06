@@ -179,7 +179,7 @@ const useUrlParams = (
     } else {
       currentUrl.searchParams.delete('order');
     }
-    router.push(currentUrl.toString());
+    router.replace(currentUrl.toString());
   }, [queryParams, setVariables, router]);
 };
 
