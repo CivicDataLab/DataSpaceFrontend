@@ -116,26 +116,36 @@ const OrgProfile = () => {
   );
 
   const handleSave = () => {
-    // Create mutation input with only changed fields
-    const inputData: OrganizationInputPartial = {
-      name: formData.name,
-      contactEmail: formData.contactEmail,
-      organizationTypes: formData.organizationTypes,
-      homepage: formData.homepage,
-      description: formData.description,
-      id: formData.id,
-      linkedinProfile: formData.linkedinProfile,
-      githubProfile: formData.githubProfile,
-      twitterProfile: formData.twitterProfile,
-      location: formData.location,
-    };
+    const formValidation =
+      formData.name &&
+      formData.contactEmail &&
+      formData.description &&
+      formData.logo;
 
-    // Only add logo if it has changed
-    if (formData.logo instanceof File) {
-      inputData.logo = formData.logo;
+    if (!formValidation) {
+      toast('Please fill all the required fields');
+      return;
+    } else {
+      const inputData: OrganizationInputPartial = {
+        name: formData.name,
+        contactEmail: formData.contactEmail,
+        organizationTypes: formData.organizationTypes,
+        homepage: formData.homepage,
+        description: formData.description,
+        id: formData.id,
+        linkedinProfile: formData.linkedinProfile,
+        githubProfile: formData.githubProfile,
+        twitterProfile: formData.twitterProfile,
+        location: formData.location,
+      };
+
+      // Only add logo if it has changed
+      if (formData.logo instanceof File) {
+        inputData.logo = formData.logo;
+      }
+
+      mutate({ input: inputData });
     }
-
-    mutate({ input: inputData });
   };
 
   return (
@@ -147,7 +157,7 @@ const OrgProfile = () => {
         <div className="flex flex-wrap gap-6  lg:flex-nowrap">
           <div className="w-full">
             <TextField
-              label="Name"
+              label="Name *"
               name="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e })}
@@ -156,7 +166,7 @@ const OrgProfile = () => {
 
           <div className="w-full">
             <TextField
-              label="Email"
+              label="Email *"
               name="email"
               value={formData.contactEmail}
               onChange={(e) => setFormData({ ...formData, contactEmail: e })}
@@ -234,7 +244,7 @@ const OrgProfile = () => {
         <div className="flex flex-wrap gap-6 lg:flex-nowrap">
           <div className="w-full">
             <TextField
-              label="Description"
+              label="Description *"
               name="description"
               multiline={6}
               value={formData.description}
@@ -243,7 +253,7 @@ const OrgProfile = () => {
           </div>
           <div className="w-full">
             <DropZone
-              label={'Upload Organization Logo'}
+              label={'Upload Organization Logo *'}
               onDrop={(e) => setFormData({ ...formData, logo: e[0] })}
               name={'Logo'}
             >
