@@ -247,6 +247,7 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
             label="Search"
             name="Search"
             onChange={(e) => handleSearchChange(e)}
+            onClear={() => handleSearchChange('')}
           />
         </div>
         <Dialog>
