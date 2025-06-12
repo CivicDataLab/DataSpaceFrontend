@@ -25,7 +25,7 @@ import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
 import { useDatasetEditStatus } from '../../context';
 import { TListItem } from '../page-layout';
-import PdfPreview from './PdfPreview';
+import PdfPreview from '../../../../../../../../(user)/components/PdfPreview';
 import PreviewData from './PreviewData';
 import {
   createResourceFilesDoc,
