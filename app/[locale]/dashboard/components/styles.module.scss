@@ -58,6 +58,9 @@
   padding-top: var(--space-5);
   flex-grow: 1;
   transition: transform var(--duration-400) ease 0s;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
 
   @media screen and (min-width: 768px) {
     padding-left: 0;
