@@ -1,15 +1,15 @@
+import React from 'react';
+import { useParams } from 'next/navigation';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
 import { useMutation } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
-import { useParams } from 'next/navigation';
 import { Button, DropZone, Text, toast } from 'opub-ui';
-import React from 'react';
 
 import { GraphQL } from '@/lib/api';
 import { createResourceFilesDoc } from './query';
 
 export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
-  const fileTypes = ['PDF', 'CSV', 'XLS', 'XLSX', 'TXT', 'ZIP'];
+  const fileTypes = ['CSV', 'JSON', 'PDF', 'XLS', 'XLSX', 'XML', 'ZIP'];
   const params = useParams<{
     entityType: string;
     entitySlug: string;
@@ -58,7 +58,7 @@ export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
       <Button kind="secondary" variant="interactive">
         Choose Files to Upload
       </Button>
-      <Text>Maximum File Size Limit : 5 MB</Text>
+      <Text>Maximum File Size Limit : 25 MB</Text>
       <Text className="flex items-center gap-1">
         Supported File Types :{' '}
         {fileTypes.map((type, index) => {
@@ -79,7 +79,7 @@ export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
   return (
     <>
       <DropZone
-        accept=".json, .csv, application/json, text/csv, application/zip, /pdf , application/pdf"
+        accept=".csv,.json,.pdf,.xlsx,.xls,.xml,.zip,application/json,text/csv,application/pdf,application/zip,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/xml,application/xml"
         name="file_details"
         label="Upload"
         allowMultiple={true}
