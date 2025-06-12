@@ -174,7 +174,6 @@ const SimilarDatasets: React.FC<Props> = ({ showCharts }) => {
               <CarouselNext />
             </Carousel>
           </div>
-          ;
         </>
       )}
     </div>
