@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import PdfPreview from '@/app/[locale]/(user)/components/PdfPreview';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -156,19 +157,25 @@ const Resources = () => {
               <Dialog.Trigger>
                 <Button
                   kind="tertiary"
-                  disabled={!previewData}
+                  disabled={row.original.format !== 'PDF' && !previewData}
                   className=" text-secondaryText underline"
                 >
                   Preview
                 </Button>
               </Dialog.Trigger>
               <Dialog.Content title={'Preview'} limitHeight large>
-                {previewData && (
-                  <Table
-                    columns={previewColumns}
-                    hideFooter
-                    rows={previewRows}
+                {row.original.format === 'PDF' ? (
+                  <PdfPreview
+                    url={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${row.original.id}`}
                   />
+                ) : (
+                  previewData && (
+                    <Table
+                      columns={previewColumns}
+                      hideFooter
+                      rows={previewRows}
+                    />
+                  )
                 )}
               </Dialog.Content>
             </Dialog>
@@ -186,6 +193,7 @@ const Resources = () => {
         format: data?.fileDetails?.format || 'Na',
         size: Math.round(data?.fileDetails?.size / 1024).toFixed(2) + 'KB',
         preview: data?.previewData,
+        id: data?.id,
       },
     ];
   };
