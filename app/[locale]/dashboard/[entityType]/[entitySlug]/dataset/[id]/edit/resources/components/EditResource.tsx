@@ -23,9 +23,9 @@ import {
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import PdfPreview from '../../../../../../../../(user)/components/PdfPreview';
 import { useDatasetEditStatus } from '../../context';
 import { TListItem } from '../page-layout';
-import PdfPreview from '../../../../../../../../(user)/components/PdfPreview';
 import PreviewData from './PreviewData';
 import {
   createResourceFilesDoc,
@@ -379,17 +379,9 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
     ); // update based on mutation state
   }, [updateResourceMutation.isLoading, updateSchemaMutation.isLoading]);
 
-  const isPdf =
-    resourceDetailsQuery.data?.resourceById.fileDetails.format?.toLowerCase() ===
-    'pdf';
-
-  const isZIP =
-    resourceDetailsQuery.data?.resourceById.fileDetails.format?.toLowerCase() ===
-    'zip';
-
+  const resourceFormat =
+    resourceDetailsQuery.data?.resourceById.fileDetails.format?.toLowerCase();
   const pdfUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${resourceId}`;
-
-
   return (
     <div>
       {resourceDetailsQuery.data?.resourceById ? (
@@ -459,11 +451,17 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
             </div>
           </div>
 
-          {!isZIP && (
+          {resourceFormat !== 'zip' && (
             <div className="mb-4 mt-8 flex items-center gap-8 align-middle">
               <Checkbox
                 name={'previewEnabled'}
                 checked={previewEnable}
+                title={
+                  resourceFormat === 'json' || resourceFormat === 'xml'
+                    ? 'Preview is not available for this file format'
+                    : ''
+                }
+                disabled={resourceFormat === 'json' || resourceFormat === 'xml'}
                 onChange={() => {
                   const newValue = !previewEnable;
                   setPreviewEnable(newValue);
@@ -537,13 +535,13 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
           )}
           {showPreview &&
             previewEnable &&
-            (isPdf ? (
+            (resourceFormat === 'pdf' ? (
               <PdfPreview url={pdfUrl} />
             ) : (
               previewData && <PreviewData previewData={previewData} />
             ))}
 
-          {!isPdf && !isZIP && (
+          {resourceFormat !== 'pdf' && resourceFormat !== 'zip' && (
             <div className="my-8">
               <div className="flex flex-wrap justify-between">
                 <Text>Fields in the Resource</Text>
