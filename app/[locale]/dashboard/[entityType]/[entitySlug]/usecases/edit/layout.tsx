@@ -35,7 +35,13 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
   const pathName = usePathname();
   const params = useParams();
 
-  const layoutList = ['details', 'contributors', 'assign', 'publish'];
+  const layoutList = [
+    'details',
+    'contributors',
+    'assign',
+    'dashboards',
+    'publish',
+  ];
 
   const pathItem = layoutList.find(function (v) {
     return pathName.indexOf(v) >= 0;
@@ -91,6 +97,11 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       selected: pathItem === 'contributors',
     },
     {
+      label: 'Dashboards',
+      url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/dashboards`,
+      selected: pathItem === 'dashboards',
+    },
+    {
       label: 'Publish',
       url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/publish`,
       selected: pathItem === 'publish',
@@ -140,9 +151,9 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
         </TabList>
       </Tabs>
       <div className="">{children}</div>
-      <div className="mb-6">
+      <div className="my-6">
         <StepNavigation
-          steps={['details', 'assign', 'contributors', 'publish']}
+          steps={['details', 'assign', 'contributors', 'dashboards', 'publish']}
         />
       </div>
     </div>
