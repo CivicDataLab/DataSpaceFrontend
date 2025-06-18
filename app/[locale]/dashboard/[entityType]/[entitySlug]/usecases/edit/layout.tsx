@@ -92,14 +92,14 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       selected: pathItem === 'assign',
     },
     {
-      label: 'Contributors',
-      url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/contributors`,
-      selected: pathItem === 'contributors',
-    },
-    {
       label: 'Dashboards',
       url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/dashboards`,
       selected: pathItem === 'dashboards',
+    },
+    {
+      label: 'Contributors',
+      url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/contributors`,
+      selected: pathItem === 'contributors',
     },
     {
       label: 'Publish',
@@ -153,7 +153,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       <div className="">{children}</div>
       <div className="my-6">
         <StepNavigation
-          steps={['details', 'assign', 'contributors', 'dashboards', 'publish']}
+          steps={['details', 'assign', 'dashboards', 'contributors', 'publish']}
         />
       </div>
     </div>
