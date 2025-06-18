@@ -107,7 +107,6 @@ const UserProfile = () => {
       formData.bio &&
       formData.profilePicture;
 
-
     if (!formValidation) {
       toast('Please fill all the required fields');
       return;
@@ -161,6 +160,7 @@ const UserProfile = () => {
             <div className="w-full">
               <TextField
                 label="Email *"
+                disabled
                 name="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e })}

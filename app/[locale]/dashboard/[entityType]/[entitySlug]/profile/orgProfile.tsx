@@ -168,6 +168,7 @@ const OrgProfile = () => {
             <TextField
               label="Email *"
               name="email"
+              disabled
               value={formData.contactEmail}
               onChange={(e) => setFormData({ ...formData, contactEmail: e })}
             />
