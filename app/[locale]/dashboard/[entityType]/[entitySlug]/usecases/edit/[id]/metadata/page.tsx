@@ -201,17 +201,22 @@ const Metadata = () => {
       )
     );
 
-  const getTagsList: { data: any; isLoading: boolean; error: any } = useQuery(
-    [`tags_list_query`],
-    () =>
-      GraphQL(
-        tagsListQueryDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        []
-      )
+  const getTagsList: {
+    data: any;
+    isLoading: boolean;
+    error: any;
+    refetch: any;
+  } = useQuery([`tags_list_query`], () =>
+    GraphQL(
+      tagsListQueryDoc,
+      {
+        [params.entityType]: params.entitySlug,
+      },
+      []
+    )
   );
+  const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
+
   // Update mutation
   const updateUseCase = useMutation(
     (data: { updateMetadataInput: UpdateUseCaseMetadataInput }) =>
@@ -220,6 +225,10 @@ const Metadata = () => {
       onSuccess: (res: any) => {
         toast('Use case updated successfully');
         const updatedData = defaultValuesPrepFn(res.addUpdateUsecaseMetadata);
+        if (isTagsListUpdated) {
+          getTagsList.refetch();
+          setIsTagsListUpdated(false);
+        }
         setFormData(updatedData);
         setPreviousFormData(updatedData);
       },
@@ -319,7 +328,7 @@ const Metadata = () => {
                 value: option,
               })) || []),
             ]}
-            label={metadataFormItem.label+ ' *'}
+            label={metadataFormItem.label + ' *'}
             selectedValue={formData[metadataFormItem.id]}
             displaySelected
             onChange={(value) => {
@@ -348,8 +357,10 @@ const Metadata = () => {
                   value: item.id,
                 })) || []
               }
+              key={`tags-${getTagsList.data?.tags?.length}`} // forces remount on change
               selectedValue={formData.tags}
               onChange={(value) => {
+                setIsTagsListUpdated(true);
                 handleChange('tags', value);
                 handleSave({ ...formData, tags: value });
               }}
