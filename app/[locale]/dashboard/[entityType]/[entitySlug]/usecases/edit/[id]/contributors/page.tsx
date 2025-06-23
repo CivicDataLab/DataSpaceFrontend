@@ -1,16 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { graphql } from '@/gql';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, Icon, Text, toast } from 'opub-ui';
+import { useEffect, useState } from 'react';
 
-import { useDashboardStore } from '@/config/store';
-import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
 import CustomCombobox from './CustomCombobox';
 import EntitySection from './EntitySelection';
@@ -20,6 +18,7 @@ import {
   AddSupporters,
   FetchUsecaseInfo,
   FetchUsers,
+  OrgList,
   RemoveContributor,
   RemovePartners,
   RemoveSupporters,
@@ -27,7 +26,6 @@ import {
 
 const Details = () => {
   const params = useParams<{ id: string }>();
-  const { allEntityDetails } = useDashboardStore();
   const [searchValue, setSearchValue] = useState('');
   const [formData, setFormData] = useState({
     contributors: [] as { label: string; value: string }[],
@@ -51,6 +49,10 @@ const Details = () => {
       keepPreviousData: true,
     }
   );
+
+  const Organizations: { data: any; isLoading: boolean; refetch: any } =
+    useQuery([`fetch_orgs`], () => GraphQL(OrgList, {}, []));
+
 
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_usecase_${params.id}`],
@@ -209,7 +211,8 @@ const Details = () => {
 
   return (
     <div>
-      {Users?.isLoading || allEntityDetails?.organizations?.length === 0 ? (
+      {Users?.isLoading ||
+      Organizations?.data?.allOrganizations?.length === 0 ? (
         <Loading />
       ) : (
         <div className=" flex flex-col gap-10">
@@ -305,7 +308,7 @@ const Details = () => {
             label="Add Supporters"
             placeholder="Add Supporters"
             data={UseCaseData?.data?.useCases[0]?.supportingOrganizations}
-            options={(allEntityDetails?.organizations || [])?.map(
+            options={(Organizations?.data?.allOrganizations || [])?.map(
               (org: any) => ({
                 label: org.name,
                 value: org.id,
@@ -346,7 +349,7 @@ const Details = () => {
             label="Add Partners"
             placeholder="Add Partners"
             data={UseCaseData?.data?.useCases[0]?.partnerOrganizations}
-            options={(allEntityDetails?.organizations || [])?.map(
+            options={(Organizations?.data?.allOrganizations || [])?.map(
               (org: any) => ({
                 label: org.name,
                 value: org.id,
