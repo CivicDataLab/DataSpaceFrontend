@@ -21,7 +21,11 @@ const Assign = ({ data }: { data: any }) => {
   };
   return (
     <div>
-      <Table columns={columns} rows={generateTableData(data)} hideFooter />
+      <Table
+        columns={columns}
+        rows={generateTableData(data)}
+        hideFooter={data.length < 10}
+      />
     </div>
   );
 };
