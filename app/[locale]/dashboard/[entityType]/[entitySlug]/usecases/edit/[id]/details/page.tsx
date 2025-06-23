@@ -262,8 +262,8 @@ const Details = () => {
             max={new Date().toISOString().split('T')[0]}
             min={formData.startedOn || ''}
             disabled={
-              formData.runningStatus === 'COMPLETED' ||
-              formData.runningStatus === 'CANCELLED'
+              formData.runningStatus === 'ON_GOING' ||
+              formData.runningStatus === 'INITIATED'
             }
             value={formData.completedOn || ''}
             onChange={(e) => {
