@@ -45,14 +45,19 @@ const Admin = () => {
   const params = useParams<{ entityType: string; entitySlug: string }>();
   const usersList: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_users_list_admin_members`],
-    () => GraphQL(usersListDoc, {
-      [params.entityType]: params.entitySlug,
-    }, [])
+    () =>
+      GraphQL(
+        usersListDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        []
+      )
   );
   const [isOpen, setIsOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [selectedUser, setSelectedUser] = useState({});
-  const [refetch,setRefetch]=useState(false)
+  const [refetch, setRefetch] = useState(false);
 
   const { mutate, isLoading: removeUserLoading } = useMutation(
     (input: { input: AddRemoveUserToOrganizationInput }) =>
@@ -140,7 +145,20 @@ const Admin = () => {
         id: item.id,
       })) || [],
   };
-  
+
+  useEffect(() => {
+    const updatedRows =
+      usersList.data?.userByOrganization.map((item: any) => ({
+        name: item.fullName,
+        role: item.organizationMemberships[0]?.role?.name || 'N/A',
+        roleId: item.organizationMemberships[0]?.role?.id || '',
+        modified:
+          formatDate(item.organizationMemberships[0]?.updatedAt) || 'N/A',
+        id: item.id,
+      })) || [];
+
+    setFilteredRows(updatedRows);
+  }, [usersList.data]);
 
   const [filteredRows, setFilteredRows] = React.useState<any[]>(table.rows);
   const handleSearchChange = (e: string) => {
@@ -150,6 +168,10 @@ const Admin = () => {
     );
     setFilteredRows(filtered);
   };
+
+  const filteredColumns = table.columns.filter(
+    (column) => column.accessorKey !== 'id'
+  );
 
   useEffect(() => {
     usersList.refetch();
@@ -201,13 +223,13 @@ const Admin = () => {
       <div>
         {usersList.data?.userByOrganization?.length > 0 ? (
           <DataTable
-            columns={table.columns}
-            rows={table.rows}
+            columns={filteredColumns}
+            rows={filteredRows}
             hideSelection
             hideViewSelector
           />
         ) : (
-          <Loading/>
+          <Loading />
         )}
       </div>
     </div>
