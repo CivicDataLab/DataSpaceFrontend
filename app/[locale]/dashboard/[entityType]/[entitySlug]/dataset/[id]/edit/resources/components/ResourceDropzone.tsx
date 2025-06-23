@@ -3,7 +3,7 @@ import { useParams } from 'next/navigation';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
 import { useMutation } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
-import { Button, DropZone, Text, toast } from 'opub-ui';
+import { Button, DropZone, Tag, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { createResourceFilesDoc } from './query';
@@ -59,16 +59,20 @@ export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
         Choose Files to Upload
       </Button>
       <Text>Maximum File Size Limit : 25 MB</Text>
-      <Text className="flex items-center gap-1">
-        Supported File Types :{' '}
-        {fileTypes.map((type, index) => {
-          return (
-            <div className="rounded-1 bg-basePureWhite px-2 py-1" key={index}>
-              {type}
-            </div>
-          );
-        })}
-      </Text>
+      <div className="flex flex-wrap flex-row items-center gap-2">
+      <Text variant="bodyMd" color="subdued">
+          Supported File Types:
+        </Text>
+        <div className="flex flex-wrap flex-row gap-2">
+          {fileTypes.map((type, index) => {
+            return (
+              <Tag fillColor="white" textColor="baseDefault" key={index}>
+                {type}
+              </Tag>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 
