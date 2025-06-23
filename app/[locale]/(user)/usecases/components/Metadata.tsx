@@ -12,6 +12,9 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       value: data.useCase.isIndividualUsecase
         ? data.useCase.user.fullName
         : data?.useCase.organization?.name,
+      tooltipContent: data.useCase.isIndividualUsecase
+        ? data.useCase.user.fullName
+        : data?.useCase.organization?.name,
     },
     {
       label: 'Contact',
@@ -138,13 +141,16 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
               >
                 {item.label}
               </Text>
+              <Tooltip content={item?.tooltipContent}>
               <Text
                 className="max-w-xs truncate"
                 variant="bodyLg"
                 fontWeight="medium"
+                // title={item?.tooltipContent}
               >
                 {typeof item.value === 'string' ? item.value : item.value}
               </Text>
+              </Tooltip>
             </div>
           ))}
         </div>
