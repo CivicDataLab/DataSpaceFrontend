@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button, Divider, Icon, Text } from 'opub-ui';
+import { Button, Divider, Icon, Text, Tooltip } from 'opub-ui';
 
 import { getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
@@ -130,20 +130,22 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             Sector
           </Text>
           <div className="flex flex-wrap gap-2">
-          {data.sectors.length > 0 ? (
-            data.sectors.map((sector: any, index: number) => (
-              <Image
-                key={index}
-                src={`/Sectors/${sector.name}.svg`}
-                alt={sector.name || ''}
-                width={52}
-                height={52}
-                className="border-1 border-solid border-greyExtralight p-1"
-              />
-            ))
-          ) : (
-            <span>N/A</span>
-          )}
+            {data.sectors.length > 0 ? (
+              data.sectors.map((sector: any, index: number) => (
+                <Tooltip content={sector.name} key={index}>
+                  <Image
+                    key={index}
+                    src={`/Sectors/${sector.name}.svg`}
+                    alt={sector.name || ''}
+                    width={52}
+                    height={52}
+                    className="border-1 border-solid border-greyExtralight p-1"
+                  />
+                </Tooltip>
+              ))
+            ) : (
+              <span>N/A</span>
+            )}
           </div>
         </div>
         {Metadata.map((item: any, index: any) => (
