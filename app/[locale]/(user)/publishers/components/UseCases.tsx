@@ -60,6 +60,13 @@ const orgPublishedUseCasesDoc: any = graphql(`
       title
       summary
       slug
+      isIndividualUsecase
+      organization {
+        name
+        logo {
+          url
+        }
+      }
       metadata {
         metadataItem {
           id
