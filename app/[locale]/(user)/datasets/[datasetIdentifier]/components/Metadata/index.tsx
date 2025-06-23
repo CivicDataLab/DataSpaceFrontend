@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Divider, Icon, Text, Tooltip } from 'opub-ui';
 
-import { getWebsiteTitle } from '@/lib/utils';
+import { formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
 interface MetadataProps {
@@ -17,6 +17,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
     value: item.value,
     type: item.metadataItem.dataType,
   }));
+
   const [isexpanded, setIsexpanded] = useState(false);
   const toggleDescription = () => setIsexpanded(!isexpanded);
 
@@ -115,15 +116,23 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
           <Text className="min-w-[120px]  basis-1/4 uppercase" variant="bodyMd">
             {data.isIndividualDataset ? 'Publisher' : 'Organization'}
           </Text>
-          <Text
-            className="max-w-xs truncate "
-            variant="bodyLg"
-            fontWeight="medium"
+          <Tooltip
+            content={
+              data.isIndividualDataset
+                ? data.user.fullName
+                : data.organization.name
+            }
           >
-            {data.isIndividualDataset
-              ? data.user.fullName
-              : data.organization.name}
-          </Text>
+            <Text
+              className="max-w-xs truncate "
+              variant="bodyLg"
+              fontWeight="medium"
+            >
+              {data.isIndividualDataset
+                ? data.user.fullName
+                : data.organization.name}
+            </Text>
+          </Tooltip>
         </div>
         <div className="flex gap-2 ">
           <Text className="min-w-[120px]  basis-1/4 uppercase" variant="bodyMd">
@@ -156,16 +165,20 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             >
               {item.label}
             </Text>
-            {item.type !== 'URL' ? (
-              <Text className="max-w-xs " variant="bodyLg" fontWeight="medium">
-                {item.value}
-              </Text>
-            ) : (
+            {item.type === 'URL' ? (
               <Link href={item.value} target="_blank">
-                <Text className="underline" color="highlight">
+                <Text className="underline" color="highlight" variant="bodyLg">
                   {sourceTitle?.trim() ? sourceTitle : 'Visit Website'}
                 </Text>
               </Link>
+            ) : item.type === 'DATE' ? (
+              <Text className="max-w-xs " variant="bodyLg" fontWeight="medium">
+                {formatDate(item.value)}
+              </Text>
+            ) : (
+              <Text className="max-w-xs " variant="bodyLg" fontWeight="medium">
+                {item.value}
+              </Text>
             )}
           </div>
         ))}
@@ -191,8 +204,10 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
           </div>
         )}
         <div className="flex flex-col gap-4">
-          <Text variant="bodyMd">Description</Text>
-          <Text variant="bodyMd">
+          <Text variant="bodyMd" className="uppercase">
+            Description
+          </Text>
+          <Text variant="bodyLg">
             {data.description?.length > 260 && !isexpanded
               ? `${data.description.slice(0, 260)}...`
               : data.description}
