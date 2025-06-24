@@ -17,8 +17,14 @@ import { FetchUsers } from '../usecases/edit/[id]/contributors/query';
 const addUserDoc: any = graphql(`
   mutation addUserToOrganization($input: AddRemoveUserToOrganizationInput!) {
     addUserToOrganization(input: $input) {
-      __typename
-      ... on TypeOrganizationMembership {
+      success
+      errors {
+        nonFieldErrors
+        fieldErrors {
+          messages
+        }
+      }
+      data {
         role {
           name
           id
@@ -118,18 +124,24 @@ const AddUser = ({
         input
       ),
     {
-      onSuccess: (res: any) => {
-        toast('User added successfully');
-        // Optionally, reset form or perform other actions
-        setIsOpen(false);
-        setFormData({
-          userId: '',
-          roleId: '',
-        });
-        setRefetch(true);
-      },
-      onError: (err: any) => {
-        toast('Failed to add user');
+      onSuccess: (data: any) => {
+        if (data.addUserToOrganization.success) {
+          toast('User added successfully');
+          setIsOpen(false);
+          setFormData({
+            userId: '',
+            roleId: '',
+          });
+          setRefetch(true);
+        } else {
+          toast(
+            'Error: ' +
+              (data.addUserToOrganization?.errors?.fieldErrors
+                ? data.addUserToOrganization?.errors?.fieldErrors[0]
+                    ?.messages[0]
+                : data.addUserToOrganization?.errors?.nonFieldErrors[0])
+          );
+        }
       },
     }
   );
@@ -146,7 +158,6 @@ const AddUser = ({
     {
       onSuccess: (res: any) => {
         toast('User updated successfully');
-        // Optionally, reset form or perform other actions
         setIsOpen(false);
         setFormData({
           userId: '',
