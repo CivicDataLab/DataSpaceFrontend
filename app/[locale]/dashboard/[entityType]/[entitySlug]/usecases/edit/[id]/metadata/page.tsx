@@ -268,7 +268,11 @@ const Metadata = () => {
           id: params.id,
           metadata: [
             ...Object.keys(transformedValues)
-              .filter((valueItem) => !['sectors', 'tags'].includes(valueItem))
+              .filter(
+                (valueItem) =>
+                  !['sectors', 'tags'].includes(valueItem) &&
+                  transformedValues[valueItem] !== ''
+              )
               .map((key) => {
                 return {
                   id: key,
