@@ -13,15 +13,12 @@ import {
   Checkbox,
   Divider,
   DropZone,
-  Icon,
-  Spinner,
   Text,
   TextField,
   toast,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
 import PdfPreview from '../../../../../../../../(user)/components/PdfPreview';
 import { useDatasetEditStatus } from '../../context';
@@ -29,7 +26,6 @@ import { TListItem } from '../page-layout';
 import PreviewData from './PreviewData';
 import {
   createResourceFilesDoc,
-  resetSchema,
   updateResourceDoc,
   updateSchema,
 } from './query';
@@ -88,10 +84,14 @@ const resourceDetails: any = graphql(`
 `);
 
 export const EditResource = ({ refetch, allResources }: EditProps) => {
-  const params = useParams<{ entityType: string; entitySlug: string; id: string }>();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
 
   const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
-  const [schema, setSchema] = React.useState([]);
+  const [schema, setSchema] = React.useState<any>([]);
 
   const resourceDetailsQuery = useQuery<any>(
     [`fetch_resource_details_${resourceId}`],
@@ -107,25 +107,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       enabled: !!resourceId,
     }
   );
-  const schemaMutation = useMutation(
-    (data: { resourceId: string }) =>
-      GraphQL(
-        resetSchema,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        data
-      ),
-    {
-      onSuccess: (data: any) => {
-        setSchema(data.resetFileResourceSchema.schema);
-        refetch();
-      },
-      onError: (err: any) => {
-        toast(err);
-      },
-    }
-  );
+
   const updateResourceMutation = useMutation(
     (data: {
       fileResourceInput: UpdateFileResourceInput;
@@ -146,11 +128,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
             onClick: () => {},
           },
         });
-        if (variables.isResetSchema) {
-          schemaMutation.mutate({
-            resourceId: resourceId,
-          });
-        }
+
         resourceDetailsQuery.refetch();
       },
       onError: (err: any) => {
@@ -235,9 +213,9 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
     columns: [],
   });
 
-  useEffect(() => {
-    resourceDetailsQuery.refetch();
-  }, []);
+  // useEffect(() => {
+  //   resourceDetailsQuery.refetch();
+  // }, []);
 
   React.useEffect(() => {
     const ResourceData = resourceDetailsQuery.data?.resourceById;
@@ -252,13 +230,16 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       rows: ResourceData?.previewData?.rows,
       columns: ResourceData?.previewData?.columns,
     });
-    setSchema(ResourceData?.schema);
-    if (ResourceData?.schema?.length === 0) {
-      schemaMutation.mutate({
-        resourceId: resourceId,
-      });
+  }, [resourceDetailsQuery.data]);
+
+
+  useEffect(() => {
+    const schemaData = resourceDetailsQuery.data?.resourceById?.schema;
+    if (schemaData && Array.isArray(schemaData)) {
+      setSchema(schemaData);
     }
   }, [resourceDetailsQuery.data]);
+  
 
   const handleResourceChange = (e: any) => {
     setResourceId(e, { shallow: false });
@@ -302,16 +283,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
         {
           onSuccess: () => {
             // Automatically trigger schema mutation after file upload
-            schemaMutation.mutate(
-              {
-                resourceId: resourceId,
-              },
-              {
-                onSuccess: () => {
-                  toast('Schema updated successfully');
-                },
-              }
-            );
+
             resourceDetailsQuery.refetch();
           },
         }
@@ -543,7 +515,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
 
           {resourceFormat !== 'pdf' && resourceFormat !== 'zip' && (
             <div className="my-8">
-              <div className="flex flex-wrap justify-between">
+              {/* <div className="flex flex-wrap justify-between">
                 <Text>Fields in the Resource</Text>
                 <Button
                   size="medium"
@@ -560,28 +532,18 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
                     <Icon source={Icons.info} color="interactive" />
                   </div>
                 </Button>
-              </div>
+              </div> */}
               <Text variant="headingXs" as="span" fontWeight="regular">
                 The Field settings apply to the Resource on a master level and
                 can not be changed in Access Models.
               </Text>
-              {schemaMutation.isLoading ? (
-                <div className=" mt-8 flex justify-center">
-                  <Spinner size={30} />
-                </div>
-              ) : resourceId && schema?.length > 0 ? (
-                <ResourceSchema
-                  setSchema={setSchema}
-                  data={schema}
-                  mutate={updateSchemaMutation.mutate}
-                  resourceId={resourceId}
-                />
-              ) : (
-                <div className="my-8 flex justify-center">
-                  {' '}
-                  Click on Reset Format{' '}
-                </div>
-              )}
+
+              <ResourceSchema
+                setSchema={setSchema}
+                data={schema}
+                mutate={updateSchemaMutation.mutate}
+                resourceId={resourceId}
+              />
             </div>
           )}
         </div>
