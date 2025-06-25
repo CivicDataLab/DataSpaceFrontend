@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
@@ -219,12 +219,18 @@ const ListingComponent: React.FC<ListingProps> = ({
   const datasetDetails = facets?.results ?? [];
 
   useUrlParams(queryParams, setQueryParams, setVariables);
+  const latestFetchId = useRef(0);
 
   useEffect(() => {
     if (variables) {
+      const currentFetchId = ++latestFetchId.current;
+
       fetchDatasets(variables)
         .then((res) => {
-          setFacets(res);
+          // Only set if this is the latest call
+          if (currentFetchId === latestFetchId.current) {
+            setFacets(res);
+          }
         })
         .catch((err) => {
           console.error(err);

@@ -63,7 +63,7 @@ const Sectors = () => {
         <div className="mt-12 grid w-full grid-cols-1 gap-6 px-4 md:grid-cols-2 md:px-12 lg:grid-cols-3 lg:px-12">
           {data?.sectors.map((sectors: any) => (
             <Link
-              href={`/sectors/${sectors.slug}?sectors=${capitalizeWords(sectors.slug)}`}
+              href={`/sectors/${sectors.slug}?size=9&page=1&sort=recent&sectors=${capitalizeWords(sectors.slug)}`}
               key={sectors.id}
             >
               <div className="flex w-full items-center gap-5 rounded-4 bg-surfaceDefault p-7 shadow-card">
