@@ -1,5 +1,4 @@
-import { Table } from 'opub-ui';
-
+import { Table, Text } from 'opub-ui';
 
 const Dashboards = ({ data }: { data: any }) => {
   const dashboardColumns = [
@@ -17,11 +16,15 @@ const Dashboards = ({ data }: { data: any }) => {
   };
   return (
     <div>
-      <Table
-        columns={dashboardColumns}
-        rows={generatePublisherData(data)}
-        hideFooter
-      />
+      {data?.length > 0 ? (
+        <Table
+          columns={dashboardColumns}
+          rows={generatePublisherData(data)}
+          hideFooter
+        />
+      ) : (
+        <Text variant="bodyMd">No Dashboards Found</Text>
+      )}
     </div>
   );
 };
