@@ -309,7 +309,7 @@ const Details = () => {
                         }}
                         kind="tertiary"
                       >
-                        <div className="flex items-center gap-2 rounded-2 bg-greyExtralight p-2 ">
+                        <div className="flex items-center gap-2 max-w-40 rounded-2 bg-greyExtralight p-2 ">
                           <Text>{item.label}</Text>
                           <Icon source={Icons.cross} size={18} />
                         </div>
