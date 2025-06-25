@@ -42,7 +42,11 @@ const AssignUsecaseDatasets: any = graphql(`
   }
 `);
 const Assign = () => {
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
   const router = useRouter();
 
   const [data, setData] = useState<any[]>([]); // Ensure `data` is an array
@@ -54,7 +58,9 @@ const Assign = () => {
       () =>
         GraphQL(
           FetchUseCaseDetails,
-          {},
+          {
+            [params.entityType]: params.entitySlug,
+          },
           {
             filters: {
               id: params.id,
@@ -87,14 +93,11 @@ const Assign = () => {
       });
   }, []);
 
-
-
   const columns = [
     { accessorKey: 'title', header: 'Title' },
     { accessorKey: 'category', header: 'Sector' },
     { accessorKey: 'modified', header: 'Last Modified' },
   ];
-
 
   const generateTableData = (list: Array<any>) => {
     return list.map((item) => {
@@ -111,7 +114,9 @@ const Assign = () => {
     () =>
       GraphQL(
         AssignUsecaseDatasets,
-        {},
+        {
+          [params.entityType]: params.entitySlug,
+        },
         {
           useCaseId: params.id,
           datasetIds: Array.isArray(selectedRow)
@@ -123,7 +128,9 @@ const Assign = () => {
       onSuccess: (data: any) => {
         toast('Dataset Assigned Successfully');
         UseCaseDetails.refetch();
-        router.push(`/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/contributors`);
+        router.push(
+          `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/contributors`
+        );
       },
       onError: (err: any) => {
         toast(`Received ${err} on dataset publish `);

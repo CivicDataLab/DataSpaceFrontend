@@ -25,7 +25,7 @@ import {
 } from './query';
 
 const Details = () => {
-  const params = useParams<{ id: string }>();
+  const params = useParams<{ entityType: string; entitySlug: string; id: string }>();
   const [searchValue, setSearchValue] = useState('');
   const [formData, setFormData] = useState({
     contributors: [] as { label: string; value: string }[],
@@ -38,7 +38,9 @@ const Details = () => {
     () =>
       GraphQL(
         FetchUsers,
-        {},
+        {
+          [params.entityType]: params.entitySlug,
+        },
         {
           limit: 10,
           searchTerm: searchValue,
@@ -51,7 +53,9 @@ const Details = () => {
   );
 
   const Organizations: { data: any; isLoading: boolean; refetch: any } =
-    useQuery([`fetch_orgs`], () => GraphQL(OrgList, {}, []));
+    useQuery([`fetch_orgs`], () => GraphQL(OrgList, {
+      [params.entityType]: params.entitySlug,
+    }, []));
 
 
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
@@ -59,7 +63,9 @@ const Details = () => {
     () =>
       GraphQL(
         FetchUsecaseInfo,
-        {},
+        {
+          [params.entityType]: params.entitySlug,
+        },
         {
           filters: {
             id: params.id,
@@ -100,7 +106,9 @@ const Details = () => {
   const { mutate: addContributor, isLoading: addContributorLoading } =
     useMutation(
       (input: { useCaseId: string; userId: string }) =>
-        GraphQL(AddContributors, {}, input),
+        GraphQL(AddContributors, {
+          [params.entityType]: params.entitySlug,
+        }, input),
       {
         onSuccess: (res: any) => {
           toast('Contributor added successfully');
@@ -115,7 +123,9 @@ const Details = () => {
   const { mutate: removeContributor, isLoading: removeContributorLoading } =
     useMutation(
       (input: { useCaseId: string; userId: string }) =>
-        GraphQL(RemoveContributor, {}, input),
+        GraphQL(RemoveContributor, {
+          [params.entityType]: params.entitySlug,
+        }, input),
       {
         onSuccess: (res: any) => {
           toast('Contributor removed successfully');
@@ -128,7 +138,9 @@ const Details = () => {
 
   const { mutate: addSupporter, isLoading: addSupporterLoading } = useMutation(
     (input: { useCaseId: string; organizationId: string }) =>
-      GraphQL(AddSupporters, {}, input),
+      GraphQL(AddSupporters, {
+        [params.entityType]: params.entitySlug,
+      }, input),
     {
       onSuccess: (res: any) => {
         toast('Supporter added successfully');
@@ -143,7 +155,9 @@ const Details = () => {
   const { mutate: removeSupporter, isLoading: removeSupporterLoading } =
     useMutation(
       (input: { useCaseId: string; organizationId: string }) =>
-        GraphQL(RemoveSupporters, {}, input),
+        GraphQL(RemoveSupporters, {
+          [params.entityType]: params.entitySlug,
+        }, input),
       {
         onSuccess: (res: any) => {
           toast('Supporter removed successfully');
@@ -156,7 +170,9 @@ const Details = () => {
 
   const { mutate: addPartner, isLoading: addPartnerLoading } = useMutation(
     (input: { useCaseId: string; organizationId: string }) =>
-      GraphQL(AddPartners, {}, input),
+      GraphQL(AddPartners, {
+        [params.entityType]: params.entitySlug,
+      }, input),
     {
       onSuccess: (res: any) => {
         toast('Partner added successfully');
@@ -171,7 +187,9 @@ const Details = () => {
   const { mutate: removePartner, isLoading: removePartnerLoading } =
     useMutation(
       (input: { useCaseId: string; organizationId: string }) =>
-        GraphQL(RemovePartners, {}, input),
+        GraphQL(RemovePartners, {
+          [params.entityType]: params.entitySlug,
+        }, input),
       {
         onSuccess: (res: any) => {
           toast('Partner removed successfully');

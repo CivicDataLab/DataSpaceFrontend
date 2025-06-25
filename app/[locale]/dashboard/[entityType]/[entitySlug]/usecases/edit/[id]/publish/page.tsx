@@ -110,14 +110,19 @@ const publishUseCaseMutation: any = graphql(`
 `);
 
 const Publish = () => {
-  const params = useParams();
-
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_UsecaseDetails`],
     () =>
       GraphQL(
         UseCaseDetails,
-        {},
+        {
+          [params.entityType]: params.entitySlug,
+        },
         {
           filters: {
             id: params.id,
@@ -132,7 +137,9 @@ const Publish = () => {
   const router = useRouter();
 
   const { mutate, isLoading: mutationLoading } = useMutation(
-    () => GraphQL(publishUseCaseMutation, {}, { useCaseId: params.id }),
+    () => GraphQL(publishUseCaseMutation, {
+      [params.entityType]: params.entitySlug,
+    }, { useCaseId: params.id }),
     {
       onSuccess: (data: any) => {
         toast('UseCase Published Successfully');
@@ -251,7 +258,11 @@ const Publish = () => {
                         ) : item.name === 'Details' ? (
                           <Details data={UseCaseData.data} />
                         ) : item.name === 'Dashboards' ? (
-                          <Dashboards data={UseCaseData.data?.useCases[0]?.usecaseDashboard} />
+                          <Dashboards
+                            data={
+                              UseCaseData.data?.useCases[0]?.usecaseDashboard
+                            }
+                          />
                         ) : (
                           <Contributors data={UseCaseData.data} />
                         )}

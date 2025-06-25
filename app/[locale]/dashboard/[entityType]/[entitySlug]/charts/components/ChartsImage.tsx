@@ -183,7 +183,9 @@ const ChartsImage: React.FC<ImageProps> = ({
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { data: ResourceChartImageInputPartial }) =>
-      GraphQL(UpdateChartImageMutation, {}, data),
+      GraphQL(UpdateChartImageMutation, {
+        [params.entityType]: params.entitySlug,
+      }, data),
     {
       onSuccess: () => {
         toast('ChartImage updated successfully');

@@ -88,7 +88,7 @@ const resourceDetails: any = graphql(`
 `);
 
 export const EditResource = ({ refetch, allResources }: EditProps) => {
-  const params = useParams();
+  const params = useParams<{ entityType: string; entitySlug: string; id: string }>();
 
   const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
   const [schema, setSchema] = React.useState([]);
@@ -99,7 +99,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       GraphQL(
         resourceDetails,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         { resourceId: resourceId }
       ),
@@ -112,7 +112,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       GraphQL(
         resetSchema,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),
@@ -134,7 +134,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       GraphQL(
         updateResourceDoc,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),
@@ -165,7 +165,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       GraphQL(
         updateSchema,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),
@@ -189,7 +189,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       GraphQL(
         createResourceFilesDoc,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),

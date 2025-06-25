@@ -81,7 +81,9 @@ const OrgProfile = () => {
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (input: { input: OrganizationInputPartial }) =>
-      GraphQL(organizationUpdateMutation, {}, input),
+      GraphQL(organizationUpdateMutation, {
+        [params.entityType]: params.entitySlug,
+      }, input),
     {
       onSuccess: (res: any) => {
         toast('Organization updated successfully');

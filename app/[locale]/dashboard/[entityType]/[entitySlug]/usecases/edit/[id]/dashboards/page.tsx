@@ -73,7 +73,7 @@ const deleteDashboard: any = graphql(`
   }
 `);
 
-const Dashboard = ({ params }: { params: { id: string } }) => {
+const Dashboard = ({ params }: { params: { entityType: string; entitySlug: string; id: string } }) => {
   const usecaseId = parseInt(params.id);
 
   const [dashboards, setDashboards] = useState<
@@ -83,7 +83,7 @@ const Dashboard = ({ params }: { params: { id: string } }) => {
 
   const { data, isLoading } = useQuery(
     ['fetch_dashboardData', usecaseId],
-    () => GraphQL(dashboardList, {}, { usecaseId }),
+    () => GraphQL(dashboardList, { [params.entityType]: params.entitySlug }, { usecaseId }),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
@@ -100,7 +100,7 @@ const Dashboard = ({ params }: { params: { id: string } }) => {
 
   const { mutate: addDashboard, isLoading: addLoading } = useMutation(
     ({ usecaseId }: { usecaseId: number }) =>
-      GraphQL(AddDashboard, {}, { usecaseId }),
+      GraphQL(AddDashboard, { [params.entityType]: params.entitySlug }, { usecaseId }),
     {
       onSuccess: (res: any) => {
         const newDashboard = res.addUsecaseDashboard.data;
@@ -116,7 +116,7 @@ const Dashboard = ({ params }: { params: { id: string } }) => {
   );
   const { mutate: saveDashboard, isLoading: saveLoading } = useMutation(
     ({ id, name, link }: { id: string; name: string; link: string }) =>
-      GraphQL(updateDashboard, {}, { id, name, link }),
+      GraphQL(updateDashboard, { [params.entityType]: params.entitySlug }, { id, name, link }),
     {
       onSuccess: ({ updateUsecaseDashboard }: any) => {
         toast.success('Changes saved');
@@ -132,7 +132,7 @@ const Dashboard = ({ params }: { params: { id: string } }) => {
   );
 
   const { mutate: removeDashboard, isLoading: deleteLoading } = useMutation(
-    (id: number) => GraphQL(deleteDashboard, {}, { id }),
+    (id: number) => GraphQL(deleteDashboard, { [params.entityType]: params.entitySlug }, { id }),
     {
       onSuccess: (_, id) => {
         setDashboards((prev) => prev.filter((d) => d.id !== id.toString()));

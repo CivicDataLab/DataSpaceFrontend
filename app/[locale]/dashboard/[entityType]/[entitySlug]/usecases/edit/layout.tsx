@@ -33,7 +33,11 @@ const FetchUseCaseTitle: any = graphql(`
 const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const pathName = usePathname();
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
 
   const layoutList = [
     'details',
@@ -52,7 +56,9 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     () =>
       GraphQL(
         FetchUseCaseTitle,
-        {},
+        {
+          [params.entityType]: params.entitySlug,
+        },
         {
           filters: {
             id: params.id,

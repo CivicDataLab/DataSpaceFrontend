@@ -36,7 +36,7 @@ const updateUserMutation: any = graphql(`
 `);
 
 const UserProfile = () => {
-  const params = useParams<{ entitySlug: string }>();
+  const params = useParams<{ entityType: string; entitySlug: string }>();
 
   const { setUserDetails, userDetails } = useDashboardStore();
 
@@ -70,7 +70,9 @@ const UserProfile = () => {
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (input: { input: UpdateUserInput }) =>
-      GraphQL(updateUserMutation, {}, input),
+      GraphQL(updateUserMutation, {
+        [params.entityType]: params.entitySlug,
+      }, input),
     {
       onSuccess: (res: any) => {
         toast('User details updated successfully');

@@ -77,7 +77,9 @@ const AddUser = ({
     () =>
       GraphQL(
         FetchUsers,
-        {},
+        {
+          [params.entityType]: params.entitySlug,
+        },
         {
           limit: 10,
           searchTerm: searchValue,

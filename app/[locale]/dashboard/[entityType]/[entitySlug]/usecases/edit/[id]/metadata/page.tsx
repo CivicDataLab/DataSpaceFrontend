@@ -115,7 +115,14 @@ const Metadata = () => {
 
   const useCaseData: { data: any; isLoading: boolean } = useQuery(
     [`fetch_UseCaseData_Metadata`],
-    () => GraphQL(FetchUseCasedetails, {}, { filters: { id: params.id } }),
+    () =>
+      GraphQL(
+        FetchUseCasedetails,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        { filters: { id: params.id } }
+      ),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
@@ -220,7 +227,9 @@ const Metadata = () => {
   // Update mutation
   const updateUseCase = useMutation(
     (data: { updateMetadataInput: UpdateUseCaseMetadataInput }) =>
-      GraphQL(UpdateUseCaseMetadataMutation, {}, data),
+      GraphQL(UpdateUseCaseMetadataMutation, {
+        [params.entityType]: params.entitySlug,
+      }, data),
     {
       onSuccess: (res: any) => {
         toast('Use case updated successfully');

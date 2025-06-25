@@ -73,7 +73,9 @@ const Details = () => {
     () =>
       GraphQL(
         FetchUseCase,
-        {},
+        {
+          [params.entityType]: params.entitySlug,
+        },
         {
           filters: {
             id: params.id,
@@ -147,7 +149,9 @@ const Details = () => {
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { data: UseCaseInputPartial }) =>
-      GraphQL(UpdateUseCaseMutation, {}, data),
+      GraphQL(UpdateUseCaseMutation, {
+        [params.entityType]: params.entitySlug,
+      }, data),
     {
       onSuccess: (res: any) => {
         toast('Use case updated successfully');
