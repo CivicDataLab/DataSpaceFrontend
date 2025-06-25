@@ -102,6 +102,7 @@ const updateMetadataMutationDoc: any = graphql(`
           field
           messages
         }
+        nonFieldErrors
       }
       data {
         id
@@ -237,9 +238,12 @@ export function EditMetadata({ id }: { id: string }) {
           setFormData(updatedData);
           setPreviousFormData(updatedData);
         } else {
-          toast(
+           toast(
             'Error: ' +
-              res.addUpdateDatasetMetadata.errors.fieldErrors[0].messages[0]
+              (res.addUpdateDatasetMetadata?.errors?.fieldErrors
+                ? res.addUpdateDatasetMetadata?.errors?.fieldErrors[0]
+                    ?.messages[0]
+                : res.addUpdateDatasetMetadata?.errors?.nonFieldErrors[0])
           );
         }
       },
