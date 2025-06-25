@@ -90,6 +90,10 @@ const Resources = () => {
                       header: 'Name of the Field',
                     },
                     {
+                      accessorKey: 'description',
+                      header: 'Description',
+                    },
+                    {
                       accessorKey: 'format',
                       header: 'Format',
                     },
@@ -97,6 +101,7 @@ const Resources = () => {
                   rows={row.original.schema.map((item: any) => ({
                     name: item.fieldName,
                     format: item.format,
+                    description: item.description,
                   }))}
                 />
               </Dialog.Content>
