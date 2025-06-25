@@ -13,8 +13,8 @@ import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
 import PrimaryDetails from '../components/Details';
-import Dashboards from './Dashboards';
 import Metadata from '../components/Metadata';
+import Dashboards from './Dashboards';
 
 const UseCasedetails: any = graphql(`
   query UseCasedetails($pk: ID!) {
@@ -188,13 +188,13 @@ const UseCaseDetailPage = () => {
               </div>
             </div>
             <div className="container py-8 lg:py-14">
-              <div className=" flex flex-col gap-1 ">
+              <div className=" flex flex-col gap-1 pb-10">
                 <Text variant="headingXl">Datasets in this Use Case</Text>
                 <Text variant="bodyLg" fontWeight="regular">
                   All Datasets related to this Use Case
                 </Text>
               </div>
-              <div className="grid  grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3 ">
+              <div className="grid grid-cols-1 p-4 gap-6 overflow-y-auto  md:grid-cols-2 lg:grid-cols-3 max-h-[calc(100vh-250px)]">
                 {datasets.length > 0 &&
                   datasets.map((dataset: TypeDataset) => (
                     <Card
