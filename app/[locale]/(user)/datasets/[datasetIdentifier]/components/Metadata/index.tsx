@@ -124,7 +124,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             }
           >
             <Text
-              className="max-w-xs truncate "
+              className="line-clamp-2 "
               variant="bodyLg"
               fontWeight="medium"
             >

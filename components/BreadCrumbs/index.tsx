@@ -23,7 +23,7 @@ const BreadCrumbs: React.FC<BreadCrumbsProps> = ({ data }) => {
                 <BreadcrumbItem>
                   <BreadcrumbPage
                     title={item.label}
-                    className="max-w-[20ch] truncate  font-bold lg:max-w-[40ch]"
+                    className="max-w-[16ch] truncate  font-bold lg:max-w-[40ch]"
                   >
                     {item.label}
                   </BreadcrumbPage>
@@ -33,7 +33,7 @@ const BreadCrumbs: React.FC<BreadCrumbsProps> = ({ data }) => {
                   <BreadcrumbLink
                     href={item.href}
                     title={item.label}
-                    className="max-w-[20ch] truncate  font-bold lg:max-w-[40ch]"
+                    className="max-w-[16ch] truncate  font-bold lg:max-w-[40ch]"
                   >
                     {item.label}
                   </BreadcrumbLink>

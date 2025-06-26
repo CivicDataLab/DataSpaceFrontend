@@ -184,14 +184,14 @@ export default function DatasetPage({
       header: 'Title',
       cell: ({ row }: any) =>
         navigationTab === 'published' ? (
-          <Text>{row.original.title}</Text>
+          <Text className="line-clamp-1 max-w-[280px]">{row.original.title}</Text>
         ) : (
           <LinkButton
             kind="tertiary"
             size="medium"
             href={`/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${row.original.id}/details`}
           >
-            {row.original.title}
+            <span className="line-clamp-1 max-w-[280px]">{row.original.title}</span>
           </LinkButton>
         ),
     },
