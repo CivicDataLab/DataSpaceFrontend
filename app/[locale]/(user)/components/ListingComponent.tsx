@@ -477,6 +477,9 @@ const ListingComponent: React.FC<ListingProps> = ({
                       : item?.organization?.logo
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
                         : '/org.png';
+                    const Geography = item.metadata.filter(
+                      (item: any) => item.metadata_item.label === 'Geography'
+                    )[0]?.value;
 
                     const MetadataContent = [
                       {
@@ -491,13 +494,15 @@ const ListingComponent: React.FC<ListingProps> = ({
                         value: item.download_count.toString(),
                         tooltip: 'Download',
                       },
-                      {
+                    ];
+                    if (Geography) {
+                      MetadataContent.push({
                         icon: Icons.globe,
                         label: 'Geography',
-                        value: 'India',
+                        value: Geography,
                         tooltip: 'Geography',
-                      },
-                    ];
+                      });
+                    }
 
                     if (item.has_charts && view === 'expanded') {
                       MetadataContent.push({
@@ -508,7 +513,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                       });
                     }
 
-                    const FooterContent = [
+                    const FooterContent =  [
                       {
                         icon: `/Sectors/${item.sectors[0]}.svg`,
                         label: 'Sectors',
