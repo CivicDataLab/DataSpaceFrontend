@@ -478,35 +478,65 @@ const ListingComponent: React.FC<ListingProps> = ({
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
                         : '/org.png';
 
+                    const MetadataContent = [
+                      {
+                        icon: Icons.calendar,
+                        label: 'Date',
+                        value: formatDate(item.modified),
+                        tooltip: 'Date',
+                      },
+                      {
+                        icon: Icons.download,
+                        label: 'Download',
+                        value: item.download_count.toString(),
+                        tooltip: 'Download',
+                      },
+                      {
+                        icon: Icons.globe,
+                        label: 'Geography',
+                        value: 'India',
+                        tooltip: 'Geography',
+                      },
+                    ];
+
+                    if (item.has_charts && view === 'expanded') {
+                      MetadataContent.push({
+                        icon: Icons.chart,
+                        label: '',
+                        value: 'With Charts',
+                        tooltip: 'Charts',
+                      });
+                    }
+
+                    const FooterContent = [
+                      {
+                        icon: `/Sectors/${item.sectors[0]}.svg`,
+                        label: 'Sectors',
+                        tooltip: `${item.sectors[0]}`,
+                      },
+                      ...(item.has_charts && view !== 'expanded'
+                        ? [
+                            {
+                              icon: `/chart-bar.svg`,
+                              label: 'Charts',
+                              tooltip: 'Charts',
+                            },
+                          ]
+                        : []),
+                      {
+                        icon: image,
+                        label: 'Published by',
+                        tooltip: `${item.is_individual_dataset ? item.user?.name : item.organization?.name}`,
+                      },
+                    ];
+
                     const commonProps = {
                       title: item.title,
                       description: item.description,
-                      metadataContent: [
-                        {
-                          icon: Icons.calendar,
-                          label: 'Date',
-                          value: formatDate(item.modified),
-                        },
-                        {
-                          icon: Icons.download,
-                          label: 'Download',
-                          value: item.download_count.toString(),
-                        },
-                        {
-                          icon: Icons.globe,
-                          label: 'Geography',
-                          value: 'India',
-                        },
-                      ],
+                      metadataContent: MetadataContent,
                       tag: item.tags,
                       formats: item.formats,
-                      footerContent: [
-                        {
-                          icon: `/Sectors/${item.sectors[0]}.svg`,
-                          label: 'Sectors',
-                        },
-                        { icon: image, label: 'Published by' },
-                      ],
+                      footerContent: FooterContent,
                     };
 
                     return (
