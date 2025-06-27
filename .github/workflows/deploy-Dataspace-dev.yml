@@ -1,0 +1,69 @@
+name: Update DataSpace
+
+on:
+  push:
+    branches: ['dev']
+env:
+  KEYCLOAK_CLIENT_ID: ${{secrets.KEYCLOAK_CLIENT_ID}}
+  KEYCLOAK_CLIENT_SECRET: ${{secrets.KEYCLOAK_CLIENT_SECRET}}
+  AUTH_ISSUER: ${{secrets.AUTH_ISSUER}}
+  NEXTAUTH_URL: ${{secrets.NEXTAUTH_URL_DS}}
+  NEXT_PUBLIC_NEXTAUTH_URL: ${{secrets.NEXT_PUBLIC_NEXTAUTH_URL_DS}}
+  NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
+  END_SESSION_URL: ${{secrets.END_SESSION_URL}}
+  REFRESH_TOKEN_URL: ${{secrets.REFRESH_TOKEN_URL}}
+  NEXT_PUBLIC_BACKEND_URL: ${{secrets.NEXT_PUBLIC_BACKEND_URL_DEV_DS}}
+  BACKEND_GRAPHQL_URL: ${{secrets.BACKEND_GRAPHQL_URL_DEV_DS}}
+  NEXT_PUBLIC_ENABLE_ACCESSMODEL: ${{secrets.NEXT_PUBLIC_ENABLE_ACCESSMODEL_DS}}
+  NEXT_PUBLIC_BACKEND_GRAPHQL_URL: ${{secrets.NEXT_PUBLIC_BACKEND_GRAPHQL_URL_DEV_DS}}
+  BACKEND_URL: ${{secrets.BACKEND_URL_DEV}}
+  NEXT_PUBLIC_PLATFORM_URL: ${{secrets.NEXT_PUBLIC_PLATFORM_URL_DEV}}
+
+jobs:
+  deploy: 
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate
+        run: npm run generate
+
+      - name: Build
+        run: npm run build
+
+      - name: Rename .next to .next2
+        run: mv .next .next2
+
+      - name: Rename public to public2
+        run: mv public public2  
+
+      - name: Send .next2 to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_DEV_DS }}
+          username: ${{ secrets.EC2_USERNAME_DS }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          source: .next2
+          target: DataExchange/DataExFrontend
+
+      - name: Send public2 to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_DEV_DS }}
+          username: ${{ secrets.EC2_USERNAME_DS }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          source: public2
+          target: DataExchange/DataExFrontend    
+      
+      - name: Update with new Build
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST_DEV_DS }}
+          username: ${{ secrets.EC2_USERNAME_DS }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: rm -rf DataExchange/DataExFrontend/.next; rm -rf DataExchange/DataExFrontend/public; mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next; mv DataExchange/DataExFrontend/public2 DataExchange/DataExFrontend/public; /home/ubuntu/.nvm/versions/node/v20.11.1/bin/pm2 restart dataspace
