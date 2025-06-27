@@ -1,4 +1,4 @@
-name: Update DataSpace
+name: Update DataSpace Prod
 
 on:
   push:
