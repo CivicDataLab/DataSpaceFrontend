@@ -1,51 +1,49 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
+import { useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Button,
-  Icon,
-  Spinner,
-  Tab,
-  TabList,
-  TabPanel,
-  Tabs,
-  Tray,
-} from 'opub-ui';
-import { BarChart } from 'opub-ui/viz';
+import { Spinner } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import BreadCrumbs from '@/components/BreadCrumbs';
-import { Icons } from '@/components/icons';
-import { data as datainfo } from '../data';
-import AccessModels from './components/AccessModels';
+import Details from './components/Details';
 import Metadata from './components/Metadata';
 import PrimaryData from './components/PrimaryData';
 import Resources from './components/Resources';
-import Visualization from './components/Visualizations';
+import SimilarDatasets from './components/SimilarDatasets';
 
-const datasetQuery = graphql(`
-  query datasets($filters: DatasetFilter) {
-    datasets(filters: $filters) {
+const datasetQuery: any = graphql(`
+  query getDataset($datasetId: UUID!) {
+    getDataset(datasetId: $datasetId) {
       tags {
         id
         value
       }
       id
+      downloadCount
       title
       description
       created
       modified
+      isIndividualDataset
+      user {
+        fullName
+        id
+        profilePicture {
+          url
+        }
+      }
       metadata {
         metadataItem {
           id
           label
+          dataType
         }
         value
       }
+      license
       resources {
         id
         created
@@ -54,64 +52,38 @@ const datasetQuery = graphql(`
         name
         description
       }
+      organization {
+        name
+        logo {
+          url
+        }
+        slug
+        id
+      }
+      sectors {
+        name
+      }
+      formats
     }
   }
 `);
 
 const DatasetDetailsPage = () => {
-  const [open, setOpen] = useState(false);
-  const primaryDataRef = useRef<HTMLDivElement>(null); // Explicitly specify the type of ref
-  const [primaryDataHeight, setPrimaryDataHeight] = useState(0);
+  const [showCharts, setShowcharts] = useState(true);
 
   const params = useParams();
 
-  const { data, isLoading } = useQuery([`${params.datasetIdentifier}`], () =>
-    GraphQL(datasetQuery, { filters: { id: params.datasetIdentifier } })
+  const Datasetdetails: { data: any; isLoading: any } = useQuery(
+    [`${params.datasetIdentifier}`],
+    () =>
+      GraphQL(
+        datasetQuery,
+        {
+          // Entity Headers if present
+        },
+        { datasetId: params.datasetIdentifier }
+      )
   );
-
-  useEffect(() => {
-    if (primaryDataRef.current) {
-      const height = primaryDataRef.current.clientHeight;
-      setPrimaryDataHeight(height);
-    }
-  }, [primaryDataRef]);
-
-  const TabsList = [
-    {
-      label: 'Resources',
-      value: 'resources',
-      component: <Resources />,
-    },
-    {
-      label: 'Access Models',
-      value: 'accessmodels',
-      component: <AccessModels />,
-    },
-    {
-      label: 'Visualizations',
-      value: 'visualizations',
-      component: <Visualization data={datainfo[1].visualization} />,
-    },
-  ];
-  const [activeTab, setActiveTab] = useState('resources'); // State to manage active tab
-
-  const barOptions = {
-    xAxis: {
-      type: 'category',
-      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    },
-    yAxis: {
-      type: 'value',
-    },
-    series: [
-      {
-        data: [120, 200, 150, 80, 70, 110, 130],
-        type: 'bar',
-        name: 'Sales',
-        color: 'rgb(55,162,218)',
-      },
-    ],
-  };
 
   return (
     <main className=" bg-surfaceDefault">
@@ -122,97 +94,54 @@ const DatasetDetailsPage = () => {
           { href: '#', label: 'Dataset Details' },
         ]}
       />
-      <div className="flex w-full gap-7 md:px-10 lg:px-10">
-        <div className="w-full flex-grow  py-11 lg:w-9/12">
-          <div className="mx-6 block flex flex-col gap-5  ">
-            <div ref={primaryDataRef} className="flex flex-col gap-4">
-              {isLoading ? (
-                <div className=" mt-8 flex justify-center">
-                  <Spinner />
-                </div>
-              ) : (
-                <PrimaryData data={data && data?.datasets[0]} />
-              )}
+      <div className="flex">
+        <div className="w-full gap-10 border-r-2 border-solid border-greyExtralight p-6 lg:w-3/4 lg:p-10">
+          {Datasetdetails.isLoading ? (
+            <div className=" mt-8 flex justify-center">
+              <Spinner />
             </div>
-            <div
-              className="sm:block md:block lg:hidden"
-              title="About the Dataset"
-            >
-              <Tray
-                size="narrow"
-                open={open}
-                onOpenChange={setOpen}
-                trigger={
-                  <>
-                    <Button
-                      kind="tertiary"
-                      className="lg:hidden"
-                      onClick={(e) => setOpen(true)}
-                    >
-                      <Icon source={Icons.info} size={24} color="default" />
-                    </Button>
-                  </>
-                }
-              >
-                {isLoading ? (
-                  <div className=" mt-8 flex justify-center">
-                    <Spinner />
-                  </div>
-                ) : (
-                  <Metadata
-                    data={data && data?.datasets[0]}
-                    setOpen={setOpen}
-                  />
-                )}
-              </Tray>
-            </div>
-            <div className="mt-5">
-              <Tabs defaultValue={activeTab} key={activeTab}>
-                <TabList fitted>
-                  {TabsList.map((item, index) => (
-                    <Tab
-                      value={item.value}
-                      key={index}
-                      onClick={(e) => setActiveTab(item.value)} // Update active tab on click
-                    >
-                      {item.label}
-                    </Tab>
-                  ))}
-                </TabList>
-                {TabsList.map((item, index) => (
-                  <TabPanel value={item.value} key={index}>
-                    {item.component}
-                  </TabPanel>
-                ))}
-              </Tabs>
-            </div>
+          ) : (
+            <PrimaryData
+              data={Datasetdetails.data && Datasetdetails.data?.getDataset}
+              isLoading={Datasetdetails.isLoading}
+            />
+          )}
+          <div className="mt-10">
+            {showCharts ? (
+              <Details setShowcharts={setShowcharts} />
+            ) : (
+              <>
+                <Resources />
+                <SimilarDatasets showCharts={showCharts} />
+              </>
+            )}
           </div>
         </div>
-        <div className=" hidden flex-col gap-8 border-l-2 border-solid border-baseGraySlateSolid3 py-6 pl-7 lg:flex lg:w-1/5">
-          <div className="flex flex-col items-center justify-center gap-4 text-center">
-            <BarChart options={barOptions} height={'250px'} />
-            <Button
-              kind="tertiary"
-              onClick={() => setActiveTab('visualizations')}
-            >
-              Visualizations
-            </Button>
-          </div>
-          {isLoading ? (
+        <div className=" hidden  w-1/4 gap-10 px-7 py-10 lg:block">
+          {Datasetdetails.isLoading ? (
             <div className=" mt-8 flex justify-center">
               <Spinner />
             </div>
           ) : (
             <div>
-              <Metadata data={data && data?.datasets[0]} />
+              <Metadata
+                data={Datasetdetails.data && Datasetdetails.data?.getDataset}
+              />
             </div>
           )}
-
-          <div className="mx-auto">
-            <Image width={200} height={200} src={'/obi.jpg'} alt="Org Logo" />
-          </div>
         </div>
       </div>
+      {showCharts && (
+        <>
+          <div className="w-full p-6 lg:px-10 lg:py-10">
+            <Resources />
+          </div>
+          <SimilarDatasets showCharts={showCharts} />
+        </>
+      )}
+      {/* <div className="w-full p-6 lg:p-10 lg:py-10">
+        <SimilarDatasets />
+      </div> */}
     </main>
   );
 };

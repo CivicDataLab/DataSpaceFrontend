@@ -33,14 +33,20 @@ const Filter: React.FC<FilterProps> = ({
   };
 
   return (
-    <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid5 px-4 py-6">
+    <div className="rounded-4 bg-surfaceDefault px-4 py-6 shadow-card">
       <div className="mb-5 flex justify-between">
         <div className="flex w-full justify-between">
           <div>
-            <Text variant="headingMd">Filters</Text>
+            <Text variant="headingMd" className=" uppercase text-primaryText">
+              Filters
+            </Text>
           </div>
           <div>
-            <Button kind="tertiary" onClick={handleReset}>
+            <Button
+              kind="tertiary"
+              className=" font-medium text-secondaryText"
+              onClick={handleReset}
+            >
               Reset
             </Button>
           </div>
@@ -56,10 +62,18 @@ const Filter: React.FC<FilterProps> = ({
       <div className="flex flex-col gap-5">
         {Object.entries(options).map(([category, data], index) => (
           <div key={index}>
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value={category}>
-                <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-baseIndigoSolid5 py-2 hover:no-underline">
-                  <Text>{toTitleCase(category)}</Text>
+            <Accordion
+              type="single"
+              collapsible
+              defaultValue={category}
+              className="w-full"
+            >
+              <AccordionItem
+                value={category}
+                className=" border-surfaceDefault"
+              >
+                <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-[#1F5F8D1A] py-[10px] px-3 hover:no-underline">
+                  <Text fontWeight="medium">{toTitleCase(category)}</Text>
                 </AccordionTrigger>
                 <AccordionContent
                   className="flex w-full flex-col px-3 pb-0 pt-2"

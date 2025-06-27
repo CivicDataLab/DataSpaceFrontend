@@ -1,8 +1,5 @@
-import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Tab, TabList, Tabs, Text } from 'opub-ui';
-
-import BreadCrumbs from '@/components/BreadCrumbs';
 
 export function DashboardHeader({ currentPath }: { currentPath: string }) {
   const userDashboardOptions = [
@@ -10,11 +7,23 @@ export function DashboardHeader({ currentPath }: { currentPath: string }) {
       label: 'My Datasets',
       url: `/dashboard/user/datasets`,
       selected: currentPath.indexOf('user') >= 0,
+      disabled: false,
     },
+    ...(process.env.NEXT_PUBLIC_DATASPACE_FEATURE_ENABLED === 'true'
+      ? [
+          {
+            label: 'My Data Spaces',
+            url: `/dashboard/dataspace`,
+            selected: currentPath.indexOf('dataspace') >= 0,
+            disabled: false,
+          },
+        ]
+      : []),
     {
       label: 'My Organizations',
       url: `/dashboard/organization`,
       selected: currentPath.indexOf('organization') >= 0,
+      disabled: false,
     },
   ];
   const router = useRouter();
@@ -24,7 +33,7 @@ export function DashboardHeader({ currentPath }: { currentPath: string }) {
   };
 
   const initialTabLabel =
-    userDashboardOptions.find((option) => option.selected)?.label ||
+    userDashboardOptions.find((option) => option?.selected)?.label ||
     'My Datasets';
 
   return (
@@ -35,16 +44,20 @@ export function DashboardHeader({ currentPath }: { currentPath: string }) {
         </Text>
         <div>
           <Tabs defaultValue={initialTabLabel}>
-            <TabList fitted>
-              {userDashboardOptions.map((item, index) => (
-                <Tab
-                  value={item.label}
-                  key={index}
-                  onClick={() => handleTabClick(item.url)}
-                >
-                  {item.label}
-                </Tab>
-              ))}
+            <TabList fitted border>
+              {userDashboardOptions
+                .filter((item) => item !== null)
+                .map((item, index) => (
+                  <Tab
+                    theme="dataSpace"
+                    value={item.label}
+                    key={index}
+                    onClick={() => handleTabClick(item.url)}
+                    disabled={item.disabled}
+                  >
+                    {item.label}
+                  </Tab>
+                ))}
             </TabList>
           </Tabs>
         </div>

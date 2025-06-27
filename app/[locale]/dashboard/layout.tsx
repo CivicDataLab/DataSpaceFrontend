@@ -12,12 +12,7 @@ interface DashboardLayoutProps {
 export default function Layout({ children }: DashboardLayoutProps) {
   return (
     <div className="flex h-full grow flex-col">
-      <header
-        className="relative z-2 bg-surfaceDefault px-4 py-3 shadow-elementTopNav"
-        style={{
-          backgroundColor: 'var( --background-alpha-medium)',
-        }}
-      >
+      <header className="sticky top-0 z-1 bg-primaryBlue">
         <MainNav />
       </header>
       <>{children}</>

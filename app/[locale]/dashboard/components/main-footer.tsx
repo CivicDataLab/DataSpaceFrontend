@@ -1,4 +1,3 @@
-import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Icon, Text } from 'opub-ui';
@@ -6,20 +5,55 @@ import { Icon, Text } from 'opub-ui';
 import { Icons } from '@/components/icons';
 
 const MainFooter = () => {
+  const socialMedia = [
+    {
+      icon: Icons.twitter,
+      link: 'https://twitter.com/civicdatalab',
+    },
+    {
+      icon: Icons.linkedin,
+      link: 'https://www.linkedin.com/company/civicdatalab',
+    },
+    {
+      icon: Icons.facebook,
+      link: 'https://facebook.com/civicdatalab',
+    },
+    {
+      icon: Icons.github,
+      link: 'https://github.com/civicdatalab',
+    },
+  ];
   return (
     <>
-      <div
-        style={{
-          backgroundColor: 'var( --background-alpha-medium)',
-        }}
-      >
-        <div className="flex flex-wrap items-center justify-start gap-8 p-10 md:justify-center lg:justify-center lg:gap-32 ">
-          <div className="flex items-center gap-8 ">
+      <div className="bg-primaryBlue">
+        <div className="flex flex-col gap-8 p-6 lg:px-28 lg:py-10">
+          <div className="flex flex-wrap justify-between gap-8 ">
+            {' '}
             <Link href="/">
               <div className="flex items-center gap-2">
-                <Icon source={Icons.logo} size={24} color="success" />
+                <div className="group relative h-[38px] w-[38px] overflow-hidden rounded-full">
+                  {/* Static Logo */}
+                  <div className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0">
+                    <Image
+                      src="/globe_logo.png"
+                      alt="Logo"
+                      layout="fill"
+                      objectFit="contain"
+                    />
+                  </div>
+
+                  {/* Globe GIF on Hover */}
+                  <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <Image
+                      src="/globe.gif"
+                      alt="Globe"
+                      layout="fill"
+                      objectFit="contain"
+                    />
+                  </div>
+                </div>
                 <Text
-                  variant="headingLg"
+                  variant="headingXl"
                   className="text-surfaceDefault"
                   as="h1"
                 >
@@ -27,55 +61,48 @@ const MainFooter = () => {
                 </Text>
               </div>
             </Link>
-            <div>
-              <Link href={'https://civicdatalab.in'} target="_blank">
-                <Image src={'/cdl.svg'} width={96} alt={'cdl'} height={94} />
-              </Link>{' '}
-            </div>
-          </div>
-          <div className=" flex  gap-6">
-            <Link href={'#'} className=" text-baseIndigoSolid2">
-              About Us
-            </Link>
-            <Link href={'#'} className=" text-baseIndigoSolid2">
-              Sitemap
-            </Link>
-            <Link href={'#'} className=" text-baseIndigoSolid2">
-              Contact Us
-            </Link>
-          </div>
-          <div className=" flex flex-col gap-2">
-            <Text
-              color="highlight"
-              className=" font-bold text-borderWarningSubdued"
-            >
-              Follow Us
-            </Text>
-            <div className=" flex gap-3">
-              <div className="  h-10  w-10 rounded-5 bg-baseBlueSolid8 p-2">
-                <Icon source={Icons.twitter} size={24} color="onBgDefault" />
+            <div className=" flex flex-col  gap-2 lg:items-end">
+              <div>
+                {' '}
+                <Text
+                  color="highlight"
+                  className=" font-bold text-borderWarningSubdued"
+                >
+                  Follow Us
+                </Text>
               </div>
-              <div className="  h-10  w-10 rounded-5 bg-baseBlueSolid8 p-2">
-                <Icon source={Icons.linkedin} size={24} color="onBgDefault" />
-              </div>
-              <div className="  h-10  w-10 rounded-5 bg-baseBlueSolid8 p-2">
-                <Icon source={Icons.facebook} size={24} color="onBgDefault" />
-              </div>
-              <div className="  h-10  w-10 rounded-5 bg-baseBlueSolid8 p-2">
-                <Icon source={Icons.github} size={24} color="onBgDefault" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="  bg-baseBlueSolid6 p-2">
-        <div className=" m-auto flex  items-center gap-2 md:pl-4 lg:w-5/6 lg:pl-8">
-          <Icon source={Icons.info} size={24} />
 
-          <Text variant="bodyMd">
-            This Platform is designed, developed and hosted by CivicDataLab for
-            Data Exchange
-          </Text>
+              <div className=" flex gap-3">
+                {socialMedia.map((item, index) => (
+                  <Link
+                    key={index}
+                    href={item.link}
+                    target="_blank"
+                    className="  h-10  w-10 rounded-5 bg-tertiaryAccent p-2"
+                  >
+                    <Icon source={item.icon} size={24} />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className=" flex flex-wrap justify-between gap-6">
+            <div className=" flex  gap-6">
+              <Link href={'/about-us'}>
+                <Text color="onBgDefault"> About Us</Text>
+              </Link>
+              <Link href={'mailto:info@civicdatalab.in'}>
+                <Text color="onBgDefault"> Contact Us</Text>
+              </Link>
+            
+            </div>
+            <div className=" flex items-center gap-2">
+              <Text color="onBgDefault"> made by</Text>
+              <Link href={'https://www.civicdatalab.in'} target="_blank">
+                <Image src={'/cdl.svg'} width={38} height={38} alt="logo" />
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </>

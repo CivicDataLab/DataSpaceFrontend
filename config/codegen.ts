@@ -5,7 +5,7 @@ loadEnvConfig(process.cwd());
 
 const config: CodegenConfig = {
   schema: process.env.BACKEND_GRAPHQL_URL,
-  documents: 'app/**/*.tsx',
+  documents: 'app/**/*.ts*',
   ignoreNoDocuments: true,
   generates: {
     './gql/generated/': {

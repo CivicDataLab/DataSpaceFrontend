@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { ErrorBoundary } from '@sentry/nextjs';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import HolyLoader from 'holy-loader';
 import { SessionProvider } from 'next-auth/react';
@@ -23,17 +24,19 @@ export default function Provider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <SessionProvider>
-      <SessionGuard>
-        <QueryClientProvider client={client}>
-          <RouterEvents />
-          <HolyLoader color="var(--action-primary-success-default)" />
-          <Tooltip.Provider>
-            {children}
-            <Toaster />
-          </Tooltip.Provider>
-        </QueryClientProvider>
-      </SessionGuard>
-    </SessionProvider>
+    <ErrorBoundary>
+      <SessionProvider>
+        <SessionGuard>
+          <QueryClientProvider client={client}>
+            <RouterEvents />
+            <HolyLoader color="var(--action-primary-success-default)" />
+            <Tooltip.Provider>
+              {children}
+              <Toaster />
+            </Tooltip.Provider>
+          </QueryClientProvider>
+        </SessionGuard>
+      </SessionProvider>
+    </ErrorBoundary>
   );
 }

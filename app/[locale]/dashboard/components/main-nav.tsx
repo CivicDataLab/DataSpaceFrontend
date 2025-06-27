@@ -1,45 +1,46 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
 import { Session } from 'next-auth';
 import { signIn, signOut, useSession } from 'next-auth/react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Avatar,
   Button,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
+  Dialog,
   Divider,
-  Icon,
   IconButton,
   Popover,
   SearchInput,
   Spinner,
   Text,
 } from 'opub-ui';
+import React, { useEffect, useState } from 'react';
 
 import { Icons } from '@/components/icons';
+import { useDashboardStore } from '@/config/store';
+import { GraphQL } from '@/lib/api';
+import { UserDetailsQryDoc } from '../[entityType]/[entitySlug]/schema';
+import { allOrganizationsListingDoc } from '../[entityType]/schema';
 import Sidebar from './sidebar';
 
 const profileLinks = [
   {
     label: 'Dashboard',
-    href: '/dashboard/user/datasets',
+    href: '/dashboard',
   },
 ];
 
 export function MainNav({ hideSearch = false }) {
-  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
-  const searchRef = React.useRef<HTMLInputElement>(null);
-  const { data: session, status } = useSession();
-  const [commandOpen, setCommandOpen] = React.useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
 
-  useMetaKeyPress('k', () => setCommandOpen((e) => !e));
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const { data: session, status } = useSession();
+  const { setUserDetails, setAllEntityDetails } = useDashboardStore();
+
 
   async function keycloakSessionLogOut() {
     try {
@@ -51,97 +52,172 @@ export function MainNav({ hideSearch = false }) {
     }
   }
 
+  const handleSignIn = async () => {
+    try {
+      // First attempt sign in
+      await signIn('keycloak', {
+        redirect: true,
+        callbackUrl: '/dashboard',
+      });
+
+      // The above will redirect automatically, no need for additional code
+      // If redirect is needed manually, we can use:
+      // router.push('/dashboard');
+    } catch (error) {
+      console.error('Sign in error:', error);
+    }
+  };
+
+  const [hasFetched, setHasFetched] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (session?.user && !hasFetched) {
+        try {
+          const [userDetailsRes, entityDetailsRes] = await Promise.all([
+            GraphQL(UserDetailsQryDoc, {}, []),
+            GraphQL(allOrganizationsListingDoc, {}, []),
+          ]);
+
+          setUserDetails(userDetailsRes);
+          setAllEntityDetails(entityDetailsRes);
+          setHasFetched(true);
+        } catch (err) {
+          console.error('Error fetching user/org data:', err);
+        }
+      }
+    };
+
+    fetchData();
+  }, [session, hasFetched]);
+
   if (isLoggingOut) {
     return <LogginOutPage />;
   }
 
+  const Navigation = [
+    {
+      title: 'All Data',
+      href: '/datasets',
+    },
+    {
+      title: 'Sectors',
+      href: '/sectors',
+    },
+    {
+      title: 'Use Cases',
+      href: '/usecases',
+    },
+    {
+      title: 'Publishers',
+      href: '/publishers',
+    },
+    {
+      title: 'About us',
+      href: '/about-us',
+    },
+  ];
+
+  const handleSearch = (value: string) => {
+    if (value) {
+      setIsOpen(false);
+
+      router.push(`/datasets?query=${encodeURIComponent(value)}`);
+    }
+  };
   return (
-    <nav>
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex gap-1">
+    <nav className="p-4 lg:p-6">
+      <div className="flex items-center justify-between gap-4  ">
+        <div className="flex items-center gap-1">
           <div className="lg:hidden">
-            <Sidebar />
+            <Sidebar
+              data={Navigation}
+              session={session}
+              status={status}
+              keycloakSessionLogOut={keycloakSessionLogOut}
+              signIn={signIn}
+            />
           </div>
           <Link href="/">
             <div className="flex items-center gap-2">
-              <Icon source={Icons.logo} size={24} color="success" />
-              <Text variant="headingLg" className="text-surfaceDefault" as="h1">
+              <div className="group relative h-[38px] w-[38px] overflow-hidden rounded-full">
+                {/* Static Logo */}
+                <div className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0">
+                  <Image
+                    src="/globe_logo.png"
+                    alt="Logo"
+                    layout="fill"
+                    objectFit="contain"
+                  />
+                </div>
+
+                {/* Globe GIF on Hover */}
+                <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <Image
+                    src="/globe.gif"
+                    alt="Globe"
+                    layout="fill"
+                    objectFit="contain"
+                  />
+                </div>
+              </div>
+              <Text variant="headingXl" className="text-surfaceDefault" as="h1">
                 CivicDataSpace
               </Text>
             </div>
           </Link>
         </div>
 
-        <div className="flex items-center gap-4">
-          {!hideSearch && (
-            <SearchInput
-              placeholder="Search"
-              name="Search"
-              className="hidden h-8 w-full max-w-[350px] md:block"
-              label="Search"
-              ref={searchRef}
-              suffix={
-                <div className="relative">
-                  <Divider
-                    orientation="vertical"
-                    className="absolute left-[-4px] top-[3px] h-6"
+        <div className="flex items-center gap-8">
+          <div className="relative hidden lg:block">
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <Dialog.Trigger>
+                <IconButton
+                  size="slim"
+                  icon={Icons.search}
+                  withTooltip
+                  color="onBgDefault"
+                  onClick={() => setIsOpen(true)}
+                >
+                  Search
+                </IconButton>
+              </Dialog.Trigger>
+              <Dialog.Content title={'Search'}>
+                <div className="p-3">
+                  <SearchInput
+                    onSubmit={handleSearch}
+                    label={''}
+                    placeholder="Search for any data"
+                    name={''}
                   />
-                  <IconButton
-                    size="slim"
-                    icon={Icons.terminal}
-                    withTooltip
-                    onClick={() => setCommandOpen(true)}
-                  >
-                    Command palette
-                  </IconButton>
-
-                  <CommandDialog
-                    open={commandOpen}
-                    onOpenChange={setCommandOpen}
-                  >
-                    <CommandInput placeholder="search..." />
-                    <CommandList>
-                      <CommandEmpty>No results found</CommandEmpty>
-                      <CommandGroup heading="Suggestions">
-                        <CommandItem>Create Dataset</CommandItem>
-                        <CommandItem>Create new Organisation</CommandItem>
-                        <CommandItem>Go to profile</CommandItem>
-                      </CommandGroup>
-                    </CommandList>
-                  </CommandDialog>
                 </div>
-              }
-            />
-          )}
-          <div className="hidden min-w-[102px] lg:block">
-            <Link href={'/datasets'}>
-              <Text
-                variant="headingSm"
-                as="h1"
-                className=" text-surfaceDefault"
-              >
-                Dataset Listing
-              </Text>
-            </Link>
+              </Dialog.Content>
+            </Dialog>
           </div>
 
-          <div className="hidden min-w-[102px] lg:block">
-            <Link href={'/categories'}>
-              <Text
-                variant="headingSm"
-                as="h1"
-                className=" text-surfaceDefault"
-              >
-                Categories
-              </Text>
-            </Link>
+          <div className="flex items-center gap-5">
+            {Navigation.map((item, index) => (
+              <div className="hidden lg:block" key={index}>
+                <Link href={item.href}>
+                  <Text
+                    variant="headingMd"
+                    as="h1"
+                    className={`uppercase ${
+                      pathname === item.href
+                        ? 'text-[#84DCCF]'
+                        : 'text-surfaceDefault'
+                    }`}
+                  >
+                    {item.title}
+                  </Text>
+                </Link>
+              </div>
+            ))}
           </div>
-
           {status === 'loading' ? (
-            <div className="min-w-[112px]" />
+            <Spinner />
           ) : (
-            <div className="flex min-w-[112px] shrink-0 items-center justify-end gap-4">
-              <Icon source={Icons.notification} color="onBgDefault" />
+            <div className=" hidden lg:block">
               {session?.user ? (
                 <ProfileContent
                   session={session}
@@ -150,11 +226,12 @@ export function MainNav({ hideSearch = false }) {
               ) : (
                 <Button
                   onClick={() => {
-                    signIn('keycloak');
+                    handleSignIn();
                   }}
                   kind="secondary"
+                  className=" bg-tertiaryAccent"
                 >
-                  Log In
+                  <Text variant="headingMd">LOGIN / SIGN UP</Text>
                 </Button>
               )}
             </div>
@@ -165,7 +242,7 @@ export function MainNav({ hideSearch = false }) {
   );
 }
 
-const ProfileContent = ({
+export const ProfileContent = ({
   session,
   keycloakSessionLogOut,
 }: {
@@ -185,7 +262,7 @@ const ProfileContent = ({
           <Button
             kind="tertiary"
             size="slim"
-            className="rounded-full hover:no-underline"
+            className="rounded-full  hover:no-underline"
           >
             <Avatar
               showInitials
@@ -240,19 +317,9 @@ const ProfileContent = ({
 
 const LogginOutPage = () => {
   return (
-    <div className="h-screen w-screen overflow-hidden">
-      <Link href="/">
-        <div className="flex items-center gap-2 pt-[6px]">
-          <Icon source={Icons.logo} size={24} color="success" />
-          <Text variant="headingLg" as="h1">
-            OPub
-          </Text>
-        </div>
-      </Link>
-      <div className="flex h-full w-full flex-col items-center justify-center gap-1">
-        <Spinner />
-        <Text variant="headingLg">Logging out</Text>
-      </div>
+    <div className=" flex items-center justify-end gap-4 bg-surfaceDefault p-5 lg:p-7">
+      <Spinner color="surface" />
+      <Text variant="headingLg">Logging out...</Text>
     </div>
   );
 };

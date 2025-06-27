@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -14,13 +14,38 @@ import styles from '../dashboard.module.scss';
 
 interface DashboardNavProps {
   items: SidebarNavItem[];
+  type?: string;
 }
 export function DashboardNav({
   items,
-  organizationId,
-}: DashboardNavProps & { organizationId?: string }) {
-  const [isCollapsed, setIsCollapsed] = React.useState(false);
+  entityDetails,
+  type,
+}: DashboardNavProps & { entityDetails?: any }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const [isImageValid, setIsImageValid] = useState(() => {
+    if (type === 'organization') {
+      return !!entityDetails?.logo?.url;
+    } else if (type === 'self') {
+      return !!entityDetails?.profilePicture?.url;
+    }
+    return false;
+  });
+
   const path = usePathname();
+
+  useEffect(() => {
+    if (!entityDetails) {
+      setIsImageValid(false);
+      return;
+    }
+
+    if (type === 'organization') {
+      setIsImageValid(!!entityDetails.logo?.url);
+    } else if (type === 'self') {
+      setIsImageValid(!!entityDetails.profilePicture?.url);
+    }
+  }, [entityDetails, type]);
 
   useMetaKeyPress('b', () => setIsCollapsed((e) => !e));
 
@@ -29,34 +54,61 @@ export function DashboardNav({
   }
 
   const sidebarIcon = isCollapsed ? Icons.expand : Icons.collapse;
+
   return (
     <aside
       className={cn(
         'overflow-hidden bg-surfaceDefault ',
-        ' z-1 mb-10 hidden shrink-0 basis-[260px]  rounded-2 border-2  border-solid  border-baseGraySlateSolid6 shadow-insetBasic md:block',
+        ' mb-10 hidden shrink-0 basis-[260px]  rounded-2 border-2  border-solid  border-baseGraySlateSolid6 shadow-insetBasic md:block',
         isCollapsed && 'basis-[60px]',
         styles.Collapse
       )}
     >
       <nav className={cn('flex flex-col gap-2')}>
-        {organizationId && !isCollapsed ? (
+        {entityDetails && !isCollapsed ? (
           <>
-            <div className="flex flex-col items-center justify-center px-4 py-8">
-              <Image
-                height={140}
-                width={140}
-                src={'/obi.jpg'}
-                alt={'Organisation ID'}
-              />
-              <Text variant="headingMd" fontWeight="medium" className="py-2">
-                {organizationId}
-              </Text>
-              <Link href={'/dashboard'}>
-                <Text variant="headingXs" color="interactive">
-                  {' '}
-                  Go back to Dashboard{' '}
+            <div className="flex flex-col items-center justify-center gap-4 px-4 py-8">
+              {isImageValid ? (
+                <Image
+                  height={140}
+                  width={140}
+                  src={
+                    type === 'organization'
+                      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityDetails?.logo?.url}`
+                      : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityDetails?.profilePicture?.url}`
+                  }
+                  alt={`${entityDetails?.name} logo`}
+                  onError={() => {
+                    setIsImageValid(false);
+                  }}
+                  className={`${type === 'organization' ? 'object-contain' : 'object-cover rounded-full'}`}
+                />
+              ) : (
+                <Image
+                  height={140}
+                  width={140}
+                  src={path.includes('self') ? '/profile.png' : '/org.png'}
+                  alt={'fallback logo'}
+                  className="fill-current object-contain text-baseGraySlateSolid6"
+                />
+              )}
+              <div className="flex flex-col items-center gap-3 text-center">
+                <Text variant="headingMd" fontWeight="medium">
+                  {entityDetails?.name || entityDetails.firstName}
                 </Text>
-              </Link>
+                <Link
+                  href={
+                    path.includes('self')
+                      ? '/dashboard'
+                      : '/dashboard/organization'
+                  }
+                >
+                  <Text variant="headingXs" color="interactive">
+                    {' '}
+                    Go back to Dashboard{' '}
+                  </Text>
+                </Link>
+              </div>
             </div>
             <Divider className="m-auto w-4/5" />
           </>

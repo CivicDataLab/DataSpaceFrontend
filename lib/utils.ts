@@ -67,3 +67,56 @@ export const range = (len: number) => {
   }
   return arr;
 };
+
+
+
+export function handleRedirect(event: any, link: any) {
+  event.preventDefault();
+  const confirmation = window.confirm(
+    `You are being redirected to "${link}". `
+  );
+  if (confirmation) {
+    window.open(link, '_blank');
+  }
+}
+
+
+export function formatDateString(
+  input: string | number | any,
+  isHyphenated = false
+): string {
+  const date = new Date(input);
+  // If hyphendated it would return date in this format - 2023-01-01 else in April 1, 2021
+  return isHyphenated
+    ? new Date(
+        date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'numeric',
+          // day: 'numeric',
+        })
+      )
+        .toISOString()
+        .split('T')[0]
+    : date.toLocaleDateString('en-US', {
+        month: 'long',
+        // day: 'numeric',
+        year: 'numeric',
+      });
+}
+
+
+export async function getWebsiteTitle(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    const html = await response.text();
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    const title = doc.querySelector('title');
+    return title?.innerText || null;
+  } catch (error) {
+    console.error('Failed to fetch website title:', error);
+    return null;
+  }
+}

@@ -9,6 +9,7 @@ interface GraphqlTableProps {
   onPageChange: (newPage: number) => void;
   onPageSizeChange: (newSize: number) => void;
   children: React.ReactNode;
+  view? : string
 }
 
 const GraphqlPagination: React.FC<GraphqlTableProps> = ({
@@ -18,10 +19,13 @@ const GraphqlPagination: React.FC<GraphqlTableProps> = ({
   onPageChange,
   onPageSizeChange,
   children,
+  view
 }) => {
   return (
     <div>
-      {children}
+      <div className={`${view === 'collapsed' ? 'grid grid-cols-1 w-full gap-4 md:grid-cols-2 lg:grid-cols-3' : 'flex flex-col gap-4'}`}>
+        {children}
+      </div>
       <Footer
         totalRows={totalRows}
         pageSize={pageSize}

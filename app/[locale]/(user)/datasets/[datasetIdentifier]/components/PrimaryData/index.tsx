@@ -1,28 +1,69 @@
-import React from 'react';
-import { Tag, Text } from 'opub-ui';
+'use client';
+
+import React, { useState } from 'react';
+import { Button, Icon, Spinner, Tag, Text, Tray } from 'opub-ui';
+
+import { Icons } from '@/components/icons';
+import Metadata from '../Metadata';
 
 interface PrimaryDataProps {
   data: any;
+  isLoading?: boolean;
 }
 
-const PrimaryData: React.FC<PrimaryDataProps> = ({ data }) => {
+const PrimaryData: React.FC<PrimaryDataProps> = ({ data, isLoading }) => {
+  const [open, setOpen] = useState(false);
+
   return (
-    <>
-      <div>
-        <Text variant="headingLg">{data?.title}</Text>
-      </div>
-      <div className="flex flex-wrap items-center">
-        {/* <Text fontWeight="bold">Tags&nbsp;:&nbsp;</Text> */}
+    <div>
+      <div className="flex flex-col gap-4">
+        <Text variant="heading2xl">{data?.title}</Text>
         <div className="flex gap-2">
           {data?.tags.map((item: any, index: any) => (
-            <Tag key={index}>{item.value}</Tag>
+            <Tag
+              key={index}
+              variation="outlined"
+              textColor="var(--surface-default)"
+              borderColor="var(--orange-secondary-color)"
+            >
+              <Text className=" text-primaryText" fontWeight='medium'>{item.value}</Text>{' '}
+            </Tag>
           ))}
         </div>
+        <div
+          className="flex sm:block md:block lg:hidden"
+          title="About the Dataset"
+        >
+          <Tray
+            size="narrow"
+            open={open}
+            onOpenChange={setOpen}
+            trigger={
+              <div>
+                <Button
+                  kind="tertiary"
+                  className="lg:hidden"
+                  onClick={(e) => setOpen(true)}
+                >
+                  <div className="flex items-center gap-2 py-2">
+                    <Icon source={Icons.info} size={24} color="default" />
+                    <Text>Metadata</Text>
+                  </div>
+                </Button>
+              </div>
+            }
+          >
+            {isLoading ? (
+              <div className=" mt-8 flex justify-center">
+                <Spinner />
+              </div>
+            ) : (
+              <Metadata data={data} setOpen={setOpen} />
+            )}
+          </Tray>
+        </div>
       </div>
-      <div>
-        <Text variant="bodyMd">{data?.description}</Text>
-      </div>
-    </>
+    </div>
   );
 };
 
