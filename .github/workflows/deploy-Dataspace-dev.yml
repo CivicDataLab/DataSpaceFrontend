@@ -7,8 +7,8 @@ env:
   KEYCLOAK_CLIENT_ID: ${{secrets.KEYCLOAK_CLIENT_ID}}
   KEYCLOAK_CLIENT_SECRET: ${{secrets.KEYCLOAK_CLIENT_SECRET}}
   AUTH_ISSUER: ${{secrets.AUTH_ISSUER}}
-  NEXTAUTH_URL: ${{secrets.NEXTAUTH_URL_DEV_DS}}
-  NEXT_PUBLIC_NEXTAUTH_URL: ${{secrets.NEXT_PUBLIC_NEXTAUTH_URL_DEV_DS}}
+  NEXTAUTH_URL: 'https://dev.civicdataspace.in/'
+  NEXT_PUBLIC_NEXTAUTH_URL: 'https://dev.civicdataspace.in/'
   NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
   END_SESSION_URL: ${{secrets.END_SESSION_URL}}
   REFRESH_TOKEN_URL: ${{secrets.REFRESH_TOKEN_URL}}
@@ -20,7 +20,7 @@ env:
   NEXT_PUBLIC_PLATFORM_URL: ${{secrets.NEXT_PUBLIC_PLATFORM_URL_DEV}}
 
 jobs:
-  deploy: 
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -40,7 +40,7 @@ jobs:
         run: mv .next .next2
 
       - name: Rename public to public2
-        run: mv public public2  
+        run: mv public public2
 
       - name: Send .next2 to EC2
         uses: appleboy/scp-action@master
@@ -58,8 +58,8 @@ jobs:
           username: ${{ secrets.EC2_USERNAME_DS }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           source: public2
-          target: DataExchange/DataExFrontend    
-      
+          target: DataExchange/DataExFrontend
+
       - name: Update with new Build
         uses: appleboy/ssh-action@v1.0.3
         with:
