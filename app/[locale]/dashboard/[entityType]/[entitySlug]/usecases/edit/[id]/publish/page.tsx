@@ -29,6 +29,7 @@ const UseCaseDetails: any = graphql(`
       title
       summary
       website
+      platformUrl
       metadata {
         metadataItem {
           id

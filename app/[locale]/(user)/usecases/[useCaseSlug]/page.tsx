@@ -63,6 +63,7 @@ const UseCasedetails: any = graphql(`
           url
         }
       }
+      platformUrl  
       logo {
         name
         path
