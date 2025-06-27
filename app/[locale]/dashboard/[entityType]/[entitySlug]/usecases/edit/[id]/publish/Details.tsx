@@ -1,7 +1,34 @@
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Text } from 'opub-ui';
 
+import { getWebsiteTitle } from '@/lib/utils';
+
 const Details = ({ data }: { data: any }) => {
+  const [platformTitle, setPlatformTitle] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTitle = async () => {
+      try {
+        const urlItem = data.useCases[0].platformUrl;
+
+        if (urlItem && urlItem.value) {
+          const title = await getWebsiteTitle(urlItem.value);
+          setPlatformTitle(title);
+        }
+      } catch (error) {
+        console.error('Error fetching website title:', error);
+      }
+    };
+
+    if (data.useCases[0].platformUrl === null) {
+      setPlatformTitle('N/A');
+    } else {
+      fetchTitle();
+    }
+  }, [data?.useCases[0]?.platformUrl]);
+
   const PrimaryDetails = [
     { label: 'Use Case Name', value: data?.useCases[0]?.title },
     { label: 'Summary', value: data?.useCases[0]?.summary },
@@ -38,6 +65,23 @@ const Details = ({ data }: { data: any }) => {
                 </div>
               )
           )}
+
+          <div className="flex flex-wrap gap-2">
+            <div className="md:w-1/6 lg:w-1/6">
+              <Text variant="bodyMd">Platform URL:</Text>
+            </div>
+            <div>
+              <Link
+                className="text-primaryBlue underline"
+                href={data.useCases[0].platformUrl}
+              >
+                <Text className="underline" color="highlight" variant="bodyLg">
+                  {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
+                </Text>
+              </Link>
+            </div>
+          </div>
+
           {data?.useCases[0]?.logo && (
             <div className="flex flex-wrap items-center gap-2">
               <div className="md:w-1/6 lg:w-1/6">

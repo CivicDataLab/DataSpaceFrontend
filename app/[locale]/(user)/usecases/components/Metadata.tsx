@@ -1,11 +1,34 @@
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Divider, Icon, Text, Tooltip } from 'opub-ui';
 
-import { formatDate } from '@/lib/utils';
+import { formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
 const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
+  const [platformTitle, setPlatformTitle] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTitle = async () => {
+      try {
+        const urlItem = data.useCase.platformUrl;
+
+        if (urlItem && urlItem.value) {
+          const title = await getWebsiteTitle(urlItem.value);
+          setPlatformTitle(title);
+        }
+      } catch (error) {
+        console.error('Error fetching website title:', error);
+      }
+    };
+
+    if (data.useCase.platformUrl === null) {
+      setPlatformTitle('N/A');
+    } else {
+      fetchTitle();
+    }
+  }, [data.useCase.platformUrl]);
   const metadata = [
     {
       label: data.useCase.isIndividualUsecase ? 'Publisher' : 'Organization',
@@ -27,18 +50,39 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           {data.useCase.isIndividualUsecase ? 'Publisher' : 'Organization'}
         </Link>
       ),
+    
+    },
+    {
+      label: 'Platform URL',
+      value:
+        data.useCase.platformUrl === null ? (
+          'N/A'
+        ) : (
+          <Link
+            className="text-primaryBlue underline"
+            href={data.useCase.platformUrl}
+          >
+            <Text className="underline" color="highlight" variant="bodyLg">
+              {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
+            </Text>
+          </Link>
+        ),
+      tooltipContent: data.useCase.platformUrl === null ? 'N/A' : platformTitle,
     },
     {
       label: 'Started On',
       value: formatDate(data.useCase.created) || 'N/A',
+      tooltipContent: formatDate(data.useCase.created) || 'N/A',
     },
     {
       label: 'Status',
       value: data.useCase.runningStatus.split('_').join('') || 'N/A',
+      tooltipContent: data.useCase.runningStatus.split('_').join('') || 'N/A',
     },
     {
       label: 'Last Updated',
       value: formatDate(data.useCase.modified) || 'N/A',
+      tooltipContent: formatDate(data.useCase.modified) || 'N/A',
     },
     {
       label: 'Sectors',
@@ -142,14 +186,14 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
                 {item.label}
               </Text>
               <Tooltip content={item?.tooltipContent}>
-              <Text
-                className="max-w-xs truncate"
-                variant="bodyLg"
-                fontWeight="medium"
-                // title={item?.tooltipContent}
-              >
-                {typeof item.value === 'string' ? item.value : item.value}
-              </Text>
+                <Text
+                  className="max-w-xs truncate"
+                  variant="bodyLg"
+                  fontWeight="medium"
+                  // title={item?.tooltipContent}
+                >
+                  {typeof item.value === 'string' ? item.value : item.value}
+                </Text>
               </Tooltip>
             </div>
           ))}
