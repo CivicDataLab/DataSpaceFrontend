@@ -2,7 +2,7 @@ name: Update DataSpace
 
 on:
   push:
-    branches: ['dev']
+    branches: ['main']
 env:
   KEYCLOAK_CLIENT_ID: ${{secrets.KEYCLOAK_CLIENT_ID}}
   KEYCLOAK_CLIENT_SECRET: ${{secrets.KEYCLOAK_CLIENT_SECRET}}
