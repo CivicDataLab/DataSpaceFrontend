@@ -36,7 +36,7 @@ const updateUserMutation: any = graphql(`
 `);
 
 const UserProfile = () => {
-  const params = useParams<{ entitySlug: string }>();
+  const params = useParams<{ entityType: string; entitySlug: string }>();
 
   const { setUserDetails, userDetails } = useDashboardStore();
 
@@ -70,7 +70,9 @@ const UserProfile = () => {
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (input: { input: UpdateUserInput }) =>
-      GraphQL(updateUserMutation, {}, input),
+      GraphQL(updateUserMutation, {
+        [params.entityType]: params.entitySlug,
+      }, input),
     {
       onSuccess: (res: any) => {
         toast('User details updated successfully');
@@ -106,7 +108,6 @@ const UserProfile = () => {
       formData.email &&
       formData.bio &&
       formData.profilePicture;
-
 
     if (!formValidation) {
       toast('Please fill all the required fields');
@@ -161,6 +162,7 @@ const UserProfile = () => {
             <div className="w-full">
               <TextField
                 label="Email *"
+                disabled
                 name="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e })}

@@ -102,6 +102,7 @@ const updateMetadataMutationDoc: any = graphql(`
           field
           messages
         }
+        nonFieldErrors
       }
       data {
         id
@@ -172,16 +173,19 @@ export function EditMetadata({ id }: { id: string }) {
       )
     );
 
-  const getTagsList: { data: any; isLoading: boolean; error: any } = useQuery(
-    [`tags_list_query`],
-    () =>
-      GraphQL(
-        tagsListQueryDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        []
-      )
+  const getTagsList: {
+    data: any;
+    isLoading: boolean;
+    error: any;
+    refetch: any;
+  } = useQuery([`tags_list_query`], () =>
+    GraphQL(
+      tagsListQueryDoc,
+      {
+        [params.entityType]: params.entitySlug,
+      },
+      []
+    )
   );
 
   const getMetaDataListQuery: {
@@ -202,6 +206,8 @@ export function EditMetadata({ id }: { id: string }) {
       }
     )
   );
+
+  const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
 
   const updateMetadataMutation = useMutation(
     (data: { UpdateMetadataInput: UpdateMetadataInput }) =>
@@ -225,13 +231,19 @@ export function EditMetadata({ id }: { id: string }) {
           const updatedData = defaultValuesPrepFn(
             res.addUpdateDatasetMetadata.data
           );
+          if (isTagsListUpdated) {
+            getTagsList.refetch();
+            setIsTagsListUpdated(false);
+          }
           setFormData(updatedData);
           setPreviousFormData(updatedData);
-          // getDatasetMetadata.refetch();
         } else {
-          toast(
+           toast(
             'Error: ' +
-              res.addUpdateDatasetMetadata.errors.fieldErrors[0].messages[0]
+              (res.addUpdateDatasetMetadata?.errors?.fieldErrors
+                ? res.addUpdateDatasetMetadata?.errors?.fieldErrors[0]
+                    ?.messages[0]
+                : res.addUpdateDatasetMetadata?.errors?.nonFieldErrors[0])
           );
         }
       },
@@ -316,7 +328,9 @@ export function EditMetadata({ id }: { id: string }) {
       const transformedValues = Object.keys(updatedData)?.reduce(
         (acc: any, key) => {
           acc[key] = Array.isArray(updatedData[key])
-            ? updatedData[key].map((item: any) => item.value || item).join(', ')
+            ? updatedData[key]
+                .map((item: any) => item?.value || item)
+                .join(', ')
             : updatedData[key];
           return acc;
         },
@@ -531,17 +545,17 @@ export function EditMetadata({ id }: { id: string }) {
                 <Combobox
                   displaySelected
                   name="tags"
-                  list={getTagsList.data?.tags?.map((item: TypeTag) => {
-                    return {
-                      label: item.value,
-                      value: item.id,
-                    };
-                  })}
+                  list={getTagsList.data?.tags?.map((item: TypeTag) => ({
+                    label: item.value,
+                    value: item.id,
+                  }))}
+                  key={`tags-${getTagsList.data?.tags?.length}`} // forces remount on change
                   label="Tags *"
                   creatable
                   onChange={(value) => {
+                    setIsTagsListUpdated(true);
                     handleChange('tags', value);
-                    handleSave({ ...formData, tags: value }); // Save on change
+                    handleSave({ ...formData, tags: value });
                   }}
                 />
               </div>
@@ -582,9 +596,11 @@ export function EditMetadata({ id }: { id: string }) {
                     defaultChecked={false}
                     disabled
                   >
-                    <div className="flex flex-col gap-1 " title='Coming Soon'>
-                      <Text className=' text-textDisabled'>Restricted Access</Text>
-                      <Text className=' text-iconDisabled'>
+                    <div className="flex flex-col gap-1 " title="Coming Soon">
+                      <Text className=" text-textDisabled">
+                        Restricted Access
+                      </Text>
+                      <Text className=" text-iconDisabled">
                         Users would require to request access to the dataset to
                         view and download it. Recommended for sensitive data.
                       </Text>

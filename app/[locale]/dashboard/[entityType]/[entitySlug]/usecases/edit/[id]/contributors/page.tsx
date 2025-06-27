@@ -1,16 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { graphql } from '@/gql';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, Icon, Text, toast } from 'opub-ui';
+import { useEffect, useState } from 'react';
 
-import { useDashboardStore } from '@/config/store';
-import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
 import CustomCombobox from './CustomCombobox';
 import EntitySection from './EntitySelection';
@@ -20,14 +18,14 @@ import {
   AddSupporters,
   FetchUsecaseInfo,
   FetchUsers,
+  OrgList,
   RemoveContributor,
   RemovePartners,
   RemoveSupporters,
 } from './query';
 
 const Details = () => {
-  const params = useParams<{ id: string }>();
-  const { allEntityDetails } = useDashboardStore();
+  const params = useParams<{ entityType: string; entitySlug: string; id: string }>();
   const [searchValue, setSearchValue] = useState('');
   const [formData, setFormData] = useState({
     contributors: [] as { label: string; value: string }[],
@@ -40,7 +38,9 @@ const Details = () => {
     () =>
       GraphQL(
         FetchUsers,
-        {},
+        {
+          [params.entityType]: params.entitySlug,
+        },
         {
           limit: 10,
           searchTerm: searchValue,
@@ -52,12 +52,20 @@ const Details = () => {
     }
   );
 
+  const Organizations: { data: any; isLoading: boolean; refetch: any } =
+    useQuery([`fetch_orgs`], () => GraphQL(OrgList, {
+      [params.entityType]: params.entitySlug,
+    }, []));
+
+
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_usecase_${params.id}`],
     () =>
       GraphQL(
         FetchUsecaseInfo,
-        {},
+        {
+          [params.entityType]: params.entitySlug,
+        },
         {
           filters: {
             id: params.id,
@@ -98,7 +106,9 @@ const Details = () => {
   const { mutate: addContributor, isLoading: addContributorLoading } =
     useMutation(
       (input: { useCaseId: string; userId: string }) =>
-        GraphQL(AddContributors, {}, input),
+        GraphQL(AddContributors, {
+          [params.entityType]: params.entitySlug,
+        }, input),
       {
         onSuccess: (res: any) => {
           toast('Contributor added successfully');
@@ -113,7 +123,9 @@ const Details = () => {
   const { mutate: removeContributor, isLoading: removeContributorLoading } =
     useMutation(
       (input: { useCaseId: string; userId: string }) =>
-        GraphQL(RemoveContributor, {}, input),
+        GraphQL(RemoveContributor, {
+          [params.entityType]: params.entitySlug,
+        }, input),
       {
         onSuccess: (res: any) => {
           toast('Contributor removed successfully');
@@ -126,7 +138,9 @@ const Details = () => {
 
   const { mutate: addSupporter, isLoading: addSupporterLoading } = useMutation(
     (input: { useCaseId: string; organizationId: string }) =>
-      GraphQL(AddSupporters, {}, input),
+      GraphQL(AddSupporters, {
+        [params.entityType]: params.entitySlug,
+      }, input),
     {
       onSuccess: (res: any) => {
         toast('Supporter added successfully');
@@ -141,7 +155,9 @@ const Details = () => {
   const { mutate: removeSupporter, isLoading: removeSupporterLoading } =
     useMutation(
       (input: { useCaseId: string; organizationId: string }) =>
-        GraphQL(RemoveSupporters, {}, input),
+        GraphQL(RemoveSupporters, {
+          [params.entityType]: params.entitySlug,
+        }, input),
       {
         onSuccess: (res: any) => {
           toast('Supporter removed successfully');
@@ -154,7 +170,9 @@ const Details = () => {
 
   const { mutate: addPartner, isLoading: addPartnerLoading } = useMutation(
     (input: { useCaseId: string; organizationId: string }) =>
-      GraphQL(AddPartners, {}, input),
+      GraphQL(AddPartners, {
+        [params.entityType]: params.entitySlug,
+      }, input),
     {
       onSuccess: (res: any) => {
         toast('Partner added successfully');
@@ -169,7 +187,9 @@ const Details = () => {
   const { mutate: removePartner, isLoading: removePartnerLoading } =
     useMutation(
       (input: { useCaseId: string; organizationId: string }) =>
-        GraphQL(RemovePartners, {}, input),
+        GraphQL(RemovePartners, {
+          [params.entityType]: params.entitySlug,
+        }, input),
       {
         onSuccess: (res: any) => {
           toast('Partner removed successfully');
@@ -209,7 +229,8 @@ const Details = () => {
 
   return (
     <div>
-      {Users?.isLoading || allEntityDetails?.organizations?.length === 0 ? (
+      {Users?.isLoading ||
+      Organizations?.data?.allOrganizations?.length === 0 ? (
         <Loading />
       ) : (
         <div className=" flex flex-col gap-10">
@@ -288,7 +309,7 @@ const Details = () => {
                         }}
                         kind="tertiary"
                       >
-                        <div className="flex items-center gap-2 rounded-2 bg-greyExtralight p-2 ">
+                        <div className="flex items-center gap-2 max-w-40 rounded-2 bg-greyExtralight p-2 ">
                           <Text>{item.label}</Text>
                           <Icon source={Icons.cross} size={18} />
                         </div>
@@ -305,7 +326,7 @@ const Details = () => {
             label="Add Supporters"
             placeholder="Add Supporters"
             data={UseCaseData?.data?.useCases[0]?.supportingOrganizations}
-            options={(allEntityDetails?.organizations || [])?.map(
+            options={(Organizations?.data?.allOrganizations || [])?.map(
               (org: any) => ({
                 label: org.name,
                 value: org.id,
@@ -346,7 +367,7 @@ const Details = () => {
             label="Add Partners"
             placeholder="Add Partners"
             data={UseCaseData?.data?.useCases[0]?.partnerOrganizations}
-            options={(allEntityDetails?.organizations || [])?.map(
+            options={(Organizations?.data?.allOrganizations || [])?.map(
               (org: any) => ({
                 label: org.name,
                 value: org.id,

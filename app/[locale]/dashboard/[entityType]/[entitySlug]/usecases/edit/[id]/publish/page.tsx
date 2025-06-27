@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -12,14 +11,16 @@ import {
   Button,
   Icon,
   Spinner,
-  Table,
   Text,
   toast,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import Assign from './Assign';
+import Contributors from './Contributors';
+import Dashboards from './Dashboards';
+import Details from './Details';
 
 const UseCaseDetails: any = graphql(`
   query UseCasedata($filters: UseCaseFilter) {
@@ -88,6 +89,11 @@ const UseCaseDetails: any = graphql(`
           name
         }
       }
+      usecaseDashboard {
+        id
+        name
+        link
+      }
     }
   }
 `);
@@ -104,14 +110,19 @@ const publishUseCaseMutation: any = graphql(`
 `);
 
 const Publish = () => {
-  const params = useParams();
-
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_UsecaseDetails`],
     () =>
       GraphQL(
         UseCaseDetails,
-        {},
+        {
+          [params.entityType]: params.entitySlug,
+        },
         {
           filters: {
             id: params.id,
@@ -126,7 +137,9 @@ const Publish = () => {
   const router = useRouter();
 
   const { mutate, isLoading: mutationLoading } = useMutation(
-    () => GraphQL(publishUseCaseMutation, {}, { useCaseId: params.id }),
+    () => GraphQL(publishUseCaseMutation, {
+      [params.entityType]: params.entitySlug,
+    }, { useCaseId: params.id }),
     {
       onSuccess: (data: any) => {
         toast('UseCase Published Successfully');
@@ -162,84 +175,16 @@ const Publish = () => {
           : '',
     },
     {
+      name: 'Dashboards',
+      data: UseCaseData?.data?.useCases[0]?.length > 0,
+      error: '',
+    },
+    {
       name: 'Contributors',
       data: UseCaseData?.data?.useCases[0]?.length > 0,
       error: '',
     },
   ];
-
-  const columns = [
-    { accessorKey: 'title', header: 'Title' },
-    { accessorKey: 'sector', header: 'Sector' },
-    { accessorKey: 'modified', header: 'Last Modified' },
-  ];
-
-  const PrimaryDetails = [
-    { label: 'Use Case Name', value: UseCaseData.data?.useCases[0]?.title },
-    { label: 'Summary', value: UseCaseData.data?.useCases[0]?.summary },
-    {
-      label: 'Running Status',
-      value: UseCaseData.data?.useCases[0]?.runningStatus,
-    },
-    { label: 'Started On', value: UseCaseData.data?.useCases[0]?.startedOn },
-    {
-      label: 'Completed On',
-      value: UseCaseData.data?.useCases[0]?.completedOn,
-    },
-    { label: 'Sector', value: UseCaseData.data?.useCases[0]?.sectors[0]?.name },
-    { label: 'Tags', value: UseCaseData.data?.useCases[0]?.tags[0]?.value },
-    ...(UseCaseData.data?.useCases[0]?.metadata?.map((meta: any) => ({
-      label: meta.metadataItem?.label,
-      value: meta.value,
-    })) || []),
-  ];
-
-  const ContributorDetails = [
-    {
-      label: 'Contributors',
-      value:
-        UseCaseData.data?.useCases[0]?.contributors.length > 0
-          ? UseCaseData.data?.useCases[0]?.contributors
-              .map((item: any) => item.fullName)
-              .join(', ')
-          : 'No Contributors',
-      image: UseCaseData.data?.useCases[0]?.contributors,
-    },
-  ];
-
-  const OrgDetails = [
-    {
-      label: 'Supporters',
-      value:
-        UseCaseData.data?.useCases[0]?.supportingOrganizations.length > 0
-          ? UseCaseData.data?.useCases[0]?.supportingOrganizations
-              .map((item: any) => item.name)
-              .join(', ')
-          : 'No Supporting Organizations',
-      image: UseCaseData.data?.useCases[0]?.supportingOrganizations,
-    },
-    {
-      label: 'Partners',
-      value:
-        UseCaseData.data?.useCases[0]?.partnerOrganizations.length > 0
-          ? UseCaseData.data?.useCases[0]?.partnerOrganizations
-              .map((item: any) => item.name)
-              .join(', ')
-          : 'No Partner Organizations',
-      image: UseCaseData.data?.useCases[0]?.partnerOrganizations,
-    },
-  ];
-
-  const generateTableData = (list: Array<any>) => {
-    return list?.map((item) => {
-      return {
-        title: item.title,
-        id: item.id,
-        sector: item.sectors[0]?.name,
-        modified: formatDate(item.modified),
-      };
-    });
-  };
 
   const isPublishDisabled = (useCase: any) => {
     if (!useCase) return true;
@@ -309,132 +254,17 @@ const Publish = () => {
                     >
                       <div className=" py-4">
                         {item.name === 'Assign' ? (
-                          <Table
-                            columns={columns}
-                            rows={generateTableData(item.data)}
-                            hideFooter
-                          />
+                          <Assign data={item.data} />
                         ) : item.name === 'Details' ? (
-                          <div className="flex flex-col gap-4 px-8 py-4">
-                            <>
-                              {PrimaryDetails.map(
-                                (item, index) =>
-                                  item.value && (
-                                    <div
-                                      className="flex flex-wrap gap-2"
-                                      key={index}
-                                    >
-                                      <div className="md:w-1/6 lg:w-1/6">
-                                        <Text variant="bodyMd">
-                                          {item.label}:
-                                        </Text>
-                                      </div>
-                                      <div>
-                                        <Text variant="bodyMd">
-                                          {item.value}
-                                        </Text>
-                                      </div>
-                                    </div>
-                                  )
-                              )}
-                              {UseCaseData.data?.useCases[0]?.logo && (
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <div className="md:w-1/6 lg:w-1/6">
-                                    <Text className="" variant="bodyMd">
-                                      Image:
-                                    </Text>
-                                  </div>
-                                  <Image
-                                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${UseCaseData.data?.useCases[0]?.logo?.path.replace('/code/files/', '')}`}
-                                    alt={UseCaseData.data?.useCases[0]?.title}
-                                    width={240}
-                                    height={240}
-                                  />
-                                </div>
-                              )}
-                            </>
-                          </div>
+                          <Details data={UseCaseData.data} />
+                        ) : item.name === 'Dashboards' ? (
+                          <Dashboards
+                            data={
+                              UseCaseData.data?.useCases[0]?.usecaseDashboard
+                            }
+                          />
                         ) : (
-                          <div className="flex flex-col gap-4 px-8 py-4">
-                            {ContributorDetails.map(
-                              (item: any, index: number) => (
-                                <div
-                                  className="flex flex-col gap-3"
-                                  key={index}
-                                >
-                                  <div>
-                                    <Text variant="bodyMd">{item.label}:</Text>
-                                  </div>
-                                  <div className="flex flex-wrap gap-2">
-                                    {item.image.map(
-                                      (data: any, index: number) => (
-                                        <div
-                                          key={index}
-                                          className="flex flex-col items-center gap-4"
-                                        >
-                                          <Image
-                                            src={
-                                              data?.profilePicture?.url
-                                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.profilePicture.url}`
-                                                : '/profile.png'
-                                            }
-                                            alt={item.label}
-                                            width={80}
-                                            height={80}
-                                            className="rounded-full object-cover"
-                                          />
-
-                                          <Text
-                                            variant="bodyMd"
-                                            className=" w-36 rounded-1 bg-greyExtralight text-center"
-                                          >
-                                            {data.fullName}
-                                          </Text>
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-                                </div>
-                              )
-                            )}
-                            {OrgDetails.map((item: any, index: number) => (
-                              <div className="flex flex-col gap-3" key={index}>
-                                <div>
-                                  <Text variant="bodyMd">{item.label}:</Text>
-                                </div>
-                                <div className="flex flex-wrap gap-6">
-                                  {item.image.map(
-                                    (data: any, index: number) => (
-                                      <div
-                                        key={index}
-                                        className="flex flex-col items-center gap-4"
-                                      >
-                                        <div className="rounded-4 bg-surfaceDefault p-4 shadow-basicMd">
-                                          <Image
-                                            src={
-                                              data?.logo?.url
-                                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.logo.url}`
-                                                : '/org.png'
-                                            }
-                                            alt={item.label}
-                                            width={140}
-                                            height={100}
-                                            className="object-contain"
-                                          />
-                                        </div>
-                                        <Text
-                                          variant="bodyMd"
-                                          className=" w-36 rounded-1 bg-greyExtralight text-center"
-                                        >
-                                          {data.name}
-                                        </Text>
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                          <Contributors data={UseCaseData.data} />
                         )}
                       </div>
                     </AccordionContent>

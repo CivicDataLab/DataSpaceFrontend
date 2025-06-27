@@ -1,14 +1,13 @@
 import { DataTable } from 'opub-ui';
 
 interface EditProps {
-  isPreview: boolean;
   previewData: {
     columns: string[];
     rows: any[];
   };
 }
 
-const PreviewData = ({ isPreview, previewData }: EditProps) => {
+const PreviewData = ({ previewData }: EditProps) => {
   const previewColumns =
     previewData?.columns?.map((column: string) => ({
       accessorKey: column,
@@ -16,6 +15,7 @@ const PreviewData = ({ isPreview, previewData }: EditProps) => {
       cell: ({ cell }: any) => {
         const value = cell.getValue();
         return <span>{value !== null ? value?.toString() : 'N/A'}</span>;
+        ``;
       },
     })) || [];
 
@@ -29,14 +29,12 @@ const PreviewData = ({ isPreview, previewData }: EditProps) => {
       return rowData;
     }) || [];
   return (
-    <div className="md:max-w-[75vh] lg:max-w-[96vh]">
-      <DataTable
-        columns={previewColumns}
-        hideFooter
-        hideSelection
-        rows={previewRows}
-      />
-    </div>
+    <DataTable
+      columns={previewColumns}
+      hideSelection
+      hideFooter
+      rows={previewRows}
+    />
   );
 };
 

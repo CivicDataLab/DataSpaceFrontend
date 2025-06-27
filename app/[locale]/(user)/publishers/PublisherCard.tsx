@@ -76,10 +76,14 @@ const PublisherCard: React.FC<CardProps> = ({ data }) => {
                       : item?.description
                   }
                 >
-                  <Text>
+                  <Text className=" line-clamp-2">
                     {item.__typename === 'TypeUser'
-                      ? item.bio.slice(0, 100) + '...'
-                      : item.description.slice(0, 100) + '...'}
+                      ? item?.bio?.length > 220
+                        ? item.bio.slice(0, 220) + '...'
+                        : item.bio
+                      : item?.description?.length > 220
+                        ? item.description.slice(0, 220) + '...'
+                        : item.description}
                   </Text>
                 </Tooltip>
               </div>

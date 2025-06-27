@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
-import { Button, DataTable, IconButton, toast } from 'opub-ui';
+import { Button, DataTable, IconButton, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
@@ -186,15 +186,18 @@ export default function DatasetPage({
     {
       accessorKey: 'title',
       header: 'Title',
-      cell: ({ row }: any) => (
-        <LinkButton
-          kind="tertiary"
-          size="medium"
-          href={`/dashboard/${params.entityType}/${params.entitySlug}/dataset/${row.original.id}/edit/metadata`}
-        >
-          {row.original.title}
-        </LinkButton>
-      ),
+      cell: ({ row }: any) =>
+        navigationTab === 'published' ? (
+          <Text>{row.original.title}</Text>
+        ) : (
+          <LinkButton
+            kind="tertiary"
+            size="medium"
+            href={`/dashboard/${params.entityType}/${params.entitySlug}/dataset/${row.original.id}/edit/metadata`}
+          >
+            {row.original.title}
+          </LinkButton>
+        ),
     },
     { accessorKey: 'created', header: 'Date Created' },
     { accessorKey: 'modified', header: 'Date Modified' },

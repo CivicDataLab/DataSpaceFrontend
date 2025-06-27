@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import PdfPreview from '@/app/[locale]/(user)/components/PdfPreview';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -89,6 +90,10 @@ const Resources = () => {
                       header: 'Name of the Field',
                     },
                     {
+                      accessorKey: 'description',
+                      header: 'Description',
+                    },
+                    {
                       accessorKey: 'format',
                       header: 'Format',
                     },
@@ -96,6 +101,7 @@ const Resources = () => {
                   rows={row.original.schema.map((item: any) => ({
                     name: item.fieldName,
                     format: item.format,
+                    description: item.description,
                   }))}
                 />
               </Dialog.Content>
@@ -156,15 +162,25 @@ const Resources = () => {
               <Dialog.Trigger>
                 <Button
                   kind="tertiary"
-                  disabled={!previewData}
+                  disabled={row.original.format !== 'PDF' && !previewData}
                   className=" text-secondaryText underline"
                 >
                   Preview
                 </Button>
               </Dialog.Trigger>
               <Dialog.Content title={'Preview'} limitHeight large>
-                {previewData && (
-                  <Table columns={previewColumns} rows={previewRows} />
+                {row.original.format === 'PDF' ? (
+                  <PdfPreview
+                    url={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${row.original.id}`}
+                  />
+                ) : (
+                  previewData && (
+                    <Table
+                      columns={previewColumns}
+                      hideFooter
+                      rows={previewRows}
+                    />
+                  )
                 )}
               </Dialog.Content>
             </Dialog>
@@ -182,6 +198,7 @@ const Resources = () => {
         format: data?.fileDetails?.format || 'Na',
         size: Math.round(data?.fileDetails?.size / 1024).toFixed(2) + 'KB',
         preview: data?.previewData,
+        id: data?.id,
       },
     ];
   };
@@ -196,7 +213,7 @@ const Resources = () => {
         <div className=" flex flex-col gap-8">
           <div className="flex flex-col gap-1">
             <Text variant="headingLg">Files in this Dataset </Text>
-            <Text   variant='bodyLg'>
+            <Text variant="bodyLg">
               All files associated with this Dataset which can be downloaded{' '}
             </Text>
           </div>
@@ -217,48 +234,51 @@ const Resources = () => {
                           <Text variant="headingMd">{item.name}</Text>
                         </div>
                       </div>
-                   <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="item-1" className=" border-none">
-                      <div className="flex flex-wrap items-center justify-end gap-4">
-                        <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 p-0 hover:no-underline">
-                          <Text className=" text-secondaryText">
-                            {' '}
-                            View Details
-                          </Text>
-                        </AccordionTrigger>
-                        <div>
-                          <Link
-                            href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${item.id}`}
-                            target="_blank"
-                            className="flex justify-center"
+                      <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="item-1" className=" border-none">
+                          <div className="flex flex-wrap items-center justify-end gap-4">
+                            <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 p-0 hover:no-underline">
+                              <Text className=" text-secondaryText">
+                                {' '}
+                                View Details
+                              </Text>
+                            </AccordionTrigger>
+                            <div>
+                              <Link
+                                href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${item.id}`}
+                                target="_blank"
+                                className="flex justify-center"
+                              >
+                                <Button kind="tertiary">
+                                  <div className="flex gap-1">
+                                    <Text
+                                      className=" text-primaryText"
+                                      fontWeight="semibold"
+                                    >
+                                      {' '}
+                                      Download
+                                    </Text>
+                                    <Icon source={Icons.download} size={20} />
+                                  </div>
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                          <AccordionContent
+                            className="flex w-full flex-col py-5"
+                            style={{
+                              backgroundColor: 'var( --base-pure-white)',
+                              outline: '1px solid var( --base-pure-white)',
+                            }}
                           >
-                            <Button kind="tertiary">
-                              <div className="flex gap-1">
-                                <Text className=" text-primaryText" fontWeight='semibold'>
-                                  {' '}
-                                  Download
-                                </Text>
-                                <Icon source={Icons.download} size={20} />
-                              </div>
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                      <AccordionContent
-                        className="flex w-full flex-col py-5"
-                        style={{
-                          backgroundColor: 'var( --base-pure-white)',
-                          outline: '1px solid var( --base-pure-white)',
-                        }}
-                      >
-                        <Table
-                          columns={generateColumnData()}
-                          rows={generateTableData(item)}
-                          hideFooter
-                        />
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
+                            <Table
+                              columns={generateColumnData()}
+                              rows={generateTableData(item)}
+                              hideFooter
+                            />
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
                     </div>
                   </div>
                 </div>

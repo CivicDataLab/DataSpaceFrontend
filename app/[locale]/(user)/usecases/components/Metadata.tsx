@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button, Divider, Icon, Text } from 'opub-ui';
+import { Button, Divider, Icon, Text, Tooltip } from 'opub-ui';
 
 import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
@@ -10,6 +10,9 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     {
       label: data.useCase.isIndividualUsecase ? 'Publisher' : 'Organization',
       value: data.useCase.isIndividualUsecase
+        ? data.useCase.user.fullName
+        : data?.useCase.organization?.name,
+      tooltipContent: data.useCase.isIndividualUsecase
         ? data.useCase.user.fullName
         : data?.useCase.organization?.name,
     },
@@ -43,14 +46,15 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
         <div className="flex flex-wrap  gap-2">
           {data.useCase.sectors.length > 0 ? (
             data.useCase.sectors.map((sector: any, index: number) => (
-              <Image
-                key={index}
-                src={`/Sectors/${sector.name}.svg`}
-                alt={sector.name || ''}
-                width={52}
-                height={52}
-                className="border-1 border-solid border-greyExtralight p-1"
-              />
+              <Tooltip content={sector.name} key={index}>
+                <Image
+                  src={`/Sectors/${sector.name}.svg`}
+                  alt={sector.name || ''}
+                  width={52}
+                  height={52}
+                  className="border-1 border-solid border-greyExtralight p-1"
+                />
+              </Tooltip>
             ))
           ) : (
             <span>N/A</span> // Fallback if no sectors are available
@@ -67,14 +71,15 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
               ?.find((meta: any) => meta.metadataItem?.label === 'SDG Goal')
               ?.value.split(', ')
               .map((item: any, index: number) => (
-                <Image
-                  key={index}
-                  src={`/SDG/${item}.svg`}
-                  alt={item || ''}
-                  width={60}
-                  height={60}
-                  className="border-1 border-solid border-greyExtralight p-1"
-                />
+                <Tooltip content={item} key={index}>
+                  <Image
+                    src={`/SDG/${item}.svg`}
+                    alt={item || ''}
+                    width={60}
+                    height={60}
+                    className="border-1 border-solid border-greyExtralight p-1"
+                  />
+                </Tooltip>
               ))
           ) : (
             <span>N/A</span>
@@ -136,13 +141,16 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
               >
                 {item.label}
               </Text>
+              <Tooltip content={item?.tooltipContent}>
               <Text
                 className="max-w-xs truncate"
                 variant="bodyLg"
                 fontWeight="medium"
+                // title={item?.tooltipContent}
               >
                 {typeof item.value === 'string' ? item.value : item.value}
               </Text>
+              </Tooltip>
             </div>
           ))}
         </div>

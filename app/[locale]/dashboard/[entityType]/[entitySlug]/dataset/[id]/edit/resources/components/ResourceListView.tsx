@@ -247,6 +247,7 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
             label="Search"
             name="Search"
             onChange={(e) => handleSearchChange(e)}
+            onClear={() => handleSearchChange('')}
           />
         </div>
         <Dialog>
@@ -258,12 +259,17 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
               <Loading />
             ) : (
               <DropZone
+                accept=".csv,.json,.pdf,.xlsx,.xls,.xml,.zip,application/json,text/csv,application/pdf,application/zip,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/xml,application/xml"
                 name="file_upload"
                 allowMultiple={true}
                 onDrop={dropZone}
               >
                 {uploadedFile}
-                {file.length === 0 && <DropZone.FileUpload />}
+                {file.length === 0 && (
+                  <DropZone.FileUpload
+                    actionHint={'CSV, JSON, PDF, XLS, XLSX, XML, ZIP'}
+                  />
+                )}
               </DropZone>
             )}
           </Dialog.Content>

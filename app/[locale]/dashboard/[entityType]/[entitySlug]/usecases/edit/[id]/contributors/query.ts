@@ -10,8 +10,8 @@ export const FetchUsers: any = graphql(`
       }
     }
   `);
-  
-  export const FetchUsecaseInfo: any = graphql(`
+
+export const FetchUsecaseInfo: any = graphql(`
     query useCaseinfo($filters: UseCaseFilter) {
       useCases(filters: $filters) {
         id
@@ -43,8 +43,8 @@ export const FetchUsers: any = graphql(`
       }
     }
   `);
-  
-  export const AddContributors: any = graphql(`
+
+export const AddContributors: any = graphql(`
     mutation addContributorToUseCase($useCaseId: String!, $userId: ID!) {
       addContributorToUseCase(useCaseId: $useCaseId, userId: $userId) {
         __typename
@@ -60,8 +60,8 @@ export const FetchUsers: any = graphql(`
       }
     }
   `);
-  
-  export const RemoveContributor: any = graphql(`
+
+export const RemoveContributor: any = graphql(`
     mutation removeContributorFromUseCase($useCaseId: String!, $userId: ID!) {
       removeContributorFromUseCase(useCaseId: $useCaseId, userId: $userId) {
         __typename
@@ -77,8 +77,8 @@ export const FetchUsers: any = graphql(`
       }
     }
   `);
-  
-  export const AddSupporters: any = graphql(`
+
+export const AddSupporters: any = graphql(`
     mutation addSupportingOrganizationToUseCase(
       $useCaseId: String!
       $organizationId: ID!
@@ -101,8 +101,8 @@ export const FetchUsers: any = graphql(`
       }
     }
   `);
-  
-  export const RemoveSupporters: any = graphql(`
+
+export const RemoveSupporters: any = graphql(`
     mutation removeSupportingOrganizationFromUseCase(
       $useCaseId: String!
       $organizationId: ID!
@@ -125,8 +125,8 @@ export const FetchUsers: any = graphql(`
       }
     }
   `);
-  
-  export const AddPartners: any = graphql(`
+
+export const AddPartners: any = graphql(`
     mutation addPartnerOrganizationToUseCase(
       $useCaseId: String!
       $organizationId: ID!
@@ -149,8 +149,8 @@ export const FetchUsers: any = graphql(`
       }
     }
   `);
-  
-  export const RemovePartners: any = graphql(`
+
+export const RemovePartners: any = graphql(`
     mutation removePartnerOrganizationFromUseCase(
       $useCaseId: String!
       $organizationId: ID!
@@ -173,3 +173,17 @@ export const FetchUsers: any = graphql(`
       }
     }
   `);
+
+
+export const OrgList: any = graphql(`
+  query allOrgs {
+    allOrganizations {
+      id
+      name
+      logo {
+        path
+        url
+      }
+    }
+  }
+`);

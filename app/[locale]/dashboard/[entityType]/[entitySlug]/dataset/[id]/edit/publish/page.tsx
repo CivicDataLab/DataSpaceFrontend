@@ -131,12 +131,17 @@ const generateColumnData = (name: any) => {
                         header: 'Name of the Field',
                       },
                       {
+                        accessorKey: 'description',
+                        header: 'Description',
+                      },
+                      {
                         accessorKey: 'format',
                         header: 'Format',
                       },
                     ]}
                     rows={row.original.dialog.map((item: any) => ({
                       name: item.fieldName,
+                      description: item.description,
                       format: item.format,
                     }))}
                     hideFooter

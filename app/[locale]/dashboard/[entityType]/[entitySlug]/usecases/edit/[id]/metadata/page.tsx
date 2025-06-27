@@ -115,7 +115,14 @@ const Metadata = () => {
 
   const useCaseData: { data: any; isLoading: boolean } = useQuery(
     [`fetch_UseCaseData_Metadata`],
-    () => GraphQL(FetchUseCasedetails, {}, { filters: { id: params.id } }),
+    () =>
+      GraphQL(
+        FetchUseCasedetails,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        { filters: { id: params.id } }
+      ),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
@@ -201,25 +208,36 @@ const Metadata = () => {
       )
     );
 
-  const getTagsList: { data: any; isLoading: boolean; error: any } = useQuery(
-    [`tags_list_query`],
-    () =>
-      GraphQL(
-        tagsListQueryDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        []
-      )
+  const getTagsList: {
+    data: any;
+    isLoading: boolean;
+    error: any;
+    refetch: any;
+  } = useQuery([`tags_list_query`], () =>
+    GraphQL(
+      tagsListQueryDoc,
+      {
+        [params.entityType]: params.entitySlug,
+      },
+      []
+    )
   );
+  const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
+
   // Update mutation
   const updateUseCase = useMutation(
     (data: { updateMetadataInput: UpdateUseCaseMetadataInput }) =>
-      GraphQL(UpdateUseCaseMetadataMutation, {}, data),
+      GraphQL(UpdateUseCaseMetadataMutation, {
+        [params.entityType]: params.entitySlug,
+      }, data),
     {
       onSuccess: (res: any) => {
         toast('Use case updated successfully');
         const updatedData = defaultValuesPrepFn(res.addUpdateUsecaseMetadata);
+        if (isTagsListUpdated) {
+          getTagsList.refetch();
+          setIsTagsListUpdated(false);
+        }
         setFormData(updatedData);
         setPreviousFormData(updatedData);
       },
@@ -259,7 +277,11 @@ const Metadata = () => {
           id: params.id,
           metadata: [
             ...Object.keys(transformedValues)
-              .filter((valueItem) => !['sectors', 'tags'].includes(valueItem))
+              .filter(
+                (valueItem) =>
+                  !['sectors', 'tags'].includes(valueItem) &&
+                  transformedValues[valueItem] !== ''
+              )
               .map((key) => {
                 return {
                   id: key,
@@ -319,7 +341,7 @@ const Metadata = () => {
                 value: option,
               })) || []),
             ]}
-            label={metadataFormItem.label+ ' *'}
+            label={metadataFormItem.label + ' *'}
             selectedValue={formData[metadataFormItem.id]}
             displaySelected
             onChange={(value) => {
@@ -348,8 +370,10 @@ const Metadata = () => {
                   value: item.id,
                 })) || []
               }
+              key={`tags-${getTagsList.data?.tags?.length}`} // forces remount on change
               selectedValue={formData.tags}
               onChange={(value) => {
+                setIsTagsListUpdated(true);
                 handleChange('tags', value);
                 handleSave({ ...formData, tags: value });
               }}

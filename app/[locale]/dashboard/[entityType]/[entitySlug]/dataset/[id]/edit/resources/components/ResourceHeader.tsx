@@ -7,7 +7,7 @@ interface ResourceHeaderProps {
   listViewFunction: () => void;
   isSheetOpen: boolean;
   setIsSheetOpen: (open: boolean) => void;
-  dropZone:any;
+  dropZone: any;
   uploadedFile: React.ReactNode;
   file: File[];
   list: { value: string; label: string }[];
@@ -25,7 +25,7 @@ const ResourceHeader = ({
   list,
   resourceId,
   handleResourceChange,
-}:ResourceHeaderProps) => {
+}: ResourceHeaderProps) => {
   return (
     <div>
       <div className="flex  justify-between gap-6">
@@ -59,11 +59,16 @@ const ResourceHeader = ({
                     <Dialog.Content title={'Add New Resource'}>
                       <DropZone
                         name="file_upload"
+                        accept=".csv,.json,.pdf,.xlsx,.xls,.xml,.zip,application/json,text/csv,application/pdf,application/zip,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/xml,application/xml"
                         allowMultiple={true}
                         onDrop={dropZone}
                       >
                         {uploadedFile}
-                        {file.length === 0 && <DropZone.FileUpload />}
+                        {file.length === 0 && (
+                          <DropZone.FileUpload
+                            actionHint={'CSV, JSON, PDF, XLS, XLSX, XML, ZIP'}
+                          />
+                        )}
                       </DropZone>
                     </Dialog.Content>
                   </Dialog>
