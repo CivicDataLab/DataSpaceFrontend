@@ -18,11 +18,14 @@ const addUserDoc: any = graphql(`
   mutation addUserToOrganization($input: AddRemoveUserToOrganizationInput!) {
     addUserToOrganization(input: $input) {
       __typename
-      ... on TypeOrganizationMembership {
-        role {
-          name
-          id
+      ... on TypeOrganizationMembershipMutationResponse {
+        data {
+          role {
+            name
+            id
+          }
         }
+        success
       }
     }
   }
