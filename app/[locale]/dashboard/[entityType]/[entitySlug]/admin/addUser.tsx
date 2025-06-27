@@ -29,7 +29,6 @@ const addUserDoc: any = graphql(`
           name
           id
         }
-        success
       }
     }
   }
