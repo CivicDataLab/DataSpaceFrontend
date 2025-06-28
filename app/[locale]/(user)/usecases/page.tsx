@@ -90,13 +90,13 @@ const UseCasesListingPage = () => {
       <div className=" bg-primaryBlue ">
         <div className="container flex flex-col-reverse justify-center gap-8 p-10 lg:flex-row ">
           <div className="flex flex-col justify-center gap-6">
-            <Text variant="heading3xl" className=" text-surfaceDefault">
+            <Text variant="heading2xl" className=" text-surfaceDefault">
               Our Use Cases
             </Text>
             <Text
               variant="headingLg"
               fontWeight="regular"
-              className=" text-surfaceDefault"
+              className=" text-surfaceDefault leading-3 lg:leading-5"
             >
               By Use case we mean any specific sector or domain data led
               interventions that can be applied to address some of the most
@@ -113,9 +113,9 @@ const UseCasesListingPage = () => {
           />
         </div>
       </div>
-      <div className="container p-6 py-20 lg:p-10">
+      <div className="container p-6 lg:pb-20 lg:p-10">
         <div>
-          <Text variant="heading3xl">Explore Use Cases</Text>
+          <Text variant="heading2xl" fontWeight='bold'>Explore Use Cases</Text>
         </div>
         {getUseCasesList.isLoading ? (
           <div className=" mt-8 flex justify-center">
@@ -124,7 +124,7 @@ const UseCasesListingPage = () => {
         ) : (
           <div
             className={cn(
-              'grid w-full grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3',
+              'grid w-full grid-cols-1 gap-6 pt-6 lg:pt-10 md:grid-cols-2 lg:grid-cols-3',
               Styles.Card
             )}
           >

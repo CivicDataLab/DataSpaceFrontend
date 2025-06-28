@@ -47,7 +47,7 @@ const Filter: React.FC<FilterProps> = ({
               className=" font-medium text-secondaryText"
               onClick={handleReset}
             >
-              Reset
+              RESET
             </Button>
           </div>
         </div>

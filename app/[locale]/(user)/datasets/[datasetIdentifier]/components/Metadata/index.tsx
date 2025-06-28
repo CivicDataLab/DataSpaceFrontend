@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button, Divider, Icon, Text, Tooltip } from 'opub-ui';
-
-import { formatDate, getWebsiteTitle } from '@/lib/utils';
+import { Button, Divider, Icon, Tag, Text, Tooltip } from 'opub-ui';
+import Styles from '../../../dataset.module.scss'
+import { cn, formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
 interface MetadataProps {
@@ -79,7 +79,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
       : '/org.png';
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-5 lg:gap-10">
       <div className=" flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <Text
@@ -158,7 +158,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
           </div>
         </div>
         {Metadata.map((item: any, index: any) => (
-          <div className="flex items-start gap-2 " key={index}>
+          <div className="flex  gap-2 " key={index}>
             <Text
               className="min-w-[120px]  basis-1/4 uppercase"
               variant="bodyMd"
@@ -175,6 +175,19 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
               <Text className="max-w-xs " variant="bodyLg" fontWeight="medium">
                 {formatDate(item.value)}
               </Text>
+            ) : item.type === 'MULTISELECT' ? (
+              <div className={cn('flex flex-wrap gap-2', Styles.Tag)}>
+                {item.value.split(',').map((val: any, index: any) => (
+                  <Tag
+                    key={index}
+                    fillColor="var(--orange-secondary-color)"
+                    borderColor="var(--orange-secondary-text)"
+                    textColor="black"
+                  >
+                    {val.trim()}
+                  </Tag>
+                ))}
+              </div>
             ) : (
               <Text className="max-w-xs " variant="bodyLg" fontWeight="medium">
                 {item.value}
@@ -208,7 +221,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             Description
           </Text>
           <Text variant="bodyLg">
-            {data.description?.length > 260 && !isexpanded
+            {/* {data.description?.length > 260 && !isexpanded
               ? `${data.description.slice(0, 260)}...`
               : data.description}
             {data.description?.length > 260 && (
@@ -220,7 +233,8 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
               >
                 {isexpanded ? 'See Less' : 'See More'}
               </Button>
-            )}
+            )} */}
+            {data.description}
           </Text>
         </div>
       </div>

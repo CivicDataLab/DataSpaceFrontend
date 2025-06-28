@@ -2,7 +2,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Icon, Text } from 'opub-ui';
 
+import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import styles from './styles.module.scss';
 
 const MainFooter = () => {
   const socialMedia = [
@@ -27,7 +29,7 @@ const MainFooter = () => {
     <>
       <div className="bg-primaryBlue">
         <div className="flex flex-col gap-8 p-6 lg:px-28 lg:py-10">
-          <div className="flex flex-wrap justify-between gap-8 ">
+          <div className="flex flex-wrap items-center justify-between gap-8 ">
             {' '}
             <Link href="/">
               <div className="flex items-center gap-2">
@@ -66,7 +68,8 @@ const MainFooter = () => {
                 {' '}
                 <Text
                   color="highlight"
-                  className=" font-bold text-borderWarningSubdued"
+                  variant="headingMd"
+                  className=" font-semi-bold text-secondaryOrange"
                 >
                   Follow Us
                 </Text>
@@ -80,26 +83,33 @@ const MainFooter = () => {
                     target="_blank"
                     className="  h-10  w-10 rounded-5 bg-tertiaryAccent p-2"
                   >
-                    <Icon source={item.icon} size={24} />
+                    <Icon
+                      className={cn(styles.FooterIcons)}
+                      source={item.icon}
+                      size={24}
+                    />
                   </Link>
                 ))}
               </div>
             </div>
           </div>
-          <div className=" flex flex-wrap justify-between gap-6">
-            <div className=" flex  gap-6">
+          <div className=" flex flex-wrap items-end justify-between gap-6">
+            <div className=" flex  gap-6 uppercase">
               <Link href={'/about-us'}>
                 <Text color="onBgDefault"> About Us</Text>
               </Link>
               <Link href={'mailto:info@civicdatalab.in'}>
                 <Text color="onBgDefault"> Contact Us</Text>
               </Link>
-            
             </div>
-            <div className=" flex items-center gap-2">
+            <div className=" flex items-end gap-2">
               <Text color="onBgDefault"> made by</Text>
-              <Link href={'https://www.civicdatalab.in'} target="_blank">
-                <Image src={'/cdl.svg'} width={38} height={38} alt="logo" />
+              <Link
+                href={'https://www.civicdatalab.in'}
+                target="_blank"
+                className=" h-8 w-8"
+              >
+                <Image src={'/cdl.svg'} width={32} height={32} alt="logo" />
               </Link>
             </div>
           </div>

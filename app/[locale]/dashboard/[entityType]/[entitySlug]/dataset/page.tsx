@@ -188,7 +188,7 @@ export default function DatasetPage({
       header: 'Title',
       cell: ({ row }: any) =>
         navigationTab === 'published' ? (
-          <Text>{row.original.title}</Text>
+          <Text title={row.original.title}>{row.original.title}</Text>
         ) : (
           <LinkButton
             kind="tertiary"

@@ -49,11 +49,8 @@ const DetailsQuery: any = graphql(`
   }
 `);
 
-interface DetailsProps {
-  setShowcharts: (vars: boolean) => void;
-}
 
-const Details: React.FC<DetailsProps> = ({ setShowcharts }) => {
+const Details: React.FC = () => {
   const params = useParams();
   const chartRef = useRef<ReactECharts>(null);
 
@@ -62,11 +59,7 @@ const Details: React.FC<DetailsProps> = ({ setShowcharts }) => {
     () => GraphQL(DetailsQuery, {}, { datasetId: params.datasetIdentifier })
   );
 
-  useEffect(() => {
-    if (data && data?.getChartData.length <= 0) {
-      setShowcharts(false);
-    }
-  }, [data]);
+ 
 
   const renderChart = (item: any) => {
     if (item.chartType === 'ASSAM_DISTRICT' || item.chartType === 'ASSAM_RC') {
@@ -84,7 +77,7 @@ const Details: React.FC<DetailsProps> = ({ setShowcharts }) => {
   const toggleDescription = () => setIsexpanded(!isexpanded);
 
   return (
-    <div className=" flex w-full flex-col gap-4 p-2">
+    <div className=" flex w-full flex-col gap-4 py-10">
       {isLoading ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />

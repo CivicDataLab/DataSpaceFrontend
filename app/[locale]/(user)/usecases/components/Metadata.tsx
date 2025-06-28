@@ -149,9 +149,9 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
             fontWeight="semibold"
             className=" text-primaryBlue"
           >
-            ABOUT THE USECASE{' '}
+            ABOUT THE USE CASE{' '}
           </Text>
-          <Text variant="bodyLg">METADATA</Text>
+          <Text variant="bodyLg">DETAILS</Text>
         </div>
         <div className="flex items-center justify-between">
           {setOpen && (

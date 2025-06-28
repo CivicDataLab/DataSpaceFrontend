@@ -69,8 +69,6 @@ const datasetQuery: any = graphql(`
 `);
 
 const DatasetDetailsPage = () => {
-  const [showCharts, setShowcharts] = useState(true);
-
   const params = useParams();
 
   const Datasetdetails: { data: any; isLoading: any } = useQuery(
@@ -106,16 +104,9 @@ const DatasetDetailsPage = () => {
               isLoading={Datasetdetails.isLoading}
             />
           )}
-          <div className="mt-10">
-            {showCharts ? (
-              <Details setShowcharts={setShowcharts} />
-            ) : (
-              <>
-                <Resources />
-                <SimilarDatasets showCharts={showCharts} />
-              </>
-            )}
-          </div>
+          <Details />
+          <Resources />
+          <SimilarDatasets />
         </div>
         <div className=" hidden  w-1/4 gap-10 px-7 py-10 lg:block">
           {Datasetdetails.isLoading ? (
@@ -131,14 +122,7 @@ const DatasetDetailsPage = () => {
           )}
         </div>
       </div>
-      {showCharts && (
-        <>
-          <div className="w-full p-6 lg:px-10 lg:py-10">
-            <Resources />
-          </div>
-          <SimilarDatasets showCharts={showCharts} />
-        </>
-      )}
+
       {/* <div className="w-full p-6 lg:p-10 lg:py-10">
         <SimilarDatasets />
       </div> */}

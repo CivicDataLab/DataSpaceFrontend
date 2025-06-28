@@ -22,11 +22,11 @@ const PrimaryData: React.FC<PrimaryDataProps> = ({ data, isLoading }) => {
           {data?.tags.map((item: any, index: any) => (
             <Tag
               key={index}
-              variation="outlined"
-              textColor="var(--surface-default)"
-              borderColor="var(--orange-secondary-color)"
+              fillColor="var(--accent-tertiary-color)"
+              borderColor="#5C9A91"
+              textColor="black"
             >
-              <Text className=" text-primaryText" fontWeight='medium'>{item.value}</Text>{' '}
+              {item.value}
             </Tag>
           ))}
         </div>

@@ -210,7 +210,7 @@ const Resources = () => {
         </div>
       ) : getResourceDetails.data &&
         getResourceDetails.data?.datasetResources?.length > 0 ? (
-        <div className=" flex flex-col gap-8">
+        <div className=" py-10 flex flex-col gap-8">
           <div className="flex flex-col gap-1">
             <Text variant="headingLg">Files in this Dataset </Text>
             <Text variant="bodyLg">
@@ -231,7 +231,7 @@ const Resources = () => {
                           {item.fileDetails?.format && (
                             <Format fileType={item.fileDetails?.format} />
                           )}
-                          <Text variant="headingMd">{item.name}</Text>
+                          <Text variant="headingMd" className='truncate' >{item.name}</Text>
                         </div>
                       </div>
                       <Accordion type="single" collapsible className="w-full">

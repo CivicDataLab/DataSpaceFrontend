@@ -88,6 +88,7 @@ const SectorsListingPage = () => {
                     variant="headingLg"
                     color="onBgDefault"
                     fontWeight="regular"
+                    className='leading-3 lg:leading-5'
                   >
                     We try to enable our users to create and participate in
                     sectoral data collaboratives, amplifying the reach and
@@ -124,57 +125,59 @@ const SectorsListingPage = () => {
                 </div>
               </div>
             </div>
-            <div className="container flex flex-col gap-5 py-10 lg:gap-10">
-              <Text variant="heading2xl" fontWeight="bold">
-                Explore Sectors
-              </Text>
-              <div className="flex w-full flex-col justify-center gap-6">
-                <div className="flex flex-wrap gap-6 lg:flex-nowrap">
-                  <SearchInput
-                    label={''}
-                    className={cn('w-full', Styles.Search)}
-                    onSubmit={(e) => {
-                      setSearchText(e);
-                    }}
-                    onClear={() => {
-                      setSearchText('');
-                    }}
-                    name={'Start typing to search for any sector'}
-                  />
-                  <div className="flex items-center gap-2">
-                    <Text
-                      variant="bodyLg"
-                      fontWeight="semibold"
-                      className="whitespace-nowrap text-secondaryOrange"
-                    >
-                      Sort :
-                    </Text>
-                    <Select
-                      label=""
-                      labelInline
-                      name="sort-select"
-                      options={[
-                        {
-                          label: 'Name Asc',
-                          value: 'name_asc',
-                        },
-                        {
-                          label: 'Name Desc',
-                          value: 'name_desc',
-                        },
-                        {
-                          label: 'Dataset Count Asc',
-                          value: 'datasetCount_asc',
-                        },
-                        {
-                          label: 'Dataset Count Desc',
-                          value: 'datasetCount_desc',
-                        },
-                      ]}
-                      onChange={(e: any) => {
-                        handleSortChange(e);
+            <div className="container flex flex-col gap-5 pt-10 pb-20 lg:gap-10">
+              <div>
+                <Text variant="heading2xl" fontWeight="bold">
+                  Explore Sectors
+                </Text>
+                <div className="mt-6 flex w-full flex-col justify-center gap-6">
+                  <div className="flex flex-wrap gap-6 lg:flex-nowrap">
+                    <SearchInput
+                      label={''}
+                      className={cn('w-full', Styles.Search)}
+                      onSubmit={(e) => {
+                        setSearchText(e);
                       }}
+                      onClear={() => {
+                        setSearchText('');
+                      }}
+                      name={'Start typing to search for any sector'}
                     />
+                    <div className="flex items-center gap-2">
+                      <Text
+                        variant="bodyLg"
+                        fontWeight="semibold"
+                        className="whitespace-nowrap text-secondaryOrange"
+                      >
+                        Sort :
+                      </Text>
+                      <Select
+                        label=""
+                        labelInline
+                        name="sort-select"
+                        options={[
+                          {
+                            label: 'Name Asc',
+                            value: 'name_asc',
+                          },
+                          {
+                            label: 'Name Desc',
+                            value: 'name_desc',
+                          },
+                          {
+                            label: 'Dataset Count Asc',
+                            value: 'datasetCount_asc',
+                          },
+                          {
+                            label: 'Dataset Count Desc',
+                            value: 'datasetCount_desc',
+                          },
+                        ]}
+                        onChange={(e: any) => {
+                          handleSortChange(e);
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -204,7 +207,7 @@ const SectorsListingPage = () => {
                               <Text variant="headingLg" fontWeight="semibold">
                                 {sectors.name}
                               </Text>
-                              <Divider />
+                              <Divider className=' h-[2px] bg-greyExtralight' />
                             </div>
                             <div className="flex gap-1">
                               <Text
