@@ -1,10 +1,11 @@
 'use client';
 
-import { Session } from 'next-auth';
-import { signIn, signOut, useSession } from 'next-auth/react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { Session } from 'next-auth';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import {
   Avatar,
   Button,
@@ -16,11 +17,10 @@ import {
   Spinner,
   Text,
 } from 'opub-ui';
-import React, { useEffect, useState } from 'react';
 
-import { Icons } from '@/components/icons';
 import { useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
+import { Icons } from '@/components/icons';
 import { UserDetailsQryDoc } from '../[entityType]/[entitySlug]/schema';
 import { allOrganizationsListingDoc } from '../[entityType]/schema';
 import Sidebar from './sidebar';
@@ -40,7 +40,6 @@ export function MainNav({ hideSearch = false }) {
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const { data: session, status } = useSession();
   const { setUserDetails, setAllEntityDetails } = useDashboardStore();
-
 
   async function keycloakSessionLogOut() {
     try {
@@ -126,7 +125,7 @@ export function MainNav({ hideSearch = false }) {
     }
   };
   return (
-    <nav className="p-4 lg:p-10 lg:pb-7">
+    <nav className="p-4 lg:p-6">
       <div className="flex items-center justify-between gap-4  ">
         <div className="flex items-center gap-1">
           <div className="lg:hidden">
