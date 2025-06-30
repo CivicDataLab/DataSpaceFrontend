@@ -92,13 +92,11 @@ const PublishersListingPage = () => {
                     variant="headingLg"
                     color="onBgDefault"
                     fontWeight="regular"
-                    className=' leading-3 lg:leading-5'
+                    className=" leading-3 lg:leading-5"
                   >
-                    Our Publishers are the backbone of our platform. Their
-                    contributions are what make up our platform. They belong to
-                    different sectors and consist of both organizations, and
-                    independent researchers. By making their data accessible
-                    they are able to create impact and become Data Changemakers.
+                    Meet the data providers powering CivicDataSpace — explore
+                    individual and organizational publishers across domains who
+                    are opening up data for impact and transparency.
                   </Text>
                 </div>
                 <div className="flex items-center justify-center gap-2 px-3 ">

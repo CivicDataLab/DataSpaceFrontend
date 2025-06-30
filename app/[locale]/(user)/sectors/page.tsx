@@ -88,13 +88,11 @@ const SectorsListingPage = () => {
                     variant="headingLg"
                     color="onBgDefault"
                     fontWeight="regular"
-                    className='leading-3 lg:leading-5'
+                    className="leading-3 lg:leading-5"
                   >
-                    We try to enable our users to create and participate in
-                    sectoral data collaboratives, amplifying the reach and
-                    impact of high-value datasets and sectoral use cases at
-                    various levels, including national, sub-national, and
-                    regional.
+                    Browse our thematic sectors - from disaster risk reduction
+                    to open budgets - to discover curated datasets and use cases
+                    driving data-informed decisions across fields.
                   </Text>
                 </div>
                 <div className="flex items-center justify-center gap-2 px-3 ">
@@ -125,7 +123,7 @@ const SectorsListingPage = () => {
                 </div>
               </div>
             </div>
-            <div className="container flex flex-col gap-5 pt-10 pb-20 lg:gap-10">
+            <div className="container flex flex-col gap-5 pb-20 pt-10 lg:gap-10">
               <div>
                 <Text variant="heading2xl" fontWeight="bold">
                   Explore Sectors
@@ -207,7 +205,7 @@ const SectorsListingPage = () => {
                               <Text variant="headingLg" fontWeight="semibold">
                                 {sectors.name}
                               </Text>
-                              <Divider className=' h-[2px] bg-greyExtralight' />
+                              <Divider className=" h-[2px] bg-greyExtralight" />
                             </div>
                             <div className="flex gap-1">
                               <Text

@@ -57,8 +57,7 @@ const Datasets = () => {
         <Text variant="heading3xl">Popular Datasets</Text>
         <div className="flex flex-wrap justify-between gap-2 ">
           <Text variant="headingLg" fontWeight="medium">
-            The most popular Datasets on CivicDataSpace{' '}
-          </Text>
+          Discover high-impact datasets that are helping users power research, analysis, and action.          </Text>
           <Button
             kind="primary"
             className=" bg-secondaryOrange text-basePureBlack"
