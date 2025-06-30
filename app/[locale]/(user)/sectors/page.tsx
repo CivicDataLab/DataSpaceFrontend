@@ -20,7 +20,7 @@ import Styles from '../datasets/dataset.module.scss';
 
 const sectorsListQueryDoc: any = graphql(`
   query SectorsLists($order: SectorOrder, $filters: SectorFilter) {
-    sectors(order: $order, filters: $filters) {
+    activeSectors(order: $order, filters: $filters) {
       id
       name
       description
@@ -185,10 +185,10 @@ const SectorsListingPage = () => {
                 <div className="m-4 flex justify-center">
                   <Spinner />
                 </div>
-              ) : data && data?.sectors?.length > 0 ? (
+              ) : data && data?.activeSectors?.length > 0 ? (
                 <>
                   <div className="grid w-full grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
-                    {data?.sectors.map((sectors: any) => (
+                    {data?.activeSectors.map((sectors: any) => (
                       <Link
                         href={`/sectors/${sectors.slug}?sectors=${capitalizeWords(sectors.slug)}`}
                         key={sectors.id}

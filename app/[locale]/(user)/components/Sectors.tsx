@@ -13,7 +13,7 @@ import { GraphQL } from '@/lib/api';
 
 const sectorDetails = graphql(`
   query SectorsList {
-    sectors {
+    activeSectors {
       id
       name
       description
@@ -61,7 +61,7 @@ const Sectors = () => {
         </div>
       ) : (
         <div className="mt-12 grid w-full grid-cols-1 gap-6 px-4 md:grid-cols-2 md:px-12 lg:grid-cols-3 lg:px-12">
-          {data?.sectors.map((sectors: any) => (
+          {data?.activeSectors.map((sectors: any) => (
             <Link
               href={`/sectors/${sectors.slug}?size=9&page=1&sort=recent&sectors=${capitalizeWords(sectors.slug)}`}
               key={sectors.id}
