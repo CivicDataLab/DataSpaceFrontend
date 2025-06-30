@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button, Divider, Icon, Text } from 'opub-ui';
-
-import { getWebsiteTitle } from '@/lib/utils';
+import { Button, Divider, Icon, Tag, Text, Tooltip } from 'opub-ui';
+import Styles from '../../../dataset.module.scss'
+import { cn, formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
 interface MetadataProps {
@@ -17,6 +17,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
     value: item.value,
     type: item.metadataItem.dataType,
   }));
+
   const [isexpanded, setIsexpanded] = useState(false);
   const toggleDescription = () => setIsexpanded(!isexpanded);
 
@@ -78,7 +79,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
       : '/org.png';
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-5 lg:gap-10">
       <div className=" flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <Text
@@ -115,55 +116,82 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
           <Text className="min-w-[120px]  basis-1/4 uppercase" variant="bodyMd">
             {data.isIndividualDataset ? 'Publisher' : 'Organization'}
           </Text>
-          <Text
-            className="max-w-xs truncate "
-            variant="bodyLg"
-            fontWeight="medium"
+          <Tooltip
+            content={
+              data.isIndividualDataset
+                ? data.user.fullName
+                : data.organization.name
+            }
           >
-            {data.isIndividualDataset
-              ? data.user.fullName
-              : data.organization.name}
-          </Text>
+            <Text
+              className="line-clamp-2 "
+              variant="bodyLg"
+              fontWeight="medium"
+            >
+              {data.isIndividualDataset
+                ? data.user.fullName
+                : data.organization.name}
+            </Text>
+          </Tooltip>
         </div>
         <div className="flex gap-2 ">
           <Text className="min-w-[120px]  basis-1/4 uppercase" variant="bodyMd">
             Sector
           </Text>
           <div className="flex flex-wrap gap-2">
-          {data.sectors.length > 0 ? (
-            data.sectors.map((sector: any, index: number) => (
-              <Image
-                key={index}
-                src={`/Sectors/${sector.name}.svg`}
-                alt={sector.name || ''}
-                width={52}
-                height={52}
-                className="border-1 border-solid border-greyExtralight p-1"
-              />
-            ))
-          ) : (
-            <span>N/A</span>
-          )}
+            {data.sectors.length > 0 ? (
+              data.sectors.map((sector: any, index: number) => (
+                <Tooltip content={sector.name} key={index}>
+                  <Image
+                    key={index}
+                    src={`/Sectors/${sector.name}.svg`}
+                    alt={sector.name || ''}
+                    width={52}
+                    height={52}
+                    className="border-1 border-solid border-greyExtralight p-1"
+                  />
+                </Tooltip>
+              ))
+            ) : (
+              <span>N/A</span>
+            )}
           </div>
         </div>
         {Metadata.map((item: any, index: any) => (
-          <div className="flex items-start gap-2 " key={index}>
+          <div className="flex  gap-2 " key={index}>
             <Text
               className="min-w-[120px]  basis-1/4 uppercase"
               variant="bodyMd"
             >
               {item.label}
             </Text>
-            {item.type !== 'URL' ? (
-              <Text className="max-w-xs " variant="bodyLg" fontWeight="medium">
-                {item.value}
-              </Text>
-            ) : (
+            {item.type === 'URL' ? (
               <Link href={item.value} target="_blank">
-                <Text className="underline" color="highlight">
+                <Text className="underline" color="highlight" variant="bodyLg">
                   {sourceTitle?.trim() ? sourceTitle : 'Visit Website'}
                 </Text>
               </Link>
+            ) : item.type === 'DATE' ? (
+              <Text className="max-w-xs " variant="bodyLg" fontWeight="medium">
+                {formatDate(item.value)}
+              </Text>
+            ) : item.type === 'MULTISELECT' ? (
+              <div className={cn('flex flex-wrap gap-2', Styles.Tag)}>
+                {item.value.split(',').map((val: any, index: any) => (
+                  <Tag
+                    key={index}
+                    fillColor="var(--orange-secondary-color)"
+                    borderColor="var(--orange-secondary-text)"
+                    textColor="black"
+                  >
+                    {val.trim()}
+                  </Tag>
+                ))}
+              </div>
+            ) : (
+              <Text className="max-w-xs " variant="bodyLg" fontWeight="medium">
+                {item.value}
+              </Text>
             )}
           </div>
         ))}
@@ -189,9 +217,11 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
           </div>
         )}
         <div className="flex flex-col gap-4">
-          <Text variant="bodyMd">Description</Text>
-          <Text variant="bodyMd">
-            {data.description?.length > 260 && !isexpanded
+          <Text variant="bodyMd" className="uppercase">
+            Description
+          </Text>
+          <Text variant="bodyLg">
+            {/* {data.description?.length > 260 && !isexpanded
               ? `${data.description.slice(0, 260)}...`
               : data.description}
             {data.description?.length > 260 && (
@@ -203,7 +233,8 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
               >
                 {isexpanded ? 'See Less' : 'See More'}
               </Button>
-            )}
+            )} */}
+            {data.description}
           </Text>
         </div>
       </div>

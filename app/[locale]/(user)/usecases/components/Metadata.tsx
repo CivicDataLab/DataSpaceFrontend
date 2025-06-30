@@ -1,15 +1,41 @@
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button, Divider, Icon, Text } from 'opub-ui';
+import { Button, Divider, Icon, Text, Tooltip } from 'opub-ui';
 
-import { formatDate } from '@/lib/utils';
+import { formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
 const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
+  const [platformTitle, setPlatformTitle] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTitle = async () => {
+      try {
+        const urlItem = data.useCase.platformUrl;
+
+        if (urlItem && urlItem.value) {
+          const title = await getWebsiteTitle(urlItem.value);
+          setPlatformTitle(title);
+        }
+      } catch (error) {
+        console.error('Error fetching website title:', error);
+      }
+    };
+
+    if (data.useCase.platformUrl === null) {
+      setPlatformTitle('N/A');
+    } else {
+      fetchTitle();
+    }
+  }, [data.useCase.platformUrl]);
   const metadata = [
     {
       label: data.useCase.isIndividualUsecase ? 'Publisher' : 'Organization',
       value: data.useCase.isIndividualUsecase
+        ? data.useCase.user.fullName
+        : data?.useCase.organization?.name,
+      tooltipContent: data.useCase.isIndividualUsecase
         ? data.useCase.user.fullName
         : data?.useCase.organization?.name,
     },
@@ -24,18 +50,39 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           {data.useCase.isIndividualUsecase ? 'Publisher' : 'Organization'}
         </Link>
       ),
+    
+    },
+    {
+      label: 'Platform URL',
+      value:
+        data.useCase.platformUrl === null ? (
+          'N/A'
+        ) : (
+          <Link
+            className="text-primaryBlue underline"
+            href={data.useCase.platformUrl}
+          >
+            <Text className="underline" color="highlight" variant="bodyLg">
+              {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
+            </Text>
+          </Link>
+        ),
+      tooltipContent: data.useCase.platformUrl === null ? 'N/A' : platformTitle,
     },
     {
       label: 'Started On',
       value: formatDate(data.useCase.created) || 'N/A',
+      tooltipContent: formatDate(data.useCase.created) || 'N/A',
     },
     {
       label: 'Status',
       value: data.useCase.runningStatus.split('_').join('') || 'N/A',
+      tooltipContent: data.useCase.runningStatus.split('_').join('') || 'N/A',
     },
     {
       label: 'Last Updated',
       value: formatDate(data.useCase.modified) || 'N/A',
+      tooltipContent: formatDate(data.useCase.modified) || 'N/A',
     },
     {
       label: 'Sectors',
@@ -43,14 +90,15 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
         <div className="flex flex-wrap  gap-2">
           {data.useCase.sectors.length > 0 ? (
             data.useCase.sectors.map((sector: any, index: number) => (
-              <Image
-                key={index}
-                src={`/Sectors/${sector.name}.svg`}
-                alt={sector.name || ''}
-                width={52}
-                height={52}
-                className="border-1 border-solid border-greyExtralight p-1"
-              />
+              <Tooltip content={sector.name} key={index}>
+                <Image
+                  src={`/Sectors/${sector.name}.svg`}
+                  alt={sector.name || ''}
+                  width={52}
+                  height={52}
+                  className="border-1 border-solid border-greyExtralight p-1"
+                />
+              </Tooltip>
             ))
           ) : (
             <span>N/A</span> // Fallback if no sectors are available
@@ -67,14 +115,15 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
               ?.find((meta: any) => meta.metadataItem?.label === 'SDG Goal')
               ?.value.split(', ')
               .map((item: any, index: number) => (
-                <Image
-                  key={index}
-                  src={`/SDG/${item}.svg`}
-                  alt={item || ''}
-                  width={60}
-                  height={60}
-                  className="border-1 border-solid border-greyExtralight p-1"
-                />
+                <Tooltip content={item} key={index}>
+                  <Image
+                    src={`/SDG/${item}.svg`}
+                    alt={item || ''}
+                    width={60}
+                    height={60}
+                    className="border-1 border-solid border-greyExtralight p-1"
+                  />
+                </Tooltip>
               ))
           ) : (
             <span>N/A</span>
@@ -100,9 +149,9 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
             fontWeight="semibold"
             className=" text-primaryBlue"
           >
-            ABOUT THE USECASE{' '}
+            ABOUT THE USE CASE{' '}
           </Text>
-          <Text variant="bodyLg">METADATA</Text>
+          <Text variant="bodyLg">DETAILS</Text>
         </div>
         <div className="flex items-center justify-between">
           {setOpen && (
@@ -136,13 +185,16 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
               >
                 {item.label}
               </Text>
-              <Text
-                className="max-w-xs truncate"
-                variant="bodyLg"
-                fontWeight="medium"
-              >
-                {typeof item.value === 'string' ? item.value : item.value}
-              </Text>
+              <Tooltip content={item?.tooltipContent}>
+                <Text
+                  className="max-w-xs truncate"
+                  variant="bodyLg"
+                  fontWeight="medium"
+                  // title={item?.tooltipContent}
+                >
+                  {typeof item.value === 'string' ? item.value : item.value}
+                </Text>
+              </Tooltip>
             </div>
           ))}
         </div>

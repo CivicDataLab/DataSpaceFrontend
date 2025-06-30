@@ -53,7 +53,7 @@ export const ResourceSchema = ({
       ...newData[rowIndex],
       [field]: newValue,
     };
-    
+
     setUpdatedData(newData);
     setSchema(newData);
     handleSave(newData);
@@ -109,29 +109,15 @@ export const ResourceSchema = ({
       {
         accessorKey: 'format',
         header: 'FORMAT',
-        cell: (info: any) => {
-          const rowIndex = info.row.index;
-          const format = updatedData[rowIndex]?.format || '';
-          return (
-            <Select
-              label="Resource List"
-              labelHidden
-              options={options}
-              value={format}
-              onChange={(e) => handleFieldChange('format', e, rowIndex)}
-              name="Select format"
-            />
-          );
-        },
       },
     ];
   };
 
   const generateTableData = (updatedData: any[]) => {
-    return updatedData.map((item: any) => ({
-      fieldName: item.fieldName,
-      description: item.description,
-      format: item.format,
+    return updatedData?.map((item: any) => ({
+      fieldName: item?.fieldName,
+      description: item?.description,
+      format: item?.format,
     }));
   };
 
@@ -146,7 +132,7 @@ export const ResourceSchema = ({
             hideSelection
           />
         ) : (
-          <div className="mt-8 flex justify-center">Click on Reset Fields</div>
+          <div className="mt-8 flex justify-center">Failed to Generate Schema</div>
         )}
       </div>
     </>

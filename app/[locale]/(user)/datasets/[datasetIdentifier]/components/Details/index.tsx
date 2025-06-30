@@ -49,11 +49,7 @@ const DetailsQuery: any = graphql(`
   }
 `);
 
-interface DetailsProps {
-  setShowcharts: (vars: boolean) => void;
-}
-
-const Details: React.FC<DetailsProps> = ({ setShowcharts }) => {
+const Details: React.FC = () => {
   const params = useParams();
   const chartRef = useRef<ReactECharts>(null);
 
@@ -61,12 +57,6 @@ const Details: React.FC<DetailsProps> = ({ setShowcharts }) => {
     [`chartDetails_${params.id}`],
     () => GraphQL(DetailsQuery, {}, { datasetId: params.datasetIdentifier })
   );
-
-  useEffect(() => {
-    if (data && data?.getChartData.length <= 0) {
-      setShowcharts(false);
-    }
-  }, [data]);
 
   const renderChart = (item: any) => {
     if (item.chartType === 'ASSAM_DISTRICT' || item.chartType === 'ASSAM_RC') {
@@ -84,13 +74,13 @@ const Details: React.FC<DetailsProps> = ({ setShowcharts }) => {
   const toggleDescription = () => setIsexpanded(!isexpanded);
 
   return (
-    <div className=" flex w-full flex-col gap-4 p-2">
+    <>
       {isLoading ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
       ) : data?.getChartData?.length > 0 ? (
-        <>
+        <div className=" flex w-full flex-col gap-4 py-10">
           <div className="relative w-full ">
             <Carousel className="w-full">
               <div className=" px-12">
@@ -98,21 +88,6 @@ const Details: React.FC<DetailsProps> = ({ setShowcharts }) => {
                   {data?.getChartData.map((item: any, index: any) => (
                     <CarouselItem key={index} className="m-auto">
                       <div className="w-full border-2 border-solid border-baseGraySlateSolid4 bg-surfaceDefault p-6 text-center shadow-basicLg max-sm:p-2">
-                        <div className="lg:p-10">
-                          {item.__typename === 'TypeResourceChart' &&
-                          item?.chart?.options ? (
-                            renderChart(item)
-                          ) : (
-                            <Image
-                              src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/chart_image/${item.id}`}
-                              alt={''}
-                              width={300}
-                              height={300}
-                              unoptimized
-                            />
-                          )}
-                          {/* Call the renderChart function */}
-                        </div>
                         <div className="flex items-center justify-between gap-2 max-sm:flex-wrap">
                           <div className="flex flex-col gap-1 py-2 text-start">
                             <Text className="font-semi-bold">{item.name}</Text>
@@ -133,13 +108,6 @@ const Details: React.FC<DetailsProps> = ({ setShowcharts }) => {
                             </Text>
                           </div>
                           <div className="flex gap-2">
-                            <Button kind="secondary" className="p-2">
-                              <Icon
-                                source={Icons.diagonal}
-                                size={20}
-                                color="default"
-                              />
-                            </Button>
                             <Link
                               href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/chart/${item.id}`}
                               target="_blank"
@@ -155,6 +123,22 @@ const Details: React.FC<DetailsProps> = ({ setShowcharts }) => {
                             </Link>
                           </div>
                         </div>
+                        <div className="p-4 lg:p-10">
+                          {item.__typename === 'TypeResourceChart' &&
+                          item?.chart?.options ? (
+                            renderChart(item)
+                          ) : (
+                            <Image
+                              src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/chart_image/${item.id}`}
+                              alt={''}
+                              width={100}
+                              height={100}
+                              unoptimized
+                              className=" h-full w-full object-contain"
+                            />
+                          )}
+                          {/* Call the renderChart function */}
+                        </div>
                       </div>
                     </CarouselItem>
                   ))}
@@ -168,11 +152,11 @@ const Details: React.FC<DetailsProps> = ({ setShowcharts }) => {
               </div>
             </Carousel>
           </div>
-        </>
+        </div>
       ) : (
         ''
       )}
-    </div>
+    </>
   );
 };
 

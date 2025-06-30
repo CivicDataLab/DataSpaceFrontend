@@ -33,9 +33,19 @@ const FetchUseCaseTitle: any = graphql(`
 const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const pathName = usePathname();
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
 
-  const layoutList = ['details', 'contributors', 'assign', 'publish'];
+  const layoutList = [
+    'details',
+    'contributors',
+    'assign',
+    'dashboards',
+    'publish',
+  ];
 
   const pathItem = layoutList.find(function (v) {
     return pathName.indexOf(v) >= 0;
@@ -46,7 +56,9 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     () =>
       GraphQL(
         FetchUseCaseTitle,
-        {},
+        {
+          [params.entityType]: params.entitySlug,
+        },
         {
           filters: {
             id: params.id,
@@ -61,7 +73,9 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { data: UseCaseInputPartial }) =>
-      GraphQL(UpdateUseCaseTitleMutation, {}, data),
+      GraphQL(UpdateUseCaseTitleMutation, {
+        [params.entityType]: params.entitySlug,
+      }, data),
     {
       onSuccess: () => {
         toast('Use case updated successfully');
@@ -84,6 +98,11 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       label: 'Datasets',
       url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/assign`,
       selected: pathItem === 'assign',
+    },
+    {
+      label: 'Dashboards',
+      url: `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/dashboards`,
+      selected: pathItem === 'dashboards',
     },
     {
       label: 'Contributors',
@@ -140,9 +159,9 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
         </TabList>
       </Tabs>
       <div className="">{children}</div>
-      <div className="mb-6">
+      <div className="my-6">
         <StepNavigation
-          steps={['details', 'assign', 'contributors', 'publish']}
+          steps={['details', 'assign', 'dashboards', 'contributors', 'publish']}
         />
       </div>
     </div>

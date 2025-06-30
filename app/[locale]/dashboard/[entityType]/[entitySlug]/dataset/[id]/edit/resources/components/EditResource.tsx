@@ -13,22 +13,19 @@ import {
   Checkbox,
   Divider,
   DropZone,
-  Icon,
-  Spinner,
   Text,
   TextField,
   toast,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import PdfPreview from '../../../../../../../../(user)/components/PdfPreview';
 import { useDatasetEditStatus } from '../../context';
 import { TListItem } from '../page-layout';
 import PreviewData from './PreviewData';
 import {
   createResourceFilesDoc,
-  resetSchema,
   updateResourceDoc,
   updateSchema,
 } from './query';
@@ -72,6 +69,7 @@ const resourceDetails: any = graphql(`
         resource {
           pk
         }
+        format
         file {
           name
           path
@@ -86,10 +84,14 @@ const resourceDetails: any = graphql(`
 `);
 
 export const EditResource = ({ refetch, allResources }: EditProps) => {
-  const params = useParams();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
 
   const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
-  const [schema, setSchema] = React.useState([]);
+  const [schema, setSchema] = React.useState<any>([]);
 
   const resourceDetailsQuery = useQuery<any>(
     [`fetch_resource_details_${resourceId}`],
@@ -97,7 +99,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       GraphQL(
         resourceDetails,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         { resourceId: resourceId }
       ),
@@ -105,25 +107,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       enabled: !!resourceId,
     }
   );
-  const schemaMutation = useMutation(
-    (data: { resourceId: string }) =>
-      GraphQL(
-        resetSchema,
-        {
-          // Entity Headers if present
-        },
-        data
-      ),
-    {
-      onSuccess: (data: any) => {
-        setSchema(data.resetFileResourceSchema.schema);
-        refetch();
-      },
-      onError: (err: any) => {
-        toast(err);
-      },
-    }
-  );
+
   const updateResourceMutation = useMutation(
     (data: {
       fileResourceInput: UpdateFileResourceInput;
@@ -132,7 +116,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       GraphQL(
         updateResourceDoc,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),
@@ -144,11 +128,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
             onClick: () => {},
           },
         });
-        if (variables.isResetSchema) {
-          schemaMutation.mutate({
-            resourceId: resourceId,
-          });
-        }
+
         resourceDetailsQuery.refetch();
       },
       onError: (err: any) => {
@@ -163,7 +143,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       GraphQL(
         updateSchema,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),
@@ -187,7 +167,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       GraphQL(
         createResourceFilesDoc,
         {
-          // Entity Headers if present
+          [params.entityType]: params.entitySlug,
         },
         data
       ),
@@ -233,9 +213,9 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
     columns: [],
   });
 
-  useEffect(() => {
-    resourceDetailsQuery.refetch();
-  }, []);
+  // useEffect(() => {
+  //   resourceDetailsQuery.refetch();
+  // }, []);
 
   React.useEffect(() => {
     const ResourceData = resourceDetailsQuery.data?.resourceById;
@@ -250,13 +230,16 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       rows: ResourceData?.previewData?.rows,
       columns: ResourceData?.previewData?.columns,
     });
-    setSchema(ResourceData?.schema);
-    if (ResourceData?.schema?.length === 0) {
-      schemaMutation.mutate({
-        resourceId: resourceId,
-      });
+  }, [resourceDetailsQuery.data]);
+
+
+  useEffect(() => {
+    const schemaData = resourceDetailsQuery.data?.resourceById?.schema;
+    if (schemaData && Array.isArray(schemaData)) {
+      setSchema(schemaData);
     }
   }, [resourceDetailsQuery.data]);
+  
 
   const handleResourceChange = (e: any) => {
     setResourceId(e, { shallow: false });
@@ -300,16 +283,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
         {
           onSuccess: () => {
             // Automatically trigger schema mutation after file upload
-            schemaMutation.mutate(
-              {
-                resourceId: resourceId,
-              },
-              {
-                onSuccess: () => {
-                  toast('Schema updated successfully');
-                },
-              }
-            );
+
             resourceDetailsQuery.refetch();
           },
         }
@@ -377,6 +351,9 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
     ); // update based on mutation state
   }, [updateResourceMutation.isLoading, updateSchemaMutation.isLoading]);
 
+  const resourceFormat =
+    resourceDetailsQuery.data?.resourceById.fileDetails.format?.toLowerCase();
+  const pdfUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${resourceId}`;
   return (
     <div>
       {resourceDetailsQuery.data?.resourceById ? (
@@ -446,42 +423,49 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
             </div>
           </div>
 
-          <div className="mt-8 mb-4 flex items-center gap-8 align-middle">
-            <Checkbox
-              name={'previewEnabled'}
-              checked={previewEnable}
-              onChange={() => {
-                const newValue = !previewEnable;
-                setPreviewEnable(newValue);
-                updateResourceMutation.mutate({
-                  fileResourceInput: {
-                    id: resourceId,
-                    name: resourceName || '',
-                    previewEnabled: newValue, // use new value here
-                    previewDetails: {
-                      startEntry: 1,
-                      endEntry: 5,
-                      isAllEntries: previewDetails.isAllEntries,
+          {resourceFormat !== 'zip' && (
+            <div className="mb-4 mt-8 flex items-center gap-8 align-middle">
+              <Checkbox
+                name={'previewEnabled'}
+                checked={previewEnable}
+                title={
+                  resourceFormat === 'json' || resourceFormat === 'xml'
+                    ? 'Preview is not available for this file format'
+                    : ''
+                }
+                disabled={resourceFormat === 'json' || resourceFormat === 'xml'}
+                onChange={() => {
+                  const newValue = !previewEnable;
+                  setPreviewEnable(newValue);
+                  updateResourceMutation.mutate({
+                    fileResourceInput: {
+                      id: resourceId,
+                      name: resourceName || '',
+                      previewEnabled: newValue, // use new value here
+                      previewDetails: {
+                        startEntry: 1,
+                        endEntry: 5,
+                        isAllEntries: previewDetails.isAllEntries,
+                      },
                     },
-                  },
-                  isResetSchema: false,
-                });
-              }}
-            >
-              Preview Enabled
-            </Checkbox>
-            <div>
-              <Button
-                kind="tertiary"
-                disabled={!previewEnable}
-                onClick={() => {
-                  setShowPreview(!showPreview);
+                    isResetSchema: false,
+                  });
                 }}
               >
-                {showPreview ? 'Hide Preview' : 'See Preview'}
-              </Button>
-            </div>
-            {/* {previewEnable && (
+                Preview Enabled
+              </Checkbox>
+              <div>
+                <Button
+                  kind="tertiary"
+                  disabled={!previewEnable}
+                  onClick={() => {
+                    setShowPreview(!showPreview);
+                  }}
+                >
+                  {showPreview ? 'Hide Preview' : 'See Preview'}
+                </Button>
+              </div>
+              {/* {previewEnable && (
           <>
             <Checkbox
               name={'isAllEntries'}
@@ -519,51 +503,49 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
             )}
           </>
         )} */}
-          </div>
-          {showPreview && previewEnable && previewData && (
-            <PreviewData isPreview={previewEnable} previewData={previewData} />
-          )}
-          <div className="my-8">
-            <div className="flex flex-wrap justify-between">
-              <Text>Fields in the Resource</Text>
-              <Button
-                size="medium"
-                kind="tertiary"
-                variant="basic"
-                onClick={() =>
-                  schemaMutation.mutate({
-                    resourceId: resourceId,
-                  })
-                }
-              >
-                <div className="flex items-center gap-1">
-                  <Text>Reset Formats</Text>{' '}
-                  <Icon source={Icons.info} color="interactive" />
-                </div>
-              </Button>
             </div>
-            <Text variant="headingXs" as="span" fontWeight="regular">
-              The Field settings apply to the Resource on a master level and can
-              not be changed in Access Models.
-            </Text>
-            {schemaMutation.isLoading ? (
-              <div className=" mt-8 flex justify-center">
-                <Spinner size={30} />
-              </div>
-            ) : resourceId && schema?.length > 0 ? (
+          )}
+          {showPreview &&
+            previewEnable &&
+            (resourceFormat === 'pdf' ? (
+              <PdfPreview url={pdfUrl} />
+            ) : (
+              previewData && <PreviewData previewData={previewData} />
+            ))}
+
+          {resourceFormat !== 'pdf' && resourceFormat !== 'zip' && (
+            <div className="my-8">
+              {/* <div className="flex flex-wrap justify-between">
+                <Text>Fields in the Resource</Text>
+                <Button
+                  size="medium"
+                  kind="tertiary"
+                  variant="basic"
+                  onClick={() =>
+                    schemaMutation.mutate({
+                      resourceId: resourceId,
+                    })
+                  }
+                >
+                  <div className="flex items-center gap-1">
+                    <Text>Reset Formats</Text>{' '}
+                    <Icon source={Icons.info} color="interactive" />
+                  </div>
+                </Button>
+              </div> */}
+              <Text variant="headingXs" as="span" fontWeight="regular">
+                The Field settings apply to the Resource on a master level and
+                can not be changed in Access Models.
+              </Text>
+
               <ResourceSchema
                 setSchema={setSchema}
                 data={schema}
                 mutate={updateSchemaMutation.mutate}
                 resourceId={resourceId}
               />
-            ) : (
-              <div className="my-8 flex justify-center">
-                {' '}
-                Click on Reset Format{' '}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       ) : (
         <Loading />

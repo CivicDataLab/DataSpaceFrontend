@@ -18,15 +18,15 @@ const PrimaryData: React.FC<PrimaryDataProps> = ({ data, isLoading }) => {
     <div>
       <div className="flex flex-col gap-4">
         <Text variant="heading2xl">{data?.title}</Text>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {data?.tags.map((item: any, index: any) => (
             <Tag
               key={index}
-              variation="outlined"
-              textColor="var(--surface-default)"
-              borderColor="var(--orange-secondary-color)"
+              fillColor="var(--accent-tertiary-color)"
+              borderColor="#5C9A91"
+              textColor="black"
             >
-              <Text className=" text-primaryText" fontWeight='medium'>{item.value}</Text>{' '}
+              {item.value}
             </Tag>
           ))}
         </div>

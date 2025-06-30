@@ -28,6 +28,7 @@ const UpdateUseCaseMutation: any = graphql(`
       status
       startedOn
       completedOn
+      platformUrl
       logo {
         name
         path
@@ -44,6 +45,7 @@ const FetchUseCase: any = graphql(`
       title
       summary
       website
+      platformUrl
       logo {
         name
         path
@@ -73,7 +75,9 @@ const Details = () => {
     () =>
       GraphQL(
         FetchUseCase,
-        {},
+        {
+          [params.entityType]: params.entitySlug,
+        },
         {
           filters: {
             id: params.id,
@@ -100,6 +104,7 @@ const Details = () => {
     runningStatus: null,
     startedOn: null,
     completedOn: null,
+    platformUrl: '',
   };
 
   const runningStatus = [
@@ -139,6 +144,7 @@ const Details = () => {
         runningStatus: UsecasesData.runningStatus || null,
         startedOn: UsecasesData.startedOn || '',
         completedOn: UsecasesData.completedOn || '',
+        platformUrl: UsecasesData.platformUrl || '',
       };
       setFormData(updatedData);
       setPreviousFormData(updatedData);
@@ -147,7 +153,13 @@ const Details = () => {
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { data: UseCaseInputPartial }) =>
-      GraphQL(UpdateUseCaseMutation, {}, data),
+      GraphQL(
+        UpdateUseCaseMutation,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        data
+      ),
     {
       onSuccess: (res: any) => {
         toast('Use case updated successfully');
@@ -199,6 +211,7 @@ const Details = () => {
           runningStatus: updatedData.runningStatus,
           startedOn: (updatedData.startedOn as Date) || null,
           completedOn: (updatedData.completedOn as Date) || null,
+          platformUrl: updatedData.platformUrl || '',
         },
       });
     }
@@ -222,6 +235,33 @@ const Details = () => {
           onBlur={() => handleSave(formData)}
         />
       </div>
+      <div className="flex flex-wrap gap-6 md:flex-nowrap lg:flex-nowrap">
+        <div className="w-full">
+          <TextField
+            label="Platform Url"
+            name="platformUrl"
+            type="url"
+            value={formData.platformUrl}
+            onChange={(e) => handleChange('platformUrl', e)}
+            onBlur={() => handleSave(formData)}
+          />
+        </div>
+        <div className="w-full">
+          <Select
+            name={'runningStatus'}
+            options={runningStatus?.map((item) => ({
+              label: item.label,
+              value: item.value,
+            }))}
+            label="Running Status"
+            value={formData?.runningStatus ? formData.runningStatus : ''}
+            onChange={(value: any) => {
+              handleChange('runningStatus', value);
+              handleSave({ ...formData, runningStatus: value });
+            }}
+          />
+        </div>
+      </div>
 
       <Metadata />
       <div className="flex flex-wrap gap-6 md:flex-nowrap lg:flex-nowrap">
@@ -240,21 +280,6 @@ const Details = () => {
         </div>
 
         <div className="w-full">
-          <Select
-            name={'runningStatus'}
-            options={runningStatus?.map((item) => ({
-              label: item.label,
-              value: item.value,
-            }))}
-            label="Running Status"
-            value={formData?.runningStatus ? formData.runningStatus : ''}
-            onChange={(value: any) => {
-              handleChange('runningStatus', value);
-              handleSave({ ...formData, runningStatus: value });
-            }}
-          />
-        </div>
-        <div className="w-full">
           <TextField
             label="Completed On"
             name="completedOn"
@@ -262,8 +287,8 @@ const Details = () => {
             max={new Date().toISOString().split('T')[0]}
             min={formData.startedOn || ''}
             disabled={
-              formData.runningStatus === 'COMPLETED' ||
-              formData.runningStatus === 'CANCELLED'
+              formData.runningStatus === 'ON_GOING' ||
+              formData.runningStatus === 'INITIATED'
             }
             value={formData.completedOn || ''}
             onChange={(e) => {

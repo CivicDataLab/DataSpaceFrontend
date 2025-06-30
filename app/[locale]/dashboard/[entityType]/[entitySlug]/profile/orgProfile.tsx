@@ -81,7 +81,9 @@ const OrgProfile = () => {
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (input: { input: OrganizationInputPartial }) =>
-      GraphQL(organizationUpdateMutation, {}, input),
+      GraphQL(organizationUpdateMutation, {
+        [params.entityType]: params.entitySlug,
+      }, input),
     {
       onSuccess: (res: any) => {
         toast('Organization updated successfully');
@@ -168,6 +170,7 @@ const OrgProfile = () => {
             <TextField
               label="Email *"
               name="email"
+              disabled
               value={formData.contactEmail}
               onChange={(e) => setFormData({ ...formData, contactEmail: e })}
             />

@@ -14,6 +14,7 @@ import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
 import PrimaryDetails from '../components/Details';
 import Metadata from '../components/Metadata';
+import Dashboards from './Dashboards';
 
 const UseCasedetails: any = graphql(`
   query UseCasedetails($pk: ID!) {
@@ -21,6 +22,7 @@ const UseCasedetails: any = graphql(`
       id
       title
       summary
+      created
       isIndividualUsecase
       user {
         fullName
@@ -62,6 +64,7 @@ const UseCasedetails: any = graphql(`
           url
         }
       }
+      platformUrl
       logo {
         name
         path
@@ -188,12 +191,13 @@ const UseCaseDetailPage = () => {
             </div>
             <div className="container py-8 lg:py-14">
               <div className=" flex flex-col gap-1 ">
-                <Text variant="heading3xl">Datasets in this Use Case</Text>
-                <Text variant="headingLg" fontWeight="regular">
+                <Text variant="headingXl">Datasets in this Use Case</Text>
+                <Text variant="bodyLg" fontWeight="regular">
                   All Datasets related to this Use Case
                 </Text>
               </div>
               <div className="grid  grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3 ">
+                {/* <div className="grid grid-cols-1 p-4 gap-6 overflow-y-auto  md:grid-cols-2 lg:grid-cols-3 max-h-[calc(100vh-250px)]"> */}
                 {datasets.length > 0 &&
                   datasets.map((dataset: TypeDataset) => (
                     <Card
@@ -245,6 +249,7 @@ const UseCaseDetailPage = () => {
               </div>
             </div>
           </div>
+          <Dashboards />
           {(hasSupportingOrganizations ||
             hasPartnerOrganizations ||
             hasContributors) && (
@@ -252,7 +257,7 @@ const UseCaseDetailPage = () => {
               <div className="container flex flex-wrap gap-8 py-10 lg:flex-nowrap ">
                 {hasSupportingOrganizations && (
                   <div className="w-full lg:w-2/4">
-                    <Text variant="heading2xl" color="onBgDefault">
+                    <Text variant="headingXl" color="onBgDefault">
                       Supported by
                     </Text>
                     <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
@@ -277,7 +282,7 @@ const UseCaseDetailPage = () => {
                 )}
                 {hasPartnerOrganizations && (
                   <div className="w-full lg:w-2/4">
-                    <Text variant="heading2xl" color="onBgDefault">
+                    <Text variant="headingXl" color="onBgDefault">
                       Partnered by
                     </Text>
                     <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
@@ -303,11 +308,11 @@ const UseCaseDetailPage = () => {
               </div>
               {hasContributors && (
                 <div className="container py-10">
-                  <div className="flex flex-col">
-                    <Text variant="heading2xl" color="onBgDefault">
+                  <div className="flex flex-col gap-1">
+                    <Text variant="headingXl" color="onBgDefault">
                       Contributors{' '}
                     </Text>
-                    <Text color="onBgDefault" variant="headingLg">
+                    <Text color="onBgDefault" variant="bodyLg">
                       Publisher and Contributors who have added to the Use Case
                     </Text>
                   </div>

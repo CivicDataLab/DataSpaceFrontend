@@ -35,21 +35,6 @@ export const updateResourceDoc: any = graphql(`
   }
 `);
 
-export const resetSchema: any = graphql(`
-  mutation resetFileResourceSchema($resourceId: UUID!) {
-    resetFileResourceSchema(resourceId: $resourceId) {
-      ... on TypeResource {
-        id
-        schema {
-          format
-          description
-          id
-          fieldName
-        }
-      }
-    }
-  }
-`);
 
 export const fetchSchema: any = graphql(`
   query datasetSchema($datasetId: UUID!) {

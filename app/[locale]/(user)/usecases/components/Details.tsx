@@ -18,7 +18,13 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
       <div className="mt-4 flex flex-wrap gap-2">
         {data.useCase.tags.map((item: any, index: number) => (
           <div key={index}>
-            <Tag>{item.value}</Tag>
+            <Tag
+              fillColor="var(--accent-tertiary-color)"
+              borderColor="#5C9A91"
+              textColor="black"
+            >
+              {item.value}
+            </Tag>
           </div>
         ))}
       </div>
@@ -63,11 +69,15 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
           className="h-full w-full"
         />
       </div>
-      <div className=' lg:pr-4'>
+      <div className=" lg:pr-4">
         <div className="mt-6 lg:mt-10">
-          <Text variant="heading2xl">GEOGRAPHIES</Text>
+          <Text variant="headingXl">GEOGRAPHIES</Text>
           <div className="mt-4">
-            <Tag>
+            <Tag
+              fillColor="var(--orange-secondary-color)"
+              borderColor="var(--orange-secondary-text)"
+              textColor="black"
+            >
               {
                 data.useCase.metadata?.find(
                   (meta: any) => meta.metadataItem?.label === 'Geography'
@@ -77,9 +87,9 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
           </div>
         </div>
         <div className="mt-6 lg:mt-10">
-          <Text variant="heading2xl">Summary</Text>
+          <Text variant="headingXl">Summary</Text>
           <div className="mt-4">
-            <Text variant="headingMd" fontWeight="regular">
+            <Text variant="headingLg" fontWeight="regular" className="leading-5">
               {data.useCase.summary}
             </Text>
           </div>

@@ -75,11 +75,7 @@ const similarDatasetQuery: any = graphql(`
   }
 `);
 
-interface Props {
-  showCharts: boolean;
-}
-
-const SimilarDatasets: React.FC<Props> = ({ showCharts }) => {
+const SimilarDatasets: React.FC = () => {
   const params = useParams();
 
   const SimilatDatasetdetails: { data: any; isLoading: any } = useQuery(
@@ -94,18 +90,15 @@ const SimilarDatasets: React.FC<Props> = ({ showCharts }) => {
       )
   );
 
-
   return (
-    <div className="py-4 md:py-10 lg:py-20">
+    <div className="py-4 md:py-10 lg:py-10">
       {SimilatDatasetdetails.isLoading ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
       ) : (
         <>
-          <div
-            className={`flex flex-col gap-1  ${showCharts ? ' px-6 lg:px-10' : ' lg:px-0'}`}
-          >
+          <div className={`flex flex-col gap-1 `}>
             <Text variant="headingXl">Similar Datasets</Text>
             <Text variant="bodyLg">Similar Datasets that you may like </Text>
           </div>
@@ -174,7 +167,6 @@ const SimilarDatasets: React.FC<Props> = ({ showCharts }) => {
               <CarouselNext />
             </Carousel>
           </div>
-          ;
         </>
       )}
     </div>

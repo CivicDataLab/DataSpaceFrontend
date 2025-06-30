@@ -132,7 +132,7 @@ const Page = () => {
             </div>
 
             <div className={cn(styles.Main)}>
-              <div className="flex flex-wrap gap-6 md:gap-10 lg:gap-24">
+              <div className="flex flex-wrap gap-6 md:gap-10 lg:gap-20">
                 {allEntityDetails?.organizations?.map((entityItem: any) => {
                   return (
                     <div key={entityItem.name}>

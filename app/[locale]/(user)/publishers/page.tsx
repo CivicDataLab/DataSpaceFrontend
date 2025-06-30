@@ -92,6 +92,7 @@ const PublishersListingPage = () => {
                     variant="headingLg"
                     color="onBgDefault"
                     fontWeight="regular"
+                    className=' leading-3 lg:leading-5'
                   >
                     Our Publishers are the backbone of our platform. Their
                     contributions are what make up our platform. They belong to

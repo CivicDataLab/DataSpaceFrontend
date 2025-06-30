@@ -1,6 +1,6 @@
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button, Icon, Spinner, Text, TextField } from 'opub-ui';
-import { useEffect, useState } from 'react';
 
 import { Icons } from '@/components/icons';
 
@@ -11,7 +11,8 @@ interface TitleBarProps {
   onSave: (data: any) => void;
   loading: boolean;
   status: 'loading' | 'success';
-  setStatus: (s: 'loading' | 'success') => void;}
+  setStatus: (s: 'loading' | 'success') => void;
+}
 
 const TitleBar = ({
   label,
@@ -43,7 +44,9 @@ const TitleBar = ({
             }}
           />
         ) : (
-          <Text fontWeight="bold">{title}</Text>
+          <Text fontWeight="bold" title={title} className=" truncate max-w-[40ch]">
+            {title}
+          </Text>
         )}
         <div className=" pl-2">
           {edit && (

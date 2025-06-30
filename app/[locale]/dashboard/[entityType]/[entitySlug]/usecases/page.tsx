@@ -93,8 +93,7 @@ export default function DatasetPage({
           },
           order: { modified: 'DESC' },
         }
-      ),
-    
+      )
   );
 
   useEffect(() => {
@@ -183,15 +182,18 @@ export default function DatasetPage({
     {
       accessorKey: 'title',
       header: 'Title',
-      cell: ({ row }: any) => (
-        <LinkButton
-          kind="tertiary"
-          size="medium"
-          href={`/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${row.original.id}/details`}
-        >
-          {row.original.title}
-        </LinkButton>
-      ),
+      cell: ({ row }: any) =>
+        navigationTab === 'published' ? (
+          <Text className="line-clamp-1 max-w-[280px]" title={row.original.title}>{row.original.title}</Text>
+        ) : (
+          <LinkButton
+            kind="tertiary"
+            size="medium"
+            href={`/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${row.original.id}/details`}
+          >
+            <span className="line-clamp-1 max-w-[280px]">{row.original.title}</span>
+          </LinkButton>
+        ),
     },
     { accessorKey: 'created', header: 'Date Created' },
     { accessorKey: 'modified', header: 'Date Modified' },

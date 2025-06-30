@@ -68,9 +68,11 @@ const EntitySection = ({
                 />
               </div>
               <Button kind="tertiary" onClick={() => onRemove(item)}>
-                <div className="flex flex-col items-center gap-2 rounded-2 p-2 bg-greyExtralight">
-                  <div className="flex items-center gap-2">
-                    <Text>{item.label}</Text>
+                <div className="flex flex-col items-center gap-2 rounded-2 bg-greyExtralight p-2">
+                  <div className="flex gap-2 items-center ">
+                    <Text className="line-clamp-2 max-w-40 " title={item.label}>
+                      {item.label}
+                    </Text>
                     <Icon source={Icons.cross} size={18} />
                   </div>
                 </div>

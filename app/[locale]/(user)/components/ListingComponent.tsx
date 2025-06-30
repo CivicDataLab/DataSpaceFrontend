@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
@@ -219,12 +219,18 @@ const ListingComponent: React.FC<ListingProps> = ({
   const datasetDetails = facets?.results ?? [];
 
   useUrlParams(queryParams, setQueryParams, setVariables);
+  const latestFetchId = useRef(0);
 
   useEffect(() => {
     if (variables) {
+      const currentFetchId = ++latestFetchId.current;
+
       fetchDatasets(variables)
         .then((res) => {
-          setFacets(res);
+          // Only set if this is the latest call
+          if (currentFetchId === latestFetchId.current) {
+            setFacets(res);
+          }
         })
         .catch((err) => {
           console.error(err);
@@ -471,36 +477,71 @@ const ListingComponent: React.FC<ListingProps> = ({
                       : item?.organization?.logo
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
                         : '/org.png';
+                    const Geography = item.metadata.filter(
+                      (item: any) => item.metadata_item.label === 'Geography'
+                    )[0]?.value;
+
+                    const MetadataContent = [
+                      {
+                        icon: Icons.calendar,
+                        label: 'Date',
+                        value: formatDate(item.modified),
+                        tooltip: 'Date',
+                      },
+                      {
+                        icon: Icons.download,
+                        label: 'Download',
+                        value: item.download_count.toString(),
+                        tooltip: 'Download',
+                      },
+                    ];
+                    if (Geography) {
+                      MetadataContent.push({
+                        icon: Icons.globe,
+                        label: 'Geography',
+                        value: Geography,
+                        tooltip: 'Geography',
+                      });
+                    }
+
+                    if (item.has_charts && view === 'expanded') {
+                      MetadataContent.push({
+                        icon: Icons.chart,
+                        label: '',
+                        value: 'With Charts',
+                        tooltip: 'Charts',
+                      });
+                    }
+
+                    const FooterContent =  [
+                      {
+                        icon: `/Sectors/${item.sectors[0]}.svg`,
+                        label: 'Sectors',
+                        tooltip: `${item.sectors[0]}`,
+                      },
+                      ...(item.has_charts && view !== 'expanded'
+                        ? [
+                            {
+                              icon: `/chart-bar.svg`,
+                              label: 'Charts',
+                              tooltip: 'Charts',
+                            },
+                          ]
+                        : []),
+                      {
+                        icon: image,
+                        label: 'Published by',
+                        tooltip: `${item.is_individual_dataset ? item.user?.name : item.organization?.name}`,
+                      },
+                    ];
 
                     const commonProps = {
                       title: item.title,
                       description: item.description,
-                      metadataContent: [
-                        {
-                          icon: Icons.calendar,
-                          label: 'Date',
-                          value: formatDate(item.modified),
-                        },
-                        {
-                          icon: Icons.download,
-                          label: 'Download',
-                          value: item.download_count.toString(),
-                        },
-                        {
-                          icon: Icons.globe,
-                          label: 'Geography',
-                          value: 'India',
-                        },
-                      ],
+                      metadataContent: MetadataContent,
                       tag: item.tags,
                       formats: item.formats,
-                      footerContent: [
-                        {
-                          icon: `/Sectors/${item.sectors[0]}.svg`,
-                          label: 'Sectors',
-                        },
-                        { icon: image, label: 'Published by' },
-                      ],
+                      footerContent: FooterContent,
                     };
 
                     return (
