@@ -49,7 +49,6 @@ const DetailsQuery: any = graphql(`
   }
 `);
 
-
 const Details: React.FC = () => {
   const params = useParams();
   const chartRef = useRef<ReactECharts>(null);
@@ -58,8 +57,6 @@ const Details: React.FC = () => {
     [`chartDetails_${params.id}`],
     () => GraphQL(DetailsQuery, {}, { datasetId: params.datasetIdentifier })
   );
-
- 
 
   const renderChart = (item: any) => {
     if (item.chartType === 'ASSAM_DISTRICT' || item.chartType === 'ASSAM_RC') {
@@ -77,13 +74,13 @@ const Details: React.FC = () => {
   const toggleDescription = () => setIsexpanded(!isexpanded);
 
   return (
-    <div className=" flex w-full flex-col gap-4 py-10">
+    <>
       {isLoading ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
       ) : data?.getChartData?.length > 0 ? (
-        <>
+        <div className=" flex w-full flex-col gap-4 py-10">
           <div className="relative w-full ">
             <Carousel className="w-full">
               <div className=" px-12">
@@ -126,7 +123,7 @@ const Details: React.FC = () => {
                             </Link>
                           </div>
                         </div>
-                        <div className="lg:p-10">
+                        <div className="p-4 lg:p-10">
                           {item.__typename === 'TypeResourceChart' &&
                           item?.chart?.options ? (
                             renderChart(item)
@@ -134,14 +131,14 @@ const Details: React.FC = () => {
                             <Image
                               src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/chart_image/${item.id}`}
                               alt={''}
-                              width={300}
-                              height={300}
+                              width={100}
+                              height={100}
                               unoptimized
+                              className=" h-full w-full object-contain"
                             />
                           )}
                           {/* Call the renderChart function */}
                         </div>
-                        
                       </div>
                     </CarouselItem>
                   ))}
@@ -155,11 +152,11 @@ const Details: React.FC = () => {
               </div>
             </Carousel>
           </div>
-        </>
+        </div>
       ) : (
         ''
       )}
-    </div>
+    </>
   );
 };
 

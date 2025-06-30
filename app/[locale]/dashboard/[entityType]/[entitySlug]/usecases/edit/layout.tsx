@@ -73,7 +73,9 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { data: UseCaseInputPartial }) =>
-      GraphQL(UpdateUseCaseTitleMutation, {}, data),
+      GraphQL(UpdateUseCaseTitleMutation, {
+        [params.entityType]: params.entitySlug,
+      }, data),
     {
       onSuccess: () => {
         toast('Use case updated successfully');

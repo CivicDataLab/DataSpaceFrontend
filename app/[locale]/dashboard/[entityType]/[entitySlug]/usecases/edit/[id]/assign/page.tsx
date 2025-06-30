@@ -129,7 +129,7 @@ const Assign = () => {
         toast('Dataset Assigned Successfully');
         UseCaseDetails.refetch();
         router.push(
-          `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/contributors`
+          `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/dashboards`
         );
       },
       onError: (err: any) => {

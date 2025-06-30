@@ -210,7 +210,7 @@ const Resources = () => {
         </div>
       ) : getResourceDetails.data &&
         getResourceDetails.data?.datasetResources?.length > 0 ? (
-        <div className=" py-10 flex flex-col gap-8">
+        <div className=" flex flex-col gap-8 py-10">
           <div className="flex flex-col gap-1">
             <Text variant="headingLg">Files in this Dataset </Text>
             <Text variant="bodyLg">
@@ -224,34 +224,37 @@ const Resources = () => {
                   key={index}
                   className="mt-5 flex flex-col gap-6 border-1 border-solid border-greyExtralight bg-surfaceDefault p-4 lg:mx-0 lg:p-6"
                 >
-                  <div className="flex flex-wrap justify-between gap-4">
-                    <div className="flex w-full flex-col gap-4 ">
-                      <div className=" flex flex-wrap items-center justify-between gap-2 lg:flex-nowrap">
-                        <div className="flex items-start gap-2 lg:items-center">
-                          {item.fileDetails?.format && (
-                            <Format fileType={item.fileDetails?.format} />
-                          )}
-                          <Text variant="headingMd" className='truncate' >{item.name}</Text>
-                        </div>
-                      </div>
-                      <Accordion type="single" collapsible className="w-full">
-                        <AccordionItem value="item-1" className=" border-none">
-                          <div className="flex flex-wrap items-center justify-end gap-4">
-                            <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 p-0 hover:no-underline">
-                              <Text className=" text-secondaryText">
+                  <div>
+                    <Accordion type="single" collapsible className="w-full">
+                      <AccordionItem value="item-1" className=" border-none">
+                        <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
+                          <div className="flex flex-wrap md:flex-nowrap items-center gap-2 ">
+                            {item.fileDetails?.format && (
+                              <Format fileType={item.fileDetails?.format} />
+                            )}
+                            <Text variant="headingMd" className=" line-clamp-1">
+                              {item.name}
+                            </Text>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <AccordionTrigger className="flex w-full items-center gap-2 p-0 hover:no-underline">
+                              <Text
+                                variant="bodyLg"
+                                className=" w-[100px] text-secondaryText"
+                              >
                                 {' '}
                                 View Details
                               </Text>
                             </AccordionTrigger>
-                            <div>
-                              <Link
-                                href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${item.id}`}
-                                target="_blank"
-                                className="flex justify-center"
-                              >
-                                <Button kind="tertiary">
+                            <Link
+                              href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${item.id}`}
+                              target="_blank"
+                              className="flex justify-center"
+                            >
+                              <Button kind="tertiary">
                                   <div className="flex gap-1">
                                     <Text
+                                      variant="bodyLg"
                                       className=" text-primaryText"
                                       fontWeight="semibold"
                                     >
@@ -263,23 +266,22 @@ const Resources = () => {
                                 </Button>
                               </Link>
                             </div>
-                          </div>
-                          <AccordionContent
-                            className="flex w-full flex-col py-5"
-                            style={{
-                              backgroundColor: 'var( --base-pure-white)',
-                              outline: '1px solid var( --base-pure-white)',
-                            }}
-                          >
-                            <Table
-                              columns={generateColumnData()}
-                              rows={generateTableData(item)}
-                              hideFooter
-                            />
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    </div>
+                        </div>
+                        <AccordionContent
+                          className="flex w-full flex-col py-5"
+                          style={{
+                            backgroundColor: 'var( --base-pure-white)',
+                            outline: '1px solid var( --base-pure-white)',
+                          }}
+                        >
+                          <Table
+                            columns={generateColumnData()}
+                            rows={generateTableData(item)}
+                            hideFooter
+                          />
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                   </div>
                 </div>
               )
@@ -294,3 +296,47 @@ const Resources = () => {
 };
 
 export default Resources;
+
+{
+  /* <Accordion type="single" collapsible className="w-full">
+<AccordionItem value="item-1" className=" border-none">
+  <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="flex flex-col lg:w-3/4">
+      <div
+        ref={(el) => (descriptionRefs.current[index] = el)}
+        className={!showMore[index] ? 'line-clamp-2' : ''}
+      >
+        <Text>{item.description}</Text>
+      </div>
+      {isDescriptionLong[index] && (
+        <Button
+          className="self-start p-2"
+          onClick={() => toggleShowMore(index)}
+          variant="interactive"
+          size="slim"
+          kind="tertiary"
+        >
+          {showMore[index] ? 'Show less' : 'Show more'}
+        </Button>
+      )}
+    </div>
+    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 p-0 hover:no-underline">
+      View Details
+    </AccordionTrigger>
+  </div>
+  <AccordionContent
+    className="flex w-full flex-col py-5"
+    style={{
+      backgroundColor: 'var( --base-pure-white)',
+      outline: '1px solid var( --base-pure-white)',
+    }}
+  >
+    <Table
+      columns={generateColumnData()}
+      rows={generateTableData(item)}
+      hideFooter
+    />
+  </AccordionContent>
+</AccordionItem>
+</Accordion> */
+}
