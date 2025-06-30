@@ -1,9 +1,8 @@
-import React from 'react';
 import Image from 'next/image';
 import { Text } from 'opub-ui';
 
 import BreadCrumbs from '@/components/BreadCrumbs';
-import Initiatives from './components/Initiatives';
+import Team from './components/Team';
 
 const About = () => {
   return (
@@ -14,10 +13,38 @@ const About = () => {
           { href: '#', label: 'About' },
         ]}
       />
-      <div className="container py-5 lg:py-10 mb-5">
-        <div className=" flex flex-wrap justify-center gap-14 lg:flex-nowrap ">
-          <div className="flex flex-col gap-6">
-            <Text variant="heading2xl">About us</Text>
+      <div className="container mb-5 py-5 lg:py-10">
+        <Text variant="heading2xl">About CivicDataSpace</Text>
+        <div className=" flex flex-col gap-4 pt-4 lg:gap-6 lg:pt-6">
+          <Text variant="headingLg" fontWeight="regular" className=" leading-5">
+            CivicDataSpace is a collaborative, open-source platform that goes
+            beyond just making data accessible - it strengthens how data is
+            used, shared, and reused. By bringing together siloed datasets and
+            fragmented resources, it enables turning your data into tools for
+            change.{' '}
+          </Text>
+          <Text variant="headingLg" fontWeight="regular" className=" leading-5">
+            At its core, CivicDataSpace supports the formation of open,
+            sector-specific Data Collaboratives-ecosystems that enable
+            collective intelligence, foster responsible AI solutions, and power
+            civic platforms. These collaboratives aim to make data more
+            inclusive, interoperable, and AI-ready, helping policymakers,
+            researchers, and civil society actors design more effective and
+            sustainable solutions.
+          </Text>
+        </div>
+        <div className="mt-4 lg:mt-10">
+          <Image
+            src="/illus.svg"
+            alt="about"
+            width={1000}
+            height={1000}
+            className="h-full w-full object-contain"
+          />
+        </div>
+        <div className="py-5 lg:py-10">
+          <Text variant="heading2xl">The People Behind CivicDataSpace</Text>
+          <div className="pt-4 lg:pt-6">
             <Text
               variant="headingLg"
               fontWeight="regular"
@@ -35,47 +62,10 @@ const About = () => {
               scale.
             </Text>
           </div>
-          <Image
-            src={'/about-us-illustration.svg'}
-            alt={'about-us-illustration'}
-            width={536}
-            height={350}
-            className=" w-full"
-            priority
-          />
         </div>
-      </div>
-      <div className="bg-primaryBlue">
-        <div className=" container flex flex-col gap-6 py-5 lg:py-10">
-          <div>
-            <Text variant="headingLg" fontWeight="regular" color="onBgDefault">
-              Our current areas of expertise include digital public goods &
-              infrastructure (DPGs & DPI), climate change, public finance, urban
-              development, open contracting and law & justice. We have
-              co-created digital public goods like open data platforms, data
-              exchanges, data science models and citizen-led apps for improving
-              participatory data-driven governance in India and other countries.
-            </Text>
-          </div>
-          <div>
-            <Text variant="headingLg" fontWeight="regular" color="onBgDefault">
-              In the last five years, we have collected, cleaned and published
-              nearly 30,000+ public interest datasets and are catering to an
-              active user base of more than a million citizens. Some of our
-              publicly available open data initiatives include Open Budgets
-              India, Justice Hub, Open Contracting India, Open City, CogniCity
-              among others. We have co-created digital public goods with
-              National Informatics Center (NIC), Ministry of Electronic &
-              Information Technology (MeitY) and the Government of Assam.
-              Additionally, we actively build capacity for a diverse group of
-              partners working to enhance social impact, situated in India,
-              Indonesia, Philippines, Thailand, Panama and Scotland.
-            </Text>
-          </div>
+        <div>
+          <Team />
         </div>
-      </div>
-      <div>
-        <Initiatives />
       </div>
     </main>
   );

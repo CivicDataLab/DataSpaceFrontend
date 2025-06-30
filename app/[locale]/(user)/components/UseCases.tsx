@@ -98,8 +98,7 @@ const UseCasesListingPage = () => {
         <Text variant="heading3xl">Recent UseCases</Text>
         <div className="flex flex-wrap justify-between gap-2 ">
           <Text variant="headingLg" fontWeight="medium">
-            Recently updated and trending Use Cases on Asia-Pacific Climate Data
-            Collaborative{' '}
+          Explore freshly updated data use cases gaining momentum across CivicDataSpace
           </Text>
           <Button
             kind="primary"

@@ -79,17 +79,8 @@ export const Content = () => {
         <div className="flex flex-col gap-11 lg:w-[49%]">
           <div className="flex flex-col">
             <Text variant="heading3xl" color="onBgDefault">
-              Collaborate to advance
-            </Text>
-            <Text
-              variant="heading3xl"
-              color="onBgDefault"
-              className=" text-tertiaryAccent"
-            >
-              Data-driven Impact and Action
-            </Text>
-            <Text variant="heading3xl" color="onBgDefault">
-              with CivicDataLab{' '}
+              Share knowledge resources, datasets, and AI use-cases in one open,
+              collaborative platform for data changemakers.
             </Text>
           </div>
           {Stats.isLoading ? (

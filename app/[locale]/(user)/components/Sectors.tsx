@@ -41,8 +41,7 @@ const Sectors = () => {
         <Text variant="heading3xl">Explore Sectors</Text>
         <div className="flex flex-wrap justify-between gap-2">
           <Text variant="headingLg" fontWeight="medium">
-            Classification of all Use Cases and Datasets on the Asia-Pacific
-            Climate Data Collaborative{' '}
+          Browse use cases and datasets organized by sector to find what matters most to your domain.
           </Text>
           <Button
             kind="primary"
