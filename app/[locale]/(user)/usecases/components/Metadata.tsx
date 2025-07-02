@@ -50,7 +50,6 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           {data.useCase.isIndividualUsecase ? 'Publisher' : 'Organization'}
         </Link>
       ),
-    
     },
     {
       label: 'Platform URL',
@@ -71,8 +70,8 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     },
     {
       label: 'Started On',
-      value: formatDate(data.useCase.created) || 'N/A',
-      tooltipContent: formatDate(data.useCase.created) || 'N/A',
+      value: formatDate(data.useCase.startedOn) || 'N/A',
+      tooltipContent: formatDate(data.useCase.startedOn) || 'N/A',
     },
     {
       label: 'Status',

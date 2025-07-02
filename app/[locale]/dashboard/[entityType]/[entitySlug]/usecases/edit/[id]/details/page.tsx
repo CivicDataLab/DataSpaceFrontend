@@ -71,7 +71,7 @@ const Details = () => {
   const router = useRouter();
 
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_UseCaseData`],
+    [`fetch_UseCaseData_details`],
     () =>
       GraphQL(
         FetchUseCase,
