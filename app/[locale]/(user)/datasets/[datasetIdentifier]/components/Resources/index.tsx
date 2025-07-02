@@ -212,7 +212,7 @@ const Resources = () => {
         getResourceDetails.data?.datasetResources?.length > 0 ? (
         <div className=" flex flex-col gap-8 py-10">
           <div className="flex flex-col gap-1">
-            <Text variant="headingLg">Files in this Dataset </Text>
+            <Text variant="headingXl">Files in this Dataset </Text>
             <Text variant="bodyLg">
               All files associated with this Dataset which can be downloaded{' '}
             </Text>

@@ -194,8 +194,7 @@ const UseCaseDetailPage = () => {
               <div className=" flex flex-col gap-1 ">
                 <Text variant="headingXl">Datasets in this Use Case</Text>
                 <Text variant="bodyLg" fontWeight="regular">
-                  All Datasets related to this Use Case
-                </Text>
+                Explore datasets related to this use case                </Text>
               </div>
               <div className="grid  grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3 ">
                 {/* <div className="grid grid-cols-1 p-4 gap-6 overflow-y-auto  md:grid-cols-2 lg:grid-cols-3 max-h-[calc(100vh-250px)]"> */}

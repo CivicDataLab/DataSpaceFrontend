@@ -53,11 +53,15 @@ const Datasets = () => {
 
   return (
     <div className=" container py-10 md:px-8 lg:py-20">
-      <div className="flex flex-col gap-2 px-4 md:px-12 lg:px-12">
-        <Text variant="heading3xl">Popular Datasets</Text>
-        <div className="flex flex-wrap justify-between gap-2 ">
-          <Text variant="headingLg" fontWeight="medium">
-          Discover high-impact datasets that are helping users power research, analysis, and action.          </Text>
+      <div className="flex flex-wrap items-center justify-between gap-4 px-4 md:px-12 lg:gap-2 lg:px-12 ">
+        <div className="flex flex-col gap-2">
+          <Text variant="headingXl">Popular Datasets</Text>
+          <Text variant="bodyLg" fontWeight="medium">
+            Discover high-impact datasets that are helping users power research,
+            analysis, and action.
+          </Text>
+        </div>
+        <div>
           <Button
             kind="primary"
             className=" bg-secondaryOrange text-basePureBlack"
@@ -65,11 +69,13 @@ const Datasets = () => {
               router.push('/datasets');
             }}
           >
-            Explore all Datasets
+            <Text variant="bodyLg" fontWeight="semibold">
+              Explore all Datasets
+            </Text>
           </Button>
         </div>
       </div>
-      <div className="mt-12">
+      <div className="mt-6 lg:mt-12">
         <Carousel className="flex  w-full justify-between">
           <CarouselPrevious />
 
