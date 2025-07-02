@@ -23,6 +23,7 @@ const UseCasedetails: any = graphql(`
       title
       summary
       created
+      startedOn
       isIndividualUsecase
       user {
         fullName
