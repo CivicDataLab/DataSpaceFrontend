@@ -67,6 +67,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
           width={100}
           height={100}
           className="h-full w-full"
+          unoptimized
         />
       </div>
       <div className=" lg:pr-4">
