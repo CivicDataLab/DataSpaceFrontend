@@ -35,7 +35,7 @@ const About = () => {
         </div>
         <div className="mt-4 lg:mt-10">
           <Image
-            src="/illus.svg"
+            src="/illus.png"
             alt="about"
             width={1000}
             height={1000}
