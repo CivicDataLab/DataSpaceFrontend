@@ -109,7 +109,7 @@ const Details = () => {
 
   const runningStatus = [
     {
-      label: 'Intitated',
+      label: 'Initiated',
       value: 'INITIATED',
     },
     {
