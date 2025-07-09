@@ -9,6 +9,7 @@ import { Button, DataTable, Icon, IconButton, Text, toast } from 'opub-ui';
 import { twMerge } from 'tailwind-merge';
 
 import { GraphQL } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
 import { Loading } from '@/components/loading';
@@ -184,14 +185,21 @@ export default function DatasetPage({
       header: 'Title',
       cell: ({ row }: any) =>
         navigationTab === 'published' ? (
-          <Text className="line-clamp-1 max-w-[280px]" title={row.original.title}>{row.original.title}</Text>
+          <Text
+            className="line-clamp-1 max-w-[280px]"
+            title={row.original.title}
+          >
+            {row.original.title}
+          </Text>
         ) : (
           <LinkButton
             kind="tertiary"
             size="medium"
             href={`/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${row.original.id}/details`}
           >
-            <span className="line-clamp-1 max-w-[280px]">{row.original.title}</span>
+            <span className="line-clamp-1 max-w-[280px]">
+              {row.original.title}
+            </span>
           </LinkButton>
         ),
     },
@@ -235,16 +243,8 @@ export default function DatasetPage({
       return {
         title: item.title,
         id: item.id,
-        created: new Date(item.created).toLocaleString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        }),
-        modified: new Date(item.modified).toLocaleString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        }),
+        created: formatDate(item.created),
+        modified: formatDate(item.modified),
       };
     });
   };
