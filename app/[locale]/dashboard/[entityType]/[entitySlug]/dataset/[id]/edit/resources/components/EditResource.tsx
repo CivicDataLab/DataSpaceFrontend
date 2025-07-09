@@ -232,14 +232,12 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
     });
   }, [resourceDetailsQuery.data]);
 
-
   useEffect(() => {
     const schemaData = resourceDetailsQuery.data?.resourceById?.schema;
     if (schemaData && Array.isArray(schemaData)) {
       setSchema(schemaData);
     }
   }, [resourceDetailsQuery.data]);
-  
 
   const handleResourceChange = (e: any) => {
     setResourceId(e, { shallow: false });
@@ -378,6 +376,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
                 <TextField
                   value={resourceName}
                   onChange={(text) => setResourceName(text)}
+                  helpText={`Character limit: ${resourceName.length}/200`}
                   onBlur={saveResource}
                   multiline={2}
                   label="Data File Name"

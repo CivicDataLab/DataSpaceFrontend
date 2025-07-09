@@ -238,7 +238,7 @@ export function EditMetadata({ id }: { id: string }) {
           setFormData(updatedData);
           setPreviousFormData(updatedData);
         } else {
-           toast(
+          toast(
             'Error: ' +
               (res.addUpdateDatasetMetadata?.errors?.fieldErrors
                 ? res.addUpdateDatasetMetadata?.errors?.fieldErrors[0]
@@ -522,7 +522,7 @@ export function EditMetadata({ id }: { id: string }) {
                     name="description"
                     label="Description *"
                     value={formData.description}
-                    helpText="Character limit: 1000"
+                    helpText={`Character limit: ${formData.description.length}/1000`}
                     onChange={(e) => handleChange('description', e)}
                     onBlur={() => handleSave(formData)} // Save on blur
                   />
