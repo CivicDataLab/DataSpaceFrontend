@@ -376,7 +376,7 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
                 <TextField
                   value={resourceName}
                   onChange={(text) => setResourceName(text)}
-                  helpText={`Character limit: ${resourceName.length}/200`}
+                  helpText={`Character limit: ${resourceName?.length}/200`}
                   onBlur={saveResource}
                   multiline={2}
                   label="Data File Name"

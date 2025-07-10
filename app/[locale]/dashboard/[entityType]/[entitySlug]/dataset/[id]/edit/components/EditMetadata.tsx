@@ -522,7 +522,7 @@ export function EditMetadata({ id }: { id: string }) {
                     name="description"
                     label="Description *"
                     value={formData.description}
-                    helpText={`Character limit: ${formData.description.length}/1000`}
+                    helpText={`Character limit: ${formData?.description?.length}/1000`}
                     onChange={(e) => handleChange('description', e)}
                     onBlur={() => handleSave(formData)} // Save on blur
                   />

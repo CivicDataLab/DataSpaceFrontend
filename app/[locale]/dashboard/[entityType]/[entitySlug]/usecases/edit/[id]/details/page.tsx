@@ -230,7 +230,7 @@ const Details = () => {
           name="summary"
           value={formData.summary}
           multiline={7}
-          helpText={`Character limit: ${formData.summary.length}/10000`}
+          helpText={`Character limit: ${formData?.summary?.length}/10000`}
           onChange={(e) => handleChange('summary', e)}
           onBlur={() => handleSave(formData)}
         />
