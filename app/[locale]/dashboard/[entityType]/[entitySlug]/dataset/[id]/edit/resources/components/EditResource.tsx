@@ -94,17 +94,29 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
   const [schema, setSchema] = React.useState<any>([]);
 
   const resourceDetailsQuery = useQuery<any>(
-    [`fetch_resource_details_${resourceId}`],
-    () =>
-      GraphQL(
+    // Use a stable key when resourceId is empty/invalid
+    resourceId && resourceId.trim()
+      ? [`fetch_resource_details_${resourceId}`]
+      : ['fetch_resource_details_disabled'],
+    () => {
+      if (!resourceId || !resourceId.trim()) {
+        // Return a rejected promise or throw an error to prevent execution
+        return Promise.reject(new Error('No resource ID provided'));
+      }
+      return GraphQL(
         resourceDetails,
         {
           [params.entityType]: params.entitySlug,
         },
         { resourceId: resourceId }
-      ),
+      );
+    },
     {
-      enabled: !!resourceId,
+      enabled: !!(resourceId && resourceId.trim()),
+      // Prevent retries when there's no resourceId
+      retry: false,
+      // Don't refetch when resourceId is empty
+      refetchOnWindowFocus: !!(resourceId && resourceId.trim()),
     }
   );
 
@@ -213,9 +225,9 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
     columns: [],
   });
 
-  // useEffect(() => {
-  //   resourceDetailsQuery.refetch();
-  // }, []);
+  useEffect(() => {
+    resourceDetailsQuery.refetch();
+  }, []);
 
   React.useEffect(() => {
     const ResourceData = resourceDetailsQuery.data?.resourceById;
