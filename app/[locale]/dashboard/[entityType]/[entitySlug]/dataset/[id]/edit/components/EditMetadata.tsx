@@ -322,51 +322,79 @@ export function EditMetadata({ id }: { id: string }) {
   };
 
   const handleSave = (updatedData: any) => {
-    if (JSON.stringify(updatedData) !== JSON.stringify(previousFormData)) {
-      setPreviousFormData(updatedData);
+    const changedFields: any = {};
 
-      const transformedValues = Object.keys(updatedData)?.reduce(
-        (acc: any, key) => {
-          acc[key] = Array.isArray(updatedData[key])
-            ? updatedData[key]
-                .map((item: any) => item?.value || item)
-                .join(', ')
-            : updatedData[key];
-          return acc;
-        },
-        {}
-      );
+    for (const key in updatedData) {
+      const newValue = updatedData[key];
+      const prevValue = previousFormData[key];
 
-      updateMetadataMutation.mutate({
-        UpdateMetadataInput: {
-          dataset: id,
-          metadata: [
-            ...Object.keys(transformedValues)
-              .filter(
-                (valueItem) =>
-                  ![
-                    'sectors',
-                    'description',
-                    'tags',
-                    'isPublic',
-                    'license',
-                  ].includes(valueItem) && transformedValues[valueItem] !== ''
-              )
-              .map((key) => {
-                return {
-                  id: key,
-                  value: transformedValues[key],
-                };
-              }),
-          ],
-          ...(updatedData.license && { license: updatedData.license }),
-          accessType: updatedData.accessType || 'PUBLIC',
-          description: updatedData.description || '',
-          tags: updatedData.tags?.map((item: any) => item.label) || [],
-          sectors: updatedData.sectors?.map((item: any) => item.value) || [],
-        },
-      });
+      const isArray = Array.isArray(newValue);
+
+      const normalize = (val: any) =>
+        isArray ? val?.map((item: any) => item?.value || item) : val;
+
+      const newNormalized = normalize(newValue);
+      const prevNormalized = normalize(prevValue);
+
+      const hasChanged = isArray
+        ? JSON.stringify(newNormalized) !== JSON.stringify(prevNormalized)
+        : newNormalized !== prevNormalized;
+
+      if (hasChanged) {
+        changedFields[key] = newValue;
+      }
     }
+
+    // Exit early if nothing changed
+    if (Object.keys(changedFields).length === 0) return;
+
+    setPreviousFormData(updatedData); // Update local copy
+
+    const transformedValues = Object.keys(changedFields).reduce(
+      (acc: any, key) => {
+        acc[key] = Array.isArray(changedFields[key])
+          ? changedFields[key]
+              .map((item: any) => item?.value || item)
+              .join(', ')
+          : changedFields[key];
+        return acc;
+      },
+      {}
+    );
+
+    updateMetadataMutation.mutate({
+      UpdateMetadataInput: {
+        dataset: id,
+        metadata: Object.keys(transformedValues)
+          .filter(
+            (key) =>
+              ![
+                'sectors',
+                'description',
+                'tags',
+                'isPublic',
+                'license',
+              ].includes(key) && transformedValues[key] !== ''
+          )
+          .map((key) => ({
+            id: key,
+            value: transformedValues[key],
+          })),
+        ...(changedFields.license && { license: changedFields.license }),
+        ...(changedFields.accessType && {
+          accessType: changedFields.accessType,
+        }),
+        ...(changedFields.description !== undefined && {
+          description: changedFields.description,
+        }),
+        ...(changedFields.tags && {
+          tags: changedFields.tags.map((item: any) => item.label),
+        }),
+        ...(changedFields.sectors && {
+          sectors: changedFields.sectors.map((item: any) => item.value),
+        }),
+      },
+    });
   };
 
   function renderInputField(metadataFormItem: any) {
