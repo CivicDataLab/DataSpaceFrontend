@@ -241,7 +241,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
       name: '',
       schema: [],
     },
-    type: ChartTypes.BarVertical,
+    type: ChartTypes.Bar,
     chart: {},
   });
 
