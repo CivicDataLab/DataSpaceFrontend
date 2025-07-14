@@ -58,7 +58,7 @@ export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
       <Button kind="secondary" variant="interactive">
         Choose Files to Upload
       </Button>
-      <Text>Maximum File Size Limit : 25 MB</Text>
+      <Text>Maximum File Size Limit : 50 MB</Text>
       <div className="flex flex-wrap flex-row items-center gap-2">
       <Text variant="bodyMd" color="subdued">
           Supported File Types:
