@@ -14,7 +14,7 @@ import {
   DropZone,
   Form,
   Icon,
-  Label,
+  Labelled,
   Select,
   Spinner,
   Tag,
@@ -173,6 +173,8 @@ const ChartImageUpload = ({
         dataset: selectedDataset,
         image: files,
       });
+    } else {
+      toast('Required fields missing. Please fill all required fields.');
     }
   };
 
@@ -187,91 +189,100 @@ const ChartImageUpload = ({
 
       <Form>
         <div className="flex flex-col gap-4">
-          <Combobox
-            label="Select Dataset"
-            name="selectDataset"
-            list={allDatasetsRes?.data?.datasets?.map((item: any) => {
-              return {
-                label: item.title,
-                value: item.id,
-              };
-            })}
-            displaySelected
-            // selectedValue={selectedDataset}
-            onChange={(e) => {
-              setSelectedDataset(e);
-            }}
-            required
-          />
+          <Labelled label="Select Dataset" requiredIndicator>
+            <Combobox
+              label=""
+              name="selectDataset"
+              list={allDatasetsRes?.data?.datasets?.map((item: any) => {
+                return {
+                  label: item.title,
+                  value: item.id,
+                };
+              })}
+              displaySelected
+              // selectedValue={selectedDataset}
+              onChange={(e) => {
+                setSelectedDataset(e);
+              }}
+              required
+            />
+          </Labelled>
 
-          <DropZone
-            name={'chartImage'}
-            label="Select Chart Image"
-            accept=".png,.jpg,.jpeg,.svg,.tiff"
-            onDrop={(val) => {
-              setFiles(val[0]);
-            }}
-            outline
-            allowMultiple={false}
-            className="bg-greyExtralight"
-            errorOverlayText={files ? undefined : 'Please select a file'}
-            required
-          >
-            {files ? (
-              <div className="mt-4 flex items-center justify-between">
-                <Text variant="bodyMd" color="subdued">
-                  {files.name}
-                </Text>
-                <Button
-                  icon={<Icons.delete />}
-                  kind="tertiary"
-                  onClick={() => setFiles(undefined)}
-                />
-              </div>
-            ) : (
-              <DropZone.FileUpload
-                actionHint={
-                  <div className="flex flex-col items-center gap-2 p-2">
-                    <Text variant="bodyMd" color="subdued">
-                      Drag and drop
-                    </Text>
-                    <div className="font-color-textDefault w-fit rounded-1 bg-tertiaryAccent px-2 py-1">
-                      Select File
-                    </div>
-                    <Text variant="bodyMd" color="subdued">
-                      *only one image can be added.
-                    </Text>
-                    <Text variant="bodyMd" color="subdued">
-                      Recommended resolution of 16:9 - (1280x720), (1920x1080)
-                    </Text>
-                    <Text variant="bodyMd" color="subdued">
-                      Maximum file size: 100MB
-                    </Text>
-                    <div className="flex flex-row items-center gap-2">
+          <Labelled label="Select Chart Image" requiredIndicator>
+            <DropZone
+              name={'chartImage'}
+              label=""
+              accept=".png,.jpg,.jpeg,.svg,.tiff"
+              onDrop={(val) => {
+                setFiles(val[0]);
+              }}
+              outline
+              allowMultiple={false}
+              className="bg-greyExtralight"
+              errorOverlayText={files ? undefined : 'Please select a file'}
+              required
+            >
+              {files ? (
+                <div className="mt-4 flex items-center justify-between">
+                  <Text variant="bodyMd" color="subdued">
+                    {files.name}
+                  </Text>
+                  <Button
+                    icon={<Icons.delete />}
+                    kind="tertiary"
+                    onClick={() => setFiles(undefined)}
+                  />
+                </div>
+              ) : (
+                <DropZone.FileUpload
+                  actionHint={
+                    <div className="flex flex-col items-center gap-2 p-2">
                       <Text variant="bodyMd" color="subdued">
-                        Supported File Types:
+                        Drag and drop
                       </Text>
-                      <div className="flex flex-row gap-1">
-                        {['PNG', 'JPG', 'SVG', 'TIFF'].map((item, index) => (
-                          <Tag
-                            fillColor="white"
-                            textColor="baseDefault"
-                            key={index}
-                          >
-                            {item}
-                          </Tag>
-                        ))}
+                      <div className="font-color-textDefault w-fit rounded-1 bg-tertiaryAccent px-2 py-1">
+                        Select File
+                      </div>
+                      <Text variant="bodyMd" color="subdued">
+                        *only one image can be added.
+                      </Text>
+                      <Text variant="bodyMd" color="subdued">
+                        Recommended resolution of 16:9 - (1280x720), (1920x1080)
+                      </Text>
+                      <Text variant="bodyMd" color="subdued">
+                        Maximum file size: 100MB
+                      </Text>
+                      <div className="flex flex-row items-center gap-2">
+                        <Text variant="bodyMd" color="subdued">
+                          Supported File Types:
+                        </Text>
+                        <div className="flex flex-row gap-1">
+                          {['PNG', 'JPG', 'SVG', 'TIFF'].map((item, index) => (
+                            <Tag
+                              fillColor="white"
+                              textColor="baseDefault"
+                              key={index}
+                            >
+                              {item}
+                            </Tag>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                }
-                actionTitle={''}
-              />
-            )}
-          </DropZone>
+                  }
+                  actionTitle={''}
+                />
+              )}
+            </DropZone>
+          </Labelled>
 
           <div className="flex items-center justify-center">
-            <Button kind="primary" size="large" onClick={handleAddImage}>
+            <Button
+              kind="primary"
+              size="large"
+              onClick={handleAddImage}
+              disabled={createResourceChartImageMutation.isLoading}
+            >
               Add Image
             </Button>
           </div>
@@ -537,31 +548,37 @@ const ChartCreateViz = ({
       label: 'BAR',
       value: 'BAR',
       icon: 'chartBar',
+      disabled: false,
     },
     {
       label: 'LINE',
       value: 'LINE',
       icon: 'chartLine',
+      disabled: false,
     },
     {
       label: 'TREEMAP',
       value: 'TREEMAP',
       icon: 'chartTreeMap',
+      disabled: false,
     },
     {
       label: 'BIG NUMBER',
       value: 'BIG_NUMBER',
       icon: 'chartBigNumber',
+      disabled: true,
     },
     {
       label: 'MAP',
       value: 'MAP',
       icon: 'chartMap',
+      disabled: true,
     },
     {
       label: 'MAP POLYGON',
       value: 'MAP_POLYGON',
       icon: 'chartMapPolygon',
+      disabled: true,
     },
   ];
 
@@ -572,7 +589,7 @@ const ChartCreateViz = ({
         type: selectedChartType,
       });
     } else {
-      toast('Please select a resource and chart type');
+      toast('Required fields missing. Please fill all required fields.');
     }
   };
 
@@ -586,69 +603,84 @@ const ChartCreateViz = ({
       </div>
       <Form>
         <div className="flex flex-col gap-4">
-          <Select
-            name={'chartCreateSelectDataset'}
-            label="Select Dataset"
-            options={allDatasetsRes?.data?.datasets?.map((item: any) => {
-              return {
-                label: item.title,
-                value: item.id,
-              };
-            })}
-            onChange={(e) => {
-              setChartDataset(e);
-              setChartResource('');
-            }}
-          />
-
-          <Select
-            name={'chartCreateSelectResource'}
-            label="Select Resource"
-            options={allDatasetsRes?.data?.datasets
-              ?.find((item: any) => item.id === chartDataset)
-              ?.resources?.map((item: any) => {
+          <Labelled label="Select Dataset" requiredIndicator>
+            <Select
+              name={'chartCreateSelectDataset'}
+              label=""
+              options={allDatasetsRes?.data?.datasets?.map((item: any) => {
                 return {
-                  label: item.name,
+                  label: item.title,
                   value: item.id,
                 };
               })}
-            onChange={(e) => {
-              setChartResource(e);
-            }}
-            value={chartResource || ''}
-          />
+              required
+              onChange={(e) => {
+                setChartDataset(e);
+                setChartResource('');
+              }}
+            />
+          </Labelled>
+
+          <Labelled label="Select Resource" requiredIndicator>
+            <Select
+              name={'chartCreateSelectResource'}
+              label=""
+              required
+              options={allDatasetsRes?.data?.datasets
+                ?.find((item: any) => item.id === chartDataset)
+                ?.resources?.map((item: any) => {
+                  return {
+                    label: item.name,
+                    value: item.id,
+                  };
+                })}
+              onChange={(e) => {
+                setChartResource(e);
+              }}
+              value={chartResource || ''}
+            />
+          </Labelled>
+
           <div>
-            <Label>Select Chart type</Label>
+            <Labelled label="Select Chart type" requiredIndicator>
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                {chartTypes.map((chartType, index) => (
+                  <Button
+                    key={index}
+                    kind="tertiary"
+                    className={cn(
+                      'border rounded-lg hover:bg-gray-50 flex cursor-pointer flex-row items-center justify-start gap-2 px-1 py-2',
+                      selectedChartType === chartType.value &&
+                        'bg-greyExtralight hover:bg-greyExtralight'
+                    )}
+                    icon={
+                      <Icon
+                        source={Icons[chartType.icon]}
+                        size={48}
+                        className="svg:text-primaryDefault"
+                      />
+                    }
+                    onClick={() => {
+                      setSelectedChartType(chartType.value);
+                    }}
+                    disabled={chartType.disabled || false}
+                  >
+                    {chartType.label}
+                  </Button>
+                ))}
+              </div>
+            </Labelled>
+
             {/* <ChartTypeDialog /> */}
-            <div className="mt-2 grid grid-cols-2 gap-4">
-              {chartTypes.map((chartType, index) => (
-                <Button
-                  key={index}
-                  kind="tertiary"
-                  className={cn(
-                    'border rounded-lg hover:bg-gray-50 flex cursor-pointer flex-row items-center justify-start gap-2 px-1 py-2',
-                    selectedChartType === chartType.value &&
-                      'bg-greyExtralight hover:bg-greyExtralight'
-                  )}
-                  icon={
-                    <Icon
-                      source={Icons[chartType.icon]}
-                      size={48}
-                      className="svg:text-primaryDefault"
-                    />
-                  }
-                  onClick={() => {
-                    setSelectedChartType(chartType.value);
-                  }}
-                >
-                  {chartType.label}
-                </Button>
-              ))}
-            </div>
           </div>
 
           <div className="flex items-center justify-center">
-            <Button kind="primary" size="large" onClick={handleChartCreateViz}>
+            <Button
+              kind="primary"
+              size="large"
+              onClick={handleChartCreateViz}
+              disabled={createResourceChartVizMutation.isLoading}
+            >
               Create Chart
             </Button>
           </div>

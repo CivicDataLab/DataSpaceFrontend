@@ -24,15 +24,9 @@ const ChartForm: React.FC<ChartFormProps> = ({
   const isAssamChart =
     chartData.type === ChartTypes.AssamDistrict ||
     chartData.type === ChartTypes.AssamRc;
-  const isGroupedChart =
-    chartData.type === ChartTypes.GroupedBarVertical ||
-    chartData.type === ChartTypes.GroupedBarHorizontal ||
-    chartData.type === ChartTypes.Multiline;
 
   const isBarOrLineChart =
-    chartData.type === ChartTypes.BarVertical ||
-    chartData.type === ChartTypes.BarHorizontal ||
-    chartData.type === ChartTypes.Line;
+    chartData.type === ChartTypes.Bar || chartData.type === ChartTypes.Line;
 
   useEffect(() => {
     if (
@@ -278,7 +272,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
             />
           </div>
 
-          {(isBarOrLineChart || isGroupedChart) && (
+          {isBarOrLineChart && (
             <div className="flex flex-row flex-wrap justify-between  gap-4">
               <div className="flex flex-col gap-4 ">
                 {chartData?.options?.yAxisColumn?.map((column, index) => (
@@ -332,7 +326,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
                         onBlur={() => handleSave(chartData)}
                       />
                     </div>
-                    {isGroupedChart && index > 0 && (
+                    {index > 0 && (
                       <Button onClick={() => removeYAxisColumn(index)}>
                         Remove
                       </Button>
@@ -340,7 +334,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
                   </div>
                 ))}
               </div>
-              {isGroupedChart && (
+              {isBarOrLineChart && (
                 <Button className="mt-4 h-fit w-fit" onClick={addYAxisColumn}>
                   Add Y-axis Column
                 </Button>

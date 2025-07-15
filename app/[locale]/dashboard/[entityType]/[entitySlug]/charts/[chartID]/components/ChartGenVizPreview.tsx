@@ -9,6 +9,7 @@ import * as echarts from 'echarts/core';
 import {
   Button,
   Dialog,
+  Form,
   Label,
   Popover,
   Select,
@@ -241,7 +242,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
       name: '',
       schema: [],
     },
-    type: ChartTypes.BarVertical,
+    type: ChartTypes.Bar,
     chart: {},
   });
 
@@ -304,7 +305,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
     refetch: any;
     error: any;
     isError: boolean;
-  } = useQuery([`chartDetailsForViz`], () =>
+  } = useQuery([`chartDetailsForViz-${JSON.stringify(chartData)}`], () =>
     GraphQL(
       getResourceChartForViz,
       {
@@ -319,8 +320,6 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
   useEffect(() => {
     if (chartDetailsRes?.data?.resourceChart) {
       const chartRes = chartDetailsRes?.data?.resourceChart;
-
-      console.log('chartData updated :::::::::', chartRes);
 
       setChartData({
         chartId: params.chartID,
@@ -447,7 +446,11 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
             chartId: params.chartID,
             resource: value,
             name: chartData.name,
-            options: chartData.options,
+            options: {
+              ...chartData.options,
+              xAxisColumn: '',
+              yAxisColumn: [],
+            },
             type: chartData.type,
             filters: chartData.filters,
           },
@@ -679,22 +682,25 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
 
           <div className="border-t-2 border-solid border-greyExtralight pt-8">
             <div className="flex flex-row justify-center gap-6">
-              <div className="flex flex-[7] justify-center">
-                <div className="w-full rounded-4 border-1 border-solid border-greyExtralight object-contain">
-                  {chartData.chart?.options &&
-                  Object.keys(chartData.chart?.options).length > 0 ? (
+              {/* Chart Preview */}
+              <div className="flex-[7]">
+                {chartData.chart?.options &&
+                Object.keys(chartData.chart?.options).length > 0 ? (
+                  <div className="sticky top-36 w-full items-center rounded-4 border-1 border-solid border-greyExtralight">
                     <ReactECharts
                       option={chartData.chart?.options}
                       ref={chartRef}
                     />
-                  ) : (
-                    <div className="h-full w-full">
-                      <Text variant="bodyLg">No Chart Data</Text>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="sticky top-36 flex w-full items-center justify-center">
+                    <Text variant="bodyLg">No Valid Chart Data</Text>
+                  </div>
+                )}
               </div>
-              <div className="flex flex-[3] flex-col rounded-4 border-2 border-solid border-greyExtralight p-3">
+
+              {/* Chart Customization */}
+              <div className="flex h-full flex-[3] flex-col rounded-4 border-2 border-solid border-greyExtralight p-3">
                 <Tabs value={selectedTab}>
                   <TabList fitted border>
                     <Tab
@@ -902,11 +908,6 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                               columnLabel={''}
                               columnColor={''}
                               onSubmit={(e) => {
-                                console.log(
-                                  'addYAxisColumn :::::::::',
-                                  e,
-                                  chartData.options.yAxisColumn
-                                );
                                 if (
                                   chartData.options.yAxisColumn === undefined ||
                                   chartData.options.yAxisColumn?.findIndex(
@@ -1053,62 +1054,65 @@ const YaxisColumnForm = ({
 
   return (
     <div className="flex w-full min-w-full flex-col gap-1 p-8">
-      {/* Y axis Column */}
-      <Select
-        name="selectYAxisColumn"
-        label="Column"
-        options={yAxisOptions}
-        value={yAxisColumn}
-        onChange={(e) => {
-          setYAxisColumn(e);
-        }}
-      />
-
-      {/* Label for specific element */}
-      <TextField
-        name="selectYAxisColumnLabel"
-        label="Label"
-        value={yAxisColumnLabel}
-        onChange={(e) => {
-          setYAxisColumnLabel(e);
-        }}
-      />
-
-      {/* Color for specific element */}
-      <TextField
-        name="selectYAxisColumnColor"
-        label="Color"
-        value={yAxisColumnColor}
-        onChange={(e) => {
-          setYAxisColumnColor(e);
-        }}
-      />
-
-      <div className="mt-1 flex flex-row justify-between gap-8">
-        <Button
-          kind="secondary"
-          size="slim"
-          className="rounded-2 border-1 border-solid border-greyExtralight"
-          onClick={onCancel}
-        >
-          Cancel
-        </Button>
-
-        <Button
-          kind="primary"
-          size="slim"
-          className="rounded-2 border-1 border-solid border-greyExtralight"
-          onClick={() => {
-            onSubmit({
-              fieldName: yAxisColumn,
-              label: yAxisColumnLabel,
-              color: yAxisColumnColor,
-            });
+      <Form>
+        {/* Y axis Column */}
+        <Select
+          name="selectYAxisColumn"
+          label="Column"
+          options={yAxisOptions}
+          value={yAxisColumn}
+          onChange={(e) => {
+            setYAxisColumn(e);
           }}
-        >
-          Save
-        </Button>
-      </div>
+          required
+        />
+
+        {/* Label for specific element */}
+        <TextField
+          name="selectYAxisColumnLabel"
+          label="Label"
+          value={yAxisColumnLabel}
+          onChange={(e) => {
+            setYAxisColumnLabel(e);
+          }}
+        />
+
+        {/* Color for specific element */}
+        <TextField
+          name="selectYAxisColumnColor"
+          label="Color"
+          value={yAxisColumnColor}
+          onChange={(e) => {
+            setYAxisColumnColor(e);
+          }}
+        />
+
+        <div className="mt-1 flex flex-row justify-between gap-8">
+          <Button
+            kind="secondary"
+            size="slim"
+            className="rounded-2 border-1 border-solid border-greyExtralight"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            kind="primary"
+            size="slim"
+            className="rounded-2 border-1 border-solid border-greyExtralight"
+            onClick={() => {
+              onSubmit({
+                fieldName: yAxisColumn,
+                label: yAxisColumnLabel,
+                color: yAxisColumnColor,
+              });
+            }}
+          >
+            Save
+          </Button>
+        </div>
+      </Form>
     </div>
   );
 };
