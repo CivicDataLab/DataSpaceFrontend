@@ -488,13 +488,17 @@ const ListingComponent: React.FC<ListingProps> = ({
                         value: formatDate(item.modified),
                         tooltip: 'Date',
                       },
-                      {
+                    ];
+
+                    if (item.download_count > 0) {
+                      MetadataContent.push({
                         icon: Icons.download,
                         label: 'Download',
                         value: item.download_count?.toString() || '0',
                         tooltip: 'Download',
-                      },
-                    ];
+                      });
+                    }
+
                     if (Geography) {
                       MetadataContent.push({
                         icon: Icons.globe,
@@ -513,7 +517,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                       });
                     }
 
-                    const FooterContent =  [
+                    const FooterContent = [
                       {
                         icon: `/Sectors/${item.sectors?.[0]}.svg`,
                         label: 'Sectors',
