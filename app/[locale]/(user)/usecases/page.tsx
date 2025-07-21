@@ -1,13 +1,15 @@
 'use client';
 
 import Image from 'next/image';
+import { fetchUseCases } from '@/fetch';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import { fetchUseCases } from '@/fetch';
 import { Card, Spinner, Text } from 'opub-ui';
-import BreadCrumbs from '@/components/BreadCrumbs';
+
 import { GraphQL } from '@/lib/api';
+import BreadCrumbs from '@/components/BreadCrumbs';
 import ListingComponent from '../components/ListingComponent';
+
 const breadcrumbData = [
   { href: '/', label: 'Home' },
   { href: '#', label: 'Use Cases' },
@@ -15,10 +17,8 @@ const breadcrumbData = [
 
 const UseCasesListingPage = () => {
   return (
-    <main className="bg-baseGraySlateSolid2">
-      <BreadCrumbs
-        data={breadcrumbData}
-      />
+    <main>
+      <BreadCrumbs data={breadcrumbData} />
       <div className=" bg-primaryBlue ">
         <div className="container flex flex-col-reverse justify-center gap-8 p-10 lg:flex-row ">
           <div className="flex flex-col justify-center gap-6">
@@ -28,7 +28,7 @@ const UseCasesListingPage = () => {
             <Text
               variant="headingLg"
               fontWeight="regular"
-              className=" text-surfaceDefault leading-3 lg:leading-5"
+              className=" leading-3 text-surfaceDefault lg:leading-5"
             >
               By Use case we mean any specific sector or domain data led
               interventions that can be applied to address some of the most
@@ -45,13 +45,13 @@ const UseCasesListingPage = () => {
           />
         </div>
       </div>
-      <div className="container p-6 lg:pb-20 lg:p-10">
+      <div className="container p-6 lg:p-10 lg:pb-20">
         <div>
-          <Text variant="heading2xl" fontWeight='bold'>Explore Use Cases</Text>
+          <Text variant="heading2xl" fontWeight="bold">
+            Explore Use Cases
+          </Text>
         </div>
-        <ListingComponent
-            fetchDatasets={fetchUseCases}
-          />
+        <ListingComponent fetchDatasets={fetchUseCases} />
       </div>
     </main>
   );

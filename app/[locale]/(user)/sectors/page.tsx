@@ -64,7 +64,7 @@ const SectorsListingPage = () => {
   };
 
   return (
-    <main className="bg-baseGraySlateSolid2">
+    <main >
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
