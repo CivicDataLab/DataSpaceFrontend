@@ -190,7 +190,7 @@ interface ListingProps {
     total: number;
     aggregations: Aggregations;
   }>;
-  breadcrumbData: { href: string; label: string }[];
+  breadcrumbData?: { href: string; label: string }[];
   headerComponent?: React.ReactNode;
   categoryName?: string;
   categoryDescription?: string;
@@ -289,7 +289,7 @@ const ListingComponent: React.FC<ListingProps> = ({
 
   return (
     <div className="bg-basePureWhite">
-      <BreadCrumbs data={breadcrumbData} />
+      {breadcrumbData && <BreadCrumbs data={breadcrumbData} />}
       <div className="container">
         {/* Optional Category Header */}
         {(categoryName || categoryDescription || categoryImage) && (
@@ -488,13 +488,17 @@ const ListingComponent: React.FC<ListingProps> = ({
                         value: formatDate(item.modified),
                         tooltip: 'Date',
                       },
-                      {
+                    ];
+
+                    if (item.download_count > 0) {
+                      MetadataContent.push({
                         icon: Icons.download,
                         label: 'Download',
-                        value: item.download_count.toString(),
+                        value: item.download_count?.toString() || '0',
                         tooltip: 'Download',
-                      },
-                    ];
+                      });
+                    }
+
                     if (Geography) {
                       MetadataContent.push({
                         icon: Icons.globe,
@@ -513,11 +517,11 @@ const ListingComponent: React.FC<ListingProps> = ({
                       });
                     }
 
-                    const FooterContent =  [
+                    const FooterContent = [
                       {
-                        icon: `/Sectors/${item.sectors[0]}.svg`,
+                        icon: `/Sectors/${item.sectors?.[0]}.svg`,
                         label: 'Sectors',
-                        tooltip: `${item.sectors[0]}`,
+                        tooltip: `${item.sectors?.[0]}`,
                       },
                       ...(item.has_charts && view !== 'expanded'
                         ? [
@@ -542,7 +546,12 @@ const ListingComponent: React.FC<ListingProps> = ({
                       tag: item.tags,
                       formats: item.formats,
                       footerContent: FooterContent,
+                      imageUrl: '',
                     };
+
+                    if (item.logo) {
+                      commonProps.imageUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`;
+                    }
 
                     return (
                       <Card
