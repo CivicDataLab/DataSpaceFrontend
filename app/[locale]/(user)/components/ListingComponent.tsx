@@ -195,6 +195,8 @@ interface ListingProps {
   categoryName?: string;
   categoryDescription?: string;
   categoryImage?: string;
+  placeholder: string;
+  redirectionURL: string;
 }
 
 const ListingComponent: React.FC<ListingProps> = ({
@@ -204,6 +206,8 @@ const ListingComponent: React.FC<ListingProps> = ({
   categoryName,
   categoryDescription,
   categoryImage,
+  placeholder,
+  redirectionURL,
 }) => {
   const [facets, setFacets] = useState<{
     results: any[];
@@ -348,7 +352,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                     label="Search"
                     name="Search"
                     className={cn(Styles.Search)}
-                    placeholder="Start typing to search for any Dataset"
+                    placeholder={placeholder}
                     onSubmit={(value) => handleSearch(value)}
                     onClear={(value) => handleSearch(value)}
                   />
@@ -561,7 +565,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                           view === 'expanded' ? 'expanded' : 'collapsed'
                         }
                         iconColor="warning"
-                        href={`/datasets/${item.id}`}
+                        href={`${redirectionURL}/${item.id}`}
                       />
                     );
                   })}
