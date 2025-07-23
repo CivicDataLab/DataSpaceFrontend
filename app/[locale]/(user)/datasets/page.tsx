@@ -14,6 +14,8 @@ const DatasetsListing = () => {
     <ListingComponent
       fetchDatasets={fetchDatasets}
       breadcrumbData={breadcrumbData}
+      redirectionURL={`/datasets`}
+      placeholder="Start typing to search for any Dataset"
     />
   );
 };

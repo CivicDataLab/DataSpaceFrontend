@@ -48,6 +48,8 @@ const SectorDetailsPage = ({ params }: { params: { sectorSlug: string } }) => {
       categoryName={sector?.name}
       categoryDescription={sector?.description ?? undefined}
       categoryImage={`/Sectors/${sector.name}.svg`}
+      redirectionURL={`/datasets`}
+      placeholder="Start typing to search for any Dataset"
     />
   );
 };

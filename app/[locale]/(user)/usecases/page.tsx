@@ -51,7 +51,11 @@ const UseCasesListingPage = () => {
             Explore Use Cases
           </Text>
         </div>
-        <ListingComponent fetchDatasets={fetchUseCases} />
+        <ListingComponent
+          fetchDatasets={fetchUseCases}
+          placeholder="Start typing to search for any Use Case"
+          redirectionURL={`/usecases`}
+        />
       </div>
     </main>
   );
