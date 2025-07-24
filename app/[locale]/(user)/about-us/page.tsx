@@ -1,8 +1,27 @@
 import Image from 'next/image';
 import { Text } from 'opub-ui';
 
+import { generatePageMetadata } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import Team from './components/Team';
+
+export const generateMetadata = () =>
+  generatePageMetadata({
+    title: 'About Us',
+    description:
+      'Learn more about CivicDataSpace, our mission, and the people behind it.',
+    keywords: ['CivicDataSpace', 'About Us', 'Open Data', 'CDL'],
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/about`, // update if dynamic
+      title: 'About CivicDataSpace',
+      description:
+        'Explore the mission, vision, and people powering CivicDataSpace – an open-source platform to enable data for public good.',
+      siteName: 'CivicDataSpace',
+      image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`, // from /public/og.png
+    },
+  });
 
 const About = () => {
   return (
