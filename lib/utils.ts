@@ -1,4 +1,50 @@
 import { twMerge, type ClassNameValue } from 'tailwind-merge';
+import { Metadata } from 'next';
+
+type MetadataOptions = {
+  title?: string;
+  url?: string;
+  image?: string;
+  description?: string;
+  keywords?: string[];
+  openGraph?: {
+    type: 'website' | 'article' | 'dataset';
+    locale: string;
+    url: string;
+    title: string;
+    description: string;
+    siteName?: string;
+    image?: string;
+  };
+};
+
+
+export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
+  return {
+    title: options.title,
+    description:
+      options.description,
+    keywords: options.keywords,
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: options.openGraph?.url,
+      title: options.openGraph?.title,
+      description: options.openGraph?.description,
+      siteName: options.openGraph?.siteName,
+      images: options.openGraph?.image,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: options.openGraph?.title,
+      description: options.openGraph?.description,
+      images: options.openGraph?.image,
+      creator: 'CivicDataLab',
+    },
+
+  };
+}
+
 
 export function cn(...inputs: ClassNameValue[]) {
   return twMerge(inputs);
@@ -89,19 +135,19 @@ export function formatDateString(
   // If hyphendated it would return date in this format - 2023-01-01 else in April 1, 2021
   return isHyphenated
     ? new Date(
-        date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'numeric',
-          // day: 'numeric',
-        })
-      )
-        .toISOString()
-        .split('T')[0]
-    : date.toLocaleDateString('en-US', {
-        month: 'long',
-        // day: 'numeric',
+      date.toLocaleDateString('en-US', {
         year: 'numeric',
-      });
+        month: 'numeric',
+        // day: 'numeric',
+      })
+    )
+      .toISOString()
+      .split('T')[0]
+    : date.toLocaleDateString('en-US', {
+      month: 'long',
+      // day: 'numeric',
+      year: 'numeric',
+    });
 }
 
 
@@ -120,3 +166,4 @@ export async function getWebsiteTitle(url: string): Promise<string | null> {
     return null;
   }
 }
+

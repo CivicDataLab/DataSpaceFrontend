@@ -169,6 +169,7 @@ const Page = () => {
                           <div>
                             <TextField
                               label="Organization Name *"
+                              helpText={`Character limit: ${formData?.name?.length}/200`}
                               name="name"
                               value={formData.name}
                               onChange={(e) =>
@@ -328,7 +329,7 @@ const EntityCard = ({ entityItem, params }: any) => {
         </Link>
       </div>
       <div>
-        <Text variant="headingMd" className="text-center">
+        <Text variant="headingMd" className="text-center line-clamp-3" title={entityItem.name}>
           {entityItem.name}
         </Text>
       </div>

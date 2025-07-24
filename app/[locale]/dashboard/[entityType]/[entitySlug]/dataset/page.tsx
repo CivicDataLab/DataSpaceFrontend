@@ -14,6 +14,7 @@ import { Loading } from '@/components/loading';
 import { ActionBar } from './components/action-bar';
 import { Content } from './components/content';
 import { Navigation } from './components/navigate-org-datasets';
+import { formatDate } from '@/lib/utils';
 
 const allDatasetsQueryDoc: any = graphql(`
   query allDatasetsQuery($filters: DatasetFilter, $order: DatasetOrder) {
@@ -239,16 +240,8 @@ export default function DatasetPage({
       return {
         title: item.title,
         id: item.id,
-        created: new Date(item.created).toLocaleString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        }),
-        modified: new Date(item.modified).toLocaleString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        }),
+        created: formatDate(item.created),
+        modified: formatDate(item.modified),
       };
     });
   };
