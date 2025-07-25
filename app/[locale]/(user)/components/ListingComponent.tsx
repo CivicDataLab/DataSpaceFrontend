@@ -1,3 +1,5 @@
+'use client'  
+
 import React, { useEffect, useReducer, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -20,6 +22,7 @@ import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
 import Filter from '../datasets/components/FIlter/Filter';
 import Styles from '../datasets/dataset.module.scss';
+import { fetchData } from '@/fetch';
 
 // Interfaces
 interface Bucket {
@@ -185,11 +188,7 @@ const useUrlParams = (
 
 // Listing Component Props
 interface ListingProps {
-  fetchDatasets: (variables: string) => Promise<{
-    results: any[];
-    total: number;
-    aggregations: Aggregations;
-  }>;
+  type: string;
   breadcrumbData?: { href: string; label: string }[];
   headerComponent?: React.ReactNode;
   categoryName?: string;
@@ -200,7 +199,7 @@ interface ListingProps {
 }
 
 const ListingComponent: React.FC<ListingProps> = ({
-  fetchDatasets,
+  type,
   breadcrumbData,
   headerComponent,
   categoryName,
@@ -229,7 +228,7 @@ const ListingComponent: React.FC<ListingProps> = ({
     if (variables) {
       const currentFetchId = ++latestFetchId.current;
 
-      fetchDatasets(variables)
+      fetchData(type,variables)
         .then((res) => {
           // Only set if this is the latest call
           if (currentFetchId === latestFetchId.current) {
@@ -240,7 +239,7 @@ const ListingComponent: React.FC<ListingProps> = ({
           console.error(err);
         });
     }
-  }, [variables, fetchDatasets]);
+  }, [variables, type]);
 
   const [hasMounted, setHasMounted] = useState(false);
 
