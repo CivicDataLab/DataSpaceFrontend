@@ -8,7 +8,7 @@ type MetadataOptions = {
   description?: string;
   keywords?: string[];
   openGraph?: {
-    type: 'website' | 'article' | 'dataset';
+    type: 'website' | 'article' | 'dataset' | 'profile';
     locale: string;
     url: string;
     title: string;
