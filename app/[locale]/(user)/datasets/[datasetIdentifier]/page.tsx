@@ -10,6 +10,10 @@ const datasetMetaQuery: any = graphql(`
       title
       description
       id
+      tags {
+        id
+        value
+      }
     }
   }
 `);
@@ -27,16 +31,16 @@ export async function generateMetadata({
     );
 
     const dataset = res?.getDataset;
-
     return generatePageMetadata({
-      title: dataset?.title,
+      title: `${dataset?.title} | Dataset | CivicDataSpace`,
       description: dataset?.description,
+      keywords: dataset?.tags?.map((tag: any) => tag.value) || [],
       openGraph: {
         type: 'dataset',
         locale: 'en_US',
         url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/datasets/${params.datasetIdentifier}`,
         title: dataset?.title,
-        description: dataset?.description,
+        description:  dataset?.description,
         siteName: 'CivicDataSpace',
         image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
       },
