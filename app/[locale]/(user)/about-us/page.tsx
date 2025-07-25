@@ -7,19 +7,29 @@ import Team from './components/Team';
 
 export const generateMetadata = () =>
   generatePageMetadata({
-    title: 'About Us',
+    title: 'About CivicDataSpace | Empowering Public Good with Open Data',
     description:
-      'Learn more about CivicDataSpace, our mission, and the people behind it.',
-    keywords: ['CivicDataSpace', 'About Us', 'Open Data', 'CDL'],
+      'Learn about CivicDataSpace — an open-source platform built to foster inclusive, interoperable, and AI-ready data ecosystems for public good.',
+    keywords: [
+      'CivicDataSpace',
+      'About CivicDataSpace',
+      'Open Data',
+      'CivicTech',
+      'Data for Public Good',
+      'Inclusive Data',
+      'AI-ready Data',
+      'CivicDataLab',
+      'Open Source Platform',
+    ],
     openGraph: {
       type: 'website',
       locale: 'en_US',
-      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/about`, // update if dynamic
-      title: 'About CivicDataSpace',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/about`,
+      title: 'About CivicDataSpace | Empowering Public Good with Open Data',
       description:
-        'Explore the mission, vision, and people powering CivicDataSpace – an open-source platform to enable data for public good.',
+        'Explore the mission, vision, and team behind CivicDataSpace — an open-source initiative to unlock the power of data for civic impact.',
       siteName: 'CivicDataSpace',
-      image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`, // from /public/og.png
+      image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
     },
   });
 
