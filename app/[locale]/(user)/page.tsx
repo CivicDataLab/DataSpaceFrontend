@@ -8,16 +8,16 @@ export const generateMetadata = () =>
   generatePageMetadata({
     title: 'CivicDataSpace – Empowering Public Good with Open Data',
     description:
-      'CivicDataSpace is an open-source platform enabling inclusive and AI-ready data collaboratives. Explore datasets, use cases, and insights for public good.',
+      'CivicDataSpace is an open-source platform enabling inclusive and AI-ready data collaborative. Explore datasets, use cases, and insights for public good.',
     keywords: [
       'CivicDataSpace',
       'Open Data',
-      'Data Collaboratives',
+      'Data Collaborative',
       'Public Datasets',
       'AI-ready data',
       'CivicTech',
       'CivicDataLab',
-    ],
+    ],  
     openGraph: {
       type: 'website',
       locale: 'en_US',
