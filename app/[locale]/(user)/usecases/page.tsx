@@ -1,64 +1,36 @@
-'use client';
+import React from 'react';
+import { generatePageMetadata } from '@/lib/utils';
+import UseCasesListingClient from './UseCasesListingClient';
 
-import Image from 'next/image';
-import { fetchUseCases } from '@/fetch';
-import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
-import { Card, Spinner, Text } from 'opub-ui';
+export const generateMetadata = () =>
+  generatePageMetadata({
+    title: 'Explore Real-World Use Cases | CivicDataSpace',
+    description:
+      'Discover data-driven interventions across sectors like climate, gender, governance, and education. Our use cases highlight how open data solves real-world problems.',
+    keywords: [
+      'Data Use Cases',
+      'CivicTech',
+      'Open Data Applications',
+      'Policy Use Cases',
+      'Climate Data Use Case',
+      'Gender Equality Data',
+      'Urban Planning',
+      'CivicDataSpace Use Cases',
+    ],
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases`,
+      title: 'Explore Real-World Use Cases | CivicDataSpace',
+      description:
+        'Explore impactful data-led interventions solving real-world challenges — from climate change to justice and finance.',
+      siteName: 'CivicDataSpace',
+      image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
+    },
+  });
 
-import { GraphQL } from '@/lib/api';
-import BreadCrumbs from '@/components/BreadCrumbs';
-import ListingComponent from '../components/ListingComponent';
-
-const breadcrumbData = [
-  { href: '/', label: 'Home' },
-  { href: '#', label: 'Use Cases' },
-];
-
-const UseCasesListingPage = () => {
-  return (
-    <main>
-      <BreadCrumbs data={breadcrumbData} />
-      <div className=" bg-primaryBlue ">
-        <div className="container flex flex-col-reverse justify-center gap-8 p-10 lg:flex-row ">
-          <div className="flex flex-col justify-center gap-6">
-            <Text variant="heading2xl" className=" text-surfaceDefault">
-              Our Use Cases
-            </Text>
-            <Text
-              variant="headingLg"
-              fontWeight="regular"
-              className=" leading-3 text-surfaceDefault lg:leading-5"
-            >
-              By Use case we mean any specific sector or domain data led
-              interventions that can be applied to address some of the most
-              pressing concerns from hyper-local to the global level
-              simultaneously.
-            </Text>
-          </div>
-          <Image
-            src={'/Usecase_illustration.png'}
-            width={600}
-            height={316}
-            alt={'Usecase Illustration'}
-            className=" m-auto h-auto w-full"
-          />
-        </div>
-      </div>
-      <div className="container p-6 lg:p-10 lg:pb-20">
-        <div>
-          <Text variant="heading2xl" fontWeight="bold">
-            Explore Use Cases
-          </Text>
-        </div>
-        <ListingComponent
-          fetchDatasets={fetchUseCases}
-          placeholder="Start typing to search for any Use Case"
-          redirectionURL={`/usecases`}
-        />
-      </div>
-    </main>
-  );
+const UseCasesPage = () => {
+  return <UseCasesListingClient />;
 };
 
-export default UseCasesListingPage;
+export default UseCasesPage;
