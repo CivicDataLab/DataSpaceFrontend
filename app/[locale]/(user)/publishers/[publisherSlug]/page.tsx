@@ -1,84 +1,62 @@
-'use client';
-
-import React from 'react';
-import { useParams } from 'next/navigation';
+import { Metadata } from 'next';
 import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
-import { Spinner } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import BreadCrumbs from '@/components/BreadCrumbs';
-import ProfileDetails from '../components/ProfileDetails';
-import SidebarCard from '../components/SidebarCard';
+import { generatePageMetadata } from '@/lib/utils';
+import PublisherPageClient from './PublisherPageClient';
 
-const userInfoQuery: any = graphql(`
-  query UserData($userId: ID!) {
+const userInfo = graphql(`
+  query Userdetails($userId: ID!) {
     userById(userId: $userId) {
       id
       bio
-      dateJoined
-      contributedSectorsCount
-      location
-      twitterProfile
-      githubProfile
       fullName
       profilePicture {
         url
       }
-      publishedUseCasesCount
-      publishedDatasetsCount
-      linkedinProfile
     }
   }
 `);
+export async function generateMetadata({
+  params,
+}: {
+  params: { publisherSlug: string };
+}): Promise<Metadata> {
+  const data = await GraphQL(userInfo, {}, { userId: params.publisherSlug });
 
-const PublisherPage = () => {
-  const params = useParams();
-  const userInfo: any = useQuery([`${params.publisherSlug}`], () =>
-    GraphQL(
-      userInfoQuery,
-      {
-        // Entity Headers if present
-      },
-      { userId: params.publisherSlug }
-    )
-  );
+  const user = data.userById;
 
-  return (
-    <main className="bg-primaryBlue">
-      <BreadCrumbs
-        data={[
-          { href: '/', label: 'Home' },
-          { href: '/publishers', label: 'Publishers' },
-          { href: '#', label: `${userInfo?.data?.userById?.fullName || ''} ` },
-        ]}
-      />
-      {
-        <div className="container py-10 text-surfaceDefault">
-          <div className="flex flex-wrap gap-10 lg:flex-nowrap">
-            <div className="w-full lg:w-1/4">
-              {userInfo?.isLoading ? (
-                <div className="m-4 flex justify-center rounded-2 bg-surfaceDefault p-4">
-                  <Spinner color="highlight" />
-                </div>
-              ) : (
-                <SidebarCard data={userInfo?.data?.userById} type="Publisher" />
-              )}
-            </div>
-            <div className="w-full">
-              {userInfo?.isLoading ? (
-                <div className="m-4 flex justify-center rounded-2 bg-surfaceDefault p-4">
-                  <Spinner color="highlight" />
-                </div>
-              ) : (
-                <ProfileDetails data={userInfo?.data?.userById} type="Publisher" />
-              )}
-            </div>
-          </div>
-        </div>
-      }
-    </main>
-  );
-};
+  return generatePageMetadata({
+    title: `${user?.fullName} | Publisher on CivicDataSpace`,
+    description:
+      user?.bio || 'Explore datasets and use cases by this publisher.',
+    keywords: [
+      'CivicDataSpace Publisher',
+      'Open Data Contributor',
+      'Use Case Publisher',
+      'Dataset Publisher',
+      'CivicTech',
+      'Open Government Data',
+    ],
+    openGraph: {
+      title: `${user?.fullName} | Publisher on CivicDataSpace`,
+      description:
+        user?.bio || 'Explore datasets and use cases by this publisher.',
+      type: 'profile',
+      siteName: 'CivicDataSpace',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/publishers/${params.publisherSlug}`,
+      image: user?.profilePicture?.url
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${user.profilePicture.url}`
+        : `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
+      locale: 'en_US',
+    },
+  });
+}
 
-export default PublisherPage;
+export default function PublisherPage({
+  params,
+}: {
+  params: { publisherSlug: string };
+}) {
+  return <PublisherPageClient publisherSlug={params.publisherSlug} />;
+}
