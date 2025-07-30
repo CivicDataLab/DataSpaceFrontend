@@ -40,7 +40,7 @@ export async function generateMetadata({
         locale: 'en_US',
         url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/datasets/${params.datasetIdentifier}`,
         title: dataset?.title,
-        description:  dataset?.description,
+        description: dataset?.description,
         siteName: 'CivicDataSpace',
         image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
       },

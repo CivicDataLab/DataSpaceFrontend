@@ -1,13 +1,16 @@
 'use client';
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { graphql } from '@/gql';
-import { GraphQL } from '@/lib/api';
-import BreadCrumbs from '@/components/BreadCrumbs';
-import SidebarCard from '../../components/SidebarCard';
-import ProfileDetails from '../../components/ProfileDetails';
+import { useQuery } from '@tanstack/react-query';
 import { Spinner } from 'opub-ui';
+
+import { GraphQL } from '@/lib/api';
+import { generateJsonLd } from '@/lib/utils';
+import BreadCrumbs from '@/components/BreadCrumbs';
+import JsonLd from '@/components/JsonLd';
+import ProfileDetails from '../../components/ProfileDetails';
+import SidebarCard from '../../components/SidebarCard';
 
 const orgInfoQuery = graphql(`
   query organizationData($id: String!) {
@@ -34,16 +37,38 @@ const OrgPageClient = ({ organizationSlug }: { organizationSlug: string }) => {
   const { data, isLoading } = useQuery(
     [`org_details_${organizationSlug}`],
     () =>
-      GraphQL(orgInfoQuery, {}, {
-        id: organizationSlug,
-      }),
+      GraphQL(
+        orgInfoQuery,
+        {},
+        {
+          id: organizationSlug,
+        }
+      ),
     { refetchOnMount: true }
   );
 
   const org = data?.organization;
-
+  const jsonLd = generateJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: org?.name,
+    url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/publishers/organization/${organizationSlug}`,
+    description: org?.description,
+    logo: {
+      '@type': 'ImageObject',
+      url: org?.logo?.url
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo.url}`
+        : `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'CivicDataLab',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/about`,
+    },
+  });
   return (
     <main className="bg-primaryBlue">
+      <JsonLd json={jsonLd} />
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },

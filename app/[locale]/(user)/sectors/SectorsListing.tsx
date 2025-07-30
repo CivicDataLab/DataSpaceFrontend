@@ -13,9 +13,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Divider, SearchInput, Select, Spinner, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { cn } from '@/lib/utils';
+import { cn, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { ErrorPage } from '@/components/error';
+import JsonLd from '@/components/JsonLd';
 import Styles from '../datasets/dataset.module.scss';
 
 const sectorsListQueryDoc: any = graphql(`
@@ -63,8 +64,18 @@ const SectorsListing = () => {
     setSort(formattedSort);
   };
 
+  const jsonLd = generateJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'CivicDataLab',
+    url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/sectors`,
+    description:
+      'Browse datasets and real-world use cases across key sectors like Climate Action, Gender Equality, Law and Justice, and Urban Development. Discover insights that drive data-informed governance and civic innovation.',
+  });
+
   return (
-    <main >
+    <main>
+      <JsonLd json={jsonLd} />
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
@@ -237,4 +248,3 @@ const SectorsListing = () => {
 };
 
 export default SectorsListing;
-

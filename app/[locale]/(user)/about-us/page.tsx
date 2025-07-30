@@ -1,8 +1,9 @@
 import Image from 'next/image';
 import { Text } from 'opub-ui';
 
-import { generatePageMetadata } from '@/lib/utils';
+import { generateJsonLd, generatePageMetadata } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
+import JsonLd from '@/components/JsonLd';
 import Team from './components/Team';
 
 export const generateMetadata = () =>
@@ -34,8 +35,30 @@ export const generateMetadata = () =>
   });
 
 const About = () => {
+  const jsonLd = generateJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: 'About CivicDataSpace',
+    url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/about`,
+    description:
+      'Learn more about CivicDataSpace – an open-source platform enabling data collaboratives and civic innovation for the public good.',
+    about: {
+      '@type': 'WebApplication',
+      name: 'CivicDataSpace',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/about`,
+      description:
+        'CivicDataSpace is an open-source platform that enables inclusive, interoperable, and AI-ready data collaboratives to drive public good.',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'CivicDataLab',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/about`,
+    },
+  });
+
   return (
     <main>
+      <JsonLd json={jsonLd} />
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },

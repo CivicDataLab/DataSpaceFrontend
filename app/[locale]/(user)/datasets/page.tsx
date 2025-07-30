@@ -1,6 +1,7 @@
 import React from 'react';
 
-import { generatePageMetadata } from '@/lib/utils';
+import { generateJsonLd, generatePageMetadata } from '@/lib/utils';
+import JsonLd from '@/components/JsonLd';
 import ListingComponent from '../components/ListingComponent';
 
 export const generateMetadata = () =>
@@ -34,13 +35,30 @@ const DatasetsListing = () => {
     { href: '#', label: 'Dataset Listing' },
   ];
 
+  const jsonLd = generateJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Browse Open Datasets | CivicDataSpace',
+    url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/datasets`,
+    description:
+      'Explore a wide range of public datasets for research, policy, and civic innovation.',
+    publisher: {
+      '@type': 'Organization',
+      name: 'CivicDataSpace',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/datasets`,
+    },
+  });
+
   return (
-    <ListingComponent
-      type="dataset"
-      breadcrumbData={breadcrumbData}
-      redirectionURL={`/datasets`}
-      placeholder="Start typing to search for any Dataset"
-    />
+    <>
+      <JsonLd json={jsonLd} />
+      <ListingComponent
+        type="dataset"
+        breadcrumbData={breadcrumbData}
+        redirectionURL={`/datasets`}
+        placeholder="Start typing to search for any Dataset"
+      />
+    </>
   );
 };
 
