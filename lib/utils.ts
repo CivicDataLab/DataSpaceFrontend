@@ -15,6 +15,7 @@ type MetadataOptions = {
     description: string;
     siteName?: string;
     image?: string;
+    other?: any;
   };
 };
 
@@ -34,6 +35,7 @@ export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
       siteName: options.openGraph?.siteName,
       images: options.openGraph?.image,
     },
+    other: options.openGraph?.other,
     twitter: {
       card: 'summary_large_image',
       title: options.openGraph?.title,
@@ -44,6 +46,18 @@ export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
 
   };
 }
+
+
+export interface JsonLdSchema {
+  '@context': 'https://schema.org';
+  '@type': string;
+  [key: string]: any;
+}
+
+export function generateJsonLd(schema: JsonLdSchema): string {
+  return JSON.stringify(schema, null, 2);
+}
+
 
 
 export function cn(...inputs: ClassNameValue[]) {
