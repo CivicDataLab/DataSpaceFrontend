@@ -1,29 +1,43 @@
 name: Update DataSpace Dev
 
 on:
-  push:
-    branches: ['dev']
-env:
-  KEYCLOAK_CLIENT_ID: ${{secrets.KEYCLOAK_CLIENT_ID}}
-  KEYCLOAK_CLIENT_SECRET: ${{secrets.KEYCLOAK_CLIENT_SECRET}}
-  AUTH_ISSUER: ${{secrets.AUTH_ISSUER}}
-  NEXTAUTH_URL: 'https://dev.civicdataspace.in/'
-  NEXT_PUBLIC_NEXTAUTH_URL: 'https://dev.civicdataspace.in/'
-  NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
-  END_SESSION_URL: ${{secrets.END_SESSION_URL}}
-  REFRESH_TOKEN_URL: ${{secrets.REFRESH_TOKEN_URL}}
-  NEXT_PUBLIC_BACKEND_URL: ${{secrets.NEXT_PUBLIC_BACKEND_URL_DEV_DS}}
-  BACKEND_GRAPHQL_URL: ${{secrets.BACKEND_GRAPHQL_URL_DEV_DS}}
-  NEXT_PUBLIC_ENABLE_ACCESSMODEL: ${{secrets.NEXT_PUBLIC_ENABLE_ACCESSMODEL_DS}}
-  NEXT_PUBLIC_BACKEND_GRAPHQL_URL: ${{secrets.NEXT_PUBLIC_BACKEND_GRAPHQL_URL_DEV_DS}}
-  BACKEND_URL: ${{secrets.BACKEND_URL_DEV}}
-  NEXT_PUBLIC_PLATFORM_URL: ${{secrets.NEXT_PUBLIC_PLATFORM_URL_DEV}}
-  NEXT_PUBLIC_ANALYTICS_URL: ${{secrets.NEXT_PUBLIC_ANALYTICS_URL}}
-
+  workflow_call:
+    secrets:
+      KEYCLOAK_CLIENT_ID:           { required: true }
+      KEYCLOAK_CLIENT_SECRET:       { required: true }
+      AUTH_ISSUER:                  { required: true }
+      NEXTAUTH_URL:                 { required: true }
+      NEXT_PUBLIC_NEXTAUTH_URL:     { required: true }
+      NEXTAUTH_SECRET:              { required: true }
+      END_SESSION_URL:              { required: true }
+      REFRESH_TOKEN_URL:            { required: true }
+      NEXT_PUBLIC_BACKEND_URL:      { required: true }
+      BACKEND_GRAPHQL_URL:          { required: true }
+      NEXT_PUBLIC_ENABLE_ACCESSMODEL:  { required: true }
+      NEXT_PUBLIC_BACKEND_GRAPHQL_URL: { required: true }
+      BACKEND_URL:                  { required: true }
+      NEXT_PUBLIC_PLATFORM_URL:     { required: true }
+      NEXT_PUBLIC_ANALYTICS_URL:    { required: true }
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
+      KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+      AUTH_ISSUER: ${{ secrets.AUTH_ISSUER }}
+      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+      NEXT_PUBLIC_NEXTAUTH_URL: ${{ secrets.NEXT_PUBLIC_NEXTAUTH_URL }}
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      END_SESSION_URL: ${{ secrets.END_SESSION_URL }}
+      REFRESH_TOKEN_URL: ${{ secrets.REFRESH_TOKEN_URL }}
+      NEXT_PUBLIC_BACKEND_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
+      BACKEND_GRAPHQL_URL: ${{ secrets.BACKEND_GRAPHQL_URL }}
+      NEXT_PUBLIC_ENABLE_ACCESSMODEL: ${{ secrets.NEXT_PUBLIC_ENABLE_ACCESSMODEL }}
+      NEXT_PUBLIC_BACKEND_GRAPHQL_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_GRAPHQL_URL }}
+      BACKEND_URL: ${{ secrets.BACKEND_URL }}
+      NEXT_PUBLIC_PLATFORM_URL: ${{ secrets.NEXT_PUBLIC_PLATFORM_URL }}
+      NEXT_PUBLIC_ANALYTICS_URL: ${{ secrets.NEXT_PUBLIC_ANALYTICS_URL }}
 
     steps:
       - name: Checkout code
@@ -68,4 +82,9 @@ jobs:
           host: ${{ secrets.EC2_HOST_DEV_DS }}
           username: ${{ secrets.EC2_USERNAME_DS }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          script: rm -rf DataExchange/DataExFrontend/.next; rm -rf DataExchange/DataExFrontend/public; mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next; mv DataExchange/DataExFrontend/public2 DataExchange/DataExFrontend/public; /home/ubuntu/.nvm/versions/node/v20.11.1/bin/pm2 restart dataspace
+          script: |
+            rm -rf DataExchange/DataExFrontend/.next
+            rm -rf DataExchange/DataExFrontend/public
+            mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next
+            mv DataExchange/DataExFrontend/public2 DataExchange/DataExFrontend/public
+            /home/ubuntu/.nvm/versions/node/v20.11.1/bin/pm2 restart dataspace
