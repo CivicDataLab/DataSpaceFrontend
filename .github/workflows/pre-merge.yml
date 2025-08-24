@@ -1,11 +1,27 @@
-name: Build → Smoke → Deploy Dev
+name: Build Status
 
 on:
   push:
     branches: ['dev']
   pull_request:
     branches: ['dev']
-  workflow_dispatch:
+env:
+  KEYCLOAK_CLIENT_ID: ${{secrets.KEYCLOAK_CLIENT_ID}}
+  KEYCLOAK_CLIENT_SECRET: ${{secrets.KEYCLOAK_CLIENT_SECRET}}
+  AUTH_ISSUER: ${{secrets.AUTH_ISSUER}}
+  NEXTAUTH_URL: 'https://dev.civicdataspace.in/'
+  NEXT_PUBLIC_NEXTAUTH_URL: 'https://dev.civicdataspace.in/'
+  NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
+  END_SESSION_URL: ${{secrets.END_SESSION_URL}}
+  REFRESH_TOKEN_URL: ${{secrets.REFRESH_TOKEN_URL}}
+  NEXT_PUBLIC_BACKEND_URL: ${{secrets.NEXT_PUBLIC_BACKEND_URL_DEV_DS}}
+  BACKEND_GRAPHQL_URL: ${{secrets.BACKEND_GRAPHQL_URL_DEV_DS}}
+  NEXT_PUBLIC_ENABLE_ACCESSMODEL: ${{secrets.NEXT_PUBLIC_ENABLE_ACCESSMODEL_DS}}
+  NEXT_PUBLIC_BACKEND_GRAPHQL_URL: ${{secrets.NEXT_PUBLIC_BACKEND_GRAPHQL_URL_DEV_DS}}
+  BACKEND_URL: ${{secrets.BACKEND_URL_DEV}}
+  NEXT_PUBLIC_PLATFORM_URL: ${{secrets.NEXT_PUBLIC_PLATFORM_URL_DEV}}
+  NEXT_PUBLIC_ANALYTICS_URL: ${{secrets.NEXT_PUBLIC_ANALYTICS_URL}}
+
 
 jobs:
   build:
@@ -29,34 +45,3 @@ jobs:
       - run: npm ci --force
       - run: npm run generate
       - run: npm run build --if-present
-
-  smoke:
-    needs: build
-    uses: saqibmanan/CivicDataSpace-test/.github/workflows/run-smoke.yml@main
-    secrets:
-      BASE_URL: ${{ secrets.BASE_URL }}
-      HOME_URL_DEV: ${{ secrets.HOME_URL_DEV }}
-      TEST_EMAIL_1: ${{ secrets.TEST_EMAIL_1 }}
-      TEST_PASSWORD_1: ${{ secrets.TEST_PASSWORD_1 }}
-      TEST_EMAIL_2: ${{ secrets.TEST_EMAIL_2 }}
-      TEST_PASSWORD_2: ${{ secrets.TEST_PASSWORD_2 }}
-
-  deploy:
-    needs: smoke
-    uses: saqibmanan/DataSpaceFrontend/.github/workflows/run-deploy-dev.yml@main
-    secrets:
-      KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
-      KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
-      AUTH_ISSUER: ${{ secrets.AUTH_ISSUER }}
-      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-      NEXT_PUBLIC_NEXTAUTH_URL: ${{ secrets.NEXT_PUBLIC_NEXTAUTH_URL }}
-      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-      END_SESSION_URL: ${{ secrets.END_SESSION_URL }}
-      REFRESH_TOKEN_URL: ${{ secrets.REFRESH_TOKEN_URL }}
-      NEXT_PUBLIC_BACKEND_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
-      BACKEND_GRAPHQL_URL: ${{ secrets.BACKEND_GRAPHQL_URL }}
-      NEXT_PUBLIC_ENABLE_ACCESSMODEL: ${{ secrets.NEXT_PUBLIC_ENABLE_ACCESSMODEL }}
-      NEXT_PUBLIC_BACKEND_GRAPHQL_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_GRAPHQL_URL }}
-      BACKEND_URL: ${{ secrets.BACKEND_URL }}
-      NEXT_PUBLIC_PLATFORM_URL: ${{ secrets.NEXT_PUBLIC_PLATFORM_URL }}
-      NEXT_PUBLIC_ANALYTICS_URL: ${{ secrets.NEXT_PUBLIC_ANALYTICS_URL }}
