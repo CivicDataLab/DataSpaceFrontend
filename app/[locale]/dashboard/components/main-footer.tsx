@@ -9,113 +9,61 @@ import styles from './styles.module.scss';
 const MainFooter = () => {
   const socialMedia = [
     {
-      icon: Icons.twitter,
-      link: 'https://twitter.com/civicdatalab',
+      icon: Icons.github,
+      link: 'https://github.com/civicdatalab',
     },
     {
       icon: Icons.linkedin,
       link: 'https://www.linkedin.com/company/civicdatalab',
     },
     {
+      icon: Icons.twitter,
+      link: 'https://twitter.com/civicdatalab',
+    },
+    {
       icon: Icons.facebook,
       link: 'https://facebook.com/civicdatalab',
     },
-    {
-      icon: Icons.github,
-      link: 'https://github.com/civicdatalab',
-    },
   ];
   return (
-    <>
-      <div className="bg-primaryBlue">
-        <div className="flex flex-col gap-8 p-6 lg:px-28 lg:py-10">
-          <div className="flex flex-wrap items-center justify-between gap-8 ">
-            {' '}
-            <Link href="/">
-              <div className="flex items-center gap-2">
-                <div className="group relative h-[38px] w-[38px] overflow-hidden rounded-full">
-                  {/* Static Logo */}
-                  <div className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0">
-                    <Image
-                      src="/globe_logo.png"
-                      alt="Logo"
-                      layout="fill"
-                      objectFit="contain"
-                    />
-                  </div>
-
-                  {/* Globe GIF on Hover */}
-                  <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    <Image
-                      src="/globe.gif"
-                      alt="Globe"
-                      layout="fill"
-                      objectFit="contain"
-                    />
-                  </div>
-                </div>
-                <Text
-                  variant="headingXl"
-                  className="text-surfaceDefault"
-                  as="h1"
-                >
-                  CivicDataSpace
-                </Text>
-              </div>
+    <div className="bg-primaryBlue">
+      <div className="flex flex-wrap items-center justify-between p-4 lg:px-20 lg:py-6">
+        <div className="flex gap-6 uppercase">
+          <Link href={'/about-us'}>
+            <Text color="onBgDefault">About Us</Text>
+          </Link>
+          <Link href={'mailto:info@civicdatalab.in'}>
+            <Text color="onBgDefault">Contact Us</Text>
+          </Link>
+        </div>
+        <div className="flex items-center gap-2 text-white">
+          <Text color="onBgDefault">made by</Text>
+          <Link
+            href={'https://www.civicdatalab.in'}
+            target="_blank"
+            className="h-8 w-8"
+          >
+            <Image src={'/cdl.svg'} width={28} height={28} alt="CDL logo" />
+          </Link>
+        </div>
+        <div className="flex gap-3">
+          {socialMedia.map((item, index) => (
+            <Link
+              key={index}
+              href={item.link}
+              target="_blank"
+              className="h-10 w-10 rounded-5 bg-tertiaryAccent p-2"
+            >
+              <Icon
+                className={cn(styles.FooterIcons)}
+                source={item.icon}
+                size={24}
+              />
             </Link>
-            <div className=" flex flex-col  gap-2 lg:items-end">
-              <div>
-                {' '}
-                <Text
-                  color="highlight"
-                  variant="headingMd"
-                  className=" font-semi-bold text-secondaryOrange"
-                >
-                  Follow Us
-                </Text>
-              </div>
-
-              <div className=" flex gap-3">
-                {socialMedia.map((item, index) => (
-                  <Link
-                    key={index}
-                    href={item.link}
-                    target="_blank"
-                    className="  h-10  w-10 rounded-5 bg-tertiaryAccent p-2"
-                  >
-                    <Icon
-                      className={cn(styles.FooterIcons)}
-                      source={item.icon}
-                      size={24}
-                    />
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className=" flex flex-wrap items-end justify-between gap-6">
-            <div className=" flex  gap-6 uppercase">
-              <Link href={'/about-us'}>
-                <Text color="onBgDefault"> About Us</Text>
-              </Link>
-              <Link href={'mailto:info@civicdatalab.in'}>
-                <Text color="onBgDefault"> Contact Us</Text>
-              </Link>
-            </div>
-            <div className=" flex items-end gap-2">
-              <Text color="onBgDefault"> made by</Text>
-              <Link
-                href={'https://www.civicdatalab.in'}
-                target="_blank"
-                className=" h-8 w-8"
-              >
-                <Image src={'/cdl.svg'} width={32} height={32} alt="logo" />
-              </Link>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
