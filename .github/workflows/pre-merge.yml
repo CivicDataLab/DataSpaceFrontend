@@ -32,7 +32,7 @@ jobs:
 
   smoke:
     needs: build
-    uses: saqibmanan/CivicDataSpace-test/.github/workflows/run-smoke.yml@main
+    uses: saqibmanan/CivicDataSpace-test/.github/workflows/run-smoke.yml@dev
     secrets:
       BASE_URL: ${{ secrets.BASE_URL }}
       HOME_URL_DEV: ${{ secrets.HOME_URL_DEV }}
@@ -43,7 +43,7 @@ jobs:
 
   deploy:
     needs: smoke
-    uses: saqibmanan/DataSpaceFrontend/.github/workflows/run-deploy-dev.yml@main
+    uses: saqibmanan/DataSpaceFrontend/.github/workflows/run-deploy-dev.yml@dev
     secrets:
       KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
       KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
