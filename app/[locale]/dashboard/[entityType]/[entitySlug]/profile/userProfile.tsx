@@ -35,6 +35,8 @@ const updateUserMutation: any = graphql(`
   }
 `);
 
+const urlRegex = /^(https?:\/\/)([\w-]+\.)+[\w-]{2,}(\/\S*)?$/;
+
 const UserProfile = () => {
   const params = useParams<{ entityType: string; entitySlug: string }>();
 
@@ -112,7 +114,22 @@ const UserProfile = () => {
     if (!formValidation) {
       toast('Please fill all the required fields');
       return;
-    } else {
+    } 
+     if (formData.githubProfile && !urlRegex.test(formData.githubProfile)) {
+    toast.error('Enter a valid GitHub URL');
+    return;
+  }
+
+  if (formData.linkedinProfile && !urlRegex.test(formData.linkedinProfile)) {
+    toast.error('Enter a valid LinkedIn URL');
+    return;
+  }
+
+  if (formData.twitterProfile && !urlRegex.test(formData.twitterProfile)) {
+    toast.error('Enter a valid Twitter URL');
+    return;
+  }
+    else {
       const inputData: UpdateUserInput = {
         firstName: formData.firstName,
         lastName: formData.lastName,
