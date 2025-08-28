@@ -71,7 +71,7 @@ const About = () => {
             className="h-full w-full object-contain"
           />
         </div>
-        <div className="py-5 lg:py-10">
+        {/* <div className="py-5 lg:py-10">
           <Text variant="heading2xl">The People Behind CivicDataSpace</Text>
           <div className="pt-4 lg:pt-6">
             <Text
@@ -94,7 +94,7 @@ const About = () => {
         </div>
         <div>
           <Team />
-        </div>
+        </div> */}
       </div>
     </main>
   );
