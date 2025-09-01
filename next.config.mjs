@@ -12,7 +12,7 @@ jiti('./env');
 const backendUrl = new URL(process.env.BACKEND_URL);
 const platformUrl = new URL(process.env.NEXT_PUBLIC_PLATFORM_URL); // Use NEXT_PUBLIC_ for client-side access
 
-const withNextIntl = createNextIntlPlugin();
+const withNextIntl = createNextIntlPlugin('./i18n.ts');
 const nextConfig = withNextIntl({
   transpilePackages: ['opub-ui'],
   images: {

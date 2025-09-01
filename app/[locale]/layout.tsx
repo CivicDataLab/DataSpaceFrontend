@@ -2,7 +2,7 @@ import React from 'react';
 import { Inter as FontSans } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
-import { unstable_setRequestLocale } from 'next-intl/server';
+import { setRequestLocale } from 'next-intl/server';
 
 import { siteConfig } from '@/config/site';
 import Provider from '@/components/provider';
@@ -84,7 +84,7 @@ export default async function LocaleLayout(
   } catch (error) {
     notFound();
   }
-  unstable_setRequestLocale(locale);
+  setRequestLocale(locale);
 
   return (
     <html lang={locale}>
