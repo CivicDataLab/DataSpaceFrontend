@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { Metadata } from 'next';
 import { twMerge, type ClassNameValue } from 'tailwind-merge';
 
 type MetadataOptions = {
@@ -148,7 +149,19 @@ export function formatDateString(
       )
         .toISOString()
         .split('T')[0]
+        date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'numeric',
+          // day: 'numeric',
+        })
+      )
+        .toISOString()
+        .split('T')[0]
     : date.toLocaleDateString('en-US', {
+        month: 'long',
+        // day: 'numeric',
+        year: 'numeric',
+      });
         month: 'long',
         // day: 'numeric',
         year: 'numeric',
@@ -255,4 +268,13 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     path: 'sectors',
     priority: '0.6',
   },
+};
+export const extractPublisherId = (publisherSlug: any) => {
+  // If the param contains an underscore, split and take the last part
+  if (publisherSlug.includes('_')) {
+    return publisherSlug.split('_').pop();
+  }
+
+  // Otherwise, return the param as is (it's already just the ID)
+  return publisherSlug;
 };

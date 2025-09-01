@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { graphql } from '@/gql';
 
 import { GraphQL } from '@/lib/api';
-import { generatePageMetadata } from '@/lib/utils';
+import { extractPublisherId, generatePageMetadata } from '@/lib/utils';
 import PublisherPageClient from './PublisherPageClient';
 
 const userInfo = graphql(`
@@ -17,16 +17,6 @@ const userInfo = graphql(`
     }
   }
 `);
-
-const extractPublisherId = (publisherSlug: any) => {
-  // If the param contains an underscore, split and take the last part
-  if (publisherSlug.includes('_')) {
-    return publisherSlug.split('_').pop();
-  }
-
-  // Otherwise, return the param as is (it's already just the ID)
-  return publisherSlug;
-};
 
 export async function generateMetadata({
   params,
