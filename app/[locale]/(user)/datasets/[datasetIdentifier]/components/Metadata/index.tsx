@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Divider, Icon, Tag, Text, Tooltip } from 'opub-ui';
-import Styles from '../../../dataset.module.scss'
+
 import { cn, formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import Styles from '../../../dataset.module.scss';
 
 interface MetadataProps {
   data: any;
@@ -77,6 +78,19 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
     : data?.organization?.logo
       ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.organization.logo.url}`
       : '/org.png';
+  const getPublisherURL = (data: any) => {
+    if (!data) return '/publishers';
+
+    if (data.isIndividualDataset && data.user) {
+      return `/publishers/${data.user.fullName + '_' + data.user.id}`;
+    }
+
+    if (data.organization) {
+      return `/publishers/organization/${data.organization.slug + '_' + data.organization.id}`;
+    }
+
+    return '/publishers';
+  };
 
   return (
     <div className="flex flex-col gap-5 lg:gap-10">
@@ -102,15 +116,19 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
       <Divider />
       <div className=" flex flex-col gap-8">
         <div className=" hidden rounded-2 border-1 border-solid border-greyExtralight p-2 lg:block">
-          <Image
-            height={140}
-            width={100}
-            src={image}
-            alt={
-              data.isIndividualDataset ? 'Publisher logo' : 'Organization logo'
-            }
-            className="w-full object-contain"
-          />
+          <Link href={getPublisherURL(data)}>
+            <Image
+              height={140}
+              width={100}
+              src={image}
+              alt={
+                data.isIndividualDataset
+                  ? 'Publisher logo'
+                  : 'Organization logo'
+              }
+              className="w-full object-contain"
+            />
+          </Link>
         </div>
         <div className="flex items-center gap-2 ">
           <Text className="min-w-[120px]  basis-1/4 uppercase" variant="bodyMd">
@@ -123,15 +141,17 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
                 : data.organization.name
             }
           >
-            <Text
-              className="line-clamp-2 "
-              variant="bodyLg"
-              fontWeight="medium"
-            >
-              {data.isIndividualDataset
-                ? data.user.fullName
-                : data.organization.name}
-            </Text>
+            <Link href={getPublisherURL(data)}>
+              <Text
+                className="line-clamp-2 "
+                variant="bodyLg"
+                fontWeight="medium"
+              >
+                {data.isIndividualDataset
+                  ? data.user.fullName
+                  : data.organization.name}
+              </Text>
+            </Link>
           </Tooltip>
         </div>
         <div className="flex gap-2 ">
