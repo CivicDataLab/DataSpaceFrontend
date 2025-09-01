@@ -101,9 +101,9 @@ const orgPublishedUseCasesDoc: any = graphql(`
 const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
   const params = useParams();
 
-  const PublishedUseCasesList: any = useQuery(
-    [`userPublishedDataset_${params.publisherSlug}`],
-    () =>
+  const PublishedUseCasesList: any = useQuery({
+    queryKey: [`userPublishedDataset_${params.publisherSlug}`],
+    queryFn: () =>
       type === 'organization'
         ? GraphQL(
             orgPublishedUseCasesDoc,
@@ -119,7 +119,7 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
             },
             { userId: params.publisherSlug } // ✅ exact match for expected shape
           )
-  );
+    });
 
   const UseCaseData =
     type === 'organization'
@@ -133,7 +133,7 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
           'grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2'
         )}
       >
-        {PublishedUseCasesList.isLoading ? (
+        {PublishedUseCasesList.isPending ? (
           <div className=" flex w-fit justify-center rounded-2 bg-surfaceDefault p-4">
             <Spinner />
           </div>

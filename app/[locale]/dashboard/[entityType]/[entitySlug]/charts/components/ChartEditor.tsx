@@ -74,11 +74,13 @@ const ChartsEditor = ({ setEditorView }: { setEditorView: any }) => {
 
   const allDatasetsRes: {
     data: any;
-    isLoading: boolean;
+    isPending: boolean;
     refetch: any;
     error: any;
     isError: boolean;
-  } = useQuery([`allDatasetsListwithResourcesForCharts`], () =>
+  } = useQuery({
+    queryKey: [`allDatasetsListwithResourcesForCharts`],
+    queryFn: () =>
     GraphQL(
       getAllDatasetsListwithResourcesDoc,
       {
@@ -86,7 +88,7 @@ const ChartsEditor = ({ setEditorView }: { setEditorView: any }) => {
       },
       []
     )
-  );
+  });
 
   return (
     <div>
@@ -110,7 +112,7 @@ const ChartsEditor = ({ setEditorView }: { setEditorView: any }) => {
         </Text>
       </div>
 
-      {allDatasetsRes.isLoading ? (
+      {allDatasetsRes.isPending ? (
         <div className="flex h-full items-center justify-center">
           <Spinner />
         </div>
@@ -141,11 +143,11 @@ const ChartImageUpload = ({
 
   const createResourceChartImageMutation: {
     mutate: any;
-    isLoading: boolean;
+    isPending: boolean;
     error: any;
-  } = useMutation(
-    [`createResourceChartImage`],
-    (input: ResourceChartImageInput) =>
+  } = useMutation({
+    mutationKey: [`createResourceChartImage`],
+    mutationFn: (input: ResourceChartImageInput) =>
       GraphQL(
         createResourceChartImageDoc,
         {
@@ -153,19 +155,17 @@ const ChartImageUpload = ({
         },
         { input: input }
       ),
-    {
-      onSuccess: (resp: any) => {
-        toast(`Created chart image successfully`);
-        // Navigate to chart image preview page
-        router.push(
-          `/dashboard/${params.entityType}/${params.entitySlug}/charts/${resp?.createResourceChartImage?.id}?type=TypeResourceChartImage`
-        );
-      },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
-      },
-    }
-  );
+    onSuccess: (resp: any) => {
+      toast(`Created chart image successfully`);
+      // Navigate to chart image preview page
+      router.push(
+        `/dashboard/${params.entityType}/${params.entitySlug}/charts/${resp?.createResourceChartImage?.id}?type=TypeResourceChartImage`
+      );
+    },
+    onError: (err: any) => {
+      toast('Error:  ' + err.message.split(':')[0]);
+    },
+  });
 
   const handleAddImage = () => {
     if (selectedDataset && files) {
@@ -281,7 +281,7 @@ const ChartImageUpload = ({
               kind="primary"
               size="large"
               onClick={handleAddImage}
-              disabled={createResourceChartImageMutation.isLoading}
+              disabled={createResourceChartImageMutation.isPending}
             >
               Add Image
             </Button>
@@ -515,11 +515,11 @@ const ChartCreateViz = ({
 
   const createResourceChartVizMutation: {
     mutate: any;
-    isLoading: boolean;
+    isPending: boolean;
     error: any;
-  } = useMutation(
-    [`createResourceChart`],
-    (chartInput: ResourceChartInput) =>
+  } = useMutation({
+    mutationKey: [`createResourceChart`],
+    mutationFn: (chartInput: ResourceChartInput) =>
       GraphQL(
         createResourceChartVizDoc,
         {
@@ -527,8 +527,7 @@ const ChartCreateViz = ({
         },
         { chartInput: chartInput }
       ),
-    {
-      onSuccess: (resp: any) => {
+    onSuccess: (resp: any) => {
         toast(`Created chart successfully. Redirecting . . .`);
         // Navigate to chart preview page
         router.push(
@@ -679,7 +678,7 @@ const ChartCreateViz = ({
               kind="primary"
               size="large"
               onClick={handleChartCreateViz}
-              disabled={createResourceChartVizMutation.isLoading}
+              disabled={createResourceChartVizMutation.isPending}
             >
               Create Chart
             </Button>

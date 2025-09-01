@@ -139,9 +139,9 @@ const UseCaseDetailClient = () => {
     data: UseCaseDetails,
     isLoading,
     refetch,
-  } = useQuery<{ useCase: TypeUseCase }>(
-    [`fetch_UsecaseDetails_${params.useCaseSlug}`],
-    () =>
+  } = useQuery<{ useCase: TypeUseCase }>( {
+    queryKey: [`fetch_UsecaseDetails_${params.useCaseSlug}`],
+    queryFn: () =>
       GraphQL(
         UseCasedetails,
         {},
@@ -149,9 +149,8 @@ const UseCaseDetailClient = () => {
           pk: params.useCaseSlug,
         }
       ),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
     }
   );
   const datasets = UseCaseDetails?.useCase?.datasets || []; // Fallback to an empty array

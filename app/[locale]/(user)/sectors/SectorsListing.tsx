@@ -36,13 +36,15 @@ const SectorsListing = () => {
   const [searchText, setSearchText] = useState('');
 
   const { data, isLoading, isError, refetch } = useQuery<SectorsListsQuery>(
-    ['sectors_list_page', sort],
-    () =>
-      GraphQL(
-        sectorsListQueryDoc,
-        {},
+    {
+      queryKey: ['sectors_list_page', sort],
+      queryFn: () =>
+        GraphQL(
+          sectorsListQueryDoc,
+          {},
         { filters: searchText ? { search: searchText } : {}, order: sort }
       ) as Promise<SectorsListsQuery>
+    }
   );
 
   function capitalizeWords(name: any) {

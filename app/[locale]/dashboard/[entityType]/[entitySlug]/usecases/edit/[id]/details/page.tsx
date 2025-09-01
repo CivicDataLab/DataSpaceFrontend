@@ -70,9 +70,9 @@ const Details = () => {
 
   const router = useRouter();
 
-  const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_UseCaseData_details`],
-    () =>
+  const UseCaseData: { data: any; isPending: boolean; refetch: any } = useQuery({
+    queryKey: [`fetch_UseCaseData_details`],
+    queryFn: () =>
       GraphQL(
         FetchUseCase,
         {
@@ -84,11 +84,9 @@ const Details = () => {
           },
         }
       ),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
-  );
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+  });
 
   const UsecasesData =
     UseCaseData?.data?.useCases.length > 0 && UseCaseData?.data?.useCases[0];
@@ -151,8 +149,9 @@ const Details = () => {
     }
   }, [params.id, UsecasesData]);
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
-    (data: { data: UseCaseInputPartial }) =>
+  const { mutate, isPending: editMutationLoading } = useMutation(
+    {
+      mutationFn: (data: { data: UseCaseInputPartial }) =>
       GraphQL(
         UpdateUseCaseMutation,
         {
@@ -160,7 +159,6 @@ const Details = () => {
         },
         data
       ),
-    {
       onSuccess: (res: any) => {
         toast('Use case updated successfully');
         setFormData((prev) => ({

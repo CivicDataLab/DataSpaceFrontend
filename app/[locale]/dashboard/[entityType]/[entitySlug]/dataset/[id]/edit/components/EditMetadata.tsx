@@ -143,12 +143,12 @@ export function EditMetadata({ id }: { id: string }) {
 
   const getDatasetMetadata: {
     data: any;
-    isLoading: boolean;
+    isPending: boolean;
     refetch: any;
     error: any;
-  } = useQuery(
-    [`metadata_values_query_${params.id}`],
-    () =>
+  } = useQuery({
+    queryKey: [`metadata_values_query_${params.id}`],
+    queryFn: () =>
       GraphQL(
         datasetMetadataQueryDoc,
         {
@@ -156,61 +156,65 @@ export function EditMetadata({ id }: { id: string }) {
         },
         { filters: { id: params.id } }
       ),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
-  );
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+  });
 
-  const getSectorsList: { data: any; isLoading: boolean; error: any } =
-    useQuery([`sectors_list_query`], () =>
+  const getSectorsList: { data: any; isPending: boolean; error: any } =
+    useQuery({
+      queryKey: [`sectors_list_query`],
+      queryFn: () =>
+        GraphQL(
+          sectorsListQueryDoc,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          []
+        )
+    });
+
+  const getTagsList: {
+    data: any;
+    isPending: boolean;
+    error: any;
+    refetch: any;
+  } = useQuery({
+    queryKey: [`tags_list_query`],
+    queryFn: () =>
       GraphQL(
-        sectorsListQueryDoc,
+        tagsListQueryDoc,
         {
           [params.entityType]: params.entitySlug,
         },
         []
       )
-    );
-
-  const getTagsList: {
-    data: any;
-    isLoading: boolean;
-    error: any;
-    refetch: any;
-  } = useQuery([`tags_list_query`], () =>
-    GraphQL(
-      tagsListQueryDoc,
-      {
-        [params.entityType]: params.entitySlug,
-      },
-      []
-    )
-  );
+  });
 
   const getMetaDataListQuery: {
     data: any;
-    isLoading: boolean;
+    isPending: boolean;
     refetch: any;
-  } = useQuery([`metadata_fields_list_${id}`], () =>
-    GraphQL(
-      metadataQueryDoc,
-      {
-        [params.entityType]: params.entitySlug,
-      },
+  } = useQuery({
+    queryKey: [`metadata_fields_list_${id}`],
+    queryFn: () =>
+      GraphQL(
+        metadataQueryDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
       {
         filters: {
           model: 'DATASET',
           enabled: true,
         },
       }
-    )
-  );
+      )
+  });
 
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
 
-  const updateMetadataMutation = useMutation(
-    (data: { UpdateMetadataInput: UpdateMetadataInput }) =>
+  const updateMetadataMutation = useMutation({
+    mutationFn: (data: { UpdateMetadataInput: UpdateMetadataInput }) =>
       GraphQL(
         updateMetadataMutationDoc,
         {
@@ -218,16 +222,15 @@ export function EditMetadata({ id }: { id: string }) {
         },
         data
       ),
-    {
-      onSuccess: (res: any) => {
-        if (res.addUpdateDatasetMetadata.success) {
-          toast('Details updated successfully!');
-          queryClient.invalidateQueries({
-            queryKey: [
-              `metadata_values_query_${params.id}`,
-              `metadata_fields_list_${id}`,
-            ],
-          });
+    onSuccess: (res: any) => {
+      if (res.addUpdateDatasetMetadata.success) {
+        toast('Details updated successfully!');
+        queryClient.invalidateQueries({
+          queryKey: [
+            `metadata_values_query_${params.id}`,
+            `metadata_fields_list_${id}`,
+          ],
+        });
           const updatedData = defaultValuesPrepFn(
             res.addUpdateDatasetMetadata.data
           );
@@ -465,7 +468,7 @@ export function EditMetadata({ id }: { id: string }) {
             value={formData[metadataFormItem.id] || ''}
             label={metadataFormItem.label}
             disabled={
-              getMetaDataListQuery.isLoading || !metadataFormItem.enabled
+              getMetaDataListQuery.isPending || !metadataFormItem.enabled
             }
             onChange={(e) => handleChange(metadataFormItem.id, e)}
             onBlur={() => handleSave(formData)} // Save on blur
@@ -484,7 +487,7 @@ export function EditMetadata({ id }: { id: string }) {
             value={formData[metadataFormItem.id] || ''}
             label={metadataFormItem.label}
             disabled={
-              getMetaDataListQuery.isLoading || !metadataFormItem.enabled
+              getMetaDataListQuery.isPending || !metadataFormItem.enabled
             }
             onChange={(e) => handleChange(metadataFormItem.id, e)}
             onBlur={() => handleSave(formData)} // Save on blur
@@ -523,14 +526,14 @@ export function EditMetadata({ id }: { id: string }) {
   const { setStatus } = useDatasetEditStatus();
 
   useEffect(() => {
-    setStatus(updateMetadataMutation.isLoading ? 'loading' : 'success'); // update based on mutation state
-  }, [updateMetadataMutation.isLoading]);
+    setStatus(updateMetadataMutation.isPending ? 'loading' : 'success'); // update based on mutation state
+  }, [updateMetadataMutation.isPending, setStatus]);
 
   return (
     <>
-      {!getTagsList?.isLoading &&
-      !getSectorsList?.isLoading &&
-      !getDatasetMetadata.isLoading ? (
+      {!getTagsList?.isPending &&
+      !getSectorsList?.isPending &&
+      !getDatasetMetadata.isPending ? (
         <Form
           formOptions={{
             resetOptions: {

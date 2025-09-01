@@ -1,6 +1,8 @@
 'use client';
 
+import React from 'react';
 import { useEffect, useState } from 'react';
+import { keepPreviousData } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
@@ -72,9 +74,9 @@ const AddUser = ({
     id: string;
   }>();
 
-  const Users: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_users_list`],
-    () =>
+  const Users: { data: any; isPending: boolean; refetch: any } = useQuery({
+    queryKey: [`fetch_users_list`],
+    queryFn: () =>
       GraphQL(
         FetchUsers,
         {
@@ -85,23 +87,21 @@ const AddUser = ({
           searchTerm: searchValue,
         }
       ),
-    {
-      enabled: searchValue?.length > 0,
-      keepPreviousData: true,
-    }
-  );
+    enabled: searchValue?.length > 0,
+    placeholderData: keepPreviousData,
+  });
 
-  const RolesList: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_UseCaseData`],
-    () =>
+  const RolesList: { data: any; isPending: boolean; refetch: any } = useQuery({
+    queryKey: [`fetch_UseCaseData`],
+    queryFn: () =>
       GraphQL(
         allRolesDoc,
         {
           [params.entityType]: params.entitySlug,
         },
         []
-      )
-  );
+      ),
+  });
 
   useEffect(() => {
     if (selectedUser) {
@@ -116,8 +116,8 @@ const AddUser = ({
     }
   }, [selectedUser]);
 
-  const { mutate, isLoading: addUserLoading } = useMutation(
-    (input: { input: AddRemoveUserToOrganizationInput }) =>
+  const { mutate, isPending: addUserLoading } = useMutation({
+    mutationFn: (input: { input: AddRemoveUserToOrganizationInput }) =>
       GraphQL(
         addUserDoc,
         {
@@ -125,31 +125,29 @@ const AddUser = ({
         },
         input
       ),
-    {
-      onSuccess: (data: any) => {
-        if (data.addUserToOrganization.success) {
-          toast('User added successfully');
-          setIsOpen(false);
-          setFormData({
-            userId: '',
-            roleId: '',
-          });
-          setRefetch(true);
-        } else {
-          toast(
-            'Error: ' +
-              (data.addUserToOrganization?.errors?.fieldErrors
-                ? data.addUserToOrganization?.errors?.fieldErrors[0]
-                    ?.messages[0]
-                : data.addUserToOrganization?.errors?.nonFieldErrors[0])
-          );
-        }
-      },
-    }
-  );
+    onSuccess: (data: any) => {
+      if (data.addUserToOrganization.success) {
+        toast('User added successfully');
+        setIsOpen(false);
+        setFormData({
+          userId: '',
+          roleId: '',
+        });
+        setRefetch(true);
+      } else {
+        toast(
+          'Error: ' +
+            (data.addUserToOrganization?.errors?.fieldErrors
+              ? data.addUserToOrganization?.errors?.fieldErrors[0]
+                  ?.messages[0]
+              : data.addUserToOrganization?.errors?.nonFieldErrors[0])
+        );
+      }
+    },
+  });
 
-  const { mutate: updateMutate, isLoading: updateUserLoading } = useMutation(
-    (input: { input: AssignOrganizationRoleInput }) =>
+  const { mutate: updateMutate, isPending: updateUserLoading } = useMutation({
+    mutationFn: (input: { input: AssignOrganizationRoleInput }) =>
       GraphQL(
         updateUser,
         {
@@ -157,21 +155,19 @@ const AddUser = ({
         },
         input
       ),
-    {
-      onSuccess: (res: any) => {
-        toast('User updated successfully');
-        setIsOpen(false);
-        setFormData({
-          userId: '',
-          roleId: '',
-        });
-        setRefetch(true);
-      },
-      onError: (err: any) => {
-        toast('Failed to update user');
-      },
-    }
-  );
+    onSuccess: (res: any) => {
+      toast('User updated successfully');
+      setIsOpen(false);
+      setFormData({
+        userId: '',
+        roleId: '',
+      });
+      setRefetch(true);
+    },
+    onError: (err: any) => {
+      toast('Failed to update user');
+    },
+  });
 
   const [formData, setFormData] = useState({
     userId: '',

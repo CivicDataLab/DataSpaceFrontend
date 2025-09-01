@@ -116,9 +116,10 @@ const Publish = () => {
     entitySlug: string;
     id: string;
   }>();
-  const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_UsecaseDetails`],
-    () =>
+  const UseCaseData: { data: any; isPending: boolean; refetch: any } = useQuery({
+    queryKey: [`fetch_UsecaseDetails`],
+    queryFn: (
+  ) =>
       GraphQL(
         UseCaseDetails,
         {
@@ -130,18 +131,15 @@ const Publish = () => {
           },
         }
       ),
-    {
       refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
-  );
+      refetchOnReconnect: true,   
+});
   const router = useRouter();
 
-  const { mutate, isLoading: mutationLoading } = useMutation(
-    () => GraphQL(publishUseCaseMutation, {
+  const { mutate, isPending: mutationLoading } = useMutation({
+    mutationFn: () => GraphQL(publishUseCaseMutation, {
       [params.entityType]: params.entitySlug,
     }, { useCaseId: params.id }),
-    {
       onSuccess: (data: any) => {
         toast('UseCase Published Successfully');
         router.push(
@@ -217,7 +215,7 @@ const Publish = () => {
           </Text>
         </div>
         <div className=" flex flex-col gap-10 pt-6">
-          {UseCaseData.isLoading || mutationLoading ? (
+          {UseCaseData.isPending || mutationLoading ? (
             <div className=" mt-8 flex justify-center">
               <Spinner />
             </div>

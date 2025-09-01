@@ -33,9 +33,9 @@ export const Content = ({
 }) => {
   const router = useRouter();
 
-  const CreateDatasetMutation: { mutate: any; isLoading: boolean; error: any } =
-    useMutation(
-      () =>
+  const CreateDatasetMutation: { mutate: any; isPending: boolean; error: any } =
+    useMutation({
+      mutationFn: () =>
         GraphQL(
           createDatasetMutationDoc,
           {
@@ -43,7 +43,6 @@ export const Content = ({
           },
           []
         ),
-      {
         onSuccess: (data: any) => {
           if (data.addDataset.success) {
             toast('Dataset created successfully!');
@@ -56,8 +55,7 @@ export const Content = ({
             );
           }
         },
-      }
-    );
+    });
 
   return (
     <div className="flex h-full w-full grow flex-col items-center justify-center">

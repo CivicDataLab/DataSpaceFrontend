@@ -120,8 +120,10 @@ const AccessModels = () => {
   const getAccessModeldetails: {
     data: any;
     isError: boolean;
-    isLoading: boolean;
-  } = useQuery([`accessmodel_${params.datasetIdentifier}`], () =>
+    isPending: boolean;
+  } = useQuery({
+    queryKey: [`accessmodel_${params.datasetIdentifier}`],
+    queryFn: () =>
     GraphQL(
       accessModelResourcesQuery,
       {
@@ -131,11 +133,11 @@ const AccessModels = () => {
         datasetId: params.datasetIdentifier,
       }
     )
-  );
+  });
 
   return (
     <>
-      {getAccessModeldetails.isLoading ? (
+      {getAccessModeldetails.isPending ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>

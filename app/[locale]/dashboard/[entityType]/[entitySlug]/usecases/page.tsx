@@ -4,7 +4,7 @@ import { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
+import { parseAsString, useQueryState } from 'nuqs';
 import { Button, DataTable, Icon, IconButton, Text, toast } from 'opub-ui';
 import { twMerge } from 'tailwind-merge';
 
@@ -81,9 +81,9 @@ export default function DatasetPage(
     },
   ];
 
-  const AllUseCases: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_UseCases`],
-    () =>
+  const AllUseCases: { data: any; isPending: boolean; refetch: any } = useQuery({
+    queryKey: [`fetch_UseCases`],
+    queryFn: () =>
       GraphQL(
         allUseCases,
         {
@@ -96,7 +96,7 @@ export default function DatasetPage(
           order: { modified: 'DESC' },
         }
       )
-  );
+  });
 
   useEffect(() => {
     if (navigationTab === null || navigationTab === undefined)
@@ -106,11 +106,12 @@ export default function DatasetPage(
 
   const DeleteUseCaseMutation: {
     mutate: any;
-    isLoading: boolean;
+    isPending: boolean;
     error: any;
   } = useMutation(
-    [`delete_Usecase`],
-    (data: { id: string }) =>
+    {
+      mutationKey: [`delete_Usecase`],
+      mutationFn: (data: { id: string }) =>
       GraphQL(
         deleteUseCase,
         {
@@ -118,7 +119,6 @@ export default function DatasetPage(
         },
         { useCaseId: data.id }
       ),
-    {
       onSuccess: () => {
         toast(`Deleted UseCase successfully`);
         AllUseCases.refetch();
@@ -131,11 +131,11 @@ export default function DatasetPage(
 
   const CreateUseCase: {
     mutate: any;
-    isLoading: boolean;
+    isPending: boolean;
     error: any;
-  } = useMutation(
-    [`delete_Usecase`],
-    () =>
+  } = useMutation({
+    mutationKey: [`delete_Usecase`],
+    mutationFn: (data: { id: string }) =>
       GraphQL(
         AddUseCase,
         {
@@ -143,7 +143,6 @@ export default function DatasetPage(
         },
         []
       ),
-    {
       onSuccess: (response: any) => {
         toast(`UseCase created successfully`);
         router.push(
@@ -158,11 +157,11 @@ export default function DatasetPage(
   );
   const UnpublishDatasetMutation: {
     mutate: any;
-    isLoading: boolean;
+    isPending: boolean;
     error: any;
-  } = useMutation(
-    [`unpublish_usecase`],
-    (data: { id: string }) =>
+  } = useMutation({
+    mutationKey: [`unpublish_usecase`],
+    mutationFn: (data: { id: string }) =>
       GraphQL(
         unPublishUseCase,
         {
@@ -170,7 +169,6 @@ export default function DatasetPage(
         },
         { useCaseId: data.id }
       ),
-    {
       onSuccess: () => {
         toast(`Unpublished usecase successfully`);
         AllUseCases.refetch();
@@ -277,7 +275,7 @@ export default function DatasetPage(
               hideViewSelector
             />
           </div>
-        ) : AllUseCases.isLoading ? (
+        ) : AllUseCases.isPending ? (
           <Loading />
         ) : (
           <>

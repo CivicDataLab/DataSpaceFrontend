@@ -53,10 +53,10 @@ const Details: React.FC = () => {
   const params = useParams();
   const chartRef = useRef<ReactECharts>(null);
 
-  const { data, isLoading }: { data: any; isLoading: any } = useQuery(
-    [`chartDetails_${params.id}`],
-    () => GraphQL(DetailsQuery, {}, { datasetId: params.datasetIdentifier })
-  );
+  const { data, isLoading }: { data: any; isLoading: any } = useQuery({
+    queryKey: [`chartDetails_${params.id}`],
+    queryFn: () => GraphQL(DetailsQuery, {}, { datasetId: params.datasetIdentifier })
+  });
 
   const renderChart = (item: any) => {
     if (item.chartType === 'ASSAM_DISTRICT' || item.chartType === 'ASSAM_RC') {

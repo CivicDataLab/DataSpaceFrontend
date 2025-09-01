@@ -55,11 +55,10 @@ const Page = () => {
 
   const [formData, setFormData] = useState(initialFormData);
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
-    (input: { input: OrganizationInput }) =>
+  const { mutate, isPending: editMutationLoading } = useMutation({
+    mutationFn: (input: { input: OrganizationInput }) =>
       GraphQL(organizationCreationMutation, {}, input),
-    {
-      onSuccess: (res: any) => {
+    onSuccess: (res: any) => {
         toast('Organization created successfully');
         // Optionally, reset form or perform other actions
         setIsOpen(false);
@@ -81,11 +80,10 @@ const Page = () => {
           ],
         });
       },
-      onError: (error: any) => {
+    onError: (error: any) => {
         toast(`Error: ${error.message}`);
       },
-    }
-  );
+  });
 
   if (params.entityType !== 'organization') {
     return notFound();

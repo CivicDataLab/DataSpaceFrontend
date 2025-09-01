@@ -74,10 +74,10 @@ export default function DatasetDetailsPage({
 }: {
   datasetId: string;
 }) {
-  const Datasetdetails: { data: any; isLoading: any } = useQuery(
-    [`details_${datasetId}`],
-    () => GraphQL(datasetQuery, {}, { datasetId: datasetId })
-  );
+  const Datasetdetails: { data: any; isPending: boolean } = useQuery({
+    queryKey: [`details_${datasetId}`],
+    queryFn: () => GraphQL(datasetQuery, {}, { datasetId: datasetId }),
+  });
 
   const jsonLd = generateJsonLd({
     '@context': 'https://schema.org',
@@ -105,14 +105,14 @@ export default function DatasetDetailsPage({
         />
         <div className="flex">
           <div className="w-full gap-10 border-r-2 border-solid border-greyExtralight p-6 lg:w-3/4 lg:p-10">
-            {Datasetdetails.isLoading ? (
+            {Datasetdetails.isPending ? (
               <div className=" mt-8 flex justify-center">
                 <Spinner />
               </div>
             ) : (
               <PrimaryData
                 data={Datasetdetails?.data?.getDataset}
-                isLoading={Datasetdetails.isLoading}
+                isLoading={Datasetdetails.isPending}
               />
             )}
             <Details />
@@ -120,7 +120,7 @@ export default function DatasetDetailsPage({
             <SimilarDatasets />
           </div>
           <div className=" hidden  w-1/4 gap-10 px-7 py-10 lg:block">
-            {Datasetdetails.isLoading ? (
+            {Datasetdetails.isPending ? (
               <div className=" mt-8 flex justify-center">
                 <Spinner />
               </div>

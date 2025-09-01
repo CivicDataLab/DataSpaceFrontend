@@ -175,7 +175,9 @@ const Page = () => {
   }>();
 
   const getDatasetsSummary: { data: any; isLoading: any; refetch: any } =
-    useQuery([`summary_${params.id}`], () =>
+    useQuery({
+    queryKey: [`summary_${params.id}`],
+    queryFn: () =>
       GraphQL(
         datasetSummaryQuery,
         {
@@ -183,7 +185,8 @@ const Page = () => {
         },
         { filters: { id: params.id } }
       )
-    );
+    },
+  );
 
   useEffect(() => {
     getDatasetsSummary.refetch();
@@ -247,8 +250,8 @@ const Page = () => {
   ];
   const router = useRouter();
 
-  const { mutate, isLoading: mutationLoading } = useMutation(
-    () =>
+  const { mutate, isPending: mutationLoading } = useMutation({
+    mutationFn: () =>
       GraphQL(
         publishDatasetMutation,
         {
@@ -256,7 +259,6 @@ const Page = () => {
         },
         { datasetId: params.id }
       ),
-    {
       onSuccess: (data: any) => {
         toast('Dataset Published Successfully');
         router.push(

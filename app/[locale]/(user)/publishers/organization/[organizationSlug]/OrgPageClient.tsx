@@ -34,9 +34,9 @@ const orgInfoQuery = graphql(`
 `);
 
 const OrgPageClient = ({ organizationSlug }: { organizationSlug: string }) => {
-  const { data, isLoading } = useQuery(
-    [`org_details_${organizationSlug}`],
-    () =>
+  const { data, isLoading } = useQuery({
+    queryKey: [`org_details_${organizationSlug}`],
+    queryFn: () =>
       GraphQL(
         orgInfoQuery,
         {},
@@ -44,8 +44,8 @@ const OrgPageClient = ({ organizationSlug }: { organizationSlug: string }) => {
           id: organizationSlug,
         }
       ),
-    { refetchOnMount: true }
-  );
+    refetchOnMount: true,
+  });
 
   const org = data?.organization;
   const jsonLd = generateJsonLd({

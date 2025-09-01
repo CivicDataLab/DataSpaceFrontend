@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { Button, Icon, Text, toast } from 'opub-ui';
@@ -33,9 +33,10 @@ const Details = () => {
     partners: [] as { label: string; value: string }[],
   });
 
-  const Users: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_users`],
-    () =>
+  const Users: { data: any; isPending: boolean; refetch: any } = useQuery({
+    queryKey: [`fetch_users`],
+    queryFn: (
+  ) =>
       GraphQL(
         FetchUsers,
         {
@@ -46,21 +47,24 @@ const Details = () => {
           searchTerm: searchValue,
         }
       ),
-    {
+    
       enabled: searchValue.length > 0,
-      keepPreviousData: true,
-    }
-  );
+  });
 
-  const Organizations: { data: any; isLoading: boolean; refetch: any } =
-    useQuery([`fetch_orgs`], () => GraphQL(OrgList, {
+  const Organizations: { data: any; isPending: boolean; refetch: any } =
+    useQuery({
+    queryKey: [`fetch_orgs`],
+    queryFn: (
+  ) => GraphQL(OrgList, {
       [params.entityType]: params.entitySlug,
-    }, []));
+    }, []),
+    });
 
 
-  const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_usecase_${params.id}`],
-    () =>
+  const UseCaseData: { data: any; isPending: boolean; refetch: any } = useQuery({
+    queryKey: [`fetch_usecase_${params.id}`],
+    queryFn: (
+  ) =>
       GraphQL(
         FetchUsecaseInfo,
         {
@@ -72,11 +76,9 @@ const Details = () => {
           },
         }
       ),
-    {
       refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
-  );
+      refetchOnReconnect: true,   
+});
 
   useEffect(() => {
     setFormData((prev) => ({
@@ -103,13 +105,13 @@ const Details = () => {
     }));
   }, [UseCaseData?.data]);
 
-  const { mutate: addContributor, isLoading: addContributorLoading } =
+  const { mutate: addContributor, isPending: addContributorLoading } =
     useMutation(
-      (input: { useCaseId: string; userId: string }) =>
+      { mutationFn: (input: { useCaseId: string; userId: string }) =>
         GraphQL(AddContributors, {
           [params.entityType]: params.entitySlug,
         }, input),
-      {
+      
         onSuccess: (res: any) => {
           toast('Contributor added successfully');
           UseCaseData.refetch();
@@ -120,13 +122,12 @@ const Details = () => {
       }
     );
 
-  const { mutate: removeContributor, isLoading: removeContributorLoading } =
+  const { mutate: removeContributor, isPending: removeContributorLoading } =
     useMutation(
-      (input: { useCaseId: string; userId: string }) =>
+      { mutationFn: (input: { useCaseId: string; userId: string }) =>
         GraphQL(RemoveContributor, {
           [params.entityType]: params.entitySlug,
         }, input),
-      {
         onSuccess: (res: any) => {
           toast('Contributor removed successfully');
         },
@@ -136,12 +137,11 @@ const Details = () => {
       }
     );
 
-  const { mutate: addSupporter, isLoading: addSupporterLoading } = useMutation(
-    (input: { useCaseId: string; organizationId: string }) =>
+  const { mutate: addSupporter, isPending: addSupporterLoading } = useMutation(
+    { mutationFn: (input: { useCaseId: string; organizationId: string }) =>
       GraphQL(AddSupporters, {
         [params.entityType]: params.entitySlug,
       }, input),
-    {
       onSuccess: (res: any) => {
         toast('Supporter added successfully');
         UseCaseData.refetch();
@@ -152,13 +152,12 @@ const Details = () => {
     }
   );
 
-  const { mutate: removeSupporter, isLoading: removeSupporterLoading } =
+  const { mutate: removeSupporter, isPending: removeSupporterLoading } =
     useMutation(
-      (input: { useCaseId: string; organizationId: string }) =>
+      { mutationFn: (input: { useCaseId: string; organizationId: string }) =>
         GraphQL(RemoveSupporters, {
           [params.entityType]: params.entitySlug,
         }, input),
-      {
         onSuccess: (res: any) => {
           toast('Supporter removed successfully');
         },
@@ -168,12 +167,11 @@ const Details = () => {
       }
     );
 
-  const { mutate: addPartner, isLoading: addPartnerLoading } = useMutation(
-    (input: { useCaseId: string; organizationId: string }) =>
+  const { mutate: addPartner, isPending: addPartnerLoading } = useMutation(
+    { mutationFn: (input: { useCaseId: string; organizationId: string }) =>
       GraphQL(AddPartners, {
         [params.entityType]: params.entitySlug,
       }, input),
-    {
       onSuccess: (res: any) => {
         toast('Partner added successfully');
         UseCaseData.refetch();
@@ -184,13 +182,12 @@ const Details = () => {
     }
   );
 
-  const { mutate: removePartner, isLoading: removePartnerLoading } =
+  const { mutate: removePartner, isPending: removePartnerLoading } =
     useMutation(
-      (input: { useCaseId: string; organizationId: string }) =>
+      { mutationFn: (input: { useCaseId: string; organizationId: string }) =>
         GraphQL(RemovePartners, {
           [params.entityType]: params.entitySlug,
         }, input),
-      {
         onSuccess: (res: any) => {
           toast('Partner removed successfully');
         },
@@ -229,7 +226,7 @@ const Details = () => {
 
   return (
     <div>
-      {Users?.isLoading ||
+      {Users?.isPending ||
       Organizations?.data?.allOrganizations?.length === 0 ? (
         <Loading />
       ) : (

@@ -78,9 +78,9 @@ const similarDatasetQuery: any = graphql(`
 const SimilarDatasets: React.FC = () => {
   const params = useParams();
 
-  const SimilatDatasetdetails: { data: any; isLoading: any } = useQuery(
-    [`similar_datasets_${params.datasetIdentifier}`],
-    () =>
+  const SimilatDatasetdetails: { data: any; isPending: any } = useQuery({
+    queryKey: [`similar_datasets_${params.datasetIdentifier}`],
+    queryFn: () =>
       GraphQL(
         similarDatasetQuery,
         {
@@ -88,11 +88,11 @@ const SimilarDatasets: React.FC = () => {
         },
         { datasetId: params.datasetIdentifier }
       )
-  );
+    });
 
   return (
     <div className="py-4 md:py-10 lg:py-10">
-      {SimilatDatasetdetails.isLoading ? (
+      {SimilatDatasetdetails.isPending ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>

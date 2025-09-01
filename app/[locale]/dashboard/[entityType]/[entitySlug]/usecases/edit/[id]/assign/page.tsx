@@ -52,10 +52,10 @@ const Assign = () => {
   const [data, setData] = useState<any[]>([]); // Ensure `data` is an array
   const [selectedRow, setSelectedRows] = useState<any[]>([]);
 
-  const UseCaseDetails: { data: any; isLoading: boolean; refetch: any } =
-    useQuery(
-      [`UseCase_Details`, params.id],
-      () =>
+  const UseCaseDetails: { data: any; isPending: boolean; refetch: any } =
+    useQuery({
+    queryKey: [`UseCase_Details`, params.id],
+    queryFn: () =>
         GraphQL(
           FetchUseCaseDetails,
           {
@@ -67,11 +67,9 @@ const Assign = () => {
             },
           }
         ),
-      {
-        refetchOnMount: true,
-        refetchOnReconnect: true,
-      }
-    );
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+    });
 
   const formattedData = (data: any) =>
     data.map((item: any) => {
@@ -110,8 +108,8 @@ const Assign = () => {
     });
   };
 
-  const { mutate, isLoading: mutationLoading } = useMutation(
-    () =>
+  const { mutate, isPending: mutationLoading } = useMutation({
+    mutationFn: () =>
       GraphQL(
         AssignUsecaseDatasets,
         {
@@ -124,7 +122,7 @@ const Assign = () => {
             : [],
         }
       ),
-    {
+    
       onSuccess: (data: any) => {
         toast('Dataset Assigned Successfully');
         UseCaseDetails.refetch();
@@ -142,7 +140,7 @@ const Assign = () => {
     <>
       {UseCaseDetails?.data?.useCases[0]?.datasets?.length >= 0 &&
       data.length > 0 &&
-      !UseCaseDetails.isLoading ? (
+      !UseCaseDetails.isPending ? (
         <>
           <div className="flex justify-between">
             <div>

@@ -62,8 +62,10 @@ export function EditLayout({ children, params }: LayoutProps) {
 
   const [editMode, setEditMode] = useState(false);
 
-  const getDatasetTitleRes: { data: any; isLoading: boolean; refetch: any } =
-    useQuery([`dataset_title_${routerParams.id}`], () =>
+  const getDatasetTitleRes: { data: any; isPending: boolean; refetch: any } =
+    useQuery({
+    queryKey: [`dataset_title_${routerParams.id}`],
+    queryFn: () =>
       GraphQL(
         datasetQueryDoc,
         {
@@ -75,10 +77,10 @@ export function EditLayout({ children, params }: LayoutProps) {
           },
         }
       )
-    );
+    });
 
-  const updateDatasetTitleMutation = useMutation(
-    (data: { updateDatasetInput: UpdateDatasetInput }) =>
+  const updateDatasetTitleMutation = useMutation({
+    mutationFn: (data: { updateDatasetInput: UpdateDatasetInput }) =>
       GraphQL(
         updateDatasetTitleMutationDoc,
         {
@@ -86,7 +88,6 @@ export function EditLayout({ children, params }: LayoutProps) {
         },
         data
       ),
-    {
       onSuccess: (data: any) => {
         // queryClient.invalidateQueries({
         //   queryKey: [`create_dataset_${'52'}`],
@@ -115,7 +116,7 @@ export function EditLayout({ children, params }: LayoutProps) {
 
   return (
     <div className="flex h-full flex-col lg:mt-8">
-      {getDatasetTitleRes.isLoading ? (
+      {getDatasetTitleRes.isPending ? (
         <></>
       ) : (
         <TitleBar
@@ -130,7 +131,7 @@ export function EditLayout({ children, params }: LayoutProps) {
               },
             })
           }
-          loading={updateDatasetTitleMutation.isLoading}
+          loading={updateDatasetTitleMutation.isPending}
           status={status}
           setStatus={setStatus}
         />

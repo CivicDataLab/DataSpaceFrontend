@@ -34,7 +34,9 @@ const userInfoQuery: any = graphql(`
 `);
 
 const PublisherPageClient = ({ publisherSlug }: { publisherSlug: string }) => {
-  const userInfo: any = useQuery([`${publisherSlug}`], () =>
+  const userInfo: any = useQuery({
+    queryKey: [`${publisherSlug}`],
+    queryFn: () =>
     GraphQL(
       userInfoQuery,
       {
@@ -42,7 +44,7 @@ const PublisherPageClient = ({ publisherSlug }: { publisherSlug: string }) => {
       },
       { userId: publisherSlug }
     )
-  );
+  });
 
   const jsonLd = generateJsonLd({
     '@context': 'https://schema.org',
@@ -77,7 +79,7 @@ const PublisherPageClient = ({ publisherSlug }: { publisherSlug: string }) => {
         <div className="container py-10 text-surfaceDefault">
           <div className="flex flex-wrap gap-10 lg:flex-nowrap">
             <div className="w-full lg:w-1/4">
-              {userInfo?.isLoading ? (
+              {userInfo?.isPending ? (
                 <div className="m-4 flex justify-center rounded-2 bg-surfaceDefault p-4">
                   <Spinner color="highlight" />
                 </div>
@@ -86,7 +88,7 @@ const PublisherPageClient = ({ publisherSlug }: { publisherSlug: string }) => {
               )}
             </div>
             <div className="w-full">
-              {userInfo?.isLoading ? (
+              {userInfo?.isPending ? (
                 <div className="m-4 flex justify-center rounded-2 bg-surfaceDefault p-4">
                   <Spinner color="highlight" />
                 </div>

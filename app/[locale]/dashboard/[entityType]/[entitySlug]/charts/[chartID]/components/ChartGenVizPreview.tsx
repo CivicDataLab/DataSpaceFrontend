@@ -285,11 +285,13 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
 
   const getAllDatasetsWithResourcesRes: {
     data: any;
-    isLoading: boolean;
+    isPending: boolean;
     refetch: any;
     error: any;
     isError: boolean;
-  } = useQuery([`allDatasetsListwithResourcesForCharts`], () =>
+  } = useQuery({
+    queryKey: [`allDatasetsListwithResourcesForCharts`],
+    queryFn: () =>
     GraphQL(
       getAllDatasetsListwithResourcesDoc,
       {
@@ -297,15 +299,17 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
       },
       []
     )
-  );
+  });
 
   const chartDetailsRes: {
     data: any;
-    isLoading: boolean;
+    isPending: boolean;
     refetch: any;
     error: any;
     isError: boolean;
-  } = useQuery([`chartDetailsForViz-${JSON.stringify(chartData)}`], () =>
+  } = useQuery({
+    queryKey: [`chartDetailsForViz-${JSON.stringify(chartData)}`],
+    queryFn: () =>
     GraphQL(
       getResourceChartForViz,
       {
@@ -315,7 +319,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
         chartDetailsId: params.chartID,
       }
     )
-  );
+  });
 
   useEffect(() => {
     if (chartDetailsRes?.data?.resourceChart) {
@@ -382,15 +386,16 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
 
   const editResourceChartMutation: {
     mutate: any;
-    isLoading: any;
+    isPending: any;
   } = useMutation(
-    (data: { chartInput: ResourceChartInput }) =>
-      GraphQL(
-        saveEditResourceChartDoc,
-        { [params.entityType]: params.entitySlug },
-        data
-      ),
     {
+      mutationFn: (data: { chartInput: ResourceChartInput }) =>
+        GraphQL(
+          saveEditResourceChartDoc,
+          { [params.entityType]: params.entitySlug },
+          data
+        ),
+    
       onSuccess: () => {
         chartDetailsRes.refetch();
         toast('Resource Chart Updated Successfully');
@@ -405,15 +410,15 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
 
   const publishResourceChartMutation: {
     mutate: any;
-    isLoading: any;
+    isPending: any;
   } = useMutation(
-    (data: { chartId: string }) =>
-      GraphQL(
-        publishResourceChartDoc,
-        { [params.entityType]: params.entitySlug },
-        data
-      ),
     {
+      mutationFn: (data: { chartId: string }) =>
+        GraphQL(
+          publishResourceChartDoc,
+          { [params.entityType]: params.entitySlug },
+          data
+        ),
       onSuccess: () => {
         toast('Resource Chart Published Successfully');
       },
@@ -664,7 +669,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
     <div>
       {chartDetailsRes.isError ? (
         <>Error Loading the Page</>
-      ) : chartDetailsRes.isLoading ? (
+      ) : chartDetailsRes.isPending ? (
         <LoadingPage />
       ) : (
         <div>
@@ -675,8 +680,8 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
             onSave={(val: any) => {
               handleSave('chartName', val);
             }}
-            loading={editResourceChartMutation.isLoading}
-            status={editResourceChartMutation.isLoading ? 'loading' : 'success'}
+            loading={editResourceChartMutation.isPending}
+            status={editResourceChartMutation.isPending ? 'loading' : 'success'}
             setStatus={() => {}}
           />
 
@@ -1016,8 +1021,8 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                 <Button
                   kind="primary"
                   className="my-1 rounded-2"
-                  loading={publishResourceChartMutation.isLoading}
-                  disabled={publishResourceChartMutation.isLoading}
+                  loading={publishResourceChartMutation.isPending}
+                  disabled={publishResourceChartMutation.isPending}
                   onClick={() => handlePublishChart()}
                 >
                   Publish Chart

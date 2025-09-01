@@ -68,35 +68,33 @@ const UserProfile = () => {
     location: '',
   };
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
-    (input: { input: UpdateUserInput }) =>
+  const { mutate, isPending: editMutationLoading } = useMutation( {
+    mutationFn: (input: { input: UpdateUserInput }) =>
       GraphQL(updateUserMutation, {
         [params.entityType]: params.entitySlug,
       }, input),
-    {
-      onSuccess: (res: any) => {
-        toast('User details updated successfully');
-        setFormData({
-          firstName: res?.updateUser?.firstName,
-          lastName: res?.updateUser?.lastName,
-          email: res?.updateUser?.email,
-          bio: res?.updateUser?.bio,
-          profilePicture: res?.updateUser?.profilePicture,
-          githubProfile: res?.updateUser?.githubProfile,
-          linkedinProfile: res?.updateUser?.linkedinProfile,
-          twitterProfile: res?.updateUser?.twitterProfile,
-          location: res?.updateUser?.location,
-        });
-        setUserDetails({
-          ...userDetails,
-          me: res.updateUser,
-        });
-      },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`);
-      },
-    }
-  );
+    onSuccess: (res: any) => {
+      toast('User details updated successfully');
+      setFormData({
+        firstName: res?.updateUser?.firstName,
+        lastName: res?.updateUser?.lastName,
+        email: res?.updateUser?.email,
+        bio: res?.updateUser?.bio,
+        profilePicture: res?.updateUser?.profilePicture,
+        githubProfile: res?.updateUser?.githubProfile,
+        linkedinProfile: res?.updateUser?.linkedinProfile,
+        twitterProfile: res?.updateUser?.twitterProfile,
+        location: res?.updateUser?.location,
+      });
+      setUserDetails({
+        ...userDetails,
+        me: res.updateUser,
+      });
+    },
+    onError: (error: any) => {
+      toast(`Error: ${error.message}`);
+    },
+  });
 
   const [formData, setFormData] = React.useState(initialFormData);
 

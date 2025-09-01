@@ -77,19 +77,21 @@ const useCasesListDoc: any = graphql(`
 const UseCasesListingPage = () => {
   const getUseCasesList: {
     data: any;
-    isLoading: boolean;
+    isPending: boolean;
     error: any;
     isError: boolean;
-  } = useQuery([`useCases_list`], () =>
-    GraphQL(
-      useCasesListDoc,
-      {},
-      {
-        filters: { status: 'PUBLISHED' },
-        pagination: { limit: 6 },
-      }
-    )
-  );
+  } = useQuery({
+    queryKey: [`useCases_list`],
+    queryFn: () =>
+      GraphQL(
+        useCasesListDoc,
+        {},
+        {
+          filters: { status: 'PUBLISHED' },
+          pagination: { limit: 6 },
+        }
+      )
+  });
   const router = useRouter();
 
   return (
@@ -120,7 +122,7 @@ const UseCasesListingPage = () => {
         <Carousel className="flex w-full justify-between">
           <CarouselPrevious />
 
-          {getUseCasesList.isLoading ? (
+          {getUseCasesList.isPending ? (
             <div className="p-8">
               <Spinner />
             </div>

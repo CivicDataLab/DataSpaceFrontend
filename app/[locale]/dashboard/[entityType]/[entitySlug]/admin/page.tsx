@@ -43,9 +43,9 @@ const removeUserDoc: any = graphql(`
 
 const Admin = () => {
   const params = useParams<{ entityType: string; entitySlug: string }>();
-  const usersList: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_users_list_admin_members`],
-    () =>
+  const usersList: { data: any; isPending: boolean; refetch: any } = useQuery({
+    queryKey: [`fetch_users_list_admin_members`],
+    queryFn: () =>
       GraphQL(
         usersListDoc,
         {
@@ -53,22 +53,24 @@ const Admin = () => {
         },
         []
       )
+    },
   );
   const [isOpen, setIsOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [selectedUser, setSelectedUser] = useState({});
   const [refetch, setRefetch] = useState(false);
 
-  const { mutate, isLoading: removeUserLoading } = useMutation(
-    (input: { input: AddRemoveUserToOrganizationInput }) =>
-      GraphQL(
-        removeUserDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        input
-      ),
+  const { mutate, isPending: removeUserLoading } = useMutation(
     {
+      mutationFn: (input: { input: AddRemoveUserToOrganizationInput }) =>
+        GraphQL(
+          removeUserDoc,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          input
+        ),
+    
       onSuccess: (res: any) => {
         toast('User removed successfully');
         usersList.refetch();

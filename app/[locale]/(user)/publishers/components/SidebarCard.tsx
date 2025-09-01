@@ -32,9 +32,9 @@ const organizationDoc: any = graphql(`
 `);
 
 const SidebarCard: React.FC<SidebarCardProps> = ({ data, type }) => {
-  const sectorInfo: any = useQuery(
-    [`${data.id}_sector`],
-    () =>
+  const sectorInfo: any = useQuery({
+    queryKey: [`${data.id}_sector`],
+    queryFn: () =>
       GraphQL(
         sectorsDoc,
         {
@@ -42,14 +42,12 @@ const SidebarCard: React.FC<SidebarCardProps> = ({ data, type }) => {
         },
         { userId: data.id }
       ),
-    {
-      enabled: type === 'Publisher' && !!data?.id,
-    }
-  );
+    enabled: type === 'Publisher' && !!data?.id,
+  });
 
-  const organizationInfo: any = useQuery(
-    [`${data.id}_organization`],
-    () =>
+  const organizationInfo: any = useQuery({
+    queryKey: [`${data.id}_organization`],
+    queryFn: () =>
       GraphQL(
         organizationDoc,
         {
@@ -57,10 +55,8 @@ const SidebarCard: React.FC<SidebarCardProps> = ({ data, type }) => {
         },
         { organizationId: data.id }
       ),
-    {
-      enabled: type === 'organization' && !!data?.id, // runs only if type is 'organization' and data.id exists
-    }
-  );
+    enabled: type === 'organization' && !!data?.id, // runs only if type is 'organization' and data.id exists
+  });
 
   return (
     <div className="m-auto flex flex-col gap-4">

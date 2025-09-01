@@ -11,7 +11,7 @@ interface ChartHeaderProps {
   setIsSheetOpen: (open: boolean) => void;
   resourceChart: {
     mutate: (data: { resource: string }) => void;
-    isLoading: boolean;
+    isPending: boolean;
   };
   resourceData: ResourceData;
   chartsList: {

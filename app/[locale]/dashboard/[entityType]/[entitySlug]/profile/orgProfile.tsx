@@ -79,12 +79,12 @@ const OrgProfile = () => {
 
   const [formData, setFormData] = React.useState(initialFormData);
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
-    (input: { input: OrganizationInputPartial }) =>
+  const { mutate, isPending: editMutationLoading } = useMutation(
+    {
+      mutationFn: (input: { input: OrganizationInputPartial }) =>
       GraphQL(organizationUpdateMutation, {
         [params.entityType]: params.entitySlug,
       }, input),
-    {
       onSuccess: (res: any) => {
         toast('Organization updated successfully');
         setFormData({

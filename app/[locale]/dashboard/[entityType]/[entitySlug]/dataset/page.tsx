@@ -4,7 +4,7 @@ import { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
+import { parseAsString, useQueryState } from 'nuqs';
 import { Button, DataTable, IconButton, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -87,21 +87,23 @@ export default function DatasetPage(
     },
   ];
 
-  const AllDatasetsQuery: { data: any; isLoading: boolean; refetch: any } =
-    useQuery([`fetch_datasets_org_dashboard`], () =>
-      GraphQL(
-        allDatasetsQueryDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        {
-          filters: {
-            status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
+  const AllDatasetsQuery: { data: any; isPending: boolean; refetch: any } =
+    useQuery({
+      queryKey: [`fetch_datasets_org_dashboard`],
+      queryFn: () =>
+        GraphQL(
+          allDatasetsQueryDoc,
+          {
+            [params.entityType]: params.entitySlug,
           },
-          order: { modified: 'DESC' },
-        }
-      )
-    );
+          {
+            filters: {
+              status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
+            },
+            order: { modified: 'DESC' },
+          }
+        )
+    });
 
   useEffect(() => {
     if (navigationTab === null || navigationTab === undefined)
@@ -111,11 +113,10 @@ export default function DatasetPage(
 
   const DeleteDatasetMutation: {
     mutate: any;
-    isLoading: boolean;
+    isPending: boolean;
     error: any;
-  } = useMutation(
-    [`delete_dataset`],
-    (data: { datasetId: string }) =>
+  } = useMutation({
+    mutationFn: (data: { datasetId: string }) =>
       GraphQL(
         deleteDatasetMutationDoc,
         {
@@ -123,19 +124,17 @@ export default function DatasetPage(
         },
         { datasetId: data.datasetId }
       ),
-    {
-      onSuccess: () => {
-        toast(`Deleted dataset successfully`);
-        AllDatasetsQuery.refetch();
-      },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
-      },
-    }
-  );
-  const CreateDatasetMutation: { mutate: any; isLoading: boolean; error: any } =
-    useMutation(
-      () =>
+    onSuccess: () => {
+      toast(`Deleted dataset successfully`);
+      AllDatasetsQuery.refetch();
+    },
+    onError: (err: any) => {
+      toast('Error:  ' + err.message.split(':')[0]);
+    },
+  });
+  const CreateDatasetMutation: { mutate: any; isPending: boolean; error: any } =
+    useMutation({
+      mutationFn: () =>
         GraphQL(
           createDatasetMutationDoc,
           {
@@ -143,29 +142,26 @@ export default function DatasetPage(
           },
           []
         ),
-      {
-        onSuccess: (data: any) => {
-          if (data.addDataset.success) {
-            toast('Dataset created successfully!');
+      onSuccess: (data: any) => {
+        if (data.addDataset.success) {
+          toast('Dataset created successfully!');
 
-            router.push(
-              `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
-            );
-          } else {
-            toast(
-              'Error: ' + data.addDataset.errors.fieldErrors[0].messages[0]
-            );
-          }
-        },
-      }
-    );
+          router.push(
+            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
+          );
+        } else {
+          toast(
+            'Error: ' + data.addDataset.errors.fieldErrors[0].messages[0]
+          );
+        }
+      },
+    });
   const UnpublishDatasetMutation: {
     mutate: any;
-    isLoading: boolean;
+    isPending: boolean;
     error: any;
-  } = useMutation(
-    [`unpublish_dataset`],
-    (data: { datasetId: string }) =>
+  } = useMutation({
+    mutationFn: (data: { datasetId: string }) =>
       GraphQL(
         unPublishDataset,
         {
@@ -173,16 +169,14 @@ export default function DatasetPage(
         },
         { datasetId: data.datasetId }
       ),
-    {
-      onSuccess: () => {
-        toast(`Unpublished dataset successfully`);
-        AllDatasetsQuery.refetch();
-      },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
-      },
-    }
-  );
+    onSuccess: () => {
+      toast(`Unpublished dataset successfully`);
+      AllDatasetsQuery.refetch();
+    },
+    onError: (err: any) => {
+      toast('Error:  ' + err.message.split(':')[0]);
+    },
+  });
 
   const datasetsListColumns = [
     {
@@ -274,7 +268,7 @@ export default function DatasetPage(
               hideViewSelector
             />
           </div>
-        ) : AllDatasetsQuery.isLoading ? (
+        ) : AllDatasetsQuery.isPending ? (
           <Loading />
         ) : (
           <Content params={params} />

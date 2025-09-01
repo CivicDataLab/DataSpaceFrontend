@@ -95,9 +95,9 @@ const ChartsImage: React.FC<ImageProps> = ({
   }>();
 
   const { data: chartImageDetails, refetch }: { data: any; refetch: any } =
-    useQuery(
-      [`chartsdata_${params.id}`, imageId],
-      () =>
+    useQuery({
+    queryKey: [`chartsdata_${params.id}`, imageId],
+    queryFn: () =>
         GraphQL(
           getResourceChartImageDetails,
           {
@@ -109,15 +109,15 @@ const ChartsImage: React.FC<ImageProps> = ({
             },
           }
         ),
-      {}
+      }
     );
 
   const {
     data: chartImagesList,
     refetch: listrefetch,
-  }: { data: any; refetch: any } = useQuery(
-    [`chartslist_${params.id}`, imageId],
-    () =>
+  }: { data: any; refetch: any } = useQuery({
+    queryKey: [`chartslist_${params.id}`, imageId],
+    queryFn: () =>
       GraphQL(
         getDatasetResourceChartImageDetails,
         {
@@ -127,14 +127,14 @@ const ChartsImage: React.FC<ImageProps> = ({
           datasetId: params.id,
         }
       ),
-    {}
-  );
+    });
 
   const resourceChartImageMutation: {
     mutate: any;
-    isLoading: any;
+    isPending: any;
   } = useMutation(
-    (data: { dataset: UUID }) =>
+    {
+    mutationFn: (data: { dataset: UUID }) =>
       GraphQL(
         AddResourceChartimage,
         {
@@ -142,7 +142,6 @@ const ChartsImage: React.FC<ImageProps> = ({
         },
         data
       ),
-    {
       onSuccess: (res: any) => {
         toast('Resource ChartImage Created Successfully');
         setType('img');
@@ -181,21 +180,21 @@ const ChartsImage: React.FC<ImageProps> = ({
     }
   }, [chartImageDetails]);
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
-    (data: { data: ResourceChartImageInputPartial }) =>
+  const { mutate, isPending: editMutationLoading } = useMutation(
+    {
+    mutationFn: (data: { data: ResourceChartImageInputPartial }) =>
       GraphQL(UpdateChartImageMutation, {
         [params.entityType]: params.entitySlug,
       }, data),
-    {
-      onSuccess: () => {
-        toast('ChartImage updated successfully');
-        // Optionally, reset form or perform other actions
-        refetch();
-        listrefetch();
-      },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`);
-      },
+    onSuccess: () => {
+      toast('ChartImage updated successfully');
+      // Optionally, reset form or perform other actions
+      refetch();
+      listrefetch();
+    },
+    onError: (error: any) => {
+      toast(`Error: ${error.message}`);
+    },
     }
   );
 

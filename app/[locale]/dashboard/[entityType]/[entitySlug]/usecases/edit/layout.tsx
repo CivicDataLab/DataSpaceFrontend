@@ -51,9 +51,9 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     return pathName.indexOf(v) >= 0;
   });
 
-  const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_UseCaseData`],
-    () =>
+  const UseCaseData: { data: any; isPending: boolean; refetch: any } = useQuery({
+    queryKey: [`fetch_UseCaseData`],
+    queryFn: () =>
       GraphQL(
         FetchUseCaseTitle,
         {
@@ -65,18 +65,16 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
           },
         }
       ),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
-  );
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+  });
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
-    (data: { data: UseCaseInputPartial }) =>
-      GraphQL(UpdateUseCaseTitleMutation, {
-        [params.entityType]: params.entitySlug,
-      }, data),
+  const { mutate, isPending: editMutationLoading } = useMutation(
     {
+      mutationFn: (data: { data: UseCaseInputPartial }) =>
+        GraphQL(UpdateUseCaseTitleMutation, {
+          [params.entityType]: params.entitySlug,
+        }, data),
       onSuccess: () => {
         toast('Use case updated successfully');
         // Optionally, reset form or perform other actions

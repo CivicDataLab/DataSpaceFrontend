@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams } from 'next/navigation';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
 import { useMutation } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
+import { parseAsString, useQueryState } from 'nuqs';
 import { Button, DropZone, Tag, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -19,8 +19,8 @@ export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
 
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
 
-  const { mutate, isLoading } = useMutation(
-    (data: { fileResourceInput: CreateFileResourceInput }) =>
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(
         createResourceFilesDoc,
         {
@@ -28,7 +28,6 @@ export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
         },
         data
       ),
-    {
       onSuccess: (data: any) => {
         reload();
         setResourceId(data.createFileResources[0].id);

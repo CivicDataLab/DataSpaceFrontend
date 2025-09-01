@@ -34,10 +34,15 @@ const statsInfo: any = graphql(`
 
 export const Content = () => {
   const router = useRouter();
-  const Stats: { data: any; isLoading: any } = useQuery([`statsDetails`], () =>
-    GraphQL(statsInfo, {}, [])
-  );
-  // const Tags: { data: any; isLoading: any } = useQuery([`tagDetails`], () =>
+  const Stats: { data: any; isPending: any } = useQuery({
+    queryKey: [`statsDetails`],
+    queryFn: () =>
+      GraphQL(statsInfo, {}, [])
+  });
+  // const Tags: { data: any; isLoading: any } = useQuery({
+  //   queryKey: [`tagDetails`],
+  //   queryFn: (
+  // }) =>
   //   GraphQL(tagsInfo, {}, [])
   // );
 
@@ -93,7 +98,7 @@ export const Content = () => {
               collaborative platform for data changemakers.
             </Text>
           </div>
-          {Stats.isLoading ? (
+          {Stats.isPending ? (
             <div className=" flex w-fit justify-center rounded-2 bg-surfaceDefault p-4">
               <Spinner />
             </div>

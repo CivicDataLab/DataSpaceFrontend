@@ -36,8 +36,8 @@ export const Page = () => {
 
   const queryClient = useQueryClient();
 
-  const { mutate, isLoading } = useMutation(
-    () =>
+  const { mutate, isPending } = useMutation({
+    mutationFn: () =>
       GraphQL(
         createDatasetMutationDoc,
         {
@@ -45,7 +45,6 @@ export const Page = () => {
         },
         []
       ),
-    {
       onSuccess: (data: any) => {
         if (data.addDataset.success) {
           toast('Dataset created successfully!');
@@ -60,8 +59,7 @@ export const Page = () => {
           toast('Error: ' + data.addDataset.errors.fieldErrors[0].messages[0]);
         }
       },
-    }
-  );
+  });
 
   // React.useEffect(() => {
   //   router.prefetch('/dashboard/dataset/new');
@@ -77,7 +75,7 @@ export const Page = () => {
             mutate();
           },
         }}
-        isLoading={isLoading}
+        isLoading={isPending}
       />
 
       <Content params={params} />

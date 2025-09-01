@@ -81,9 +81,9 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     id: string;
   }>();
 
-  const { data: resourceData }: { data: any } = useQuery(
-    [`res_charts_${params.id}`],
-    () =>
+  const { data: resourceData }: { data: any } = useQuery({
+    queryKey: [`res_charts_${params.id}`],
+    queryFn: () =>
       GraphQL(
         datasetResource,
         {
@@ -91,11 +91,12 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         },
         { datasetId: params.id }
       )
+    }
   );
 
-  const { data: chartDetails, refetch }: { data: any; refetch: any } = useQuery(
-    [`chartdata_${params.id}`],
-    () =>
+  const { data: chartDetails, refetch }: { data: any; refetch: any } = useQuery({
+    queryKey: [`chartdata_${params.id}`],
+    queryFn: () =>
       GraphQL(
         getResourceChartDetails,
         {
@@ -105,16 +106,16 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           chartDetailsId: chartId,
         }
       ),
-    {}
+    }
   );
 
   const {
     data: chartsList,
-    isLoading,
+    isPending,
     refetch: chartsListRefetch,
-  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`chartsList_${params.id}`],
-    () =>
+  }: { data: any; isPending: boolean; refetch: any } = useQuery({
+    queryKey: [`chartsList_${params.id}`],
+    queryFn: () =>
       GraphQL(
         chartDetailsQuery,
         {
@@ -124,13 +125,14 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           datasetId: params.id,
         }
       )
+    }
   );
 
   const resourceChart: {
     mutate: any;
-    isLoading: any;
-  } = useMutation(
-    (data: { resource: UUID }) =>
+    isPending: any;
+  } = useMutation( {
+    mutationFn: (data: { resource: UUID }) =>
       GraphQL(
         CreateResourceChart,
         {
@@ -138,7 +140,6 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         },
         data
       ),
-    {
       onSuccess: (res: any) => {
         toast('Resource Chart Created Successfully');
         refetch();
@@ -318,16 +319,15 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     });
   }, []);
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
-    (chartInput: { chartInput: ResourceChartInput }) =>
+  const { mutate, isPending: editMutationLoading } = useMutation( {
+    mutationFn: (chartInput: { chartInput: ResourceChartInput }) =>
       GraphQL(
         createChart,
         {
           [params.entityType]: params.entitySlug,
         },
         chartInput
-      ),
-    {
+      ),    
       onSuccess: (res: any) => {
         toast('Resource chart saved');
         const newChartId = res?.editResourceChart?.id;

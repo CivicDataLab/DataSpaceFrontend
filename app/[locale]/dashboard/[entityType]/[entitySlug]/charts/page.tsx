@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { parseAsString, useQueryState } from 'next-usequerystate';
+import { parseAsString, useQueryState } from 'nuqs';
 
 import ChartsImage from './components/ChartsImage';
 import ChartsList from './components/ChartsList';

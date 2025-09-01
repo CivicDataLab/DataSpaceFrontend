@@ -45,12 +45,13 @@ const PublishersListingPage = () => {
   const [type, setType] = useState<'all' | 'org' | 'pub'>('all');
   const Details: {
     data: any;
-    isLoading: boolean;
+    isPending: boolean;
     isError: boolean;
     refetch: any;
-  } = useQuery(['publishers_list_page'], () =>
-    GraphQL(getAllPublishers, {}, [])
-  );
+  } = useQuery({
+    queryKey: ['publishers_list_page'],
+    queryFn: () => GraphQL(getAllPublishers, {}, []),
+  });
 
   type PublisherType = 'all' | 'org' | 'pub';
   const publisherButtons: { key: PublisherType; label: string }[] = [
@@ -170,7 +171,7 @@ const PublishersListingPage = () => {
                     </div>
                   </ButtonGroup>
                 </div>
-                {Details.isLoading ? (
+                {Details.isPending ? (
                   <div className="m-4 flex justify-center">
                     <Spinner />
                   </div>

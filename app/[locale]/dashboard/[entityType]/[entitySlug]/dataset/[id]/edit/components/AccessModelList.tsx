@@ -56,11 +56,11 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
 
   const {
     data,
-    isLoading,
+    isPending,
     refetch,
-  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`accessModelList_${params.id}`],
-    () =>
+  }: { data: any; isPending: boolean; refetch: any } = useQuery({
+    queryKey: [`accessModelList_${params.id}`],
+    queryFn: () =>
       GraphQL(
         accessModelQuery,
         {
@@ -70,7 +70,7 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
           datasetId: params.id,
         }
       )
-  );
+  });
 
   const [filteredRows, setFilteredRows] = useState<any[]>([]);
 
@@ -81,8 +81,8 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
     }
   }, [data, list]);
 
-  const { mutate, isLoading: deleteLoading } = useMutation(
-    (data: { accessModelId: UUID }) =>
+  const { mutate, isPending: deleteLoading } = useMutation({
+    mutationFn: (data: { accessModelId: UUID }) =>
       GraphQL(
         deleteAccessModel,
         {
@@ -90,7 +90,6 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
         },
         data
       ),
-    {
       onSuccess: () => {
         toast('Access Model Deleted Successfully');
         refetch();
@@ -168,7 +167,7 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
 
   return (
     <div>
-      {!data || isLoading || deleteLoading ? (
+      {!data || isPending || deleteLoading ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>

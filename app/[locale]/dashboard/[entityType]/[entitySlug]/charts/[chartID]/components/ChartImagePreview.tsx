@@ -62,11 +62,13 @@ const publishResourceChartImageDoc: any = graphql(`
 const ChartImagePreview = ({ params }: { params: any }) => {
   const getResourceChartDetailsRes: {
     data: any;
-    isLoading: boolean;
+    isPending: boolean;
     refetch: any;
     error: any;
     isError: boolean;
-  } = useQuery([`getResourceChartImageDetails_${params.chartID}`], () =>
+  } = useQuery({
+    queryKey: [`getResourceChartImageDetails_${params.chartID}`],
+    queryFn: () =>
     GraphQL(
       getResourceChartImageDetailsDoc,
       {
@@ -76,7 +78,7 @@ const ChartImagePreview = ({ params }: { params: any }) => {
         imageId: params.chartID,
       }
     )
-  );
+  });
 
   const [chartTitle, setChartTitle] = useState('');
 
@@ -84,9 +86,10 @@ const ChartImagePreview = ({ params }: { params: any }) => {
     setChartTitle(getResourceChartDetailsRes?.data?.resourceChartImage?.name);
   }, [getResourceChartDetailsRes?.data]);
 
-  const updateResourceChartImageMutation: { mutate: any; isLoading: any } =
+  const updateResourceChartImageMutation: { mutate: any; isPending: any } =
     useMutation(
-      (data: { input: ResourceChartImageInputPartial }) =>
+      {
+      mutationFn: (data: { input: ResourceChartImageInputPartial }) =>
         GraphQL(
           updateResourceChartImageDoc,
           {
@@ -94,7 +97,6 @@ const ChartImagePreview = ({ params }: { params: any }) => {
           },
           data
         ),
-      {
         onSuccess: () => {
           toast('ChartImage Updated Successfully');
           getResourceChartDetailsRes.refetch();
@@ -105,9 +107,9 @@ const ChartImagePreview = ({ params }: { params: any }) => {
       }
     );
 
-  const publishResourceChartImageMutation: { mutate: any; isLoading: any } =
-    useMutation(
-      (data: { resourceChartImageId: string }) =>
+  const publishResourceChartImageMutation: { mutate: any; isPending: any } =
+    useMutation( {
+      mutationFn: (data: { resourceChartImageId: string }) =>
         GraphQL(
           publishResourceChartImageDoc,
           {
@@ -115,7 +117,6 @@ const ChartImagePreview = ({ params }: { params: any }) => {
           },
           data
         ),
-      {
         onSuccess: () => {
           toast('Chart Image Published Successfully');
           getResourceChartDetailsRes.refetch();
@@ -144,9 +145,9 @@ const ChartImagePreview = ({ params }: { params: any }) => {
             },
           });
         }}
-        loading={getResourceChartDetailsRes.isLoading}
+        loading={getResourceChartDetailsRes.isPending}
         status={
-          updateResourceChartImageMutation.isLoading ? 'loading' : 'success'
+          updateResourceChartImageMutation.isPending ? 'loading' : 'success'
         }
         setStatus={() => {}}
       />
@@ -155,7 +156,7 @@ const ChartImagePreview = ({ params }: { params: any }) => {
         <div>
           <Text variant="heading2xl">Something went wrong</Text>
         </div>
-      ) : getResourceChartDetailsRes?.isLoading ? (
+      ) : getResourceChartDetailsRes?.isPending ? (
         <Loading />
       ) : (
         <div className="border-t-2 border-solid border-greyExtralight pt-8">

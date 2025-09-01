@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, use } from 'react';
+import React, { useCallback, useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -84,27 +84,31 @@ const Dashboard = (
   >([]);
   const [previousState, setPreviousState] = useState<any>({});
 
-  const { data, isLoading } = useQuery(
-    ['fetch_dashboardData', usecaseId],
-    () => GraphQL(dashboardList, { [params.entityType]: params.entitySlug }, { usecaseId }),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-      onSuccess: (res: any) => {
-        setDashboards(res.usecaseDashboards || []);
+  const { isSuccess, data } = useQuery({
+    queryKey: ['fetch_dashboardData', usecaseId],
+    queryFn: () => GraphQL(dashboardList, { [params.entityType]: params.entitySlug }, { usecaseId }),
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+  });
+
+  useEffect(() => {
+    if (isSuccess && data) {
+      const dashboardData = data as { usecaseDashboards?: Array<{ id: string; name: string; link: string }> };
+      if (dashboardData.usecaseDashboards) {
+        setDashboards(dashboardData.usecaseDashboards);
         setPreviousState(
           Object.fromEntries(
-            res.usecaseDashboards.map((item: any) => [item.id, { ...item }])
+            dashboardData.usecaseDashboards.map((item: any) => [item.id, { ...item }])
           )
         );
-      },
+      }
     }
-  );
+  }, [data, isSuccess]);
 
-  const { mutate: addDashboard, isLoading: addLoading } = useMutation(
-    ({ usecaseId }: { usecaseId: number }) =>
-      GraphQL(AddDashboard, { [params.entityType]: params.entitySlug }, { usecaseId }),
+  const { mutate: addDashboard, isPending: addLoading } = useMutation(
     {
+      mutationFn: ({ usecaseId }: { usecaseId: number }) =>
+        GraphQL(AddDashboard, { [params.entityType]: params.entitySlug }, { usecaseId }),
       onSuccess: (res: any) => {
         const newDashboard = res.addUsecaseDashboard.data;
 
@@ -117,10 +121,10 @@ const Dashboard = (
       },
     }
   );
-  const { mutate: saveDashboard, isLoading: saveLoading } = useMutation(
-    ({ id, name, link }: { id: string; name: string; link: string }) =>
-      GraphQL(updateDashboard, { [params.entityType]: params.entitySlug }, { id, name, link }),
+  const { mutate: saveDashboard, isPending: saveLoading } = useMutation(
     {
+      mutationFn: ({ id, name, link }: { id: string; name: string; link: string }) =>
+        GraphQL(updateDashboard, { [params.entityType]: params.entitySlug }, { id, name, link }),
       onSuccess: ({ updateUsecaseDashboard }: any) => {
         toast.success('Changes saved');
         setPreviousState((prev: any) => ({
@@ -134,18 +138,16 @@ const Dashboard = (
     }
   );
 
-  const { mutate: removeDashboard, isLoading: deleteLoading } = useMutation(
-    (id: number) => GraphQL(deleteDashboard, { [params.entityType]: params.entitySlug }, { id }),
-    {
-      onSuccess: (_, id) => {
-        setDashboards((prev) => prev.filter((d) => d.id !== id.toString()));
-        toast.success('Dashboard deleted');
-      },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`);
-      },
-    }
-  );
+  const { mutate: removeDashboard, isPending: deleteLoading } = useMutation({
+    mutationFn: (id: number) => GraphQL(deleteDashboard, { [params.entityType]: params.entitySlug }, { id }),
+    onSuccess: (_, id) => {
+      setDashboards((prev) => prev.filter((d) => d.id !== id.toString()));
+      toast.success('Dashboard deleted');
+    },
+    onError: (error: any) => {
+      toast(`Error: ${error.message}`);
+    },
+  });
 
   const handleChange = (id: string, field: 'name' | 'link', value: string) => {
     setDashboards((prev) =>

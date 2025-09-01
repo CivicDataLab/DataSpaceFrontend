@@ -7,7 +7,7 @@ import {
   UpdateFileResourceInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
+import { parseAsString, useQueryState } from 'nuqs';
 import {
   Button,
   Checkbox,
@@ -95,10 +95,11 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
 
   const resourceDetailsQuery = useQuery<any>(
     // Use a stable key when resourceId is empty/invalid
-    resourceId && resourceId.trim()
-      ? [`fetch_resource_details_${resourceId}`]
-      : ['fetch_resource_details_disabled'],
-    () => {
+    {
+      queryKey: resourceId && resourceId.trim()
+        ? [`fetch_resource_details_${resourceId}`]
+        : ['fetch_resource_details_disabled'],
+    queryFn: () => {
       if (!resourceId || !resourceId.trim()) {
         // Return a rejected promise or throw an error to prevent execution
         return Promise.reject(new Error('No resource ID provided'));
@@ -111,17 +112,17 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
         { resourceId: resourceId }
       );
     },
-    {
-      enabled: !!(resourceId && resourceId.trim()),
-      // Prevent retries when there's no resourceId
-      retry: false,
-      // Don't refetch when resourceId is empty
-      refetchOnWindowFocus: !!(resourceId && resourceId.trim()),
+    
+    enabled: !!(resourceId && resourceId.trim()),
+    // Prevent retries when there's no resourceId
+    retry: false,
+    // Don't refetch when resourceId is empty
+    refetchOnWindowFocus: !!(resourceId && resourceId.trim()),
     }
   );
 
-  const updateResourceMutation = useMutation(
-    (data: {
+  const updateResourceMutation = useMutation({
+    mutationFn: (data: {
       fileResourceInput: UpdateFileResourceInput;
       isResetSchema: boolean;
     }) =>
@@ -132,7 +133,6 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
         },
         data
       ),
-    {
       onSuccess: (data, variables) => {
         toast('File changes saved', {
           action: {
@@ -150,8 +150,8 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
     }
   );
 
-  const updateSchemaMutation = useMutation(
-    (data: { input: SchemaUpdateInput }) =>
+  const updateSchemaMutation = useMutation({
+    mutationFn: (data: { input: SchemaUpdateInput }) =>
       GraphQL(
         updateSchema,
         {
@@ -159,7 +159,6 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
         },
         data
       ),
-    {
       onSuccess: () => {
         toast('Schema Updated Successfully', {
           action: {
@@ -174,8 +173,8 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
     }
   );
 
-  const createResourceMutation = useMutation(
-    (data: { fileResourceInput: CreateFileResourceInput }) =>
+  const createResourceMutation = useMutation({
+    mutationFn: (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(
         createResourceFilesDoc,
         {
@@ -183,7 +182,6 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
         },
         data
       ),
-    {
       onSuccess: (data: any) => {
         setResourceId(data.createFileResources[0].id);
         toast('Resource Added Successfully', {
@@ -355,11 +353,11 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
 
   useEffect(() => {
     setStatus(
-      updateResourceMutation.isLoading || updateSchemaMutation.isLoading
+      updateResourceMutation.isPending || updateSchemaMutation.isPending
         ? 'loading'
         : 'success'
     ); // update based on mutation state
-  }, [updateResourceMutation.isLoading, updateSchemaMutation.isLoading]);
+  }, [updateResourceMutation.isPending, updateSchemaMutation.isPending]);
 
   const resourceFormat =
     resourceDetailsQuery.data?.resourceById.fileDetails.format?.toLowerCase();

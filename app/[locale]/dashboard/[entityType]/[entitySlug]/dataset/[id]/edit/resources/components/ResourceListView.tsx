@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
 import { useMutation } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
+import { parseAsString, useQueryState } from 'nuqs';
 import {
   Button,
   DataTable,
@@ -47,8 +47,8 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
     refetch();
   }, [resourceId]);
 
-  const updateResourceMutation = useMutation(
-    (data: { resourceId: string }) =>
+  const updateResourceMutation = useMutation({
+    mutationFn: (data: { resourceId: string }) =>
       GraphQL(
         updateResourceList,
         {
@@ -56,7 +56,6 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
         },
         data
       ),
-    {
       onSuccess: (data, variables) => {
         const updatedFilteredRows = filteredRows.filter(
           (row: any) => row.id !== variables.resourceId
@@ -76,8 +75,8 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
     }
   );
 
-  const createResourceMutation = useMutation(
-    (data: { fileResourceInput: CreateFileResourceInput }) =>
+  const createResourceMutation = useMutation({
+    mutationFn: (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(
         createResourceFilesDoc,
         {
@@ -85,7 +84,6 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
         },
         data
       ),
-    {
       onSuccess: (data: any) => {
         const updatedRows = data.createFileResources.map((item: any) => ({
           name_of_resource: item.name,
@@ -255,7 +253,7 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
             <Button size="medium">ADD NEW DATA FILE</Button>
           </Dialog.Trigger>
           <Dialog.Content title={'Add New Resource'}>
-            {createResourceMutation.isLoading ? (
+            {createResourceMutation.isPending ? (
               <Loading />
             ) : (
               <DropZone

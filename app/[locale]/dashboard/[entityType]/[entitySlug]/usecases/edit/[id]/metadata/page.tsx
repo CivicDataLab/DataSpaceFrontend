@@ -113,9 +113,9 @@ const Metadata = () => {
 
   const { setStatus } = useEditStatus();
 
-  const useCaseData: { data: any; isLoading: boolean } = useQuery(
-    [`fetch_UseCaseData_Metadata`],
-    () =>
+  const useCaseData: { data: any; isPending: boolean } = useQuery({
+    queryKey: [`fetch_UseCaseData_Metadata`],
+    queryFn: () =>
       GraphQL(
         FetchUseCasedetails,
         {
@@ -123,14 +123,12 @@ const Metadata = () => {
         },
         { filters: { id: params.id } }
       ),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
-  );
-  const { data: metadataFields, isLoading: isMetadataFieldsLoading } = useQuery(
-    [`metadata_fields_USECASE_${params.id}`],
-    () =>
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+  });
+  const { data: metadataFields, isLoading: isMetadataFieldsLoading } = useQuery({
+    queryKey: [`metadata_fields_USECASE_${params.id}`],
+    queryFn: () =>
       GraphQL(
         metadataQueryDoc,
         {
@@ -143,7 +141,7 @@ const Metadata = () => {
           },
         }
       )
-  );
+  });
 
   const defaultValuesPrepFn = (data: TypeUseCase) => {
     let defaultVal: {
@@ -197,8 +195,10 @@ const Metadata = () => {
     }
   }, [useCaseData.data]);
 
-  const getSectorsList: { data: any; isLoading: boolean; error: any } =
-    useQuery([`sectors_list_query`], () =>
+  const getSectorsList: { data: any; isPending: boolean; error: any } =
+    useQuery({
+    queryKey: [`sectors_list_query`],
+    queryFn: () =>
       GraphQL(
         sectorsListQueryDoc,
         {
@@ -206,14 +206,16 @@ const Metadata = () => {
         },
         []
       )
-    );
+    });
 
   const getTagsList: {
     data: any;
-    isLoading: boolean;
+    isPending: boolean;
     error: any;
     refetch: any;
-  } = useQuery([`tags_list_query`], () =>
+  } = useQuery({
+    queryKey: [`tags_list_query`],
+    queryFn: () =>
     GraphQL(
       tagsListQueryDoc,
       {
@@ -221,16 +223,16 @@ const Metadata = () => {
       },
       []
     )
-  );
+  });
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
 
   // Update mutation
   const updateUseCase = useMutation(
-    (data: { updateMetadataInput: UpdateUseCaseMetadataInput }) =>
+    {
+      mutationFn: (data: { updateMetadataInput: UpdateUseCaseMetadataInput }) =>
       GraphQL(UpdateUseCaseMetadataMutation, {
         [params.entityType]: params.entitySlug,
       }, data),
-    {
       onSuccess: (res: any) => {
         toast('Use case updated successfully');
         const updatedData = defaultValuesPrepFn(res.addUpdateUsecaseMetadata);
@@ -248,8 +250,8 @@ const Metadata = () => {
   );
 
   useEffect(() => {
-    setStatus(updateUseCase.isLoading ? 'loading' : 'success'); // update based on mutation state
-  }, [updateUseCase.isLoading]);
+    setStatus(updateUseCase.isPending ? 'loading' : 'success'); // update based on mutation state
+  }, [updateUseCase.isPending]);
 
   const handleChange = (field: string, value: any) => {
     setFormData((prevData) => ({
@@ -297,9 +299,9 @@ const Metadata = () => {
   };
 
   if (
-    getSectorsList.isLoading ||
-    getTagsList.isLoading ||
-    useCaseData.isLoading
+    getSectorsList.isPending ||
+    getTagsList.isPending ||
+    useCaseData.isPending
   ) {
     return (
       <div className="flex h-36 w-full items-center justify-center">

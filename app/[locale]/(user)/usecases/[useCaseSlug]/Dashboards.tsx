@@ -19,12 +19,14 @@ const DashboardsList: any = graphql(`
 
 const Dashboards = () => {
   const params = useParams();
-  const { data, isLoading } = useQuery<{ usecaseDashboards: any }>(
-    ['fetch_dashboardData', params.useCaseSlug],
-    () => GraphQL(DashboardsList, {}, { usecaseId: +params.useCaseSlug }),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
+  const useCaseSlug = params.useCaseSlug as string;
+  
+  const { data, isLoading } = useQuery<{ usecaseDashboards: any }>( {
+    queryKey:['fetch_dashboardData', useCaseSlug],
+    queryFn: () => GraphQL(DashboardsList, {}, { usecaseId: +useCaseSlug }),
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    enabled: !!useCaseSlug, // Only run query if useCaseSlug exists
     }
   );
 

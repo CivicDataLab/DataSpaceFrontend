@@ -54,9 +54,9 @@ const datasetResourceQuery: any = graphql(`
 const Resources = () => {
   const params = useParams();
 
-  const getResourceDetails: { data: any; isLoading: boolean } = useQuery(
-    [`resources_${params.datasetIdentifier}`],
-    () =>
+  const getResourceDetails: { data: any; isPending: boolean } = useQuery({
+    queryKey: [`resources_${params.datasetIdentifier}`],
+    queryFn: () =>
       GraphQL(
         datasetResourceQuery,
         {
@@ -64,7 +64,7 @@ const Resources = () => {
         },
         { datasetId: params.datasetIdentifier }
       )
-  );
+    });
 
   const generateColumnData = () => {
     return [
@@ -204,7 +204,7 @@ const Resources = () => {
   };
   return (
     <div>
-      {getResourceDetails.isLoading ? (
+      {getResourceDetails.isPending ? (
         <div className="mt-8 flex justify-center">
           <Spinner />
         </div>

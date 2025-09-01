@@ -24,9 +24,9 @@ export function DistibutionPage({
 }: {
   params: { entityType: string; entitySlug: string; id: string };
 }) {
-  const { data, isLoading, refetch } = useQuery(
-    [`fetch_resources_${params.id}`],
-    () =>
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: [`fetch_resources_${params.id}`],
+    queryFn: () =>
       GraphQL(
         getResourceDoc,
         {
@@ -34,6 +34,7 @@ export function DistibutionPage({
         },
         { filters: { id: params.id } }
       ),
+    },
   );
 
   const ResourceList: TListItem[] =

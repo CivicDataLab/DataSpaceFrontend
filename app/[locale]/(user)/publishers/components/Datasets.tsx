@@ -104,9 +104,9 @@ const organizationPublishedDatasetsDoc: any = graphql(`
 const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
   const params = useParams();
 
-  const PublishedDatasetsList: any = useQuery(
-    [`userDataset_${params.publisherSlug}`],
-    () =>
+  const PublishedDatasetsList: any = useQuery({
+    queryKey: [`userDataset_${params.publisherSlug}`],
+    queryFn: () =>
       type === 'organization'
         ? GraphQL(
             organizationPublishedDatasetsDoc,
@@ -122,7 +122,7 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
             },
             { userId: params.publisherSlug } // ✅ exact match for expected shape
           )
-  );
+  });
 
   const DatasetData =
     type === 'organization'
@@ -136,7 +136,7 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
           'grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2'
         )}
       >
-        {PublishedDatasetsList.isLoading ? (
+        {PublishedDatasetsList.isPending ? (
           <div className=" flex w-fit justify-center rounded-2 bg-surfaceDefault p-4">
             <Spinner />
           </div>

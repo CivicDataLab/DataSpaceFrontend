@@ -104,9 +104,9 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     entitySlug: string;
     id: string;
   }>();
-  const { data, isLoading }: { data: any; isLoading: boolean } = useQuery(
-    [`resourcesList_${params.id}`],
-    () =>
+  const { data, isPending }: { data: any; isPending: boolean } = useQuery({
+    queryKey: [`resourcesList_${params.id}`],
+    queryFn: () =>
       GraphQL(
         datasetResourcesQuery,
         {
@@ -114,15 +114,16 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
         },
         { datasetId: params.id }
       )
+    }
   );
 
   const {
     data: accessModelList,
-    isLoading: accessModelListLoading,
+    isPending: accessModelListLoading,
     refetch: accessModelListRefetch,
-  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`accessModelList_${params.id}`],
-    () =>
+  }: { data: any; isPending: boolean; refetch: any } = useQuery({
+    queryKey: [`accessModelList_${params.id}`],
+    queryFn: () =>
       GraphQL(
         accessModelListQuery,
         {
@@ -130,14 +131,14 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
         },
         { datasetId: params.id }
       )
-  );
+  });
   const {
     data: accessModelDetails,
     refetch: accessModelDetailsRefetch,
-    isLoading: accessModelDetailsLoading,
-  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`accessModelDetails${params.id}`],
-    () =>
+    isPending: accessModelDetailsLoading,
+  }: { data: any; isPending: boolean; refetch: any } = useQuery({
+    queryKey: [`accessModelDetails${params.id}`],
+    queryFn: () =>
       GraphQL(
         getAccessModelDetails,
         {
@@ -145,6 +146,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
         },
         { accessModelId: accessModelId }
       )
+    }
   );
 
   const [accessModelData, setAccessModelData] = useState({
@@ -308,8 +310,8 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     handleSave(updatedData);
   };
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
-    (data: { accessModelInput: EditAccessModelInput }) =>
+  const { mutate, isPending: editMutationLoading } = useMutation({
+    mutationFn: (data: { accessModelInput: EditAccessModelInput }) =>
       GraphQL(
         editaccessModel,
         {
@@ -317,7 +319,6 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
         },
         data
       ),
-    {
       onSuccess: (res: any) => {
         // toast('Access Model Saved');
         accessModelDetailsRefetch();
@@ -435,7 +436,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
         </Sheet>
       </div>
       <Divider />
-      {isLoading ? (
+      {isPending ? (
         <div className="mt-8 flex justify-center">
           <Spinner />
         </div>

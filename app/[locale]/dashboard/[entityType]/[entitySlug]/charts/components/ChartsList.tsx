@@ -120,11 +120,13 @@ const ChartsList: React.FC<ChartsListProps> = ({
 
   const chartListRes: {
     data: any;
-    isLoading: boolean;
+    isPending: boolean;
     refetch: any;
     error: any;
     isError: boolean;
-  } = useQuery([`chartList`], () =>
+  } = useQuery({
+    queryKey: [`chartList`],
+    queryFn: () =>
     GraphQL(
       getAllCharts,
       params.entityType !== 'self' ? {
@@ -132,7 +134,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
       } : {},
       []
     )
-  );
+  });
 
   const [filteredRows, setFilteredRows] = useState<any[]>([]);
 
@@ -143,9 +145,9 @@ const ChartsList: React.FC<ChartsListProps> = ({
     }
   }, [chartListRes.data]);
 
-  const deleteResourceChartmutation: { mutate: any; isLoading: any } =
-    useMutation(
-      (data: { chartId: UUID }) =>
+  const deleteResourceChartmutation: { mutate: any; isPending: any } =
+    useMutation( {
+      mutationFn: (data: { chartId: UUID }) =>
         GraphQL(
           deleteResourceChart,
           {
@@ -153,7 +155,6 @@ const ChartsList: React.FC<ChartsListProps> = ({
           },
           data
         ),
-      {
         onSuccess: () => {
           toast('Chart Deleted Successfully');
           chartListRes.refetch();
@@ -164,9 +165,9 @@ const ChartsList: React.FC<ChartsListProps> = ({
       }
     );
 
-  const deleteResourceChartImagemutation: { mutate: any; isLoading: any } =
-    useMutation(
-      (data: { resourceChartImageId: string }) =>
+  const deleteResourceChartImagemutation: { mutate: any; isPending: any } =
+    useMutation( {
+      mutationFn: (data: { resourceChartImageId: string }) =>
         GraphQL(
           deleteResourceChartImage,
           {
@@ -174,7 +175,6 @@ const ChartsList: React.FC<ChartsListProps> = ({
           },
           data
         ),
-      {
         onSuccess: () => {
           toast('ChartImage Deleted Successfully');
           chartListRes.refetch();
@@ -346,7 +346,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
     <>
       {editorView ? (
         <ChartEditor setEditorView={setEditorView} />
-      ) : chartListRes.isLoading || deleteResourceChartmutation.isLoading ? (
+      ) : chartListRes.isPending || deleteResourceChartmutation.isPending ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>

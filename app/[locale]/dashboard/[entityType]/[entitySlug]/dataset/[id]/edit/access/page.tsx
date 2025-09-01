@@ -4,7 +4,7 @@ import {
   parseAsBoolean,
   parseAsString,
   useQueryState,
-} from 'next-usequerystate';
+} from 'nuqs';
 
 import AccessModelForm from '../components/AccessModelForm';
 import AccessModelList from '../components/AccessModelList';
