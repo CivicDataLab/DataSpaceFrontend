@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -64,11 +64,12 @@ const unPublishDataset: any = graphql(`
   }
 `);
 
-export default function DatasetPage({
-  params,
-}: {
-  params: { entityType: string; entitySlug: string };
-}) {
+export default function DatasetPage(
+  props: {
+    params: Promise<{ entityType: string; entitySlug: string }>;
+  }
+) {
+  const params = use(props.params);
   const router = useRouter();
 
   const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);

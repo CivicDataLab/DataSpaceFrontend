@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function Page({
-  params,
-}: {
-  params: { entityType: string; entitySlug: string };
-}) {
+export default function Page(
+  props: {
+    params: Promise<{ entityType: string; entitySlug: string }>;
+  }
+) {
+  const params = use(props.params);
   const router = useRouter();
 
   useEffect(() => {

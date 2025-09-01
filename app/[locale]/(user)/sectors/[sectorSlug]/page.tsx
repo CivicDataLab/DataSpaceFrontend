@@ -17,11 +17,12 @@ const sectorQueryDoc = graphql(`
   }
 `);
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { sectorSlug: string };
-}) {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ sectorSlug: string }>;
+  }
+) {
+  const params = await props.params;
   const data = await GraphQL(
     sectorQueryDoc,
     {},
@@ -49,11 +50,12 @@ export async function generateMetadata({
   });
 }
 
-const SectorDetailsPage = async ({
-  params,
-}: {
-  params: { sectorSlug: string };
-}) => {
+const SectorDetailsPage = async (
+  props: {
+    params: Promise<{ sectorSlug: string }>;
+  }
+) => {
+  const params = await props.params;
   const data = await GraphQL(
     sectorQueryDoc,
     {},

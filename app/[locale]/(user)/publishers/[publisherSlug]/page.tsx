@@ -17,11 +17,12 @@ const userInfo = graphql(`
     }
   }
 `);
-export async function generateMetadata({
-  params,
-}: {
-  params: { publisherSlug: string };
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ publisherSlug: string }>;
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const data = await GraphQL(userInfo, {}, { userId: params.publisherSlug });
 
   const user = data.userById;
@@ -53,10 +54,11 @@ export async function generateMetadata({
   });
 }
 
-export default function PublisherPage({
-  params,
-}: {
-  params: { publisherSlug: string };
-}) {
+export default async function PublisherPage(
+  props: {
+    params: Promise<{ publisherSlug: string }>;
+  }
+) {
+  const params = await props.params;
   return <PublisherPageClient publisherSlug={params.publisherSlug} />;
 }

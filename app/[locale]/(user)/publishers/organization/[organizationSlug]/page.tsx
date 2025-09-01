@@ -18,11 +18,12 @@ const orgDataQuery = graphql(`
   }
 `);
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { organizationSlug: string };
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ organizationSlug: string }>;
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const data = await GraphQL(orgDataQuery, {}, { id: params.organizationSlug });
 
   const org = data.organization;
@@ -54,10 +55,11 @@ export async function generateMetadata({
   });
 }
 
-export default function OrgPage({
-  params,
-}: {
-  params: { organizationSlug: string };
-}) {
+export default async function OrgPage(
+  props: {
+    params: Promise<{ organizationSlug: string }>;
+  }
+) {
+  const params = await props.params;
   return <OrgPageClient organizationSlug={params.organizationSlug} />;
 }

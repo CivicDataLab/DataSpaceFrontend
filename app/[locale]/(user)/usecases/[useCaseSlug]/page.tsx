@@ -23,11 +23,12 @@ const UseCaseInfoQuery = graphql(`
   }
 `);
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { useCaseSlug: string };
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ useCaseSlug: string }>;
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const data = await GraphQL(UseCaseInfoQuery, {}, { pk: params.useCaseSlug });
 
   const UseCase = data?.useCase;

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { use } from 'react';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { usePRouter } from '@/hooks/use-prouter';
@@ -11,7 +11,8 @@ import { Icons } from '@/components/icons';
 import { InProgress } from '@/components/in-progress';
 import { ActionBar } from '../components/action-bar';
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = usePRouter();
   // React.useEffect(() => {
   //   router.prefetch(`/dashboard/dataset/${params.id}/edit`);

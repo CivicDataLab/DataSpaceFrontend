@@ -16,7 +16,8 @@ import { EditPage } from './page-layout';
 //   }
 // `);
 
-export default async function Page({ params }: { params: { id: string } }) {
+export default async function Page(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const queryClient = getQueryClient();
   // await queryClient.prefetchQuery([`dataset_${params.id}`], () =>
   //   GraphQL(datasetQueryDoc, {
@@ -27,9 +28,9 @@ export default async function Page({ params }: { params: { id: string } }) {
 
   return (
     // <Hydrate state={dehydratedState}>
-      <div className={styles.EditPage}>
-        <EditPage params={params} />
-      </div>
     // </Hydrate>
+    <div className={styles.EditPage}>
+      <EditPage params={params} />
+    </div>
   );
 }

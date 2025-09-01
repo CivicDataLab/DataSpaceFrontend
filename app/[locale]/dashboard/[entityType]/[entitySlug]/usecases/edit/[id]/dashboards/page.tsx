@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -73,7 +73,10 @@ const deleteDashboard: any = graphql(`
   }
 `);
 
-const Dashboard = ({ params }: { params: { entityType: string; entitySlug: string; id: string } }) => {
+const Dashboard = (
+  props: { params: Promise<{ entityType: string; entitySlug: string; id: string }> }
+) => {
+  const params = use(props.params);
   const usecaseId = parseInt(params.id);
 
   const [dashboards, setDashboards] = useState<

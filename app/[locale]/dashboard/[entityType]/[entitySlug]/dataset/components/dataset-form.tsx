@@ -6,7 +6,7 @@ interface DatasetFormProps {
   formOptions: any;
   onChange?: (e?: any) => void;
   children: React.ReactNode;
-  submitRef: React.RefObject<HTMLButtonElement>;
+  submitRef: React.RefObject<HTMLButtonElement | null>;
 }
 
 export function DatasetForm({

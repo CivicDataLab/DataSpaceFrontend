@@ -31,11 +31,12 @@ import { DistibutionPage } from './page-layout';
 //   }
 // `);
 
-export default async function Page({
-  params,
-}: {
-  params: { entityType: string; entitySlug: string; id: string };
-}) {
+export default async function Page(
+  props: {
+    params: Promise<{ entityType: string; entitySlug: string; id: string }>;
+  }
+) {
+  const params = await props.params;
   const queryClient = getQueryClient();
   // await queryClient.prefetchQuery([`dataset_distribution_${params.id}`], () =>
   //   GraphQL(datasetDistributionQueryDoc, {
@@ -46,9 +47,9 @@ export default async function Page({
 
   return (
     // <Hydrate state={dehydratedState}>
+    // </Hydrate>
     <div className={styles.EditPage}>
       <DistibutionPage params={params} />
     </div>
-    // </Hydrate>
   );
 }

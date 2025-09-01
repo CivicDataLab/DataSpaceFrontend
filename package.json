@@ -1,9 +1,9 @@
 {
-  "name": "data-exchange-frontend",
+  "name": "dataspace-frontend",
   "version": "0.1.3",
   "private": true,
   "scripts": {
-    "dev": "graphql-codegen --config ./config/codegen.ts && next dev",
+    "dev": "graphql-codegen --config ./config/codegen.ts && next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -21,8 +21,8 @@
     "@tabler/icons-react": "^3.2.0",
     "@tanstack/react-query": "^4.29.5",
     "@types/node": "^20.1.3",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9",
     "cryptr": "^6.3.0",
     "echarts": "^5.4.3",
     "echarts-for-react": "^3.0.2",
@@ -31,16 +31,16 @@
     "graphql-tag": "^2.12.6",
     "holy-loader": "^2.2.10",
     "jwt-decode": "^4.0.0",
-    "next": "^14.0.4",
+    "next": "15.5.2",
     "next-auth": "^4.24.7",
     "next-intl": "^3.4.0",
     "next-usequerystate": "^1.17.2",
     "opub-ui": "^0.3.89",
-    "react": "^18.2.0",
+    "react": "19.1.1",
     "react-aria": "3.22.0",
-    "react-dom": "^18.2.0",
+    "react-dom": "19.1.1",
     "sharp": "^0.33.2",
-    "usehooks-ts": "^2.13.0",
+    "usehooks-ts": "^3.1.1",
     "zod": "^3.22.4",
     "zustand": "^4.3.8"
   },
@@ -54,7 +54,7 @@
     "@types/dom-to-image": "^2.6.5",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "eslint": "^8.57.0",
-    "eslint-config-next": "^14.1.2",
+    "eslint-config-next": "15.5.2",
     "eslint-config-prettier": "^9.1.0",
     "husky": "^9.0.11",
     "jiti": "^1.21.0",
@@ -93,5 +93,9 @@
         }
       }
     }
+  },
+  "overrides": {
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9"
   }
 }

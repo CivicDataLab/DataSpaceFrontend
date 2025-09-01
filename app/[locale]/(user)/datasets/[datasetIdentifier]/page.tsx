@@ -18,11 +18,12 @@ const datasetMetaQuery: any = graphql(`
   }
 `);
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { datasetIdentifier: string };
-}) {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ datasetIdentifier: string }>;
+  }
+) {
+  const params = await props.params;
   try {
     const res: any = await GraphQL(
       datasetMetaQuery,
@@ -51,10 +52,11 @@ export async function generateMetadata({
   }
 }
 
-export default function Page({
-  params,
-}: {
-  params: { datasetIdentifier: string };
-}) {
+export default async function Page(
+  props: {
+    params: Promise<{ datasetIdentifier: string }>;
+  }
+) {
+  const params = await props.params;
   return <DatasetDetailsPage datasetId={params.datasetIdentifier} />;
 }

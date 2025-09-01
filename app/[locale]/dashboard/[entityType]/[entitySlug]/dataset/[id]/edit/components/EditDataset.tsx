@@ -11,7 +11,7 @@ export function EditDataset({
 }: {
   // defaultVal: PatchDataset;
   defaultVal: any;
-  submitRef: React.RefObject<HTMLButtonElement>;
+  submitRef: React.RefObject<HTMLButtonElement | null>;
   mutate: any;
   isLoading: boolean;
 }) {

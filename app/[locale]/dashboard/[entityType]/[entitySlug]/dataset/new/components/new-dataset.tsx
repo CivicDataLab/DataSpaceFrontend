@@ -31,7 +31,7 @@ export function CreateDataset({
   mutatePatch,
 }: {
   defaultVal?: PatchDataset;
-  submitRef: React.RefObject<HTMLButtonElement>;
+  submitRef: React.RefObject<HTMLButtonElement | null>;
   isLoading?: boolean;
   // mutate?: (res: { dataset_data: CreateDatasetInput }) => void;
   // mutatePatch?: (res: { dataset_data: PatchDatasetInput }) => void;
