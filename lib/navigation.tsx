@@ -21,7 +21,7 @@ function useOnComplete() {
   React.useEffect(() => navigateEnd(), [pathname, searchParams]);
 }
 
-function __RouterEvents() {
+function RouterEventsComponent() {
   useOnComplete();
   return null;
 }
@@ -30,7 +30,7 @@ function __RouterEvents() {
 export function RouterEvents() {
   return (
     <React.Suspense>
-      <__RouterEvents />
+      <RouterEventsComponent />
     </React.Suspense>
   );
 }
