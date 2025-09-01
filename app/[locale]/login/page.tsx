@@ -10,20 +10,28 @@ import { Icons } from '@/components/icons';
 
 const SignIn = () => {
   const router = useRouter();
-  const { status } = useSession();
+  const { status, update } = useSession();
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      void signIn('keycloak');
-    } else if (status === 'authenticated') {
-      const callbackUrl = window.location.search.includes('callbackUrl=')
-        ? decodeURIComponent(
-            window.location.search.replace(/^\?callbackUrl=/, '')
-          )
-        : '/';
-      void router.push(callbackUrl);
-      void router.refresh();
-    }
+    const handleAuthentication = async () => {
+      if (status === 'unauthenticated') {
+        void signIn('keycloak');
+      } else if (status === 'authenticated') {
+        try {
+          await update();
+          const callbackUrl = window.location.search.includes('callbackUrl=')
+            ? decodeURIComponent(
+                window.location.search.replace(/^\?callbackUrl=/, '')
+              )
+            : '/';
+          void router.push(callbackUrl);
+          void router.refresh();
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    };
+    void handleAuthentication();
   }, [status, router]);
 
   return <LogginInPage />;
