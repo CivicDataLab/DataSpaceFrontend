@@ -9,13 +9,13 @@ To get started, you can clone the repository and run it locally using the follow
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/CivicDataLab/data-exchange.git
+git clone https://github.com/CivicDataLab/DataSpaceFrontend.git
 ```
 
 2. Install dependencies
 
 ```bash
-cd data-exchange
+cd DataSpaceFrontend
 
 npm i
 ```
@@ -48,7 +48,7 @@ Data Exchange uses Next.js new `app` directory. For more information on how to u
 
 ## Community
 
-We use Github Discussions to discuss ideas, proposals and questions about the project. You can [head over there](https://github.com/CivicDataLab/data-exchange/discussions) to interact with the community.
+We use Github Discussions to discuss ideas, proposals and questions about the project. You can [head over there](https://github.com/CivicDataLab/DataSpaceFrontend/discussions) to interact with the community.
 
 Our [Code of Conduct](CODE_OF_CONDUCT.md) applies to all community channels.
 
