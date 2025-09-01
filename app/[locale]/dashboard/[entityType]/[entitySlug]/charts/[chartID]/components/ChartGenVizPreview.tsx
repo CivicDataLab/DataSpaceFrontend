@@ -427,19 +427,6 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
     console.log('Saving chart data :::::::::::::', field, value);
 
     switch (field) {
-      case 'chartName':
-        editResourceChartMutation.mutate({
-          chartInput: {
-            chartId: params.chartID,
-            resource: chartData.resource.id,
-            name: value,
-            options: chartData.options,
-            type: chartData.type,
-            filters: chartData.filters,
-          },
-        });
-        break;
-
       case 'resource':
         editResourceChartMutation.mutate({
           chartInput: {
@@ -673,7 +660,16 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
             title={chartDetailsRes?.data?.resourceChart?.name}
             goBackURL={`/dashboard/${params.entityType}/${params.entitySlug}/charts`}
             onSave={(val: any) => {
-              handleSave('chartName', val);
+              editResourceChartMutation.mutate({
+                chartInput: {
+                  chartId: params.chartID,
+                  resource: chartData.resource.id,
+                  name: val,
+                  options: chartData.options,
+                  type: chartData.type,
+                  filters: chartData.filters,
+                },
+              });
             }}
             loading={editResourceChartMutation.isLoading}
             status={editResourceChartMutation.isLoading ? 'loading' : 'success'}
@@ -739,7 +735,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                         }
                       )}
                       required
-                      defaultValue={chartData?.dataset?.id}
+                      value={chartData?.dataset?.id}
                       onChange={(e) => {
                         if (
                           getAllDatasetsWithResourcesRes?.data?.datasets?.find(
