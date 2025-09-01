@@ -43,7 +43,7 @@ jobs:
 
   deploy:
     needs: smoke
-    uses: saqibmanan/DataSpaceFrontend/.github/workflows/run-deploy-dev.yml@dev
+    uses: saqibmanan/DataSpaceFrontend/.github/workflows/deploy-Dataspace-dev.yml@dev
     secrets:
       KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
       KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
