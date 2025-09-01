@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { graphql } from '@/gql';
 
 import { GraphQL } from '@/lib/api';
-import { generatePageMetadata } from '@/lib/utils';
+import { extractPublisherId, generatePageMetadata } from '@/lib/utils';
 import OrgPageClient from './OrgPageClient';
 
 const orgDataQuery = graphql(`
@@ -23,7 +23,11 @@ export async function generateMetadata({
 }: {
   params: { organizationSlug: string };
 }): Promise<Metadata> {
-  const data = await GraphQL(orgDataQuery, {}, { id: params.organizationSlug });
+  const data = await GraphQL(
+    orgDataQuery,
+    {},
+    { id: extractPublisherId(params.organizationSlug) }
+  );
 
   const org = data.organization;
 
@@ -59,5 +63,9 @@ export default function OrgPage({
 }: {
   params: { organizationSlug: string };
 }) {
-  return <OrgPageClient organizationSlug={params.organizationSlug} />;
+  return (
+    <OrgPageClient
+      organizationSlug={extractPublisherId(params.organizationSlug)}
+    />
+  );
 }
