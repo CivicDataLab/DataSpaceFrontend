@@ -18,6 +18,7 @@ const statsInfo: any = graphql(`
       totalPublishedDatasets
       totalPublishers
       totalPublishedUsecases
+      totalOrganizations
     }
   }
 `);
@@ -49,19 +50,27 @@ export const Content = () => {
     {
       label: 'Datasets',
       count: Stats?.data?.stats?.totalPublishedDatasets,
+      link: '/datasets',
     },
     {
       label: 'Use Cases',
       count: Stats?.data?.stats?.totalPublishedUsecases,
+      link: '/usecases',
     },
 
     {
       label: 'Publishers',
       count: Stats?.data?.stats?.totalPublishers,
+      link: '/publishers',
     },
+    // {
+    //   label: 'Users',
+    //   count: Stats?.data?.stats?.totalUsers,
+    // },
     {
-      label: 'Users',
-      count: Stats?.data?.stats?.totalUsers,
+      label: 'Organizations',
+      count: Stats?.data?.stats?.totalOrganizations,
+      link: '/publishers',
     },
   ];
 
@@ -73,6 +82,7 @@ export const Content = () => {
     'Law And Justice',
     'Urban Development',
   ];
+
   return (
     <main className="bg-primaryBlue py-6 md:px-8 md:py-10 lg:py-20">
       <div className="container flex items-center justify-around gap-20 px-10 md:px-12 lg:px-8 ">
@@ -90,17 +100,22 @@ export const Content = () => {
           ) : (
             <div className="flex flex-wrap items-center gap-4 md:gap-0 lg:gap-0 ">
               {Metrics.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col border-x-[1px] border-solid border-tertiaryAccent px-4"
-                >
-                  <Text variant="heading3xl" className=" text-secondaryOrange">
-                    {item.count}
-                  </Text>
-                  <Text color="onBgDefault" className=" w-20 ">
-                    {item.label}
-                  </Text>
-                </div>
+                <Link key={`${item.label}_${index}`} href={item.link}>
+                  <div
+                    key={index}
+                    className="flex flex-col border-x-[1px] border-solid border-tertiaryAccent px-4"
+                  >
+                    <Text
+                      variant="heading3xl"
+                      className=" text-secondaryOrange"
+                    >
+                      {item.count}
+                    </Text>
+                    <Text color="onBgDefault" className=" w-20 ">
+                      {item.label}
+                    </Text>
+                  </div>
+                </Link>
               ))}
             </div>
           )}
