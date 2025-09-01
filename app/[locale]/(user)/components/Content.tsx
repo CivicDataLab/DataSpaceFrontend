@@ -18,6 +18,7 @@ const statsInfo: any = graphql(`
       totalPublishedDatasets
       totalPublishers
       totalPublishedUsecases
+      totalOrganizations
     }
   }
 `);
@@ -66,6 +67,11 @@ export const Content = () => {
     //   label: 'Users',
     //   count: Stats?.data?.stats?.totalUsers,
     // },
+    {
+      label: 'Organizations',
+      count: Stats?.data?.stats?.totalOrganizations,
+      link: '/publishers',
+    },
   ];
 
   const Sectors = [
