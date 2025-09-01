@@ -566,19 +566,19 @@ const ChartCreateViz = ({
       label: 'BIG NUMBER',
       value: 'BIG_NUMBER',
       icon: 'chartBigNumber',
-      disabled: true,
+      disabled: false,
     },
     {
       label: 'MAP',
       value: 'MAP',
       icon: 'chartMap',
-      disabled: true,
+      disabled: false,
     },
     {
       label: 'MAP POLYGON',
       value: 'MAP_POLYGON',
       icon: 'chartMapPolygon',
-      disabled: true,
+      disabled: false,
     },
   ];
 
@@ -603,7 +603,7 @@ const ChartCreateViz = ({
       </div>
       <Form>
         <div className="flex flex-col gap-4">
-          <Labelled label="Select Dataset" requiredIndicator>
+          <Labelled label="Select Dataset test" requiredIndicator>
             <Select
               name={'chartCreateSelectDataset'}
               label=""
