@@ -6,7 +6,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Spinner } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
+import JsonLd from '@/components/JsonLd';
 import ProfileDetails from '../components/ProfileDetails';
 import SidebarCard from '../components/SidebarCard';
 
@@ -42,8 +44,28 @@ const PublisherPageClient = ({ publisherSlug }: { publisherSlug: string }) => {
     )
   );
 
+  const jsonLd = generateJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: userInfo?.data?.userById?.fullName,
+    url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/publishers/${publisherSlug}`,
+    description: userInfo?.data?.userById?.bio,
+    logo: {
+      '@type': 'ImageObject',
+      url: userInfo?.data?.userById?.profilePicture?.url
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${userInfo?.data?.userById?.profilePicture?.url}`
+        : `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'CivicDataLab',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/about`,
+    },
+  });
+
   return (
     <main className="bg-primaryBlue">
+      <JsonLd json={jsonLd} />
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },

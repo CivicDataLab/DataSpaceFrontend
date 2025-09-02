@@ -1,5 +1,7 @@
 import React from 'react';
-import { generatePageMetadata } from '@/lib/utils';
+
+import { generateJsonLd, generatePageMetadata } from '@/lib/utils';
+import JsonLd from '@/components/JsonLd';
 import UseCasesListingClient from './UseCasesListingClient';
 
 export const generateMetadata = () =>
@@ -30,7 +32,25 @@ export const generateMetadata = () =>
   });
 
 const UseCasesPage = () => {
-  return <UseCasesListingClient />;
+  const jsonLd = generateJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'CivicDataLab',
+    url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases`,
+    description:
+      'Discover data-driven interventions across sectors like climate, gender, governance, and education. Our use cases highlight how open data solves real-world problems.',
+    publisher: {
+      '@type': 'Organization',
+      name: 'CivicDataSpace',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases`,
+    },
+  });
+  return (
+    <>
+      <JsonLd json={jsonLd} />
+      <UseCasesListingClient />
+    </>
+  );
 };
 
 export default UseCasesPage;
