@@ -117,3 +117,12 @@ jobs:
             mv DataExchange/DataExFrontend/.next_backup DataExchange/DataExFrontend/.next
             mv DataExchange/DataExFrontend/public_backup DataExchange/DataExFrontend/public
             /home/ubuntu/.nvm/versions/node/v20.11.1/bin/pm2 restart dataspace
+
+    notify_success:
+      name: ✅ Deployment & Smoke Test Passed
+      needs: smoke_tests
+      if: success()
+      runs-on: ubuntu-latest
+
+      steps:
+        - run: echo "✅ Smoke tests passed. Deployment is stable."
