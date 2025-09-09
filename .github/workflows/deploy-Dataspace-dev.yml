@@ -97,3 +97,23 @@ jobs:
       TEST_EMAIL_2: ${{ secrets.TEST_EMAIL_2 }}
       TEST_PASSWORD_2: ${{ secrets.TEST_PASSWORD_2 }}
       QA_REPO_PAT:      ${{ secrets.QA_REPO_PAT }}
+
+  revert_deploy:
+    name: Revert Deployment on Smoke Test Failure
+    needs: smoke_tests
+    if: failure()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Revert to Backup Build on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST_DEV_DS }}
+          username: ${{ secrets.EC2_USERNAME_DS }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            rm -rf DataExchange/DataExFrontend/.next
+            rm -rf DataExchange/DataExFrontend/public
+            mv DataExchange/DataExFrontend/.next_backup DataExchange/DataExFrontend/.next
+            mv DataExchange/DataExFrontend/public_backup DataExchange/DataExFrontend/public
+            /home/ubuntu/.nvm/versions/node/v20.11.1/bin/pm2 restart dataspace
