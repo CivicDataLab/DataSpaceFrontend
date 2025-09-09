@@ -1,26 +1,12 @@
 name: Update DataSpace Dev
 
 on:
-  workflow_call:
-    secrets:
-      KEYCLOAK_CLIENT_ID:           { required: true }
-      KEYCLOAK_CLIENT_SECRET:       { required: true }
-      AUTH_ISSUER:                  { required: true }
-      NEXTAUTH_URL:                 { required: true }
-      NEXT_PUBLIC_NEXTAUTH_URL:     { required: true }
-      NEXTAUTH_SECRET:              { required: true }
-      END_SESSION_URL:              { required: true }
-      REFRESH_TOKEN_URL:            { required: true }
-      NEXT_PUBLIC_BACKEND_URL:      { required: true }
-      BACKEND_GRAPHQL_URL:          { required: true }
-      NEXT_PUBLIC_ENABLE_ACCESSMODEL:  { required: true }
-      NEXT_PUBLIC_BACKEND_GRAPHQL_URL: { required: true }
-      BACKEND_URL:                  { required: true }
-      NEXT_PUBLIC_PLATFORM_URL:     { required: true }
-      NEXT_PUBLIC_ANALYTICS_URL:    { required: true }
+  push:
+    branches: ['dev']
 
 jobs:
   deploy:
+    name: Deploy to Dev Server
     runs-on: ubuntu-latest
     env:
       KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
@@ -57,6 +43,16 @@ jobs:
 
       - name: Rename public to public2
         run: mv public public2
+
+      - name: Backup existing .next and public folders
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST_DEV_DS }}
+          username: ${{ secrets.EC2_USERNAME_DS }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            cp -r DataExchange/DataExFrontend/.next DataExchange/DataExFrontend/.next_backup || true
+            cp -r DataExchange/DataExFrontend/public DataExchange/DataExFrontend/public_backup || true
 
       - name: Send .next2 to EC2
         uses: appleboy/scp-action@master
