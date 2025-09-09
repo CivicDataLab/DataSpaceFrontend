@@ -84,3 +84,16 @@ jobs:
             mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next
             mv DataExchange/DataExFrontend/public2 DataExchange/DataExFrontend/public
             /home/ubuntu/.nvm/versions/node/v20.11.1/bin/pm2 restart dataspace
+
+  smoke:
+    name: Run Smoke Tests from QA Repo
+    needs: deploy
+    uses: saqibmanan/CivicDataSpace-test/.github/workflows/run-smoke.yml@dev
+    secrets:
+      BASE_URL: ${{ secrets.BASE_URL }}
+      HOME_URL_DEV: ${{ secrets.HOME_URL_DEV }}
+      TEST_EMAIL_1: ${{ secrets.TEST_EMAIL_1 }}
+      TEST_PASSWORD_1: ${{ secrets.TEST_PASSWORD_1 }}
+      TEST_EMAIL_2: ${{ secrets.TEST_EMAIL_2 }}
+      TEST_PASSWORD_2: ${{ secrets.TEST_PASSWORD_2 }}
+      QA_REPO_PAT:      ${{ secrets.QA_REPO_PAT }}
