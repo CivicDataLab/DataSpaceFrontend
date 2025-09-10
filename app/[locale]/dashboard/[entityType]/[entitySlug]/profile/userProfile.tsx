@@ -35,6 +35,23 @@ const updateUserMutation: any = graphql(`
   }
 `);
 
+const githubRegex = /^https:\/\/github\.com\/[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
+const linkedinRegex = /^https:\/\/(?:www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
+const twitterRegex = /^https:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/[a-zA-Z0-9_]+\/?$/;
+
+const prettyField = (f: string) => {
+  switch (f) {
+    case 'github_profile':
+      return 'GitHub URL';
+    case 'linkedin_profile':
+      return 'LinkedIn URL';
+    case 'twitter_profile':
+      return 'Twitter URL';
+    default:
+      return f.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+};
+
 const UserProfile = () => {
   const params = useParams<{ entityType: string; entitySlug: string }>();
 
@@ -70,9 +87,11 @@ const UserProfile = () => {
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (input: { input: UpdateUserInput }) =>
-      GraphQL(updateUserMutation, {
-        [params.entityType]: params.entitySlug,
-      }, input),
+      GraphQL(
+        updateUserMutation,
+        { [params.entityType]: params.entitySlug },
+        input
+      ),
     {
       onSuccess: (res: any) => {
         toast('User details updated successfully');
@@ -92,8 +111,36 @@ const UserProfile = () => {
           me: res.updateUser,
         });
       },
+
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        if (typeof error?.message === 'string') {
+          const message: string = error.message;
+
+          // Try to extract field errors
+          const tryField = (field: string) => {
+            const m = message.match(
+              new RegExp(`'${field}'\\s*:\\s*\\['([^']+)'\\]`)
+            );
+            if (m?.[1]) {
+              const prettyName = prettyField(field);
+              const errorMsg = `${prettyName}: ${m[1]}`;
+              toast.error(errorMsg);
+            }
+            return Boolean(m?.[1]);
+          };
+
+          const anyMatched =
+            tryField('github_profile') ||
+            tryField('linkedin_profile') ||
+            tryField('twitter_profile');
+
+          if (!anyMatched) {
+            toast.error(`Error: ${message}`);
+          }
+          return;
+        }
+
+        toast.error('An unexpected error occurred.');
       },
     }
   );
@@ -112,24 +159,36 @@ const UserProfile = () => {
     if (!formValidation) {
       toast('Please fill all the required fields');
       return;
-    } else {
-      const inputData: UpdateUserInput = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        bio: formData.bio,
-        email: formData.email,
-        githubProfile: formData.githubProfile,
-        linkedinProfile: formData.linkedinProfile,
-        twitterProfile: formData.twitterProfile,
-        location: formData.location,
-      };
-
-      // Only add logo if it has changed
-      if (formData.profilePicture instanceof File) {
-        inputData.profilePicture = formData.profilePicture;
-      }
-      mutate({ input: inputData });
     }
+   if (formData.githubProfile && !githubRegex.test(formData.githubProfile)) {
+      toast.error('GitHub URL: Enter a valid URL.');
+      return;
+    }
+    if (formData.linkedinProfile && !linkedinRegex.test(formData.linkedinProfile)) {
+       toast.error('LinkedIn URL: Enter a valid URL.');
+      return;
+    }
+    if (formData.twitterProfile && !twitterRegex.test(formData.twitterProfile)) {
+       toast.error('Twitter URL: Enter a valid URL.');
+      return;
+    }
+
+    const inputData: UpdateUserInput = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      bio: formData.bio,
+      email: formData.email,
+      githubProfile: formData.githubProfile,
+      linkedinProfile: formData.linkedinProfile,
+      twitterProfile: formData.twitterProfile,
+      location: formData.location,
+    };
+
+    // Only add logo if it has changed
+    if (formData.profilePicture instanceof File) {
+      inputData.profilePicture = formData.profilePicture;
+    }
+    mutate({ input: inputData });
   };
 
   return (
@@ -182,6 +241,7 @@ const UserProfile = () => {
               label="Github Profile"
               name="githubProfile"
               type="url"
+              placeholder="https://github.com/username"
               value={formData.githubProfile}
               onChange={(e) => setFormData({ ...formData, githubProfile: e })}
             />
@@ -189,6 +249,7 @@ const UserProfile = () => {
               label="Linkedin Profile"
               name="linkedinProfile"
               type="url"
+              placeholder="https://linkedin.com/in/username"
               value={formData.linkedinProfile}
               onChange={(e) => setFormData({ ...formData, linkedinProfile: e })}
             />
@@ -196,6 +257,7 @@ const UserProfile = () => {
               label="Twitter Profile"
               name="twitterProfile"
               type="url"
+              placeholder="https://twitter.com/username"
               value={formData.twitterProfile}
               onChange={(e) => setFormData({ ...formData, twitterProfile: e })}
             />
