@@ -5,15 +5,8 @@ import {
   ENTITY_CONFIG,
   ENTITY_CONFIG_TYPE,
   getSiteMapConfig,
+  isSitemapEnabled,
 } from '@/lib/utils';
-
-// Check if sitemaps are enabled
-const isSitemapEnabled = () => {
-  return (
-    process.env.FEATURE_SITEMAPS === 'true' ||
-    process.env.NODE_ENV === 'production'
-  );
-};
 
 const getAllEntityCounts = async (): Promise<Record<string, number>> => {
   const counts: Record<string, number> = {};
@@ -57,6 +50,7 @@ export async function getGraphqlEntityCount(
       }
     );
     const data = await response.json();
+
     return {
       entityName: entity,
       count: data?.data?.[config.queryResKey as string]?.length || 0,
@@ -74,8 +68,9 @@ export async function getSearchEntityCount(
   page: number
 ): Promise<{ entityName: string; count: number; list: any }> {
   try {
+    const config = ENTITY_CONFIG[entity];
     const response = await fetch(
-      `${process.env.FEATURE_SITEMAP_BACKEND_BASE_URL}/search/dataset/?sort=recent&size=${size}&page=${page}`,
+      `${process.env.FEATURE_SITEMAP_BACKEND_BASE_URL}${config.endpoint}?sort=recent&size=${size}&page=${page}`,
       {
         method: 'GET',
         headers: {
@@ -130,7 +125,8 @@ function generateSitemapIndex(
     )
     .join('');
 
-  return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${staticUrls}\n${sitemapEntries}\n</urlset>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n
+  <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${staticUrls}\n${sitemapEntries}\n</urlset>`;
 }
 
 export async function GET(request: NextRequest) {
@@ -159,27 +155,29 @@ export async function GET(request: NextRequest) {
     if (entityCounts.datasets > 0) {
       const datasetPages = Math.ceil(entityCounts.datasets / ITEMS_PER_SITEMAP);
       for (let i = 1; i <= datasetPages; i++) {
-        sitemapUrls.push(`${baseUrl}/sitemap-datasets-${i}.xml`);
+        sitemapUrls.push(`${baseUrl}/sitemap/datasets-${i}.xml`);
       }
     }
 
     // Usecases sitemaps
-    // const usecasePages = Math.ceil(usecasesCount / ITEMS_PER_SITEMAP);
-    // for (let i = 1; i <= usecasePages; i++) {
-    //   sitemapUrls.push(`${baseUrl}/sitemap-usecases-${i}.xml`);
-    // }
+    const usecasePages = Math.ceil(entityCounts.usecases / ITEMS_PER_SITEMAP);
+    for (let i = 1; i <= usecasePages; i++) {
+      sitemapUrls.push(`${baseUrl}/sitemap/usecases-${i}.xml`);
+    }
 
-    // // Publishers sitemaps
-    // const publisherPages = Math.ceil(publishersCount / ITEMS_PER_SITEMAP);
-    // for (let i = 1; i <= publisherPages; i++) {
-    //   sitemapUrls.push(`${baseUrl}/sitemap-publishers-${i}.xml`);
-    // }
+    // Contributors sitemaps
+    const contributorPages = Math.ceil(
+      entityCounts.contributors / ITEMS_PER_SITEMAP
+    );
+    for (let i = 1; i <= contributorPages; i++) {
+      sitemapUrls.push(`${baseUrl}/sitemap/contributors-${i}.xml`);
+    }
 
     // Sectors sitemaps
     if (entityCounts.sectors > 0) {
       const sectorPages = Math.ceil(entityCounts.sectors / ITEMS_PER_SITEMAP);
       for (let i = 1; i <= sectorPages; i++) {
-        sitemapUrls.push(`${baseUrl}/sitemap-sectors-${i}.xml`);
+        sitemapUrls.push(`${baseUrl}/sitemap/sectors-${i}.xml`);
       }
     }
 

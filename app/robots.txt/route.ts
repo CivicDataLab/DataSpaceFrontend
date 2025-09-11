@@ -1,12 +1,18 @@
 // app/robots.txt/route.ts
+import { isSitemapEnabled } from '@/lib/utils';
+
 export async function GET() {
   const baseUrl = process.env.NEXTAUTH_URL;
 
   const robotsTxt = `User-agent: *
     Allow: /
 
-    Sitemap: ${baseUrl}/sitemap.xml
+    Sitemap: ${baseUrl}/sitemap/main.xml
     `;
+
+  if (!isSitemapEnabled()) {
+    return new Response('Sitemaps are not enabled', { status: 404 });
+  }
 
   return new Response(robotsTxt, {
     headers: {

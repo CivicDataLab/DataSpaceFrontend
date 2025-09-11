@@ -197,6 +197,14 @@ export type ENTITY_CONFIG_TYPE = Record<
   }
 >;
 
+// Check if sitemap is enabled
+export const isSitemapEnabled = () => {
+  return (
+    process.env.FEATURE_SITEMAPS === 'true' ||
+    process.env.NODE_ENV === 'production'
+  );
+};
+
 // Entity Config
 export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
   datasets: {
@@ -206,18 +214,35 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     path: 'datasets',
     priority: '0.8',
   },
-  // usecases: {
-  //   source: 'graphql',
-  //   graphqlQuery: 'usecases',
-  //   path: '/usecases',
-  //   priority: '0.7',
-  // },
-  // publishers: {
-  //   source: 'graphql',
-  //   graphqlQuery: 'publishers',
-  //   path: '/publishers',
-  //   priority: '0.6',
-  // },
+  usecases: {
+    source: 'graphql',
+    graphqlQuery: `query UseCasesList {
+      useCases {
+        id
+        slug
+      }
+    }`,
+    queryResKey: 'useCases',
+    path: 'usecases',
+    priority: '0.7',
+  },
+  contributors: {
+    source: 'graphql',
+    graphqlQuery: `query getContributors {
+    getPublishers {
+        __typename
+        ... on TypeOrganization {
+          id
+        }
+        ... on TypeUser {
+          id
+        }
+      }
+    }`,
+    queryResKey: 'getPublishers',
+    path: 'publishers',
+    priority: '0.6',
+  },
   sectors: {
     source: 'graphql',
     graphqlQuery: `query SectorsLists {
