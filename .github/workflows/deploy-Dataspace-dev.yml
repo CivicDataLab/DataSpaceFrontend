@@ -12,12 +12,12 @@ env:
   NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
   END_SESSION_URL: 'https://opub-kc.civicdatalab.in/auth/realms/DataSpace/protocol/openid-connect/logout'
   REFRESH_TOKEN_URL: 'https://opub-kc.civicdatalab.in/auth/realms/DataSpace/protocol/openid-connect/token'
-  NEXT_PUBLIC_BACKEND_URL: ${{secrets.NEXT_PUBLIC_BACKEND_URL_DEV_DS}}
-  BACKEND_GRAPHQL_URL: ${{secrets.BACKEND_GRAPHQL_URL_DEV_DS}}
+  NEXT_PUBLIC_BACKEND_URL: 'https://dev.api.civicdataspace.in'
+  BACKEND_GRAPHQL_URL: 'https://dev.api.civicdataspace.in/api/graphql'
   NEXT_PUBLIC_ENABLE_ACCESSMODEL: ${{secrets.NEXT_PUBLIC_ENABLE_ACCESSMODEL_DS}}
-  NEXT_PUBLIC_BACKEND_GRAPHQL_URL: ${{secrets.NEXT_PUBLIC_BACKEND_GRAPHQL_URL_DEV_DS}}
-  BACKEND_URL: ${{secrets.BACKEND_URL_DEV}}
-  NEXT_PUBLIC_PLATFORM_URL: ${{secrets.NEXT_PUBLIC_PLATFORM_URL_DEV}}
+  NEXT_PUBLIC_BACKEND_GRAPHQL_URL: 'https://dev.api.civicdataspace.in/api/graphql'
+  BACKEND_URL: 'https://dev.api.civicdataspace.in'
+  NEXT_PUBLIC_PLATFORM_URL: '"https://dev.civicdataspace.in"'
   NEXT_PUBLIC_ANALYTICS_URL: ${{secrets.NEXT_PUBLIC_ANALYTICS_URL}}
 
 
