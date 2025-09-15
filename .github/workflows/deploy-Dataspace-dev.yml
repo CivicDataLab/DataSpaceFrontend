@@ -17,7 +17,7 @@ env:
   NEXT_PUBLIC_ENABLE_ACCESSMODEL: ${{secrets.NEXT_PUBLIC_ENABLE_ACCESSMODEL_DS}}
   NEXT_PUBLIC_BACKEND_GRAPHQL_URL: 'https://dev.api.civicdataspace.in/api/graphql'
   BACKEND_URL: 'https://dev.api.civicdataspace.in'
-  NEXT_PUBLIC_PLATFORM_URL: '"https://dev.civicdataspace.in"'
+  NEXT_PUBLIC_PLATFORM_URL: 'https://dev.civicdataspace.in'
   NEXT_PUBLIC_ANALYTICS_URL: ${{secrets.NEXT_PUBLIC_ANALYTICS_URL}}
 
 
