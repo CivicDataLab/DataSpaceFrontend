@@ -201,28 +201,38 @@ const SectorsListing = () => {
                       <Link
                         href={`/sectors/${sectors.slug}?sectors=${capitalizeWords(sectors.slug)}`}
                         key={sectors.id}
+                        className="h-full" // Ensure link takes full height
                       >
-                        <div className="flex w-full items-center gap-5 rounded-4 bg-surfaceDefault p-7 shadow-card">
-                          <div className="flex gap-4">
+                        <div className="flex h-full min-h-[140px] w-full items-center gap-5 rounded-4 bg-surfaceDefault p-7 shadow-card transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
+                          <div className="flex flex-shrink-0 gap-4">
                             <Image
                               src={`/Sectors/${sectors.name}.svg`}
                               width={80}
                               height={80}
                               alt={'Sectors Logo'}
+                              className="h-20 w-20 object-contain" // Ensure consistent image sizing
                             />
                           </div>
-                          <div className="flex w-full flex-col gap-3">
+                          <div className="flex w-full min-w-0 flex-col justify-between h-full gap-3">
+                            {' '}
+                            {/* min-w-0 prevents text overflow */}
                             <div className="flex flex-col gap-2">
-                              <Text variant="headingLg" fontWeight="semibold">
+                              <Text
+                                variant="headingLg"
+                                fontWeight="semibold"
+                                className="line-clamp-1 text-ellipsis overflow-hidden"
+                              >
                                 {sectors.name}
                               </Text>
-                              <Divider className=" h-[2px] bg-greyExtralight" />
+                              <Divider className="h-[2px] bg-greyExtralight" />
                             </div>
                             <div className="flex gap-1">
+                              {' '}
+                              {/* mt-auto pushes to bottom */}
                               <Text
                                 variant="bodyMd"
                                 fontWeight="bold"
-                                className=" text-primaryBlue"
+                                className="text-primaryBlue"
                               >
                                 {sectors.datasetCount}
                               </Text>
