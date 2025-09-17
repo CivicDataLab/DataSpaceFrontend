@@ -139,11 +139,11 @@ export function MainNav({ hideSearch = false }) {
           </div>
           <Link href="/">
             <div className="flex items-center gap-2">
-              <div className="group relative h-[38px] w-[38px] overflow-hidden rounded-full">
+              <div className="group relative h-[52px] w-[170px] overflow-hidden">
                 {/* Static Logo */}
-                <div className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0">
+                <div className="absolute inset-0">
                   <Image
-                    src="/globe_logo.png"
+                    src="/dataspacelogosep2025.png"
                     alt="Logo"
                     layout="fill"
                     objectFit="contain"
@@ -151,18 +151,18 @@ export function MainNav({ hideSearch = false }) {
                 </div>
 
                 {/* Globe GIF on Hover */}
-                <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                {/* <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                   <Image
                     src="/globe.gif"
                     alt="Globe"
                     layout="fill"
                     objectFit="contain"
                   />
-                </div>
+                </div> */}
               </div>
-              <Text variant="headingXl" className="text-surfaceDefault" as="h1">
+              {/* <Text variant="headingXl" className="text-surfaceDefault" as="h1">
                 CivicDataSpace
-              </Text>
+              </Text> */}
             </div>
           </Link>
         </div>
@@ -258,17 +258,25 @@ export const ProfileContent = ({
             {session.user.name}
           </IconButton>
         ) : (
-          <Button
-            kind="tertiary"
-            size="slim"
-            className="rounded-full  hover:no-underline"
+          <div
+            style={
+              {
+                '--border-highlight-subdued': 'var(--accent-tertiary-color)',
+              } as React.CSSProperties
+            }
           >
-            <Avatar
-              showInitials
-              name={session.user.name || 'User'}
-              size="small"
-            />
-          </Button>
+            <Button
+              kind="tertiary"
+              size="slim"
+              className="rounded-full  hover:no-underline"
+            >
+              <Avatar
+                showInitials
+                name={session.user.name || 'User'}
+                size="small"
+              />
+            </Button>
+          </div>
         )}
       </Popover.Trigger>
       <Popover.Content align="end">
