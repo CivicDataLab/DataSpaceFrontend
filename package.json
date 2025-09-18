@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "generate": "graphql-codegen --config ./config/codegen.ts",
+    "generate:ci": "graphql-codegen --config ./config/codegen.ts --silent || echo 'Codegen failed, continuing with existing files'",
     "clean": "rm -rf node_modules package-lock.json",
     "release": "release-it",
     "style": "opub-tokens; echo \"\\033[33mRunning Prettier\"; prettier --write **/tailwind/*.js **/_variables.css"
