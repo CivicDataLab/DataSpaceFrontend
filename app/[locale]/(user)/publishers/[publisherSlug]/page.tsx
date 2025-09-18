@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { graphql } from '@/gql';
 
 import { GraphQL } from '@/lib/api';
-import { generatePageMetadata } from '@/lib/utils';
+import { extractPublisherId, generatePageMetadata } from '@/lib/utils';
 import PublisherPageClient from './PublisherPageClient';
 
 const userInfo = graphql(`
@@ -17,12 +17,17 @@ const userInfo = graphql(`
     }
   }
 `);
+
 export async function generateMetadata({
   params,
 }: {
   params: { publisherSlug: string };
 }): Promise<Metadata> {
-  const data = await GraphQL(userInfo, {}, { userId: params.publisherSlug });
+  const data = await GraphQL(
+    userInfo,
+    {},
+    { userId: extractPublisherId(params.publisherSlug) }
+  );
 
   const user = data.userById;
 
@@ -58,5 +63,9 @@ export default function PublisherPage({
 }: {
   params: { publisherSlug: string };
 }) {
-  return <PublisherPageClient publisherSlug={params.publisherSlug} />;
+  return (
+    <PublisherPageClient
+      publisherSlug={extractPublisherId(params.publisherSlug)}
+    />
+  );
 }

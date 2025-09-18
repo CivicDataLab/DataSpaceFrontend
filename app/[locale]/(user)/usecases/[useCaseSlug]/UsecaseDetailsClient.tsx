@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { TypeDataset, TypeUseCase } from '@/gql/generated/graphql';
@@ -29,12 +30,15 @@ const UseCasedetails: any = graphql(`
       user {
         fullName
         email
+        id
         profilePicture {
           url
         }
       }
       organization {
         name
+        slug
+        id
         contactEmail
         logo {
           url
@@ -117,6 +121,7 @@ const UseCasedetails: any = graphql(`
       }
       supportingOrganizations {
         id
+        slug
         name
         logo {
           url
@@ -124,6 +129,7 @@ const UseCasedetails: any = graphql(`
       }
       partnerOrganizations {
         id
+        slug
         name
         logo {
           url
@@ -281,18 +287,20 @@ const UseCaseDetailClient = () => {
                       <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
                         {UseCaseDetails?.useCase?.supportingOrganizations?.map(
                           (org: any) => (
-                            <div
+                            <Link
+                              href={`/publishers/organization/${org.slug + '_' + org.id}`}
                               key={org.id}
-                              className=" rounded-4 bg-surfaceDefault  p-4"
                             >
-                              <Image
-                                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
-                                alt={org.name}
-                                width={140}
-                                height={100}
-                                className=" object-contain"
-                              />
-                            </div>
+                              <div className=" rounded-4 bg-surfaceDefault  p-4">
+                                <Image
+                                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
+                                  alt={org.name}
+                                  width={140}
+                                  height={100}
+                                  className=" object-contain"
+                                />
+                              </div>
+                            </Link>
                           )
                         )}
                       </div>
@@ -306,18 +314,20 @@ const UseCaseDetailClient = () => {
                       <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
                         {UseCaseDetails?.useCase?.partnerOrganizations?.map(
                           (org: any) => (
-                            <div
+                            <Link
+                              href={`/publishers/organization/${org.slug + '_' + org.id}`}
                               key={org.id}
-                              className=" rounded-4 bg-surfaceDefault  p-4"
                             >
-                              <Image
-                                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
-                                alt={org.name}
-                                width={140}
-                                height={100}
-                                className=" object-contain"
-                              />
-                            </div>
+                              <div className=" rounded-4 bg-surfaceDefault  p-4">
+                                <Image
+                                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
+                                  alt={org.name}
+                                  width={140}
+                                  height={100}
+                                  className=" object-contain"
+                                />
+                              </div>
+                            </Link>
                           )
                         )}
                       </div>
@@ -338,18 +348,23 @@ const UseCaseDetailClient = () => {
                     <div className="mt-8 flex flex-wrap items-center justify-start gap-8">
                       {UseCaseDetails?.useCase?.contributors?.map(
                         (contributor: any) => (
-                          <Image
-                            alt={contributor.fullName}
-                            width={120}
-                            height={120}
-                            className="rounded-full object-cover"
+                          <Link
+                            href={`/publishers/${contributor.fullName + '_' + contributor.id}`}
                             key={contributor.id}
-                            src={
-                              contributor.profilePicture?.url
-                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${contributor.profilePicture?.url}`
-                                : '/profile.png'
-                            }
-                          />
+                          >
+                            <Image
+                              alt={contributor.fullName}
+                              width={120}
+                              height={120}
+                              className="rounded-full object-cover"
+                              key={contributor.id}
+                              src={
+                                contributor.profilePicture?.url
+                                  ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${contributor.profilePicture?.url}`
+                                  : '/profile.png'
+                              }
+                            />
+                          </Link>
                         )
                       )}
                     </div>

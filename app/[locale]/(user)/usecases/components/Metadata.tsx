@@ -29,15 +29,39 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       fetchTitle();
     }
   }, [data.useCase.platformUrl]);
+
+  const getOrganizationLink = () => {
+    if (!data) return '/publishers';
+
+    if (data.useCase.isIndividualUsecase && data.useCase.user) {
+      return `/publishers/${data.useCase.user.fullName + '_' + data.useCase.user.id}`;
+    }
+
+    if (data.useCase.organization) {
+      return `/publishers/organization/${data.useCase.organization.slug + '_' + data.useCase.organization.id}`;
+    }
+
+    return '/publishers';
+  };
+
   const metadata = [
     {
       label: data.useCase.isIndividualUsecase ? 'Publisher' : 'Organization',
-      value: data.useCase.isIndividualUsecase
-        ? data.useCase.user.fullName
-        : data?.useCase.organization?.name,
-      tooltipContent: data.useCase.isIndividualUsecase
-        ? data.useCase.user.fullName
-        : data?.useCase.organization?.name,
+      value: (
+        <Tooltip
+          content={
+            data.useCase.isIndividualUsecase
+              ? data.useCase.user.fullName
+              : data.useCase.organization.name
+          }
+        >
+          <Link href={getOrganizationLink()}>
+            {data.useCase.isIndividualUsecase
+              ? data.useCase.user.fullName
+              : data?.useCase.organization?.name}
+          </Link>
+        </Tooltip>
+      ),
     },
     {
       label: 'Contact',
@@ -162,19 +186,21 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       </div>
       <Divider />
       <div className=" flex flex-col gap-8">
-        <div className=" hidden rounded-2 border-1 border-solid border-greyExtralight p-2 lg:block">
-          <Image
-            height={140}
-            width={100}
-            src={image}
-            alt={
-              data.useCase.isIndividualUsecase
-                ? 'Publisher logo'
-                : 'Organization logo'
-            }
-            className="w-full object-contain"
-          />
-        </div>
+        <Link href={getOrganizationLink()}>
+          <div className="hidden rounded-2 border-1 border-solid border-greyExtralight p-2 lg:block">
+            <Image
+              height={140}
+              width={100}
+              src={image}
+              alt={
+                data.useCase.isIndividualUsecase
+                  ? 'Publisher logo'
+                  : 'Organization logo'
+              }
+              className="w-full object-contain"
+            />
+          </div>
+        </Link>
         <div className="flex flex-col gap-8">
           {metadata.map((item, index) => (
             <div key={index} className="flex gap-2">
