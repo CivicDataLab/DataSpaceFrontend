@@ -1,5 +1,5 @@
-import { twMerge, type ClassNameValue } from 'tailwind-merge';
 import { Metadata } from 'next';
+import { twMerge, type ClassNameValue } from 'tailwind-merge';
 
 type MetadataOptions = {
   title?: string;
@@ -19,12 +19,10 @@ type MetadataOptions = {
   };
 };
 
-
 export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
   return {
     title: options.title,
-    description:
-      options.description,
+    description: options.description,
     keywords: options.keywords,
     openGraph: {
       type: 'website',
@@ -43,10 +41,8 @@ export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
       images: options.openGraph?.image,
       creator: 'CivicDataLab',
     },
-
   };
 }
-
 
 export interface JsonLdSchema {
   '@context': 'https://schema.org';
@@ -57,8 +53,6 @@ export interface JsonLdSchema {
 export function generateJsonLd(schema: JsonLdSchema): string {
   return JSON.stringify(schema, null, 2);
 }
-
-
 
 export function cn(...inputs: ClassNameValue[]) {
   return twMerge(inputs);
@@ -128,8 +122,6 @@ export const range = (len: number) => {
   return arr;
 };
 
-
-
 export function handleRedirect(event: any, link: any) {
   event.preventDefault();
   const confirmation = window.confirm(
@@ -140,7 +132,6 @@ export function handleRedirect(event: any, link: any) {
   }
 }
 
-
 export function formatDateString(
   input: string | number | any,
   isHyphenated = false
@@ -149,21 +140,20 @@ export function formatDateString(
   // If hyphendated it would return date in this format - 2023-01-01 else in April 1, 2021
   return isHyphenated
     ? new Date(
-      date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'numeric',
-        // day: 'numeric',
-      })
-    )
-      .toISOString()
-      .split('T')[0]
+        date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'numeric',
+          // day: 'numeric',
+        })
+      )
+        .toISOString()
+        .split('T')[0]
     : date.toLocaleDateString('en-US', {
-      month: 'long',
-      // day: 'numeric',
-      year: 'numeric',
-    });
+        month: 'long',
+        // day: 'numeric',
+        year: 'numeric',
+      });
 }
-
 
 export async function getWebsiteTitle(url: string): Promise<string | null> {
   try {
@@ -181,3 +171,88 @@ export async function getWebsiteTitle(url: string): Promise<string | null> {
   }
 }
 
+// Feature Sitemaps
+// Get configuration from environment
+export const getSiteMapConfig = () => ({
+  itemsPerPage: parseInt(process.env.FEATURE_SITEMAP_ITEMS_PER_PAGE || '1000'),
+  cacheDuration: parseInt(process.env.FEATURE_SITEMAP_CACHE_DURATION || '3600'),
+  childCacheDuration: parseInt(
+    process.env.FEATURE_SITEMAP_CHILD_CACHE_DURATION || '21600'
+  ),
+});
+
+export type ENTITY_CONFIG_TYPE = Record<
+  string,
+  {
+    // search for Elasticsearch type queries
+    // graphql for GraphQL type queries
+    source: 'search' | 'graphql';
+    // For Elasticsearch type queries
+    endpoint?: string;
+    // For GraphQL type queries
+    graphqlQuery?: string;
+    queryResKey?: string;
+    path: string;
+    priority: string;
+  }
+>;
+
+// Check if sitemap is enabled
+export const isSitemapEnabled = () => {
+  return (
+    process.env.FEATURE_SITEMAPS === 'true' ||
+    process.env.NODE_ENV === 'production'
+  );
+};
+
+// Entity Config
+export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
+  datasets: {
+    source: 'search',
+    endpoint: '/search/dataset/',
+    // ?=&size=9&page=1&sort=recent
+    path: 'datasets',
+    priority: '0.8',
+  },
+  usecases: {
+    source: 'graphql',
+    graphqlQuery: `query UseCasesList {
+      useCases {
+        id
+        slug
+      }
+    }`,
+    queryResKey: 'useCases',
+    path: 'usecases',
+    priority: '0.7',
+  },
+  contributors: {
+    source: 'graphql',
+    graphqlQuery: `query getContributors {
+    getPublishers {
+        __typename
+        ... on TypeOrganization {
+          id
+        }
+        ... on TypeUser {
+          id
+        }
+      }
+    }`,
+    queryResKey: 'getPublishers',
+    path: 'publishers',
+    priority: '0.6',
+  },
+  sectors: {
+    source: 'graphql',
+    graphqlQuery: `query SectorsLists {
+      activeSectors {
+        id
+        slug
+      }
+    }`,
+    queryResKey: 'activeSectors',
+    path: 'sectors',
+    priority: '0.6',
+  },
+};
