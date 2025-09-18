@@ -2,7 +2,7 @@
 import { type NextRequest } from 'next/server';
 
 import { ENTITY_CONFIG, getSiteMapConfig, isSitemapEnabled } from '@/lib/utils';
-import { getGraphqlEntityCount, getSearchEntityCount } from '../main.xml/route';
+import { getGraphqlEntityCount, getSearchEntityCount } from '@/lib/sitemap-utils';
 
 interface EntityItem {
   id: string;

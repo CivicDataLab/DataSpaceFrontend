@@ -1,91 +1,9 @@
 // app/sitemap.xml/route.ts
-import { type NextRequest } from 'next/server';
-
 import {
-  ENTITY_CONFIG,
-  ENTITY_CONFIG_TYPE,
   getSiteMapConfig,
   isSitemapEnabled,
 } from '@/lib/utils';
-
-const getAllEntityCounts = async (): Promise<Record<string, number>> => {
-  const counts: Record<string, number> = {};
-
-  const countPromises: Promise<{ entityName: string; count: number }>[] = [];
-
-  Object.entries(ENTITY_CONFIG).forEach(([entityName, config]) => {
-    if (config.source === 'graphql' && config.graphqlQuery) {
-      countPromises.push(getGraphqlEntityCount(entityName, config));
-    }
-    if (config.source === 'search' && config.endpoint) {
-      countPromises.push(getSearchEntityCount(entityName, 5, 1));
-    }
-  });
-
-  const results = await Promise.all(countPromises);
-
-  results.forEach(({ entityName, count }) => {
-    counts[entityName] = count;
-  });
-
-  return counts;
-};
-
-export async function getGraphqlEntityCount(
-  entity: string,
-  config: ENTITY_CONFIG_TYPE[string]
-): Promise<{ entityName: string; count: number; list: any }> {
-  try {
-    const response = await fetch(
-      `${process.env.FEATURE_SITEMAP_BACKEND_BASE_URL}/graphql`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: config.graphqlQuery,
-          variables: {},
-        }),
-      }
-    );
-    const data = await response.json();
-
-    return {
-      entityName: entity,
-      count: data?.data?.[config.queryResKey as string]?.length || 0,
-      list: data?.data?.[config.queryResKey as string] || [],
-    };
-  } catch (error) {
-    console.error(`Error fetching count for ${entity}:`, error);
-    return { entityName: entity, count: 0, list: [] };
-  }
-}
-
-export async function getSearchEntityCount(
-  entity: string,
-  size: number,
-  page: number
-): Promise<{ entityName: string; count: number; list: any }> {
-  try {
-    const config = ENTITY_CONFIG[entity];
-    const response = await fetch(
-      `${process.env.FEATURE_SITEMAP_BACKEND_BASE_URL}${config.endpoint}?sort=recent&size=${size}&page=${page}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        next: { revalidate: 3600 },
-      }
-    );
-    const data = await response.json();
-    return { entityName: entity, count: data.total, list: data.results };
-  } catch (error) {
-    console.error(`Error fetching count for ${entity}:`, error);
-    return { entityName: entity, count: 0, list: [] };
-  }
-}
+import { getAllEntityCounts } from '@/lib/sitemap-utils';
 
 function generateStaticUrls(): string {
   const baseUrl = process.env.NEXTAUTH_URL;
@@ -129,7 +47,7 @@ function generateSitemapIndex(
   <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${staticUrls}\n${sitemapEntries}\n</urlset>`;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   // Check if sitemaps are enabled via feature flag
   if (!isSitemapEnabled()) {
     return new Response('Sitemaps are not enabled', { status: 404 });

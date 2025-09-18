@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import { Metadata } from 'next';
 import { twMerge, type ClassNameValue } from 'tailwind-merge';
 
 type MetadataOptions = {
@@ -144,26 +143,12 @@ export function formatDateString(
         date.toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'numeric',
-          // day: 'numeric',
-        })
-      )
-        .toISOString()
-        .split('T')[0]
-        date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'numeric',
-          // day: 'numeric',
         })
       )
         .toISOString()
         .split('T')[0]
     : date.toLocaleDateString('en-US', {
         month: 'long',
-        // day: 'numeric',
-        year: 'numeric',
-      });
-        month: 'long',
-        // day: 'numeric',
         year: 'numeric',
       });
 }
