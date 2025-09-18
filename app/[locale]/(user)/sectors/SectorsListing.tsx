@@ -10,7 +10,7 @@ import {
   SectorsListsQuery,
 } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
-import { Divider, SearchInput, Select, Spinner, Text } from 'opub-ui';
+import { Divider, SearchInput, Select, Spinner, Text, Tooltip } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { cn, generateJsonLd } from '@/lib/utils';
@@ -217,13 +217,15 @@ const SectorsListing = () => {
                             {' '}
                             {/* min-w-0 prevents text overflow */}
                             <div className="flex flex-col gap-2">
-                              <Text
+                             <Tooltip content={sectors.name}>
+                                <Text
                                 variant="headingLg"
                                 fontWeight="semibold"
                                 className="line-clamp-1 text-ellipsis overflow-hidden"
                               >
                                 {sectors.name}
                               </Text>
+                              </Tooltip>
                               <Divider className="h-[2px] bg-greyExtralight" />
                             </div>
                             <div className="flex gap-1">
