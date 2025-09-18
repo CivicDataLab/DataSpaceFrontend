@@ -27,7 +27,7 @@ const MainFooter = () => {
   ];
   return (
     <div className="bg-primaryBlue">
-      <div className="flex flex-wrap items-center justify-between p-4 lg:px-20 lg:py-6">
+      <div className="flex items-center justify-between p-4 lg:px-20 lg:py-6">
         <div className="flex gap-6 uppercase">
           <Link href={'/about-us'}>
             <Text color="onBgDefault">About Us</Text>
@@ -36,17 +36,7 @@ const MainFooter = () => {
             <Text color="onBgDefault">Contact Us</Text>
           </Link>
         </div>
-        <div className="flex items-center gap-2 text-white">
-          <Text color="onBgDefault">made by</Text>
-          <Link
-            href={'https://www.civicdatalab.in'}
-            target="_blank"
-            className="h-8 w-8"
-          >
-            <Image src={'/cdl.svg'} width={28} height={28} alt="CDL logo" />
-          </Link>
-        </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 absolute left-1/2 transform -translate-x-1/2">
           {socialMedia.map((item, index) => (
             <Link
               key={index}
@@ -61,6 +51,17 @@ const MainFooter = () => {
               />
             </Link>
           ))}
+        </div>
+        <div className="flex items-center text-white">
+          <Text color="onBgDefault">Made in India. A DataSpace product by</Text>
+          <Link
+            href={'https://www.civicdatalab.in'}
+            target="_blank"
+            className="flex items-center gap-2 ml-1"
+          >
+             <Text color="onBgDefault">CivicDataLab</Text>
+            <Image src={'/cdl.svg'} width={40} height={40} alt="CDL logo" />
+          </Link>
         </div>
       </div>
     </div>

@@ -75,22 +75,26 @@ export const Content = () => {
   ];
 
   const Sectors = [
-    'Budgets',
-    'Child Rights',
-    'Disaster Risk Reduction',
-    'Climate Finance',
-    'Law And Justice',
+    'Public Finance',
+    'Law and Justice',
+    'Climate Action',
     'Urban Development',
+    'Gender',
+    'Coastal',
+    'Disaster Risk Reduction',
+    'Child Rights'
   ];
 
   return (
     <main className="bg-primaryBlue py-6 md:px-8 md:py-10 lg:py-20">
       <div className="container flex items-center justify-around gap-20 px-10 md:px-12 lg:px-8 ">
         <div className="flex flex-col gap-11 lg:w-[49%]">
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-2">
             <Text variant="heading3xl" color="onBgDefault">
-              Share knowledge resources, datasets, and AI use-cases in one open,
-              collaborative platform for data changemakers.
+              An Open-Source Platform for Collaborative Data-Driven Change
+            </Text>
+             <Text variant="headingLg" color="onBgDefault">
+              Share datasets, knowledge resources, and AI use-cases for data changemakers.
             </Text>
           </div>
           {Stats.isLoading ? (
