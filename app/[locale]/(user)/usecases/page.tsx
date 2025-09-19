@@ -1,181 +1,56 @@
-'use client';
+import React from 'react';
 
-import Image from 'next/image';
-import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
-import { Card, Spinner, Text } from 'opub-ui';
+import { generateJsonLd, generatePageMetadata } from '@/lib/utils';
+import JsonLd from '@/components/JsonLd';
+import UseCasesListingClient from './UseCasesListingClient';
 
-import { GraphQL } from '@/lib/api';
-import { cn, formatDate } from '@/lib/utils';
-import BreadCrumbs from '@/components/BreadCrumbs';
-import { Icons } from '@/components/icons';
-import { Loading } from '@/components/loading';
-import Styles from '../page.module.scss';
+export const generateMetadata = () =>
+  generatePageMetadata({
+    title: 'Explore Real-World Use Cases | CivicDataSpace',
+    description:
+      'Discover data-driven interventions across sectors like climate, gender, governance, and education. Our use cases highlight how open data solves real-world problems.',
+    keywords: [
+      'Data Use Cases',
+      'CivicTech',
+      'Open Data Applications',
+      'Policy Use Cases',
+      'Climate Data Use Case',
+      'Gender Equality Data',
+      'Urban Planning',
+      'CivicDataSpace Use Cases',
+    ],
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases`,
+      title: 'Explore Real-World Use Cases | CivicDataSpace',
+      description:
+        'Explore impactful data-led interventions solving real-world challenges — from climate change to justice and finance.',
+      siteName: 'CivicDataSpace',
+      image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
+    },
+  });
 
-const useCasesListQueryDoc: any = graphql(`
-  query UseCasesList($filters: UseCaseFilter) {
-    publishedUseCases(filters: $filters) {
-      id
-      title
-      summary
-      slug
-      datasetCount
-      isIndividualUsecase
-      user {
-        fullName
-        profilePicture {
-          url
-        }
-      }
-      organization {
-        name
-        logo {
-          url
-        }
-      }
-      logo {
-        path
-      }
-      metadata {
-        metadataItem {
-          id
-          label
-          dataType
-        }
-        id
-        value
-      }
-      publishers {
-        logo {
-          path
-        }
-        name
-      }
-      sectors {
-        id
-        name
-      }
-      created
-      modified
-      website
-      contactEmail
-    }
-  }
-`);
-
-const UseCasesListingPage = () => {
-  const getUseCasesList: {
-    data: any;
-    isLoading: boolean;
-    error: any;
-    isError: boolean;
-  } = useQuery([`useCases_list_page`], () =>
-    GraphQL(
-      useCasesListQueryDoc,
-      {},
-      {
-        filters: { status: 'PUBLISHED' },
-      }
-    )
-  );
-
+const UseCasesPage = () => {
+  const jsonLd = generateJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'CivicDataLab',
+    url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases`,
+    description:
+      'Discover data-driven interventions across sectors like climate, gender, governance, and education. Our use cases highlight how open data solves real-world problems.',
+    publisher: {
+      '@type': 'Organization',
+      name: 'CivicDataSpace',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases`,
+    },
+  });
   return (
-    <main className="bg-baseGraySlateSolid2">
-      <BreadCrumbs
-        data={[
-          { href: '/', label: 'Home' },
-          { href: '#', label: 'Use Cases' },
-        ]}
-      />
-      <div className=" bg-primaryBlue ">
-        <div className="container flex flex-col-reverse justify-center gap-8 p-10 lg:flex-row ">
-          <div className="flex flex-col justify-center gap-6">
-            <Text variant="heading2xl" className=" text-surfaceDefault">
-              Our Use Cases
-            </Text>
-            <Text
-              variant="headingLg"
-              fontWeight="regular"
-              className=" text-surfaceDefault leading-3 lg:leading-5"
-            >
-              By Use case we mean any specific sector or domain data led
-              interventions that can be applied to address some of the most
-              pressing concerns from hyper-local to the global level
-              simultaneously.
-            </Text>
-          </div>
-          <Image
-            src={'/Usecase_illustration.png'}
-            width={600}
-            height={316}
-            alt={'Usecase Illustration'}
-            className=" m-auto h-auto w-full"
-          />
-        </div>
-      </div>
-      <div className="container p-6 lg:pb-20 lg:p-10">
-        <div>
-          <Text variant="heading2xl" fontWeight='bold'>Explore Use Cases</Text>
-        </div>
-        {getUseCasesList.isLoading ? (
-          <div className=" mt-8 flex justify-center">
-            <Spinner />
-          </div>
-        ) : (
-          <div
-            className={cn(
-              'grid w-full grid-cols-1 gap-6 pt-6 lg:pt-10 md:grid-cols-2 lg:grid-cols-3',
-              Styles.Card
-            )}
-          >
-            {getUseCasesList &&
-              getUseCasesList?.data?.publishedUseCases.length > 0 &&
-              getUseCasesList?.data?.publishedUseCases.map((item: any, index: any) => (
-                <Card
-                  title={item.title}
-                  key={index}
-                  href={`/usecases/${item.id}`}
-                  metadataContent={[
-                    {
-                      icon: Icons.calendar,
-                      label: 'Date',
-                      value: formatDate(item.modified),
-                    },
-                    {
-                      icon: Icons.globe,
-                      label: 'Geography',
-                      value: item.metadata?.find(
-                        (meta: any) => meta.metadataItem?.label === 'Geography'
-                      )?.value,
-                    },
-                  ]}
-                  footerContent={[
-                    {
-                      icon: `/Sectors/${item?.sectors[0]?.name}.svg`,
-                      label: 'Sectors',
-                    },
-                    {
-                      icon: item.isIndividualUsecase
-                        ? item?.user?.profilePicture
-                          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
-                          : '/profile.png'
-                        : item?.organization?.logo
-                          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
-                          : '/org.png',
-                      label: 'Published by',
-                    },
-                  ]}
-                  imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo?.path.replace('/code/files/', '')}`}
-                  description={item.summary}
-                  iconColor="warning"
-                  variation={'collapsed'}
-                />
-              ))}
-          </div>
-        )}
-      </div>
-    </main>
+    <>
+      <JsonLd json={jsonLd} />
+      <UseCasesListingClient />
+    </>
   );
 };
 
-export default UseCasesListingPage;
+export default UseCasesPage;

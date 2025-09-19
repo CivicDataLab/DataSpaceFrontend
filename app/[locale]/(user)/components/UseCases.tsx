@@ -94,12 +94,15 @@ const UseCasesListingPage = () => {
 
   return (
     <div className=" container pt-10 md:px-8 lg:pt-20">
-      <div className="flex flex-col gap-2 px-4 md:px-12 lg:px-12 ">
-        <Text variant="heading3xl">Recent UseCases</Text>
-        <div className="flex flex-wrap justify-between gap-2 ">
-          <Text variant="headingLg" fontWeight="medium">
-          Explore freshly updated data use cases gaining momentum across CivicDataSpace
+      <div className="flex items-center flex-wrap justify-between gap-4 lg:gap-2 px-4 md:px-12 lg:px-12 ">
+        <div className="flex flex-col gap-2">
+          <Text variant="headingXl">Recent UseCases</Text>
+          <Text variant="bodyLg" fontWeight="medium">
+            Explore freshly updated data use cases gaining momentum across
+            CivicDataSpace
           </Text>
+        </div>
+        <div>
           <Button
             kind="primary"
             className=" bg-secondaryOrange text-basePureBlack"
@@ -107,11 +110,13 @@ const UseCasesListingPage = () => {
               router.push('/usecases');
             }}
           >
-            Explore all Use Cases
+            <Text variant="bodyLg" fontWeight="semibold">
+              Explore all Use Cases
+            </Text>
           </Button>
         </div>
       </div>
-      <div className="mt-12">
+      <div className="mt-6 lg:mt-12">
         <Carousel className="flex w-full justify-between">
           <CarouselPrevious />
 
@@ -123,56 +128,58 @@ const UseCasesListingPage = () => {
             <CarouselContent className="p-4 ">
               {getUseCasesList &&
                 getUseCasesList?.data?.publishedUseCases.length > 0 &&
-                getUseCasesList?.data?.publishedUseCases.map((item: any, index: any) => (
-                  <CarouselItem
-                    key={item.id}
-                    className={cn(
-                      'h-2/4 basis-full pl-4 sm:basis-1/2  lg:basis-1/3',
-                      Styles.UseCaseList
-                    )}
-                  >
-                    <Card
-                      title={item.title}
-                      key={index}
-                      href={`/usecases/${item.id}`}
-                      metadataContent={[
-                        {
-                          icon: Icons.calendar,
-                          label: 'Date',
-                          value: formatDate(item.modified),
-                        },
-                        {
-                          icon: Icons.globe,
-                          label: 'Geography',
-                          value: item.metadata?.find(
-                            (meta: any) =>
-                              meta.metadataItem?.label === 'Geography'
-                          )?.value,
-                        },
-                      ]}
-                      footerContent={[
-                        {
-                          icon: `/Sectors/${item?.sectors[0]?.name}.svg`,
-                          label: 'Sectors',
-                        },
-                        {
-                          icon: item.isIndividualUsecase
-                            ? item?.user?.profilePicture
-                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
-                              : '/profile.png'
-                            : item?.organization?.logo
-                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
-                              : '/org.png',
-                          label: 'Published by',
-                        },
-                      ]}
-                      imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo?.path.replace('/code/files/', '')}`}
-                      description={item.summary}
-                      iconColor="warning"
-                      variation={'collapsed'}
-                    />
-                  </CarouselItem>
-                ))}
+                getUseCasesList?.data?.publishedUseCases.map(
+                  (item: any, index: any) => (
+                    <CarouselItem
+                      key={item.id}
+                      className={cn(
+                        'h-2/4 basis-full pl-4 sm:basis-1/2  lg:basis-1/3',
+                        Styles.UseCaseList
+                      )}
+                    >
+                      <Card
+                        title={item.title}
+                        key={index}
+                        href={`/usecases/${item.id}`}
+                        metadataContent={[
+                          {
+                            icon: Icons.calendar,
+                            label: 'Date',
+                            value: formatDate(item.modified),
+                          },
+                          {
+                            icon: Icons.globe,
+                            label: 'Geography',
+                            value: item.metadata?.find(
+                              (meta: any) =>
+                                meta.metadataItem?.label === 'Geography'
+                            )?.value,
+                          },
+                        ]}
+                        footerContent={[
+                          {
+                            icon: `/Sectors/${item?.sectors[0]?.name}.svg`,
+                            label: 'Sectors',
+                          },
+                          {
+                            icon: item.isIndividualUsecase
+                              ? item?.user?.profilePicture
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
+                                : '/profile.png'
+                              : item?.organization?.logo
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
+                                : '/org.png',
+                            label: 'Published by',
+                          },
+                        ]}
+                        imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo?.path.replace('/code/files/', '')}`}
+                        description={item.summary}
+                        iconColor="warning"
+                        variation={'collapsed'}
+                      />
+                    </CarouselItem>
+                  )
+                )}
             </CarouselContent>
           )}
           <CarouselNext />

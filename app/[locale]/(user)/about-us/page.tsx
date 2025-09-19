@@ -1,12 +1,64 @@
 import Image from 'next/image';
 import { Text } from 'opub-ui';
 
+import { generateJsonLd, generatePageMetadata } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
+import JsonLd from '@/components/JsonLd';
 import Team from './components/Team';
 
+export const generateMetadata = () =>
+  generatePageMetadata({
+    title: 'About CivicDataSpace | Empowering Public Good with Open Data',
+    description:
+      'Learn about CivicDataSpace — an open-source platform built to foster inclusive, interoperable, and AI-ready data ecosystems for public good.',
+    keywords: [
+      'CivicDataSpace',
+      'About CivicDataSpace',
+      'Open Data',
+      'CivicTech',
+      'Data for Public Good',
+      'Inclusive Data',
+      'AI-ready Data',
+      'CivicDataLab',
+      'Open Source Platform',
+    ],
+    openGraph: {
+      type: 'website',
+      locale: 'en_US',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/about`,
+      title: 'About CivicDataSpace | Empowering Public Good with Open Data',
+      description:
+        'Explore the mission, vision, and team behind CivicDataSpace — an open-source initiative to unlock the power of data for civic impact.',
+      siteName: 'CivicDataSpace',
+      image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
+    },
+  });
+
 const About = () => {
+  const jsonLd = generateJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: 'About CivicDataSpace',
+    url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/about`,
+    description:
+      'Learn more about CivicDataSpace – an open-source platform enabling data collaboratives and civic innovation for the public good.',
+    about: {
+      '@type': 'WebApplication',
+      name: 'CivicDataSpace',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/about`,
+      description:
+        'CivicDataSpace is an open-source platform that enables inclusive, interoperable, and AI-ready data collaboratives to drive public good.',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'CivicDataLab',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/about`,
+    },
+  });
+
   return (
     <main>
+      <JsonLd json={jsonLd} />
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
@@ -42,7 +94,7 @@ const About = () => {
             className="h-full w-full object-contain"
           />
         </div>
-        <div className="py-5 lg:py-10">
+        {/* <div className="py-5 lg:py-10">
           <Text variant="heading2xl">The People Behind CivicDataSpace</Text>
           <div className="pt-4 lg:pt-6">
             <Text
@@ -65,7 +117,7 @@ const About = () => {
         </div>
         <div>
           <Team />
-        </div>
+        </div> */}
       </div>
     </main>
   );

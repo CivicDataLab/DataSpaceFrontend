@@ -1,133 +1,60 @@
-'use client';
-
-import { useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
-import { Spinner } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import BreadCrumbs from '@/components/BreadCrumbs';
-import Details from './components/Details';
-import Metadata from './components/Metadata';
-import PrimaryData from './components/PrimaryData';
-import Resources from './components/Resources';
-import SimilarDatasets from './components/SimilarDatasets';
+import { generatePageMetadata } from '@/lib/utils';
+import DatasetDetailsPage from './DatasetDetailsPage';
 
-const datasetQuery: any = graphql(`
-  query getDataset($datasetId: UUID!) {
+const datasetMetaQuery: any = graphql(`
+  query getDatasetInfo($datasetId: UUID!) {
     getDataset(datasetId: $datasetId) {
+      title
+      description
+      id
       tags {
         id
         value
       }
-      id
-      downloadCount
-      title
-      description
-      created
-      modified
-      isIndividualDataset
-      user {
-        fullName
-        id
-        profilePicture {
-          url
-        }
-      }
-      metadata {
-        metadataItem {
-          id
-          label
-          dataType
-        }
-        value
-      }
-      license
-      resources {
-        id
-        created
-        modified
-        type
-        name
-        description
-      }
-      organization {
-        name
-        logo {
-          url
-        }
-        slug
-        id
-      }
-      sectors {
-        name
-      }
-      formats
     }
   }
 `);
 
-const DatasetDetailsPage = () => {
-  const params = useParams();
+export async function generateMetadata({
+  params,
+}: {
+  params: { datasetIdentifier: string };
+}) {
+  try {
+    const res: any = await GraphQL(
+      datasetMetaQuery,
+      {},
+      { datasetId: params.datasetIdentifier }
+    );
 
-  const Datasetdetails: { data: any; isLoading: any } = useQuery(
-    [`${params.datasetIdentifier}`],
-    () =>
-      GraphQL(
-        datasetQuery,
-        {
-          // Entity Headers if present
-        },
-        { datasetId: params.datasetIdentifier }
-      )
-  );
+    const dataset = res?.getDataset;
+    return generatePageMetadata({
+      title: `${dataset?.title} | Dataset | CivicDataSpace`,
+      description: dataset?.description,
+      keywords: dataset?.tags?.map((tag: any) => tag.value) || [],
+      openGraph: {
+        type: 'dataset',
+        locale: 'en_US',
+        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/datasets/${params.datasetIdentifier}`,
+        title: dataset?.title,
+        description: dataset?.description,
+        siteName: 'CivicDataSpace',
+        image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
+      },
+    });
+  } catch (e) {
+    console.error('Metadata fetch error', e);
+    return generatePageMetadata({ title: 'Dataset Details' });
+  }
+}
 
-  return (
-    <main className=" bg-surfaceDefault">
-      <BreadCrumbs
-        data={[
-          { href: '/', label: 'Home' },
-          { href: '/datasets', label: 'Dataset Listing' },
-          { href: '#', label: 'Dataset Details' },
-        ]}
-      />
-      <div className="flex">
-        <div className="w-full gap-10 border-r-2 border-solid border-greyExtralight p-6 lg:w-3/4 lg:p-10">
-          {Datasetdetails.isLoading ? (
-            <div className=" mt-8 flex justify-center">
-              <Spinner />
-            </div>
-          ) : (
-            <PrimaryData
-              data={Datasetdetails.data && Datasetdetails.data?.getDataset}
-              isLoading={Datasetdetails.isLoading}
-            />
-          )}
-          <Details />
-          <Resources />
-          <SimilarDatasets />
-        </div>
-        <div className=" hidden  w-1/4 gap-10 px-7 py-10 lg:block">
-          {Datasetdetails.isLoading ? (
-            <div className=" mt-8 flex justify-center">
-              <Spinner />
-            </div>
-          ) : (
-            <div>
-              <Metadata
-                data={Datasetdetails.data && Datasetdetails.data?.getDataset}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* <div className="w-full p-6 lg:p-10 lg:py-10">
-        <SimilarDatasets />
-      </div> */}
-    </main>
-  );
-};
-
-export default DatasetDetailsPage;
+export default function Page({
+  params,
+}: {
+  params: { datasetIdentifier: string };
+}) {
+  return <DatasetDetailsPage datasetId={params.datasetIdentifier} />;
+}

@@ -72,7 +72,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
       </div>
       <div className=" lg:pr-4">
         <div className="mt-6 lg:mt-10">
-          <Text variant="headingXl">GEOGRAPHIES</Text>
+          <Text variant="headingXl">Geographies</Text>
           <div className="mt-4">
             <Tag
               fillColor="var(--orange-secondary-color)"
@@ -90,7 +90,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
         <div className="mt-6 lg:mt-10">
           <Text variant="headingXl">Summary</Text>
           <div className="mt-4">
-            <Text variant="headingLg" fontWeight="regular" className="leading-5">
+            <Text variant="bodyLg" fontWeight="regular" className="leading-5">
               {data.useCase.summary}
             </Text>
           </div>

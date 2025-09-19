@@ -1,3 +1,5 @@
+'use client'  
+
 import React, { useEffect, useReducer, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -20,6 +22,7 @@ import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
 import Filter from '../datasets/components/FIlter/Filter';
 import Styles from '../datasets/dataset.module.scss';
+import { fetchData } from '@/fetch';
 
 // Interfaces
 interface Bucket {
@@ -185,25 +188,25 @@ const useUrlParams = (
 
 // Listing Component Props
 interface ListingProps {
-  fetchDatasets: (variables: string) => Promise<{
-    results: any[];
-    total: number;
-    aggregations: Aggregations;
-  }>;
-  breadcrumbData: { href: string; label: string }[];
+  type: string;
+  breadcrumbData?: { href: string; label: string }[];
   headerComponent?: React.ReactNode;
   categoryName?: string;
   categoryDescription?: string;
   categoryImage?: string;
+  placeholder: string;
+  redirectionURL: string;
 }
 
 const ListingComponent: React.FC<ListingProps> = ({
-  fetchDatasets,
+  type,
   breadcrumbData,
   headerComponent,
   categoryName,
   categoryDescription,
   categoryImage,
+  placeholder,
+  redirectionURL,
 }) => {
   const [facets, setFacets] = useState<{
     results: any[];
@@ -225,7 +228,7 @@ const ListingComponent: React.FC<ListingProps> = ({
     if (variables) {
       const currentFetchId = ++latestFetchId.current;
 
-      fetchDatasets(variables)
+      fetchData(type,variables)
         .then((res) => {
           // Only set if this is the latest call
           if (currentFetchId === latestFetchId.current) {
@@ -236,7 +239,7 @@ const ListingComponent: React.FC<ListingProps> = ({
           console.error(err);
         });
     }
-  }, [variables, fetchDatasets]);
+  }, [variables, type]);
 
   const [hasMounted, setHasMounted] = useState(false);
 
@@ -289,7 +292,7 @@ const ListingComponent: React.FC<ListingProps> = ({
 
   return (
     <div className="bg-basePureWhite">
-      <BreadCrumbs data={breadcrumbData} />
+      {breadcrumbData && <BreadCrumbs data={breadcrumbData} />}
       <div className="container">
         {/* Optional Category Header */}
         {(categoryName || categoryDescription || categoryImage) && (
@@ -348,7 +351,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                     label="Search"
                     name="Search"
                     className={cn(Styles.Search)}
-                    placeholder="Start typing to search for any Dataset"
+                    placeholder={placeholder}
                     onSubmit={(value) => handleSearch(value)}
                     onClear={(value) => handleSearch(value)}
                   />
@@ -488,13 +491,17 @@ const ListingComponent: React.FC<ListingProps> = ({
                         value: formatDate(item.modified),
                         tooltip: 'Date',
                       },
-                      {
+                    ];
+
+                    if (item.download_count > 0) {
+                      MetadataContent.push({
                         icon: Icons.download,
                         label: 'Download',
-                        value: item.download_count.toString(),
+                        value: item.download_count?.toString() || '0',
                         tooltip: 'Download',
-                      },
-                    ];
+                      });
+                    }
+
                     if (Geography) {
                       MetadataContent.push({
                         icon: Icons.globe,
@@ -513,11 +520,11 @@ const ListingComponent: React.FC<ListingProps> = ({
                       });
                     }
 
-                    const FooterContent =  [
+                    const FooterContent = [
                       {
-                        icon: `/Sectors/${item.sectors[0]}.svg`,
+                        icon: `/Sectors/${item.sectors?.[0]}.svg`,
                         label: 'Sectors',
-                        tooltip: `${item.sectors[0]}`,
+                        tooltip: `${item.sectors?.[0]}`,
                       },
                       ...(item.has_charts && view !== 'expanded'
                         ? [
@@ -542,7 +549,12 @@ const ListingComponent: React.FC<ListingProps> = ({
                       tag: item.tags,
                       formats: item.formats,
                       footerContent: FooterContent,
+                      imageUrl: '',
                     };
+
+                    if (item.logo) {
+                      commonProps.imageUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`;
+                    }
 
                     return (
                       <Card
@@ -552,7 +564,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                           view === 'expanded' ? 'expanded' : 'collapsed'
                         }
                         iconColor="warning"
-                        href={`/datasets/${item.id}`}
+                        href={`${redirectionURL}/${item.id}`}
                       />
                     );
                   })}

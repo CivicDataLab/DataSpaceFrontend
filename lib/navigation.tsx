@@ -20,17 +20,16 @@ function useOnComplete() {
   const searchParams = useSearchParams();
   React.useEffect(() => navigateEnd(), [pathname, searchParams]);
 }
-
-function __RouterEvents() {
+function InternalRouterEvents() {
   useOnComplete();
   return null;
 }
 
-// https://github.com/joulev/nextjs13-appdir-router-events/blob/52e3457f183b0b638cd14c6c0e8c138e71a76895/app/router-events.tsx
 export function RouterEvents() {
   return (
     <React.Suspense>
-      <__RouterEvents />
+      <InternalRouterEvents />
     </React.Suspense>
   );
 }
+

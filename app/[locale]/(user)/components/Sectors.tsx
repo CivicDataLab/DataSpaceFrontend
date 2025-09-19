@@ -37,12 +37,15 @@ const Sectors = () => {
   }
   return (
     <div className="container pt-10 md:px-8 lg:pt-20">
-      <div className="flex flex-col gap-2 px-4 md:px-12 lg:px-12 ">
-        <Text variant="heading3xl">Explore Sectors</Text>
-        <div className="flex flex-wrap justify-between gap-2">
-          <Text variant="headingLg" fontWeight="medium">
-          Browse use cases and datasets organized by sector to find what matters most to your domain.
+      <div className="flex flex-wrap items-center justify-between gap-4 lg:gap-2 px-4 md:px-12 lg:px-12 ">
+        <div className="flex flex-col gap-2">
+          <Text variant="headingXl">Explore Sectors</Text>
+          <Text variant="bodyLg" fontWeight="medium">
+            Browse use cases and datasets organized by sector to find what
+            matters most to your domain.
           </Text>
+        </div>
+        <div>
           <Button
             kind="primary"
             className=" bg-secondaryOrange text-basePureBlack"
@@ -50,7 +53,9 @@ const Sectors = () => {
               router.push('/sectors');
             }}
           >
-            Explore all Sectors
+            <Text variant="bodyLg" fontWeight="semibold">
+              Explore all Sectors
+            </Text>
           </Button>
         </div>
       </div>
@@ -59,7 +64,7 @@ const Sectors = () => {
           <Spinner />
         </div>
       ) : (
-        <div className="mt-12 grid w-full grid-cols-1 gap-6 px-4 md:grid-cols-2 md:px-12 lg:grid-cols-3 lg:px-12">
+        <div className="mt-6 lg:mt-12 grid w-full grid-cols-1 gap-6 px-4 md:grid-cols-2 md:px-12 lg:grid-cols-3 lg:px-12">
           {data?.activeSectors.map((sectors: any) => (
             <Link
               href={`/sectors/${sectors.slug}?size=9&page=1&sort=recent&sectors=${capitalizeWords(sectors.slug)}`}

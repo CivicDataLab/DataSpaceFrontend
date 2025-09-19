@@ -127,9 +127,9 @@ const ChartsList: React.FC<ChartsListProps> = ({
   } = useQuery([`chartList`], () =>
     GraphQL(
       getAllCharts,
-      {
+      params.entityType !== 'self' ? {
         [params.entityType]: params.entitySlug,
-      },
+      } : {},
       []
     )
   );

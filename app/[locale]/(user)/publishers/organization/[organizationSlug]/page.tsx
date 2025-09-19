@@ -1,89 +1,71 @@
-'use client';
-
-import React from 'react';
-import { useParams } from 'next/navigation';
+import { Metadata } from 'next';
 import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
 
 import { GraphQL } from '@/lib/api';
-import { Loading } from '@/components/loading';
-import ProfileDetails from '../../components/ProfileDetails';
-import { Spinner } from 'opub-ui';
-import SidebarCard from '../../components/SidebarCard';
-import BreadCrumbs from '@/components/BreadCrumbs';
+import { extractPublisherId, generatePageMetadata } from '@/lib/utils';
+import OrgPageClient from './OrgPageClient';
 
-const orgInfoQuery: any = graphql(`
-  query organizationData($id: String!) {
+const orgDataQuery = graphql(`
+  query orgData($id: String!) {
     organization(id: $id) {
       id
-      created
-      description
-      contributedSectorsCount
-      location
-      twitterProfile
-      githubProfile
       name
+      description
       logo {
         url
       }
-      publishedUseCasesCount
-      publishedDatasetsCount
-      linkedinProfile
     }
   }
 `);
 
-const OrgPage = () => {
-  const params = useParams();
-  const organizationInfo: any = useQuery([`${params.publisherSlug}`], () =>
-    GraphQL(
-      orgInfoQuery,
-      {
-        // Entity Headers if present
-      },
-      { id: params.organizationSlug }
-    )
+export async function generateMetadata({
+  params,
+}: {
+  params: { organizationSlug: string };
+}): Promise<Metadata> {
+  const data = await GraphQL(
+    orgDataQuery,
+    {},
+    { id: extractPublisherId(params.organizationSlug) }
   );
 
+  const org = data.organization;
+
+  return generatePageMetadata({
+    title: `${org?.name} | Publisher on CivicDataSpace`,
+    description:
+      org?.description || 'Explore datasets and use cases by this publisher.',
+    keywords: [
+      'CivicDataSpace Publisher',
+      'Open Data Contributor',
+      'Use Case Publisher',
+      'Dataset Publisher',
+      'CivicTech',
+      'Open Government Data',
+    ],
+    openGraph: {
+      title: `${org?.name} | Publisher on CivicDataSpace`,
+      description:
+        org?.description || 'Explore datasets and use cases by this publisher.',
+      type: 'profile',
+      siteName: 'CivicDataSpace',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/publishers/${params.organizationSlug}`,
+      image: org?.logo?.url
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo.url}`
+        : `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
+      locale: 'en_US',
+    },
+  });
+}
+
+export default function OrgPage({
+  params,
+}: {
+  params: { organizationSlug: string };
+}) {
   return (
-    <main className="bg-primaryBlue">
-      <BreadCrumbs
-        data={[
-          { href: '/', label: 'Home' },
-          { href: '/publishers', label: 'Publishers' },
-          {
-            href: '#',
-            label: `${organizationInfo?.data?.organization?.name || ''} `,
-          },
-        ]}
-      />
-      {
-        <div className="container py-10 text-surfaceDefault">
-          <div className="flex flex-wrap gap-10 lg:flex-nowrap">
-            <div className="w-full lg:w-1/4">
-              {organizationInfo?.isLoading ? (
-                <div className="m-4 flex justify-center rounded-2 bg-surfaceDefault p-4">
-                  <Spinner color="highlight" />
-                </div>
-              ) : (
-                <SidebarCard data={organizationInfo?.data?.organization} type={'organization'}/>
-              )}
-            </div>
-            <div className="w-full">
-              {organizationInfo?.isLoading ? (
-                <div className="m-4 flex justify-center rounded-2 bg-surfaceDefault p-4">
-                  <Spinner color="highlight" />
-                </div>
-              ) : (
-                <ProfileDetails data={organizationInfo?.data?.organization} type={'organization'}/>
-
-              )}
-            </div>
-          </div>
-        </div>
-      }
-    </main>
+    <OrgPageClient
+      organizationSlug={extractPublisherId(params.organizationSlug)}
+    />
   );
-};
-
-export default OrgPage;
+}

@@ -25,7 +25,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env*.local*
+.env*.local
 
 # vercel
 .vercel
@@ -40,3 +40,4 @@ next-env.d.ts
 # generated graphql files
 /gql/generated/gql.ts
 /gql/generated/graphql.ts
+/gql/generated/

@@ -1,5 +1,12 @@
 # Data Exchange Frontend
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-14.0+-black.svg)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-18.2+-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![Issues](https://img.shields.io/github/issues/CivicDataLab/DataSpaceFrontend)](https://github.com/CivicDataLab/DataSpaceFrontend/issues)
+[![Contributors](https://img.shields.io/github/contributors/CivicDataLab/DataSpaceFrontend)](https://github.com/CivicDataLab/DataSpaceFrontend/graphs/contributors)
+
 A platform to speed up the development of Open Data Exchange.
 
 ## Getting Started
@@ -9,13 +16,13 @@ To get started, you can clone the repository and run it locally using the follow
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/CivicDataLab/data-exchange.git
+git clone https://github.com/CivicDataLab/DataSpaceFrontend.git
 ```
 
 2. Install dependencies
 
 ```bash
-cd data-exchange
+cd DataSpaceFrontend
 
 npm i
 ```
@@ -48,7 +55,7 @@ Data Exchange uses Next.js new `app` directory. For more information on how to u
 
 ## Community
 
-We use Github Discussions to discuss ideas, proposals and questions about the project. You can [head over there](https://github.com/CivicDataLab/data-exchange/discussions) to interact with the community.
+We use Github Discussions to discuss ideas, proposals and questions about the project. You can [head over there](https://github.com/CivicDataLab/DataSpaceFrontend/discussions) to interact with the community.
 
 Our [Code of Conduct](CODE_OF_CONDUCT.md) applies to all community channels.
 

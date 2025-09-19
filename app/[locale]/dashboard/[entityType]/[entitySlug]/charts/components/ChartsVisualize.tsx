@@ -182,7 +182,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       timeColumn: '',
     },
     resource: '',
-    type: ChartTypes.BarVertical,
+    type: ChartTypes.Bar,
     chart: {},
   });
 
@@ -278,8 +278,8 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           timeColumn: '',
           yAxisColumn: [],
         };
-      case ChartTypes.BarVertical:
-      case ChartTypes.BarHorizontal:
+      case ChartTypes.Bar:
+      case ChartTypes.Line:
         return {
           ...baseOptions,
           yAxisColumn: [{ fieldName: '', label: '', color: '#000000' }],

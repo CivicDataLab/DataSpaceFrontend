@@ -1,0 +1,14 @@
+services:
+
+  next_app:
+      build:
+        context: .
+        dockerfile: Dockerfile
+      container_name: next-js-app
+      env_file:
+      - .env.local
+      ports:
+        - 3000:3000
+      # stdin_open: true
+      # restart: unless-stopped
+  
