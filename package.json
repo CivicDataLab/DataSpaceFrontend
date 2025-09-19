@@ -30,6 +30,7 @@
     "graphql": "^16.6.0",
     "graphql-request": "5.1.0",
     "graphql-tag": "^2.12.6",
+    "gtag": "^1.0.1",
     "holy-loader": "^2.2.10",
     "jwt-decode": "^4.0.0",
     "next": "^14.0.4",

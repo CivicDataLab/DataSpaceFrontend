@@ -20,6 +20,7 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { useAnalytics } from '@/hooks/use-analytics';
 import { Icons } from '@/components/icons';
 
 const DetailsQuery: any = graphql(`
@@ -52,11 +53,19 @@ const DetailsQuery: any = graphql(`
 const Details: React.FC = () => {
   const params = useParams();
   const chartRef = useRef<ReactECharts>(null);
+  const { trackDataset } = useAnalytics();
 
   const { data, isLoading }: { data: any; isLoading: any } = useQuery(
     [`chartDetails_${params.id}`],
     () => GraphQL(DetailsQuery, {}, { datasetId: params.datasetIdentifier })
   );
+
+  // Track dataset view when component mounts
+  useEffect(() => {
+    if (params.datasetIdentifier) {
+      trackDataset(params.datasetIdentifier as string);
+    }
+  }, [params.datasetIdentifier, trackDataset]);
 
   const renderChart = (item: any) => {
     if (item.chartType === 'ASSAM_DISTRICT' || item.chartType === 'ASSAM_RC') {
