@@ -8,7 +8,7 @@ import { TypeDataset, TypeUseCase } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Text } from 'opub-ui';
 
-import { GraphQL } from '@/lib/api';
+import { GraphQLClient } from '@/lib/api';
 import { formatDate, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
@@ -144,11 +144,11 @@ const UseCaseDetailClient = () => {
   const {
     data: UseCaseDetails,
     isLoading,
-    refetch,
+    error,
   } = useQuery<{ useCase: TypeUseCase }>(
     [`fetch_UsecaseDetails_${params.useCaseSlug}`],
     () =>
-      GraphQL(
+      GraphQLClient(
         UseCasedetails,
         {},
         {
@@ -158,6 +158,13 @@ const UseCaseDetailClient = () => {
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
+      retry: (failureCount, error: any) => {
+        // Don't retry on 401/403 errors
+        if (error?.message?.includes('401') || error?.message?.includes('403')) {
+          return false;
+        }
+        return failureCount < 3;
+      },
     }
   );
   const datasets = UseCaseDetails?.useCase?.datasets || []; // Fallback to an empty array
@@ -194,6 +201,28 @@ const UseCaseDetailClient = () => {
         {isLoading ? (
           <div className=" flex justify-center p-10">
             <Loading />
+          </div>
+        ) : error ? (
+          <div className="container py-10">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <Text variant="headingXl" color="critical">
+                Error Loading Use Case
+              </Text>
+              <Text variant="bodyLg">
+                {(error as any)?.message?.includes('401') || (error as any)?.message?.includes('403')
+                  ? 'You do not have permission to view this use case. Please log in or contact the administrator.'
+                  : 'Failed to load use case details. Please try again later.'}
+              </Text>
+            </div>
+          </div>
+        ) : !UseCaseDetails?.useCase ? (
+          <div className="container py-10">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <Text variant="headingXl">Use Case Not Found</Text>
+              <Text variant="bodyLg">
+                The requested use case could not be found.
+              </Text>
+            </div>
           </div>
         ) : (
           <>
