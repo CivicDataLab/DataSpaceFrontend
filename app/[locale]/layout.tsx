@@ -4,8 +4,8 @@ import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { unstable_setRequestLocale } from 'next-intl/server';
 
-import { siteConfig } from '@/config/site';
 import Provider from '@/components/provider';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
 import locales from '../../config/locales';
 
 const fontSans = FontSans({ subsets: ['latin'], display: 'swap' });
@@ -80,6 +80,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <body className={fontSans.className}>
+        <GoogleAnalytics />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Provider>{children}</Provider>
         </NextIntlClientProvider>

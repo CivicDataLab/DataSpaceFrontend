@@ -11,7 +11,11 @@ export const env = createEnv({
     END_SESSION_URL: z.string().url(),
     REFRESH_TOKEN_URL: z.string().url(),
   },
-  client: {},
+  client: {
+    NEXT_PUBLIC_GA_ID: z.string().optional(),
+  },
 
-  experimental__runtimeEnv: {},
+  experimental__runtimeEnv: {
+    NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
+  },
 });

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useEffect } from 'react';
 import { graphql } from '@/gql';
 import { TypeDataset, TypeUseCase } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +11,7 @@ import { Card, Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
 import { formatDate, generateJsonLd } from '@/lib/utils';
+import { useAnalytics } from '@/hooks/use-analytics';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import JsonLd from '@/components/JsonLd';
@@ -141,6 +143,7 @@ const UseCasedetails = graphql(`
 
 const UseCaseDetailClient = () => {
   const params = useParams();
+  const { trackUsecase } = useAnalytics();
 
   const {
     data: UseCaseDetails,
@@ -166,6 +169,14 @@ const UseCaseDetailClient = () => {
       },
     }
   );
+
+  // Track usecase view when data is loaded
+  useEffect(() => {
+    if (UseCaseDetails?.useCase) {
+      trackUsecase(UseCaseDetails.useCase.id, UseCaseDetails.useCase.title || undefined);
+    }
+  }, [UseCaseDetails?.useCase, trackUsecase]);
+
   const datasets = UseCaseDetails?.useCase?.datasets || []; // Fallback to an empty array
 
   const hasSupportingOrganizations =

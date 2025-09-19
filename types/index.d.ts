@@ -55,3 +55,10 @@ export type EditDistributionProps = {
   description: string;
   file: File[] | undefined;
 };
+
+declare global {
+  interface Window {
+    gtag: (...args: any[]) => void;
+    dataLayer: any[];
+  }
+}
