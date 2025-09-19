@@ -62,6 +62,23 @@ export async function GraphQLClient<TResult, TVariables>(
   return data;
 }
 
+// Public GraphQL function that doesn't require authentication
+export async function GraphQLPublic<TResult, TVariables>(
+  document: TypedDocumentNode<TResult, TVariables>,
+  entityHeaders: Record<string, string> = {},
+  ...[variables]: TVariables extends Record<string, never> ? [] : [TVariables]
+) {
+  const data = await request(
+    `${process.env.NEXT_PUBLIC_BACKEND_GRAPHQL_URL}`,
+    document,
+    {
+      ...variables,
+    },
+    entityHeaders
+  );
+  return data;
+}
+
 // wrapper function for react-query to be used by server components
 export const getQueryClient = React.cache(
   () =>

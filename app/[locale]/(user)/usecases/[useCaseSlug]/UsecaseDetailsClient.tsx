@@ -7,8 +7,9 @@ import { graphql } from '@/gql';
 import { TypeDataset, TypeUseCase } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Text } from 'opub-ui';
+import { useSession } from 'next-auth/react';
 
-import { GraphQLClient } from '@/lib/api';
+import { GraphQLPublic } from '@/lib/api';
 import { formatDate, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
@@ -141,29 +142,49 @@ const UseCasedetails: any = graphql(`
 
 const UseCaseDetailClient = () => {
   const params = useParams();
+  const { data: session, status: sessionStatus } = useSession();
+  
+  // Debug logging
+  console.log('Debug Info:', {
+    useCaseSlug: params.useCaseSlug,
+    sessionStatus,
+    hasSession: !!session,
+    accessToken: session?.access_token ? 'Present' : 'Missing',
+    backendUrl: process.env.NEXT_PUBLIC_BACKEND_GRAPHQL_URL,
+  });
+
   const {
     data: UseCaseDetails,
     isLoading,
     error,
   } = useQuery<{ useCase: TypeUseCase }>(
     [`fetch_UsecaseDetails_${params.useCaseSlug}`],
-    () =>
-      GraphQLClient(
-        UseCasedetails,
-        {},
-        {
-          pk: params.useCaseSlug,
-        }
-      ),
+    async () => {
+      console.log('Making public GraphQL request for usecase:', params.useCaseSlug);
+      try {
+        const result = await GraphQLPublic(
+          UseCasedetails,
+          {},
+          {
+            pk: params.useCaseSlug,
+          }
+        ) as { useCase: TypeUseCase };
+        console.log('Public GraphQL request successful:', result);
+        return result;
+      } catch (err) {
+        console.error('Public GraphQL request failed:', err);
+        throw err;
+      }
+    },
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
       retry: (failureCount, error: any) => {
-        // Don't retry on 401/403 errors
-        if (error?.message?.includes('401') || error?.message?.includes('403')) {
-          return false;
-        }
+        console.log('Retry attempt:', failureCount, 'Error:', error);
         return failureCount < 3;
+      },
+      onError: (error: any) => {
+        console.error('Query error:', error);
       },
     }
   );
