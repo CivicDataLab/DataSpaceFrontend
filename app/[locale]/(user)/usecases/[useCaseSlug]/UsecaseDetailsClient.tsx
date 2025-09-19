@@ -19,7 +19,7 @@ import PrimaryDetails from '../components/Details';
 import Metadata from '../components/Metadata';
 import Dashboards from './Dashboards';
 
-const UseCasedetails: any = graphql(`
+const UseCasedetails = graphql(`
   query UseCasedetails($pk: ID!) {
     useCase(pk: $pk) {
       id
