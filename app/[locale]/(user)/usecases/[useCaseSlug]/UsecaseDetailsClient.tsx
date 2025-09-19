@@ -163,7 +163,7 @@ const UseCaseDetailClient = () => {
       console.log('Making public GraphQL request for usecase:', params.useCaseSlug);
       try {
         const result = await GraphQLPublic(
-          UseCasedetails,
+          UseCasedetails as any,
           {},
           {
             pk: params.useCaseSlug,
