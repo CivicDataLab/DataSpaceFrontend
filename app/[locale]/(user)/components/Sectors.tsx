@@ -70,7 +70,7 @@ const Sectors = () => {
               href={`/sectors/${sectors.slug}?size=9&page=1&sort=recent&sectors=${capitalizeWords(sectors.slug)}`}
               key={sectors.id}
             >
-              <div className="flex w-full items-center gap-5 rounded-4 bg-surfaceDefault p-7 shadow-card">
+              <div className="flex h-full min-h-[140px]w-full items-center gap-5 rounded-4 bg-surfaceDefault p-7 shadow-card transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
                 <div className="flex gap-4">
                   <Image
                     src={`/Sectors/${sectors.name}.svg`}
