@@ -80,6 +80,11 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       icon: 'light',
     },
     {
+      title: 'Collaboratives',
+      href: `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives`,
+      icon: 'userGroup',
+    },
+    {
       title: 'Add & Manage Charts',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/charts`,
       icon: 'chartBar',

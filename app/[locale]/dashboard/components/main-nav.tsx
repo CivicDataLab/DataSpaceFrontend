@@ -108,6 +108,10 @@ export function MainNav({ hideSearch = false }) {
       href: '/usecases',
     },
     {
+      title: 'Collaboratives',
+      href: '/collaboratives',
+    },
+    {
       title: 'Publishers',
       href: '/publishers',
     },
