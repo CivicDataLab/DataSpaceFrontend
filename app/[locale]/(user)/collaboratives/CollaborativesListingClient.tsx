@@ -51,6 +51,11 @@ const PublishedCollaboratives = graphql(`
         id
         name
       }
+      sdgs {
+        id
+        code
+        name
+      }
       datasetCount
       metadata {
         metadataItem {
@@ -76,11 +81,19 @@ const CollaborativesListingClient = () => {
   } = useQuery<{ publishedCollaboratives: TypeCollaborative[] }>(
     ['fetch_published_collaboratives'],
     async () => {
-      const result = await GraphQLPublic(
-        PublishedCollaboratives as any,
-        {}
-      ) as { publishedCollaboratives: TypeCollaborative[] };
-      return result;
+      console.log('Fetching collaboratives...');
+      try {
+        // @ts-ignore - Query has no variables
+        const result = await GraphQLPublic(
+          PublishedCollaboratives as any,
+          {}
+        );
+        console.log('Collaboratives result:', result);
+        return result as { publishedCollaboratives: TypeCollaborative[] };
+      } catch (err) {
+        console.error('Error fetching collaboratives:', err);
+        throw err;
+      }
     },
     {
       refetchOnMount: true,
@@ -90,6 +103,8 @@ const CollaborativesListingClient = () => {
       },
     }
   );
+
+  console.log('Query state:', { isLoading, error, data: collaborativesData });
 
   const collaboratives = collaborativesData?.publishedCollaboratives || [];
 
@@ -190,7 +205,7 @@ const CollaborativesListingClient = () => {
                   {filteredCollaboratives.map((collaborative: TypeCollaborative) => (
                     <Card
                       key={collaborative.id}
-                      title={collaborative.title}
+                      title={collaborative.title || ''}
                       variation="collapsed"
                       iconColor="warning"
                       metadataContent={[
@@ -200,7 +215,7 @@ const CollaborativesListingClient = () => {
                           value: formatDate(collaborative.startedOn),
                         },
                         {
-                          icon: Icons.database,
+                          icon: Icons.dataset,
                           label: 'Datasets',
                           value: collaborative.datasetCount?.toString() || '0',
                         },

@@ -12,7 +12,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
   useEffect(() => {
     const fetchTitle = async () => {
       try {
-        const urlItem = data.collaborative.platformUrl;
+        const urlItem = data.collaborativeBySlug.platformUrl;
 
         if (urlItem && urlItem.value) {
           const title = await getWebsiteTitle(urlItem.value);
@@ -23,22 +23,22 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       }
     };
 
-    if (data.collaborative.platformUrl === null) {
+    if (data.collaborativeBySlug.platformUrl === null) {
       setPlatformTitle('N/A');
     } else {
       fetchTitle();
     }
-  }, [data.collaborative.platformUrl]);
+  }, [data.collaborativeBySlug.platformUrl]);
 
   const getOrganizationLink = () => {
     if (!data) return '/publishers';
 
-    if (data.collaborative.isIndividualCollaborative && data.collaborative.user) {
-      return `/publishers/${data.collaborative.user.fullName + '_' + data.collaborative.user.id}`;
+    if (data.collaborativeBySlug.isIndividualCollaborative && data.collaborativeBySlug.user) {
+      return `/publishers/${data.collaborativeBySlug.user.fullName + '_' + data.collaborativeBySlug.user.id}`;
     }
 
-    if (data.collaborative.organization) {
-      return `/publishers/organization/${data.collaborative.organization.slug + '_' + data.collaborative.organization.id}`;
+    if (data.collaborativeBySlug.organization) {
+      return `/publishers/organization/${data.collaborativeBySlug.organization.slug + '_' + data.collaborativeBySlug.organization.id}`;
     }
 
     return '/publishers';
@@ -46,19 +46,19 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
 
   const metadata = [
     {
-      label: data.collaborative.isIndividualCollaborative ? 'Publisher' : 'Organization',
+      label: data.collaborativeBySlug.isIndividualCollaborative ? 'Publisher' : 'Organization',
       value: (
         <Tooltip
           content={
-            data.collaborative.isIndividualCollaborative
-              ? data.collaborative.user.fullName
-              : data.collaborative.organization.name
+            data.collaborativeBySlug.isIndividualCollaborative
+              ? data.collaborativeBySlug.user.fullName
+              : data.collaborativeBySlug.organization.name
           }
         >
           <Link href={getOrganizationLink()}>
-            {data.collaborative.isIndividualCollaborative
-              ? data.collaborative.user.fullName
-              : data?.collaborative.organization?.name}
+            {data.collaborativeBySlug.isIndividualCollaborative
+              ? data.collaborativeBySlug.user.fullName
+              : data?.collaborativeBySlug.organization?.name}
           </Link>
         </Tooltip>
       ),
@@ -68,56 +68,56 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       value: (
         <Link
           className="text-primaryBlue underline"
-          href={`${data.collaborative.isIndividualCollaborative ? `mailto:${data.collaborative.user.email}` : `mailto:${data.collaborative.organization.contactEmail}`}`}
+          href={`${data.collaborativeBySlug.isIndividualCollaborative ? `mailto:${data.collaborativeBySlug.user.email}` : `mailto:${data.collaborativeBySlug.organization.contactEmail}`}`}
         >
           Contact{' '}
-          {data.collaborative.isIndividualCollaborative ? 'Publisher' : 'Organization'}
+          {data.collaborativeBySlug.isIndividualCollaborative ? 'Publisher' : 'Organization'}
         </Link>
       ),
     },
     {
       label: 'Platform URL',
       value:
-        data.collaborative.platformUrl === null ? (
+        data.collaborativeBySlug.platformUrl === null ? (
           'N/A'
         ) : (
           <Link
             className="text-primaryBlue underline"
-            href={data.collaborative.platformUrl}
+            href={data.collaborativeBySlug.platformUrl}
           >
             <Text className="underline" color="highlight" variant="bodyLg">
               {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
             </Text>
           </Link>
         ),
-      tooltipContent: data.collaborative.platformUrl === null ? 'N/A' : platformTitle,
+      tooltipContent: data.collaborativeBySlug.platformUrl === null ? 'N/A' : platformTitle,
     },
     {
       label: 'Started On',
-      value: formatDate(data.collaborative.startedOn) || 'N/A',
-      tooltipContent: formatDate(data.collaborative.startedOn) || 'N/A',
+      value: formatDate(data.collaborativeBySlug.startedOn) || 'N/A',
+      tooltipContent: formatDate(data.collaborativeBySlug.startedOn) || 'N/A',
     },
     {
       label: 'Completed On',
-      value: formatDate(data.collaborative.completedOn) || 'N/A',
-      tooltipContent: formatDate(data.collaborative.completedOn) || 'N/A',
+      value: formatDate(data.collaborativeBySlug.completedOn) || 'N/A',
+      tooltipContent: formatDate(data.collaborativeBySlug.completedOn) || 'N/A',
     },
     {
       label: 'Status',
-      value: data.collaborative.status?.split('_').join('') || 'N/A',
-      tooltipContent: data.collaborative.status?.split('_').join('') || 'N/A',
+      value: data.collaborativeBySlug.status?.split('_').join('') || 'N/A',
+      tooltipContent: data.collaborativeBySlug.status?.split('_').join('') || 'N/A',
     },
     {
       label: 'Last Updated',
-      value: formatDate(data.collaborative.modified) || 'N/A',
-      tooltipContent: formatDate(data.collaborative.modified) || 'N/A',
+      value: formatDate(data.collaborativeBySlug.modified) || 'N/A',
+      tooltipContent: formatDate(data.collaborativeBySlug.modified) || 'N/A',
     },
     {
       label: 'Sectors',
       value: (
         <div className="flex flex-wrap  gap-2">
-          {data.collaborative.sectors.length > 0 ? (
-            data.collaborative.sectors.map((sector: any, index: number) => (
+          {data.collaborativeBySlug.sectors.length > 0 ? (
+            data.collaborativeBySlug.sectors.map((sector: any, index: number) => (
               <Tooltip content={sector.name} key={index}>
                 <Image
                   src={`/Sectors/${sector.name}.svg`}
@@ -138,8 +138,8 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       label: 'SDG Goals',
       value: (
         <div className="flex flex-wrap  gap-2">
-          {data.collaborative.sdgs && data.collaborative.sdgs.length > 0 ? (
-            data.collaborative.sdgs.map((sdg: any, index: number) => (
+          {data.collaborativeBySlug.sdgs && data.collaborativeBySlug.sdgs.length > 0 ? (
+            data.collaborativeBySlug.sdgs.map((sdg: any, index: number) => (
               <Tooltip content={`${sdg.code} - ${sdg.name}`} key={index}>
                 <Image
                   src={`/SDG/${sdg.code}.svg`}
@@ -157,12 +157,12 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       ),
     },
   ];
-  const image = data.collaborative.isIndividualCollaborative
-    ? data.collaborative?.user?.profilePicture
-      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborative.user.profilePicture.url}`
+  const image = data.collaborativeBySlug.isIndividualCollaborative
+    ? data.collaborativeBySlug?.user?.profilePicture
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.user.profilePicture.url}`
       : '/profile.png'
-    : data?.collaborative.organization?.logo
-      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborative.organization.logo.url}`
+    : data?.collaborativeBySlug.organization?.logo
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.organization.logo.url}`
       : '/org.png';
 
   return (
@@ -195,7 +195,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
               width={100}
               src={image}
               alt={
-                data.collaborative.isIndividualCollaborative
+                data.collaborativeBySlug.isIndividualCollaborative
                   ? 'Publisher logo'
                   : 'Organization logo'
               }

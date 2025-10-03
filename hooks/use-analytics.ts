@@ -5,6 +5,7 @@ import {
   trackUserInteraction, 
   trackDatasetView, 
   trackUsecaseView, 
+  trackCollaborativeView,
   trackSearch, 
   trackDownload,
   trackEngagement,
@@ -37,6 +38,10 @@ export const useAnalytics = () => {
     trackSearch(query, resultCount);
   }, []);
 
+  const trackCollaborative = useCallback((collaborativeId: string, collaborativeTitle?: string) => {
+    trackCollaborativeView(collaborativeId, collaborativeTitle);
+  }, []);
+
   const trackFileDownload = useCallback((fileName: string, fileType?: string) => {
     trackDownload(fileName, fileType);
   }, []);
@@ -59,6 +64,7 @@ export const useAnalytics = () => {
     trackInteraction,
     trackDataset,
     trackUsecase,
+    trackCollaborative,
     trackSearchQuery,
     trackFileDownload,
     trackUserEngagement,

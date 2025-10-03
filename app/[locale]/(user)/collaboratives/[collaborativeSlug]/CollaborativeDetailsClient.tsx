@@ -18,11 +18,10 @@ import JsonLd from '@/components/JsonLd';
 import { Loading } from '@/components/loading';
 import PrimaryDetails from '../components/Details';
 import Metadata from '../components/Metadata';
-import Dashboards from './Dashboards';
 
 const CollaborativeDetails = graphql(`
-  query CollaborativeQuery($pk: ID!) {
-    collaborative(pk: $pk) {
+  query CollaborativeQuery($slug: String!) {
+    collaborativeBySlug(slug: $slug) {
       id
       title
       summary
@@ -59,6 +58,11 @@ const CollaborativeDetails = graphql(`
       }
       sectors {
         id
+        name
+      }
+      sdgs {
+        id
+        code
         name
       }
       tags {
@@ -188,23 +192,28 @@ const CollaborativeDetails = graphql(`
 
 const CollaborativeDetailClient = () => {
   const params = useParams();
-  const { trackUsecase } = useAnalytics();
+  const { trackCollaborative } = useAnalytics();
 
   const {
     data: CollaborativeDetailsData,
     isLoading,
     error,
-  } = useQuery<{ collaborative: TypeCollaborative }>(
+  } = useQuery<{ collaborativeBySlug: TypeCollaborative }>(
     [`fetch_CollaborativeDetails_${params.collaborativeSlug}`],
     async () => {
-      const result = await GraphQLPublic(
-        CollaborativeDetails as any,
-        {},
-        {
-          pk: params.collaborativeSlug,
-        }
-      ) as { collaborative: TypeCollaborative };
-      return result;
+      console.log('Fetching collaborative details for:', params.collaborativeSlug);
+      try {
+        const result = await GraphQLPublic(
+          CollaborativeDetails as any,
+          {},
+          {
+            slug: params.collaborativeSlug,
+          }
+        ) as { collaborativeBySlug: TypeCollaborative };
+        return result;
+      } catch (err) {
+        throw err;
+      }
     },
     {
       refetchOnMount: true,
@@ -215,25 +224,27 @@ const CollaborativeDetailClient = () => {
     }
   );
 
+  console.log('Collaborative details query state:', { isLoading, error, data: CollaborativeDetailsData });
+
   // Track collaborative view when data is loaded
   useEffect(() => {
-    if (CollaborativeDetailsData?.collaborative) {
-      trackUsecase(CollaborativeDetailsData.collaborative.id, CollaborativeDetailsData.collaborative.title || undefined);
+    if (CollaborativeDetailsData?.collaborativeBySlug) {
+      trackCollaborative(CollaborativeDetailsData.collaborativeBySlug.id, CollaborativeDetailsData.collaborativeBySlug.title || undefined);
     }
-  }, [CollaborativeDetailsData?.collaborative, trackUsecase]);
+  }, [CollaborativeDetailsData?.collaborativeBySlug, trackCollaborative]);
 
-  const datasets = CollaborativeDetailsData?.collaborative?.datasets || []; // Fallback to an empty array
-  const useCases = CollaborativeDetailsData?.collaborative?.useCases || []; // Fallback to an empty array
+  const datasets = CollaborativeDetailsData?.collaborativeBySlug?.datasets || []; // Fallback to an empty array
+  const useCases = CollaborativeDetailsData?.collaborativeBySlug?.useCases || []; // Fallback to an empty array
 
   const hasSupportingOrganizations =
-    CollaborativeDetailsData?.collaborative?.supportingOrganizations &&
-    CollaborativeDetailsData?.collaborative?.supportingOrganizations?.length > 0;
+    CollaborativeDetailsData?.collaborativeBySlug?.supportingOrganizations &&
+    CollaborativeDetailsData?.collaborativeBySlug?.supportingOrganizations?.length > 0;
   const hasPartnerOrganizations =
-    CollaborativeDetailsData?.collaborative?.partnerOrganizations &&
-    CollaborativeDetailsData?.collaborative?.partnerOrganizations?.length > 0;
+    CollaborativeDetailsData?.collaborativeBySlug?.partnerOrganizations &&
+    CollaborativeDetailsData?.collaborativeBySlug?.partnerOrganizations?.length > 0;
   const hasContributors =
-    CollaborativeDetailsData?.collaborative?.contributors &&
-    CollaborativeDetailsData?.collaborative?.contributors?.length > 0;
+    CollaborativeDetailsData?.collaborativeBySlug?.contributors &&
+    CollaborativeDetailsData?.collaborativeBySlug?.contributors?.length > 0;
 
   const jsonLd = generateJsonLd({
     '@context': 'https://schema.org',
@@ -241,8 +252,8 @@ const CollaborativeDetailClient = () => {
     name: 'CivicDataLab',
     url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/collaboratives/${params.collaborativeSlug}`,
     description:
-      CollaborativeDetailsData?.collaborative?.summary ||
-      `Explore open data and curated datasets in the ${CollaborativeDetailsData?.collaborative?.title} collaborative.`,
+      CollaborativeDetailsData?.collaborativeBySlug?.summary ||
+      `Explore open data and curated datasets in the ${CollaborativeDetailsData?.collaborativeBySlug?.title} collaborative.`,
     publisher: {
       '@type': 'Organization',
       name: 'CivicDataSpace',
@@ -271,7 +282,7 @@ const CollaborativeDetailClient = () => {
               </Text>
             </div>
           </div>
-        ) : !CollaborativeDetailsData?.collaborative ? (
+        ) : !CollaborativeDetailsData?.collaborativeBySlug ? (
           <div className="container py-10">
             <div className="flex flex-col items-center justify-center gap-4">
               <Text variant="headingXl">Collaborative Not Found</Text>
@@ -286,7 +297,7 @@ const CollaborativeDetailClient = () => {
               data={[
                 { href: '/', label: 'Home' },
                 { href: '/collaboratives', label: 'Collaboratives' },
-                { href: '#', label: CollaborativeDetailsData?.collaborative?.title || '' },
+                { href: '#', label: CollaborativeDetailsData?.collaborativeBySlug?.title || '' },
               ]}
             />
             <div className=" bg-onSurfaceDefault">
@@ -421,7 +432,6 @@ const CollaborativeDetailClient = () => {
                 </div>
               </div>
             </div>
-            <Dashboards />
             {(hasSupportingOrganizations ||
               hasPartnerOrganizations ||
               hasContributors) && (
@@ -433,7 +443,7 @@ const CollaborativeDetailClient = () => {
                         Supported by
                       </Text>
                       <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
-                        {CollaborativeDetailsData?.collaborative?.supportingOrganizations?.map(
+                        {CollaborativeDetailsData?.collaborativeBySlug?.supportingOrganizations?.map(
                           (org: any) => (
                             <Link
                               href={`/publishers/organization/${org.slug + '_' + org.id}`}
@@ -460,7 +470,7 @@ const CollaborativeDetailClient = () => {
                         Partnered by
                       </Text>
                       <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
-                        {CollaborativeDetailsData?.collaborative?.partnerOrganizations?.map(
+                        {CollaborativeDetailsData?.collaborativeBySlug?.partnerOrganizations?.map(
                           (org: any) => (
                             <Link
                               href={`/publishers/organization/${org.slug + '_' + org.id}`}
@@ -493,7 +503,7 @@ const CollaborativeDetailClient = () => {
                       </Text>
                     </div>
                     <div className="mt-8 flex flex-wrap items-center justify-start gap-8">
-                      {CollaborativeDetailsData?.collaborative?.contributors?.map(
+                      {CollaborativeDetailsData?.collaborativeBySlug?.contributors?.map(
                         (contributor: any) => (
                           <Link
                             href={`/publishers/${contributor.fullName + '_' + contributor.id}`}

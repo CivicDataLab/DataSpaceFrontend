@@ -13,10 +13,10 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
   return (
     <div>
       <div>
-        <Text variant="heading2xl">{data.collaborative.title}</Text>
+        <Text variant="heading2xl">{data.collaborativeBySlug.title}</Text>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        {data.collaborative.tags.map((item: any, index: number) => (
+        {data.collaborativeBySlug.tags.map((item: any, index: number) => (
           <div key={index}>
             <Tag
               fillColor="var(--accent-tertiary-color)"
@@ -62,8 +62,8 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
       </div>
       <div className="mt-6 lg:mt-10">
         <Image
-          src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborative.logo?.path.replace('/code/files/', '')}`}
-          alt={data.collaborative.title}
+          src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.logo?.path.replace('/code/files/', '')}`}
+          alt={data.collaborativeBySlug.title}
           width={100}
           height={100}
           className="h-full w-full"
@@ -80,7 +80,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
               textColor="black"
             >
               {
-                data.collaborative.metadata?.find(
+                data.collaborativeBySlug.metadata?.find(
                   (meta: any) => meta.metadataItem?.label === 'Geography'
                 )?.value
               }
@@ -91,7 +91,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
           <Text variant="headingXl">Summary</Text>
           <div className="mt-4">
             <Text variant="bodyLg" fontWeight="regular" className="leading-5">
-              {data.collaborative.summary}
+              {data.collaborativeBySlug.summary}
             </Text>
           </div>
         </div>
