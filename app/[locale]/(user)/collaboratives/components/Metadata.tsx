@@ -172,11 +172,11 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           <Text
             variant="headingLg"
             fontWeight="semibold"
-            className=" text-primaryBlue"
+            color="onBgDefault"
           >
             ABOUT THE COLLABORATIVE{' '}
           </Text>
-          <Text variant="bodyLg">DETAILS</Text>
+          <Text variant="bodyLg" color="onBgDefault">DETAILS</Text>
         </div>
         <div className="flex items-center justify-between">
           {setOpen && (
@@ -209,6 +209,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
               <Text
                 className="min-w-[120px]  basis-1/4 uppercase"
                 variant="bodyMd"
+                color="onBgDefault"
               >
                 {item.label}
               </Text>
@@ -217,7 +218,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
                   className="max-w-xs truncate"
                   variant="bodyLg"
                   fontWeight="medium"
-                  // title={item?.tooltipContent}
+                  color="onBgDefault"
                 >
                   {typeof item.value === 'string' ? item.value : item.value}
                 </Text>

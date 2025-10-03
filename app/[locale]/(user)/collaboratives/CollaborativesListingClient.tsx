@@ -1,16 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import BreadCrumbs from '@/components/BreadCrumbs';
+import { Icons } from '@/components/icons';
+import JsonLd from '@/components/JsonLd';
+import { Loading } from '@/components/loading';
 import { graphql } from '@/gql';
 import { TypeCollaborative } from '@/gql/generated/graphql';
-import { useQuery } from '@tanstack/react-query';
-import { Card, Text, Button, Icon } from 'opub-ui';
-
 import { GraphQLPublic } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
-import { Icons } from '@/components/icons';
-import { Loading } from '@/components/loading';
-import BreadCrumbs from '@/components/BreadCrumbs';
+import { formatDate, generateJsonLd } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import Image from 'next/image';
+import { Button, Card, Icon, Text } from 'opub-ui';
+import { useState } from 'react';
 
 const PublishedCollaboratives = graphql(`
   query PublishedCollaboratives {
@@ -104,8 +105,6 @@ const CollaborativesListingClient = () => {
     }
   );
 
-  console.log('Query state:', { isLoading, error, data: collaborativesData });
-
   const collaboratives = collaborativesData?.publishedCollaboratives || [];
 
   // Filter collaboratives based on search term and sector
@@ -122,26 +121,66 @@ const CollaborativesListingClient = () => {
     collaborative.sectors?.map((sector: any) => sector.name) || []
   );
   const uniqueSectors = [...new Set(allSectors)];
-
+  const jsonLd = generateJsonLd({
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'CivicDataLab',
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/collaboratives`,
+      description:
+        'Explore collaborative data initiatives and partnerships that bring organizations together to create impactful solutions.',
+    });
   return (
-    <>
+    <main>
+      <JsonLd json={jsonLd} />
       <BreadCrumbs
         data={[
           { href: '/', label: 'Home' },
           { href: '/collaboratives', label: 'Collaboratives' },
         ]}
       />
+      <>
+      <>
+      <div className="w-full">
+        <div className=" bg-primaryBlue">
+          <div className=" container flex flex-col-reverse items-center gap-8 py-10 lg:flex-row ">
+            <div className="flex flex-col gap-5 ">
+              <Text
+                variant="heading2xl"
+                fontWeight="bold"
+                color="onBgDefault"
+              >
+                Our Collaboratives
+              </Text>
+              <Text
+                variant="headingLg"
+                color="onBgDefault"
+                fontWeight="regular"
+                className="leading-3 lg:leading-5"
+              >
+                By Collaboratives we mean a collective effort by several organisations
+                in any specific sectors that can be applied to address some of the
+                most pressing concerns from hyper-local to the global level simultaneously.
+              </Text>
+            </div>
+            <div className="flex items-center justify-center gap-2 px-3 ">
+              <Image
+                src={'/collaborative.png'}
+                alt={'collaborative'}
+                width={600}
+                height={316}
+                className="m-auto h-auto w-full"
+              />
+            </div>
+          </div>
+          </div>
+        </div>
+      </>
+      </>
       
       <div className="bg-onSurfaceDefault">
         <div className="container py-8 lg:py-14">
           {/* Header Section */}
           <div className="mb-8">
-            <Text variant="heading2xl" className="mb-4">
-              Data Collaboratives
-            </Text>
-            <Text variant="bodyLg" fontWeight="regular" className="mb-6">
-              Explore collaborative data initiatives and partnerships that bring organizations together to create impactful solutions.
-            </Text>
             
             {/* Search and Filter Section */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
@@ -278,7 +317,7 @@ const CollaborativesListingClient = () => {
           )}
         </div>
       </div>
-    </>
+    </main>
   );
 };
 

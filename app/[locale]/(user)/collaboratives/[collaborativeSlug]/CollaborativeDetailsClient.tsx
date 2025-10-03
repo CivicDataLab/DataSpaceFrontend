@@ -300,7 +300,7 @@ const CollaborativeDetailClient = () => {
                 { href: '#', label: CollaborativeDetailsData?.collaborativeBySlug?.title || '' },
               ]}
             />
-            <div className=" bg-onSurfaceDefault">
+            <div className=" bg-primaryBlue">
               <div className="container flex flex-row">
                 <div className="w-full border-solid border-greyExtralight py-8 pr-8 lg:w-3/4 lg:border-r-2 lg:py-10 lg:pr-8">
                   <PrimaryDetails data={CollaborativeDetailsData} isLoading={isLoading} />
@@ -309,130 +309,7 @@ const CollaborativeDetailClient = () => {
                   <Metadata data={CollaborativeDetailsData} />
                 </div>
               </div>
-              {/* Use Cases Section */}
-              {useCases.length > 0 && (
-                <div className="container py-8 lg:py-14">
-                  <div className=" flex flex-col gap-1 ">
-                    <Text variant="headingXl">Use Cases</Text>
-                    <Text variant="bodyLg" fontWeight="regular">
-                      Use Cases associated with this Collaborative
-                    </Text>
-                  </div>
-                  <div className="grid  grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3 ">
-                    {useCases.map((useCase: TypeUseCase) => (
-                      <Card
-                        key={useCase.id}
-                        title={useCase.title || ''}
-                        variation={'collapsed'}
-                        iconColor={'success'}
-                        metadataContent={[
-                          {
-                            icon: Icons.calendar,
-                            label: 'Started',
-                            value: formatDate(useCase.startedOn),
-                          },
-                          {
-                            icon: Icons.activity,
-                            label: 'Status',
-                            value: useCase.runningStatus?.split('_').join(' ') || 'N/A',
-                          },
-                          {
-                            icon: Icons.globe,
-                            label: 'Geography',
-                            value:
-                              useCase.metadata?.find(
-                                (meta: any) =>
-                                  meta.metadataItem?.label === 'Geography'
-                              )?.value || '',
-                          },
-                        ]}
-                        href={`/usecases/${useCase.slug}`}
-                        footerContent={[
-                          {
-                            icon: useCase.sectors && useCase.sectors[0]?.name 
-                              ? `/Sectors/${useCase.sectors[0].name}.svg`
-                              : '/Sectors/default.svg',
-                            label: 'Sectors',
-                          },
-                          {
-                            icon: useCase.isIndividualUsecase
-                              ? useCase?.user?.profilePicture
-                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.user.profilePicture.url}`
-                                : '/profile.png'
-                              : useCase?.organization?.logo
-                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.organization.logo.url}`
-                                : '/org.png',
-                            label: 'Published by',
-                          },
-                        ]}
-                        description={useCase.summary || ''}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Datasets Section */}
-              <div className="container py-8 lg:py-14">
-                <div className=" flex flex-col gap-1 ">
-                  <Text variant="headingXl">Datasets in this Collaborative</Text>
-                  <Text variant="bodyLg" fontWeight="regular">
-                    Explore datasets related to this collaborative{' '}
-                  </Text>
-                </div>
-                <div className="grid  grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3 ">
-                  {datasets.length > 0 &&
-                    datasets.map((dataset: TypeDataset) => (
-                      <Card
-                        key={dataset.id}
-                        title={dataset.title}
-                        variation={'collapsed'}
-                        iconColor={'warning'}
-                        metadataContent={[
-                          {
-                            icon: Icons.calendar,
-                            label: 'Date',
-                            value: formatDate(dataset.modified),
-                          },
-                          {
-                            icon: Icons.download,
-                            label: 'Download',
-                            value: dataset.downloadCount.toString(),
-                          },
-                          {
-                            icon: Icons.globe,
-                            label: 'Geography',
-                            value:
-                              dataset.metadata?.find(
-                                (meta: any) =>
-                                  meta.metadataItem?.label === 'Geography'
-                              )?.value || '',
-                          },
-                        ]}
-                        href={`/datasets/${dataset.id}`}
-                        footerContent={[
-                          {
-                            icon: `/Sectors/${dataset.sectors[0]?.name}.svg`,
-                            label: 'Sectors',
-                          },
-                          {
-                            icon: dataset.isIndividualDataset
-                              ? dataset?.user?.profilePicture
-                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${dataset.user.profilePicture.url}`
-                                : '/profile.png'
-                              : dataset?.organization?.logo
-                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${dataset.organization.logo.url}`
-                                : '/org.png',
-                            label: 'Published by',
-                          },
-                        ]}
-                        description={dataset.description || ''}
-                      />
-                    ))}
-                </div>
-              </div>
-            </div>
-            {(hasSupportingOrganizations ||
+              {(hasSupportingOrganizations ||
               hasPartnerOrganizations ||
               hasContributors) && (
               <div className=" bg-primaryBlue">
@@ -528,7 +405,132 @@ const CollaborativeDetailClient = () => {
                   </div>
                 )}
               </div>
+            )}              
+            </div>
+            <div className="container py-8 lg:py-14" color="onBgDefault">
+              {/* Use Cases Section */}
+            {useCases.length > 0 && (
+              <div className="container py-8 lg:py-14">
+                <div className=" flex flex-col gap-1 ">
+                  <Text variant="headingXl">Use Cases</Text>
+                  <Text variant="bodyLg" fontWeight="regular">
+                    Use Cases associated with this Collaborative
+                  </Text>
+                </div>
+                <div className="grid  grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3 ">
+                  {useCases.map((useCase: TypeUseCase) => (
+                    <Card
+                      key={useCase.id}
+                      title={useCase.title || ''}
+                      variation={'collapsed'}
+                      iconColor={'success'}
+                      metadataContent={[
+                        {
+                          icon: Icons.calendar,
+                          label: 'Started',
+                          value: formatDate(useCase.startedOn),
+                        },
+                        {
+                          icon: Icons.activity,
+                          label: 'Status',
+                          value: useCase.runningStatus?.split('_').join(' ') || 'N/A',
+                        },
+                        {
+                          icon: Icons.globe,
+                          label: 'Geography',
+                          value:
+                            useCase.metadata?.find(
+                              (meta: any) =>
+                                meta.metadataItem?.label === 'Geography'
+                            )?.value || '',
+                        },
+                      ]}
+                      href={`/usecases/${useCase.slug}`}
+                      footerContent={[
+                        {
+                          icon: useCase.sectors && useCase.sectors[0]?.name 
+                            ? `/Sectors/${useCase.sectors[0].name}.svg`
+                            : '/Sectors/default.svg',
+                          label: 'Sectors',
+                        },
+                        {
+                          icon: useCase.isIndividualUsecase
+                            ? useCase?.user?.profilePicture
+                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.user.profilePicture.url}`
+                              : '/profile.png'
+                            : useCase?.organization?.logo
+                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.organization.logo.url}`
+                              : '/org.png',
+                          label: 'Published by',
+                        },
+                      ]}
+                      description={useCase.summary || ''}
+                    />
+                  ))}
+                </div>
+              </div>
             )}
+              {/* Datasets Section */}
+              <div className="container py-8 lg:py-14">
+                <div className=" flex flex-col gap-1 ">
+                  <Text variant="headingXl">Datasets in this Collaborative</Text>
+                  <Text variant="bodyLg" fontWeight="regular">
+                    Explore datasets related to this collaborative{' '}
+                  </Text>
+                </div>
+                <div className="grid  grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3 ">
+                  {datasets.length > 0 &&
+                    datasets.map((dataset: TypeDataset) => (
+                      <Card
+                        key={dataset.id}
+                        title={dataset.title}
+                        variation={'collapsed'}
+                        iconColor={'warning'}
+                        metadataContent={[
+                          {
+                            icon: Icons.calendar,
+                            label: 'Date',
+                            value: formatDate(dataset.modified),
+                          },
+                          {
+                            icon: Icons.download,
+                            label: 'Download',
+                            value: dataset.downloadCount.toString(),
+                          },
+                          {
+                            icon: Icons.globe,
+                            label: 'Geography',
+                            value:
+                              dataset.metadata?.find(
+                                (meta: any) =>
+                                  meta.metadataItem?.label === 'Geography'
+                              )?.value || '',
+                          },
+                        ]}
+                        href={`/datasets/${dataset.id}`}
+                        footerContent={[
+                          {
+                            icon: `/Sectors/${dataset.sectors[0]?.name}.svg`,
+                            label: 'Sectors',
+                          },
+                          {
+                            icon: dataset.isIndividualDataset
+                              ? dataset?.user?.profilePicture
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${dataset.user.profilePicture.url}`
+                                : '/profile.png'
+                              : dataset?.organization?.logo
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${dataset.organization.logo.url}`
+                                : '/org.png',
+                            label: 'Published by',
+                          },
+                        ]}
+                        description={dataset.description || ''}
+                      />
+                    ))}
+                </div>
+              </div>
+            </div>
+            
           </>
         )}
       </div>

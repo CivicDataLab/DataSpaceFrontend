@@ -13,7 +13,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
   return (
     <div>
       <div>
-        <Text variant="heading2xl">{data.collaborativeBySlug.title}</Text>
+        <Text variant="heading2xl" color="onBgDefault">{data.collaborativeBySlug.title}</Text>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         {data.collaborativeBySlug.tags.map((item: any, index: number) => (
@@ -45,7 +45,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
               >
                 <div className="flex items-center gap-2 py-2">
                   <Icon source={Icons.info} size={24} color="default" />
-                  <Text>Metadata</Text>
+                  <Text color="onBgDefault">Metadata</Text>
                 </div>
               </Button>
             </div>
@@ -72,12 +72,12 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
       </div>
       <div className=" lg:pr-4">
         <div className="mt-6 lg:mt-10">
-          <Text variant="headingXl">Geographies</Text>
+          <Text variant="headingXl" color="onBgDefault">Geographies</Text>
           <div className="mt-4">
             <Tag
               fillColor="var(--orange-secondary-color)"
               borderColor="var(--orange-secondary-text)"
-              textColor="black"
+              textColor="white"
             >
               {
                 data.collaborativeBySlug.metadata?.find(
@@ -88,9 +88,9 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
           </div>
         </div>
         <div className="mt-6 lg:mt-10">
-          <Text variant="headingXl">Summary</Text>
+          <Text variant="headingXl" color="onBgDefault">Summary</Text>
           <div className="mt-4">
-            <Text variant="bodyLg" fontWeight="regular" className="leading-5">
+            <Text variant="bodyLg" fontWeight="regular" className="leading-5" color="onBgDefault">
               {data.collaborativeBySlug.summary}
             </Text>
           </div>
