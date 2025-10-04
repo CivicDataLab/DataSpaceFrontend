@@ -24,7 +24,6 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { Loading } from '@/components/loading';
 import DatasetLoading from '../../../components/loading-dataset';
 import { useDatasetEditStatus } from '../context';
 
@@ -344,7 +343,6 @@ export function EditMetadata({ id }: { id: string }) {
       }) || [];
 
     defaultVal['geographies'] =
-      // @ts-ignore - geographies will be available after GraphQL codegen
       dataset?.geographies?.map((geo: any) => {
         return {
           label: geo.name,

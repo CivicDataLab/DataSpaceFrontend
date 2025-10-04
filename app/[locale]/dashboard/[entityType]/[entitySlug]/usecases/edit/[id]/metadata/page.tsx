@@ -8,7 +8,6 @@ import {
   TypeMetadata,
   TypeSector,
   TypeTag,
-  TypeUseCase,
   UpdateUseCaseMetadataInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -165,7 +164,7 @@ const Metadata = () => {
       refetchOnReconnect: true,
     }
   );
-  const { data: metadataFields, isLoading: isMetadataFieldsLoading } = useQuery(
+  const { data: metadataFields } = useQuery(
     [`metadata_fields_USECASE_${params.id}`],
     () =>
       GraphQL(
@@ -219,7 +218,6 @@ const Metadata = () => {
       }) || [];
 
     defaultVal['geographies'] =
-      // @ts-ignore - geographies will be available after GraphQL codegen
       data?.geographies?.map((geo: any) => {
         return {
           label: geo.name,
