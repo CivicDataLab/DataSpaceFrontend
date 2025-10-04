@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   MetadataModels,
@@ -11,7 +9,9 @@ import {
   UpdateUseCaseMetadataInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { Combobox, Spinner, toast } from 'opub-ui';
+import { useEffect, useState } from 'react';
 
 import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
@@ -140,6 +140,16 @@ const tagsListQueryDoc: any = graphql(`
   }
 `);
 
+const sdgsListQueryDoc: any = graphql(`
+  query SDGList {
+    sdgs {
+      id
+      code
+      name
+    }
+  }
+`);
+
 const Metadata = () => {
   const params = useParams<{
     entityType: string;
@@ -191,6 +201,7 @@ const Metadata = () => {
         sectors: [],
         geographies: [],
         tags: [],
+        sdgs: [],
       };
     }
 
@@ -222,6 +233,14 @@ const Metadata = () => {
         return {
           label: geo.name,
           value: geo.id,
+        };
+      }) || [];
+
+    defaultVal['sdgs'] =
+      data?.sdgs?.map((sdg: any) => {
+        return {
+          label: `${sdg.code} - ${sdg.name}`,
+          value: sdg.id,
         };
       }) || [];
 
@@ -264,6 +283,17 @@ const Metadata = () => {
     useQuery([`geographies_list_query`], () =>
       GraphQL(
         geographiesListQueryDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        []
+      )
+    );
+
+  const getSDGsList: { data: any; isLoading: boolean; error: any } =
+    useQuery([`sdgs_list_query`], () =>
+      GraphQL(
+        sdgsListQueryDoc,
         {
           [params.entityType]: params.entitySlug,
         },
@@ -342,7 +372,7 @@ const Metadata = () => {
             ...Object.keys(transformedValues)
               .filter(
                 (valueItem) =>
-                  !['sectors', 'tags', 'geographies'].includes(valueItem) &&
+                  !['sectors', 'tags', 'geographies', 'sdgs'].includes(valueItem) &&
                   transformedValues[valueItem] !== ''
               )
               .map((key) => {
@@ -354,6 +384,7 @@ const Metadata = () => {
           ],
           sectors: updatedData.sectors?.map((item: any) => item.value) || [],
           tags: updatedData.tags?.map((item: any) => item.label) || [],
+          sdgs: updatedData.sdgs?.map((item: any) => item.value) || [],
           geographies: updatedData.geographies?.map((item: any) => parseInt(item.value, 10)) || [],
         },
       });
@@ -363,6 +394,8 @@ const Metadata = () => {
   if (
     getSectorsList.isLoading ||
     getTagsList.isLoading ||
+    getSDGsList.isLoading ||
+    getGeographiesList.isLoading ||
     useCaseData.isLoading
   ) {
     return (
@@ -422,6 +455,24 @@ const Metadata = () => {
     <div>
       <div>
         <div className="flex flex-wrap">
+          <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
+            <Combobox
+              displaySelected
+              label="SDG Goals *"
+              name="sdgs"
+              list={
+                getSDGsList?.data.sdgs?.map((item: any) => ({
+                  label: `${item.code} - ${item.name}`,
+                  value: item.id,
+                })) || []
+              }
+              selectedValue={formData.sdgs}
+              onChange={(value) => {
+                handleChange('sdgs', value);
+                handleSave({ ...formData, sdgs: value });
+              }}
+            />
+          </div>
           <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
             <Combobox
               displaySelected

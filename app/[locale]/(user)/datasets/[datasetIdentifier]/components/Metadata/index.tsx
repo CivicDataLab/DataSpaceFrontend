@@ -13,7 +13,7 @@ interface MetadataProps {
 }
 
 const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
-  const Metadata = data.metadata.map((item: any) => ({
+  const Metadata = (data.metadata || []).map((item: any) => ({
     label: item.metadataItem.label,
     value: item.value,
     type: item.metadataItem.dataType,
@@ -55,7 +55,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
   useEffect(() => {
     const fetchTitle = async () => {
       try {
-        const urlItem = data.metadata.find(
+        const urlItem = (data.metadata || []).find(
           (item: any) => item.metadataItem?.dataType === 'URL'
         );
 
@@ -186,8 +186,8 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
               {data.geographies.map((geo: any, index: number) => (
                 <Tag
                   key={index}
-                  fillColor="var(--blue-secondary-color)"
-                  borderColor="var(--blue-secondary-text)"
+                  fillColor="var(--orange-secondary-color)"
+                  borderColor="var(--orange-secondary-text)"
                   textColor="black"
                 >
                   {geo.name}

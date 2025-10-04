@@ -303,8 +303,8 @@ export function EditMetadata({ id }: { id: string }) {
       };
     }
 
-    dataset?.metadata.length > 0 &&
-      dataset?.metadata?.map((field) => {
+    (dataset?.metadata || []).length > 0 &&
+      (dataset?.metadata || []).map((field) => {
         if (
           field.metadataItem.dataType === 'MULTISELECT' &&
           field.value !== ''
@@ -590,6 +590,7 @@ export function EditMetadata({ id }: { id: string }) {
     <>
       {!getTagsList?.isLoading &&
       !getSectorsList?.isLoading &&
+      !getGeographiesList?.isLoading &&
       !getDatasetMetadata.isLoading ? (
         <Form
           formOptions={{

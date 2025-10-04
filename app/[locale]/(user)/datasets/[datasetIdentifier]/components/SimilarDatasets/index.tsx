@@ -49,6 +49,9 @@ const similarDatasetQuery: any = graphql(`
           }
           value
         }
+        geographies {
+          name
+        }
         license
         resources {
           id
@@ -135,7 +138,7 @@ const SimilarDatasets: React.FC = () => {
                             {
                               icon: Icons.globe,
                               label: 'Geography',
-                              value: 'India',
+                              value: item.geographies.join(', '),
                             },
                           ]}
                           tag={item.tags}

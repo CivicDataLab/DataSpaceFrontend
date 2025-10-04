@@ -43,6 +43,17 @@ const UseCaseDetails: any = graphql(`
         id
         name
       }
+      geographies {
+        id
+        name
+        code
+        type
+      }
+      sdgs {
+        id
+        code
+        name
+      }
       runningStatus
       tags {
         id

@@ -529,9 +529,12 @@ const ListingComponent: React.FC<ListingProps> = ({
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
                         : '/org.png';
                     
-                    // Get geographies from the geographies field (new approach)
                     const geographies = item.geographies && item.geographies.length > 0
                       ? item.geographies
+                      : null;
+
+                    const sdgs = item.sdgs && item.sdgs.length > 0
+                      ? item.sdgs
                       : null;
 
                     const MetadataContent = [
@@ -554,18 +557,25 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     if (geographies && geographies.length > 0) {
                       // Format geographies hierarchically for display
-                      const geoDisplay = geographies.map((geo: any) => {
-                        if (geo.parentId) {
-                          return `${geo.name} (${geo.parentId.name})`;
-                        }
-                        return geo.name;
-                      }).join(', ');
+                      const geoDisplay = geographies.join(', ');
 
                       MetadataContent.push({
                         icon: Icons.globe,
                         label: 'Geography',
                         value: geoDisplay,
                         tooltip: geoDisplay,
+                      });
+                    }
+
+                    if (sdgs && sdgs.length > 0) {
+                      // Format SDGs for display
+                      const sdgDisplay = sdgs.map((sdg: any) => `${sdg.code} - ${sdg.name}`).join(', ');
+
+                      MetadataContent.push({
+                        icon: Icons.target,
+                        label: 'SDG Goals',
+                        value: sdgDisplay,
+                        tooltip: sdgDisplay,
                       });
                     }
 

@@ -42,6 +42,8 @@ const Details = ({ data }: { data: any }) => {
       value: data?.useCases[0]?.completedOn,
     },
     { label: 'Sector', value: data?.useCases[0]?.sectors[0]?.name },
+    { label: 'Geography', value: data?.useCases[0]?.geographies?.map((geo: any) => geo.name).join(', ') },
+    { label: 'SDG Goals', value: data?.useCases[0]?.sdgs?.map((sdg: any) => `${sdg.code} - ${sdg.name}`).join(', ') },
     { label: 'Tags', value: data?.useCases[0]?.tags[0]?.value },
     ...(data?.useCases[0]?.metadata?.map((meta: any) => ({
       label: meta.metadataItem?.label,
@@ -71,14 +73,18 @@ const Details = ({ data }: { data: any }) => {
               <Text variant="bodyMd">Platform URL:</Text>
             </div>
             <div>
-              <Link
-                className="text-primaryBlue underline"
-                href={data.useCases[0].platformUrl}
-              >
-                <Text className="underline" color="highlight" variant="bodyLg">
-                  {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
-                </Text>
-              </Link>
+              {data.useCases[0].platformUrl ? (
+                <Link
+                  className="text-primaryBlue underline"
+                  href={data.useCases[0].platformUrl}
+                >
+                  <Text className="underline" color="highlight" variant="bodyLg">
+                    {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
+                  </Text>
+                </Link>
+              ) : (
+                <Text variant="bodyMd">Not provided</Text>
+              )}
             </div>
           </div>
 
