@@ -24,9 +24,9 @@ const stripMarkdown = (markdown: string): string => {
     // Remove inline code
     .replace(/`([^`]+)`/g, '$1')
     // Remove images
-    .replace(/!\[([^\]]*)\]\([^\)]+\)/g, '$1')
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
     // Remove links
-    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     // Remove headers
     .replace(/^#{1,6}\s+/gm, '')
     // Remove bold
