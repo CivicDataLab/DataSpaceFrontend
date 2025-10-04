@@ -58,6 +58,11 @@ const CollaborativeDetails: any = graphql(`
         path
         url
       }
+      coverImage {
+        name
+        path
+        url
+      }
       datasets {
         title
         id

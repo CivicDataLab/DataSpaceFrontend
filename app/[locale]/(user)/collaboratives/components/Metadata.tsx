@@ -30,51 +30,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     }
   }, [data.collaborativeBySlug.platformUrl]);
 
-  const getOrganizationLink = () => {
-    if (!data) return '/publishers';
-
-    if (data.collaborativeBySlug.isIndividualCollaborative && data.collaborativeBySlug.user) {
-      return `/publishers/${data.collaborativeBySlug.user.fullName + '_' + data.collaborativeBySlug.user.id}`;
-    }
-
-    if (data.collaborativeBySlug.organization) {
-      return `/publishers/organization/${data.collaborativeBySlug.organization.slug + '_' + data.collaborativeBySlug.organization.id}`;
-    }
-
-    return '/publishers';
-  };
-
   const metadata = [
-    {
-      label: data.collaborativeBySlug.isIndividualCollaborative ? 'Publisher' : 'Organization',
-      value: (
-        <Tooltip
-          content={
-            data.collaborativeBySlug.isIndividualCollaborative
-              ? data.collaborativeBySlug.user.fullName
-              : data.collaborativeBySlug.organization.name
-          }
-        >
-          <Link href={getOrganizationLink()}>
-            {data.collaborativeBySlug.isIndividualCollaborative
-              ? data.collaborativeBySlug.user.fullName
-              : data?.collaborativeBySlug.organization?.name}
-          </Link>
-        </Tooltip>
-      ),
-    },
-    {
-      label: 'Contact',
-      value: (
-        <Link
-          className="text-primaryBlue underline"
-          href={`${data.collaborativeBySlug.isIndividualCollaborative ? `mailto:${data.collaborativeBySlug.user.email}` : `mailto:${data.collaborativeBySlug.organization.contactEmail}`}`}
-        >
-          Contact{' '}
-          {data.collaborativeBySlug.isIndividualCollaborative ? 'Publisher' : 'Organization'}
-        </Link>
-      ),
-    },
     {
       label: 'Platform URL',
       value:
@@ -157,13 +113,11 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       ),
     },
   ];
-  const image = data.collaborativeBySlug.isIndividualCollaborative
-    ? data.collaborativeBySlug?.user?.profilePicture
-      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.user.profilePicture.url}`
-      : '/profile.png'
-    : data?.collaborativeBySlug.organization?.logo
-      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.organization.logo.url}`
-      : '/org.png';
+  
+  // Use collaborative logo if available, otherwise use a default
+  const image = data.collaborativeBySlug?.logo?.path
+    ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.logo.path.replace('/code/files/', '')}`
+    : '/org.png';
 
   return (
     <div className="flex flex-col gap-10 px-7 py-10">
@@ -188,21 +142,15 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       </div>
       <Divider />
       <div className=" flex flex-col gap-8">
-        <Link href={getOrganizationLink()}>
-          <div className="hidden rounded-2 border-1 border-solid border-greyExtralight p-2 lg:block">
-            <Image
-              height={140}
-              width={100}
-              src={image}
-              alt={
-                data.collaborativeBySlug.isIndividualCollaborative
-                  ? 'Publisher logo'
-                  : 'Organization logo'
-              }
-              className="w-full object-contain"
-            />
-          </div>
-        </Link>
+        <div className="hidden rounded-2 border-1 border-solid border-greyExtralight p-2 lg:block">
+          <Image
+            height={140}
+            width={100}
+            src={image}
+            alt="Collaborative logo"
+            className="w-full object-contain"
+          />
+        </div>
         <div className="flex flex-col gap-8">
           {metadata.map((item, index) => (
             <div key={index} className="flex gap-2">

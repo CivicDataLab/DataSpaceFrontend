@@ -80,6 +80,10 @@ const CollaborativeDetails = graphql(`
         name
         path
       }
+      coverImage {
+        name
+        path
+      }
       datasets {
         title
         id

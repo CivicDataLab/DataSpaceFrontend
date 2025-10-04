@@ -60,16 +60,59 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
           )}
         </Tray>
       </div>
-      <div className="mt-6 lg:mt-10">
-        <Image
-          src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.logo?.path.replace('/code/files/', '')}`}
-          alt={data.collaborativeBySlug.title}
-          width={100}
-          height={100}
-          className="h-full w-full"
-          unoptimized
-        />
+      {data.collaborativeBySlug.coverImage && (
+        <div className="mt-6 lg:mt-10">
+          <Image
+            src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.coverImage?.path.replace('/code/files/', '')}`}
+            alt={data.collaborativeBySlug.title}
+            width={1200}
+            height={400}
+            className="h-auto w-full rounded-2 object-cover"
+            unoptimized
+          />
+        </div>
+      )}
+      
+      {/* Stats Section */}
+      <div className="mt-10 flex flex-wrap items-center gap-8 lg:mt-12 lg:gap-0">
+        <div className="flex flex-col border-x-[1px] border-solid border-tertiaryAccent px-8">
+          <Text variant="heading3xl" className="text-secondaryOrange">
+            {data.collaborativeBySlug.useCases?.length || 0}
+          </Text>
+          <Text variant="bodyLg" color="onBgDefault" className="w-24">
+            Use Cases
+          </Text>
+        </div>
+        
+        <div className="flex flex-col border-x-[1px] border-solid border-tertiaryAccent px-8">
+          <Text variant="heading3xl" className="text-secondaryOrange">
+            {data.collaborativeBySlug.datasets?.length || 0}
+          </Text>
+          <Text variant="bodyLg" color="onBgDefault" className="w-24">
+            Datasets
+          </Text>
+        </div>
+        
+        <div className="flex flex-col border-x-[1px] border-solid border-tertiaryAccent px-8">
+          <Text variant="heading3xl" className="text-secondaryOrange">
+            {(data.collaborativeBySlug.supportingOrganizations?.length || 0) + 
+             (data.collaborativeBySlug.partnerOrganizations?.length || 0)}
+          </Text>
+          <Text variant="bodyLg" color="onBgDefault" className="w-24">
+            Organizations
+          </Text>
+        </div>
+        
+        <div className="flex flex-col border-x-[1px] border-solid border-tertiaryAccent px-8">
+          <Text variant="heading3xl" className="text-secondaryOrange">
+            {data.collaborativeBySlug.contributors?.length || 0}
+          </Text>
+          <Text variant="bodyLg" color="onBgDefault" className="w-24">
+            Contributors
+          </Text>
+        </div>
       </div>
+      
       <div className=" lg:pr-4">
         <div className="mt-6 lg:mt-10">
           <Text variant="headingXl" color="onBgDefault">Geographies</Text>

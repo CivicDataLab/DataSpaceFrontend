@@ -30,6 +30,11 @@ const UpdateCollaborativeMutation: any = graphql(`
         path
         url
       }
+      coverImage {
+        name
+        path
+        url
+      }
     }
   }
 `);
@@ -42,6 +47,11 @@ const FetchCollaborative: any = graphql(`
       summary
       platformUrl
       logo {
+        name
+        path
+        url
+      }
+      coverImage {
         name
         path
         url
@@ -94,6 +104,7 @@ const Details = () => {
     title: '',
     summary: '',
     logo: null as File | null,
+    coverImage: null as File | null,
     slug: '',
     status: '',
     startedOn: null,
@@ -110,6 +121,7 @@ const Details = () => {
         title: CollaborativesData.title || '',
         summary: CollaborativesData.summary || '',
         logo: CollaborativesData.logo || null,
+        coverImage: CollaborativesData.coverImage || null,
         slug: CollaborativesData.slug || '',
         status: CollaborativesData.status || '',
         startedOn: CollaborativesData.startedOn || '',
@@ -161,6 +173,18 @@ const Details = () => {
         data: {
           id: params.id.toString(),
           logo: acceptedFiles[0],
+        },
+      });
+    },
+    []
+  );
+
+  const onCoverImageDrop = React.useCallback(
+    (_dropFiles: File[], acceptedFiles: File[]) => {
+      mutate({
+        data: {
+          id: params.id.toString(),
+          coverImage: acceptedFiles[0],
         },
       });
     },
@@ -266,11 +290,28 @@ const Details = () => {
           name={'Logo'}
         >
           <DropZone.FileUpload
-            actionHint="Only one image can be added. Recommended resolution of 16:9 - (1280x720), (1920x1080) - Supported File Types: PNG/JPG/SVG "
+            actionHint="Only one image can be added. Recommended resolution: Square (400x400) - Supported File Types: PNG/JPG/SVG "
             actionTitle={
               formData.logo && typeof formData.logo === 'object' && 'name' in formData.logo
                 ? (formData.logo as any).name?.split('/').pop() || 'Logo file'
                 : 'Name of the logo'
+            }
+          />
+        </DropZone>
+      </div>
+      
+      <div>
+        <DropZone
+          label={!formData?.coverImage ? 'Cover Image' : 'Change Cover Image'}
+          onDrop={onCoverImageDrop}
+          name={'CoverImage'}
+        >
+          <DropZone.FileUpload
+            actionHint="Only one image can be added. Recommended resolution: 16:9 - (1280x720), (1920x1080) - Supported File Types: PNG/JPG "
+            actionTitle={
+              formData.coverImage && typeof formData.coverImage === 'object' && 'name' in formData.coverImage
+                ? (formData.coverImage as any).name?.split('/').pop() || 'Cover image file'
+                : 'Name of the cover image'
             }
           />
         </DropZone>
