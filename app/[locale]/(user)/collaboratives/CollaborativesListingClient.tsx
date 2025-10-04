@@ -143,7 +143,7 @@ const CollaborativesListingClient = () => {
       <div className="w-full">
         <div className=" bg-primaryBlue">
           <div className=" container flex flex-col-reverse items-center gap-8 py-10 lg:flex-row ">
-            <div className="flex flex-col gap-5 ">
+            <div className="flex flex-col gap-5 lg:w-1/2">
               <Text
                 variant="heading2xl"
                 fontWeight="bold"
@@ -162,13 +162,13 @@ const CollaborativesListingClient = () => {
                 most pressing concerns from hyper-local to the global level simultaneously.
               </Text>
             </div>
-            <div className="flex items-center justify-center gap-2 px-3 ">
+            <div className="flex w-full items-center justify-center lg:w-1/2">
               <Image
                 src={'/collaborative.png'}
                 alt={'collaborative'}
-                width={600}
-                height={316}
-                className="m-auto h-auto w-full"
+                width={1700}
+                height={800}
+                className="h-auto w-full object-contain"
               />
             </div>
           </div>
