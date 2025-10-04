@@ -454,7 +454,7 @@ const CollaborativeDetailClient = () => {
                         key={useCase.id}
                         variation={'collapsed'}
                         iconColor="success"
-                        href={`/usecases/${useCase.slug}`}
+                        href={`/usecases/${useCase.id}`}
                       />
                     );
                   })}

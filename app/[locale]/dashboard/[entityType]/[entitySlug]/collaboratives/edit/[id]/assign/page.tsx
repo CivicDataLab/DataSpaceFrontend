@@ -129,7 +129,7 @@ const Assign = () => {
         toast('Dataset Assigned Successfully');
         CollaborativeDetails.refetch();
         router.push(
-          `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives/edit/${params.id}/contributors`
+          `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives/edit/${params.id}/usecases`
         );
       },
       onError: (err: any) => {
