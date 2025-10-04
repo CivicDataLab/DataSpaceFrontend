@@ -1,9 +1,8 @@
 'use client'  
 
-import React, { useEffect, useReducer, useRef, useState } from 'react';
+import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import {
   Button,
   ButtonGroup,
@@ -15,14 +14,15 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 
-import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import { fetchData } from '@/fetch';
+import { cn, formatDate } from '@/lib/utils';
 import Filter from '../datasets/components/FIlter/Filter';
 import Styles from '../datasets/dataset.module.scss';
-import { fetchData } from '@/fetch';
 
 // Interfaces
 interface Bucket {
@@ -281,11 +281,18 @@ const ListingComponent: React.FC<ListingProps> = ({
 
   const filterOptions = Object.entries(aggregations).reduce(
     (acc: Record<string, { label: string; value: string }[]>, [key, value]) => {
-      // Check if value exists and has buckets array
+      // Check if value exists and has buckets array (Elasticsearch format)
       if (value && value.buckets && Array.isArray(value.buckets)) {
         acc[key] = value.buckets.map((bucket) => ({
           label: bucket.key,
           value: bucket.key,
+        }));
+      } 
+      // Handle key-value object format (current backend format)
+      else if (value && typeof value === 'object' && !Array.isArray(value)) {
+        acc[key] = Object.entries(value).map(([label, count]) => ({
+          label: label,
+          value: label,
         }));
       }
       return acc;
