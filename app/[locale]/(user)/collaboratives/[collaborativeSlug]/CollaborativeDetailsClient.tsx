@@ -1,21 +1,21 @@
 'use client';
 
+import { graphql } from '@/gql';
+import { TypeCollaborative, TypeDataset, TypeUseCase } from '@/gql/generated/graphql';
+import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useEffect } from 'react';
-import { graphql } from '@/gql';
-import { TypeDataset, TypeCollaborative, TypeUseCase } from '@/gql/generated/graphql';
-import { useQuery } from '@tanstack/react-query';
 import { Card, Text } from 'opub-ui';
+import { useEffect } from 'react';
 
-import { GraphQLPublic } from '@/lib/api';
-import { formatDate, generateJsonLd } from '@/lib/utils';
-import { useAnalytics } from '@/hooks/use-analytics';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import JsonLd from '@/components/JsonLd';
 import { Loading } from '@/components/loading';
+import { useAnalytics } from '@/hooks/use-analytics';
+import { GraphQLPublic } from '@/lib/api';
+import { formatDate, generateJsonLd } from '@/lib/utils';
 import PrimaryDetails from '../components/Details';
 import Metadata from '../components/Metadata';
 
@@ -418,55 +418,77 @@ const CollaborativeDetailClient = () => {
                   </Text>
                 </div>
                 <div className="grid  grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3 ">
-                  {useCases.map((useCase: TypeUseCase) => (
-                    <Card
-                      key={useCase.id}
-                      title={useCase.title || ''}
-                      variation={'collapsed'}
-                      iconColor={'success'}
-                      metadataContent={[
-                        {
-                          icon: Icons.calendar,
-                          label: 'Started',
-                          value: formatDate(useCase.startedOn),
-                        },
-                        {
-                          icon: Icons.activity,
-                          label: 'Status',
-                          value: useCase.runningStatus?.split('_').join(' ') || 'N/A',
-                        },
-                        {
-                          icon: Icons.globe,
-                          label: 'Geography',
-                          value:
-                            useCase.metadata?.find(
-                              (meta: any) =>
-                                meta.metadataItem?.label === 'Geography'
-                            )?.value || '',
-                        },
-                      ]}
-                      href={`/usecases/${useCase.slug}`}
-                      footerContent={[
-                        {
-                          icon: useCase.sectors && useCase.sectors[0]?.name 
-                            ? `/Sectors/${useCase.sectors[0].name}.svg`
-                            : '/Sectors/default.svg',
-                          label: 'Sectors',
-                        },
-                        {
-                          icon: useCase.isIndividualUsecase
-                            ? useCase?.user?.profilePicture
-                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.user.profilePicture.url}`
-                              : '/profile.png'
-                            : useCase?.organization?.logo
-                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.organization.logo.url}`
-                              : '/org.png',
-                          label: 'Published by',
-                        },
-                      ]}
-                      description={useCase.summary || ''}
-                    />
-                  ))}
+                  {useCases.map((useCase: TypeUseCase) => {
+                    const image = useCase.isIndividualUsecase
+                      ? useCase?.user?.profilePicture
+                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.user.profilePicture.url}`
+                        : '/profile.png'
+                      : useCase?.organization?.logo
+                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.organization.logo.url}`
+                        : '/org.png';
+
+                    const Geography = useCase.metadata?.find(
+                      (meta: any) => meta.metadataItem?.label === 'Geography'
+                    )?.value;
+
+                    const MetadataContent = [
+                      {
+                        icon: Icons.calendar,
+                        label: 'Date',
+                        value: formatDate(useCase.modified),
+                        tooltip: 'Date',
+                      },
+                    ];
+
+                    if (Geography) {
+                      MetadataContent.push({
+                        icon: Icons.globe,
+                        label: 'Geography',
+                        value: Geography,
+                        tooltip: 'Geography',
+                      });
+                    }
+
+                    const FooterContent = [
+                      {
+                        icon: useCase.sectors && useCase.sectors[0]?.name
+                          ? `/Sectors/${useCase.sectors[0].name}.svg`
+                          : '/Sectors/default.svg',
+                        label: 'Sectors',
+                        tooltip: useCase.sectors?.[0]?.name || 'Sector',
+                      },
+                      {
+                        icon: image,
+                        label: 'Published by',
+                        tooltip: useCase.isIndividualUsecase
+                          ? useCase.user?.fullName
+                          : useCase.organization?.name,
+                      },
+                    ];
+
+                    const commonProps = {
+                      title: useCase.title || '',
+                      description: useCase.summary || '',
+                      metadataContent: MetadataContent,
+                      tag: useCase.tags?.map((t: any) => t.value) || [],
+                      footerContent: FooterContent,
+                      imageUrl: '',
+                    };
+
+                    if (useCase.logo) {
+                      commonProps.imageUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.logo.path.replace('/code/files/', '')}`;
+                    }
+
+                    return (
+                      <Card
+                        {...commonProps}
+                        key={useCase.id}
+                        variation={'collapsed'}
+                        iconColor="success"
+                        href={`/usecases/${useCase.slug}`}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             )}

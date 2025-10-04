@@ -66,6 +66,15 @@ const CollaborativeDetails: any = graphql(`
         }
         modified
       }
+      useCases {
+        title
+        id
+        slug
+        sectors {
+          name
+        }
+        modified
+      }
       contactEmail
       status
       slug
@@ -166,12 +175,17 @@ const Publish = () => {
       errorType: 'critical',
     },
     {
-      name: 'Assign',
+      name: 'Datasets',
       data: CollaborativeData?.data?.collaboratives[0]?.datasets,
       error:
         CollaborativeData.data && CollaborativeData.data?.collaboratives[0]?.datasets.length === 0
           ? 'No datasets assigned. Please assign to continue.'
           : '',
+    },
+    {
+      name: 'Use Cases',
+      data: CollaborativeData?.data?.collaboratives[0]?.useCases,
+      error: '',
     },
     {
       name: 'Dashboards',
@@ -252,7 +266,9 @@ const Publish = () => {
                       }}
                     >
                       <div className=" py-4">
-                        {item.name === 'Assign' ? (
+                        {item.name === 'Datasets' ? (
+                          <Assign data={item.data} />
+                        ) : item.name === 'Use Cases' ? (
                           <Assign data={item.data} />
                         ) : item.name === 'Details' ? (
                           <Details data={CollaborativeData.data} />
