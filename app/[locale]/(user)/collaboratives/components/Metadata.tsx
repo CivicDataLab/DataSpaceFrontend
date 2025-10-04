@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Divider, Icon, Text, Tooltip } from 'opub-ui';
+import { useEffect, useState } from 'react';
 
-import { formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import { formatDate, getWebsiteTitle } from '@/lib/utils';
 
 const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
   const [platformTitle, setPlatformTitle] = useState<string | null>(null);
@@ -47,21 +47,6 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           </Link>
         ),
       tooltipContent: data.collaborativeBySlug.platformUrl === null ? 'N/A' : platformTitle,
-    },
-    {
-      label: 'Started On',
-      value: formatDate(data.collaborativeBySlug.startedOn) || 'N/A',
-      tooltipContent: formatDate(data.collaborativeBySlug.startedOn) || 'N/A',
-    },
-    {
-      label: 'Completed On',
-      value: formatDate(data.collaborativeBySlug.completedOn) || 'N/A',
-      tooltipContent: formatDate(data.collaborativeBySlug.completedOn) || 'N/A',
-    },
-    {
-      label: 'Status',
-      value: data.collaborativeBySlug.status?.split('_').join('') || 'N/A',
-      tooltipContent: data.collaborativeBySlug.status?.split('_').join('') || 'N/A',
     },
     {
       label: 'Last Updated',

@@ -114,22 +114,23 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
       </div>
       
       <div className=" lg:pr-4">
-        <div className="mt-6 lg:mt-10">
-          <Text variant="headingXl" color="onBgDefault">Geographies</Text>
-          <div className="mt-4">
-            <Tag
-              fillColor="var(--orange-secondary-color)"
-              borderColor="var(--orange-secondary-text)"
-              textColor="white"
-            >
-              {
-                data.collaborativeBySlug.metadata?.find(
-                  (meta: any) => meta.metadataItem?.label === 'Geography'
-                )?.value
-              }
-            </Tag>
+        {data.collaborativeBySlug.geographies && data.collaborativeBySlug.geographies.length > 0 && (
+          <div className="mt-6 lg:mt-10">
+            <Text variant="headingXl" color="onBgDefault">Geographies</Text>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {data.collaborativeBySlug.geographies.map((geo: any, index: number) => (
+                <Tag
+                  key={index}
+                  fillColor="var(--orange-secondary-color)"
+                  borderColor="var(--orange-secondary-text)"
+                  textColor="white"
+                >
+                  {geo.name}
+                </Tag>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <div className="mt-6 lg:mt-10">
           <Text variant="headingXl" color="onBgDefault">Summary</Text>
           <div className="mt-4">

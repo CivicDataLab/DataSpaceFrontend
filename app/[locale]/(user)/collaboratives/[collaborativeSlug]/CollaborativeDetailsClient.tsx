@@ -69,6 +69,12 @@ const CollaborativeDetails = graphql(`
         id
         value
       }
+      geographies {
+        id
+        name
+        code
+        type
+      }
       publishers {
         name
         contactEmail

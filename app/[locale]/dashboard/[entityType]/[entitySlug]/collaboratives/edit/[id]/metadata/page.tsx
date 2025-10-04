@@ -36,6 +36,12 @@ const FetchCollaborativeMetadata: any = graphql(`
         code
         name
       }
+      geographies {
+        id
+        name
+        code
+        type
+      }
     }
   }
 `);
@@ -82,6 +88,21 @@ const tagsListQueryDoc: any = graphql(`
   }
 `);
 
+const geographiesListQueryDoc: any = graphql(`
+  query GeographiesList {
+    geographies {
+      id
+      name
+      code
+      type
+      parentId {
+        id
+        name
+      }
+    }
+  }
+`);
+
 const UpdateCollaborativeMetadata: any = graphql(`
   mutation addUpdateCollaborativeMetadata($updateMetadataInput: UpdateCollaborativeMetadataInput!) {
     addUpdateCollaborativeMetadata(updateMetadataInput: $updateMetadataInput) {
@@ -109,6 +130,12 @@ const UpdateCollaborativeMetadata: any = graphql(`
           id
           code
           name
+        }
+        geographies {
+          id
+          name
+          code
+          type
         }
       }
     }
@@ -201,6 +228,14 @@ const Metadata = () => {
         };
       }) || [];
 
+    defaultVal['geographies'] =
+      data?.geographies?.map((geo: any) => {
+        return {
+          label: geo.name,
+          value: geo.id,
+        };
+      }) || [];
+
     return defaultVal;
   };
 
@@ -253,6 +288,17 @@ const Metadata = () => {
       []
     )
   );
+
+  const getGeographiesList: { data: any; isLoading: boolean; error: any } =
+    useQuery([`geographies_list_query`], () =>
+      GraphQL(
+        geographiesListQueryDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        []
+      )
+    );
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
 
   // Update mutation
@@ -307,6 +353,7 @@ const Metadata = () => {
           sectors: updatedData.sectors?.map((item: any) => item.value) || [],
           sdgs: updatedData.sdgs?.map((item: any) => item.value) || [],
           tags: updatedData.tags?.map((item: any) => item.label) || [],
+          geographies: updatedData.geographies?.map((item: any) => parseInt(item.value, 10)) || [],
         },
       });
     }
@@ -320,6 +367,7 @@ const Metadata = () => {
     getSectorsList.isLoading ||
     getSDGsList.isLoading ||
     getTagsList.isLoading ||
+    getGeographiesList.isLoading ||
     collaborativeData.isLoading
   ) {
     return (
@@ -433,6 +481,24 @@ const Metadata = () => {
               onChange={(value) => {
                 handleChange('sectors', value);
                 handleSave({ ...formData, sectors: value });
+              }}
+            />
+          </div>
+          <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
+            <Combobox
+              displaySelected
+              label="Geographies"
+              name="geographies"
+              list={
+                getGeographiesList?.data.geographies?.map((item: any) => ({
+                  label: `${item.name}${item.parentId ? ` (${item.parentId.name})` : ''}`,
+                  value: item.id,
+                })) || []
+              }
+              selectedValue={formData.geographies}
+              onChange={(value) => {
+                handleChange('geographies', value);
+                handleSave({ ...formData, geographies: value });
               }}
             />
           </div>
