@@ -4,7 +4,7 @@ import createIntlMiddleware from 'next-intl/middleware';
 
 import locales from './config/locales';
 
-const publicPages = ['/', '/datasets', '/datasets/(.*)', '/login', '/chart', '/sectors', '/sectors/(.*)', '/usecases', '/usecases/(.*)', '/about-us', '/publishers', '/publishers/(.*)'];
+const publicPages = ['/', '/datasets', '/datasets/(.*)', '/login', '/chart', '/sectors', '/sectors/(.*)', '/usecases', '/usecases/(.*)', '/collaboratives', '/collaboratives/(.*)', '/about-us', '/publishers', '/publishers/(.*)'];
 
 const intlMiddleware = createIntlMiddleware({
   locales: locales.all,

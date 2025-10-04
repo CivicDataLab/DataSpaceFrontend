@@ -133,21 +133,18 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       label: 'SDG Goals',
       value: (
         <div className="flex flex-wrap  gap-2">
-          {data.useCase.metadata.length > 0 ? (
-            data.useCase.metadata
-              ?.find((meta: any) => meta.metadataItem?.label === 'SDG Goal')
-              ?.value.split(', ')
-              .map((item: any, index: number) => (
-                <Tooltip content={item} key={index}>
-                  <Image
-                    src={`/SDG/${item}.svg`}
-                    alt={item || ''}
-                    width={60}
-                    height={60}
-                    className="border-1 border-solid border-greyExtralight p-1"
-                  />
-                </Tooltip>
-              ))
+          {data.useCase.sdgs && data.useCase.sdgs.length > 0 ? (
+            data.useCase.sdgs.map((sdg: any, index: number) => (
+              <Tooltip content={`${sdg.code} - ${sdg.name}`} key={index}>
+                <Image
+                  src={`/SDG/${sdg.code}.svg`}
+                  alt={sdg.name || ''}
+                  width={60}
+                  height={60}
+                  className="border-1 border-solid border-greyExtralight p-1"
+                />
+              </Tooltip>
+            ))
           ) : (
             <span>N/A</span>
           )}

@@ -108,6 +108,10 @@ export function MainNav({ hideSearch = false }) {
       href: '/usecases',
     },
     {
+      title: 'Collaboratives',
+      href: '/collaboratives',
+    },
+    {
       title: 'Publishers',
       href: '/publishers',
     },
@@ -125,8 +129,8 @@ export function MainNav({ hideSearch = false }) {
     }
   };
   return (
-    <nav className="p-4 lg:p-6">
-      <div className="flex items-center justify-between gap-4  ">
+    <nav className="px-4 py-6 lg:px-6 md:py-5 sm:py-8 lg:py-3 min-h-[80px] sticky top-1 z-50">
+      <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-1">
           <div className="lg:hidden">
             <Sidebar
@@ -139,7 +143,7 @@ export function MainNav({ hideSearch = false }) {
           </div>
           <Link href="/">
             <div className="flex items-center gap-2">
-              <div className="group relative h-[68px] w-[183px] overflow-hidden">
+              <div className="group relative h-[35px] md:h-[40px] lg:h-[68px] w-[130px] md:w-[150px] lg:w-[183px] overflow-hidden">
                 {/* Static Logo */}
                 <div className="absolute inset-0">
                   <Image

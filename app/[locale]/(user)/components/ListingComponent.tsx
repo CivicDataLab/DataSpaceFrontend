@@ -1,9 +1,8 @@
 'use client'  
 
-import React, { useEffect, useReducer, useRef, useState } from 'react';
+import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import {
   Button,
   ButtonGroup,
@@ -15,14 +14,53 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 
-import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import { fetchData } from '@/fetch';
+import { cn, formatDate } from '@/lib/utils';
 import Filter from '../datasets/components/FIlter/Filter';
 import Styles from '../datasets/dataset.module.scss';
-import { fetchData } from '@/fetch';
+
+// Helper function to strip markdown and HTML tags for card preview
+const stripMarkdown = (markdown: string): string => {
+  if (!markdown) return '';
+  return markdown
+    // Remove code blocks first (before other replacements)
+    .replace(/```[\s\S]*?```/g, '')
+    // Remove inline code
+    .replace(/`([^`]+)`/g, '$1')
+    // Remove images
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+    // Remove links
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Remove headers
+    .replace(/^#{1,6}\s+/gm, '')
+    // Remove bold
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    // Remove italic
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+    // Remove strikethrough
+    .replace(/~~([^~]+)~~/g, '$1')
+    // Remove blockquotes
+    .replace(/^\s*>\s+/gm, '')
+    // Remove horizontal rules
+    .replace(/^(-{3,}|_{3,}|\*{3,})$/gm, '')
+    // Remove list markers
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*\d+\.\s+/gm, '')
+    // Remove HTML tags
+    .replace(/<[^>]*>/g, '')
+    // Remove extra whitespace and newlines
+    .replace(/\n\s*\n/g, '\n')
+    .replace(/\n/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
 
 // Interfaces
 interface Bucket {
@@ -281,10 +319,20 @@ const ListingComponent: React.FC<ListingProps> = ({
 
   const filterOptions = Object.entries(aggregations).reduce(
     (acc: Record<string, { label: string; value: string }[]>, [key, value]) => {
-      acc[key] = Object.entries(value).map(([bucketKey]) => ({
-        label: bucketKey,
-        value: bucketKey,
-      }));
+      // Check if value exists and has buckets array (Elasticsearch format)
+      if (value && value.buckets && Array.isArray(value.buckets)) {
+        acc[key] = value.buckets.map((bucket) => ({
+          label: bucket.key,
+          value: bucket.key,
+        }));
+      } 
+      // Handle key-value object format (current backend format)
+      else if (value && typeof value === 'object' && !Array.isArray(value)) {
+        acc[key] = Object.entries(value).map(([label, count]) => ({
+          label: label,
+          value: label,
+        }));
+      }
       return acc;
     },
     {}
@@ -544,7 +592,7 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     const commonProps = {
                       title: item.title,
-                      description: item.description,
+                      description: stripMarkdown(item.description || ''),
                       metadataContent: MetadataContent,
                       tag: item.tags,
                       formats: item.formats,
