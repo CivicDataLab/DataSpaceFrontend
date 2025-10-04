@@ -46,6 +46,21 @@ const tagsListQueryDoc: any = graphql(`
   }
 `);
 
+const geographiesListQueryDoc: any = graphql(`
+  query GeographiesList {
+    geographies {
+      id
+      name
+      code
+      type
+      parentId {
+        id
+        name
+      }
+    }
+  }
+`);
+
 const datasetMetadataQueryDoc: any = graphql(`
   query MetadataValues($filters: DatasetFilter) {
     datasets(filters: $filters) {
@@ -59,6 +74,12 @@ const datasetMetadataQueryDoc: any = graphql(`
       sectors {
         id
         name
+      }
+      geographies {
+        id
+        name
+        code
+        type
       }
       license
       metadata {
@@ -115,6 +136,12 @@ const updateMetadataMutationDoc: any = graphql(`
         sectors {
           id
           name
+        }
+        geographies {
+          id
+          name
+          code
+          type
         }
         license
         accessType
@@ -188,6 +215,17 @@ export function EditMetadata({ id }: { id: string }) {
     )
   );
 
+  const getGeographiesList: { data: any; isLoading: boolean; error: any } =
+    useQuery([`geographies_list_query`], () =>
+      GraphQL(
+        geographiesListQueryDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        []
+      )
+    );
+
   const getMetaDataListQuery: {
     data: any;
     isLoading: boolean;
@@ -250,10 +288,21 @@ export function EditMetadata({ id }: { id: string }) {
     }
   );
 
-  const defaultValuesPrepFn = (dataset: TypeDataset) => {
+  const defaultValuesPrepFn = (dataset?: TypeDataset) => {
     let defaultVal: {
       [key: string]: any;
     } = {};
+
+    if (!dataset) {
+      return {
+        description: '',
+        sectors: [],
+        license: null,
+        tags: [],
+        geographies: [],
+        isPublic: true,
+      };
+    }
 
     dataset?.metadata.length > 0 &&
       dataset?.metadata?.map((field) => {
@@ -294,13 +343,22 @@ export function EditMetadata({ id }: { id: string }) {
         };
       }) || [];
 
+    defaultVal['geographies'] =
+      // @ts-ignore - geographies will be available after GraphQL codegen
+      dataset?.geographies?.map((geo: any) => {
+        return {
+          label: geo.name,
+          value: geo.id,
+        };
+      }) || [];
+
     defaultVal['isPublic'] = true;
 
     return defaultVal;
   };
 
   const [formData, setFormData] = useState(
-    defaultValuesPrepFn(getDatasetMetadata?.data?.datasets[0])
+    defaultValuesPrepFn(getDatasetMetadata?.data?.datasets?.[0] || {} as TypeDataset)
   );
   const [previousFormData, setPreviousFormData] = useState(formData);
 
@@ -372,6 +430,7 @@ export function EditMetadata({ id }: { id: string }) {
                 'sectors',
                 'description',
                 'tags',
+                'geographies',
                 'isPublic',
                 'license',
               ].includes(key) && transformedValues[key] !== ''
@@ -392,6 +451,9 @@ export function EditMetadata({ id }: { id: string }) {
         }),
         ...(changedFields.sectors && {
           sectors: changedFields.sectors.map((item: any) => item.value),
+        }),
+        ...(changedFields.geographies && {
+          geographies: changedFields.geographies.map((item: any) => parseInt(item.value, 10)),
         }),
       },
     });
@@ -584,6 +646,22 @@ export function EditMetadata({ id }: { id: string }) {
                     setIsTagsListUpdated(true);
                     handleChange('tags', value);
                     handleSave({ ...formData, tags: value });
+                  }}
+                />
+                <Combobox
+                  displaySelected
+                  label="Geographies"
+                  name="geographies"
+                  list={
+                    getGeographiesList?.data?.geographies?.map((item: any) => ({
+                      label: `${item.name}${item.parentId ? ` (${item.parentId.name})` : ''}`,
+                      value: item.id,
+                    })) || []
+                  }
+                  selectedValue={formData.geographies}
+                  onChange={(value) => {
+                    handleChange('geographies', value);
+                    handleSave({ ...formData, geographies: value });
                   }}
                 />
               </div>

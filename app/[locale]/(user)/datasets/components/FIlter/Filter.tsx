@@ -12,6 +12,7 @@ import {
 
 import { toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import GeographyFilter from './GeographyFilter';
 
 interface FilterProps {
   setOpen?: (isOpen: boolean) => void;
@@ -60,42 +61,54 @@ const Filter: React.FC<FilterProps> = ({
         )}
       </div>
       <div className="flex flex-col gap-5">
-        {Object.entries(options).map(([category, data], index) => (
-          <div key={index}>
-            <Accordion
-              type="single"
-              collapsible
-              defaultValue={category}
-              className="w-full"
-            >
-              <AccordionItem
-                value={category}
-                className=" border-surfaceDefault"
+        {/* Geography Filter - Hierarchical */}
+        <GeographyFilter
+          selectedGeographies={selectedOptions['geographies'] || []}
+          onGeographyChange={(geographies) =>
+            setSelectedOptions('geographies', geographies)
+          }
+          geographyOptions={options['geographies'] || []}
+        />
+
+        {/* Other Filters */}
+        {Object.entries(options)
+          .filter(([category]) => category !== 'geographies')
+          .map(([category, data], index) => (
+            <div key={index}>
+              <Accordion
+                type="single"
+                collapsible
+                defaultValue={category}
+                className="w-full"
               >
-                <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-[#1F5F8D1A] py-[10px] px-3 hover:no-underline">
-                  <Text fontWeight="medium">{toTitleCase(category)}</Text>
-                </AccordionTrigger>
-                <AccordionContent
-                  className="flex w-full flex-col px-3 pb-0 pt-2"
-                  style={{
-                    backgroundColor: 'var(--base-pure-white)',
-                    outline: '1px solid var(--base-pure-white)',
-                  }}
+                <AccordionItem
+                  value={category}
+                  className=" border-surfaceDefault"
                 >
-                  <CheckboxGroup
-                    name={category}
-                    options={data}
-                    title={undefined}
-                    value={selectedOptions[category] || []}
-                    onChange={(values) => {
-                      setSelectedOptions(category, values as string[]);
+                  <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-[#1F5F8D1A] py-[10px] px-3 hover:no-underline">
+                    <Text fontWeight="medium">{toTitleCase(category)}</Text>
+                  </AccordionTrigger>
+                  <AccordionContent
+                    className="flex w-full flex-col px-3 pb-0 pt-2"
+                    style={{
+                      backgroundColor: 'var(--base-pure-white)',
+                      outline: '1px solid var(--base-pure-white)',
                     }}
-                  />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-        ))}
+                  >
+                    <CheckboxGroup
+                      name={category}
+                      options={data}
+                      title={undefined}
+                      value={selectedOptions[category] || []}
+                      onChange={(values) => {
+                        setSelectedOptions(category, values as string[]);
+                      }}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          ))}
       </div>
     </div>
   );

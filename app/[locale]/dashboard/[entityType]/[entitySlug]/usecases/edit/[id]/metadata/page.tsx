@@ -30,39 +30,61 @@ const FetchUseCasedetails: any = graphql(`
         id
         value
       }
+      tags {
+        id
+        value
+      }
       sectors {
         id
         name
       }
-      tags {
+      geographies {
         id
-        value
+        name
+        code
+        type
+      }
+      sdgs {
+        id
+        code
+        name
       }
     }
   }
 `);
 
 const UpdateUseCaseMetadataMutation: any = graphql(`
-  mutation updateUsecase($updateMetadataInput: UpdateUseCaseMetadataInput!) {
+  mutation addUpdateUsecaseMetadata($updateMetadataInput: UpdateUseCaseMetadataInput!) {
     addUpdateUsecaseMetadata(updateMetadataInput: $updateMetadataInput) {
       ... on TypeUseCase {
+      id
+      metadata {
+        metadataItem {
+          id
+          label
+          dataType
+        }
         id
-        metadata {
-          metadataItem {
-            id
-            label
-            dataType
-          }
-          id
-          value
-        }
-        sectors {
-          id
-          name
-        }
-        tags {
-          id
-          value
+        value
+      }
+      tags {
+        id
+        value
+      }
+      sectors {
+        id
+        name
+      }
+      geographies {
+        id
+        name
+        code
+        type
+      }
+      sdgs {
+        id
+        code
+        name
         }
       }
     }
@@ -91,6 +113,21 @@ const sectorsListQueryDoc: any = graphql(`
     sectors {
       id
       name
+    }
+  }
+`);
+
+const geographiesListQueryDoc: any = graphql(`
+  query GeographiesList {
+    geographies {
+      id
+      name
+      code
+      type
+      parentId {
+        id
+        name
+      }
     }
   }
 `);
@@ -145,12 +182,20 @@ const Metadata = () => {
       )
   );
 
-  const defaultValuesPrepFn = (data: TypeUseCase) => {
+  const defaultValuesPrepFn = (data: any) => {
     let defaultVal: {
       [key: string]: any;
     } = {};
 
-    data?.metadata?.map((field) => {
+    if (!data) {
+      return {
+        sectors: [],
+        geographies: [],
+        tags: [],
+      };
+    }
+
+    data?.metadata?.map((field: any) => {
       if (field.metadataItem.dataType === 'MULTISELECT' && field.value !== '') {
         defaultVal[field.metadataItem.id] = field.value
           .split(', ')
@@ -173,6 +218,15 @@ const Metadata = () => {
         };
       }) || [];
 
+    defaultVal['geographies'] =
+      // @ts-ignore - geographies will be available after GraphQL codegen
+      data?.geographies?.map((geo: any) => {
+        return {
+          label: geo.name,
+          value: geo.id,
+        };
+      }) || [];
+
     defaultVal['tags'] =
       data?.tags?.map((tag: TypeTag) => {
         return {
@@ -185,7 +239,7 @@ const Metadata = () => {
   };
 
   const [formData, setFormData] = useState(
-    defaultValuesPrepFn(useCaseData?.data?.useCases[0])
+    defaultValuesPrepFn(useCaseData?.data?.useCases?.[0] || {})
   );
   const [previousFormData, setPreviousFormData] = useState(formData);
 
@@ -201,6 +255,17 @@ const Metadata = () => {
     useQuery([`sectors_list_query`], () =>
       GraphQL(
         sectorsListQueryDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        []
+      )
+    );
+
+  const getGeographiesList: { data: any; isLoading: boolean; error: any } =
+    useQuery([`geographies_list_query`], () =>
+      GraphQL(
+        geographiesListQueryDoc,
         {
           [params.entityType]: params.entitySlug,
         },
@@ -279,7 +344,7 @@ const Metadata = () => {
             ...Object.keys(transformedValues)
               .filter(
                 (valueItem) =>
-                  !['sectors', 'tags'].includes(valueItem) &&
+                  !['sectors', 'tags', 'geographies'].includes(valueItem) &&
                   transformedValues[valueItem] !== ''
               )
               .map((key) => {
@@ -291,6 +356,7 @@ const Metadata = () => {
           ],
           sectors: updatedData.sectors?.map((item: any) => item.value) || [],
           tags: updatedData.tags?.map((item: any) => item.label) || [],
+          geographies: updatedData.geographies?.map((item: any) => parseInt(item.value, 10)) || [],
         },
       });
     }
@@ -394,6 +460,22 @@ const Metadata = () => {
               onChange={(value) => {
                 handleChange('sectors', value);
                 handleSave({ ...formData, sectors: value });
+              }}
+            />
+            <Combobox
+              displaySelected
+              label="Geographies"
+              name="geographies"
+              list={
+                getGeographiesList?.data?.geographies?.map((item: any) => ({
+                  label: `${item.name}${item.parentId ? ` (${item.parentId.name})` : ''}`,
+                  value: item.id,
+                })) || []
+              }
+              selectedValue={formData.geographies}
+              onChange={(value) => {
+                handleChange('geographies', value);
+                handleSave({ ...formData, geographies: value });
               }}
             />
           </div>
