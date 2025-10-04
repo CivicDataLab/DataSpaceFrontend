@@ -84,7 +84,7 @@ const CollaborativesListingClient = () => {
     async () => {
       console.log('Fetching collaboratives...');
       try {
-        // @ts-ignore - Query has no variables
+        // @ts-expect-error - Query has no variables
         const result = await GraphQLPublic(
           PublishedCollaboratives as any,
           {}
@@ -210,15 +210,11 @@ const CollaborativesListingClient = () => {
             </div>
           </div>
 
-          {/* Loading State */}
-          {isLoading && (
+          {isLoading? (
             <div className="flex justify-center p-10">
               <Loading />
             </div>
-          )}
-
-          {/* Error State */}
-          {error && (
+          ):error?(
             <div className="flex flex-col items-center justify-center gap-4 py-10">
               <Text variant="headingXl" color="critical">
                 Error Loading Collaboratives
@@ -227,7 +223,7 @@ const CollaborativesListingClient = () => {
                 Failed to load collaboratives. Please try again later.
               </Text>
             </div>
-          )}
+          ):null}
 
           {/* Results Section */}
           {!isLoading && !error && (

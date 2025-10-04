@@ -212,18 +212,14 @@ const CollaborativeDetailClient = () => {
     [`fetch_CollaborativeDetails_${params.collaborativeSlug}`],
     async () => {
       console.log('Fetching collaborative details for:', params.collaborativeSlug);
-      try {
-        const result = await GraphQLPublic(
-          CollaborativeDetails as any,
-          {},
-          {
-            slug: params.collaborativeSlug,
-          }
-        ) as { collaborativeBySlug: TypeCollaborative };
-        return result;
-      } catch (err) {
-        throw err;
-      }
+      const result = await GraphQLPublic(
+        CollaborativeDetails as any,
+        {},
+        {
+          slug: params.collaborativeSlug,
+        }
+      ) as { collaborativeBySlug: TypeCollaborative };
+      return result;
     },
     {
       refetchOnMount: true,
