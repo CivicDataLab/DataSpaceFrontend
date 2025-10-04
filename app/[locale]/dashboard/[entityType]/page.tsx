@@ -55,7 +55,7 @@ const Page = () => {
 
   const [formData, setFormData] = useState(initialFormData);
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
+  const { mutate } = useMutation(
     (input: { input: OrganizationInput }) =>
       GraphQL(organizationCreationMutation, {}, input),
     {

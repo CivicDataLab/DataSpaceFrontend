@@ -39,13 +39,6 @@ const Footer: React.FC<FooterProps> = ({
     }
   };
 
-  const handleJumpToPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const pageNumber = parseInt(event.target.value);
-    if (!isNaN(pageNumber) && pageNumber >= 1 && pageNumber <= totalPages) {
-      onPageChange(pageNumber);
-    }
-  };
-
   const handlePageSizeChange = (event: any) => {
     const newSize = parseInt(event as string);
     if (!isNaN(newSize) && newSize > 0) {

@@ -88,7 +88,7 @@ export function MainNav({ hideSearch = false }) {
     };
 
     fetchData();
-  }, [session, hasFetched]);
+  }, [session, hasFetched, setUserDetails, setAllEntityDetails]);
 
   if (isLoggingOut) {
     return <LogginOutPage />;
