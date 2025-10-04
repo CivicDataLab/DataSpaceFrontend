@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button, Divider, Icon, Text, Tooltip } from 'opub-ui';
+import { Button, Icon, Text, Tooltip } from 'opub-ui';
 import { useEffect, useState } from 'react';
 
 import { Icons } from '@/components/icons';
@@ -41,7 +41,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
             className="text-primaryBlue underline"
             href={data.collaborativeBySlug.platformUrl}
           >
-            <Text className="underline" color="highlight" variant="bodyLg">
+            <Text className="underline" color="onBgDefault" variant="bodyLg">
               {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
             </Text>
           </Link>
@@ -65,7 +65,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
                   alt={sector.name || ''}
                   width={52}
                   height={52}
-                  className="border-1 border-solid border-greyExtralight p-1"
+                  className="bg-white"
                 />
               </Tooltip>
             ))
@@ -87,7 +87,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
                   alt={sdg.name || ''}
                   width={60}
                   height={60}
-                  className="border-1 border-solid border-greyExtralight p-1"
+                  className="bg-white"
                 />
               </Tooltip>
             ))
@@ -125,12 +125,12 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           )}
         </div>
       </div>
-      <Divider />
+      <div className="h-0.5 bg-baseGraySlateSolid9 w-full" ></div>
       <div className=" flex flex-col gap-8">
-        <div className="hidden rounded-2 border-1 border-solid border-greyExtralight p-2 lg:block">
+        <div className="hidden rounded-2  p-2 lg:block">
           <Image
-            height={140}
-            width={100}
+            height={180}
+            width={120}
             src={image}
             alt="Collaborative logo"
             className="w-full object-contain"

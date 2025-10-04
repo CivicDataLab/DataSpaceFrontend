@@ -123,7 +123,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
                   key={index}
                   fillColor="var(--orange-secondary-color)"
                   borderColor="var(--orange-secondary-text)"
-                  textColor="white"
+                  textColor="black"
                 >
                   {geo.name}
                 </Tag>
