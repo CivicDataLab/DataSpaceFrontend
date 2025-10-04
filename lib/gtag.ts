@@ -125,3 +125,10 @@ export const trackScrollDepth = (scrollPercentage: number) => {
     page_path: window.location.pathname,
   });
 };
+
+export const trackCollaborativeView = (collaborativeId: string, collaborativeTitle?: string) => {
+  trackEvent('collaborative_view', {
+    collaborative_id: collaborativeId,
+    collaborative_title: collaborativeTitle,
+  });
+};

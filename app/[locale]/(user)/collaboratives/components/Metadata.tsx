@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Divider, Icon, Text, Tooltip } from 'opub-ui';
+import { useEffect, useState } from 'react';
 
-import { formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import { formatDate, getWebsiteTitle } from '@/lib/utils';
 
 const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
   const [platformTitle, setPlatformTitle] = useState<string | null>(null);
@@ -12,7 +12,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
   useEffect(() => {
     const fetchTitle = async () => {
       try {
-        const urlItem = data.useCase.platformUrl;
+        const urlItem = data.collaborativeBySlug.platformUrl;
 
         if (urlItem && urlItem.value) {
           const title = await getWebsiteTitle(urlItem.value);
@@ -23,96 +23,42 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       }
     };
 
-    if (data.useCase.platformUrl === null) {
+    if (data.collaborativeBySlug.platformUrl === null) {
       setPlatformTitle('N/A');
     } else {
       fetchTitle();
     }
-  }, [data.useCase.platformUrl]);
-
-  const getOrganizationLink = () => {
-    if (!data) return '/publishers';
-
-    if (data.useCase.isIndividualUsecase && data.useCase.user) {
-      return `/publishers/${data.useCase.user.fullName + '_' + data.useCase.user.id}`;
-    }
-
-    if (data.useCase.organization) {
-      return `/publishers/organization/${data.useCase.organization.slug + '_' + data.useCase.organization.id}`;
-    }
-
-    return '/publishers';
-  };
+  }, [data.collaborativeBySlug.platformUrl]);
 
   const metadata = [
     {
-      label: data.useCase.isIndividualUsecase ? 'Publisher' : 'Organization',
-      value: (
-        <Tooltip
-          content={
-            data.useCase.isIndividualUsecase
-              ? data.useCase.user.fullName
-              : data.useCase.organization.name
-          }
-        >
-          <Link href={getOrganizationLink()}>
-            {data.useCase.isIndividualUsecase
-              ? data.useCase.user.fullName
-              : data?.useCase.organization?.name}
-          </Link>
-        </Tooltip>
-      ),
-    },
-    {
-      label: 'Contact',
-      value: (
-        <Link
-          className="text-primaryBlue underline"
-          href={`${data.useCase.isIndividualUsecase ? `mailto:${data.useCase.user.email}` : `mailto:${data.useCase.organization.contactEmail}`}`}
-        >
-          Contact{' '}
-          {data.useCase.isIndividualUsecase ? 'Publisher' : 'Organization'}
-        </Link>
-      ),
-    },
-    {
       label: 'Platform URL',
       value:
-        data.useCase.platformUrl === null ? (
+        data.collaborativeBySlug.platformUrl === null ? (
           'N/A'
         ) : (
           <Link
             className="text-primaryBlue underline"
-            href={data.useCase.platformUrl}
+            href={data.collaborativeBySlug.platformUrl}
           >
             <Text className="underline" color="highlight" variant="bodyLg">
               {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
             </Text>
           </Link>
         ),
-      tooltipContent: data.useCase.platformUrl === null ? 'N/A' : platformTitle,
-    },
-    {
-      label: 'Started On',
-      value: formatDate(data.useCase.startedOn) || 'N/A',
-      tooltipContent: formatDate(data.useCase.startedOn) || 'N/A',
-    },
-    {
-      label: 'Status',
-      value: data.useCase.runningStatus.split('_').join('') || 'N/A',
-      tooltipContent: data.useCase.runningStatus.split('_').join('') || 'N/A',
+      tooltipContent: data.collaborativeBySlug.platformUrl === null ? 'N/A' : platformTitle,
     },
     {
       label: 'Last Updated',
-      value: formatDate(data.useCase.modified) || 'N/A',
-      tooltipContent: formatDate(data.useCase.modified) || 'N/A',
+      value: formatDate(data.collaborativeBySlug.modified) || 'N/A',
+      tooltipContent: formatDate(data.collaborativeBySlug.modified) || 'N/A',
     },
     {
       label: 'Sectors',
       value: (
         <div className="flex flex-wrap  gap-2">
-          {data.useCase.sectors.length > 0 ? (
-            data.useCase.sectors.map((sector: any, index: number) => (
+          {data.collaborativeBySlug.sectors.length > 0 ? (
+            data.collaborativeBySlug.sectors.map((sector: any, index: number) => (
               <Tooltip content={sector.name} key={index}>
                 <Image
                   src={`/Sectors/${sector.name}.svg`}
@@ -133,8 +79,8 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       label: 'SDG Goals',
       value: (
         <div className="flex flex-wrap  gap-2">
-          {data.useCase.sdgs && data.useCase.sdgs.length > 0 ? (
-            data.useCase.sdgs.map((sdg: any, index: number) => (
+          {data.collaborativeBySlug.sdgs && data.collaborativeBySlug.sdgs.length > 0 ? (
+            data.collaborativeBySlug.sdgs.map((sdg: any, index: number) => (
               <Tooltip content={`${sdg.code} - ${sdg.name}`} key={index}>
                 <Image
                   src={`/SDG/${sdg.code}.svg`}
@@ -152,13 +98,11 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       ),
     },
   ];
-  const image = data.useCase.isIndividualUsecase
-    ? data.useCase?.user?.profilePicture
-      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.useCase.user.profilePicture.url}`
-      : '/profile.png'
-    : data?.useCase.organization?.logo
-      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.useCase.organization.logo.url}`
-      : '/org.png';
+  
+  // Use collaborative logo if available, otherwise use a default
+  const image = data.collaborativeBySlug?.logo?.path
+    ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.logo.path.replace('/code/files/', '')}`
+    : '/org.png';
 
   return (
     <div className="flex flex-col gap-10 px-7 py-10">
@@ -167,11 +111,11 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           <Text
             variant="headingLg"
             fontWeight="semibold"
-            className=" text-primaryBlue"
+            color="onBgDefault"
           >
-            ABOUT THE USE CASE{' '}
+            ABOUT THE COLLABORATIVE{' '}
           </Text>
-          <Text variant="bodyLg">DETAILS</Text>
+          <Text variant="bodyLg" color="onBgDefault">DETAILS</Text>
         </div>
         <div className="flex items-center justify-between">
           {setOpen && (
@@ -183,27 +127,22 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       </div>
       <Divider />
       <div className=" flex flex-col gap-8">
-        <Link href={getOrganizationLink()}>
-          <div className="hidden rounded-2 border-1 border-solid border-greyExtralight p-2 lg:block">
-            <Image
-              height={140}
-              width={100}
-              src={image}
-              alt={
-                data.useCase.isIndividualUsecase
-                  ? 'Publisher logo'
-                  : 'Organization logo'
-              }
-              className="w-full object-contain"
-            />
-          </div>
-        </Link>
+        <div className="hidden rounded-2 border-1 border-solid border-greyExtralight p-2 lg:block">
+          <Image
+            height={140}
+            width={100}
+            src={image}
+            alt="Collaborative logo"
+            className="w-full object-contain"
+          />
+        </div>
         <div className="flex flex-col gap-8">
           {metadata.map((item, index) => (
             <div key={index} className="flex gap-2">
               <Text
                 className="min-w-[120px]  basis-1/4 uppercase"
                 variant="bodyMd"
+                color="onBgDefault"
               >
                 {item.label}
               </Text>
@@ -212,13 +151,47 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
                   className="max-w-xs truncate"
                   variant="bodyLg"
                   fontWeight="medium"
-                  // title={item?.tooltipContent}
+                  color="onBgDefault"
                 >
                   {typeof item.value === 'string' ? item.value : item.value}
                 </Text>
               </Tooltip>
             </div>
           ))}
+          {/* Contributors Section */}
+          {data.collaborativeBySlug.contributors && data.collaborativeBySlug.contributors.length > 0 && (
+            <div className="flex gap-2">
+              <Text
+                className="min-w-[120px] basis-1/4 uppercase"
+                variant="bodyMd"
+                color="onBgDefault"
+              >
+                Contributors
+              </Text>
+              <div className="flex flex-wrap gap-2">
+                {data.collaborativeBySlug.contributors.map((contributor: any) => (
+                  <Link
+                    href={`/publishers/${contributor.fullName + '_' + contributor.id}`}
+                    key={contributor.id}
+                  >
+                    <Tooltip content={contributor.fullName}>
+                      <Image
+                        alt={contributor.fullName}
+                        width={40}
+                        height={40}
+                        className="rounded-full object-cover"
+                        src={
+                          contributor.profilePicture?.url
+                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${contributor.profilePicture?.url}`
+                            : '/profile.png'
+                        }
+                      />
+                    </Tooltip>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

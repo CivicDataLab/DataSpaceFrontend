@@ -281,10 +281,13 @@ const ListingComponent: React.FC<ListingProps> = ({
 
   const filterOptions = Object.entries(aggregations).reduce(
     (acc: Record<string, { label: string; value: string }[]>, [key, value]) => {
-      acc[key] = Object.entries(value).map(([bucketKey]) => ({
-        label: bucketKey,
-        value: bucketKey,
-      }));
+      // Check if value exists and has buckets array
+      if (value && value.buckets && Array.isArray(value.buckets)) {
+        acc[key] = value.buckets.map((bucket) => ({
+          label: bucket.key,
+          value: bucket.key,
+        }));
+      }
       return acc;
     },
     {}
