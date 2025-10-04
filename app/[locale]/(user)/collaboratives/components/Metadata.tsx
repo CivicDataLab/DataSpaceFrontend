@@ -225,6 +225,40 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
               </Tooltip>
             </div>
           ))}
+          {/* Contributors Section */}
+          {data.collaborativeBySlug.contributors && data.collaborativeBySlug.contributors.length > 0 && (
+            <div className="flex gap-2">
+              <Text
+                className="min-w-[120px] basis-1/4 uppercase"
+                variant="bodyMd"
+                color="onBgDefault"
+              >
+                Contributors
+              </Text>
+              <div className="flex flex-wrap gap-2">
+                {data.collaborativeBySlug.contributors.map((contributor: any) => (
+                  <Link
+                    href={`/publishers/${contributor.fullName + '_' + contributor.id}`}
+                    key={contributor.id}
+                  >
+                    <Tooltip content={contributor.fullName}>
+                      <Image
+                        alt={contributor.fullName}
+                        width={40}
+                        height={40}
+                        className="rounded-full object-cover"
+                        src={
+                          contributor.profilePicture?.url
+                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${contributor.profilePicture?.url}`
+                            : '/profile.png'
+                        }
+                      />
+                    </Tooltip>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

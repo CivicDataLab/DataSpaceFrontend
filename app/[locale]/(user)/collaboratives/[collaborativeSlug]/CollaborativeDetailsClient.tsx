@@ -309,9 +309,7 @@ const CollaborativeDetailClient = () => {
                   <Metadata data={CollaborativeDetailsData} />
                 </div>
               </div>
-              {(hasSupportingOrganizations ||
-              hasPartnerOrganizations ||
-              hasContributors) && (
+              {(hasSupportingOrganizations || hasPartnerOrganizations) && (
               <div className=" bg-primaryBlue">
                 <div className="container flex flex-wrap gap-8 py-10 lg:flex-nowrap ">
                   {hasSupportingOrganizations && (
@@ -369,41 +367,6 @@ const CollaborativeDetailClient = () => {
                     </div>
                   )}
                 </div>
-                {hasContributors && (
-                  <div className="container py-10">
-                    <div className="flex flex-col gap-1">
-                      <Text variant="headingXl" color="onBgDefault">
-                        Contributors{' '}
-                      </Text>
-                      <Text color="onBgDefault" variant="bodyLg">
-                        Publisher and Contributors who have added to the Collaborative
-                      </Text>
-                    </div>
-                    <div className="mt-8 flex flex-wrap items-center justify-start gap-8">
-                      {CollaborativeDetailsData?.collaborativeBySlug?.contributors?.map(
-                        (contributor: any) => (
-                          <Link
-                            href={`/publishers/${contributor.fullName + '_' + contributor.id}`}
-                            key={contributor.id}
-                          >
-                            <Image
-                              alt={contributor.fullName}
-                              width={120}
-                              height={120}
-                              className="rounded-full object-cover"
-                              key={contributor.id}
-                              src={
-                                contributor.profilePicture?.url
-                                  ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${contributor.profilePicture?.url}`
-                                  : '/profile.png'
-                              }
-                            />
-                          </Link>
-                        )
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             )}              
             </div>
