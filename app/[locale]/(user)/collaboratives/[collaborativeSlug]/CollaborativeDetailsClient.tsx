@@ -121,6 +121,12 @@ const CollaborativeDetails = graphql(`
         sectors {
           name
         }
+        geographies {
+          id
+          name
+          code
+          type
+        }
         modified
       }
       useCases {
@@ -153,6 +159,12 @@ const CollaborativeDetails = graphql(`
         }
         sectors {
           name
+        }
+        geographies {
+          id
+          name
+          code
+          type
         }
         tags {
           id
@@ -396,9 +408,9 @@ const CollaborativeDetailClient = () => {
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.organization.logo.url}`
                         : '/org.png';
 
-                    const Geography = useCase.metadata?.find(
-                      (meta: any) => meta.metadataItem?.label === 'Geography'
-                    )?.value;
+                    const Geography = useCase.geographies && useCase.geographies.length > 0
+                      ? useCase.geographies.map((geo: any) => geo.name).join(', ')
+                      : null;
 
                     const MetadataContent = [
                       {
@@ -492,10 +504,9 @@ const CollaborativeDetailClient = () => {
                             icon: Icons.globe,
                             label: 'Geography',
                             value:
-                              dataset.metadata?.find(
-                                (meta: any) =>
-                                  meta.metadataItem?.label === 'Geography'
-                              )?.value || '',
+                              dataset.geographies && dataset.geographies.length > 0
+                                ? dataset.geographies.map((geo: any) => geo.name).join(', ')
+                                : '',
                           },
                         ]}
                         href={`/datasets/${dataset.id}`}

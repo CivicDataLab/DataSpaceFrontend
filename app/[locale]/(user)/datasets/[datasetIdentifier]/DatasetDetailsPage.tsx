@@ -1,14 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import { Spinner } from 'opub-ui';
 
-import { GraphQL } from '@/lib/api';
-import { generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import JsonLd from '@/components/JsonLd';
+import { GraphQL } from '@/lib/api';
+import { generateJsonLd } from '@/lib/utils';
 import Details from './components/Details';
 import Metadata from './components/Metadata';
 import PrimaryData from './components/PrimaryData';
@@ -63,6 +62,17 @@ const datasetQuery: any = graphql(`
       }
       sectors {
         name
+      }
+      geographies {
+        id
+        name
+        code
+        type
+        parentId {
+          id
+          name
+          type
+        }
       }
       formats
     }

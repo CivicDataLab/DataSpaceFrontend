@@ -60,6 +60,22 @@ const UseCasedetails = graphql(`
         id
         name
       }
+      geographies {
+        id
+        name
+        code
+        type
+        parentId {
+          id
+          name
+          type
+        }
+      }
+      sdgs {
+        id
+        code
+        name
+      }
       runningStatus
       tags {
         id
@@ -107,6 +123,12 @@ const UseCasedetails = graphql(`
         }
         sectors {
           name
+        }
+        geographies {
+          id
+          name
+          code
+          type
         }
         modified
       }
@@ -283,10 +305,9 @@ const UseCaseDetailClient = () => {
                             icon: Icons.globe,
                             label: 'Geography',
                             value:
-                              dataset.metadata?.find(
-                                (meta: any) =>
-                                  meta.metadataItem?.label === 'Geography'
-                              )?.value || '',
+                              dataset.geographies && dataset.geographies.length > 0
+                                ? dataset.geographies.map((geo: any) => geo.name).join(', ')
+                                : '',
                           },
                         ]}
                         href={`/datasets/${dataset.id}`}
