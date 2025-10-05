@@ -153,7 +153,7 @@ const Publish = () => {
       [params.entityType]: params.entitySlug,
     }, { useCaseId: params.id }),
     {
-      onSuccess: (data: any) => {
+      onSuccess: () => {
         toast('UseCase Published Successfully');
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/usecases`

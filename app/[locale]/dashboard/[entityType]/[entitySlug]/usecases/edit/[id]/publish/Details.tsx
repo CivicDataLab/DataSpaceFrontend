@@ -27,7 +27,7 @@ const Details = ({ data }: { data: any }) => {
     } else {
       fetchTitle();
     }
-  }, [data?.useCases[0]?.platformUrl]);
+  }, [data?.useCases, data?.useCases[0]?.platformUrl]);
 
   const PrimaryDetails = [
     { label: 'Use Case Name', value: data?.useCases[0]?.title },
