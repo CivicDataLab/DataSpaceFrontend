@@ -205,7 +205,7 @@ const Publish = () => {
     const hasRequiredMetadata =
       useCase.sectors.length > 0 &&
       useCase?.summary.length > 0 &&
-      useCase?.metadata.length > 0 &&
+      useCase?.sdgs.length > 0 &&
       useCase?.logo !== null;
 
     // No datasets assigned
