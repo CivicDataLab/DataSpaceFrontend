@@ -172,7 +172,7 @@ const Publish = () => {
       error:
         UseCaseData.data?.useCases[0]?.sectors.length === 0 ||
         UseCaseData.data?.useCases[0]?.summary.length === 0 ||
-        UseCaseData.data?.useCases[0]?.metadata.length === 0 ||
+        UseCaseData.data?.useCases[0]?.sdgs.length === 0 ||
         UseCaseData.data?.useCases[0]?.logo === null
           ? 'Summary or SDG or Sectors or Logo is missing. Please add to continue.'
           : '',
