@@ -47,6 +47,11 @@ const useCasesListDoc: any = graphql(`
       logo {
         path
       }
+      geographies {
+        id
+        name
+        code
+      }
       metadata {
         metadataItem {
           id
@@ -150,10 +155,9 @@ const UseCasesListingPage = () => {
                           {
                             icon: Icons.globe,
                             label: 'Geography',
-                            value: item.metadata?.find(
-                              (meta: any) =>
-                                meta.metadataItem?.label === 'Geography'
-                            )?.value,
+                            value: item.geographies?.length > 0
+                              ? item.geographies.map((geo: any) => geo.name).join(', ')
+                              : 'Not specified',
                           },
                         ]}
                         footerContent={[
