@@ -218,7 +218,7 @@ const CollaborativesListingClient = () => {
             </div>
             <div className="flex w-full items-center justify-center lg:w-1/2">
               <Image
-                src={'/collaborative.png'}
+                src={'/collaborative.svg'}
                 alt={'collaborative'}
                 width={1700}
                 height={800}
