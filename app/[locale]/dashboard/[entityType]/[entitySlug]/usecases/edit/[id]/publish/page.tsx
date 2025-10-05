@@ -43,6 +43,17 @@ const UseCaseDetails: any = graphql(`
         id
         name
       }
+      geographies {
+        id
+        name
+        code
+        type
+      }
+      sdgs {
+        id
+        code
+        name
+      }
       runningStatus
       tags {
         id
@@ -142,7 +153,7 @@ const Publish = () => {
       [params.entityType]: params.entitySlug,
     }, { useCaseId: params.id }),
     {
-      onSuccess: (data: any) => {
+      onSuccess: () => {
         toast('UseCase Published Successfully');
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/usecases`
@@ -161,7 +172,7 @@ const Publish = () => {
       error:
         UseCaseData.data?.useCases[0]?.sectors.length === 0 ||
         UseCaseData.data?.useCases[0]?.summary.length === 0 ||
-        UseCaseData.data?.useCases[0]?.metadata.length === 0 ||
+        UseCaseData.data?.useCases[0]?.sdgs.length === 0 ||
         UseCaseData.data?.useCases[0]?.logo === null
           ? 'Summary or SDG or Sectors or Logo is missing. Please add to continue.'
           : '',
@@ -194,7 +205,7 @@ const Publish = () => {
     const hasRequiredMetadata =
       useCase.sectors.length > 0 &&
       useCase?.summary.length > 0 &&
-      useCase?.metadata.length > 0 &&
+      useCase?.sdgs.length > 0 &&
       useCase?.logo !== null;
 
     // No datasets assigned

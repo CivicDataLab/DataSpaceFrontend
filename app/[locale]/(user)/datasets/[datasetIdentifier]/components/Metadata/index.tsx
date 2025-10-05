@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Divider, Icon, Tag, Text, Tooltip } from 'opub-ui';
+import React, { useEffect, useState } from 'react';
 
-import { cn, formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import { cn, formatDate, getWebsiteTitle } from '@/lib/utils';
 import Styles from '../../../dataset.module.scss';
 
 interface MetadataProps {
@@ -13,14 +13,14 @@ interface MetadataProps {
 }
 
 const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
-  const Metadata = data.metadata.map((item: any) => ({
+  const Metadata = (data.metadata || []).map((item: any) => ({
     label: item.metadataItem.label,
     value: item.value,
     type: item.metadataItem.dataType,
   }));
 
-  const [isexpanded, setIsexpanded] = useState(false);
-  const toggleDescription = () => setIsexpanded(!isexpanded);
+  // const [isexpanded, setIsexpanded] = useState(false);
+  // const toggleDescription = () => setIsexpanded(!isexpanded);
 
   const licenseOptions = [
     {
@@ -55,7 +55,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
   useEffect(() => {
     const fetchTitle = async () => {
       try {
-        const urlItem = data.metadata.find(
+        const urlItem = (data.metadata || []).find(
           (item: any) => item.metadataItem?.dataType === 'URL'
         );
 
@@ -177,6 +177,25 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             )}
           </div>
         </div>
+        {data.geographies && data.geographies.length > 0 && (
+          <div className="flex items-center gap-2 ">
+            <Text className="min-w-[120px]  basis-1/4 uppercase" variant="bodyMd">
+              Geography
+            </Text>
+            <div className="flex flex-wrap gap-2">
+              {data.geographies.map((geo: any, index: number) => (
+                <Tag
+                  key={index}
+                  fillColor="var(--orange-secondary-color)"
+                  borderColor="var(--orange-secondary-text)"
+                  textColor="black"
+                >
+                  {geo.name}
+                </Tag>
+              ))}
+            </div>
+          </div>
+        )}
         {Metadata.map((item: any, index: any) => (
           <div className="flex  gap-2 " key={index}>
             <Text

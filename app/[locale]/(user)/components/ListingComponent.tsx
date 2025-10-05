@@ -528,9 +528,14 @@ const ListingComponent: React.FC<ListingProps> = ({
                       : item?.organization?.logo
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
                         : '/org.png';
-                    const Geography = item.metadata.filter(
-                      (item: any) => item.metadata_item.label === 'Geography'
-                    )[0]?.value;
+                    
+                    const geographies = item.geographies && item.geographies.length > 0
+                      ? item.geographies
+                      : null;
+
+                    const sdgs = item.sdgs && item.sdgs.length > 0
+                      ? item.sdgs
+                      : null;
 
                     const MetadataContent = [
                       {
@@ -550,12 +555,27 @@ const ListingComponent: React.FC<ListingProps> = ({
                       });
                     }
 
-                    if (Geography) {
+                    if (geographies && geographies.length > 0) {
+                      // Format geographies hierarchically for display
+                      const geoDisplay = geographies.join(', ');
+
                       MetadataContent.push({
                         icon: Icons.globe,
                         label: 'Geography',
-                        value: Geography,
-                        tooltip: 'Geography',
+                        value: geoDisplay,
+                        tooltip: geoDisplay,
+                      });
+                    }
+
+                    if (sdgs && sdgs.length > 0) {
+                      // Format SDGs for display
+                      const sdgDisplay = sdgs.map((sdg: any) => `${sdg.code} - ${sdg.name}`).join(', ');
+
+                      MetadataContent.push({
+                        icon: Icons.target,
+                        label: 'SDG Goals',
+                        value: sdgDisplay,
+                        tooltip: sdgDisplay,
                       });
                     }
 

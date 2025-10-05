@@ -9,7 +9,7 @@ import { Loading } from '@/components/loading';
 import { useDashboardStore } from '@/config/store';
 
 const UserDashboard = () => {
-  const { userDetails, allEntityDetails } = useDashboardStore();
+  const { userDetails } = useDashboardStore();
   const list = [
     {
       label: 'My Dashboard',

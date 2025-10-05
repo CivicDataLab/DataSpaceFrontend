@@ -16,7 +16,7 @@ export default function SessionGuard({ children }: { children: ReactNode }) {
     ) {
       signIn('keycloak');
     }
-  }, [data]);
+  }, [data, pathname]);
 
   return <>{children}</>;
 }

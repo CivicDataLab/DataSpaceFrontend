@@ -121,6 +121,12 @@ const CollaborativeDetails = graphql(`
         sectors {
           name
         }
+        geographies {
+          id
+          name
+          code
+          type
+        }
         modified
       }
       useCases {
@@ -153,6 +159,12 @@ const CollaborativeDetails = graphql(`
         }
         sectors {
           name
+        }
+        geographies {
+          id
+          name
+          code
+          type
         }
         tags {
           id
@@ -248,9 +260,7 @@ const CollaborativeDetailClient = () => {
   const hasPartnerOrganizations =
     CollaborativeDetailsData?.collaborativeBySlug?.partnerOrganizations &&
     CollaborativeDetailsData?.collaborativeBySlug?.partnerOrganizations?.length > 0;
-  const hasContributors =
-    CollaborativeDetailsData?.collaborativeBySlug?.contributors &&
-    CollaborativeDetailsData?.collaborativeBySlug?.contributors?.length > 0;
+  
 
   const jsonLd = generateJsonLd({
     '@context': 'https://schema.org',
@@ -321,7 +331,7 @@ const CollaborativeDetailClient = () => {
                   {hasSupportingOrganizations && (
                     <div className="w-full lg:w-2/4">
                       <Text variant="headingXl" color="onBgDefault">
-                        Supported by
+                        Supporters
                       </Text>
                       <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
                         {CollaborativeDetailsData?.collaborativeBySlug?.supportingOrganizations?.map(
@@ -348,7 +358,7 @@ const CollaborativeDetailClient = () => {
                   {hasPartnerOrganizations && (
                     <div className="w-full lg:w-2/4">
                       <Text variant="headingXl" color="onBgDefault">
-                        Partnered by
+                        Partners
                       </Text>
                       <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
                         {CollaborativeDetailsData?.collaborativeBySlug?.partnerOrganizations?.map(
@@ -396,9 +406,9 @@ const CollaborativeDetailClient = () => {
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.organization.logo.url}`
                         : '/org.png';
 
-                    const Geography = useCase.metadata?.find(
-                      (meta: any) => meta.metadataItem?.label === 'Geography'
-                    )?.value;
+                    const Geography = useCase.geographies && useCase.geographies.length > 0
+                      ? useCase.geographies.map((geo: any) => geo.name).join(', ')
+                      : null;
 
                     const MetadataContent = [
                       {
@@ -492,10 +502,9 @@ const CollaborativeDetailClient = () => {
                             icon: Icons.globe,
                             label: 'Geography',
                             value:
-                              dataset.metadata?.find(
-                                (meta: any) =>
-                                  meta.metadataItem?.label === 'Geography'
-                              )?.value || '',
+                              dataset.geographies && dataset.geographies.length > 0
+                                ? dataset.geographies.map((geo: any) => geo.name).join(', ')
+                                : '',
                           },
                         ]}
                         href={`/datasets/${dataset.id}`}

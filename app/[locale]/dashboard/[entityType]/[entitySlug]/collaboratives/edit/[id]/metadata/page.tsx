@@ -35,6 +35,7 @@ const FetchCollaborativeMetadata: any = graphql(`
         id
         code
         name
+        number
       }
       geographies {
         id
@@ -75,6 +76,7 @@ const sdgsListQueryDoc: any = graphql(`
       id
       code
       name
+      number
     }
   }
 `);
@@ -214,8 +216,9 @@ const Metadata = () => {
 
     defaultVal['sdgs'] =
       data?.sdgs?.map((sdg: any) => {
+        const num = String(sdg.number || 0).padStart(2, '0');
         return {
-          label: `${sdg.code} - ${sdg.name}`,
+          label: `${num}. ${sdg.name}`,
           value: sdg.id,
         };
       }) || [];
@@ -433,10 +436,13 @@ const Metadata = () => {
               label="SDG Goals *"
               name="sdgs"
               list={
-                getSDGsList?.data.sdgs?.map((item: any) => ({
-                  label: `${item.code} - ${item.name}`,
-                  value: item.id,
-                })) || []
+                getSDGsList?.data?.sdgs?.map((item: any) => {
+                  const num = String(item.number || 0).padStart(2, '0');
+                  return {
+                    label: `${num}. ${item.name}`,
+                    value: item.id,
+                  };
+                }) || []
               }
               selectedValue={formData.sdgs}
               onChange={(value) => {

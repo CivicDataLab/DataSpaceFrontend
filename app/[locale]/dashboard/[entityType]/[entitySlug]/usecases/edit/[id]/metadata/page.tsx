@@ -1,18 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   MetadataModels,
   TypeMetadata,
   TypeSector,
   TypeTag,
-  TypeUseCase,
   UpdateUseCaseMetadataInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { Combobox, Spinner, toast } from 'opub-ui';
+import { useEffect, useState } from 'react';
 
 import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
@@ -30,39 +29,62 @@ const FetchUseCasedetails: any = graphql(`
         id
         value
       }
+      tags {
+        id
+        value
+      }
       sectors {
         id
         name
       }
-      tags {
+      geographies {
         id
-        value
+        name
+        code
+        type
+      }
+      sdgs {
+        id
+        code
+        name
+        number
       }
     }
   }
 `);
 
 const UpdateUseCaseMetadataMutation: any = graphql(`
-  mutation updateUsecase($updateMetadataInput: UpdateUseCaseMetadataInput!) {
+  mutation addUpdateUsecaseMetadata($updateMetadataInput: UpdateUseCaseMetadataInput!) {
     addUpdateUsecaseMetadata(updateMetadataInput: $updateMetadataInput) {
       ... on TypeUseCase {
+      id
+      metadata {
+        metadataItem {
+          id
+          label
+          dataType
+        }
         id
-        metadata {
-          metadataItem {
-            id
-            label
-            dataType
-          }
-          id
-          value
-        }
-        sectors {
-          id
-          name
-        }
-        tags {
-          id
-          value
+        value
+      }
+      tags {
+        id
+        value
+      }
+      sectors {
+        id
+        name
+      }
+      geographies {
+        id
+        name
+        code
+        type
+      }
+      sdgs {
+        id
+        code
+        name
         }
       }
     }
@@ -95,11 +117,37 @@ const sectorsListQueryDoc: any = graphql(`
   }
 `);
 
+const geographiesListQueryDoc: any = graphql(`
+  query GeographiesList {
+    geographies {
+      id
+      name
+      code
+      type
+      parentId {
+        id
+        name
+      }
+    }
+  }
+`);
+
 const tagsListQueryDoc: any = graphql(`
   query TagsList {
     tags {
       id
       value
+    }
+  }
+`);
+
+const sdgsListQueryDoc: any = graphql(`
+  query SDGList {
+    sdgs {
+      id
+      code
+      name
+      number
     }
   }
 `);
@@ -128,7 +176,7 @@ const Metadata = () => {
       refetchOnReconnect: true,
     }
   );
-  const { data: metadataFields, isLoading: isMetadataFieldsLoading } = useQuery(
+  const { data: metadataFields } = useQuery(
     [`metadata_fields_USECASE_${params.id}`],
     () =>
       GraphQL(
@@ -145,12 +193,21 @@ const Metadata = () => {
       )
   );
 
-  const defaultValuesPrepFn = (data: TypeUseCase) => {
+  const defaultValuesPrepFn = (data: any) => {
     let defaultVal: {
       [key: string]: any;
     } = {};
 
-    data?.metadata?.map((field) => {
+    if (!data) {
+      return {
+        sectors: [],
+        geographies: [],
+        tags: [],
+        sdgs: [],
+      };
+    }
+
+    data?.metadata?.map((field: any) => {
       if (field.metadataItem.dataType === 'MULTISELECT' && field.value !== '') {
         defaultVal[field.metadataItem.id] = field.value
           .split(', ')
@@ -173,6 +230,23 @@ const Metadata = () => {
         };
       }) || [];
 
+    defaultVal['geographies'] =
+      data?.geographies?.map((geo: any) => {
+        return {
+          label: geo.name,
+          value: geo.id,
+        };
+      }) || [];
+
+    defaultVal['sdgs'] =
+      data?.sdgs?.map((sdg: any) => {
+        const num = String(sdg.number || 0).padStart(2, '0');
+        return {
+          label: `${num}. ${sdg.name}`,
+          value: sdg.id,
+        };
+      }) || [];
+
     defaultVal['tags'] =
       data?.tags?.map((tag: TypeTag) => {
         return {
@@ -185,7 +259,7 @@ const Metadata = () => {
   };
 
   const [formData, setFormData] = useState(
-    defaultValuesPrepFn(useCaseData?.data?.useCases[0])
+    defaultValuesPrepFn(useCaseData?.data?.useCases?.[0] || {})
   );
   const [previousFormData, setPreviousFormData] = useState(formData);
 
@@ -201,6 +275,28 @@ const Metadata = () => {
     useQuery([`sectors_list_query`], () =>
       GraphQL(
         sectorsListQueryDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        []
+      )
+    );
+
+  const getGeographiesList: { data: any; isLoading: boolean; error: any } =
+    useQuery([`geographies_list_query`], () =>
+      GraphQL(
+        geographiesListQueryDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        []
+      )
+    );
+
+  const getSDGsList: { data: any; isLoading: boolean; error: any } =
+    useQuery([`sdgs_list_query`], () =>
+      GraphQL(
+        sdgsListQueryDoc,
         {
           [params.entityType]: params.entitySlug,
         },
@@ -279,7 +375,7 @@ const Metadata = () => {
             ...Object.keys(transformedValues)
               .filter(
                 (valueItem) =>
-                  !['sectors', 'tags'].includes(valueItem) &&
+                  !['sectors', 'tags', 'geographies', 'sdgs'].includes(valueItem) &&
                   transformedValues[valueItem] !== ''
               )
               .map((key) => {
@@ -291,6 +387,8 @@ const Metadata = () => {
           ],
           sectors: updatedData.sectors?.map((item: any) => item.value) || [],
           tags: updatedData.tags?.map((item: any) => item.label) || [],
+          sdgs: updatedData.sdgs?.map((item: any) => item.value) || [],
+          geographies: updatedData.geographies?.map((item: any) => parseInt(item.value, 10)) || [],
         },
       });
     }
@@ -299,6 +397,8 @@ const Metadata = () => {
   if (
     getSectorsList.isLoading ||
     getTagsList.isLoading ||
+    getSDGsList.isLoading ||
+    getGeographiesList.isLoading ||
     useCaseData.isLoading
   ) {
     return (
@@ -361,6 +461,27 @@ const Metadata = () => {
           <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
             <Combobox
               displaySelected
+              label="SDG Goals *"
+              name="sdgs"
+              list={
+                getSDGsList?.data?.sdgs?.map((item: any) => {
+                  const num = String(item.number || 0).padStart(2, '0');
+                  return {
+                    label: `${num}. ${item.name}`,
+                    value: item.id,
+                  };
+                }) || []
+              }
+              selectedValue={formData.sdgs}
+              onChange={(value) => {
+                handleChange('sdgs', value);
+                handleSave({ ...formData, sdgs: value });
+              }}
+            />
+          </div>
+          <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
+            <Combobox
+              displaySelected
               name="tags"
               label="Tags"
               creatable
@@ -394,6 +515,22 @@ const Metadata = () => {
               onChange={(value) => {
                 handleChange('sectors', value);
                 handleSave({ ...formData, sectors: value });
+              }}
+            />
+            <Combobox
+              displaySelected
+              label="Geographies"
+              name="geographies"
+              list={
+                getGeographiesList?.data?.geographies?.map((item: any) => ({
+                  label: `${item.name}${item.parentId ? ` (${item.parentId.name})` : ''}`,
+                  value: item.id,
+                })) || []
+              }
+              selectedValue={formData.geographies}
+              onChange={(value) => {
+                handleChange('geographies', value);
+                handleSave({ ...formData, geographies: value });
               }}
             />
           </div>

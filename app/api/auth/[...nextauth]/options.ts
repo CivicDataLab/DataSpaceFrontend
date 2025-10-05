@@ -4,8 +4,6 @@ import { Account, AuthOptions, Session } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import KeycloakProvider from 'next-auth/providers/keycloak';
 
-import { encrypt } from '@/lib/encryption';
-
 // this will refresh an expired access token, when needed
 async function refreshAccessToken(token: JWT) {
   const urlObj: Record<string, any> = {

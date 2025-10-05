@@ -102,7 +102,11 @@ const Datasets = () => {
                       {
                         icon: Icons.calendar,
                         label: 'Date',
-                        value: '19 July 2024',
+                        value: new Date(item.modified).toLocaleDateString('en-US', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                        }),
                       },
                       {
                         icon: Icons.download,
@@ -112,7 +116,9 @@ const Datasets = () => {
                       {
                         icon: Icons.globe,
                         label: 'Geography',
-                        value: 'India',
+                        value: item.geographies?.length > 0 
+                          ? item.geographies.join(', ') 
+                          : 'Not specified',
                       },
                     ]}
                     tag={item.tags}
