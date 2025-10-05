@@ -1,6 +1,6 @@
 {
-  "name": "data-exchange-frontend",
-  "version": "0.1.4",
+  "name": "data-space-frontend",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "graphql-codegen --config ./config/codegen.ts && next dev",
