@@ -10,12 +10,18 @@ export const env = createEnv({
     NEXTAUTH_SECRET: z.string().min(1),
     END_SESSION_URL: z.string().url(),
     REFRESH_TOKEN_URL: z.string().url(),
+    BACKEND_URL: z.string().url(),
+    SENTRY_FEATURE_ENABLED: z.string().optional(),
+    SENTRY_ORG_NAME: z.string().optional(),
+    SENTRY_PROJECT_NAME: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_GA_ID: z.string().optional(),
+    NEXT_PUBLIC_PLATFORM_URL: z.string().url(),
   },
 
   experimental__runtimeEnv: {
     NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
+    NEXT_PUBLIC_PLATFORM_URL: process.env.NEXT_PUBLIC_PLATFORM_URL,
   },
 });
