@@ -9,22 +9,77 @@ jiti('./env');
 
 // const backendUrl = new URL(process.env.NEXT_PUBLIC_BACKEND_URL);
 
-const backendUrl = new URL(process.env.BACKEND_URL);
-const platformUrl = new URL(process.env.NEXT_PUBLIC_PLATFORM_URL); // Use NEXT_PUBLIC_ for client-side access
+const backendUrl = new URL(process.env.BACKEND_URL || 'http://localhost:8000');
+const platformUrl = new URL(process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000');
 
-const withNextIntl = createNextIntlPlugin();
+const withNextIntl = createNextIntlPlugin('./i18n.ts');
 const nextConfig = withNextIntl({
   transpilePackages: ['opub-ui'],
+  
+  // Performance optimizations
+  experimental: {
+    optimizePackageImports: ['opub-ui', 'echarts', 'lucide-react', '@tabler/icons-react'],
+    webpackBuildWorker: true,
+    optimizeCss: true,
+  },
+  
+  // Compiler optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  
+  // Webpack optimizations
+  webpack: (config, { dev, isServer }) => {
+    // Optimize for development speed
+    if (dev) {
+      config.watchOptions = {
+        poll: false,
+        ignored: ['**/node_modules', '**/.git', '**/.next'],
+      };
+    }
+    
+    // Production bundle optimizations
+    if (!dev && !isServer) {
+      config.optimization = config.optimization || {};
+      config.optimization.splitChunks = config.optimization.splitChunks || {};
+      config.optimization.splitChunks.cacheGroups = {
+        ...(config.optimization.splitChunks.cacheGroups || {}),
+        echarts: {
+          name: 'echarts',
+          test: /[\\/]node_modules[\\/]echarts/,
+          chunks: 'all',
+          priority: 20,
+        },
+        icons: {
+          name: 'icons',
+          test: /[\\/]node_modules[\\/](@tabler\/icons-react|lucide-react)/,
+          chunks: 'all',
+          priority: 15,
+        },
+        ui: {
+          name: 'opub-ui',
+          test: /[\\/]node_modules[\\/]opub-ui/,
+          chunks: 'all',
+          priority: 10,
+        },
+      };
+    }
+    
+    return config;
+  },
+  
   images: {
     remotePatterns: [
       {
         protocol: backendUrl.protocol.slice(0, -1),
         hostname: backendUrl.hostname,
+        port: backendUrl.port || '',
+        pathname: '/**',
       },
       {
-        protocol: platformUrl.protocol.replace(':', ''),
+        protocol: platformUrl.protocol.slice(0, -1),
         hostname: platformUrl.hostname,
-        port: platformUrl.port || '', // empty string if no port
+        port: platformUrl.port || '',
         pathname: '/**',
       },
     ],
@@ -47,7 +102,12 @@ export default withSentryConfig(
     // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
     // Upload a larger set of source maps for prettier stack traces (increases build time)
-    widenClientFileUpload: true,
+    widenClientFileUpload: process.env.NODE_ENV === 'production',
+    
+    // Disable source map upload in development for speed
+    sourcemaps: {
+      disable: process.env.NODE_ENV === 'development',
+    },
 
     // Uncomment to route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
     // This can increase your server load as well as your hosting bill.
@@ -67,5 +127,5 @@ export default withSentryConfig(
     // https://vercel.com/docs/cron-jobs
     automaticVercelMonitors: true,
   },
-  process.env.SENTRY_FEATURE_ENABLED
+  process.env.SENTRY_FEATURE_ENABLED === 'true'
 );
