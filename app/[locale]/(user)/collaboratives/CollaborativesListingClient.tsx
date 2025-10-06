@@ -181,7 +181,7 @@ const CollaborativesListingClient = () => {
       name: 'CivicDataLab',
       url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/collaboratives`,
       description:
-        'Explore collaborative data initiatives and partnerships that bring organizations together to create impactful solutions.',
+        'Solving the world\'s major challenges requires greater access to interoperable data that currently resides in silos. Data Collaboratives bring together government, academia, civil society, philanthropy, and companies to responsibly share and use data for public value. Building on trusted, long-term relationships among stakeholders, we can open access to high-impact datasets and responsible AI use-cases to generate insights for climate action, public health, gender equity, and other major shared problems, thereby advancing progress toward the Sustainable Development Goals. Our goal is to accelerate the formation of Data Collaboratives with shared governance, clear safeguards, and collaborative analytics, allowing stakeholders to harness data and AI for the public good.',
     });
   return (
     <main>
@@ -211,9 +211,7 @@ const CollaborativesListingClient = () => {
                 fontWeight="regular"
                 className="leading-3 lg:leading-5"
               >
-                By Collaboratives we mean a collective effort by several organisations
-                in any specific sectors that can be applied to address some of the
-                most pressing concerns from hyper-local to the global level simultaneously.
+                Solving the world&apos;s major challenges requires greater access to interoperable data that currently resides in silos. Data Collaboratives bring together government, academia, civil society, philanthropy, and companies to responsibly share and use data for public value. Building on trusted, long-term relationships among stakeholders, we can open access to high-impact datasets and responsible AI use-cases to generate insights for climate action, public health, gender equity, and other major shared problems, thereby advancing progress toward the Sustainable Development Goals. Our goal is to accelerate the formation of Data Collaboratives with shared governance, clear safeguards, and collaborative analytics, allowing stakeholders to harness data and AI for the public good.
               </Text>
             </div>
             <div className="flex w-full items-center justify-center lg:w-1/2">
