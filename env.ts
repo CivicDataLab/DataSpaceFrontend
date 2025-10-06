@@ -14,6 +14,8 @@ export const env = createEnv({
     SENTRY_FEATURE_ENABLED: z.string().optional(),
     SENTRY_ORG_NAME: z.string().optional(),
     SENTRY_PROJECT_NAME: z.string().optional(),
+    SENTRY_DSN_URL: z.string().optional(),
+    SENTRY_PROJECT_ID: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_GA_ID: z.string().optional(),
