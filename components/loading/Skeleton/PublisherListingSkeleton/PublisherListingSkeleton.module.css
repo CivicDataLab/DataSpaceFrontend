@@ -1,0 +1,100 @@
+/* ============================================
+   FILE: components/loading/Skeleton/PublisherListingSkeleton/PublisherListingSkeleton.module.css
+   CARDS ONLY - Simplified version
+   ============================================ */
+
+/* Cards Grid */
+.cardsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  margin-top: 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .cardsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .cardsGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4rem;
+  }
+}
+
+/* Publisher Card */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: var(--surface-default, #ffffff);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo {
+  height: 80px;
+  width: 80px;
+  flex-shrink: 0;
+  background-color: #d1d5db;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+}
+
+.cardHeaderText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.publisherName {
+  height: 20px;
+  width: 140px;
+  background-color: #d1d5db;
+  border-radius: 4px;
+}
+
+.typeBadge {
+  height: 28px;
+  width: 120px;
+  background-color: #e9eff4;
+  border-radius: 9999px;
+}
+
+/* Stats Row */
+.statsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.statPill {
+  height: 32px;
+  width: 100px;
+  background-color: #d1d5db;
+  border-radius: 9999px;
+}
+
+/* Description */
+.description {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.descriptionLine {
+  height: 16px;
+  width: 100%;
+  background-color: #d1d5db;
+  border-radius: 4px;
+}

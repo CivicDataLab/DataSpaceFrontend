@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query'; // ✅ Ensure this is correct
 import { Button, Divider, Spinner, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { SectorListingSkeleton } from '@/components/loading';
 
 const sectorDetails = graphql(`
   query SectorsList {
@@ -59,10 +60,10 @@ const Sectors = () => {
           </Button>
         </div>
       </div>
-      {isLoading ? (
-        <div className="m-4 flex justify-center">
-          <Spinner />
-        </div>
+      {isLoading ? (    
+         <SectorListingSkeleton 
+          cardCount={9}  
+        />
       ) : (
         <div className="mt-6 lg:mt-12 grid w-full grid-cols-1 gap-6 px-4 md:grid-cols-2 md:px-12 lg:grid-cols-3 lg:px-12">
           {data?.activeSectors.map((sectors: any) => (

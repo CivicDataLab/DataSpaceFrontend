@@ -18,6 +18,7 @@ import BreadCrumbs from '@/components/BreadCrumbs';
 import { ErrorPage } from '@/components/error';
 import JsonLd from '@/components/JsonLd';
 import Styles from '../datasets/dataset.module.scss';
+import { SectorListingSkeleton } from '@/components/loading';
 
 const sectorsListQueryDoc: any = graphql(`
   query SectorsLists($order: SectorOrder, $filters: SectorFilter) {
@@ -191,9 +192,7 @@ const SectorsListing = () => {
                 </div>
               </div>
               {isLoading ? (
-                <div className="m-4 flex justify-center">
-                  <Spinner />
-                </div>
+                 <SectorListingSkeleton cardCount={9} />
               ) : data && data?.activeSectors?.length > 0 ? (
                 <>
                   <div className="grid w-full grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
