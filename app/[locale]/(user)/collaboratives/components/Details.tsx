@@ -108,14 +108,14 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
           </Text>
         </div>
 
-        <div className="flex flex-col border-x-[1px] border-solid border-tertiaryAccent px-8">
+        {/* <div className="flex flex-col border-x-[1px] border-solid border-tertiaryAccent px-8">
           <Text variant="heading3xl" className="text-secondaryOrange">
             {data.collaborativeBySlug.contributors?.length || 0}
           </Text>
           <Text variant="bodyLg" color="onBgDefault" className="w-24">
             Contributors
           </Text>
-        </div>
+        </div> */}
       </div>
 
       <div className=" lg:pr-4">
