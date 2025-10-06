@@ -197,7 +197,7 @@ const CollaborativesListingClient = () => {
       <div className="w-full">
         <div className=" bg-primaryBlue">
           <div className=" container flex flex-col-reverse items-center gap-8 py-10 lg:flex-row ">
-            <div className="flex flex-col gap-5 lg:w-1/2">
+            <div className="flex flex-col gap-5 lg:w-3/5">
               <Text
                 variant="heading2xl"
                 fontWeight="bold"
@@ -214,7 +214,7 @@ const CollaborativesListingClient = () => {
                 Solving the world&apos;s major challenges requires greater access to interoperable data that currently resides in silos. Data Collaboratives bring together government, academia, civil society, philanthropy, and companies to responsibly share and use data for public value. Building on trusted, long-term relationships among stakeholders, we can open access to high-impact datasets and responsible AI use-cases to generate insights for climate action, public health, gender equity, and other major shared problems, thereby advancing progress toward the Sustainable Development Goals. Our goal is to accelerate the formation of Data Collaboratives with shared governance, clear safeguards, and collaborative analytics, allowing stakeholders to harness data and AI for the public good.
               </Text>
             </div>
-            <div className="flex w-full items-center justify-center lg:w-1/2">
+            <div className="flex w-full items-center justify-center lg:w-2/5">
               <Image
                 src={'/collaborative.svg'}
                 alt={'collaborative'}
