@@ -13,19 +13,13 @@ const backendUrl = new URL(process.env.BACKEND_URL || 'http://localhost:8000');
 const platformUrl = new URL(process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000');
 
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
+
 const nextConfig = withNextIntl({
   transpilePackages: ['opub-ui'],
   
   // Performance optimizations
   experimental: {
     optimizePackageImports: ['opub-ui', 'echarts', 'lucide-react', '@tabler/icons-react'],
-    webpackBuildWorker: true,
-    optimizeCss: true,
-  },
-  
-  // Compiler optimizations
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
   },
   
   // Webpack optimizations
