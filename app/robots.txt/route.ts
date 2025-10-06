@@ -2,7 +2,7 @@
 import { isSitemapEnabled } from '@/lib/utils';
 
 export async function GET() {
-  const baseUrl = process.env.NEXTAUTH_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_PLATFORM_URL;
 
   const robotsTxt = `User-agent: *
     Allow: /
