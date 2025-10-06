@@ -76,7 +76,7 @@ export const Content = () => {
 
   const Sectors = [
     'Public Finance',
-    'Law and Justice',
+    'Law And Justice',
     'Climate Action',
     'Urban Development',
     'Gender',
