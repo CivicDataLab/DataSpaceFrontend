@@ -85,6 +85,7 @@ const UpdateUseCaseMetadataMutation: any = graphql(`
         id
         code
         name
+        number
         }
       }
     }
@@ -240,7 +241,9 @@ const Metadata = () => {
 
     defaultVal['sdgs'] =
       data?.sdgs?.map((sdg: any) => {
-        const num = String(sdg.number || 0).padStart(2, '0');
+        const num = sdg.number 
+          ? String(sdg.number).padStart(2, '0')
+          : sdg.code.replace('SDG', '').padStart(2, '0');
         return {
           label: `${num}. ${sdg.name}`,
           value: sdg.id,
@@ -465,7 +468,9 @@ const Metadata = () => {
               name="sdgs"
               list={
                 getSDGsList?.data?.sdgs?.map((item: any) => {
-                  const num = String(item.number || 0).padStart(2, '0');
+                  const num = item.number 
+                    ? String(item.number).padStart(2, '0')
+                    : item.code.replace('SDG', '').padStart(2, '0');
                   return {
                     label: `${num}. ${item.name}`,
                     value: item.id,
