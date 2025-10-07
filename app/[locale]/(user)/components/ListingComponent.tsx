@@ -14,7 +14,7 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
-import React, { useEffect, useReducer, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
@@ -149,7 +149,8 @@ const queryReducer = (state: QueryParams, action: Action): QueryParams => {
 const useUrlParams = (
   queryParams: QueryParams,
   setQueryParams: React.Dispatch<Action>,
-  setVariables: (vars: string) => void
+  setVariables: (vars: string) => void,
+  lockedFilters: Record<string, string[]>
 ) => {
   const router = useRouter();
 
@@ -165,6 +166,13 @@ const useUrlParams = (
       }
     });
 
+    // Merge locked filters with URL filters
+    Object.entries(lockedFilters).forEach(([category, values]) => {
+      if (values.length > 0) {
+        filters[category] = Array.from(new Set([...(filters[category] || []), ...values]));
+      }
+    });
+
     const initialParams: QueryParams = {
       pageSize: sizeParam ? Number(sizeParam) : 9,
       currentPage: pageParam ? Number(pageParam) : 1,
@@ -173,7 +181,7 @@ const useUrlParams = (
     };
 
     setQueryParams({ type: 'INITIALIZE', payload: initialParams });
-  }, [setQueryParams]);
+  }, [setQueryParams, lockedFilters]);
 
   useEffect(() => {
     const filtersString = Object.entries(queryParams.filters)
@@ -234,6 +242,7 @@ interface ListingProps {
   categoryImage?: string;
   placeholder: string;
   redirectionURL: string;
+  lockedFilters?: Record<string, string[]>;
 }
 
 const ListingComponent: React.FC<ListingProps> = ({
@@ -245,6 +254,7 @@ const ListingComponent: React.FC<ListingProps> = ({
   categoryImage,
   placeholder,
   redirectionURL,
+  lockedFilters = {},
 }) => {
   const [facets, setFacets] = useState<{
     results: any[];
@@ -259,7 +269,10 @@ const ListingComponent: React.FC<ListingProps> = ({
   const count = facets?.total ?? 0;
   const datasetDetails = facets?.results ?? [];
 
-  useUrlParams(queryParams, setQueryParams, setVariables);
+  // Stabilize lockedFilters reference to prevent infinite loops
+  const stableLockedFilters = useMemo(() => lockedFilters, [JSON.stringify(lockedFilters)]);
+
+  useUrlParams(queryParams, setQueryParams, setVariables, stableLockedFilters);
   const latestFetchId = useRef(0);
 
   useEffect(() => {
@@ -389,6 +402,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                 options={filterOptions}
                 setSelectedOptions={handleFilterChange}
                 selectedOptions={queryParams.filters}
+                lockedFilters={stableLockedFilters}
               />
             </div>
 
@@ -484,6 +498,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                       options={filterOptions}
                       setSelectedOptions={handleFilterChange}
                       selectedOptions={queryParams.filters}
+                      lockedFilters={stableLockedFilters}
                     />
                   </Tray>
                 </div>
@@ -497,14 +512,18 @@ const ListingComponent: React.FC<ListingProps> = ({
                     ([category, values]) =>
                       values
                         .filter((value) => category !== 'sort')
-                        .map((value) => (
-                          <Pill
-                            key={`${category}-${value}`}
-                            onRemove={() => handleRemoveFilter(category, value)}
-                          >
-                            {value}
-                          </Pill>
-                        ))
+                        .map((value) => {
+                          // Check if this filter value is locked
+                          const isLocked = stableLockedFilters[category]?.includes(value);
+                          return (
+                            <Pill
+                              key={`${category}-${value}`}
+                              onRemove={isLocked ? undefined : () => handleRemoveFilter(category, value)}
+                            >
+                              {value}
+                            </Pill>
+                          );
+                        })
                   )}
                 </div>
               )}

@@ -43,6 +43,7 @@ const SectorDetailsClient = ({ sector }: { sector: TypeSector }) => {
         categoryImage={`/Sectors/${sector.name}.svg`}
         redirectionURL={`/datasets`}
         placeholder="Start typing to search for any Dataset"
+        lockedFilters={{ sectors: [sector.name] }}
       />
     </>
   );
