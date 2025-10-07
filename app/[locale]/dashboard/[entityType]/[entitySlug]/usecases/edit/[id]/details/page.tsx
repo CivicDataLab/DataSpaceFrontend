@@ -12,6 +12,7 @@ import { DropZone, Select, TextField, toast } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
 import Metadata from '../metadata/page';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 const UpdateUseCaseMutation: any = graphql(`
   mutation updateUseCase($data: UseCaseInputPartial!) {
@@ -224,14 +225,13 @@ const Details = () => {
   return (
     <div className=" flex flex-col gap-6">
       <div>
-        <TextField
+        <RichTextEditor
           label="Summary *"
-          name="summary"
           value={formData.summary}
-          multiline={7}
-          helpText={`Character limit: ${formData?.summary?.length}/10000`}
-          onChange={(e) => handleChange('summary', e)}
+          onChange={(value) => handleChange('summary', value)}
           onBlur={() => handleSave(formData)}
+          placeholder="Enter use case summary with rich formatting..."
+          helpText={`Character limit: ${formData?.summary?.length || 0}/10000`}
         />
       </div>
       <div className="flex flex-wrap gap-6 md:flex-nowrap lg:flex-nowrap">
