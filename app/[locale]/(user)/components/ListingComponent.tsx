@@ -14,7 +14,7 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
-import React, { useEffect, useReducer, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
@@ -269,7 +269,10 @@ const ListingComponent: React.FC<ListingProps> = ({
   const count = facets?.total ?? 0;
   const datasetDetails = facets?.results ?? [];
 
-  useUrlParams(queryParams, setQueryParams, setVariables, lockedFilters);
+  // Stabilize lockedFilters reference to prevent infinite loops
+  const stableLockedFilters = useMemo(() => lockedFilters, [JSON.stringify(lockedFilters)]);
+
+  useUrlParams(queryParams, setQueryParams, setVariables, stableLockedFilters);
   const latestFetchId = useRef(0);
 
   useEffect(() => {
@@ -399,7 +402,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                 options={filterOptions}
                 setSelectedOptions={handleFilterChange}
                 selectedOptions={queryParams.filters}
-                lockedFilters={lockedFilters}
+                lockedFilters={stableLockedFilters}
               />
             </div>
 
@@ -495,7 +498,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                       options={filterOptions}
                       setSelectedOptions={handleFilterChange}
                       selectedOptions={queryParams.filters}
-                      lockedFilters={lockedFilters}
+                      lockedFilters={stableLockedFilters}
                     />
                   </Tray>
                 </div>
@@ -511,7 +514,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                         .filter((value) => category !== 'sort')
                         .map((value) => {
                           // Check if this filter value is locked
-                          const isLocked = lockedFilters[category]?.includes(value);
+                          const isLocked = stableLockedFilters[category]?.includes(value);
                           return (
                             <Pill
                               key={`${category}-${value}`}
