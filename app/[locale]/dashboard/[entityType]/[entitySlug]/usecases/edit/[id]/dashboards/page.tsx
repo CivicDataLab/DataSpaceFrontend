@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -81,7 +81,7 @@ const Dashboard = ({ params }: { params: { entityType: string; entitySlug: strin
   >([]);
   const [previousState, setPreviousState] = useState<any>({});
 
-  const { data, isLoading } = useQuery(
+  useQuery(
     ['fetch_dashboardData', usecaseId],
     () => GraphQL(dashboardList, { [params.entityType]: params.entitySlug }, { usecaseId }),
     {

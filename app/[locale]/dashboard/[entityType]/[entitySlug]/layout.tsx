@@ -4,7 +4,6 @@ import React, { useEffect } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import { SidebarNavItem } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import { create } from 'zustand';
 
 import { useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';

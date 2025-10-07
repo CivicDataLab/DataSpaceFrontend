@@ -79,7 +79,7 @@ const OrgProfile = () => {
 
   const [formData, setFormData] = React.useState(initialFormData);
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
+  const { mutate } = useMutation(
     (input: { input: OrganizationInputPartial }) =>
       GraphQL(organizationUpdateMutation, {
         [params.entityType]: params.entitySlug,

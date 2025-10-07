@@ -110,7 +110,7 @@ const Assign = () => {
     });
   };
 
-  const { mutate, isLoading: mutationLoading } = useMutation(
+  const { mutate } = useMutation(
     () =>
       GraphQL(
         AssignCollaborativeDatasets,
@@ -125,7 +125,7 @@ const Assign = () => {
         }
       ),
     {
-      onSuccess: (data: any) => {
+      onSuccess: () => {
         toast('Dataset Assigned Successfully');
         CollaborativeDetails.refetch();
         router.push(

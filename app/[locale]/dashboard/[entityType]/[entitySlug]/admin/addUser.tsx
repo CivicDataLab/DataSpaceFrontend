@@ -116,7 +116,7 @@ const AddUser = ({
     }
   }, [selectedUser]);
 
-  const { mutate, isLoading: addUserLoading } = useMutation(
+  const { mutate } = useMutation(
     (input: { input: AddRemoveUserToOrganizationInput }) =>
       GraphQL(
         addUserDoc,
@@ -148,7 +148,7 @@ const AddUser = ({
     }
   );
 
-  const { mutate: updateMutate, isLoading: updateUserLoading } = useMutation(
+  const { mutate: updateMutate } = useMutation(
     (input: { input: AssignOrganizationRoleInput }) =>
       GraphQL(
         updateUser,
@@ -158,7 +158,7 @@ const AddUser = ({
         input
       ),
     {
-      onSuccess: (res: any) => {
+      onSuccess: () => {
         toast('User updated successfully');
         setIsOpen(false);
         setFormData({
@@ -167,7 +167,7 @@ const AddUser = ({
         });
         setRefetch(true);
       },
-      onError: (err: any) => {
+      onError: () => {
         toast('Failed to update user');
       },
     }

@@ -110,7 +110,7 @@ const Details = () => {
           [params.entityType]: params.entitySlug,
         }, input),
       {
-        onSuccess: (res: any) => {
+        onSuccess: () => {
           toast('Contributor added successfully');
           CollaborativeData.refetch();
         },
@@ -127,7 +127,7 @@ const Details = () => {
           [params.entityType]: params.entitySlug,
         }, input),
       {
-        onSuccess: (res: any) => {
+        onSuccess: () => {
           toast('Contributor removed successfully');
           CollaborativeData.refetch();
         },
@@ -143,7 +143,7 @@ const Details = () => {
         [params.entityType]: params.entitySlug,
       }, input),
     {
-      onSuccess: (res: any) => {
+      onSuccess: () => {
         toast('Supporter added successfully');
         CollaborativeData.refetch();
       },
@@ -160,7 +160,7 @@ const Details = () => {
           [params.entityType]: params.entitySlug,
         }, input),
       {
-        onSuccess: (res: any) => {
+        onSuccess: () => {
           toast('Supporter removed successfully');
           CollaborativeData.refetch();
         },
@@ -176,7 +176,7 @@ const Details = () => {
         [params.entityType]: params.entitySlug,
       }, input),
     {
-      onSuccess: (res: any) => {
+      onSuccess: () => {
         toast('Partner added successfully');
         CollaborativeData.refetch();
       },
@@ -193,7 +193,7 @@ const Details = () => {
           [params.entityType]: params.entitySlug,
         }, input),
       {
-        onSuccess: (res: any) => {
+        onSuccess: () => {
           toast('Partner removed successfully');
           CollaborativeData.refetch();
         },
