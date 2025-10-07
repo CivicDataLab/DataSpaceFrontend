@@ -172,31 +172,33 @@ export function MainNav({ hideSearch = false }) {
         </div>
 
         <div className="flex items-center gap-8">
-          <div className="relative hidden lg:block">
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-              <Dialog.Trigger>
-                <IconButton
-                  size="slim"
-                  icon={Icons.search}
-                  withTooltip
-                  color="onBgDefault"
-                  onClick={() => setIsOpen(true)}
-                >
-                  Search
-                </IconButton>
-              </Dialog.Trigger>
-              <Dialog.Content title={'Search'}>
-                <div className="p-3">
-                  <SearchInput
-                    onSubmit={handleSearch}
-                    label={''}
-                    placeholder="Search for any data"
-                    name={''}
-                  />
-                </div>
-              </Dialog.Content>
-            </Dialog>
-          </div>
+          {!hideSearch && (
+            <div className="relative hidden lg:block">
+              <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <Dialog.Trigger>
+                  <IconButton
+                    size="slim"
+                    icon={Icons.search}
+                    withTooltip
+                    color="onBgDefault"
+                    onClick={() => setIsOpen(true)}
+                  >
+                    Search
+                  </IconButton>
+                </Dialog.Trigger>
+                <Dialog.Content title={'Search'}>
+                  <div className="p-3">
+                    <SearchInput
+                      onSubmit={handleSearch}
+                      label={''}
+                      placeholder="Search for any data"
+                      name={''}
+                    />
+                  </div>
+                </Dialog.Content>
+              </Dialog>
+            </div>
+          )}
 
           <div className="flex items-center gap-5">
             {Navigation.map((item, index) => (
