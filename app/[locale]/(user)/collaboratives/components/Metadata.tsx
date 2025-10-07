@@ -78,15 +78,15 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     {
       label: 'SDG Goals',
       value: (
-        <div className="flex flex-wrap  gap-2">
+        <div className="flex flex-wrap gap-2">
           {data.collaborativeBySlug.sdgs && data.collaborativeBySlug.sdgs.length > 0 ? (
             data.collaborativeBySlug.sdgs.map((sdg: any, index: number) => (
               <Tooltip content={`${sdg.code} - ${sdg.name}`} key={index}>
                 <Image
                   src={`/SDG/${sdg.code}.svg`}
                   alt={sdg.name || ''}
-                  width={60}
-                  height={60}
+                  width={50}
+                  height={50}
                   className="bg-white"
                 />
               </Tooltip>
@@ -147,7 +147,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
               </Text>
               <Tooltip content={item?.tooltipContent}>
                 <Text
-                  className="max-w-xs truncate text-gray-900 lg:text-white"
+                  className={`${item.label === 'SDG Goals' || item.label === 'Sectors' ? 'max-w-full' : 'max-w-xs truncate'} text-gray-900 lg:text-white`}
                   variant="bodyLg"
                   fontWeight="medium"
                 >
