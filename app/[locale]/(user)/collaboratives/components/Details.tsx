@@ -3,11 +3,9 @@
 import Image from 'next/image';
 import { Button, Icon, Spinner, Tag, Text, Tray } from 'opub-ui';
 import { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
-import remarkGfm from 'remark-gfm';
 
 import { Icons } from '@/components/icons';
+import { RichTextRenderer } from '@/components/RichTextRenderer';
 import Metadata from './Metadata';
 
 const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
@@ -142,14 +140,10 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
             </div>
           )}
         <div className="mt-6 lg:mt-10">
-          <div className="prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-blue-400 hover:prose-a:text-blue-300 prose-code:bg-gray-800 prose-code:rounded prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-700 prose-blockquote:border-l-blue-500 prose-th:bg-gray-800 prose-img:rounded-lg prose prose-lg prose-invert mt-4 max-w-none prose-headings:text-white prose-p:text-white prose-a:underline prose-blockquote:text-white prose-strong:text-white prose-em:text-white prose-code:px-1 prose-code:py-0.5 prose-code:text-white prose-code:before:content-none prose-code:after:content-none prose-pre:text-white prose-ol:text-white prose-ul:text-white prose-li:text-white prose-li:marker:text-white prose-table:text-white prose-thead:border-white prose-tr:border-white prose-th:border-white prose-th:text-white prose-td:border-white prose-td:text-white prose-hr:border-white">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeRaw]}
-            >
-              {data.collaborativeBySlug.summary}
-            </ReactMarkdown>
-          </div>
+          <RichTextRenderer 
+            content={data.collaborativeBySlug.summary} 
+            className="text-white"
+          />
         </div>
       </div>
     </div>
