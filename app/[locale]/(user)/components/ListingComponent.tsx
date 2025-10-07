@@ -396,10 +396,12 @@ const ListingComponent: React.FC<ListingProps> = ({
               <div className="flex flex-wrap items-center justify-between gap-5 rounded-2 py-2 lg:flex-nowrap">
                 <div className="w-full md:block">
                   <SearchInput
+                    key={queryParams.query}
                     label="Search"
                     name="Search"
                     className={cn(Styles.Search)}
                     placeholder={placeholder}
+                    defaultValue={queryParams.query}
                     onSubmit={(value) => handleSearch(value)}
                     onClear={(value) => handleSearch(value)}
                   />
