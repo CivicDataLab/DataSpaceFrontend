@@ -15,6 +15,7 @@ import { ActionBar } from './components/action-bar';
 import { Content } from './components/content';
 import { Navigation } from './components/navigate-org-datasets';
 import { formatDate } from '@/lib/utils';
+import { useTourTrigger } from '@/hooks/use-tour-trigger';
 
 const allDatasetsQueryDoc: any = graphql(`
   query allDatasetsQuery($filters: DatasetFilter, $order: DatasetOrder) {
@@ -69,6 +70,8 @@ export default function DatasetPage({
 }: {
   params: { entityType: string; entitySlug: string };
 }) {
+  useTourTrigger(true, 1500);
+  
   const router = useRouter();
 
   const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
@@ -252,6 +255,7 @@ export default function DatasetPage({
         <Navigation
           setNavigationTab={setNavigationTab}
           options={navigationOptions}
+          data-tour="sidebar"
         />
 
         {AllDatasetsQuery.data?.datasets.length > 0 ? (
@@ -264,6 +268,7 @@ export default function DatasetPage({
                 content: 'Add New Dataset',
                 onAction: () => CreateDatasetMutation.mutate(),
               }}
+              data-tour="create-dataset"
             />
 
             <DataTable
@@ -271,6 +276,7 @@ export default function DatasetPage({
               rows={generateTableData(AllDatasetsQuery.data.datasets)}
               hideSelection
               hideViewSelector
+              data-tour="my-datasets"
             />
           </div>
         ) : AllDatasetsQuery.isLoading ? (

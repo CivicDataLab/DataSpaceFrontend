@@ -10,6 +10,7 @@ import { SearchInput, Spinner, Tag, Text } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import Styles from '../page.module.scss';
+import { useTourTrigger } from '@/hooks/use-tour-trigger';
 
 const statsInfo: any = graphql(`
   query StatsList {
@@ -34,6 +35,10 @@ const statsInfo: any = graphql(`
 
 export const Content = () => {
   const router = useRouter();
+  
+  // Enable tour for first-time users
+  useTourTrigger(true, 1500);
+  
   const Stats: { data: any; isLoading: any } = useQuery([`statsDetails`], () =>
     GraphQL(statsInfo, {}, [])
   );
@@ -104,7 +109,11 @@ export const Content = () => {
           ) : (
             <div className="flex flex-wrap items-center gap-4 md:gap-0 lg:gap-0 ">
               {Metrics.map((item, index) => (
-                <Link key={`${item.label}_${index}`} href={item.link}>
+                <Link 
+                  key={`${item.label}_${index}`} 
+                  href={item.link}
+                  data-tour={index === 0 ? 'datasets-link' : index === 1 ? 'usecases-link' : index === 2 ? 'publishers-link' : undefined}
+                >
                   <div
                     key={index}
                     className="flex flex-col border-x-[1px] border-solid border-tertiaryAccent px-4"
@@ -123,7 +132,7 @@ export const Content = () => {
               ))}
             </div>
           )}
-          <div className="w-full">
+          <div className="w-full" data-tour="search-bar">
             <SearchInput
               className={cn(Styles.Search)}
               onSubmit={handleSearch}

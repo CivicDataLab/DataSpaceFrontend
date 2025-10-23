@@ -23,6 +23,7 @@ import { fetchData } from '@/fetch';
 import { cn, formatDate } from '@/lib/utils';
 import Filter from '../datasets/components/FIlter/Filter';
 import Styles from '../datasets/dataset.module.scss';
+import { useTourTrigger } from '@/hooks/use-tour-trigger';
 
 // Helper function to strip markdown and HTML tags for card preview
 const stripMarkdown = (markdown: string): string => {
@@ -256,6 +257,8 @@ const ListingComponent: React.FC<ListingProps> = ({
   redirectionURL,
   lockedFilters = {},
 }) => {
+  useTourTrigger(true, 1500);
+  
   const [facets, setFacets] = useState<{
     results: any[];
     total: number;
@@ -397,7 +400,7 @@ const ListingComponent: React.FC<ListingProps> = ({
 
         <div className="mt-5 lg:mt-10">
           <div className="row mb-16 flex gap-5 ">
-            <div className="hidden min-w-64 max-w-64 lg:block">
+            <div className="hidden min-w-64 max-w-64 lg:block" data-tour="filters">
               <Filter
                 options={filterOptions}
                 setSelectedOptions={handleFilterChange}
@@ -408,7 +411,7 @@ const ListingComponent: React.FC<ListingProps> = ({
 
             <div className="flex w-full flex-col gap-4 px-2">
               <div className="flex flex-wrap items-center justify-between gap-5 rounded-2 py-2 lg:flex-nowrap">
-                <div className="w-full md:block">
+                <div className="w-full md:block" data-tour="search">
                   <SearchInput
                     key={queryParams.query}
                     label="Search"
@@ -468,7 +471,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                       />
                     </Button>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" data-tour="sort">
                     <Select
                       label=""
                       labelInline
@@ -541,7 +544,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                   onPageSizeChange={handlePageSizeChange}
                   view={view}
                 >
-                  {datasetDetails.map((item: any) => {
+                  {datasetDetails.map((item: any, index: number) => {
                     const image = item.is_individual_dataset
                       ? item?.user?.profile_picture
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
@@ -654,6 +657,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                         }
                         iconColor="warning"
                         href={`${redirectionURL}/${item.id}`}
+                        data-tour={index === 0 && type === 'dataset' ? 'dataset-card' : index === 0 && type === 'usecase' ? 'usecase-card' : undefined}
                       />
                     );
                   })}
