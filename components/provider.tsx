@@ -9,6 +9,8 @@ import { Toaster, Tooltip } from 'opub-ui';
 
 import { RouterEvents } from '@/lib/navigation';
 import SessionGuard from './SessionGuard';
+import { TourProvider } from '@/contexts/TourContext';
+import { TourGuide } from './Tour';
 
 export default function Provider({ children }: { children: React.ReactNode }) {
   const [client] = React.useState(
@@ -40,12 +42,15 @@ export default function Provider({ children }: { children: React.ReactNode }) {
       <SessionProvider>
         <SessionGuard>
           <QueryClientProvider client={client}>
-            <RouterEvents />
-            <HolyLoader color="var(--action-primary-success-default)" />
-            <Tooltip.Provider>
-              {children}
-              <Toaster />
-            </Tooltip.Provider>
+            <TourProvider>
+              <RouterEvents />
+              <HolyLoader color="var(--action-primary-success-default)" />
+              <Tooltip.Provider>
+                {children}
+                <Toaster />
+              </Tooltip.Provider>
+              <TourGuide />
+            </TourProvider>
           </QueryClientProvider>
         </SessionGuard>
       </SessionProvider>
