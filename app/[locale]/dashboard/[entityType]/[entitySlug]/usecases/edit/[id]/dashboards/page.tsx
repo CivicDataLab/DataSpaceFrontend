@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, Icon, Text, TextField, toast } from 'opub-ui';
@@ -73,8 +74,26 @@ const deleteDashboard: any = graphql(`
   }
 `);
 
-const Dashboard = ({ params }: { params: { entityType: string; entitySlug: string; id: string } }) => {
-  const usecaseId = parseInt(params.id);
+const Dashboard = () => {
+  const params = useParams<{ entityType?: string; entitySlug?: string; id?: string }>();
+  const entityType = params?.entityType;
+  const entitySlug = params?.entitySlug;
+  const idParam = params?.id;
+
+  const isValidParams =
+    typeof entityType === 'string' &&
+    typeof entitySlug === 'string' &&
+    typeof idParam === 'string';
+
+  const usecaseId = isValidParams && idParam
+    ? Number.parseInt(idParam, 10)
+    : NaN;
+
+  const isValidId = !Number.isNaN(usecaseId) && isValidParams;
+
+  const ownerArgs: Record<string, string> | null = isValidParams
+    ? { [entityType]: entitySlug }
+    : null;
 
   const [dashboards, setDashboards] = useState<
     Array<{ id: string; name: string; link: string }>
@@ -83,10 +102,11 @@ const Dashboard = ({ params }: { params: { entityType: string; entitySlug: strin
 
   const { data, isLoading } = useQuery(
     ['fetch_dashboardData', usecaseId],
-    () => GraphQL(dashboardList, { [params.entityType]: params.entitySlug }, { usecaseId }),
+    () => GraphQL(dashboardList, ownerArgs || {}, { usecaseId }),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
+      enabled: isValidId,
       onSuccess: (res: any) => {
         setDashboards(res.usecaseDashboards || []);
         setPreviousState(
@@ -100,7 +120,7 @@ const Dashboard = ({ params }: { params: { entityType: string; entitySlug: strin
 
   const { mutate: addDashboard, isLoading: addLoading } = useMutation(
     ({ usecaseId }: { usecaseId: number }) =>
-      GraphQL(AddDashboard, { [params.entityType]: params.entitySlug }, { usecaseId }),
+      GraphQL(AddDashboard, ownerArgs || {}, { usecaseId }),
     {
       onSuccess: (res: any) => {
         const newDashboard = res.addUsecaseDashboard.data;
@@ -116,7 +136,7 @@ const Dashboard = ({ params }: { params: { entityType: string; entitySlug: strin
   );
   const { mutate: saveDashboard, isLoading: saveLoading } = useMutation(
     ({ id, name, link }: { id: string; name: string; link: string }) =>
-      GraphQL(updateDashboard, { [params.entityType]: params.entitySlug }, { id, name, link }),
+      GraphQL(updateDashboard, ownerArgs || {}, { id, name, link }),
     {
       onSuccess: ({ updateUsecaseDashboard }: any) => {
         toast.success('Changes saved');
@@ -132,7 +152,7 @@ const Dashboard = ({ params }: { params: { entityType: string; entitySlug: strin
   );
 
   const { mutate: removeDashboard, isLoading: deleteLoading } = useMutation(
-    (id: number) => GraphQL(deleteDashboard, { [params.entityType]: params.entitySlug }, { id }),
+    (id: number) => GraphQL(deleteDashboard, ownerArgs || {}, { id }),
     {
       onSuccess: (_, id) => {
         setDashboards((prev) => prev.filter((d) => d.id !== id.toString()));
@@ -143,6 +163,18 @@ const Dashboard = ({ params }: { params: { entityType: string; entitySlug: strin
       },
     }
   );
+
+  const { setStatus } = useEditStatus();
+
+  useEffect(() => {
+    setStatus(
+      saveLoading || addLoading || deleteLoading ? 'loading' : 'success'
+    ); // update based on mutation state
+  }, [saveLoading, addLoading, deleteLoading, setStatus]);
+
+  if (!isValidId) {
+    return null;
+  }
 
   const handleChange = (id: string, field: 'name' | 'link', value: string) => {
     setDashboards((prev) =>
@@ -172,14 +204,6 @@ const Dashboard = ({ params }: { params: { entityType: string; entitySlug: strin
   const handleDelete = (id: string) => {
     removeDashboard(Number(id));
   };
-
-  const { setStatus } = useEditStatus();
-
-  useEffect(() => {
-    setStatus(
-      saveLoading || addLoading || deleteLoading ? 'loading' : 'success'
-    ); // update based on mutation state
-  }, [saveLoading, addLoading, deleteLoading]);
 
   return (
     <div className="flex flex-col gap-4">

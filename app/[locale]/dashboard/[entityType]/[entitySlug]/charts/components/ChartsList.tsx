@@ -303,13 +303,15 @@ const ChartsList: React.FC<ChartsListProps> = ({
               icon={Icons.delete}
               color="interactive"
               onClick={() => {
-                row.original.typename === 'TypeResourceChart'
-                  ? deleteResourceChartmutation.mutate({
-                      chartId: row.original.id,
-                    })
-                  : deleteResourceChartImagemutation.mutate({
-                      resourceChartImageId: row.original.id,
-                    });
+                if (row.original.typename === 'TypeResourceChart') {
+                  deleteResourceChartmutation.mutate({
+                    chartId: row.original.id,
+                  });
+                } else {
+                  deleteResourceChartImagemutation.mutate({
+                    resourceChartImageId: row.original.id,
+                  });
+                }
               }}
             >
               Delete

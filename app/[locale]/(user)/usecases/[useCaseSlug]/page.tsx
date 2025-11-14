@@ -26,10 +26,11 @@ const UseCaseInfoQuery = graphql(`
 export async function generateMetadata({
   params,
 }: {
-  params: { useCaseSlug: string };
+  params: Promise<{ useCaseSlug: string }>;
 }): Promise<Metadata> {
+  const { useCaseSlug } = await params;
   try {
-    const data = await GraphQLPublic(UseCaseInfoQuery, {}, { pk: params.useCaseSlug });
+    const data = await GraphQLPublic(UseCaseInfoQuery, {}, { pk: useCaseSlug });
     const UseCase = data?.useCase;
 
     return generatePageMetadata({
@@ -41,7 +42,7 @@ export async function generateMetadata({
       openGraph: {
         type: 'article',
         locale: 'en_US',
-        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases/${params.useCaseSlug}`,
+        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases/${useCaseSlug}`,
         title: `${UseCase?.title} | Sector Data | CivicDataSpace`,
         description:
           UseCase?.summary ||
@@ -59,7 +60,7 @@ export async function generateMetadata({
       openGraph: {
         type: 'article',
         locale: 'en_US',
-        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases/${params.useCaseSlug}`,
+        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases/${useCaseSlug}`,
         title: `Use Case Details | CivicDataSpace`,
         description: `Explore open data and curated datasets in this use case.`,
         siteName: 'CivicDataSpace',

@@ -21,13 +21,14 @@ const datasetMetaQuery: any = graphql(`
 export async function generateMetadata({
   params,
 }: {
-  params: { datasetIdentifier: string };
+  params: Promise<{ datasetIdentifier: string }>;
 }) {
+  const { datasetIdentifier } = await params;
   try {
     const res: any = await GraphQL(
       datasetMetaQuery,
       {},
-      { datasetId: params.datasetIdentifier }
+      { datasetId: datasetIdentifier }
     );
 
     const dataset = res?.getDataset;
@@ -38,7 +39,7 @@ export async function generateMetadata({
       openGraph: {
         type: 'dataset',
         locale: 'en_US',
-        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/datasets/${params.datasetIdentifier}`,
+        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/datasets/${datasetIdentifier}`,
         title: dataset?.title,
         description: dataset?.description,
         siteName: 'CivicDataSpace',
@@ -51,10 +52,12 @@ export async function generateMetadata({
   }
 }
 
-export default function Page({
+export default async function Page({
   params,
 }: {
-  params: { datasetIdentifier: string };
+  params: Promise<{ datasetIdentifier: string }>;
 }) {
-  return <DatasetDetailsPage datasetId={params.datasetIdentifier} />;
+  const { datasetIdentifier } = await params;
+
+  return <DatasetDetailsPage datasetId={datasetIdentifier} />;
 }

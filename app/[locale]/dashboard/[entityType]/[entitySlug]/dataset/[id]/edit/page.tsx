@@ -16,7 +16,12 @@ import { EditPage } from './page-layout';
 //   }
 // `);
 
-export default async function Page({ params }: { params: { id: string } }) {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
   const queryClient = getQueryClient();
   // await queryClient.prefetchQuery([`dataset_${params.id}`], () =>
   //   GraphQL(datasetQueryDoc, {
@@ -27,9 +32,9 @@ export default async function Page({ params }: { params: { id: string } }) {
 
   return (
     // <Hydrate state={dehydratedState}>
-      <div className={styles.EditPage}>
-        <EditPage params={params} />
-      </div>
+    <div className={styles.EditPage}>
+      <EditPage params={{ id }} />
+    </div>
     // </Hydrate>
   );
 }

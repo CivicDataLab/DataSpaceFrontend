@@ -43,8 +43,7 @@ export function CreateDataset({
   return (
     <DatasetForm
       onSubmit={(value: any) => {
-        mutatePatch &&
-          defaultVal &&
+        if (mutatePatch && defaultVal) {
           mutatePatch({
             dataset_data: {
               title: value.title,
@@ -52,8 +51,9 @@ export function CreateDataset({
               id: defaultVal.id,
             },
           });
+        }
 
-        mutate &&
+        if (mutate) {
           mutate({
             dataset_data: {
               title: value.title,
@@ -61,6 +61,7 @@ export function CreateDataset({
               dataset_type: value.type,
             },
           });
+        }
       }}
       formOptions={{ defaultValues: defaultValue }}
       submitRef={submitRef}
