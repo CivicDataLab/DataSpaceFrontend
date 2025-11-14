@@ -18,6 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import Styles from './datasets.module.scss';
+import { DatasetListingSkeleton } from '@/components/loading';
 
 interface Bucket {
   key: string;
@@ -81,9 +82,10 @@ const Datasets = () => {
 
           <CarouselContent className="p-4">
             {isLoading ? (
-              <div className="p-8">
-                <Spinner />
-              </div>
+              <DatasetListingSkeleton 
+              cardCount={3}  
+              cardsOnly={true}  
+            />
             ) : (
               facets &&
               facets.results.map((item: any) => (

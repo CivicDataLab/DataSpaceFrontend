@@ -62,6 +62,10 @@ const stripMarkdown = (markdown: string): string => {
     .replace(/\s+/g, ' ')
     .trim();
 };
+import {
+  DatasetListingSkeleton,
+  UseCaseListingSkeleton,
+} from '@/components/loading';
 
 // Interfaces
 interface Bucket {
@@ -300,8 +304,12 @@ const ListingComponent: React.FC<ListingProps> = ({
   useEffect(() => {
     setHasMounted(true);
   }, []);
-
-  if (!hasMounted) return <Loading />;
+  if (!hasMounted) {
+  if (type === 'usecase') {
+    return <UseCaseListingSkeleton cardCount={queryParams.pageSize} />;
+  }
+  return <DatasetListingSkeleton cardCount={queryParams.pageSize} />;
+}
 
   const handlePageChange = (newPage: number) => {
     setQueryParams({ type: 'SET_CURRENT_PAGE', payload: newPage });
