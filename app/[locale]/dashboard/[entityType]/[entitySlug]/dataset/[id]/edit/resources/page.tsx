@@ -34,8 +34,9 @@ import { DistibutionPage } from './page-layout';
 export default async function Page({
   params,
 }: {
-  params: { entityType: string; entitySlug: string; id: string };
+  params: Promise<{ entityType: string; entitySlug: string; id: string }>;
 }) {
+  const resolvedParams = await params;
   const queryClient = getQueryClient();
   // await queryClient.prefetchQuery([`dataset_distribution_${params.id}`], () =>
   //   GraphQL(datasetDistributionQueryDoc, {
@@ -47,7 +48,7 @@ export default async function Page({
   return (
     // <Hydrate state={dehydratedState}>
     <div className={styles.EditPage}>
-      <DistibutionPage params={params} />
+      <DistibutionPage params={resolvedParams} />
     </div>
     // </Hydrate>
   );

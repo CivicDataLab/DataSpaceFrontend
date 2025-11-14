@@ -1,8 +1,10 @@
-'use client'  
+'use client';
 
-import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
+import { fetchData } from '@/fetch';
 import {
   Button,
   ButtonGroup,
@@ -14,52 +16,52 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
-import React, { useEffect, useReducer, useRef, useState } from 'react';
 
+import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
-import { fetchData } from '@/fetch';
-import { cn, formatDate } from '@/lib/utils';
 import Filter from '../datasets/components/FIlter/Filter';
 import Styles from '../datasets/dataset.module.scss';
 
 // Helper function to strip markdown and HTML tags for card preview
 const stripMarkdown = (markdown: string): string => {
   if (!markdown) return '';
-  return markdown
-    // Remove code blocks first (before other replacements)
-    .replace(/```[\s\S]*?```/g, '')
-    // Remove inline code
-    .replace(/`([^`]+)`/g, '$1')
-    // Remove images
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
-    // Remove links
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    // Remove headers
-    .replace(/^#{1,6}\s+/gm, '')
-    // Remove bold
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/__([^_]+)__/g, '$1')
-    // Remove italic
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/_([^_]+)_/g, '$1')
-    // Remove strikethrough
-    .replace(/~~([^~]+)~~/g, '$1')
-    // Remove blockquotes
-    .replace(/^\s*>\s+/gm, '')
-    // Remove horizontal rules
-    .replace(/^(-{3,}|_{3,}|\*{3,})$/gm, '')
-    // Remove list markers
-    .replace(/^\s*[-*+]\s+/gm, '')
-    .replace(/^\s*\d+\.\s+/gm, '')
-    // Remove HTML tags
-    .replace(/<[^>]*>/g, '')
-    // Remove extra whitespace and newlines
-    .replace(/\n\s*\n/g, '\n')
-    .replace(/\n/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return (
+    markdown
+      // Remove code blocks first (before other replacements)
+      .replace(/```[\s\S]*?```/g, '')
+      // Remove inline code
+      .replace(/`([^`]+)`/g, '$1')
+      // Remove images
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+      // Remove links
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove headers
+      .replace(/^#{1,6}\s+/gm, '')
+      // Remove bold
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/__([^_]+)__/g, '$1')
+      // Remove italic
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/_([^_]+)_/g, '$1')
+      // Remove strikethrough
+      .replace(/~~([^~]+)~~/g, '$1')
+      // Remove blockquotes
+      .replace(/^\s*>\s+/gm, '')
+      // Remove horizontal rules
+      .replace(/^(-{3,}|_{3,}|\*{3,})$/gm, '')
+      // Remove list markers
+      .replace(/^\s*[-*+]\s+/gm, '')
+      .replace(/^\s*\d+\.\s+/gm, '')
+      // Remove HTML tags
+      .replace(/<[^>]*>/g, '')
+      // Remove extra whitespace and newlines
+      .replace(/\n\s*\n/g, '\n')
+      .replace(/\n/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
 };
 
 // Interfaces
@@ -266,7 +268,7 @@ const ListingComponent: React.FC<ListingProps> = ({
     if (variables) {
       const currentFetchId = ++latestFetchId.current;
 
-      fetchData(type,variables)
+      fetchData(type, variables)
         .then((res) => {
           // Only set if this is the latest call
           if (currentFetchId === latestFetchId.current) {
@@ -325,7 +327,7 @@ const ListingComponent: React.FC<ListingProps> = ({
           label: bucket.key,
           value: bucket.key,
         }));
-      } 
+      }
       // Handle key-value object format (current backend format)
       else if (value && typeof value === 'object' && !Array.isArray(value)) {
         acc[key] = Object.entries(value).map(([label, count]) => ({
@@ -528,14 +530,14 @@ const ListingComponent: React.FC<ListingProps> = ({
                       : item?.organization?.logo
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
                         : '/org.png';
-                    
-                    const geographies = item.geographies && item.geographies.length > 0
-                      ? item.geographies
-                      : null;
 
-                    const sdgs = item.sdgs && item.sdgs.length > 0
-                      ? item.sdgs
-                      : null;
+                    const geographies =
+                      item.geographies && item.geographies.length > 0
+                        ? item.geographies
+                        : null;
+
+                    const sdgs =
+                      item.sdgs && item.sdgs.length > 0 ? item.sdgs : null;
 
                     const MetadataContent = [
                       {
@@ -569,7 +571,9 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     if (sdgs && sdgs.length > 0) {
                       // Format SDGs for display
-                      const sdgDisplay = sdgs.map((sdg: any) => `${sdg.code} - ${sdg.name}`).join(', ');
+                      const sdgDisplay = sdgs
+                        .map((sdg: any) => `${sdg.code} - ${sdg.name}`)
+                        .join(', ');
 
                       MetadataContent.push({
                         icon: Icons.target,

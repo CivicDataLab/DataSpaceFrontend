@@ -18,15 +18,27 @@ const DashboardsList: any = graphql(`
 `);
 
 const Dashboards = () => {
-  const params = useParams();
+  const params = useParams<{ useCaseSlug?: string }>();
+  const useCaseSlug = params?.useCaseSlug;
+
+  const usecaseId =
+    typeof useCaseSlug === 'string' ? Number.parseInt(useCaseSlug, 10) : NaN;
+
+  const isValidId = !Number.isNaN(usecaseId);
+
   const { data, isLoading } = useQuery<{ usecaseDashboards: any }>(
-    ['fetch_dashboardData', params.useCaseSlug],
-    () => GraphQL(DashboardsList, {}, { usecaseId: +params.useCaseSlug }),
+    ['fetch_dashboardData', usecaseId],
+    () => GraphQL(DashboardsList, {}, { usecaseId }),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
+      enabled: isValidId,
     }
   );
+
+  if (!isValidId) {
+    return null;
+  }
 
   return (
     <div>
@@ -51,7 +63,11 @@ const Dashboards = () => {
                   className="flex h-[100px] w-full items-center rounded-4 bg-surfaceDefault p-5 shadow-card"
                   target="_blank"
                 >
-                  <Text variant="bodyLg" className="text-primaryText line-clamp-2" title={dashboard.name}>
+                  <Text
+                    variant="bodyLg"
+                    className="line-clamp-2 text-primaryText"
+                    title={dashboard.name}
+                  >
                     {dashboard.name}
                   </Text>
                 </Link>

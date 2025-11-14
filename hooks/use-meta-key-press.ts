@@ -10,13 +10,17 @@ export function useMetaKeyPress(targetKey: string, fn?: () => void): boolean {
       if (isMac) {
         if (e.key === targetKey && e.metaKey) {
           e.preventDefault();
-          fn && fn();
+          if (fn) {
+            fn();
+          }
           setKeyPressed((e) => !e);
         }
       } else {
         if (e.key === targetKey && e.ctrlKey) {
           e.preventDefault();
-          fn && fn();
+          if (fn) {
+            fn();
+          }
           setKeyPressed((e) => !e);
         }
       }
