@@ -28,40 +28,45 @@ const createDatasetMutationDoc: any = graphql(`
 `);
 
 export const Page = () => {
-  const params = useParams<{
-    entityType: string;
-    entitySlug: string;
-  }>();
-  const router = useRouter();
+  const params = useParams<{ entityType?: string; entitySlug?: string }>();
+  const entityType = params?.entityType;
+  const entitySlug = params?.entitySlug;
 
+  const isValidParams =
+    typeof entityType === 'string' && typeof entitySlug === 'string';
+
+  const ownerArgs: Record<string, string> | null = isValidParams
+    ? { [entityType]: entitySlug }
+    : null;
+
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   const { mutate, isLoading } = useMutation(
-    () =>
-      GraphQL(
-        createDatasetMutationDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        []
-      ),
+    () => GraphQL(createDatasetMutationDoc, ownerArgs || {}, []),
     {
       onSuccess: (data: any) => {
         if (data.addDataset.success) {
           toast('Dataset created successfully!');
-          queryClient.invalidateQueries({
-            queryKey: [`create_dataset_${params.entityType}`],
-          });
+          if (isValidParams && entityType) {
+            queryClient.invalidateQueries({
+              queryKey: [`create_dataset_${entityType}`],
+            });
 
-          router.push(
-            `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
-          );
+            router.push(
+              `/dashboard/${entityType}/${entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
+            );
+          }
         } else {
           toast('Error: ' + data.addDataset.errors.fieldErrors[0].messages[0]);
         }
       },
     }
   );
+
+  if (!isValidParams) {
+    return null;
+  }
 
   // React.useEffect(() => {
   //   router.prefetch('/dashboard/dataset/new');
@@ -80,7 +85,7 @@ export const Page = () => {
         isLoading={isLoading}
       />
 
-      <Content params={params} />
+      <Content />
     </>
   );
 };

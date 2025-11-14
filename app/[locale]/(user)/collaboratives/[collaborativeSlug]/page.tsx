@@ -26,10 +26,15 @@ const CollaborativeInfoQuery = graphql(`
 export async function generateMetadata({
   params,
 }: {
-  params: { collaborativeSlug: string };
+  params: Promise<{ collaborativeSlug: string }>;
 }): Promise<Metadata> {
+  const { collaborativeSlug } = await params;
   try {
-    const data = await GraphQLPublic(CollaborativeInfoQuery, {}, { pk: params.collaborativeSlug });
+    const data = await GraphQLPublic(
+      CollaborativeInfoQuery,
+      {},
+      { pk: collaborativeSlug }
+    );
     const Collaborative = data?.collaborative;
 
     return generatePageMetadata({
@@ -41,7 +46,7 @@ export async function generateMetadata({
       openGraph: {
         type: 'article',
         locale: 'en_US',
-        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/collaboratives/${params.collaborativeSlug}`,
+        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/collaboratives/${collaborativeSlug}`,
         title: `${Collaborative?.title} | Collaborative Data | CivicDataSpace`,
         description:
           Collaborative?.summary ||
@@ -59,7 +64,7 @@ export async function generateMetadata({
       openGraph: {
         type: 'article',
         locale: 'en_US',
-        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/collaboratives/${params.collaborativeSlug}`,
+        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/collaboratives/${collaborativeSlug}`,
         title: `Collaborative Details | CivicDataSpace`,
         description: `Explore open data and curated datasets in this collaborative.`,
         siteName: 'CivicDataSpace',

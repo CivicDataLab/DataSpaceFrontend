@@ -265,9 +265,11 @@ const AddUser = ({
                 disabled={!formData.userId || !formData.roleId}
                 onClick={() => {
                   setIsOpen(false);
-                  isEdit
-                    ? updateMutate({ input: formData })
-                    : mutate({ input: formData });
+                  if (isEdit) {
+                    updateMutate({ input: formData });
+                  } else {
+                    mutate({ input: formData });
+                  }
                 }}
               >
                 {isEdit ? 'Update' : 'Add'}

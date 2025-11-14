@@ -1,21 +1,21 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
 import { Button, DataTable, IconButton, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
 import { Loading } from '@/components/loading';
+import { useTourTrigger } from '@/hooks/use-tour-trigger';
 import { ActionBar } from './components/action-bar';
 import { Content } from './components/content';
 import { Navigation } from './components/navigate-org-datasets';
-import { formatDate } from '@/lib/utils';
-import { useTourTrigger } from '@/hooks/use-tour-trigger';
 
 const allDatasetsQueryDoc: any = graphql(`
   query allDatasetsQuery($filters: DatasetFilter, $order: DatasetOrder) {
@@ -65,16 +65,109 @@ const unPublishDataset: any = graphql(`
   }
 `);
 
-export default function DatasetPage({
-  params,
-}: {
-  params: { entityType: string; entitySlug: string };
-}) {
+export default function DatasetPage() {
   useTourTrigger(true, 1500);
-  
   const router = useRouter();
+  const params = useParams<{ entityType?: string; entitySlug?: string }>();
+  const entityType = params?.entityType;
+  const entitySlug = params?.entitySlug;
+
+  const isValidParams =
+    typeof entityType === 'string' && typeof entitySlug === 'string';
+
+  const ownerArgs: Record<string, string> | null = isValidParams
+    ? { [entityType]: entitySlug }
+    : null;
 
   const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
+
+  const AllDatasetsQuery: { data: any; isLoading: boolean; refetch: any } =
+    useQuery(
+      [
+        `fetch_datasets_org_dashboard`,
+        entityType,
+        entitySlug,
+        navigationTab ?? 'drafts',
+      ],
+      () =>
+        GraphQL(allDatasetsQueryDoc, ownerArgs || {}, {
+          filters: {
+            status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
+          },
+          order: { modified: 'DESC' },
+        }),
+      { enabled: isValidParams }
+    );
+
+  useEffect(() => {
+    if (navigationTab === null || navigationTab === undefined)
+      setNavigationTab('drafts');
+    if (isValidParams) {
+      AllDatasetsQuery.refetch();
+    }
+  }, [navigationTab, isValidParams]);
+
+  const DeleteDatasetMutation: {
+    mutate: any;
+    isLoading: boolean;
+    error: any;
+  } = useMutation(
+    [`delete_dataset`],
+    (data: { datasetId: string }) =>
+      GraphQL(deleteDatasetMutationDoc, ownerArgs || {}, {
+        datasetId: data.datasetId,
+      }),
+    {
+      onSuccess: () => {
+        toast(`Deleted dataset successfully`);
+        if (isValidParams) {
+          AllDatasetsQuery.refetch();
+        }
+      },
+      onError: (err: any) => {
+        toast('Error:  ' + err.message.split(':')[0]);
+      },
+    }
+  );
+  const CreateDatasetMutation: { mutate: any; isLoading: boolean; error: any } =
+    useMutation(() => GraphQL(createDatasetMutationDoc, ownerArgs || {}, []), {
+      onSuccess: (data: any) => {
+        if (data.addDataset.success) {
+          toast('Dataset created successfully!');
+          if (isValidParams && entityType && entitySlug) {
+            router.push(
+              `/dashboard/${entityType}/${entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
+            );
+          }
+        } else {
+          toast('Error: ' + data.addDataset.errors.fieldErrors[0].messages[0]);
+        }
+      },
+    });
+  const UnpublishDatasetMutation: {
+    mutate: any;
+    isLoading: boolean;
+    error: any;
+  } = useMutation(
+    [`unpublish_dataset`],
+    (data: { datasetId: string }) =>
+      GraphQL(unPublishDataset, ownerArgs || {}, { datasetId: data.datasetId }),
+    {
+      onSuccess: () => {
+        toast(`Unpublished dataset successfully`);
+        if (isValidParams) {
+          AllDatasetsQuery.refetch();
+        }
+      },
+      onError: (err: any) => {
+        toast('Error:  ' + err.message.split(':')[0]);
+      },
+    }
+  );
+
+  if (!isValidParams) {
+    return null;
+  }
 
   let navigationOptions = [
     {
@@ -89,103 +182,6 @@ export default function DatasetPage({
     },
   ];
 
-  const AllDatasetsQuery: { data: any; isLoading: boolean; refetch: any } =
-    useQuery([`fetch_datasets_org_dashboard`], () =>
-      GraphQL(
-        allDatasetsQueryDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        {
-          filters: {
-            status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
-          },
-          order: { modified: 'DESC' },
-        }
-      )
-    );
-
-  useEffect(() => {
-    if (navigationTab === null || navigationTab === undefined)
-      setNavigationTab('drafts');
-    AllDatasetsQuery.refetch();
-  }, [navigationTab]);
-
-  const DeleteDatasetMutation: {
-    mutate: any;
-    isLoading: boolean;
-    error: any;
-  } = useMutation(
-    [`delete_dataset`],
-    (data: { datasetId: string }) =>
-      GraphQL(
-        deleteDatasetMutationDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        { datasetId: data.datasetId }
-      ),
-    {
-      onSuccess: () => {
-        toast(`Deleted dataset successfully`);
-        AllDatasetsQuery.refetch();
-      },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
-      },
-    }
-  );
-  const CreateDatasetMutation: { mutate: any; isLoading: boolean; error: any } =
-    useMutation(
-      () =>
-        GraphQL(
-          createDatasetMutationDoc,
-          {
-            [params.entityType]: params.entitySlug,
-          },
-          []
-        ),
-      {
-        onSuccess: (data: any) => {
-          if (data.addDataset.success) {
-            toast('Dataset created successfully!');
-
-            router.push(
-              `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
-            );
-          } else {
-            toast(
-              'Error: ' + data.addDataset.errors.fieldErrors[0].messages[0]
-            );
-          }
-        },
-      }
-    );
-  const UnpublishDatasetMutation: {
-    mutate: any;
-    isLoading: boolean;
-    error: any;
-  } = useMutation(
-    [`unpublish_dataset`],
-    (data: { datasetId: string }) =>
-      GraphQL(
-        unPublishDataset,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        { datasetId: data.datasetId }
-      ),
-    {
-      onSuccess: () => {
-        toast(`Unpublished dataset successfully`);
-        AllDatasetsQuery.refetch();
-      },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
-      },
-    }
-  );
-
   const datasetsListColumns = [
     {
       accessorKey: 'title',
@@ -197,7 +193,7 @@ export default function DatasetPage({
           <LinkButton
             kind="tertiary"
             size="medium"
-            href={`/dashboard/${params.entityType}/${params.entitySlug}/dataset/${row.original.id}/edit/metadata`}
+            href={`/dashboard/${entityType}/${entitySlug}/dataset/${row.original.id}/edit/metadata`}
           >
             {row.original.title}
           </LinkButton>
@@ -282,7 +278,7 @@ export default function DatasetPage({
         ) : AllDatasetsQuery.isLoading ? (
           <Loading />
         ) : (
-          <Content params={params} />
+          <Content />
         )}
 
         {/* <Page /> */}

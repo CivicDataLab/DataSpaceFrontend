@@ -1,8 +1,11 @@
-'use client'  
+'use client';
 
-import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
+import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
+import { fetchData } from '@/fetch';
+import { useTourTrigger } from '@/hooks/use-tour-trigger';
 import {
   Button,
   ButtonGroup,
@@ -14,53 +17,52 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
-import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
+import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
-import { fetchData } from '@/fetch';
-import { cn, formatDate } from '@/lib/utils';
 import Filter from '../datasets/components/FIlter/Filter';
 import Styles from '../datasets/dataset.module.scss';
-import { useTourTrigger } from '@/hooks/use-tour-trigger';
 
 // Helper function to strip markdown and HTML tags for card preview
 const stripMarkdown = (markdown: string): string => {
   if (!markdown) return '';
-  return markdown
-    // Remove code blocks first (before other replacements)
-    .replace(/```[\s\S]*?```/g, '')
-    // Remove inline code
-    .replace(/`([^`]+)`/g, '$1')
-    // Remove images
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
-    // Remove links
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    // Remove headers
-    .replace(/^#{1,6}\s+/gm, '')
-    // Remove bold
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/__([^_]+)__/g, '$1')
-    // Remove italic
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/_([^_]+)_/g, '$1')
-    // Remove strikethrough
-    .replace(/~~([^~]+)~~/g, '$1')
-    // Remove blockquotes
-    .replace(/^\s*>\s+/gm, '')
-    // Remove horizontal rules
-    .replace(/^(-{3,}|_{3,}|\*{3,})$/gm, '')
-    // Remove list markers
-    .replace(/^\s*[-*+]\s+/gm, '')
-    .replace(/^\s*\d+\.\s+/gm, '')
-    // Remove HTML tags
-    .replace(/<[^>]*>/g, '')
-    // Remove extra whitespace and newlines
-    .replace(/\n\s*\n/g, '\n')
-    .replace(/\n/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return (
+    markdown
+      // Remove code blocks first (before other replacements)
+      .replace(/```[\s\S]*?```/g, '')
+      // Remove inline code
+      .replace(/`([^`]+)`/g, '$1')
+      // Remove images
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+      // Remove links
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove headers
+      .replace(/^#{1,6}\s+/gm, '')
+      // Remove bold
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/__([^_]+)__/g, '$1')
+      // Remove italic
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/_([^_]+)_/g, '$1')
+      // Remove strikethrough
+      .replace(/~~([^~]+)~~/g, '$1')
+      // Remove blockquotes
+      .replace(/^\s*>\s+/gm, '')
+      // Remove horizontal rules
+      .replace(/^(-{3,}|_{3,}|\*{3,})$/gm, '')
+      // Remove list markers
+      .replace(/^\s*[-*+]\s+/gm, '')
+      .replace(/^\s*\d+\.\s+/gm, '')
+      // Remove HTML tags
+      .replace(/<[^>]*>/g, '')
+      // Remove extra whitespace and newlines
+      .replace(/\n\s*\n/g, '\n')
+      .replace(/\n/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
 };
 
 // Interfaces
@@ -170,7 +172,9 @@ const useUrlParams = (
     // Merge locked filters with URL filters
     Object.entries(lockedFilters).forEach(([category, values]) => {
       if (values.length > 0) {
-        filters[category] = Array.from(new Set([...(filters[category] || []), ...values]));
+        filters[category] = Array.from(
+          new Set([...(filters[category] || []), ...values])
+        );
       }
     });
 
@@ -258,7 +262,7 @@ const ListingComponent: React.FC<ListingProps> = ({
   lockedFilters = {},
 }) => {
   useTourTrigger(true, 1500);
-  
+
   const [facets, setFacets] = useState<{
     results: any[];
     total: number;
@@ -273,7 +277,10 @@ const ListingComponent: React.FC<ListingProps> = ({
   const datasetDetails = facets?.results ?? [];
 
   // Stabilize lockedFilters reference to prevent infinite loops
-  const stableLockedFilters = useMemo(() => lockedFilters, [JSON.stringify(lockedFilters)]);
+  const stableLockedFilters = useMemo(
+    () => lockedFilters,
+    [JSON.stringify(lockedFilters)]
+  );
 
   useUrlParams(queryParams, setQueryParams, setVariables, stableLockedFilters);
   const latestFetchId = useRef(0);
@@ -282,7 +289,7 @@ const ListingComponent: React.FC<ListingProps> = ({
     if (variables) {
       const currentFetchId = ++latestFetchId.current;
 
-      fetchData(type,variables)
+      fetchData(type, variables)
         .then((res) => {
           // Only set if this is the latest call
           if (currentFetchId === latestFetchId.current) {
@@ -341,7 +348,7 @@ const ListingComponent: React.FC<ListingProps> = ({
           label: bucket.key,
           value: bucket.key,
         }));
-      } 
+      }
       // Handle key-value object format (current backend format)
       else if (value && typeof value === 'object' && !Array.isArray(value)) {
         acc[key] = Object.entries(value).map(([label, count]) => ({
@@ -400,7 +407,10 @@ const ListingComponent: React.FC<ListingProps> = ({
 
         <div className="mt-5 lg:mt-10">
           <div className="row mb-16 flex gap-5 ">
-            <div className="hidden min-w-64 max-w-64 lg:block" data-tour="filters">
+            <div
+              className="hidden min-w-64 max-w-64 lg:block"
+              data-tour="filters"
+            >
               <Filter
                 options={filterOptions}
                 setSelectedOptions={handleFilterChange}
@@ -519,11 +529,16 @@ const ListingComponent: React.FC<ListingProps> = ({
                         .filter((value) => category !== 'sort')
                         .map((value) => {
                           // Check if this filter value is locked
-                          const isLocked = stableLockedFilters[category]?.includes(value);
+                          const isLocked =
+                            stableLockedFilters[category]?.includes(value);
                           return (
                             <Pill
                               key={`${category}-${value}`}
-                              onRemove={isLocked ? undefined : () => handleRemoveFilter(category, value)}
+                              onRemove={
+                                isLocked
+                                  ? undefined
+                                  : () => handleRemoveFilter(category, value)
+                              }
                             >
                               {value}
                             </Pill>
@@ -552,14 +567,14 @@ const ListingComponent: React.FC<ListingProps> = ({
                       : item?.organization?.logo
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
                         : '/org.png';
-                    
-                    const geographies = item.geographies && item.geographies.length > 0
-                      ? item.geographies
-                      : null;
 
-                    const sdgs = item.sdgs && item.sdgs.length > 0
-                      ? item.sdgs
-                      : null;
+                    const geographies =
+                      item.geographies && item.geographies.length > 0
+                        ? item.geographies
+                        : null;
+
+                    const sdgs =
+                      item.sdgs && item.sdgs.length > 0 ? item.sdgs : null;
 
                     const MetadataContent = [
                       {
@@ -593,7 +608,9 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     if (sdgs && sdgs.length > 0) {
                       // Format SDGs for display
-                      const sdgDisplay = sdgs.map((sdg: any) => `${sdg.code} - ${sdg.name}`).join(', ');
+                      const sdgDisplay = sdgs
+                        .map((sdg: any) => `${sdg.code} - ${sdg.name}`)
+                        .join(', ');
 
                       MetadataContent.push({
                         icon: Icons.target,
@@ -657,7 +674,13 @@ const ListingComponent: React.FC<ListingProps> = ({
                         }
                         iconColor="warning"
                         href={`${redirectionURL}/${item.id}`}
-                        data-tour={index === 0 && type === 'dataset' ? 'dataset-card' : index === 0 && type === 'usecase' ? 'usecase-card' : undefined}
+                        data-tour={
+                          index === 0 && type === 'dataset'
+                            ? 'dataset-card'
+                            : index === 0 && type === 'usecase'
+                              ? 'usecase-card'
+                              : undefined
+                        }
                       />
                     );
                   })}

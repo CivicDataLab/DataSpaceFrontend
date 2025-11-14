@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -56,8 +56,12 @@ const createAIModel: any = graphql(`
 export default function AIModelsPage({
   params,
 }: {
-  params: { entityType: string; entitySlug: string };
+  params: Promise<{ entityType: string; entitySlug: string }>;
 }) {
+  const { entityType, entitySlug } = use(params) as {
+    entityType: string;
+    entitySlug: string;
+  };
   const router = useRouter();
 
   const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
@@ -86,7 +90,7 @@ export default function AIModelsPage({
       GraphQL(
         allAIModels,
         {
-          [params.entityType]: params.entitySlug,
+          [entityType]: entitySlug,
         },
         {
           filters: {
@@ -118,7 +122,7 @@ export default function AIModelsPage({
       GraphQL(
         deleteAIModel,
         {
-          [params.entityType]: params.entitySlug,
+          [entityType]: entitySlug,
         },
         { modelId: data.id }
       ),
@@ -143,7 +147,7 @@ export default function AIModelsPage({
       GraphQL(
         createAIModel,
         {
-          [params.entityType]: params.entitySlug,
+          [entityType]: entitySlug,
         },
         {
           input: {
@@ -159,7 +163,7 @@ export default function AIModelsPage({
       onSuccess: (response: any) => {
         toast(`AI Model created successfully`);
         router.push(
-          `/dashboard/${params.entityType}/${params.entitySlug}/aimodels/edit/${response.createAiModel.data.id}/details`
+          `/dashboard/${entityType}/${entitySlug}/aimodels/edit/${response.createAiModel.data.id}/details`
         );
         AllAIModels.refetch();
       },
@@ -177,7 +181,7 @@ export default function AIModelsPage({
         <LinkButton
           kind="tertiary"
           size="medium"
-          href={`/dashboard/${params.entityType}/${params.entitySlug}/aimodels/edit/${row.original.id}/details`}
+          href={`/dashboard/${entityType}/${entitySlug}/aimodels/edit/${row.original.id}/details`}
         >
           <span className="line-clamp-1 max-w-[280px]">
             {row.original.displayName}
@@ -277,7 +281,9 @@ export default function AIModelsPage({
         ) : (
           <>
             <div className="flex h-full w-full grow flex-col items-center justify-center">
-              <div className={twMerge('h-100 flex flex-col items-center gap-4')}>
+              <div
+                className={twMerge('h-100 flex flex-col items-center gap-4')}
+              >
                 <Icon
                   source={Icons.light}
                   color="interactive"
