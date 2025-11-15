@@ -45,7 +45,7 @@ jobs:
         run: |
           # Ensure generated directory exists
           mkdir -p ./gql/generated
-          
+
           # Try to generate with timeout and fallback
           timeout 60s npm run generate:ci || {
             echo "GraphQL codegen failed or timed out, checking for existing files..."

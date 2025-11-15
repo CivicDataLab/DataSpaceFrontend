@@ -8,4 +8,3 @@ export const siteConfig: SiteConfig = {
 };
 
 export const locales = ['en', 'hi'];
-
