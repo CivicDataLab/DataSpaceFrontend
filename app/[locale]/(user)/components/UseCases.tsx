@@ -19,6 +19,7 @@ import { GraphQL } from '@/lib/api';
 import { cn, formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import Styles from './datasets.module.scss';
+import { UseCaseListingSkeleton } from '@/components/loading';
 
 const useCasesListDoc: any = graphql(`
   query TopUseCases(
@@ -125,10 +126,11 @@ const UseCasesListingPage = () => {
         <Carousel className="flex w-full justify-between">
           <CarouselPrevious />
 
-          {getUseCasesList.isLoading ? (
-            <div className="p-8">
-              <Spinner />
-            </div>
+          {getUseCasesList.isLoading ? (   
+           <UseCaseListingSkeleton 
+              cardCount={3}  
+              cardsOnly={true}  
+            />      
           ) : (
             <CarouselContent className="p-4 ">
               {getUseCasesList &&
