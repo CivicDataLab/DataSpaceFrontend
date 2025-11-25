@@ -21,12 +21,13 @@ const userInfo = graphql(`
 export async function generateMetadata({
   params,
 }: {
-  params: { publisherSlug: string };
+  params: Promise<{ publisherSlug: string }>;
 }): Promise<Metadata> {
+  const { publisherSlug } = await params;
   const data = await GraphQL(
     userInfo,
     {},
-    { userId: extractPublisherId(params.publisherSlug) }
+    { userId: extractPublisherId(publisherSlug) }
   );
 
   const user = data.userById;
@@ -49,7 +50,7 @@ export async function generateMetadata({
         user?.bio || 'Explore datasets and use cases by this publisher.',
       type: 'profile',
       siteName: 'CivicDataSpace',
-      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/publishers/${params.publisherSlug}`,
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/publishers/${publisherSlug}`,
       image: user?.profilePicture?.url
         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${user.profilePicture.url}`
         : `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
@@ -58,14 +59,13 @@ export async function generateMetadata({
   });
 }
 
-export default function PublisherPage({
+export default async function PublisherPage({
   params,
 }: {
-  params: { publisherSlug: string };
+  params: Promise<{ publisherSlug: string }>;
 }) {
+  const { publisherSlug } = await params;
   return (
-    <PublisherPageClient
-      publisherSlug={extractPublisherId(params.publisherSlug)}
-    />
+    <PublisherPageClient publisherSlug={extractPublisherId(publisherSlug)} />
   );
 }

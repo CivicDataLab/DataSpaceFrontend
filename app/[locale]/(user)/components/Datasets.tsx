@@ -100,25 +100,29 @@ const Datasets = () => {
                     description={item.description}
                     metadataContent={[
                       {
-                        icon: Icons.calendar,
+                        icon: Icons.calendar as any,
                         label: 'Date',
-                        value: new Date(item.modified).toLocaleDateString('en-US', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric',
-                        }),
+                        value: new Date(item.modified).toLocaleDateString(
+                          'en-US',
+                          {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          }
+                        ),
                       },
                       {
-                        icon: Icons.download,
+                        icon: Icons.download as any,
                         label: 'Download',
                         value: item.download_count.toString(),
                       },
                       {
                         icon: Icons.globe,
                         label: 'Geography',
-                        value: item.geographies?.length > 0 
-                          ? item.geographies.join(', ') 
-                          : 'Not specified',
+                        value:
+                          item.geographies?.length > 0
+                            ? item.geographies.join(', ')
+                            : 'Not specified',
                       },
                     ]}
                     tag={item.tags}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
@@ -58,50 +58,44 @@ const unPublishUseCase: any = graphql(`
   }
 `);
 
-export default function DatasetPage({
-  params,
-}: {
-  params: { entityType: string; entitySlug: string };
-}) {
+export default function DatasetPage() {
   const router = useRouter();
+  const params = useParams<{ entityType?: string; entitySlug?: string }>();
+  const entityType = params?.entityType;
+  const entitySlug = params?.entitySlug;
+
+  const isValidParams =
+    typeof entityType === 'string' && typeof entitySlug === 'string';
+
+  const ownerArgs: Record<string, string> | null = isValidParams
+    ? { [entityType]: entitySlug }
+    : null;
 
   const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
 
-  let navigationOptions = [
-    {
-      label: 'Drafts',
-      url: `drafts`,
-      selected: navigationTab === 'drafts',
-    },
-    {
-      label: 'Published',
-      url: `published`,
-      selected: navigationTab === 'published',
-    },
-  ];
-
   const AllUseCases: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_UseCases`],
+    [`fetch_UseCases`, entityType, entitySlug, navigationTab ?? 'drafts'],
     () =>
       GraphQL(
         allUseCases,
-        {
-          [params.entityType]: params.entitySlug,
-        },
+        ownerArgs || {},
         {
           filters: {
             status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
           },
           order: { modified: 'DESC' },
         }
-      )
+      ),
+    { enabled: isValidParams }
   );
 
   useEffect(() => {
     if (navigationTab === null || navigationTab === undefined)
       setNavigationTab('drafts');
-    AllUseCases.refetch();
-  }, [navigationTab]);
+    if (isValidParams) {
+      AllUseCases.refetch();
+    }
+  }, [navigationTab, isValidParams]);
 
   const DeleteUseCaseMutation: {
     mutate: any;
@@ -112,15 +106,15 @@ export default function DatasetPage({
     (data: { id: string }) =>
       GraphQL(
         deleteUseCase,
-        {
-          [params.entityType]: params.entitySlug,
-        },
+        ownerArgs || {},
         { useCaseId: data.id }
       ),
     {
       onSuccess: () => {
         toast(`Deleted UseCase successfully`);
-        AllUseCases.refetch();
+        if (isValidParams) {
+          AllUseCases.refetch();
+        }
       },
       onError: (err: any) => {
         toast('Error:  ' + err.message.split(':')[0]);
@@ -134,21 +128,16 @@ export default function DatasetPage({
     error: any;
   } = useMutation(
     [`delete_Usecase`],
-    () =>
-      GraphQL(
-        AddUseCase,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        []
-      ),
+    () => GraphQL(AddUseCase, ownerArgs || {}, []),
     {
       onSuccess: (response: any) => {
         toast(`UseCase created successfully`);
-        router.push(
-          `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${response.addUseCase.id}/details`
-        );
-        AllUseCases.refetch();
+        if (isValidParams && entityType && entitySlug) {
+          router.push(
+            `/dashboard/${entityType}/${entitySlug}/usecases/edit/${response.addUseCase.id}/details`
+          );
+          AllUseCases.refetch();
+        }
       },
       onError: (err: any) => {
         toast('Error:  ' + err.message.split(':')[0]);
@@ -164,21 +153,38 @@ export default function DatasetPage({
     (data: { id: string }) =>
       GraphQL(
         unPublishUseCase,
-        {
-          [params.entityType]: params.entitySlug,
-        },
+        ownerArgs || {},
         { useCaseId: data.id }
       ),
     {
       onSuccess: () => {
         toast(`Unpublished usecase successfully`);
-        AllUseCases.refetch();
+        if (isValidParams) {
+          AllUseCases.refetch();
+        }
       },
       onError: (err: any) => {
         toast('Error:  ' + err.message.split(':')[0]);
       },
     }
   );
+
+  if (!isValidParams) {
+    return null;
+  }
+
+  let navigationOptions = [
+    {
+      label: 'Drafts',
+      url: `drafts`,
+      selected: navigationTab === 'drafts',
+    },
+    {
+      label: 'Published',
+      url: `published`,
+      selected: navigationTab === 'published',
+    },
+  ];
   const datasetsListColumns = [
     {
       accessorKey: 'title',
@@ -195,7 +201,7 @@ export default function DatasetPage({
           <LinkButton
             kind="tertiary"
             size="medium"
-            href={`/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${row.original.id}/details`}
+            href={`/dashboard/${entityType}/${entitySlug}/usecases/edit/${row.original.id}/details`}
           >
             <span className="line-clamp-1 max-w-[280px]">
               {row.original.title}

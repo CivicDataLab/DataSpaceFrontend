@@ -152,12 +152,12 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
               href={`/usecases/${item.id}`}
               metadataContent={[
                 {
-                  icon: Icons.calendar,
+                  icon: Icons.calendar as any,
                   label: 'Date',
                   value: formatDate(item.modified),
                 },
                 {
-                  icon: Icons.globe,
+                  icon: Icons.globe as any,
                   label: 'Geography',
                   value: item.metadata?.find(
                     (meta: any) => meta.metadataItem?.label === 'Geography'
@@ -166,7 +166,7 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
               ]}
               footerContent={[
                 {
-                  icon: `/Sectors/${item?.sectors[0]?.name}.svg`,
+                  icon: `/Sectors/${item?.sectors[0]?.name}.svg` as any,
                   label: 'Sectors',
                 },
                 {

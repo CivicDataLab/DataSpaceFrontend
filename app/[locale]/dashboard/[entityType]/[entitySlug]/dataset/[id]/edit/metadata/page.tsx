@@ -4,12 +4,13 @@ import styles from '../edit.module.scss';
 export default async function Page({
   params,
 }: {
-  params: { id: string; entitySlug: string };
+  params: Promise<{ id: string; entitySlug: string }>;
 }) {
+  const { id } = await params;
   return (
     // <Hydrate state={dehydratedState}>
     <div className={styles.EditPage}>
-      <EditMetadata id={params.id} />
+      <EditMetadata id={id} />
     </div>
     // </Hydrate>
   );

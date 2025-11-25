@@ -20,12 +20,13 @@ const sectorQueryDoc = graphql(`
 export async function generateMetadata({
   params,
 }: {
-  params: { sectorSlug: string };
+  params: Promise<{ sectorSlug: string }>;
 }) {
+  const { sectorSlug } = await params;
   const data = await GraphQL(
     sectorQueryDoc,
     {},
-    { filters: { slug: params.sectorSlug } }
+    { filters: { slug: sectorSlug } }
   );
   const sector = data?.sectors?.[0];
 
@@ -38,7 +39,7 @@ export async function generateMetadata({
     openGraph: {
       type: 'article',
       locale: 'en_US',
-      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/sectors/${params.sectorSlug}`,
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/sectors/${sectorSlug}`,
       title: `${sector?.name} | Sector Data | CivicDataSpace`,
       description:
         sector?.description ||
@@ -52,12 +53,13 @@ export async function generateMetadata({
 const SectorDetailsPage = async ({
   params,
 }: {
-  params: { sectorSlug: string };
+  params: Promise<{ sectorSlug: string }>;
 }) => {
+  const { sectorSlug } = await params;
   const data = await GraphQL(
     sectorQueryDoc,
     {},
-    { filters: { slug: params.sectorSlug } }
+    { filters: { slug: sectorSlug } }
   );
   const sector = data?.sectors?.[0];
 

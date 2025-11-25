@@ -303,7 +303,7 @@ export function EditMetadata({ id }: { id: string }) {
       };
     }
 
-    (dataset?.metadata || []).length > 0 &&
+    if ((dataset?.metadata || []).length > 0) {
       (dataset?.metadata || []).map((field) => {
         if (
           field.metadataItem.dataType === 'MULTISELECT' &&
@@ -321,6 +321,7 @@ export function EditMetadata({ id }: { id: string }) {
           defaultVal[field.metadataItem.id] = field.value;
         }
       });
+    }
 
     defaultVal['description'] = dataset?.description || '';
 
