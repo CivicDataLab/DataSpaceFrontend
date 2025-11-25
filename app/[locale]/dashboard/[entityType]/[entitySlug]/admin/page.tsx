@@ -59,7 +59,7 @@ const Admin = () => {
   const [selectedUser, setSelectedUser] = useState({});
   const [refetch, setRefetch] = useState(false);
 
-  const { mutate, isLoading: removeUserLoading } = useMutation(
+  const { mutate } = useMutation(
     (input: { input: AddRemoveUserToOrganizationInput }) =>
       GraphQL(
         removeUserDoc,
@@ -69,11 +69,11 @@ const Admin = () => {
         input
       ),
     {
-      onSuccess: (res: any) => {
+      onSuccess: () => {
         toast('User removed successfully');
         usersList.refetch();
       },
-      onError: (err: any) => {
+      onError: () => {
         toast('Failed to remove user');
       },
     }

@@ -110,7 +110,7 @@ const Details = () => {
           [params.entityType]: params.entitySlug,
         }, input),
       {
-        onSuccess: (res: any) => {
+        onSuccess: () => {
           toast('Contributor added successfully');
           UseCaseData.refetch();
         },
@@ -127,7 +127,7 @@ const Details = () => {
           [params.entityType]: params.entitySlug,
         }, input),
       {
-        onSuccess: (res: any) => {
+        onSuccess: () => {
           toast('Contributor removed successfully');
         },
         onError: (error: any) => {
@@ -142,7 +142,7 @@ const Details = () => {
         [params.entityType]: params.entitySlug,
       }, input),
     {
-      onSuccess: (res: any) => {
+      onSuccess: () => {
         toast('Supporter added successfully');
         UseCaseData.refetch();
       },
@@ -159,7 +159,7 @@ const Details = () => {
           [params.entityType]: params.entitySlug,
         }, input),
       {
-        onSuccess: (res: any) => {
+        onSuccess: () => {
           toast('Supporter removed successfully');
         },
         onError: (error: any) => {
@@ -174,7 +174,7 @@ const Details = () => {
         [params.entityType]: params.entitySlug,
       }, input),
     {
-      onSuccess: (res: any) => {
+      onSuccess: () => {
         toast('Partner added successfully');
         UseCaseData.refetch();
       },
@@ -191,7 +191,7 @@ const Details = () => {
           [params.entityType]: params.entitySlug,
         }, input),
       {
-        onSuccess: (res: any) => {
+        onSuccess: () => {
           toast('Partner removed successfully');
         },
         onError: (error: any) => {

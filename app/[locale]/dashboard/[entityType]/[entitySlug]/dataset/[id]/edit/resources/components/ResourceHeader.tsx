@@ -63,7 +63,7 @@ const ResourceHeader = ({
                         allowMultiple={true}
                         onDrop={dropZone}
                       >
-                        {uploadedFile}
+                        {uploadedFile as any}
                         {file.length === 0 && (
                           <DropZone.FileUpload
                             actionHint={'CSV, JSON, PDF, XLS, XLSX, XML, ZIP'}

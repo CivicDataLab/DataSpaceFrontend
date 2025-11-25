@@ -100,7 +100,7 @@ const UseCasesListingPage = () => {
 
   return (
     <div className=" container pt-10 md:px-8 lg:pt-20">
-      <div className="flex items-center flex-wrap justify-between gap-4 lg:gap-2 px-4 md:px-12 lg:px-12 ">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-4 md:px-12 lg:gap-2 lg:px-12 ">
         <div className="flex flex-col gap-2">
           <Text variant="headingXl">Recent UseCases</Text>
           <Text variant="bodyLg" fontWeight="medium">
@@ -150,31 +150,34 @@ const UseCasesListingPage = () => {
                         href={`/usecases/${item.id}`}
                         metadataContent={[
                           {
-                            icon: Icons.calendar,
+                            icon: Icons.calendar as any,
                             label: 'Date',
                             value: formatDate(item.modified),
                           },
                           {
-                            icon: Icons.globe,
+                            icon: Icons.globe as any,
                             label: 'Geography',
-                            value: item.geographies?.length > 0
-                              ? item.geographies.map((geo: any) => geo.name).join(', ')
-                              : 'Not specified',
+                            value:
+                              item.geographies?.length > 0
+                                ? item.geographies
+                                    .map((geo: any) => geo.name)
+                                    .join(', ')
+                                : 'Not specified',
                           },
                         ]}
                         footerContent={[
                           {
-                            icon: `/Sectors/${item?.sectors[0]?.name}.svg`,
+                            icon: `/Sectors/${item?.sectors[0]?.name}.svg` as any,
                             label: 'Sectors',
                           },
                           {
                             icon: item.isIndividualUsecase
-                              ? item?.user?.profilePicture
+                              ? (item?.user?.profilePicture as any)
                                 ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
                                 : '/profile.png'
                               : item?.organization?.logo
                                 ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
-                                : '/org.png',
+                                : ('/org.png' as any),
                             label: 'Published by',
                           },
                         ]}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { DataTable, Select, TextField } from 'opub-ui';
+import { DataTable, TextField } from 'opub-ui';
 
 const DescriptionCell = ({
   value,
@@ -66,6 +66,7 @@ export const ResourceSchema = ({
         schemaUpdateInput: {
           resource: resourceId,
           updates: newdata?.map((item: any) => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { fieldName, ...rest } = item;
             return rest;
           }),
@@ -73,17 +74,6 @@ export const ResourceSchema = ({
       });
     }
   };
-
-  const options = [
-    {
-      label: 'Integer',
-      value: 'INTEGER',
-    },
-    {
-      label: 'String',
-      value: 'STRING',
-    },
-  ];
 
   const generateColumnData = () => {
     return [

@@ -13,6 +13,7 @@ import Metadata from './components/Metadata';
 import PrimaryData from './components/PrimaryData';
 import Resources from './components/Resources';
 import SimilarDatasets from './components/SimilarDatasets';
+import { useTourTrigger } from '@/hooks/use-tour-trigger';
 
 const datasetQuery: any = graphql(`
   query getDataset($datasetId: UUID!) {
@@ -84,6 +85,9 @@ export default function DatasetDetailsPage({
 }: {
   datasetId: string;
 }) {
+  // Enable tour for first-time users
+  useTourTrigger(true, 1500);
+  
   const Datasetdetails: { data: any; isLoading: any } = useQuery(
     [`details_${datasetId}`],
     () => GraphQL(datasetQuery, {}, { datasetId: datasetId })
@@ -114,7 +118,7 @@ export default function DatasetDetailsPage({
           ]}
         />
         <div className="flex">
-          <div className="w-full gap-10 border-r-2 border-solid border-greyExtralight p-6 lg:w-3/4 lg:p-10">
+          <div className="w-full gap-10 border-r-2 border-solid border-greyExtralight p-6 lg:w-3/4 lg:p-10" data-tour="dataset-info">
             {Datasetdetails.isLoading ? (
               <div className=" mt-8 flex justify-center">
                 <Spinner />
@@ -125,9 +129,9 @@ export default function DatasetDetailsPage({
                 isLoading={Datasetdetails.isLoading}
               />
             )}
-            <Details />
-            <Resources />
-            <SimilarDatasets />
+            <Details data-tour="preview" />
+            <Resources data-tour="download-button" />
+            <SimilarDatasets data-tour="related-datasets" />
           </div>
           <div className=" hidden  w-1/4 gap-10 px-7 py-10 lg:block">
             {Datasetdetails.isLoading ? (

@@ -129,7 +129,7 @@ export function MainNav({ hideSearch = false }) {
     }
   };
   return (
-    <nav className="px-4 py-6 lg:px-6 md:py-5 sm:py-8 lg:py-3 min-h-[80px] sticky top-1 z-50">
+    <nav className="z-50 sticky top-1 min-h-[80px] px-4 py-6 sm:py-8 md:py-5 lg:px-6 lg:py-3">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-1">
           <div className="lg:hidden">
@@ -143,7 +143,7 @@ export function MainNav({ hideSearch = false }) {
           </div>
           <Link href="/">
             <div className="flex items-center gap-2">
-              <div className="group relative h-[35px] md:h-[40px] lg:h-[68px] w-[130px] md:w-[150px] lg:w-[183px] overflow-hidden">
+              <div className="group relative h-[35px] w-[130px] overflow-hidden md:h-[40px] md:w-[150px] lg:h-[68px] lg:w-[183px]">
                 {/* Static Logo */}
                 <div className="absolute inset-0">
                   <Image
@@ -172,31 +172,33 @@ export function MainNav({ hideSearch = false }) {
         </div>
 
         <div className="flex items-center gap-8">
-          <div className="relative hidden lg:block">
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-              <Dialog.Trigger>
-                <IconButton
-                  size="slim"
-                  icon={Icons.search}
-                  withTooltip
-                  color="onBgDefault"
-                  onClick={() => setIsOpen(true)}
-                >
-                  Search
-                </IconButton>
-              </Dialog.Trigger>
-              <Dialog.Content title={'Search'}>
-                <div className="p-3">
-                  <SearchInput
-                    onSubmit={handleSearch}
-                    label={''}
-                    placeholder="Search for any data"
-                    name={''}
-                  />
-                </div>
-              </Dialog.Content>
-            </Dialog>
-          </div>
+          {!hideSearch && (
+            <div className="relative hidden lg:block">
+              <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <Dialog.Trigger>
+                  <IconButton
+                    size="slim"
+                    icon={Icons.search}
+                    withTooltip
+                    color="onBgDefault"
+                    onClick={() => setIsOpen(true)}
+                  >
+                    Search
+                  </IconButton>
+                </Dialog.Trigger>
+                <Dialog.Content title={'Search'}>
+                  <div className="p-3">
+                    <SearchInput
+                      onSubmit={handleSearch}
+                      label={''}
+                      placeholder="Search for any data"
+                      name={''}
+                    />
+                  </div>
+                </Dialog.Content>
+              </Dialog>
+            </div>
+          )}
 
           <div className="flex items-center gap-5">
             {Navigation.map((item, index) => (
