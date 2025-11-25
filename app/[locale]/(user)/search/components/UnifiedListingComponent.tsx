@@ -1,7 +1,8 @@
-'use client'
+'use client';
 
-import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import {
   Button,
   ButtonGroup,
@@ -13,12 +14,11 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
-import React, { useEffect, useReducer, useRef, useState } from 'react';
 
+import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
-import { cn, formatDate } from '@/lib/utils';
 import Filter from '../../datasets/components/FIlter/Filter';
 import Styles from '../../datasets/dataset.module.scss';
 
@@ -186,7 +186,7 @@ const useUrlParams = (
     const typesParam = queryParams.types
       ? `&types=${encodeURIComponent(queryParams.types)}`
       : '';
-    
+
     const variablesString = `?${filtersString}&size=${queryParams.pageSize}&page=${queryParams.currentPage}${searchParam}${sortParam}${orderParam}${typesParam}`;
     setVariables(variablesString);
 
@@ -222,7 +222,7 @@ const useUrlParams = (
     } else {
       currentUrl.searchParams.delete('types');
     }
-    
+
     router.replace(currentUrl.toString());
   }, [queryParams, setVariables, router]);
 };
@@ -324,17 +324,20 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   const aggregations: Aggregations = facets?.aggregations || {};
 
   const filterOptions = Object.entries(aggregations).reduce(
-    (acc: Record<string, { label: string; value: string }[]>, [key, _value]) => {
+    (
+      acc: Record<string, { label: string; value: string }[]>,
+      [key, _value]
+    ) => {
       // Skip the 'types' aggregation from filters
       if (key === 'types') return acc;
-      
+
       // Check if _value exists and has buckets array (Elasticsearch format)
       if (_value && _value.buckets && Array.isArray(_value.buckets)) {
         acc[key] = _value.buckets.map((bucket) => ({
           label: bucket.key,
           value: bucket.key,
         }));
-      } 
+      }
       // Handle key-value object format (current backend format)
       else if (_value && typeof _value === 'object' && !Array.isArray(_value)) {
         acc[key] = Object.entries(_value).map(([label]) => ({
@@ -364,7 +367,6 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
     }
   };
 
-
   return (
     <div className="bg-basePureWhite">
       {breadcrumbData && <BreadCrumbs data={breadcrumbData} />}
@@ -382,47 +384,69 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
 
             <div className="flex w-full flex-col gap-4 px-2">
               {/* Type Filter Buttons */}
-              <div className="flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-white p-3">
+              <div className="rounded-lg border border-gray-200 flex flex-wrap gap-2 bg-white p-3">
                 <Button
-                  kind={queryParams.types === 'dataset,usecase,aimodel' ? 'primary' : 'secondary'}
+                  kind={
+                    queryParams.types === 'dataset,usecase,aimodel'
+                      ? 'primary'
+                      : 'secondary'
+                  }
                   onClick={() => handleTypeFilter('dataset,usecase,aimodel')}
                   size="slim"
                 >
                   All Results
-                  {typeCounts.dataset !== undefined && typeCounts.usecase !== undefined && typeCounts.aimodel !== undefined && (
-                    <span className="ml-1 text-xs">
-                      ({(typeCounts.dataset || 0) + (typeCounts.usecase || 0) + (typeCounts.aimodel || 0)})
-                    </span>
-                  )}
+                  {typeCounts.dataset !== undefined &&
+                    typeCounts.usecase !== undefined &&
+                    typeCounts.aimodel !== undefined && (
+                      <span className="text-xs ml-1">
+                        (
+                        {(typeCounts.dataset || 0) +
+                          (typeCounts.usecase || 0) +
+                          (typeCounts.aimodel || 0)}
+                        )
+                      </span>
+                    )}
                 </Button>
                 <Button
-                  kind={queryParams.types === 'dataset' ? 'primary' : 'secondary'}
+                  kind={
+                    queryParams.types === 'dataset' ? 'primary' : 'secondary'
+                  }
                   onClick={() => handleTypeFilter('dataset')}
                   size="slim"
                 >
                   Datasets
                   {typeCounts.dataset !== undefined && (
-                    <span className="ml-1 text-xs">({typeCounts.dataset || 0})</span>
+                    <span className="text-xs ml-1">
+                      ({typeCounts.dataset || 0})
+                    </span>
                   )}
                 </Button>
                 <Button
-                  kind={queryParams.types === 'usecase' ? 'primary' : 'secondary'}
+                  kind={
+                    queryParams.types === 'usecase' ? 'primary' : 'secondary'
+                  }
                   onClick={() => handleTypeFilter('usecase')}
                   size="slim"
                 >
                   Use Cases
                   {typeCounts.usecase !== undefined && (
-                    <span className="ml-1 text-xs">({typeCounts.usecase || 0})</span>
+                    <span className="text-xs ml-1">
+                      ({typeCounts.usecase || 0})
+                    </span>
                   )}
                 </Button>
                 <Button
-                  kind={queryParams.types === 'aimodel' ? 'primary' : 'secondary'}
+                  kind={
+                    queryParams.types === 'aimodel' ? 'primary' : 'secondary'
+                  }
                   onClick={() => handleTypeFilter('aimodel')}
                   size="slim"
                 >
                   AI Models
                   {typeCounts.aimodel !== undefined && (
-                    <span className="ml-1 text-xs">({typeCounts.aimodel || 0})</span>
+                    <span className="text-xs ml-1">
+                      ({typeCounts.aimodel || 0})
+                    </span>
                   )}
                 </Button>
               </div>
@@ -525,7 +549,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                   </Tray>
                 </div>
               </div>
-              
+
               {Object.entries(queryParams.filters).some(
                 ([key, value]) =>
                   key !== 'sort' && Array.isArray(value) && value.length > 0
@@ -560,11 +584,11 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                 >
                   {results.map((item: any) => {
                     // Determine if it's individual or organization
-                    const isIndividual = 
-                      item.is_individual_dataset || 
-                      item.is_individual_usecase || 
+                    const isIndividual =
+                      item.is_individual_dataset ||
+                      item.is_individual_usecase ||
                       item.is_individual_model;
-                    
+
                     const image = isIndividual
                       ? item?.user?.profile_picture
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
@@ -572,18 +596,18 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                       : item?.organization?.logo
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
                         : '/org.png';
-                    
-                    const geographies = item.geographies && item.geographies.length > 0
-                      ? item.geographies
-                      : null;
 
-                    const sdgs = item.sdgs && item.sdgs.length > 0
-                      ? item.sdgs
-                      : null;
+                    const geographies =
+                      item.geographies && item.geographies.length > 0
+                        ? item.geographies
+                        : null;
+
+                    const sdgs =
+                      item.sdgs && item.sdgs.length > 0 ? item.sdgs : null;
 
                     const MetadataContent = [
                       {
-                        icon: Icons.calendar,
+                        icon: Icons.calendar as any,
                         label: 'Date',
                         value: formatDate(item.modified || item.updated_at),
                         tooltip: 'Date',
@@ -593,7 +617,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     // Type-specific metadata for datasets
                     if (item.type === 'dataset' && item.download_count > 0) {
                       MetadataContent.push({
-                        icon: Icons.download,
+                        icon: Icons.download as any,
                         label: 'Download',
                         value: item.download_count?.toString() || '0',
                         tooltip: 'Download',
@@ -603,7 +627,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     if (geographies && geographies.length > 0) {
                       const geoDisplay = geographies.join(', ');
                       MetadataContent.push({
-                        icon: Icons.globe,
+                        icon: Icons.globe as any,
                         label: 'Geography',
                         value: geoDisplay,
                         tooltip: geoDisplay,
@@ -612,9 +636,11 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
 
                     // Add SDGs for datasets
                     if (item.type === 'dataset' && sdgs && sdgs.length > 0) {
-                      const sdgDisplay = sdgs.map((sdg: any) => `${sdg.code} - ${sdg.name}`).join(', ');
+                      const sdgDisplay = sdgs
+                        .map((sdg: any) => `${sdg.code} - ${sdg.name}`)
+                        .join(', ');
                       MetadataContent.push({
-                        icon: Icons.star,
+                        icon: Icons.star as any,
                         label: 'SDG Goals',
                         value: sdgDisplay,
                         tooltip: sdgDisplay,
@@ -622,7 +648,11 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     }
 
                     // Add charts indicator for datasets
-                    if (item.type === 'dataset' && item.has_charts && view === 'expanded') {
+                    if (
+                      item.type === 'dataset' &&
+                      item.has_charts &&
+                      view === 'expanded'
+                    ) {
                       MetadataContent.push({
                         icon: Icons.chart,
                         label: '',
@@ -633,23 +663,27 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
 
                     const FooterContent = [
                       ...(item.sectors && item.sectors.length > 0
-                        ? [{
-                            icon: `/Sectors/${item.sectors?.[0]}.svg`,
-                            label: 'Sectors',
-                            tooltip: `${item.sectors?.[0]}`,
-                          }]
-                        : []),
-                      ...(item.type === 'dataset' && item.has_charts && view !== 'expanded'
                         ? [
                             {
-                              icon: `/chart-bar.svg`,
+                              icon: `/Sectors/${item.sectors?.[0]}.svg` as any,
+                              label: 'Sectors',
+                              tooltip: `${item.sectors?.[0]}`,
+                            },
+                          ]
+                        : []),
+                      ...(item.type === 'dataset' &&
+                      item.has_charts &&
+                      view !== 'expanded'
+                        ? [
+                            {
+                              icon: `/chart-bar.svg` as any,
                               label: 'Charts',
                               tooltip: 'Charts',
                             },
                           ]
                         : []),
                       {
-                        icon: image,
+                        icon: image as any,
                         label: 'Published by',
                         tooltip: `${isIndividual ? item.user?.name : item.organization?.name}`,
                       },

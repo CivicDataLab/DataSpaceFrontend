@@ -578,7 +578,7 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     const MetadataContent = [
                       {
-                        icon: Icons.calendar,
+                        icon: Icons.calendar as any,
                         label: 'Date',
                         value: formatDate(item.modified),
                         tooltip: 'Date',
@@ -587,7 +587,7 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     if (item.download_count > 0) {
                       MetadataContent.push({
-                        icon: Icons.download,
+                        icon: Icons.download as any,
                         label: 'Download',
                         value: item.download_count?.toString() || '0',
                         tooltip: 'Download',
@@ -599,7 +599,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                       const geoDisplay = geographies.join(', ');
 
                       MetadataContent.push({
-                        icon: Icons.globe,
+                        icon: Icons.globe as any,
                         label: 'Geography',
                         value: geoDisplay,
                         tooltip: geoDisplay,
@@ -613,7 +613,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                         .join(', ');
 
                       MetadataContent.push({
-                        icon: Icons.target,
+                        icon: Icons.target as any,
                         label: 'SDG Goals',
                         value: sdgDisplay,
                         tooltip: sdgDisplay,
@@ -622,7 +622,7 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     if (item.has_charts && view === 'expanded') {
                       MetadataContent.push({
-                        icon: Icons.chart,
+                        icon: Icons.chart as any,
                         label: '',
                         value: 'With Charts',
                         tooltip: 'Charts',
@@ -631,21 +631,21 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     const FooterContent = [
                       {
-                        icon: `/Sectors/${item.sectors?.[0]}.svg`,
+                        icon: `/Sectors/${item.sectors?.[0]}.svg` as any,
                         label: 'Sectors',
                         tooltip: `${item.sectors?.[0]}`,
                       },
                       ...(item.has_charts && view !== 'expanded'
                         ? [
                             {
-                              icon: `/chart-bar.svg`,
+                              icon: `/chart-bar.svg` as any,
                               label: 'Charts',
                               tooltip: 'Charts',
                             },
                           ]
                         : []),
                       {
-                        icon: image,
+                        icon: image as any,
                         label: 'Published by',
                         tooltip: `${item.is_individual_dataset ? item.user?.name : item.organization?.name}`,
                       },
