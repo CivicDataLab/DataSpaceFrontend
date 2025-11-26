@@ -41,7 +41,7 @@
     "next-auth": "^4.24.7",
     "next-intl": "^3.4.0",
     "next-usequerystate": "^1.17.2",
-    "opub-ui": "^0.4.25",
+    "opub-ui": "^0.4.26",
     "react": "^19.2.0",
     "react-aria": "3.22.0",
     "react-dom": "^19.2.0",
