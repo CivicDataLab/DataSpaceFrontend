@@ -11,6 +11,7 @@ import { cn, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import JsonLd from '@/components/JsonLd';
 import PublisherCard from './PublisherCard';
+import { PublisherListingSkeleton } from '@/components/loading';
 
 const getAllPublishers: any = graphql(`
   query PublishersList {
@@ -171,9 +172,7 @@ const PublishersListingPage = () => {
                   </ButtonGroup>
                 </div>
                 {Details.isLoading ? (
-                  <div className="m-4 flex justify-center">
-                    <Spinner />
-                  </div>
+                  <PublisherListingSkeleton cardCount={9} />
                 ) : (
                   Details.data &&
                   Details.data.getPublishers.length > 0 && (

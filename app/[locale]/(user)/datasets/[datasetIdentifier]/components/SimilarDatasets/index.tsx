@@ -126,17 +126,17 @@ const SimilarDatasets: React.FC = () => {
                           description={item.description}
                           metadataContent={[
                             {
-                              icon: Icons.calendar,
+                              icon: Icons.calendar as any,
                               label: 'Date',
                               value: '19 July 2024',
                             },
                             {
-                              icon: Icons.download,
+                              icon: Icons.download as any,
                               label: 'Download',
                               value: item.downloadCount.toString(),
                             },
                             {
-                              icon: Icons.globe,
+                              icon: Icons.globe as any,
                               label: 'Geography',
                               value: item.geographies.join(', '),
                             },
@@ -145,17 +145,17 @@ const SimilarDatasets: React.FC = () => {
                           formats={item.formats}
                           footerContent={[
                             {
-                              icon: `/Sectors/${item.sectors[0]?.name}.svg`,
+                              icon: `/Sectors/${item.sectors[0]?.name}.svg` as any,
                               label: 'Sectors',
                             },
                             {
                               icon: item.isIndividualDataset
-                                ? item?.user?.profilePicture
+                                ? (item?.user?.profilePicture as any)
                                   ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
-                                  : '/profile.png'
-                                : item?.organization?.logo
+                                  : ('/profile.png' as any)
+                                : (item?.organization?.logo as any)
                                   ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
-                                  : '/org.png',
+                                  : ('/org.png' as any),
                               label: 'Published by',
                             },
                           ]}

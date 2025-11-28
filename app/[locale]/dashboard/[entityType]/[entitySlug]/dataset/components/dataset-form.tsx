@@ -18,7 +18,7 @@ export function DatasetForm({
 }: DatasetFormProps) {
   return (
     <Form onSubmit={onSubmit} formOptions={formOptions} onChange={onChange}>
-      {children}
+      {children as any}
       <button hidden ref={submitRef}>
         submit form
       </button>

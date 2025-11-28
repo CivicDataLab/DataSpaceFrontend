@@ -5,16 +5,17 @@ import { DatasetEditStatusProvider } from './context';
 
 interface DashboardLayoutProps {
   children?: React.ReactNode;
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function Layout({
   children,
   params,
 }: DashboardLayoutProps) {
+  const resolvedParams = await params;
   return (
     <DatasetEditStatusProvider>
-      <EditLayout params={params}>{children}</EditLayout>
+      <EditLayout params={resolvedParams}>{children}</EditLayout>
     </DatasetEditStatusProvider>
   );
 }

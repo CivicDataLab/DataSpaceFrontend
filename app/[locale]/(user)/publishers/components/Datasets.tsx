@@ -155,17 +155,17 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
               description={item.description}
               metadataContent={[
                 {
-                  icon: Icons.calendar,
+                  icon: Icons.calendar as any,
                   label: 'Date',
                   value: '19 July 2024',
                 },
                 {
-                  icon: Icons.download,
+                  icon: Icons.download as any,
                   label: 'Download',
                   value: item.downloadCount.toString(),
                 },
                 {
-                  icon: Icons.globe,
+                  icon: Icons.globe as any,
                   label: 'Geography',
                   value: 'India',
                 },

@@ -1,8 +1,11 @@
-'use client'  
+'use client';
 
-import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
+import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
+import { fetchData } from '@/fetch';
+import { useTourTrigger } from '@/hooks/use-tour-trigger';
 import {
   Button,
   ButtonGroup,
@@ -14,53 +17,57 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
-import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
+import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
-import { fetchData } from '@/fetch';
-import { cn, formatDate } from '@/lib/utils';
 import Filter from '../datasets/components/FIlter/Filter';
 import Styles from '../datasets/dataset.module.scss';
 
 // Helper function to strip markdown and HTML tags for card preview
 const stripMarkdown = (markdown: string): string => {
   if (!markdown) return '';
-  return markdown
-    // Remove code blocks first (before other replacements)
-    .replace(/```[\s\S]*?```/g, '')
-    // Remove inline code
-    .replace(/`([^`]+)`/g, '$1')
-    // Remove images
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
-    // Remove links
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    // Remove headers
-    .replace(/^#{1,6}\s+/gm, '')
-    // Remove bold
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/__([^_]+)__/g, '$1')
-    // Remove italic
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/_([^_]+)_/g, '$1')
-    // Remove strikethrough
-    .replace(/~~([^~]+)~~/g, '$1')
-    // Remove blockquotes
-    .replace(/^\s*>\s+/gm, '')
-    // Remove horizontal rules
-    .replace(/^(-{3,}|_{3,}|\*{3,})$/gm, '')
-    // Remove list markers
-    .replace(/^\s*[-*+]\s+/gm, '')
-    .replace(/^\s*\d+\.\s+/gm, '')
-    // Remove HTML tags
-    .replace(/<[^>]*>/g, '')
-    // Remove extra whitespace and newlines
-    .replace(/\n\s*\n/g, '\n')
-    .replace(/\n/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return (
+    markdown
+      // Remove code blocks first (before other replacements)
+      .replace(/```[\s\S]*?```/g, '')
+      // Remove inline code
+      .replace(/`([^`]+)`/g, '$1')
+      // Remove images
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+      // Remove links
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove headers
+      .replace(/^#{1,6}\s+/gm, '')
+      // Remove bold
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/__([^_]+)__/g, '$1')
+      // Remove italic
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/_([^_]+)_/g, '$1')
+      // Remove strikethrough
+      .replace(/~~([^~]+)~~/g, '$1')
+      // Remove blockquotes
+      .replace(/^\s*>\s+/gm, '')
+      // Remove horizontal rules
+      .replace(/^(-{3,}|_{3,}|\*{3,})$/gm, '')
+      // Remove list markers
+      .replace(/^\s*[-*+]\s+/gm, '')
+      .replace(/^\s*\d+\.\s+/gm, '')
+      // Remove HTML tags
+      .replace(/<[^>]*>/g, '')
+      // Remove extra whitespace and newlines
+      .replace(/\n\s*\n/g, '\n')
+      .replace(/\n/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
 };
+import {
+  DatasetListingSkeleton,
+  UseCaseListingSkeleton,
+} from '@/components/loading';
 
 // Interfaces
 interface Bucket {
@@ -169,7 +176,9 @@ const useUrlParams = (
     // Merge locked filters with URL filters
     Object.entries(lockedFilters).forEach(([category, values]) => {
       if (values.length > 0) {
-        filters[category] = Array.from(new Set([...(filters[category] || []), ...values]));
+        filters[category] = Array.from(
+          new Set([...(filters[category] || []), ...values])
+        );
       }
     });
 
@@ -256,6 +265,8 @@ const ListingComponent: React.FC<ListingProps> = ({
   redirectionURL,
   lockedFilters = {},
 }) => {
+  useTourTrigger(true, 1500);
+
   const [facets, setFacets] = useState<{
     results: any[];
     total: number;
@@ -270,7 +281,10 @@ const ListingComponent: React.FC<ListingProps> = ({
   const datasetDetails = facets?.results ?? [];
 
   // Stabilize lockedFilters reference to prevent infinite loops
-  const stableLockedFilters = useMemo(() => lockedFilters, [JSON.stringify(lockedFilters)]);
+  const stableLockedFilters = useMemo(
+    () => lockedFilters,
+    [JSON.stringify(lockedFilters)]
+  );
 
   useUrlParams(queryParams, setQueryParams, setVariables, stableLockedFilters);
   const latestFetchId = useRef(0);
@@ -279,7 +293,7 @@ const ListingComponent: React.FC<ListingProps> = ({
     if (variables) {
       const currentFetchId = ++latestFetchId.current;
 
-      fetchData(type,variables)
+      fetchData(type, variables)
         .then((res) => {
           // Only set if this is the latest call
           if (currentFetchId === latestFetchId.current) {
@@ -297,8 +311,12 @@ const ListingComponent: React.FC<ListingProps> = ({
   useEffect(() => {
     setHasMounted(true);
   }, []);
-
-  if (!hasMounted) return <Loading />;
+  if (!hasMounted) {
+  if (type === 'usecase') {
+    return <UseCaseListingSkeleton cardCount={queryParams.pageSize} />;
+  }
+  return <DatasetListingSkeleton cardCount={queryParams.pageSize} />;
+}
 
   const handlePageChange = (newPage: number) => {
     setQueryParams({ type: 'SET_CURRENT_PAGE', payload: newPage });
@@ -338,7 +356,7 @@ const ListingComponent: React.FC<ListingProps> = ({
           label: bucket.key,
           value: bucket.key,
         }));
-      } 
+      }
       // Handle key-value object format (current backend format)
       else if (value && typeof value === 'object' && !Array.isArray(value)) {
         acc[key] = Object.entries(value).map(([label, count]) => ({
@@ -397,7 +415,10 @@ const ListingComponent: React.FC<ListingProps> = ({
 
         <div className="mt-5 lg:mt-10">
           <div className="row mb-16 flex gap-5 ">
-            <div className="hidden min-w-64 max-w-64 lg:block">
+            <div
+              className="hidden min-w-64 max-w-64 lg:block"
+              data-tour="filters"
+            >
               <Filter
                 options={filterOptions}
                 setSelectedOptions={handleFilterChange}
@@ -408,7 +429,7 @@ const ListingComponent: React.FC<ListingProps> = ({
 
             <div className="flex w-full flex-col gap-4 px-2">
               <div className="flex flex-wrap items-center justify-between gap-5 rounded-2 py-2 lg:flex-nowrap">
-                <div className="w-full md:block">
+                <div className="w-full md:block" data-tour="search">
                   <SearchInput
                     key={queryParams.query}
                     label="Search"
@@ -468,7 +489,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                       />
                     </Button>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" data-tour="sort">
                     <Select
                       label=""
                       labelInline
@@ -516,11 +537,16 @@ const ListingComponent: React.FC<ListingProps> = ({
                         .filter((value) => category !== 'sort')
                         .map((value) => {
                           // Check if this filter value is locked
-                          const isLocked = stableLockedFilters[category]?.includes(value);
+                          const isLocked =
+                            stableLockedFilters[category]?.includes(value);
                           return (
                             <Pill
                               key={`${category}-${value}`}
-                              onRemove={isLocked ? undefined : () => handleRemoveFilter(category, value)}
+                              onRemove={
+                                isLocked
+                                  ? undefined
+                                  : () => handleRemoveFilter(category, value)
+                              }
                             >
                               {value}
                             </Pill>
@@ -541,7 +567,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                   onPageSizeChange={handlePageSizeChange}
                   view={view}
                 >
-                  {datasetDetails.map((item: any) => {
+                  {datasetDetails.map((item: any, index: number) => {
                     const image = item.is_individual_dataset
                       ? item?.user?.profile_picture
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
@@ -549,18 +575,18 @@ const ListingComponent: React.FC<ListingProps> = ({
                       : item?.organization?.logo
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
                         : '/org.png';
-                    
-                    const geographies = item.geographies && item.geographies.length > 0
-                      ? item.geographies
-                      : null;
 
-                    const sdgs = item.sdgs && item.sdgs.length > 0
-                      ? item.sdgs
-                      : null;
+                    const geographies =
+                      item.geographies && item.geographies.length > 0
+                        ? item.geographies
+                        : null;
+
+                    const sdgs =
+                      item.sdgs && item.sdgs.length > 0 ? item.sdgs : null;
 
                     const MetadataContent = [
                       {
-                        icon: Icons.calendar,
+                        icon: Icons.calendar as any,
                         label: 'Date',
                         value: formatDate(item.modified),
                         tooltip: 'Date',
@@ -569,7 +595,7 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     if (item.download_count > 0) {
                       MetadataContent.push({
-                        icon: Icons.download,
+                        icon: Icons.download as any,
                         label: 'Download',
                         value: item.download_count?.toString() || '0',
                         tooltip: 'Download',
@@ -581,7 +607,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                       const geoDisplay = geographies.join(', ');
 
                       MetadataContent.push({
-                        icon: Icons.globe,
+                        icon: Icons.globe as any,
                         label: 'Geography',
                         value: geoDisplay,
                         tooltip: geoDisplay,
@@ -590,10 +616,12 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     if (sdgs && sdgs.length > 0) {
                       // Format SDGs for display
-                      const sdgDisplay = sdgs.map((sdg: any) => `${sdg.code} - ${sdg.name}`).join(', ');
+                      const sdgDisplay = sdgs
+                        .map((sdg: any) => `${sdg.code} - ${sdg.name}`)
+                        .join(', ');
 
                       MetadataContent.push({
-                        icon: Icons.target,
+                        icon: Icons.target as any,
                         label: 'SDG Goals',
                         value: sdgDisplay,
                         tooltip: sdgDisplay,
@@ -602,7 +630,7 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     if (item.has_charts && view === 'expanded') {
                       MetadataContent.push({
-                        icon: Icons.chart,
+                        icon: Icons.chart as any,
                         label: '',
                         value: 'With Charts',
                         tooltip: 'Charts',
@@ -611,21 +639,21 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     const FooterContent = [
                       {
-                        icon: `/Sectors/${item.sectors?.[0]}.svg`,
+                        icon: `/Sectors/${item.sectors?.[0]}.svg` as any,
                         label: 'Sectors',
                         tooltip: `${item.sectors?.[0]}`,
                       },
                       ...(item.has_charts && view !== 'expanded'
                         ? [
                             {
-                              icon: `/chart-bar.svg`,
+                              icon: `/chart-bar.svg` as any,
                               label: 'Charts',
                               tooltip: 'Charts',
                             },
                           ]
                         : []),
                       {
-                        icon: image,
+                        icon: image as any,
                         label: 'Published by',
                         tooltip: `${item.is_individual_dataset ? item.user?.name : item.organization?.name}`,
                       },
@@ -654,6 +682,13 @@ const ListingComponent: React.FC<ListingProps> = ({
                         }
                         iconColor="warning"
                         href={`${redirectionURL}/${item.id}`}
+                        data-tour={
+                          index === 0 && type === 'dataset'
+                            ? 'dataset-card'
+                            : index === 0 && type === 'usecase'
+                              ? 'usecase-card'
+                              : undefined
+                        }
                       />
                     );
                   })}

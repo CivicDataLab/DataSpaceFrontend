@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
@@ -17,7 +17,10 @@ import { ActionBar } from '../dataset/components/action-bar';
 import { Navigation } from '../dataset/components/navigate-org-datasets';
 
 const allCollaboratives: any = graphql(`
-  query CollaborativesData($filters: CollaborativeFilter, $order: CollaborativeOrder) {
+  query CollaborativesData(
+    $filters: CollaborativeFilter
+    $order: CollaborativeOrder
+  ) {
     collaboratives(filters: $filters, order: $order) {
       title
       id
@@ -58,50 +61,46 @@ const unPublishCollaborative: any = graphql(`
   }
 `);
 
-export default function CollaborativePage({
-  params,
-}: {
-  params: { entityType: string; entitySlug: string };
-}) {
+export default function CollaborativePage() {
   const router = useRouter();
+  const params = useParams<{ entityType?: string; entitySlug?: string }>();
+  const entityType = params?.entityType;
+  const entitySlug = params?.entitySlug;
+
+  const isValidParams =
+    typeof entityType === 'string' && typeof entitySlug === 'string';
+
+  const ownerArgs: Record<string, string> | null = isValidParams
+    ? { [entityType]: entitySlug }
+    : null;
 
   const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
 
-  let navigationOptions = [
-    {
-      label: 'Drafts',
-      url: `drafts`,
-      selected: navigationTab === 'drafts',
-    },
-    {
-      label: 'Published',
-      url: `published`,
-      selected: navigationTab === 'published',
-    },
-  ];
-
-  const AllCollaboratives: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_Collaboratives`],
-    () =>
-      GraphQL(
-        allCollaboratives,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        {
+  const AllCollaboratives: { data: any; isLoading: boolean; refetch: any } =
+    useQuery(
+      [
+        'fetch_Collaboratives',
+        entityType,
+        entitySlug,
+        navigationTab ?? 'drafts',
+      ],
+      () =>
+        GraphQL(allCollaboratives, ownerArgs || {}, {
           filters: {
             status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
           },
           order: { modified: 'DESC' },
-        }
-      )
-  );
+        }),
+      { enabled: isValidParams }
+    );
 
   useEffect(() => {
     if (navigationTab === null || navigationTab === undefined)
       setNavigationTab('drafts');
-    AllCollaboratives.refetch();
-  }, [navigationTab]);
+    if (isValidParams) {
+      AllCollaboratives.refetch();
+    }
+  }, [navigationTab, isValidParams]);
 
   const DeleteCollaborativeMutation: {
     mutate: any;
@@ -110,17 +109,15 @@ export default function CollaborativePage({
   } = useMutation(
     [`delete_Collaborative`],
     (data: { id: string }) =>
-      GraphQL(
-        deleteCollaborative,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        { collaborativeId: data.id }
-      ),
+      GraphQL(deleteCollaborative, ownerArgs || {}, {
+        collaborativeId: data.id,
+      }),
     {
       onSuccess: () => {
         toast(`Deleted Collaborative successfully`);
-        AllCollaboratives.refetch();
+        if (isValidParams) {
+          AllCollaboratives.refetch();
+        }
       },
       onError: (err: any) => {
         toast('Error:  ' + err.message.split(':')[0]);
@@ -134,21 +131,16 @@ export default function CollaborativePage({
     error: any;
   } = useMutation(
     [`create_Collaborative`],
-    () =>
-      GraphQL(
-        AddCollaborative,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        []
-      ),
+    () => GraphQL(AddCollaborative, ownerArgs || {}, []),
     {
       onSuccess: (response: any) => {
         toast(`Collaborative created successfully`);
-        router.push(
-          `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives/edit/${response.addCollaborative.id}/details`
-        );
-        AllCollaboratives.refetch();
+        if (isValidParams && entityType && entitySlug) {
+          router.push(
+            `/dashboard/${entityType}/${entitySlug}/collaboratives/edit/${response.addCollaborative.id}/details`
+          );
+          AllCollaboratives.refetch();
+        }
       },
       onError: (err: any) => {
         toast('Error:  ' + err.message.split(':')[0]);
@@ -163,23 +155,38 @@ export default function CollaborativePage({
   } = useMutation(
     [`unpublish_collaborative`],
     (data: { id: string }) =>
-      GraphQL(
-        unPublishCollaborative,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        { collaborativeId: data.id }
-      ),
+      GraphQL(unPublishCollaborative, ownerArgs || {}, {
+        collaborativeId: data.id,
+      }),
     {
       onSuccess: () => {
         toast(`Unpublished collaborative successfully`);
-        AllCollaboratives.refetch();
+        if (isValidParams) {
+          AllCollaboratives.refetch();
+        }
       },
       onError: (err: any) => {
         toast('Error:  ' + err.message.split(':')[0]);
       },
     }
   );
+
+  if (!isValidParams) {
+    return null;
+  }
+
+  let navigationOptions = [
+    {
+      label: 'Drafts',
+      url: `drafts`,
+      selected: navigationTab === 'drafts',
+    },
+    {
+      label: 'Published',
+      url: `published`,
+      selected: navigationTab === 'published',
+    },
+  ];
 
   const collaborativesListColumns = [
     {
@@ -197,7 +204,7 @@ export default function CollaborativePage({
           <LinkButton
             kind="tertiary"
             size="medium"
-            href={`/dashboard/${params.entityType}/${params.entitySlug}/collaboratives/edit/${row.original.id}/details`}
+            href={`/dashboard/${entityType}/${entitySlug}/collaboratives/edit/${row.original.id}/details`}
           >
             <span className="line-clamp-1 max-w-[280px]">
               {row.original.title}

@@ -85,7 +85,7 @@ function generateEntitySitemap(items: EntityItem[], entity: string): string {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { entityPage: string } }
+  { params }: { params: Promise<{ entityPage: string }> }
 ) {
   // Check if sitemaps are enabled via feature flag
   if (!isSitemapEnabled()) {
@@ -93,7 +93,7 @@ export async function GET(
   }
 
   try {
-    const { entityPage } = params;
+    const { entityPage } = await params;
 
     const m = entityPage.match(/^([a-zA-Z0-9_]+)-(\d+)\.xml$/);
     if (!m) {

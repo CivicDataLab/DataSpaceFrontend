@@ -1,17 +1,17 @@
 'use client';
 
+import { useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useEffect } from 'react';
 import { graphql } from '@/gql';
 import { TypeDataset, TypeUseCase } from '@/gql/generated/graphql';
+import { useAnalytics } from '@/hooks/use-analytics';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
 import { formatDate, generateJsonLd } from '@/lib/utils';
-import { useAnalytics } from '@/hooks/use-analytics';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import JsonLd from '@/components/JsonLd';
@@ -174,13 +174,13 @@ const UseCaseDetailClient = () => {
   } = useQuery<{ useCase: TypeUseCase }>(
     [`fetch_UsecaseDetails_${params.useCaseSlug}`],
     async () => {
-      const result = await GraphQLPublic(
+      const result = (await GraphQLPublic(
         UseCasedetails as any,
         {},
         {
           pk: params.useCaseSlug,
         }
-      ) as { useCase: TypeUseCase };
+      )) as { useCase: TypeUseCase };
       return result;
     },
     {
@@ -195,7 +195,10 @@ const UseCaseDetailClient = () => {
   // Track usecase view when data is loaded
   useEffect(() => {
     if (UseCaseDetails?.useCase) {
-      trackUsecase(UseCaseDetails.useCase.id, UseCaseDetails.useCase.title || undefined);
+      trackUsecase(
+        UseCaseDetails.useCase.id,
+        UseCaseDetails.useCase.title || undefined
+      );
     }
   }, [UseCaseDetails?.useCase, trackUsecase]);
 
@@ -241,7 +244,8 @@ const UseCaseDetailClient = () => {
                 Error Loading Use Case
               </Text>
               <Text variant="bodyLg">
-                {(error as any)?.message?.includes('401') || (error as any)?.message?.includes('403')
+                {(error as any)?.message?.includes('401') ||
+                (error as any)?.message?.includes('403')
                   ? 'You do not have permission to view this use case. Please log in or contact the administrator.'
                   : 'Failed to load use case details. Please try again later.'}
               </Text>
@@ -292,28 +296,31 @@ const UseCaseDetailClient = () => {
                         iconColor={'warning'}
                         metadataContent={[
                           {
-                            icon: Icons.calendar,
+                            icon: Icons.calendar as any,
                             label: 'Date',
                             value: formatDate(dataset.modified),
                           },
                           {
-                            icon: Icons.download,
+                            icon: Icons.download as any,
                             label: 'Download',
                             value: dataset.downloadCount.toString(),
                           },
                           {
-                            icon: Icons.globe,
+                            icon: Icons.globe as any,
                             label: 'Geography',
                             value:
-                              dataset.geographies && dataset.geographies.length > 0
-                                ? dataset.geographies.map((geo: any) => geo.name).join(', ')
+                              dataset.geographies &&
+                              dataset.geographies.length > 0
+                                ? dataset.geographies
+                                    .map((geo: any) => geo.name)
+                                    .join(', ')
                                 : '',
                           },
                         ]}
                         href={`/datasets/${dataset.id}`}
                         footerContent={[
                           {
-                            icon: `/Sectors/${dataset.sectors[0]?.name}.svg`,
+                            icon: `/Sectors/${dataset.sectors[0]?.name}.svg` as any,
                             label: 'Sectors',
                           },
                           {
