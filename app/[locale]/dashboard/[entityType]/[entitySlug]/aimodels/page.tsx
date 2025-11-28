@@ -5,7 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
 import { useRouter } from 'next/navigation';
 import { Button, DataTable, Icon, IconButton, Text, toast } from 'opub-ui';
-import { useEffect } from 'react';
+import { use, useEffect } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 import { Icons } from '@/components/icons';
