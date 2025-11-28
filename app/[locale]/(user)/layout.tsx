@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
 import { notFound, usePathname } from 'next/navigation';
+import React from 'react';
 
 import MainFooter from '../dashboard/components/main-footer';
 import { MainNav } from '../dashboard/components/main-nav';
