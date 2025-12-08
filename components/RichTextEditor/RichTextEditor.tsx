@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
-import 'react-quill/dist/quill.snow.css';
+import React, { useMemo, useState } from 'react';
+import 'react-quill-new/dist/quill.snow.css';
 
 interface RichTextEditorProps {
   value: string;
@@ -29,7 +29,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   // Dynamically import ReactQuill to avoid SSR issues
   const ReactQuill = useMemo(
     () =>
-      dynamic(() => import('react-quill'), {
+      dynamic(() => import('react-quill-new'), {
         ssr: false,
         loading: () => <div className="h-40 animate-pulse bg-gray-100 rounded" />,
       }),

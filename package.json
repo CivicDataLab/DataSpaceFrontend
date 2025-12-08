@@ -47,7 +47,7 @@
     "react-dom": "^19.2.0",
     "react-joyride": "^3.0.0-7",
     "react-markdown": "^10.1.0",
-    "react-quill": "^2.0.0",
+    "react-quill-new": "^3.3.4",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "sharp": "^0.33.2",
