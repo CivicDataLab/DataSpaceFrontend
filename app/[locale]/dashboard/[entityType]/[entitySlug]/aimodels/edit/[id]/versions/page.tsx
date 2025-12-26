@@ -1,8 +1,8 @@
 'use client';
 
 import { graphql } from '@/gql';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import {
   Button,
   Dialog,
@@ -14,11 +14,10 @@ import {
   TextField,
   toast
 } from 'opub-ui';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
 
 const fetchModelVersions: any = graphql(`
   query FetchModelVersions($filters: AIModelFilter) {
@@ -31,6 +30,7 @@ const fetchModelVersions: any = graphql(`
         version
         versionNotes
         status
+        lifecycleStage
         isLatest
         supportsStreaming
         maxTokens
@@ -44,6 +44,12 @@ const fetchModelVersions: any = graphql(`
           providerModelId
           isPrimary
           isActive
+          hfUsePipeline
+          hfAuthToken
+          hfModelClass
+          hfAttnImplementation
+          framework
+          config
         }
       }
     }
@@ -76,26 +82,6 @@ const updateVersionMutation: any = graphql(`
   }
 `);
 
-const deleteVersionMutation: any = graphql(`
-  mutation DeleteModelVersion($versionId: Int!) {
-    deleteAiModelVersion(versionId: $versionId) {
-      success
-    }
-  }
-`);
-
-const publishVersionMutation: any = graphql(`
-  mutation PublishModelVersion($versionId: Int!) {
-    publishAiModelVersion(versionId: $versionId) {
-      success
-      data {
-        id
-        status
-        publishedAt
-      }
-    }
-  }
-`);
 
 const createProviderMutation: any = graphql(`
   mutation CreateModelVersionProvider($input: CreateVersionProviderInput!) {
@@ -133,17 +119,6 @@ const deleteProviderMutation: any = graphql(`
   }
 `);
 
-const setPrimaryProviderMutation: any = graphql(`
-  mutation SetModelPrimaryProvider($providerId: Int!) {
-    setPrimaryProvider(providerId: $providerId) {
-      success
-      data {
-        id
-        isPrimary
-      }
-    }
-  }
-`);
 
 export default function VersionsPage() {
   const params = useParams<{
@@ -151,31 +126,45 @@ export default function VersionsPage() {
     entitySlug: string;
     id: string;
   }>();
-  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  // Invalidate cache on mount to force fresh fetch
+  useEffect(() => {
+    queryClient.invalidateQueries([`fetch_model_versions_${params.id}`]);
+  }, [params.id, queryClient]);
 
   const [isNewVersionModalOpen, setIsNewVersionModalOpen] = useState(false);
   const [isProviderModalOpen, setIsProviderModalOpen] = useState(false);
+  const [isWhatsThisModalOpen, setIsWhatsThisModalOpen] = useState(false);
+  const [isPrimaryConfirmModalOpen, setIsPrimaryConfirmModalOpen] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<any>(null);
   const [editingProvider, setEditingProvider] = useState<any>(null);
+  const [pendingPrimaryVersionId, setPendingPrimaryVersionId] = useState<number | null>(null);
 
   const [newVersionData, setNewVersionData] = useState({
     version: '',
-    versionNotes: '',
-    supportsStreaming: false,
-    maxTokens: 4096,
-    supportedLanguages: 'en',
+    lifecycleStage: 'DEVELOPMENT',
+    copyFromVersionId: null as number | null,
+    isLatest: false,
   });
 
   const [providerFormData, setProviderFormData] = useState({
     provider: 'CUSTOM',
     providerModelId: '',
     isPrimary: false,
+    // Huggingface-specific
     hfUsePipeline: false,
     hfModelClass: '',
+    hfAuthToken: '',
+    hfAttnImplementation: 'flash_attention_2',
     framework: '',
+    // API-based providers (OpenAI, Llama, Custom)
+    apiKey: '',
+    baseUrl: '',
+    authType: 'BEARER',
   });
 
-  // Fetch model versions
+  // Fetch model versions - override default refetchOnMount: false
   const { data, isLoading, refetch } = useQuery(
     [`fetch_model_versions_${params.id}`],
     () =>
@@ -185,7 +174,9 @@ export default function VersionsPage() {
         { filters: { id: parseInt(params.id) } } as any
       ),
     {
-      refetchOnMount: true,
+      enabled: !!params.id,
+      staleTime: 0, // Always consider data stale
+      refetchOnMount: true, // Override global default
     }
   );
 
@@ -202,11 +193,21 @@ export default function VersionsPage() {
         { input }
       ),
     {
-      onSuccess: () => {
+      onSuccess: async (response: any) => {
         toast('New version created successfully!');
         setIsNewVersionModalOpen(false);
         resetVersionForm();
-        refetch();
+        // Select the newly created version after refetch
+        const newVersionId = response?.createAiModelVersion?.data?.id;
+        const result = await refetch();
+        if (newVersionId && result.data) {
+          // Find and select the new version from refetched data
+          const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
+          const newVersion = refetchedVersions.find((v: any) => v.id === newVersionId);
+          if (newVersion) {
+            setSelectedVersion(newVersion);
+          }
+        }
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -214,41 +215,6 @@ export default function VersionsPage() {
     }
   );
 
-  const { mutate: deleteVersion } = useMutation(
-    (versionId: number) =>
-      GraphQL(
-        deleteVersionMutation,
-        { [params.entityType]: params.entitySlug },
-        { versionId } as any
-      ),
-    {
-      onSuccess: () => {
-        toast('Version deleted successfully!');
-        refetch();
-      },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`);
-      },
-    }
-  );
-
-  const { mutate: publishVersion } = useMutation(
-    (versionId: number) =>
-      GraphQL(
-        publishVersionMutation,
-        { [params.entityType]: params.entitySlug },
-        { versionId } as any
-      ),
-    {
-      onSuccess: () => {
-        toast('Version published successfully!');
-        refetch();
-      },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`);
-      },
-    }
-  );
 
   const { mutate: createProvider, isLoading: createProviderLoading } = useMutation(
     (input: any) =>
@@ -309,31 +275,12 @@ export default function VersionsPage() {
     }
   );
 
-  const { mutate: setPrimary } = useMutation(
-    (providerId: number) =>
-      GraphQL(
-        setPrimaryProviderMutation,
-        { [params.entityType]: params.entitySlug },
-        { providerId } as any
-      ),
-    {
-      onSuccess: () => {
-        toast('Primary provider updated!');
-        refetch();
-      },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`);
-      },
-    }
-  );
-
   const resetVersionForm = () => {
     setNewVersionData({
       version: '',
-      versionNotes: '',
-      supportsStreaming: false,
-      maxTokens: 4096,
-      supportedLanguages: 'en',
+      lifecycleStage: 'DEVELOPMENT',
+      copyFromVersionId: null,
+      isLatest: false,
     });
   };
 
@@ -344,24 +291,31 @@ export default function VersionsPage() {
       isPrimary: false,
       hfUsePipeline: false,
       hfModelClass: '',
+      hfAuthToken: '',
+      hfAttnImplementation: 'flash_attention_2',
       framework: '',
+      apiKey: '',
+      baseUrl: '',
+      authType: 'BEARER',
     });
   };
 
   const handleCreateNewVersion = () => {
     // Suggest next version number
-    let suggestedVersion = '1.0.0';
+    let suggestedVersion = '1.0';
     if (latestVersion?.version) {
       const parts = latestVersion.version.split('.');
       if (parts.length >= 2) {
         const minor = parseInt(parts[1]) + 1;
-        suggestedVersion = `${parts[0]}.${minor}.0`;
+        suggestedVersion = `${parts[0]}.${minor}`;
       }
     }
 
     setNewVersionData({
-      ...newVersionData,
       version: suggestedVersion,
+      lifecycleStage: 'DEVELOPMENT',
+      copyFromVersionId: latestVersion?.id || null,
+      isLatest: false,
     });
     setIsNewVersionModalOpen(true);
   };
@@ -371,18 +325,17 @@ export default function VersionsPage() {
       toast('Please enter a version number');
       return;
     }
+    if (!newVersionData.lifecycleStage) {
+      toast('Please select a lifecycle stage');
+      return;
+    }
 
     createVersion({
       modelId: parseInt(params.id),
       version: newVersionData.version,
-      versionNotes: newVersionData.versionNotes,
-      supportsStreaming: newVersionData.supportsStreaming,
-      maxTokens: newVersionData.maxTokens,
-      supportedLanguages: newVersionData.supportedLanguages
-        .split(',')
-        .map((l) => l.trim())
-        .filter(Boolean),
-      copyFromVersionId: latestVersion?.id || null,
+      lifecycleStage: newVersionData.lifecycleStage,
+      copyFromVersionId: newVersionData.copyFromVersionId,
+      isLatest: newVersionData.isLatest,
     });
   };
 
@@ -390,13 +343,19 @@ export default function VersionsPage() {
     setSelectedVersion(version);
     if (provider) {
       setEditingProvider(provider);
+      const config = provider.config || {};
       setProviderFormData({
         provider: provider.provider,
         providerModelId: provider.providerModelId || '',
         isPrimary: provider.isPrimary,
         hfUsePipeline: provider.hfUsePipeline || false,
         hfModelClass: provider.hfModelClass || '',
+        hfAuthToken: provider.hfAuthToken || '',
+        hfAttnImplementation: provider.hfAttnImplementation || 'flash_attention_2',
         framework: provider.framework || '',
+        apiKey: config.apiKey || '',
+        baseUrl: config.baseUrl || '',
+        authType: config.authType || 'BEARER',
       });
     } else {
       setEditingProvider(null);
@@ -408,24 +367,39 @@ export default function VersionsPage() {
   const handleSaveProvider = () => {
     if (!selectedVersion) return;
 
+    // Build config object for API-based providers
+    const config: Record<string, any> = {};
+    if (providerFormData.apiKey) {
+      config.apiKey = providerFormData.apiKey;
+    }
+    if (providerFormData.baseUrl) {
+      config.baseUrl = providerFormData.baseUrl;
+    }
+    if (providerFormData.authType && providerFormData.authType !== 'BEARER') {
+      config.authType = providerFormData.authType;
+    }
+
+    const baseData = {
+      providerModelId: providerFormData.providerModelId,
+      isPrimary: providerFormData.isPrimary,
+      hfUsePipeline: providerFormData.hfUsePipeline,
+      hfModelClass: providerFormData.hfModelClass || null,
+      hfAuthToken: providerFormData.hfAuthToken || null,
+      hfAttnImplementation: providerFormData.hfAttnImplementation || null,
+      framework: providerFormData.framework || null,
+      config: Object.keys(config).length > 0 ? config : null,
+    };
+
     if (editingProvider) {
       updateProvider({
         id: editingProvider.id,
-        providerModelId: providerFormData.providerModelId,
-        isPrimary: providerFormData.isPrimary,
-        hfUsePipeline: providerFormData.hfUsePipeline,
-        hfModelClass: providerFormData.hfModelClass || null,
-        framework: providerFormData.framework || null,
+        ...baseData,
       });
     } else {
       createProvider({
         versionId: selectedVersion.id,
         provider: providerFormData.provider,
-        providerModelId: providerFormData.providerModelId,
-        isPrimary: providerFormData.isPrimary,
-        hfUsePipeline: providerFormData.hfUsePipeline,
-        hfModelClass: providerFormData.hfModelClass || null,
-        framework: providerFormData.framework || null,
+        ...baseData,
       });
     }
   };
@@ -454,11 +428,104 @@ export default function VersionsPage() {
     { label: 'TensorFlow', value: 'tf' },
   ];
 
-  const statusColorMap: Record<string, string> = {
-    DRAFT: 'bg-gray-100 text-gray-800',
-    ACTIVE: 'bg-green-100 text-green-800',
-    REGISTERED: 'bg-blue-100 text-blue-800',
-    DEPRECATED: 'bg-red-100 text-red-800',
+  const lifecycleStageOptions = [
+    { label: 'Select Lifecycle Stage', value: '' },
+    { label: 'Development', value: 'DEVELOPMENT' },
+    { label: 'Testing', value: 'TESTING' },
+    { label: 'Beta Testing', value: 'BETA' },
+    { label: 'Staging', value: 'STAGING' },
+    { label: 'Production', value: 'PRODUCTION' },
+    { label: 'Deprecated', value: 'DEPRECATED' },
+    { label: 'Retired', value: 'RETIRED' },
+  ];
+
+
+  // Update version mutation for lifecycle stage changes
+  const { mutate: updateVersion } = useMutation(
+    (input: any) =>
+      GraphQL(
+        updateVersionMutation,
+        { [params.entityType]: params.entitySlug },
+        { input }
+      ),
+    {
+      onSuccess: () => {
+        toast('Version updated successfully!');
+        refetch();
+      },
+      onError: (error: any) => {
+        toast(`Error: ${error.message}`);
+      },
+    }
+  );
+
+  const handleLifecycleChange = (versionId: number, lifecycleStage: string) => {
+    // Optimistically update local state - always set selectedVersion if not set
+    const currentVersion = selectedVersion || latestVersion;
+    if (currentVersion?.id === versionId) {
+      setSelectedVersion({ ...currentVersion, lifecycleStage });
+    }
+    updateVersion({ id: versionId, lifecycleStage });
+  };
+
+  const handleSetPrimaryVersion = (versionId: number, isLatest: boolean) => {
+    if (isLatest) {
+      // Show confirmation dialog before setting as primary
+      setPendingPrimaryVersionId(versionId);
+      setIsPrimaryConfirmModalOpen(true);
+    } else {
+      // Unchecking - just update directly
+      const currentVersion = selectedVersion || latestVersion;
+      if (currentVersion?.id === versionId) {
+        setSelectedVersion({ ...currentVersion, isLatest: false });
+      }
+      updateVersion({ id: versionId, isLatest: false });
+    }
+  };
+
+  const confirmSetPrimaryVersion = () => {
+    if (pendingPrimaryVersionId) {
+      const currentVersion = selectedVersion || latestVersion;
+      if (currentVersion?.id === pendingPrimaryVersionId) {
+        setSelectedVersion({ ...currentVersion, isLatest: true });
+      }
+      updateVersion({ id: pendingPrimaryVersionId, isLatest: true });
+    }
+    setIsPrimaryConfirmModalOpen(false);
+    setPendingPrimaryVersionId(null);
+  };
+
+  // Get provider display name
+  const getProviderDisplayName = (provider: string) => {
+    const names: Record<string, string> = {
+      OPENAI: 'OpenAI',
+      LLAMA_OLLAMA: 'Llama (Ollama)',
+      LLAMA_TOGETHER: 'Together AI',
+      LLAMA_REPLICATE: 'Replicate',
+      LLAMA_CUSTOM: 'Llama Custom',
+      CUSTOM: 'Custom API',
+      HUGGINGFACE: 'HuggingFace',
+    };
+    return names[provider] || provider;
+  };
+
+  // Get endpoint URL from provider config
+  const getEndpointUrl = (provider: any) => {
+    if (provider.provider === 'HUGGINGFACE') {
+      return `api.huggingface.com/${provider.providerModelId || ''}`;
+    }
+    if (provider.config?.baseUrl) {
+      return provider.config.baseUrl;
+    }
+    if (provider.provider === 'OPENAI') {
+      return 'api.openai.com';
+    }
+    return provider.providerModelId || '-';
+  };
+
+  // Get access priority label
+  const getAccessPriority = (provider: any) => {
+    return provider.isPrimary ? 'Primary Source' : 'Alternate Source';
   };
 
   if (isLoading) {
@@ -467,189 +534,146 @@ export default function VersionsPage() {
 
   return (
     <div className="flex flex-col gap-6 py-6">
-      {/* Header */}
+      {/* Header with Version Selector */}
       <div className="flex items-center justify-between">
-        <div>
-          <Text variant="headingMd" as="h2">
-            Model Versions
-          </Text>
-          <Text variant="bodySm" color="subdued">
-            Manage versions and providers for {model?.displayName || 'this model'}
-          </Text>
+        <div className="flex items-center gap-4">
+          <Select
+            name="versionSelector"
+            label=""
+            options={versions.map((v: any) => ({
+              label: `Version ${v.version}`,
+              value: v.id.toString(),
+            }))}
+            value={selectedVersion?.id?.toString() || latestVersion?.id?.toString() || ''}
+            onChange={(value) => {
+              const version = versions.find((v: any) => v.id.toString() === value);
+              setSelectedVersion(version);
+            }}
+          />
         </div>
-        <Button onClick={handleCreateNewVersion}>Add New Version</Button>
+        <Button onClick={handleCreateNewVersion}>NEW VERSION</Button>
       </div>
 
-      {/* Versions List */}
+      {/* Selected Version Details */}
       {versions.length > 0 ? (
-        <div className="space-y-4">
-          {versions.map((version: any) => (
-            <div
-              key={version.id}
-              className={`rounded-lg border p-4 ${
-                version.isLatest ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-white'
-              }`}
-            >
-              {/* Version Header */}
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Text variant="headingSm">v{version.version}</Text>
-                  {version.isLatest && (
-                    <span className="rounded bg-green-100 px-2 py-0.5 text-xs text-green-800">
-                      Latest
-                    </span>
-                  )}
-                  <span
-                    className={`rounded px-2 py-0.5 text-xs ${
-                      statusColorMap[version.status] || 'bg-gray-100'
-                    }`}
-                  >
-                    {version.status}
+        (() => {
+          const currentVersion = selectedVersion || latestVersion;
+          if (!currentVersion) return null;
+          
+          return (
+            <div className="space-y-6">
+              {/* Lifecycle Stage */}
+              <div className="flex flex-col gap-2">
+                <Text variant="bodyMd" fontWeight="semibold">
+                  Lifecycle Stage <span className="text-red-500">*</span>
+                </Text>
+                <Select
+                  name="lifecycleStage"
+                  label=""
+                  options={lifecycleStageOptions.filter((o) => o.value !== '')}
+                  value={currentVersion.lifecycleStage || 'DEVELOPMENT'}
+                  onChange={(value) => handleLifecycleChange(currentVersion.id, value)}
+                />
+              </div>
+
+              {/* Select as Primary Version */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={currentVersion.isLatest}
+                  onChange={(e) => handleSetPrimaryVersion(currentVersion.id, e.target.checked)}
+                  className="h-5 w-5 rounded border-gray-300"
+                />
+                <span>Select as Primary Version</span>
+                <span
+                  onClick={() => setIsWhatsThisModalOpen(true)}
+                  className="cursor-pointer text-sm text-secondaryOrange underline"
+                >
+                  What&apos;s this?
+                </span>
+              </div>
+
+              {/* Providers Table */}
+              <div className="overflow-hidden rounded-lg border border-gray-200">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        PROVIDER
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        ENDPOINT URL
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                        ACCESS PRIORITY
+                      </th>
+                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">
+                        ACTIONS
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {currentVersion.providers?.length > 0 ? (
+                      currentVersion.providers.map((provider: any) => (
+                        <tr key={provider.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm">
+                            {getProviderDisplayName(provider.provider)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {getEndpointUrl(provider)}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {getAccessPriority(provider)}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <IconButton
+                                size="medium"
+                                icon={Icons.pencil}
+                                onClick={() => handleOpenProviderModal(currentVersion, provider)}
+                              >
+                                Edit
+                              </IconButton>
+                              <IconButton
+                                size="medium"
+                                icon={Icons.delete}
+                                onClick={() => {
+                                  if (confirm('Delete this provider?')) {
+                                    deleteProvider(provider.id);
+                                  }
+                                }}
+                              >
+                                Delete
+                              </IconButton>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                          No access methods configured
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Add Access Method Button */}
+              <div className="flex justify-center">
+                <Button
+                  kind="tertiary"
+                  onClick={() => handleOpenProviderModal(currentVersion)}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg">+</span> Add Access Method
                   </span>
-                </div>
-                <div className="flex gap-2">
-                  {version.status !== 'ACTIVE' && (
-                    <Button
-                      size="slim"
-                      kind="tertiary"
-                      onClick={() => publishVersion(version.id)}
-                    >
-                      Publish
-                    </Button>
-                  )}
-                  {!version.isLatest && versions.length > 1 && (
-                    <Button
-                      size="slim"
-                      kind="tertiary"
-                      onClick={() => {
-                        if (confirm('Are you sure you want to delete this version?')) {
-                          deleteVersion(version.id);
-                        }
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Version Details */}
-              <div className="mb-4 grid grid-cols-4 gap-4 text-sm">
-                <div>
-                  <Text variant="bodySm" color="subdued">
-                    Max Tokens
-                  </Text>
-                  <Text>{version.maxTokens || '-'}</Text>
-                </div>
-                <div>
-                  <Text variant="bodySm" color="subdued">
-                    Streaming
-                  </Text>
-                  <Text>{version.supportsStreaming ? 'Yes' : 'No'}</Text>
-                </div>
-                <div>
-                  <Text variant="bodySm" color="subdued">
-                    Languages
-                  </Text>
-                  <Text>{version.supportedLanguages?.join(', ') || '-'}</Text>
-                </div>
-                <div>
-                  <Text variant="bodySm" color="subdued">
-                    Created
-                  </Text>
-                  <Text>{formatDate(version.createdAt)}</Text>
-                </div>
-              </div>
-
-              {version.versionNotes && (
-                <div className="mb-4">
-                  <Text variant="bodySm" color="subdued">
-                    Notes
-                  </Text>
-                  <Text variant="bodySm">{version.versionNotes}</Text>
-                </div>
-              )}
-
-              {/* Providers Section */}
-              <div className="border-t pt-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <Text variant="bodyMd" fontWeight="semibold">
-                    Providers ({version.providers?.length || 0})
-                  </Text>
-                  <Button
-                    size="slim"
-                    kind="tertiary"
-                    onClick={() => handleOpenProviderModal(version)}
-                  >
-                    Add Provider
-                  </Button>
-                </div>
-
-                {version.providers?.length > 0 ? (
-                  <div className="space-y-2">
-                    {version.providers.map((provider: any) => (
-                      <div
-                        key={provider.id}
-                        className={`flex items-center justify-between rounded border p-3 ${
-                          provider.isPrimary
-                            ? 'border-blue-200 bg-blue-50'
-                            : 'border-gray-200 bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Text fontWeight="medium">{provider.provider}</Text>
-                          {provider.providerModelId && (
-                            <Text variant="bodySm" color="subdued">
-                              ({provider.providerModelId})
-                            </Text>
-                          )}
-                          {provider.isPrimary && (
-                            <span className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
-                              Primary
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {!provider.isPrimary && (
-                            <Button
-                              size="slim"
-                              kind="tertiary"
-                              onClick={() => setPrimary(provider.id)}
-                            >
-                              Set Primary
-                            </Button>
-                          )}
-                          <IconButton
-                            size="medium"
-                            icon={Icons.pencil}
-                            onClick={() => handleOpenProviderModal(version, provider)}
-                          >
-                            Edit
-                          </IconButton>
-                          <IconButton
-                            size="medium"
-                            icon={Icons.delete}
-                            onClick={() => {
-                              if (confirm('Delete this provider?')) {
-                                deleteProvider(provider.id);
-                              }
-                            }}
-                          >
-                            Delete
-                          </IconButton>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded border border-dashed border-gray-300 p-4 text-center">
-                    <Text color="subdued">No providers configured</Text>
-                  </div>
-                )}
+                </Button>
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })()
       ) : (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 p-12">
           <Icon source={Icons.light} size={48} color="subdued" />
@@ -657,7 +681,7 @@ export default function VersionsPage() {
             No versions yet
           </Text>
           <Text variant="bodySm" color="subdued" className="mt-2">
-            Create your first version to configure providers
+            Create your first version to configure access methods
           </Text>
           <Button onClick={handleCreateNewVersion} className="mt-4">
             Create First Version
@@ -668,86 +692,73 @@ export default function VersionsPage() {
       {/* New Version Modal */}
       <Dialog open={isNewVersionModalOpen} onOpenChange={setIsNewVersionModalOpen}>
         {isNewVersionModalOpen && (
-          <Dialog.Content title="Create New Version">
+          <Dialog.Content title="Add a New Version">
             <FormLayout>
               <TextField
                 name="version"
-                label="Version Number"
+                label="Version Name"
                 value={newVersionData.version}
                 onChange={(value) =>
                   setNewVersionData((prev) => ({ ...prev, version: value }))
                 }
-                helpText="Semantic version (e.g., 1.0.0, 2.1.0)"
+                helpText="E.g Version 1.2"
                 required
               />
-              <TextField
-                name="versionNotes"
-                label="Version Notes"
-                value={newVersionData.versionNotes}
+              <Select
+                name="lifecycleStage"
+                label="Lifecycle Stage"
+                options={lifecycleStageOptions}
+                value={newVersionData.lifecycleStage}
                 onChange={(value) =>
-                  setNewVersionData((prev) => ({ ...prev, versionNotes: value }))
+                  setNewVersionData((prev) => ({ ...prev, lifecycleStage: value }))
                 }
-                multiline={3}
-                helpText="Changelog or notes for this version"
+                required
               />
-              <TextField
-                name="maxTokens"
-                label="Max Tokens"
-                type="number"
-                value={newVersionData.maxTokens.toString()}
+              {!newVersionData.lifecycleStage && (
+                <Text variant="bodySm" color="critical">
+                  Lifecycle Stage is required
+                </Text>
+              )}
+              <Select
+                name="copyFromVersionId"
+                label="Duplicate Endpoints From"
+                options={[
+                  { label: 'Create without duplicating', value: '' },
+                  ...versions.map((v: any) => ({
+                    label: `Version ${v.version}`,
+                    value: v.id.toString(),
+                  })),
+                ]}
+                value={newVersionData.copyFromVersionId?.toString() || ''}
                 onChange={(value) =>
                   setNewVersionData((prev) => ({
                     ...prev,
-                    maxTokens: parseInt(value) || 0,
+                    copyFromVersionId: value ? parseInt(value) : null,
                   }))
                 }
-              />
-              <TextField
-                name="supportedLanguages"
-                label="Supported Languages"
-                value={newVersionData.supportedLanguages}
-                onChange={(value) =>
-                  setNewVersionData((prev) => ({
-                    ...prev,
-                    supportedLanguages: value,
-                  }))
-                }
-                helpText="Comma-separated language codes (e.g., en, es, fr)"
+                required
               />
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={newVersionData.supportsStreaming}
+                  checked={newVersionData.isLatest}
                   onChange={(e) =>
                     setNewVersionData((prev) => ({
                       ...prev,
-                      supportsStreaming: e.target.checked,
+                      isLatest: e.target.checked,
                     }))
                   }
                   className="h-4 w-4"
                 />
-                <span>Supports Streaming</span>
+                <span>Select as Primary Version</span>
               </label>
+              <Text variant="bodySm" color="subdued">
+                This will be the default version for audits
+              </Text>
 
-              {latestVersion && (
-                <div className="rounded-lg bg-blue-50 p-4">
-                  <Text variant="bodySm" className="text-blue-800">
-                    <strong>Note:</strong> All providers from version{' '}
-                    <strong>{latestVersion.version}</strong> will be copied to this
-                    new version.
-                  </Text>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-4 pt-4">
-                <Button
-                  onClick={() => setIsNewVersionModalOpen(false)}
-                  kind="secondary"
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleSaveNewVersion} loading={createLoading}>
-                  Create Version
+              <div className="flex justify-center pt-4">
+                <Button onClick={handleSaveNewVersion} loading={createLoading} fullWidth>
+                  SAVE AND CLOSE
                 </Button>
               </div>
             </FormLayout>
@@ -785,8 +796,140 @@ export default function VersionsPage() {
                 helpText="e.g., gpt-4, meta-llama/Llama-2-7b-chat-hf"
               />
 
+              {/* OpenAI-specific fields */}
+              {providerFormData.provider === 'OPENAI' && (
+                <>
+                  <TextField
+                    name="apiKey"
+                    label="API Key"
+                    type="password"
+                    value={providerFormData.apiKey}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({ ...prev, apiKey: value }))
+                    }
+                    helpText="Your OpenAI API key"
+                    required
+                  />
+                </>
+              )}
+
+              {/* Llama variants - Together AI, Replicate */}
+              {(providerFormData.provider === 'LLAMA_TOGETHER' ||
+                providerFormData.provider === 'LLAMA_REPLICATE') && (
+                <>
+                  <TextField
+                    name="apiKey"
+                    label="API Key"
+                    type="password"
+                    value={providerFormData.apiKey}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({ ...prev, apiKey: value }))
+                    }
+                    helpText={`Your ${providerFormData.provider === 'LLAMA_TOGETHER' ? 'Together AI' : 'Replicate'} API key`}
+                    required
+                  />
+                </>
+              )}
+
+              {/* Llama Ollama - needs base URL */}
+              {providerFormData.provider === 'LLAMA_OLLAMA' && (
+                <>
+                  <TextField
+                    name="baseUrl"
+                    label="Ollama Base URL"
+                    value={providerFormData.baseUrl}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({ ...prev, baseUrl: value }))
+                    }
+                    placeholder="http://localhost:11434"
+                    helpText="URL where Ollama is running"
+                    required
+                  />
+                </>
+              )}
+
+              {/* Llama Custom - needs base URL and API key */}
+              {providerFormData.provider === 'LLAMA_CUSTOM' && (
+                <>
+                  <TextField
+                    name="baseUrl"
+                    label="API Base URL"
+                    value={providerFormData.baseUrl}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({ ...prev, baseUrl: value }))
+                    }
+                    placeholder="https://your-api.com/v1"
+                    helpText="Base URL for your custom Llama API"
+                    required
+                  />
+                  <TextField
+                    name="apiKey"
+                    label="API Key"
+                    type="password"
+                    value={providerFormData.apiKey}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({ ...prev, apiKey: value }))
+                    }
+                    helpText="API key for authentication (if required)"
+                  />
+                </>
+              )}
+
+              {/* Custom API - needs base URL, API key, and auth type */}
+              {providerFormData.provider === 'CUSTOM' && (
+                <>
+                  <TextField
+                    name="baseUrl"
+                    label="API Base URL"
+                    value={providerFormData.baseUrl}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({ ...prev, baseUrl: value }))
+                    }
+                    placeholder="https://your-api.com/v1"
+                    helpText="Base URL for your custom API"
+                    required
+                  />
+                  <TextField
+                    name="apiKey"
+                    label="API Key / Token"
+                    type="password"
+                    value={providerFormData.apiKey}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({ ...prev, apiKey: value }))
+                    }
+                    helpText="API key or token for authentication"
+                  />
+                  <Select
+                    name="authType"
+                    label="Authentication Type"
+                    options={[
+                      { label: 'Bearer Token', value: 'BEARER' },
+                      { label: 'API Key Header', value: 'API_KEY' },
+                      { label: 'Basic Auth', value: 'BASIC' },
+                      { label: 'OAuth2', value: 'OAUTH2' },
+                      { label: 'Custom', value: 'CUSTOM' },
+                    ]}
+                    value={providerFormData.authType}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({ ...prev, authType: value }))
+                    }
+                  />
+                </>
+              )}
+
+              {/* Huggingface-specific fields */}
               {providerFormData.provider === 'HUGGINGFACE' && (
                 <>
+                  <TextField
+                    name="hfAuthToken"
+                    label="Huggingface Auth Token"
+                    type="password"
+                    value={providerFormData.hfAuthToken}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({ ...prev, hfAuthToken: value }))
+                    }
+                    helpText="Required for gated models"
+                  />
                   <Select
                     name="hfModelClass"
                     label="Model Class"
@@ -798,6 +941,7 @@ export default function VersionsPage() {
                         hfModelClass: value,
                       }))
                     }
+                    required
                   />
                   <Select
                     name="framework"
@@ -810,6 +954,18 @@ export default function VersionsPage() {
                         framework: value,
                       }))
                     }
+                  />
+                  <TextField
+                    name="hfAttnImplementation"
+                    label="Attention Implementation"
+                    value={providerFormData.hfAttnImplementation}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        hfAttnImplementation: value,
+                      }))
+                    }
+                    helpText="e.g., flash_attention_2, eager, sdpa"
                   />
                   <label className="flex items-center gap-2">
                     <input
@@ -858,6 +1014,74 @@ export default function VersionsPage() {
                 </Button>
               </div>
             </FormLayout>
+          </Dialog.Content>
+        )}
+      </Dialog>
+
+      {/* What is Primary Version Modal */}
+      <Dialog open={isWhatsThisModalOpen} onOpenChange={setIsWhatsThisModalOpen}>
+        {isWhatsThisModalOpen && (
+          <Dialog.Content title="What is a Primary Version?">
+            <div className="space-y-4">
+              <Text>
+                When you set up multiple versions of your AI model, you can select one version to
+                be the Primary Version.
+              </Text>
+              <Text>
+                The Primary Version will be selected by default for audits. You can switch to
+                another version before starting your audits.
+              </Text>
+              <Text>
+                If your model is shared publicly, your primary version will be displayed at the top
+                of the list of versions.
+              </Text>
+              <div className="flex justify-center pt-4">
+                <Button onClick={() => setIsWhatsThisModalOpen(false)} fullWidth>
+                  CLOSE
+                </Button>
+              </div>
+            </div>
+          </Dialog.Content>
+        )}
+      </Dialog>
+
+      {/* Primary Version Confirmation Modal */}
+      <Dialog open={isPrimaryConfirmModalOpen} onOpenChange={setIsPrimaryConfirmModalOpen}>
+        {isPrimaryConfirmModalOpen && (
+          <Dialog.Content title="Select as Primary Version?">
+            <div className="space-y-4">
+              {(() => {
+                const currentPrimary = versions.find((v: any) => v.isLatest);
+                const pendingVersion = versions.find((v: any) => v.id === pendingPrimaryVersionId);
+                return (
+                  <>
+                    {currentPrimary && currentPrimary.id !== pendingPrimaryVersionId && (
+                      <Text>
+                        If you confirm, version {currentPrimary.version} will no longer be your primary version.
+                      </Text>
+                    )}
+                    <Text>
+                      Do you want to make version {pendingVersion?.version} your primary version?
+                    </Text>
+                  </>
+                );
+              })()}
+              <div className="flex gap-4 pt-4">
+                <Button
+                  onClick={() => {
+                    setIsPrimaryConfirmModalOpen(false);
+                    setPendingPrimaryVersionId(null);
+                  }}
+                  kind="secondary"
+                  fullWidth
+                >
+                  CANCEL
+                </Button>
+                <Button onClick={confirmSetPrimaryVersion} fullWidth>
+                  SELECT AS PRIMARY
+                </Button>
+              </div>
+            </div>
           </Dialog.Content>
         )}
       </Dialog>
