@@ -137,7 +137,7 @@ export default function AIModelsPage({
     }
   );
 
-  const CreateAIModel: {
+  const CreateAIModelMutation: {
     mutate: any;
     isLoading: boolean;
     error: any;
@@ -151,24 +151,30 @@ export default function AIModelsPage({
         },
         {
           input: {
+            name: `new-model-${Date.now()}`,
+            displayName: 'New AI Model',
             modelType: 'TEXT_GENERATION',
             provider: 'CUSTOM',
           },
         }
       ),
     {
-      onSuccess: (response: any) => {
-        toast(`AI Model created successfully`);
+      onSuccess: (data: any) => {
+        const newModelId = data.createAiModel.data.id;
+        toast(`Created AI Model successfully`);
         router.push(
-          `/dashboard/${entityType}/${entitySlug}/aimodels/edit/${response.createAiModel.data.id}/details`
+          `/dashboard/${entityType}/${entitySlug}/aimodels/edit/${newModelId}/details`
         );
-        AllAIModels.refetch();
       },
       onError: (err: any) => {
         toast('Error: ' + err.message.split(':')[0]);
       },
     }
   );
+
+  const handleCreateNewModel = () => {
+    CreateAIModelMutation.mutate();
+  };
 
   const modelsListColumns = [
     {
@@ -262,7 +268,7 @@ export default function AIModelsPage({
               }
               primaryAction={{
                 content: 'Add New AI Model',
-                onAction: () => CreateAIModel.mutate(),
+                onAction: handleCreateNewModel,
               }}
             />
 
@@ -290,7 +296,7 @@ export default function AIModelsPage({
                 <Text variant="headingSm" color="subdued">
                   You have not added any AI models yet.
                 </Text>
-                <Button onClick={() => CreateAIModel.mutate()}>
+                <Button onClick={handleCreateNewModel}>
                   Add New AI Model
                 </Button>
               </div>

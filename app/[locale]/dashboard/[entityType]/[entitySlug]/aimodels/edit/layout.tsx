@@ -1,8 +1,8 @@
 'use client';
 
-import { useParams, usePathname, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { Tab, TabList, Tabs, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -40,7 +40,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     id: string;
   }>();
 
-  const layoutList = ['details', 'endpoints', 'configuration', 'publish'];
+  const layoutList = ['details', 'versions', 'publish'];
 
   const pathItem = layoutList.find(function (v) {
     return pathName.indexOf(v) >= 0;
@@ -93,19 +93,14 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
 
   const links = [
     {
-      label: 'Model Details',
+      label: 'Metadata',
       url: `/dashboard/${params.entityType}/${params.entitySlug}/aimodels/edit/${params.id}/details`,
       selected: pathItem === 'details',
     },
     {
-      label: 'Endpoints',
-      url: `/dashboard/${params.entityType}/${params.entitySlug}/aimodels/edit/${params.id}/endpoints`,
-      selected: pathItem === 'endpoints',
-    },
-    {
-      label: 'Configuration',
-      url: `/dashboard/${params.entityType}/${params.entitySlug}/aimodels/edit/${params.id}/configuration`,
-      selected: pathItem === 'configuration',
+      label: 'Version',
+      url: `/dashboard/${params.entityType}/${params.entitySlug}/aimodels/edit/${params.id}/versions`,
+      selected: pathItem === 'versions',
     },
     {
       label: 'Publish',
@@ -167,7 +162,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       <div className="">{children}</div>
       <div className="my-6">
         <StepNavigation
-          steps={['details', 'endpoints', 'configuration', 'publish']}
+          steps={['details', 'versions', 'publish']}
         />
       </div>
     </div>
