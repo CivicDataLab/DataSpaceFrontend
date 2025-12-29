@@ -1,26 +1,47 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, FormLayout, Select, Text, toast } from 'opub-ui';
+import { useParams, useRouter } from 'next/navigation';
+import { Button, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
 
-const FetchAIModelStatus: any = graphql(`
-  query AIModelStatus($filters: AIModelFilter) {
+const FetchAIModelForPublish: any = graphql(`
+  query AIModelForPublish($filters: AIModelFilter) {
     aiModels(filters: $filters) {
       id
       name
       displayName
       description
+      modelType
       status
       isPublic
       isActive
-      endpoints {
+      tags {
         id
+        value
+      }
+      sectors {
+        id
+        name
+      }
+      geographies {
+        id
+        name
+      }
+      versions {
+        id
+        version
+        lifecycleStage
+        isLatest
+        providers {
+          id
+          provider
+          providerModelId
+          isPrimary
+        }
       }
     }
   }
@@ -49,11 +70,11 @@ export default function PublishPage() {
   const router = useRouter();
   const { setStatus } = useEditStatus();
 
-  const StatusData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_AIModelStatus_${params.id}`],
+  const { data, isLoading, refetch } = useQuery(
+    [`fetch_AIModelForPublish_${params.id}`],
     () =>
       GraphQL(
-        FetchAIModelStatus,
+        FetchAIModelForPublish,
         {
           [params.entityType]: params.entitySlug,
         },
@@ -68,13 +89,13 @@ export default function PublishPage() {
     }
   );
 
-  console.log('StatusData:', StatusData.data);
-  console.log('aiModels array:', StatusData.data?.aiModels);
-  
-  const model = StatusData.data?.aiModels?.[0];
+  const model = (data as any)?.aiModels?.[0];
+  const versions = model?.versions || [];
+  const primaryVersion = versions.find((v: any) => v.isLatest) || versions[0];
+  const hasProviders = versions.some((v: any) => v.providers?.length > 0);
 
   const { mutate, isLoading: updateLoading } = useMutation(
-    (data: any) =>
+    (mutationData: any) =>
       GraphQL(
         UpdateAIModelStatusMutation,
         {
@@ -83,7 +104,7 @@ export default function PublishPage() {
         {
           input: {
             id: parseInt(params.id),
-            ...data,
+            ...mutationData,
           },
         }
       ),
@@ -91,7 +112,7 @@ export default function PublishPage() {
       onSuccess: () => {
         toast('Model status updated successfully');
         setStatus('saved');
-        StatusData.refetch();
+        refetch();
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -99,27 +120,6 @@ export default function PublishPage() {
       },
     }
   );
-
-  const [formData, setFormData] = useState({
-    status: 'REGISTERED',
-    isPublic: false,
-    isActive: true,
-  });
-
-  useEffect(() => {
-    if (model) {
-      setFormData({
-        status: model.status || 'REGISTERED',
-        isPublic: model.isPublic || false,
-        isActive: model.isActive !== undefined ? model.isActive : true,
-      });
-    }
-  }, [model]);
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    setStatus('unsaved');
-  };
 
   const handlePublish = () => {
     setStatus('saving');
@@ -138,47 +138,241 @@ export default function PublishPage() {
     );
   };
 
-  const handleSave = () => {
-    setStatus('saving');
-    mutate(formData);
+  // Model type display names
+  const modelTypeLabels: Record<string, string> = {
+    LLM: 'Large Language Model',
+    VISION: 'Vision Model',
+    AUDIO: 'Audio Model',
+    MULTIMODAL: 'Multimodal Model',
+    EMBEDDING: 'Embedding Model',
+    CLASSIFICATION: 'Classification Model',
+    GENERATION: 'Generation Model',
+    CUSTOM: 'Custom Model',
   };
 
-  const statusOptions = [
-    { label: 'Registered', value: 'REGISTERED' },
-    { label: 'Validating', value: 'VALIDATING' },
-    { label: 'Active', value: 'ACTIVE' },
-    { label: 'Auditing', value: 'AUDITING' },
-    { label: 'Approved', value: 'APPROVED' },
-    { label: 'Flagged', value: 'FLAGGED' },
-    { label: 'Deprecated', value: 'DEPRECATED' },
+  // Lifecycle stage display names
+  const lifecycleLabels: Record<string, string> = {
+    DEVELOPMENT: 'Development',
+    TESTING: 'Testing',
+    BETA: 'Beta Testing',
+    STAGING: 'Staging',
+    PRODUCTION: 'Production',
+    DEPRECATED: 'Deprecated',
+    RETIRED: 'Retired',
+  };
+
+  // Checklist items
+  const checklistItems = [
+    {
+      id: 'name',
+      label: 'Model name added',
+      checked: !!model?.name && !!model?.displayName,
+    },
+    {
+      id: 'description',
+      label: 'Model description added',
+      checked: !!model?.description,
+    },
+    {
+      id: 'type',
+      label: 'Model type selected',
+      checked: !!model?.modelType,
+    },
+    {
+      id: 'tags',
+      label: 'Tags added',
+      checked: model?.tags?.length > 0,
+    },
+    {
+      id: 'sectors',
+      label: 'Sectors selected',
+      checked: model?.sectors?.length > 0,
+    },
+    {
+      id: 'geographies',
+      label: 'Geographies selected',
+      checked: model?.geographies?.length > 0,
+    },
+    {
+      id: 'version',
+      label: 'At least one version created',
+      checked: versions.length > 0,
+    },
+    {
+      id: 'primaryVersion',
+      label: 'Primary version selected',
+      checked: !!primaryVersion,
+    },
+    {
+      id: 'provider',
+      label: 'At least one access method configured',
+      checked: hasProviders,
+    },
   ];
 
-  if (StatusData.isLoading) {
-    return <div>Loading...</div>;
+  const completedCount = checklistItems.filter((item) => item.checked).length;
+  const allComplete = completedCount === checklistItems.length;
+
+  if (isLoading) {
+    return <div className="p-6">Loading...</div>;
   }
 
   if (!model) {
-    return <div>Model not found</div>;
+    return <div className="p-6">Model not found</div>;
   }
-
-  console.log('Model data:', model);
-  console.log('Checklist checks:', {
-    hasName: !!model?.name,
-    hasDisplayName: !!model?.displayName,
-    hasDescription: !!model?.description,
-    hasEndpoints: model?.endpoints?.length > 0,
-    endpointsLength: model?.endpoints?.length
-  });
 
   const isPublished = model?.status === 'ACTIVE' && model?.isPublic;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 py-6">
+      {/* Summary Section */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <Text variant="headingMd" as="h2" className="mb-6">
+          Model Summary
+        </Text>
+
+        <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+          {/* Left Column */}
+          <div className="flex flex-col gap-1">
+            <Text variant="bodySm" color="subdued">
+              Model Name
+            </Text>
+            <Text variant="bodyMd" fontWeight="semibold">
+              {model.displayName || model.name || '-'}
+            </Text>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Text variant="bodySm" color="subdued">
+              Primary Version
+            </Text>
+            <Text variant="bodyMd" fontWeight="semibold">
+              {primaryVersion ? `Version ${primaryVersion.version}` : '-'}
+            </Text>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Text variant="bodySm" color="subdued">
+              Model Type
+            </Text>
+            <Text variant="bodyMd">
+              {modelTypeLabels[model.modelType] || model.modelType || '-'}
+            </Text>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Text variant="bodySm" color="subdued">
+              Lifecycle Stage
+            </Text>
+            <Text variant="bodyMd">
+              {primaryVersion
+                ? lifecycleLabels[primaryVersion.lifecycleStage] ||
+                  primaryVersion.lifecycleStage
+                : '-'}
+            </Text>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Text variant="bodySm" color="subdued">
+              Tags
+            </Text>
+            <Text variant="bodyMd">
+              {model.tags?.length > 0
+                ? model.tags.map((t: any) => t.value).join(', ')
+                : '-'}
+            </Text>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Text variant="bodySm" color="subdued">
+              Total Versions
+            </Text>
+            <Text variant="bodyMd">{versions.length}</Text>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Text variant="bodySm" color="subdued">
+              Sectors
+            </Text>
+            <Text variant="bodyMd">
+              {model.sectors?.length > 0
+                ? model.sectors.map((s: any) => s.name).join(', ')
+                : '-'}
+            </Text>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Text variant="bodySm" color="subdued">
+              Access Methods
+            </Text>
+            <Text variant="bodyMd">
+              {primaryVersion?.providers?.length || 0} configured
+            </Text>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Text variant="bodySm" color="subdued">
+              Geographies
+            </Text>
+            <Text variant="bodyMd">
+              {model.geographies?.length > 0
+                ? model.geographies.map((g: any) => g.name).join(', ')
+                : '-'}
+            </Text>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Text variant="bodySm" color="subdued">
+              Description
+            </Text>
+            <Text variant="bodyMd">
+              {model.description
+                ? model.description.length > 100
+                  ? `${model.description.substring(0, 100)}...`
+                  : model.description
+                : '-'}
+            </Text>
+          </div>
+        </div>
+      </div>
+
+      {/* Publication Checklist */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <Text variant="headingMd" as="h2">
+            Publication Checklist
+          </Text>
+          <Text variant="bodySm" color="subdued">
+            {completedCount} of {checklistItems.length} complete
+          </Text>
+        </div>
+
+        <div className="space-y-3">
+          {checklistItems.map((item) => (
+            <div key={item.id} className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={item.checked}
+                disabled
+                className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+              />
+              <Text
+                variant="bodyMd"
+                color={item.checked ? 'default' : 'subdued'}
+              >
+                {item.label}
+              </Text>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Publication Status */}
       <div className="rounded-lg border border-gray-200 bg-white p-6">
         <Text variant="headingMd" as="h2" className="mb-4">
           Publication Status
         </Text>
-        
+
         {isPublished ? (
           <div className="mb-6 rounded-lg bg-green-50 p-4">
             <Text variant="headingSm" className="text-green-800">
@@ -195,121 +389,23 @@ export default function PublishPage() {
               Model is not published
             </Text>
             <Text variant="bodySm" className="mt-2 text-yellow-700">
-              Your AI model is currently in draft mode. Publish it to make it
-              available to other users.
+              {allComplete
+                ? 'All checklist items are complete. You can now publish your model.'
+                : 'Complete all checklist items before publishing your model.'}
             </Text>
           </div>
         )}
-
-        <FormLayout>
-          <Select
-            name="status"
-            label="Status"
-            options={statusOptions}
-            value={formData.status}
-            onChange={(value) => handleInputChange('status', value)}
-            helpText="Current status of the model in the lifecycle"
-          />
-
-          <div className="flex flex-col gap-4">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={formData.isPublic}
-                onChange={(e) =>
-                  handleInputChange('isPublic', e.target.checked)
-                }
-                className="h-4 w-4"
-              />
-              <div>
-                <Text variant="bodyMd">Public</Text>
-                <Text variant="bodySm" color="subdued">
-                  Make this model visible to all users
-                </Text>
-              </div>
-            </label>
-
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={formData.isActive}
-                onChange={(e) =>
-                  handleInputChange('isActive', e.target.checked)
-                }
-                className="h-4 w-4"
-              />
-              <div>
-                <Text variant="bodyMd">Active</Text>
-                <Text variant="bodySm" color="subdued">
-                  Model is currently operational and can accept requests
-                </Text>
-              </div>
-            </label>
-          </div>
-        </FormLayout>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <Text variant="headingMd" as="h2" className="mb-4">
-          Publication Checklist
-        </Text>
-        <div className="space-y-3">
-          <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              checked={!!model.name && !!model.displayName}
-              disabled
-              className="mt-1 h-4 w-4"
-            />
-            <div>
-              <Text variant="bodyMd">Model name and display name set</Text>
-              <Text variant="bodySm" color="subdued">
-                Basic information is required
-              </Text>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              checked={!!model?.description}
-              disabled
-              className="mt-1 h-4 w-4"
-            />
-            <div>
-              <Text variant="bodyMd">Description provided</Text>
-              <Text variant="bodySm" color="subdued">
-                Help users understand your model&apos;s capabilities
-              </Text>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              checked={model?.endpoints?.length > 0}
-              disabled
-              className="mt-1 h-4 w-4"
-            />
-            <div>
-              <Text variant="bodyMd">At least one endpoint configured</Text>
-              <Text variant="bodySm" color="subdued">
-                Required for model to be functional
-              </Text>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      {/* Action Buttons */}
       <div className="flex justify-end gap-4">
-        <Button onClick={handleSave} loading={updateLoading}>
-          Save Changes
-        </Button>
         {!isPublished && (
           <Button
             onClick={handlePublish}
             loading={updateLoading}
-            variant="basic"
+            disabled={!allComplete}
           >
-            Publish Model
+            PUBLISH MODEL
           </Button>
         )}
       </div>
