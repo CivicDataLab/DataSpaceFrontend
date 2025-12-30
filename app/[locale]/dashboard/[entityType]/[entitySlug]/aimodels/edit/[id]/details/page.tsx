@@ -11,6 +11,7 @@ import {
 } from 'opub-ui';
 import { useEffect, useState } from 'react';
 
+import RichTextEditor from '@/components/RichTextEditor/RichTextEditor';
 import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
 
@@ -353,13 +354,13 @@ export default function AIModelDetailsPage() {
       />
 
       {/* Description */}
-      <TextField
-        name="description"
+      <RichTextEditor
         label="Description"
         value={formData.description}
         onChange={(value) => handleInputChange('description', value)}
         onBlur={() => handleSave()}
-        multiline={4}
+        placeholder="Enter model description with rich formatting..."
+        helpText={`Character limit: ${formData?.description?.length || 0}/10000`}
       />
 
       {/* Target Users & Intended Use - side by side */}

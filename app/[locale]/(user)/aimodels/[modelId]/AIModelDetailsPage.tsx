@@ -8,9 +8,9 @@ import BreadCrumbs from '@/components/BreadCrumbs';
 import JsonLd from '@/components/JsonLd';
 import { GraphQL } from '@/lib/api';
 import { generateJsonLd } from '@/lib/utils';
-import Details from './components/Details';
 import Metadata from './components/Metadata';
 import PrimaryData from './components/PrimaryData';
+import Versions from './components/Versions';
 
 const aiModelQuery: any = graphql(`
   query getAIModel($modelId: Int!) {
@@ -18,27 +18,14 @@ const aiModelQuery: any = graphql(`
       id
       name
       displayName
-      version
       description
       modelType
-      provider
-      providerModelId
-      supportsStreaming
-      maxTokens
-      supportedLanguages
-      inputSchema
-      outputSchema
       metadata
       status
       isPublic
       isActive
-      averageLatencyMs
-      successRate
-      lastAuditScore
-      auditCount
       createdAt
       updatedAt
-      lastTestedAt
       tags {
         id
         value
@@ -65,14 +52,25 @@ const aiModelQuery: any = graphql(`
           url
         }
       }
-      endpoints {
+      versions {
         id
-        url
-        httpMethod
-        authType
-        timeoutSeconds
-        isPrimary
-        isActive
+        version
+        versionNotes
+        lifecycleStage
+        isLatest
+        supportsStreaming
+        maxTokens
+        supportedLanguages
+        status
+        createdAt
+        updatedAt
+        providers {
+          id
+          provider
+          providerModelId
+          isPrimary
+          isActive
+        }
       }
     }
   }
@@ -140,7 +138,7 @@ export default function AIModelDetailsPage({
             ) : modelData ? (
               <>
                 <PrimaryData data={modelData} isLoading={isLoading} />
-                <Details data={modelData} />
+                <Versions data={modelData} />
               </>
             ) : (
               <div className="mt-8 flex justify-center">
