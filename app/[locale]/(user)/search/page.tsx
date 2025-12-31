@@ -1,8 +1,10 @@
-import React from 'react';
 
-import { generateJsonLd, generatePageMetadata } from '@/lib/utils';
 import JsonLd from '@/components/JsonLd';
+import { generateJsonLd, generatePageMetadata } from '@/lib/utils';
 import UnifiedListingComponent from './components/UnifiedListingComponent';
+
+// Force dynamic rendering to avoid SSR issues with API calls
+export const dynamic = 'force-dynamic';
 
 export const generateMetadata = () =>
   generatePageMetadata({

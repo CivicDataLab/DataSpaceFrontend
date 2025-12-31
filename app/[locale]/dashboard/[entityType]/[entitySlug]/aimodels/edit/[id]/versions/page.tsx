@@ -44,10 +44,25 @@ const fetchModelVersions: any = graphql(`
           providerModelId
           isPrimary
           isActive
+          # API Configuration
+          apiEndpointUrl
+          apiHttpMethod
+          apiTimeoutSeconds
+          apiAuthType
+          apiAuthHeaderName
+          apiKey
+          apiKeyPrefix
+          apiHeaders
+          apiRequestTemplate
+          apiResponsePath
+          # HuggingFace Configuration
           hfUsePipeline
           hfAuthToken
           hfModelClass
           hfAttnImplementation
+          hfTrustRemoteCode
+          hfTorchDtype
+          hfDeviceMap
           framework
           config
         }
@@ -152,16 +167,28 @@ export default function VersionsPage() {
     provider: 'CUSTOM',
     providerModelId: '',
     isPrimary: false,
-    // Huggingface-specific
-    hfUsePipeline: false,
-    hfModelClass: '',
-    hfAuthToken: '',
-    hfAttnImplementation: 'flash_attention_2',
-    framework: '',
-    // API-based providers (OpenAI, Llama, Custom)
+    // API Endpoint Configuration
+    apiEndpointUrl: '',
+    apiHttpMethod: 'POST',
+    apiTimeoutSeconds: 60,
+    // Authentication Configuration
+    apiAuthType: 'BEARER',
+    apiAuthHeaderName: 'Authorization',
     apiKey: '',
-    baseUrl: '',
-    authType: 'BEARER',
+    apiKeyPrefix: 'Bearer',
+    // Request/Response Configuration
+    apiHeaders: {} as Record<string, string>,
+    apiRequestTemplate: {} as Record<string, any>,
+    apiResponsePath: '',
+    // HuggingFace Configuration
+    hfUsePipeline: false,
+    hfAuthToken: '',
+    hfModelClass: '',
+    hfAttnImplementation: 'flash_attention_2',
+    hfTrustRemoteCode: true,
+    hfTorchDtype: 'auto',
+    hfDeviceMap: 'auto',
+    framework: '',
   });
 
   // Fetch model versions - override default refetchOnMount: false
@@ -289,14 +316,28 @@ export default function VersionsPage() {
       provider: 'CUSTOM',
       providerModelId: '',
       isPrimary: false,
-      hfUsePipeline: false,
-      hfModelClass: '',
-      hfAuthToken: '',
-      hfAttnImplementation: 'flash_attention_2',
-      framework: '',
+      // API Endpoint Configuration
+      apiEndpointUrl: '',
+      apiHttpMethod: 'POST',
+      apiTimeoutSeconds: 60,
+      // Authentication Configuration
+      apiAuthType: 'BEARER',
+      apiAuthHeaderName: 'Authorization',
       apiKey: '',
-      baseUrl: '',
-      authType: 'BEARER',
+      apiKeyPrefix: 'Bearer',
+      // Request/Response Configuration
+      apiHeaders: {},
+      apiRequestTemplate: {},
+      apiResponsePath: '',
+      // HuggingFace Configuration
+      hfUsePipeline: false,
+      hfAuthToken: '',
+      hfModelClass: '',
+      hfAttnImplementation: 'flash_attention_2',
+      hfTrustRemoteCode: true,
+      hfTorchDtype: 'auto',
+      hfDeviceMap: 'auto',
+      framework: '',
     });
   };
 
@@ -343,19 +384,32 @@ export default function VersionsPage() {
     setSelectedVersion(version);
     if (provider) {
       setEditingProvider(provider);
-      const config = provider.config || {};
       setProviderFormData({
         provider: provider.provider,
         providerModelId: provider.providerModelId || '',
         isPrimary: provider.isPrimary,
+        // API Endpoint Configuration
+        apiEndpointUrl: provider.apiEndpointUrl || '',
+        apiHttpMethod: provider.apiHttpMethod || 'POST',
+        apiTimeoutSeconds: provider.apiTimeoutSeconds || 60,
+        // Authentication Configuration
+        apiAuthType: provider.apiAuthType || 'BEARER',
+        apiAuthHeaderName: provider.apiAuthHeaderName || 'Authorization',
+        apiKey: provider.apiKey || '',
+        apiKeyPrefix: provider.apiKeyPrefix || 'Bearer',
+        // Request/Response Configuration
+        apiHeaders: provider.apiHeaders || {},
+        apiRequestTemplate: provider.apiRequestTemplate || {},
+        apiResponsePath: provider.apiResponsePath || '',
+        // HuggingFace Configuration
         hfUsePipeline: provider.hfUsePipeline || false,
-        hfModelClass: provider.hfModelClass || '',
         hfAuthToken: provider.hfAuthToken || '',
+        hfModelClass: provider.hfModelClass || '',
         hfAttnImplementation: provider.hfAttnImplementation || 'flash_attention_2',
+        hfTrustRemoteCode: provider.hfTrustRemoteCode ?? true,
+        hfTorchDtype: provider.hfTorchDtype || 'auto',
+        hfDeviceMap: provider.hfDeviceMap || 'auto',
         framework: provider.framework || '',
-        apiKey: config.apiKey || '',
-        baseUrl: config.baseUrl || '',
-        authType: config.authType || 'BEARER',
       });
     } else {
       setEditingProvider(null);
@@ -367,27 +421,31 @@ export default function VersionsPage() {
   const handleSaveProvider = () => {
     if (!selectedVersion) return;
 
-    // Build config object for API-based providers
-    const config: Record<string, any> = {};
-    if (providerFormData.apiKey) {
-      config.apiKey = providerFormData.apiKey;
-    }
-    if (providerFormData.baseUrl) {
-      config.baseUrl = providerFormData.baseUrl;
-    }
-    if (providerFormData.authType && providerFormData.authType !== 'BEARER') {
-      config.authType = providerFormData.authType;
-    }
-
     const baseData = {
       providerModelId: providerFormData.providerModelId,
       isPrimary: providerFormData.isPrimary,
+      // API Endpoint Configuration
+      apiEndpointUrl: providerFormData.apiEndpointUrl || null,
+      apiHttpMethod: providerFormData.apiHttpMethod || 'POST',
+      apiTimeoutSeconds: providerFormData.apiTimeoutSeconds,
+      // Authentication Configuration
+      apiAuthType: providerFormData.apiAuthType || 'BEARER',
+      apiAuthHeaderName: providerFormData.apiAuthHeaderName || 'Authorization',
+      apiKey: providerFormData.apiKey || null,
+      apiKeyPrefix: providerFormData.apiKeyPrefix || 'Bearer',
+      // Request/Response Configuration
+      apiHeaders: Object.keys(providerFormData.apiHeaders).length > 0 ? providerFormData.apiHeaders : null,
+      apiRequestTemplate: Object.keys(providerFormData.apiRequestTemplate).length > 0 ? providerFormData.apiRequestTemplate : null,
+      apiResponsePath: providerFormData.apiResponsePath || null,
+      // HuggingFace Configuration
       hfUsePipeline: providerFormData.hfUsePipeline,
-      hfModelClass: providerFormData.hfModelClass || null,
       hfAuthToken: providerFormData.hfAuthToken || null,
+      hfModelClass: providerFormData.hfModelClass || null,
       hfAttnImplementation: providerFormData.hfAttnImplementation || null,
+      hfTrustRemoteCode: providerFormData.hfTrustRemoteCode,
+      hfTorchDtype: providerFormData.hfTorchDtype || 'auto',
+      hfDeviceMap: providerFormData.hfDeviceMap || 'auto',
       framework: providerFormData.framework || null,
-      config: Object.keys(config).length > 0 ? config : null,
     };
 
     if (editingProvider) {
@@ -509,16 +567,16 @@ export default function VersionsPage() {
     return names[provider] || provider;
   };
 
-  // Get endpoint URL from provider config
+  // Get endpoint URL from provider
   const getEndpointUrl = (provider: any) => {
-    if (provider.provider === 'HUGGINGFACE') {
-      return `api.huggingface.com/${provider.providerModelId || ''}`;
+    if (provider.apiEndpointUrl) {
+      return provider.apiEndpointUrl;
     }
-    if (provider.config?.baseUrl) {
-      return provider.config.baseUrl;
+    if (provider.provider === 'HUGGINGFACE') {
+      return `huggingface.co/${provider.providerModelId || ''}`;
     }
     if (provider.provider === 'OPENAI') {
-      return 'api.openai.com';
+      return 'api.openai.com/v1/chat/completions';
     }
     return provider.providerModelId || '-';
   };
@@ -831,35 +889,35 @@ export default function VersionsPage() {
                 </>
               )}
 
-              {/* Llama Ollama - needs base URL */}
+              {/* Llama Ollama - needs endpoint URL */}
               {providerFormData.provider === 'LLAMA_OLLAMA' && (
                 <>
                   <TextField
-                    name="baseUrl"
-                    label="Ollama Base URL"
-                    value={providerFormData.baseUrl}
+                    name="apiEndpointUrl"
+                    label="Ollama Endpoint URL"
+                    value={providerFormData.apiEndpointUrl}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, baseUrl: value }))
+                      setProviderFormData((prev) => ({ ...prev, apiEndpointUrl: value }))
                     }
-                    placeholder="http://localhost:11434"
+                    placeholder="http://localhost:11434/api/generate"
                     helpText="URL where Ollama is running"
                     required
                   />
                 </>
               )}
 
-              {/* Llama Custom - needs base URL and API key */}
+              {/* Llama Custom - needs endpoint URL and API key */}
               {providerFormData.provider === 'LLAMA_CUSTOM' && (
                 <>
                   <TextField
-                    name="baseUrl"
-                    label="API Base URL"
-                    value={providerFormData.baseUrl}
+                    name="apiEndpointUrl"
+                    label="API Endpoint URL"
+                    value={providerFormData.apiEndpointUrl}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, baseUrl: value }))
+                      setProviderFormData((prev) => ({ ...prev, apiEndpointUrl: value }))
                     }
-                    placeholder="https://your-api.com/v1"
-                    helpText="Base URL for your custom Llama API"
+                    placeholder="https://your-api.com/v1/chat/completions"
+                    helpText="Full endpoint URL for your custom Llama API"
                     required
                   />
                   <TextField
@@ -875,18 +933,18 @@ export default function VersionsPage() {
                 </>
               )}
 
-              {/* Custom API - needs base URL, API key, and auth type */}
+              {/* Custom API - full configuration */}
               {providerFormData.provider === 'CUSTOM' && (
                 <>
                   <TextField
-                    name="baseUrl"
-                    label="API Base URL"
-                    value={providerFormData.baseUrl}
+                    name="apiEndpointUrl"
+                    label="API Endpoint URL"
+                    value={providerFormData.apiEndpointUrl}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, baseUrl: value }))
+                      setProviderFormData((prev) => ({ ...prev, apiEndpointUrl: value }))
                     }
-                    placeholder="https://your-api.com/v1"
-                    helpText="Base URL for your custom API"
+                    placeholder="https://your-api.com/v1/completions"
+                    helpText="Full endpoint URL for your custom API"
                     required
                   />
                   <TextField
@@ -900,7 +958,7 @@ export default function VersionsPage() {
                     helpText="API key or token for authentication"
                   />
                   <Select
-                    name="authType"
+                    name="apiAuthType"
                     label="Authentication Type"
                     options={[
                       { label: 'Bearer Token', value: 'BEARER' },
@@ -908,11 +966,42 @@ export default function VersionsPage() {
                       { label: 'Basic Auth', value: 'BASIC' },
                       { label: 'OAuth2', value: 'OAUTH2' },
                       { label: 'Custom', value: 'CUSTOM' },
+                      { label: 'None', value: 'NONE' },
                     ]}
-                    value={providerFormData.authType}
+                    value={providerFormData.apiAuthType}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, authType: value }))
+                      setProviderFormData((prev) => ({ ...prev, apiAuthType: value }))
                     }
+                  />
+                  <TextField
+                    name="apiAuthHeaderName"
+                    label="Auth Header Name"
+                    value={providerFormData.apiAuthHeaderName}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({ ...prev, apiAuthHeaderName: value }))
+                    }
+                    placeholder="Authorization"
+                    helpText="Header name for authentication (e.g., Authorization, X-API-Key)"
+                  />
+                  <TextField
+                    name="apiResponsePath"
+                    label="Response Path"
+                    value={providerFormData.apiResponsePath}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({ ...prev, apiResponsePath: value }))
+                    }
+                    placeholder="choices[0].message.content"
+                    helpText="JSON path to extract response text"
+                  />
+                  <TextField
+                    name="apiTimeoutSeconds"
+                    label="Timeout (seconds)"
+                    type="number"
+                    value={providerFormData.apiTimeoutSeconds.toString()}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({ ...prev, apiTimeoutSeconds: parseInt(value) || 60 }))
+                    }
+                    helpText="Request timeout in seconds"
                   />
                 </>
               )}

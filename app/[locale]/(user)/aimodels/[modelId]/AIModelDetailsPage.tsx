@@ -70,6 +70,15 @@ const aiModelQuery: any = graphql(`
           providerModelId
           isPrimary
           isActive
+          # API Configuration
+          apiEndpointUrl
+          apiHttpMethod
+          apiTimeoutSeconds
+          apiAuthType
+          # HuggingFace Configuration
+          hfUsePipeline
+          hfModelClass
+          framework
         }
       }
     }

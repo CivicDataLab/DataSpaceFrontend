@@ -174,6 +174,61 @@ export default function Versions({ data }: VersionsProps) {
                       </div>
                     </div>
                   )}
+                  {version.providers && version.providers.length > 0 && (
+                    <div className="mt-4 border-t border-greyExtralight pt-4">
+                      <Text variant="bodySm" className="mb-2 uppercase text-textSubdued">
+                        Provider Configuration
+                      </Text>
+                      <div className="flex flex-col gap-3">
+                        {version.providers.map((provider: any) => (
+                          <div
+                            key={provider.id}
+                            className="rounded-1 border border-greyExtralight bg-surfaceSubdued p-3"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Text variant="bodyMd" fontWeight="semibold">
+                                  {providerLabels[provider.provider] || provider.provider}
+                                </Text>
+                                {provider.isPrimary && (
+                                  <Badge status="success">Primary</Badge>
+                                )}
+                                {!provider.isActive && (
+                                  <Badge status="warning">Inactive</Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="mt-2 flex flex-col gap-1">
+                              {provider.providerModelId && (
+                                <div className="flex gap-2">
+                                  <Text variant="bodySm" className="text-textSubdued">Model:</Text>
+                                  <Text variant="bodySm">{provider.providerModelId}</Text>
+                                </div>
+                              )}
+                              {provider.apiEndpointUrl && (
+                                <div className="flex gap-2">
+                                  <Text variant="bodySm" className="text-textSubdued">Endpoint:</Text>
+                                  <Text variant="bodySm" className="break-all">{provider.apiEndpointUrl}</Text>
+                                </div>
+                              )}
+                              {provider.hfModelClass && (
+                                <div className="flex gap-2">
+                                  <Text variant="bodySm" className="text-textSubdued">Model Class:</Text>
+                                  <Text variant="bodySm">{provider.hfModelClass}</Text>
+                                </div>
+                              )}
+                              {provider.framework && (
+                                <div className="flex gap-2">
+                                  <Text variant="bodySm" className="text-textSubdued">Framework:</Text>
+                                  <Text variant="bodySm">{provider.framework === 'pt' ? 'PyTorch' : provider.framework === 'tf' ? 'TensorFlow' : provider.framework}</Text>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

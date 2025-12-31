@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -6,9 +5,10 @@ import {
   AccordionTrigger,
   Text,
 } from 'opub-ui';
+import React, { useEffect, useState } from 'react';
 
-import { toTitleCase } from '@/lib/utils';
 import { TreeView } from '@/components/ui/tree-view';
+import { toTitleCase } from '@/lib/utils';
 
 interface Geography {
   id: number;
@@ -73,7 +73,15 @@ const GeographyFilter: React.FC<GeographyFilterProps> = ({
           }
         );
 
-        const { data } = await response.json();
+        const text = await response.text();
+        let data;
+        try {
+          const parsed = JSON.parse(text);
+          data = parsed.data;
+        } catch {
+          console.error('GeographyFilter JSON parse error:', text.substring(0, 500));
+          throw new Error('Failed to parse geography response');
+        }
         
         if (data && data.geographies && data.geographies.length > 0) {
           const hierarchicalData = buildHierarchy(data.geographies);

@@ -110,7 +110,7 @@ export default function AIModelsPage({
     if (navigationTab === null || navigationTab === undefined)
       setNavigationTab('registered');
     AllAIModels.refetch();
-  }, [navigationTab]);
+  }, [AllAIModels, navigationTab, setNavigationTab]);
 
   const DeleteAIModelMutation: {
     mutate: any;

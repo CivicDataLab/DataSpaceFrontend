@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useEffect, useReducer, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
+import { useRouter } from 'next/navigation';
 import {
   Button,
   ButtonGroup,
@@ -14,11 +13,12 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 
-import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import { cn, formatDate } from '@/lib/utils';
 import Filter from '../../datasets/components/FIlter/Filter';
 import Styles from '../../datasets/dataset.module.scss';
 
@@ -232,8 +232,20 @@ const fetchUnifiedData = async (variables: string) => {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/search/unified/${variables}`
   );
-  const data = await response.json();
-  return data;
+  
+  if (!response.ok) {
+    const text = await response.text();
+    console.error('API Error Response:', text.substring(0, 500));
+    throw new Error(`API returned ${response.status}: ${response.statusText}`);
+  }
+  
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.error('JSON Parse Error. Response text:', text.substring(0, 600));
+    throw new Error(`Failed to parse JSON response`);
+  }
 };
 
 // Listing Component Props
@@ -265,18 +277,28 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   useUrlParams(queryParams, setQueryParams, setVariables);
   const latestFetchId = useRef(0);
 
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     if (variables) {
       const currentFetchId = ++latestFetchId.current;
+      setIsLoading(true);
+      setError(null);
 
       fetchUnifiedData(variables)
         .then((res) => {
           if (currentFetchId === latestFetchId.current) {
             setFacets(res);
+            setIsLoading(false);
           }
         })
         .catch((err) => {
-          console.error(err);
+          console.error('Search error:', err);
+          if (currentFetchId === latestFetchId.current) {
+            setError('Failed to load search results. Please try again.');
+            setIsLoading(false);
+          }
         });
     }
   }, [variables]);
