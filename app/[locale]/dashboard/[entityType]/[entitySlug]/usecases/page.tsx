@@ -95,7 +95,7 @@ export default function DatasetPage() {
     if (isValidParams) {
       AllUseCases.refetch();
     }
-  }, [navigationTab, isValidParams]);
+  }, [navigationTab, isValidParams, setNavigationTab, AllUseCases]);
 
   const DeleteUseCaseMutation: {
     mutate: any;

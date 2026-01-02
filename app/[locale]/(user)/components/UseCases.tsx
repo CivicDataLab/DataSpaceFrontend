@@ -11,7 +11,6 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-  Spinner,
   Text,
 } from 'opub-ui';
 

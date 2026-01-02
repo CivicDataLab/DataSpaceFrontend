@@ -243,7 +243,7 @@ const fetchUnifiedData = async (variables: string) => {
   try {
     return JSON.parse(text);
   } catch (e) {
-    console.error('JSON Parse Error. Response text:', text.substring(0, 600));
+    console.error('JSON Parse Error. Response text:', text.substring(0, 600), "Error: ", e);
     throw new Error(`Failed to parse JSON response`);
   }
 };

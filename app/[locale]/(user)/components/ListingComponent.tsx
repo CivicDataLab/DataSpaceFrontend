@@ -283,7 +283,7 @@ const ListingComponent: React.FC<ListingProps> = ({
   // Stabilize lockedFilters reference to prevent infinite loops
   const stableLockedFilters = useMemo(
     () => lockedFilters,
-    [JSON.stringify(lockedFilters)]
+    [lockedFilters]
   );
 
   useUrlParams(queryParams, setQueryParams, setVariables, stableLockedFilters);
@@ -359,7 +359,7 @@ const ListingComponent: React.FC<ListingProps> = ({
       }
       // Handle key-value object format (current backend format)
       else if (value && typeof value === 'object' && !Array.isArray(value)) {
-        acc[key] = Object.entries(value).map(([label, count]) => ({
+        acc[key] = Object.entries(value).map(([label]) => ({
           label: label,
           value: label,
         }));
@@ -534,9 +534,8 @@ const ListingComponent: React.FC<ListingProps> = ({
                   {Object.entries(queryParams.filters).map(
                     ([category, values]) =>
                       values
-                        .filter((value) => category !== 'sort')
+                        .filter(() => category !== 'sort')
                         .map((value) => {
-                          // Check if this filter value is locked
                           const isLocked =
                             stableLockedFilters[category]?.includes(value);
                           return (

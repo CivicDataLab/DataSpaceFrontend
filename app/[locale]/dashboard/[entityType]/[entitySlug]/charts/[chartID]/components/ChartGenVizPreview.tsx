@@ -1,14 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
 import LoadingPage from '@/app/[locale]/dashboard/loading';
 import { graphql } from '@/gql';
 import { ChartTypes } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
-import * as echarts from 'echarts/core';
 import {
   Button,
-  Dialog,
   Form,
   Label,
   Popover,
@@ -25,7 +22,6 @@ import {
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import TitleBar from '../../../components/title-bar';
-import { datasetResource } from '../../queries';
 
 interface YAxisColumnItem {
   fieldName: string;

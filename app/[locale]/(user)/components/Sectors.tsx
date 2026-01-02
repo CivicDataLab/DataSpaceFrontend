@@ -5,9 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query'; // ✅ Ensure this is correct
+import { useQuery } from '@tanstack/react-query';
 
-import { Button, Divider, Spinner, Text } from 'opub-ui';
+import { Button, Divider, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { SectorListingSkeleton } from '@/components/loading';
@@ -25,8 +25,8 @@ const sectorDetails = graphql(`
 `);
 
 const Sectors = () => {
-  const { data, isLoading, error, isError } = useQuery({
-    queryKey: ['sectors_list'], // ✅ Fix queryKey syntax
+  const { data, isLoading } = useQuery({
+    queryKey: ['sectors_list'],
     queryFn: () => GraphQL(sectorDetails, {}),
   });
   const router = useRouter();

@@ -118,7 +118,7 @@ const GeographyFilter: React.FC<GeographyFilterProps> = ({
     };
 
     fetchGeographies();
-  }, []); // Only run once on mount
+  }, [geographyOptions]);
 
   const buildHierarchy = (flatList: Geography[]): GeographyNode[] => {
     const map = new Map<number, GeographyNode>();

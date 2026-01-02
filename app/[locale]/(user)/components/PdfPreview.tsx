@@ -31,7 +31,7 @@ export default function PdfPreview({ url }: PdfPreviewProps) {
         URL.revokeObjectURL(previewUrl);
       }
     };
-  }, [url]);
+  }, [previewUrl, url]);
 
   if (!previewUrl) return <p>Loading PDF preview...</p>;
 

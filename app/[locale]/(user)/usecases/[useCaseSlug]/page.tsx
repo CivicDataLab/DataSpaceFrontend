@@ -53,6 +53,7 @@ export async function generateMetadata({
     });
   } catch (error) {
     // Fallback to generic metadata if the API call fails
+    console.error('Error fetching use case info:', error);
     return generatePageMetadata({
       title: `Use Case Details | CivicDataSpace`,
       description: `Explore open data and curated datasets in this use case.`,

@@ -2,7 +2,7 @@
  * Tour utility functions
  */
 
-import { TourConfig, TourStorageData } from '@/types/tour';
+import { TourConfig} from '@/types/tour';
 
 const STORAGE_KEY = 'civicdata-tours-seen';
 

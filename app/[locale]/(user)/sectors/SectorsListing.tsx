@@ -10,7 +10,7 @@ import {
   SectorsListsQuery,
 } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
-import { Divider, SearchInput, Select, Spinner, Text, Tooltip } from 'opub-ui';
+import { Divider, SearchInput, Select, Text, Tooltip } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { cn, generateJsonLd } from '@/lib/utils';
