@@ -178,7 +178,7 @@ export default function VersionsPage() {
     apiKeyPrefix: 'Bearer',
     // Request/Response Configuration
     apiHeaders: {} as Record<string, string>,
-    apiRequestTemplate: {} as Record<string, any>,
+    apiRequestTemplate: '',
     apiResponsePath: '',
     // HuggingFace Configuration
     hfUsePipeline: false,
@@ -327,7 +327,7 @@ export default function VersionsPage() {
       apiKeyPrefix: 'Bearer',
       // Request/Response Configuration
       apiHeaders: {},
-      apiRequestTemplate: {},
+      apiRequestTemplate: '',
       apiResponsePath: '',
       // HuggingFace Configuration
       hfUsePipeline: false,
@@ -399,7 +399,7 @@ export default function VersionsPage() {
         apiKeyPrefix: provider.apiKeyPrefix || 'Bearer',
         // Request/Response Configuration
         apiHeaders: provider.apiHeaders || {},
-        apiRequestTemplate: provider.apiRequestTemplate || {},
+        apiRequestTemplate: provider.apiRequestTemplate ? JSON.stringify(provider.apiRequestTemplate, null, 2) : '',
         apiResponsePath: provider.apiResponsePath || '',
         // HuggingFace Configuration
         hfUsePipeline: provider.hfUsePipeline || false,
@@ -421,6 +421,17 @@ export default function VersionsPage() {
   const handleSaveProvider = () => {
     if (!selectedVersion) return;
 
+    // Parse apiRequestTemplate string to JSON if provided
+    let parsedRequestTemplate = null;
+    if (providerFormData.apiRequestTemplate) {
+      try {
+        parsedRequestTemplate = JSON.parse(providerFormData.apiRequestTemplate);
+      } catch (e) {
+        alert('Invalid JSON in Request Body Template. Please check the format.');
+        return;
+      }
+    }
+
     const baseData = {
       providerModelId: providerFormData.providerModelId,
       isPrimary: providerFormData.isPrimary,
@@ -435,7 +446,7 @@ export default function VersionsPage() {
       apiKeyPrefix: providerFormData.apiKeyPrefix || 'Bearer',
       // Request/Response Configuration
       apiHeaders: Object.keys(providerFormData.apiHeaders).length > 0 ? providerFormData.apiHeaders : null,
-      apiRequestTemplate: Object.keys(providerFormData.apiRequestTemplate).length > 0 ? providerFormData.apiRequestTemplate : null,
+      apiRequestTemplate: parsedRequestTemplate,
       apiResponsePath: providerFormData.apiResponsePath || null,
       // HuggingFace Configuration
       hfUsePipeline: providerFormData.hfUsePipeline,
@@ -983,6 +994,20 @@ export default function VersionsPage() {
                     placeholder="Authorization"
                     helpText="Header name for authentication (e.g., Authorization, X-API-Key)"
                   />
+                  <TextField
+                   name="apiRequestTemplate"
+                    label="Request Body Template"
+                    value={providerFormData.apiRequestTemplate}
+                    onChange={(value) =>
+                      setProviderFormData((prev) => ({ ...prev, apiRequestTemplate: value }))
+                    }
+                    placeholder='{"model": "{model_id}",
+                                  "messages": [{"role": "user", "content": "{input}"}]
+                                  "temperature": {temperature},
+                                  "max_tokens": {max_tokens}
+                                  }'
+                    helpText="Request body template with placeholders like {input}, {prompt}, {model_id}, {temperature}, {max_tokens}"
+                    />
                   <TextField
                     name="apiResponsePath"
                     label="Response Path"
