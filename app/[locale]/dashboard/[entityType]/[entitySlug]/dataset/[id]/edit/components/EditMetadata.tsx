@@ -999,7 +999,7 @@ export function EditMetadata({ id }: { id: string }) {
                         name="hasSystemPrompt"
                         checked={promptMetadataState.hasSystemPrompt || false}
                         onChange={(checked) => {
-                          savePromptMetadata({ hasSystemPrompt: checked });
+                          savePromptMetadata({ hasSystemPrompt: Boolean(checked) });
                         }}
                       >
                         Includes System Prompts
@@ -1008,7 +1008,7 @@ export function EditMetadata({ id }: { id: string }) {
                         name="hasExampleResponses"
                         checked={promptMetadataState.hasExampleResponses || false}
                         onChange={(checked) => {
-                          savePromptMetadata({ hasExampleResponses: checked });
+                          savePromptMetadata({ hasExampleResponses: Boolean(checked) });
                         }}
                       >
                         Includes Example Responses
