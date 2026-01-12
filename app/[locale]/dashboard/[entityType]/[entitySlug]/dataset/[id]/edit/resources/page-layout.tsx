@@ -1,8 +1,7 @@
 'use client';
 
-import React from 'react';
-import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
 import { Spinner, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -68,6 +67,7 @@ export function DistibutionPage({
                   <ResourceListView
                     refetch={refetch}
                     data={data.datasets[0].resources}
+                    isPromptDataset={data.datasets[0].datasetType === 'PROMPT'}
                   />
                 )}
               </>

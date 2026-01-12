@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Accordion,
   AccordionContent,
@@ -19,10 +18,11 @@ import {
   Text,
   toast,
 } from 'opub-ui';
+import { useEffect, useState } from 'react';
 
+import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
 import { formatDate, getWebsiteTitle, toTitleCase } from '@/lib/utils';
-import { Icons } from '@/components/icons';
 
 const datasetSummaryQuery: any = graphql(`
   query datasetsSummary($filters: DatasetFilter) {
@@ -61,6 +61,8 @@ const datasetSummaryQuery: any = graphql(`
       description
       created
       modified
+      datasetType
+      promptMetadata
     }
   }
 `);
@@ -189,14 +191,17 @@ const Page = () => {
     getDatasetsSummary.refetch();
   });
 
+  const isPromptDataset = getDatasetsSummary.data?.datasets[0]?.datasetType === 'PROMPT';
+  const promptMetadata = getDatasetsSummary.data?.datasets[0]?.promptMetadata;
+
   const Summary = [
     {
-      name: 'Resource',
+      name: isPromptDataset ? 'Prompt Files' : 'Resource',
       data: getDatasetsSummary.data?.datasets[0]?.resources,
       error:
         getDatasetsSummary.data &&
         getDatasetsSummary.data?.datasets[0]?.resources.length === 0
-          ? 'No Resources found. Please add to continue.'
+          ? isPromptDataset ? 'No Prompt Files found. Please add to continue.' : 'No Resources found. Please add to continue.'
           : '',
       errorType: 'critical',
     },
@@ -225,6 +230,16 @@ const Page = () => {
           : '',
       errorType: 'critical',
     },
+    ...(isPromptDataset
+      ? [
+          {
+            name: 'Prompt Metadata',
+            data: promptMetadata,
+            error: '',
+            errorType: 'info',
+          },
+        ]
+      : []),
   ];
 
   const PrimaryMetadata = [
@@ -365,7 +380,58 @@ const Page = () => {
                       }}
                     >
                       <div className=" py-4">
-                        {item.name !== 'Metadata' ? (
+                        {item.name === 'Prompt Metadata' ? (
+                          <div className="flex flex-col gap-4 px-8 py-4">
+                            {item.data?.task_type && (
+                              <div className="flex flex-wrap gap-2">
+                                <Text className="lg:basis-1/6" variant="bodyMd">Task Type:</Text>
+                                <Text variant="bodyMd" className="lg:basis-4/5">
+                                  {item.data.task_type.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                                </Text>
+                              </div>
+                            )}
+                            {item.data?.domain && (
+                              <div className="flex flex-wrap gap-2">
+                                <Text className="lg:basis-1/6" variant="bodyMd">Domain:</Text>
+                                <Text variant="bodyMd" className="lg:basis-4/5">{item.data.domain}</Text>
+                              </div>
+                            )}
+                            {item.data?.target_languages?.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                <Text className="lg:basis-1/6" variant="bodyMd">Target Languages:</Text>
+                                <div className="flex gap-2 lg:basis-4/5">
+                                  {item.data.target_languages.map((lang: string, idx: number) => (
+                                    <Tag key={idx}>{lang}</Tag>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {item.data?.prompt_format && (
+                              <div className="flex flex-wrap gap-2">
+                                <Text className="lg:basis-1/6" variant="bodyMd">Prompt Format:</Text>
+                                <Text variant="bodyMd" className="lg:basis-4/5">{item.data.prompt_format}</Text>
+                              </div>
+                            )}
+                            {item.data?.target_model_types?.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                <Text className="lg:basis-1/6" variant="bodyMd">Target Model Types:</Text>
+                                <div className="flex gap-2 lg:basis-4/5">
+                                  {item.data.target_model_types.map((model: string, idx: number) => (
+                                    <Tag key={idx}>{model.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}</Tag>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            <div className="flex flex-wrap gap-2">
+                              <Text className="lg:basis-1/6" variant="bodyMd">Has System Prompt:</Text>
+                              <Text variant="bodyMd" className="lg:basis-4/5">{item.data?.has_system_prompt ? 'Yes' : 'No'}</Text>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Text className="lg:basis-1/6" variant="bodyMd">Has Example Responses:</Text>
+                              <Text variant="bodyMd" className="lg:basis-4/5">{item.data?.has_example_responses ? 'Yes' : 'No'}</Text>
+                            </div>
+                          </div>
+                        ) : item.name !== 'Metadata' ? (
                           item.data &&
                           item?.data.length > 0 && (
                             <Table

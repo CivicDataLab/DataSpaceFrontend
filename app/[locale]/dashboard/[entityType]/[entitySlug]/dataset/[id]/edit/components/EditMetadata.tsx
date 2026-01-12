@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   TypeDataset,
@@ -11,6 +9,7 @@ import {
   UpdateMetadataInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import {
   Checkbox,
   Combobox,
@@ -22,6 +21,7 @@ import {
   TextField,
   toast,
 } from 'opub-ui';
+import { useEffect, useState } from 'react';
 
 import { GraphQL } from '@/lib/api';
 import DatasetLoading from '../../../components/loading-dataset';
@@ -66,6 +66,7 @@ const datasetMetadataQueryDoc: any = graphql(`
       title
       id
       description
+      datasetType
       tags {
         id
         value
@@ -91,6 +92,7 @@ const datasetMetadataQueryDoc: any = graphql(`
         value
       }
       accessType
+      promptMetadata
     }
   }
 `);
@@ -109,6 +111,92 @@ const metadataQueryDoc: any = graphql(`
       model
       enabled
       filterable
+    }
+  }
+`);
+
+// Introspection query to get PromptTaskType enum values from schema
+const promptTaskTypeEnumQuery: any = graphql(`
+  query PromptTaskTypeEnum {
+    __type(name: "PromptTaskType") {
+      enumValues {
+        name
+        description
+      }
+    }
+  }
+`);
+
+// Introspection query to get PromptDomain enum values from schema
+const promptDomainEnumQuery: any = graphql(`
+  query PromptDomainEnum {
+    __type(name: "PromptDomain") {
+      enumValues {
+        name
+        description
+      }
+    }
+  }
+`);
+
+// Introspection query to get PromptFormat enum values from schema
+const promptFormatEnumQuery: any = graphql(`
+  query PromptFormatEnum {
+    __type(name: "PromptFormat") {
+      enumValues {
+        name
+        description
+      }
+    }
+  }
+`);
+
+// Introspection query to get TargetLanguage enum values from schema
+const targetLanguageEnumQuery: any = graphql(`
+  query TargetLanguageEnum {
+    __type(name: "TargetLanguage") {
+      enumValues {
+        name
+        description
+      }
+    }
+  }
+`);
+
+// Introspection query to get TargetModelType enum values from schema
+const targetModelTypeEnumQuery: any = graphql(`
+  query TargetModelTypeEnum {
+    __type(name: "TargetModelType") {
+      enumValues {
+        name
+        description
+      }
+    }
+  }
+`);
+
+// Mutation to update prompt-specific metadata
+const updatePromptMetadataMutationDoc: any = graphql(`
+  mutation UpdatePromptMetadata($updateInput: UpdatePromptMetadataInput!) {
+    updatePromptMetadata(updateInput: $updateInput) {
+      success
+      errors {
+        fieldErrors {
+          field
+          messages
+        }
+        nonFieldErrors
+      }
+      data {
+        id
+        taskType
+        targetLanguages
+        domain
+        promptFormat
+        hasSystemPrompt
+        hasExampleResponses
+        useCase
+      }
     }
   }
 `);
@@ -244,7 +332,120 @@ export function EditMetadata({ id }: { id: string }) {
     )
   );
 
+  // Fetch PromptTaskType enum values from GraphQL schema
+  const getPromptTaskTypeEnum: { data: any; isLoading: boolean } = useQuery(
+    ['prompt_task_type_enum'],
+    () => GraphQL(promptTaskTypeEnumQuery, {}, []),
+    { staleTime: Infinity } // Enum values don't change, cache indefinitely
+  );
+
+  // Fetch PromptDomain enum values from GraphQL schema
+  const getPromptDomainEnum: { data: any; isLoading: boolean } = useQuery(
+    ['prompt_domain_enum'],
+    () => GraphQL(promptDomainEnumQuery, {}, []),
+    { staleTime: Infinity }
+  );
+
+  // Fetch PromptFormat enum values from GraphQL schema
+  const getPromptFormatEnum: { data: any; isLoading: boolean } = useQuery(
+    ['prompt_format_enum'],
+    () => GraphQL(promptFormatEnumQuery, {}, []),
+    { staleTime: Infinity }
+  );
+
+  // Fetch TargetLanguage enum values from GraphQL schema
+  const getTargetLanguageEnum: { data: any; isLoading: boolean } = useQuery(
+    ['target_language_enum'],
+    () => GraphQL(targetLanguageEnumQuery, {}, []),
+    { staleTime: Infinity }
+  );
+
+  // Fetch TargetModelType enum values from GraphQL schema
+  const getTargetModelTypeEnum: { data: any; isLoading: boolean } = useQuery(
+    ['target_model_type_enum'],
+    () => GraphQL(targetModelTypeEnumQuery, {}, []),
+    { staleTime: Infinity }
+  );
+
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
+
+  // State for prompt metadata fields
+  const [promptMetadataState, setPromptMetadataState] = useState<{
+    taskType?: string;
+    domain?: string;
+    targetLanguages?: string[];
+    targetModelTypes?: string[];
+    promptFormat?: string;
+    hasSystemPrompt?: boolean;
+    hasExampleResponses?: boolean;
+  }>({});
+
+  // Initialize prompt metadata state when data loads
+  useEffect(() => {
+    const promptMeta = getDatasetMetadata.data?.datasets?.[0]?.promptMetadata;
+    if (promptMeta) {
+      setPromptMetadataState({
+        taskType: promptMeta.task_type || undefined,
+        domain: promptMeta.domain || undefined,
+        targetLanguages: promptMeta.target_languages || [],
+        targetModelTypes: promptMeta.target_model_types || [],
+        promptFormat: promptMeta.prompt_format || undefined,
+        hasSystemPrompt: promptMeta.has_system_prompt || false,
+        hasExampleResponses: promptMeta.has_example_responses || false,
+      });
+    }
+  }, [getDatasetMetadata.data?.datasets]);
+
+  // Mutation for updating prompt metadata
+  const updatePromptMetadataMutation = useMutation(
+    (data: { updateInput: any }) =>
+      GraphQL(
+        updatePromptMetadataMutationDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        data
+      ),
+    {
+      onSuccess: (res: any) => {
+        if (res.updatePromptMetadata.success) {
+          toast('Prompt metadata updated successfully!');
+          queryClient.invalidateQueries({
+            queryKey: [`metadata_values_query_${params.id}`],
+          });
+        } else {
+          toast(
+            'Error: ' +
+              (res.updatePromptMetadata?.errors?.fieldErrors
+                ? res.updatePromptMetadata?.errors?.fieldErrors[0]?.messages[0]
+                : res.updatePromptMetadata?.errors?.nonFieldErrors?.[0] || 'Unknown error')
+          );
+        }
+      },
+      onError: (err: any) => {
+        toast('Error: ' + err.message);
+      },
+    }
+  );
+
+  // Function to save prompt metadata
+  const savePromptMetadata = (updates: Partial<typeof promptMetadataState>) => {
+    const newState = { ...promptMetadataState, ...updates };
+    setPromptMetadataState(newState);
+    
+    updatePromptMetadataMutation.mutate({
+      updateInput: {
+        dataset: params.id,
+        taskType: newState.taskType,
+        domain: newState.domain,
+        targetLanguages: newState.targetLanguages,
+        targetModelTypes: newState.targetModelTypes,
+        promptFormat: newState.promptFormat,
+        hasSystemPrompt: newState.hasSystemPrompt,
+        hasExampleResponses: newState.hasExampleResponses,
+      },
+    });
+  };
 
   const updateMetadataMutation = useMutation(
     (data: { UpdateMetadataInput: UpdateMetadataInput }) =>
@@ -681,6 +882,167 @@ export function EditMetadata({ id }: { id: string }) {
                     .map((item: TypeMetadata) => renderInputField(item))}
                 </div>
               </div>
+
+              {/* Prompt-specific metadata fields - only shown for PROMPT type datasets */}
+              {getDatasetMetadata.data?.datasets?.[0]?.datasetType === 'PROMPT' && (
+                <div className="mb-8 rounded-lg border border-borderSubdued bg-surfaceNeutralSubdued p-6">
+                  <Text variant="headingMd" as="h3" className="mb-4">
+                    Prompt Dataset Metadata
+                  </Text>
+                  <Text variant="bodySm" color="subdued" className="mb-6">
+                    Additional metadata specific to prompt datasets for AI/ML use cases.
+                  </Text>
+                  <div className="flex flex-col gap-6">
+                    <Combobox
+                      name="taskType"
+                      label="Task Type"
+                      displaySelected
+                      list={
+                        getPromptTaskTypeEnum.data?.__type?.enumValues?.map(
+                          (enumValue: { name: string; description?: string }) => ({
+                            label: enumValue.name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            value: enumValue.name,
+                          })
+                        ) || []
+                      }
+                      selectedValue={
+                        promptMetadataState.taskType
+                          ? [{ 
+                              label: promptMetadataState.taskType.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                              value: promptMetadataState.taskType 
+                            }]
+                          : []
+                      }
+                      onChange={(value) => {
+                        const selectedValue = Array.isArray(value) ? value[0]?.value : value;
+                        savePromptMetadata({ taskType: selectedValue });
+                      }}
+                    />
+                    <Combobox
+                      name="domain"
+                      label="Domain"
+                      displaySelected
+                      list={
+                        getPromptDomainEnum.data?.__type?.enumValues?.map(
+                          (enumValue: { name: string; description?: string }) => ({
+                            label: enumValue.name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            value: enumValue.name,
+                          })
+                        ) || []
+                      }
+                      selectedValue={
+                        promptMetadataState.domain
+                          ? [{
+                              label: promptMetadataState.domain.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                              value: promptMetadataState.domain
+                            }]
+                          : []
+                      }
+                      onChange={(value) => {
+                        const selectedValue = Array.isArray(value) ? value[0]?.value : value;
+                        savePromptMetadata({ domain: selectedValue });
+                      }}
+                    />
+                    <Combobox
+                      name="targetLanguages"
+                      label="Target Languages"
+                      displaySelected
+                      creatable
+                      list={
+                        getTargetLanguageEnum.data?.__type?.enumValues?.map(
+                          (enumValue: { name: string; description?: string }) => ({
+                            label: enumValue.name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            value: enumValue.name,
+                          })
+                        ) || []
+                      }
+                      selectedValue={
+                        promptMetadataState.targetLanguages?.map(
+                          (lang: string) => ({ 
+                            label: lang.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()), 
+                            value: lang 
+                          })
+                        ) || []
+                      }
+                      onChange={(value) => {
+                        const languages = Array.isArray(value) ? value.map((v: any) => v.value) : [];
+                        savePromptMetadata({ targetLanguages: languages });
+                      }}
+                    />
+                    <Combobox
+                      name="promptFormat"
+                      label="Prompt Format"
+                      displaySelected
+                      list={
+                        getPromptFormatEnum.data?.__type?.enumValues?.map(
+                          (enumValue: { name: string; description?: string }) => ({
+                            label: enumValue.name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            value: enumValue.name,
+                          })
+                        ) || []
+                      }
+                      selectedValue={
+                        promptMetadataState.promptFormat
+                          ? [{ 
+                              label: promptMetadataState.promptFormat.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                              value: promptMetadataState.promptFormat 
+                            }]
+                          : []
+                      }
+                      onChange={(value) => {
+                        const selectedValue = Array.isArray(value) ? value[0]?.value : value;
+                        savePromptMetadata({ promptFormat: selectedValue });
+                      }}
+                    />
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <Checkbox
+                        name="hasSystemPrompt"
+                        checked={promptMetadataState.hasSystemPrompt || false}
+                        onChange={(checked) => {
+                          savePromptMetadata({ hasSystemPrompt: checked });
+                        }}
+                      >
+                        Includes System Prompts
+                      </Checkbox>
+                      <Checkbox
+                        name="hasExampleResponses"
+                        checked={promptMetadataState.hasExampleResponses || false}
+                        onChange={(checked) => {
+                          savePromptMetadata({ hasExampleResponses: checked });
+                        }}
+                      >
+                        Includes Example Responses
+                      </Checkbox>
+                    </div>
+                    <Combobox
+                      name="targetModelTypes"
+                      label="Target Model Types"
+                      displaySelected
+                      creatable
+                      list={
+                        getTargetModelTypeEnum.data?.__type?.enumValues?.map(
+                          (enumValue: { name: string; description?: string }) => ({
+                            label: enumValue.name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            value: enumValue.name,
+                          })
+                        ) || []
+                      }
+                      selectedValue={
+                        promptMetadataState.targetModelTypes?.map(
+                          (model: string) => ({ 
+                            label: model.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()), 
+                            value: model 
+                          })
+                        ) || []
+                      }
+                      onChange={(value) => {
+                        const models = Array.isArray(value) ? value.map((v: any) => v.value) : [];
+                        savePromptMetadata({ targetModelTypes: models });
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-col items-center gap-8 lg:flex-row">
                 <div className="flex w-full flex-wrap gap-2 md:flex-nowrap lg:w-2/4 lg:flex-nowrap">

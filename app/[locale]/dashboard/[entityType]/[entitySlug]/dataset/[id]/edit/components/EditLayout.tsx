@@ -1,16 +1,16 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
-import { useParams, usePathname, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UpdateDatasetInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { Tab, TabList, Tabs, toast } from 'opub-ui';
+import { ReactNode, useEffect, useState } from 'react';
 
 import { GraphQL } from '@/lib/api';
+import StepNavigation from '../../../../components/StepNavigation';
 import TitleBar from '../../../../components/title-bar';
 import { useDatasetEditStatus } from '../context';
-import StepNavigation from '../../../../components/StepNavigation';
 
 const datasetQueryDoc: any = graphql(`
   query datasetTitleQuery($filters: DatasetFilter) {
@@ -18,6 +18,7 @@ const datasetQueryDoc: any = graphql(`
       id
       title
       created
+      datasetType
     }
   }
 `);
@@ -142,6 +143,7 @@ export function EditLayout({ children, params }: LayoutProps) {
             pathItem={pathItem}
             organization={routerParams.entitySlug.toString()}
             entityType={routerParams.entityType.toString()}
+            isPromptDataset={getDatasetTitleRes?.data?.datasets?.[0]?.datasetType === 'PROMPT'}
           />
         </div>
         <div className="bg-surface border-l-divider rounded-tl-none  my-6  flex-grow">
@@ -160,11 +162,13 @@ const Navigation = ({
   pathItem,
   organization,
   entityType,
+  isPromptDataset,
 }: {
   id: string;
   pathItem: string;
   organization: string;
   entityType: string;
+  isPromptDataset?: boolean;
 }) => {
   const router = useRouter();
 
@@ -176,7 +180,7 @@ const Navigation = ({
       // selected: pathItem === 'metadata',
     },
     {
-      label: 'Data Files',
+      label: isPromptDataset ? 'Prompt Files' : 'Data Files',
       id: 'resources',
       url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/resources`,
       // selected: pathItem === 'resources',
