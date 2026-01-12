@@ -1,4 +1,3 @@
-import React from 'react';
 import { graphql } from '@/gql';
 
 import { GraphQL } from '@/lib/api';
@@ -12,6 +11,7 @@ const sectorQueryDoc = graphql(`
       name
       description
       datasetCount
+      aimodelCount
       slug
     }
   }
