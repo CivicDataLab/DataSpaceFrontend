@@ -1,23 +1,23 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { fetchDatasets } from '@/fetch';
+import { useRouter } from 'next/navigation';
 import {
-  Button,
-  Card,
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  Text,
+    Button,
+    Card,
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    CarouselNext,
+    CarouselPrevious,
+    Text,
 } from 'opub-ui';
+import { useEffect, useState } from 'react';
 
-import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
-import Styles from './datasets.module.scss';
 import { DatasetListingSkeleton } from '@/components/loading';
+import { cn } from '@/lib/utils';
+import Styles from './datasets.module.scss';
 
 interface Bucket {
   key: string;
@@ -86,8 +86,7 @@ const Datasets = () => {
               cardsOnly={true}  
             />
             ) : (
-              facets &&
-              facets.results.map((item: any) => (
+              facets?.results?.map((item: any) => (
                 <CarouselItem
                   key={item.id}
                   className={cn(
