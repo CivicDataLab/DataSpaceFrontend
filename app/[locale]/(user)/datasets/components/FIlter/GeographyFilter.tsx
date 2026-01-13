@@ -5,7 +5,7 @@ import {
     AccordionTrigger,
     Text,
 } from 'opub-ui';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 import { TreeView } from '@/components/ui/tree-view';
 import { toTitleCase } from '@/lib/utils';
