@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import { fetchData } from '@/fetch';
 import { useTourTrigger } from '@/hooks/use-tour-trigger';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import {
   Button,
   ButtonGroup,
@@ -17,11 +16,12 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
+import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
-import { Loading } from '@/components/loading';
+import { DatasetListingSkeleton, Loading, UseCaseListingSkeleton } from '@/components/loading';
+import { cn, formatDate } from '@/lib/utils';
 import Filter from '../datasets/components/FIlter/Filter';
 import Styles from '../datasets/dataset.module.scss';
 
@@ -64,10 +64,6 @@ const stripMarkdown = (markdown: string): string => {
       .trim()
   );
 };
-import {
-  DatasetListingSkeleton,
-  UseCaseListingSkeleton,
-} from '@/components/loading';
 
 // Interfaces
 interface Bucket {
@@ -190,11 +186,12 @@ const useUrlParams = (
     };
 
     setQueryParams({ type: 'INITIALIZE', payload: initialParams });
-  }, [setQueryParams, lockedFilters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const filtersString = Object.entries(queryParams.filters)
-      .filter(([_, values]) => values.length > 0)
+      .filter(([, values]) => values.length > 0)
       .map(([key, values]) => `${key}=${values.join(',')}`)
       .join('&');
 
@@ -283,7 +280,8 @@ const ListingComponent: React.FC<ListingProps> = ({
   // Stabilize lockedFilters reference to prevent infinite loops
   const stableLockedFilters = useMemo(
     () => lockedFilters,
-    [lockedFilters]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(lockedFilters)]
   );
 
   useUrlParams(queryParams, setQueryParams, setVariables, stableLockedFilters);
