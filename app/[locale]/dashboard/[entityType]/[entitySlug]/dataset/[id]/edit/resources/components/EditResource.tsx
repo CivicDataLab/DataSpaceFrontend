@@ -39,6 +39,18 @@ interface EditProps {
   isPromptDataset?: boolean;
 }
 
+// Type for GraphQL introspection query response
+interface IntrospectionEnumValue {
+  name: string;
+  description?: string;
+}
+
+interface IntrospectionTypeResponse {
+  __type: {
+    enumValues: IntrospectionEnumValue[];
+  } | null;
+}
+
 const resourceDetails: any = graphql(`
   query resourceById($resourceId: UUID!) {
     resourceById(resourceId: $resourceId) {
@@ -339,7 +351,7 @@ export const EditResource = ({
   const [hasExampleResponses, setHasExampleResponses] = useState(false);
 
   // Fetch PromptFormat enum values from GraphQL schema
-  const getPromptFormatEnum = useQuery(
+  const getPromptFormatEnum = useQuery<IntrospectionTypeResponse>(
     ['prompt_format_enum_resource'],
     () => GraphQL(promptFormatEnumQuery, {}, []),
     { staleTime: Infinity, enabled: isPromptDataset }
