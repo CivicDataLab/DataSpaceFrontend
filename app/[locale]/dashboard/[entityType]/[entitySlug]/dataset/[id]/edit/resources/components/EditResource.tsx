@@ -1,5 +1,3 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   CreateFileResourceInput,
@@ -8,18 +6,21 @@ import {
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'next-usequerystate';
+import { useParams } from 'next/navigation';
 import {
   Button,
   Checkbox,
+  Combobox,
   Divider,
   DropZone,
   Text,
   TextField,
   toast,
 } from 'opub-ui';
+import React, { useEffect, useState } from 'react';
 
-import { GraphQL } from '@/lib/api';
 import { Loading } from '@/components/loading';
+import { GraphQL } from '@/lib/api';
 import PdfPreview from '../../../../../../../../(user)/components/PdfPreview';
 import { useDatasetEditStatus } from '../../context';
 import { TListItem } from '../page-layout';
@@ -35,6 +36,7 @@ import { ResourceSchema } from './ResourceSchema';
 interface EditProps {
   refetch: () => void;
   allResources: TListItem[];
+  isPromptDataset?: boolean;
 }
 
 const resourceDetails: any = graphql(`
@@ -79,11 +81,124 @@ const resourceDetails: any = graphql(`
         created
         modified
       }
+      promptDetails {
+        promptFormat
+        hasSystemPrompt
+        hasExampleResponses
+        avgPromptLength
+        promptCount
+      }
     }
   }
 `);
 
-export const EditResource = ({ refetch, allResources }: EditProps) => {
+// Introspection query to get PromptFormat enum values from schema
+const promptFormatEnumQuery: any = graphql(`
+  query PromptFormatEnumResource {
+    __type(name: "PromptFormat") {
+      enumValues {
+        name
+        description
+      }
+    }
+  }
+`);
+
+// Mutation to update prompt resource metadata
+const updatePromptResourceMutationDoc: any = graphql(`
+  mutation UpdatePromptResource($updateInput: UpdatePromptResourceInput!) {
+    updatePromptResource(updateInput: $updateInput) {
+      success
+      errors {
+        fieldErrors {
+          field
+          messages
+        }
+        nonFieldErrors
+      }
+      data {
+        id
+        promptDetails {
+          promptFormat
+          hasSystemPrompt
+          hasExampleResponses
+        }
+      }
+    }
+  }
+`);
+
+// Prompt format templates for different prompt types
+const PROMPT_FORMAT_TEMPLATES: Record<
+  string,
+  { description: string; template: string }
+> = {
+  INSTRUCTION: {
+    description: 'Single instruction with expected output format',
+    template: `{
+  "instruction": "Translate the following English text to Hindi",
+  "input": "Hello, how are you?",
+  "output": "नमस्ते, आप कैसे हैं?"
+}`,
+  },
+  CHAT: {
+    description:
+      'Multi-turn conversation format with system, user, and assistant messages',
+    template: `{
+  "messages": [
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": "What is the capital of India?"},
+    {"role": "assistant", "content": "The capital of India is New Delhi."}
+  ]
+}`,
+  },
+  COMPLETION: {
+    description: 'Text completion format with prompt and completion pairs',
+    template: `{
+  "prompt": "The capital of France is",
+  "completion": " Paris, which is known for the Eiffel Tower."
+}`,
+  },
+  FEW_SHOT: {
+    description: 'Examples followed by the actual task',
+    template: `{
+  "examples": [
+    {"input": "happy", "output": "sad"},
+    {"input": "big", "output": "small"}
+  ],
+  "task": {"input": "hot", "output": "cold"}
+}`,
+  },
+  CHAIN_OF_THOUGHT: {
+    description: 'Step-by-step reasoning format',
+    template: `{
+  "question": "If John has 5 apples and gives 2 to Mary, how many does he have?",
+  "reasoning": "John starts with 5 apples. He gives away 2 apples. 5 - 2 = 3.",
+  "answer": "John has 3 apples."
+}`,
+  },
+  ZERO_SHOT: {
+    description: 'Direct task without examples',
+    template: `{
+  "task": "Classify the sentiment of the following text",
+  "input": "I love this product! It works great.",
+  "output": "positive"
+}`,
+  },
+  OTHER: {
+    description: 'Custom format - describe your format in the file',
+    template: `{
+  "custom_field_1": "value1",
+  "custom_field_2": "value2"
+}`,
+  },
+};
+
+export const EditResource = ({
+  refetch,
+  allResources,
+  isPromptDataset = false,
+}: EditProps) => {
   const params = useParams<{
     entityType: string;
     entitySlug: string;
@@ -225,6 +340,93 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
     columns: [],
   });
 
+  // Prompt-specific state
+  const [promptFormat, setPromptFormat] = useState<string | undefined>(
+    undefined
+  );
+  const [hasSystemPrompt, setHasSystemPrompt] = useState(false);
+  const [hasExampleResponses, setHasExampleResponses] = useState(false);
+
+  // Fetch PromptFormat enum values from GraphQL schema
+  const getPromptFormatEnum = useQuery(
+    ['prompt_format_enum_resource'],
+    () => GraphQL(promptFormatEnumQuery, {}, []),
+    { staleTime: Infinity, enabled: isPromptDataset }
+  );
+
+  // Debug: Log enum data when it changes
+  React.useEffect(() => {
+    if (getPromptFormatEnum.data) {
+      console.log(
+        'PromptFormat enum raw data:',
+        JSON.stringify(getPromptFormatEnum.data, null, 2)
+      );
+    }
+  }, [getPromptFormatEnum.data]);
+
+  // Mutation for updating prompt resource metadata
+  const updatePromptResourceMutation = useMutation(
+    (data: { updateInput: any }) =>
+      GraphQL(
+        updatePromptResourceMutationDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        data
+      ),
+    {
+      onSuccess: (res: any) => {
+        if (res.updatePromptResource?.success) {
+          toast('Prompt file metadata updated!');
+          resourceDetailsQuery.refetch();
+        } else {
+          toast(
+            'Error: ' +
+              (res.updatePromptResource?.errors?.nonFieldErrors?.[0] ||
+                'Unknown error')
+          );
+        }
+      },
+      onError: (err: any) => {
+        toast('Error: ' + err.message);
+      },
+    }
+  );
+
+  // Function to save prompt resource metadata
+  const savePromptResourceMetadata = (updates: {
+    promptFormat?: string;
+    hasSystemPrompt?: boolean;
+    hasExampleResponses?: boolean;
+  }) => {
+    const newPromptFormat =
+      updates.promptFormat !== undefined ? updates.promptFormat : promptFormat;
+    const newHasSystemPrompt =
+      updates.hasSystemPrompt !== undefined
+        ? updates.hasSystemPrompt
+        : hasSystemPrompt;
+    const newHasExampleResponses =
+      updates.hasExampleResponses !== undefined
+        ? updates.hasExampleResponses
+        : hasExampleResponses;
+
+    if (updates.promptFormat !== undefined)
+      setPromptFormat(updates.promptFormat);
+    if (updates.hasSystemPrompt !== undefined)
+      setHasSystemPrompt(updates.hasSystemPrompt);
+    if (updates.hasExampleResponses !== undefined)
+      setHasExampleResponses(updates.hasExampleResponses);
+
+    updatePromptResourceMutation.mutate({
+      updateInput: {
+        resource: resourceId,
+        promptFormat: newPromptFormat,
+        hasSystemPrompt: newHasSystemPrompt,
+        hasExampleResponses: newHasExampleResponses,
+      },
+    });
+  };
+
   useEffect(() => {
     resourceDetailsQuery.refetch();
   }, []);
@@ -242,7 +444,15 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
       rows: ResourceData?.previewData?.rows,
       columns: ResourceData?.previewData?.columns,
     });
-  }, [resourceDetailsQuery.data]);
+    // Initialize prompt-specific state from resource data
+    if (isPromptDataset && ResourceData?.promptDetails) {
+      setPromptFormat(ResourceData.promptDetails.promptFormat || undefined);
+      setHasSystemPrompt(ResourceData.promptDetails.hasSystemPrompt || false);
+      setHasExampleResponses(
+        ResourceData.promptDetails.hasExampleResponses || false
+      );
+    }
+  }, [resourceDetailsQuery.data, isPromptDataset]);
 
   useEffect(() => {
     const schemaData = resourceDetailsQuery.data?.resourceById?.schema;
@@ -391,32 +601,122 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
                   helpText={`Character limit: ${resourceName?.length}/200`}
                   onBlur={saveResource}
                   multiline={2}
-                  label="Data File Name"
+                  label={
+                    isPromptDataset ? 'Prompt File Name' : 'Data File Name'
+                  }
                   name="a"
                   required
                 />
               </div>
-              <div>
-                <Text className=" underline">
-                  Good practices for naming Data Files
-                </Text>
-                <div>
-                  <ol className="list-decimal pl-6">
-                    <li>
-                      Try to include as many keywords as possible in the name
-                    </li>
-                    <li>Mention the date or time period of the Data File</li>
-                    <li>Mention the geography if applicable</li>
-                    <li>
-                      Follow a similar format for naming all Data Files in a
-                      Dataset
-                    </li>
-                  </ol>
+              {isPromptDataset ? (
+                <div className="flex flex-col gap-4">
+                  <Combobox
+                    name="promptFormat"
+                    label="Prompt Format"
+                    displaySelected
+                    list={
+                      getPromptFormatEnum.data?.__type?.enumValues?.map(
+                        (enumValue: {
+                          name: string;
+                          description?: string;
+                        }) => ({
+                          label: enumValue.name
+                            .replace(/_/g, ' ')
+                            .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                          value: enumValue.name,
+                        })
+                      ) || []
+                    }
+                    selectedValue={
+                      promptFormat
+                        ? promptFormat
+                        : ''
+                    }
+                    onChange={(value: any) => {
+                      // Handle both array and string values
+                      let selectedValue: string | undefined;
+                      if (Array.isArray(value)) {
+                        selectedValue = value.length > 0 ? value[0]?.value : undefined;
+                      } else {
+                        selectedValue = value || undefined;
+                      }
+                      // Toggle: if same value selected, clear it
+                      if (selectedValue === promptFormat) {
+                        selectedValue = undefined;
+                      }
+                      setPromptFormat(selectedValue);
+                      savePromptResourceMetadata({
+                        promptFormat: selectedValue,
+                      });
+                    }}
+                  />
+                  <div className="flex gap-4">
+                    <Checkbox
+                      name="hasSystemPrompt"
+                      checked={hasSystemPrompt}
+                      onChange={(checked) => {
+                        savePromptResourceMetadata({
+                          hasSystemPrompt: Boolean(checked),
+                        });
+                      }}
+                    >
+                      Has System Prompt
+                    </Checkbox>
+                    <Checkbox
+                      name="hasExampleResponses"
+                      checked={hasExampleResponses}
+                      onChange={(checked) => {
+                        savePromptResourceMetadata({
+                          hasExampleResponses: Boolean(checked),
+                        });
+                      }}
+                    >
+                      Has Example Responses
+                    </Checkbox>
+                  </div>
+                  {promptFormat && PROMPT_FORMAT_TEMPLATES[promptFormat] && (
+                    <div className="rounded-lg border bg-surfaceNeutralSubdued mt-4 border-borderSubdued p-4">
+                      <Text variant="headingSm" as="h4" className="mb-2">
+                        Expected Format Template
+                      </Text>
+                      <Text variant="bodySm" color="subdued" className="mb-3">
+                        {PROMPT_FORMAT_TEMPLATES[promptFormat].description}
+                      </Text>
+                      <pre className="rounded bg-surfaceNeutral text-sm overflow-x-auto p-3">
+                        <code>
+                          {PROMPT_FORMAT_TEMPLATES[promptFormat].template}
+                        </code>
+                      </pre>
+                    </div>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <Text className=" underline">
+                    Good practices for naming Data Files
+                  </Text>
+                  <div>
+                    <ol className="list-decimal pl-6">
+                      <li>
+                        Try to include as many keywords as possible in the name
+                      </li>
+                      <li>Mention the date or time period of the Data File</li>
+                      <li>Mention the geography if applicable</li>
+                      <li>
+                        Follow a similar format for naming all Data Files in a
+                        Dataset
+                      </li>
+                    </ol>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex  flex-col justify-between lg:w-1/4">
-              <Text className="pb-1">File associated with Data File</Text>
+              <Text className="pb-1">
+                {isPromptDataset
+                  ? 'File associated with Prompt File'
+                  : 'File associated with Data File'}
+              </Text>
               <div className="  rounded-2 border-1 border-solid border-baseGraySlateSolid7 p-3 ">
                 {fileInput}
                 <div className="mt-4 lg:mt-8">
@@ -425,7 +725,11 @@ export const EditResource = ({ refetch, allResources }: EditProps) => {
                     allowMultiple={false}
                     onDrop={onDrop}
                     className="h-40 w-full  border-none bg-baseGraySlateSolid5"
-                    label="Change file for this Data File"
+                    label={
+                      isPromptDataset
+                        ? 'Change file for this Prompt File'
+                        : 'Change file for this Data File'
+                    }
                   >
                     <DropZone.FileUpload />
                   </DropZone>

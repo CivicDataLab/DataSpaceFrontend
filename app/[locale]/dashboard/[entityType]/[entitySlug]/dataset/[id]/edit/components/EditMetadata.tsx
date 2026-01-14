@@ -139,18 +139,6 @@ const promptDomainEnumQuery: any = graphql(`
   }
 `);
 
-// Introspection query to get PromptFormat enum values from schema
-const promptFormatEnumQuery: any = graphql(`
-  query PromptFormatEnum {
-    __type(name: "PromptFormat") {
-      enumValues {
-        name
-        description
-      }
-    }
-  }
-`);
-
 // Introspection query to get TargetLanguage enum values from schema
 const targetLanguageEnumQuery: any = graphql(`
   query TargetLanguageEnum {
@@ -192,10 +180,6 @@ const updatePromptMetadataMutationDoc: any = graphql(`
         taskType
         targetLanguages
         domain
-        promptFormat
-        hasSystemPrompt
-        hasExampleResponses
-        useCase
       }
     }
   }
@@ -346,13 +330,6 @@ export function EditMetadata({ id }: { id: string }) {
     { staleTime: Infinity }
   );
 
-  // Fetch PromptFormat enum values from GraphQL schema
-  const getPromptFormatEnum: { data: any; isLoading: boolean } = useQuery(
-    ['prompt_format_enum'],
-    () => GraphQL(promptFormatEnumQuery, {}, []),
-    { staleTime: Infinity }
-  );
-
   // Fetch TargetLanguage enum values from GraphQL schema
   const getTargetLanguageEnum: { data: any; isLoading: boolean } = useQuery(
     ['target_language_enum'],
@@ -375,9 +352,6 @@ export function EditMetadata({ id }: { id: string }) {
     domain?: string;
     targetLanguages?: string[];
     targetModelTypes?: string[];
-    promptFormat?: string;
-    hasSystemPrompt?: boolean;
-    hasExampleResponses?: boolean;
   }>({});
 
   // Initialize prompt metadata state when data loads
@@ -389,9 +363,6 @@ export function EditMetadata({ id }: { id: string }) {
         domain: promptMeta.domain || undefined,
         targetLanguages: promptMeta.target_languages || [],
         targetModelTypes: promptMeta.target_model_types || [],
-        promptFormat: promptMeta.prompt_format || undefined,
-        hasSystemPrompt: promptMeta.has_system_prompt || false,
-        hasExampleResponses: promptMeta.has_example_responses || false,
       });
     }
   }, [getDatasetMetadata.data?.datasets]);
@@ -440,9 +411,6 @@ export function EditMetadata({ id }: { id: string }) {
         domain: newState.domain,
         targetLanguages: newState.targetLanguages,
         targetModelTypes: newState.targetModelTypes,
-        promptFormat: newState.promptFormat,
-        hasSystemPrompt: newState.hasSystemPrompt,
-        hasExampleResponses: newState.hasExampleResponses,
       },
     });
   };
@@ -969,51 +937,6 @@ export function EditMetadata({ id }: { id: string }) {
                         savePromptMetadata({ targetLanguages: languages });
                       }}
                     />
-                    <Combobox
-                      name="promptFormat"
-                      label="Prompt Format"
-                      displaySelected
-                      list={
-                        getPromptFormatEnum.data?.__type?.enumValues?.map(
-                          (enumValue: { name: string; description?: string }) => ({
-                            label: enumValue.name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                            value: enumValue.name,
-                          })
-                        ) || []
-                      }
-                      selectedValue={
-                        promptMetadataState.promptFormat
-                          ? [{ 
-                              label: promptMetadataState.promptFormat.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                              value: promptMetadataState.promptFormat 
-                            }]
-                          : []
-                      }
-                      onChange={(value) => {
-                        const selectedValue = Array.isArray(value) ? value[0]?.value : value;
-                        savePromptMetadata({ promptFormat: selectedValue });
-                      }}
-                    />
-                    <div className="grid gap-4 lg:grid-cols-2">
-                      <Checkbox
-                        name="hasSystemPrompt"
-                        checked={promptMetadataState.hasSystemPrompt || false}
-                        onChange={(checked) => {
-                          savePromptMetadata({ hasSystemPrompt: Boolean(checked) });
-                        }}
-                      >
-                        Includes System Prompts
-                      </Checkbox>
-                      <Checkbox
-                        name="hasExampleResponses"
-                        checked={promptMetadataState.hasExampleResponses || false}
-                        onChange={(checked) => {
-                          savePromptMetadata({ hasExampleResponses: Boolean(checked) });
-                        }}
-                      >
-                        Includes Example Responses
-                      </Checkbox>
-                    </div>
                     <Combobox
                       name="targetModelTypes"
                       label="Target Model Types"

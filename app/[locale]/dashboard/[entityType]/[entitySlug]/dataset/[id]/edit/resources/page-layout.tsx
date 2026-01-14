@@ -62,7 +62,11 @@ export function DistibutionPage({
             {data && ResourceList.length > 0 ? (
               <>
                 {resourceId ? (
-                  <EditResource refetch={refetch} allResources={ResourceList}/>
+                  <EditResource 
+                    refetch={refetch} 
+                    allResources={ResourceList}
+                    isPromptDataset={data.datasets[0].datasetType === 'PROMPT'}
+                  />
                 ) : (
                   <ResourceListView
                     refetch={refetch}
