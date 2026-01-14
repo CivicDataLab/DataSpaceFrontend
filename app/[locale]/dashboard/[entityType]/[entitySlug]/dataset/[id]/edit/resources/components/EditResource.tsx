@@ -128,69 +128,60 @@ const updatePromptResourceMutationDoc: any = graphql(`
   }
 `);
 
-// Prompt format templates for different prompt types
+// Prompt format templates for different prompt types (CSV format for multiple prompts)
 const PROMPT_FORMAT_TEMPLATES: Record<
   string,
   { description: string; template: string }
 > = {
   INSTRUCTION: {
-    description: 'Single instruction with expected output format',
-    template: `{
-  "instruction": "Translate the following English text to Hindi",
-  "input": "Hello, how are you?",
-  "output": "नमस्ते, आप कैसे हैं?"
-}`,
+    description: 'Single instruction with expected output format. Each row is one prompt.',
+    template: `instruction,input,output
+"Translate the following English text to Hindi","Hello, how are you?","नमस्ते, आप कैसे हैं?"
+"Summarize the following text","Artificial Intelligence is transforming industries worldwide.","AI is changing industries globally."
+"Convert this sentence to past tense","I am going to the store","I went to the store"`,
   },
   CHAT: {
     description:
-      'Multi-turn conversation format with system, user, and assistant messages',
-    template: `{
-  "messages": [
-    {"role": "system", "content": "You are a helpful assistant."},
-    {"role": "user", "content": "What is the capital of India?"},
-    {"role": "assistant", "content": "The capital of India is New Delhi."}
-  ]
-}`,
+      'Multi-turn conversation format. Each row contains a complete conversation with system, user, and assistant messages.',
+    template: `system_prompt,user_message,assistant_response
+"You are a helpful assistant.","What is the capital of India?","The capital of India is New Delhi."
+"You are a math tutor.","What is 15 + 27?","15 + 27 equals 42."
+"You are a language expert.","How do you say hello in Spanish?","In Spanish, hello is 'Hola'."`,
   },
   COMPLETION: {
-    description: 'Text completion format with prompt and completion pairs',
-    template: `{
-  "prompt": "The capital of France is",
-  "completion": " Paris, which is known for the Eiffel Tower."
-}`,
+    description: 'Text completion format with prompt and completion pairs. Each row is one prompt-completion pair.',
+    template: `prompt,completion
+"The capital of France is"," Paris, which is known for the Eiffel Tower."
+"The largest ocean on Earth is"," the Pacific Ocean, covering more than 60 million square miles."
+"The chemical symbol for gold is"," Au, derived from the Latin word aurum."`,
   },
   FEW_SHOT: {
-    description: 'Examples followed by the actual task',
-    template: `{
-  "examples": [
-    {"input": "happy", "output": "sad"},
-    {"input": "big", "output": "small"}
-  ],
-  "task": {"input": "hot", "output": "cold"}
-}`,
+    description: 'Examples followed by the actual task. Each row contains example pairs and the task.',
+    template: `example_input_1,example_output_1,example_input_2,example_output_2,task_input,task_output
+"happy","sad","big","small","hot","cold"
+"up","down","left","right","forward","backward"
+"day","night","sun","moon","light","dark"`,
   },
   CHAIN_OF_THOUGHT: {
-    description: 'Step-by-step reasoning format',
-    template: `{
-  "question": "If John has 5 apples and gives 2 to Mary, how many does he have?",
-  "reasoning": "John starts with 5 apples. He gives away 2 apples. 5 - 2 = 3.",
-  "answer": "John has 3 apples."
-}`,
+    description: 'Step-by-step reasoning format. Each row shows question, reasoning steps, and answer.',
+    template: `question,reasoning,answer
+"If John has 5 apples and gives 2 to Mary, how many does he have?","John starts with 5 apples. He gives away 2 apples. 5 - 2 = 3.","John has 3 apples."
+"A train travels 60 km in 1 hour. How far does it travel in 3 hours?","Speed is 60 km/hour. Distance = Speed × Time. Distance = 60 × 3 = 180 km.","The train travels 180 km."
+"If 3 pencils cost $6, how much does 1 pencil cost?","Total cost is $6 for 3 pencils. Cost per pencil = $6 ÷ 3 = $2.","One pencil costs $2."`,
   },
   ZERO_SHOT: {
-    description: 'Direct task without examples',
-    template: `{
-  "task": "Classify the sentiment of the following text",
-  "input": "I love this product! It works great.",
-  "output": "positive"
-}`,
+    description: 'Direct task without examples. Each row is one task-input-output triplet.',
+    template: `task,input,output
+"Classify the sentiment of the following text","I love this product! It works great.","positive"
+"Identify the language","Bonjour, comment allez-vous?","French"
+"Extract the main topic","The article discusses climate change and its impact on agriculture.","climate change"`,
   },
   OTHER: {
-    description: 'Custom format - describe your format in the file',
-    template: `{
-  "custom_field_1": "value1",
-  "custom_field_2": "value2"
-}`,
+    description: 'Custom format - define your own columns. Each row is one prompt.',
+    template: `custom_field_1,custom_field_2,custom_field_3
+"value1","value2","value3"
+"value4","value5","value6"
+"value7","value8","value9"`,
   },
 };
 
@@ -569,7 +560,7 @@ export const EditResource = ({
         ? 'loading'
         : 'success'
     ); // update based on mutation state
-  }, [updateResourceMutation.isLoading, updateSchemaMutation.isLoading]);
+  }, [setStatus, updateResourceMutation.isLoading, updateSchemaMutation.isLoading]);
 
   const resourceFormat =
     resourceDetailsQuery.data?.resourceById.fileDetails.format?.toLowerCase();
@@ -679,14 +670,51 @@ export const EditResource = ({
                       <Text variant="headingSm" as="h4" className="mb-2">
                         Expected Format Template
                       </Text>
-                      <Text variant="bodySm" color="subdued" className="mb-3">
+                      <Text variant="bodySm" className="mb-3 text-textSubdued">
                         {PROMPT_FORMAT_TEMPLATES[promptFormat].description}
                       </Text>
-                      <pre className="rounded bg-surfaceNeutral text-sm overflow-x-auto p-3">
-                        <code>
-                          {PROMPT_FORMAT_TEMPLATES[promptFormat].template}
-                        </code>
-                      </pre>
+                      <div className="overflow-x-auto rounded bg-surfaceNeutral p-3">
+                        <table className="min-w-full text-sm border-collapse">
+                          <thead>
+                            <tr className="border-b border-borderSubdued">
+                              {PROMPT_FORMAT_TEMPLATES[promptFormat].template
+                                .split('\n')[0]
+                                .split(',')
+                                .map((header, idx) => (
+                                  <th
+                                    key={idx}
+                                    className="px-3 py-2 text-left font-semibold bg-surfaceNeutralSubdued"
+                                  >
+                                    {header.trim()}
+                                  </th>
+                                ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {PROMPT_FORMAT_TEMPLATES[promptFormat].template
+                              .split('\n')
+                              .slice(1)
+                              .map((row, rowIdx) => {
+                                const cells = row.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g) || [];
+                                return (
+                                  <tr
+                                    key={rowIdx}
+                                    className="border-b border-borderSubdued hover:bg-surfaceNeutralHovered"
+                                  >
+                                    {cells.map((cell, cellIdx) => (
+                                      <td
+                                        key={cellIdx}
+                                        className="px-3 py-2 align-top"
+                                      >
+                                        {cell.replace(/^"|"$/g, '').trim()}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                );
+                              })}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
                 </div>
