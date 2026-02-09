@@ -342,20 +342,35 @@ export default function PublishPage() {
           <Text variant="headingMd" as="h2">
             Publication Checklist
           </Text>
-          <Text variant="bodySm" color="subdued">
+          <Text variant="bodySm" className="text-primaryText">
             {completedCount} of {checklistItems.length} complete
           </Text>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mb-5 h-2 w-full overflow-hidden rounded-full bg-greyExtralight">
+          <div
+            className="h-full rounded-full bg-primaryBlue transition-all duration-300"
+            style={{ width: `${(completedCount / checklistItems.length) * 100}%` }}
+          />
         </div>
 
         <div className="space-y-3">
           {checklistItems.map((item) => (
             <div key={item.id} className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={item.checked}
-                disabled
-                className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-              />
+              <span
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
+                  item.checked
+                    ? 'border-primaryBlue bg-primaryBlue'
+                    : 'border-gray-300 bg-white'
+                }`}
+              >
+                {item.checked && (
+                  <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </span>
               <Text
                 variant="bodyMd"
                 color={item.checked ? 'default' : 'subdued'}
@@ -374,21 +389,21 @@ export default function PublishPage() {
         </Text>
 
         {isPublished ? (
-          <div className="mb-6 rounded-lg bg-green-50 p-4">
-            <Text variant="headingSm" className="text-green-800">
+          <div className="mb-6 rounded-lg border border-tertiaryAccent bg-tertiaryAccent/10 p-4">
+            <Text variant="headingSm" className="text-primaryText">
               ✓ Model is Published and Active
             </Text>
-            <Text variant="bodySm" className="mt-2 text-green-700">
+            <Text variant="bodySm" className="mt-2 text-primaryText/80">
               Your AI model is now publicly accessible and can be discovered by
               other users.
             </Text>
           </div>
         ) : (
-          <div className="mb-6 rounded-lg bg-yellow-50 p-4">
-            <Text variant="headingSm" className="text-yellow-800">
+          <div className="mb-6 rounded-lg border border-secondaryOrange bg-secondaryOrange/10 p-4">
+            <Text variant="headingSm" className="text-secondaryText">
               Model is not published
             </Text>
-            <Text variant="bodySm" className="mt-2 text-yellow-700">
+            <Text variant="bodySm" className="mt-2 text-secondaryText/80">
               {allComplete
                 ? 'All checklist items are complete. You can now publish your model.'
                 : 'Complete all checklist items before publishing your model.'}
