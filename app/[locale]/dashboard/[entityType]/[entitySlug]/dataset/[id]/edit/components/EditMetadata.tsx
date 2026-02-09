@@ -18,11 +18,11 @@ import {
   Input,
   Select,
   Text,
-  TextField,
-  toast,
+  toast
 } from 'opub-ui';
 import { useEffect, useState } from 'react';
 
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { GraphQL } from '@/lib/api';
 import DatasetLoading from '../../../components/loading-dataset';
 import { useDatasetEditStatus } from '../context';
@@ -775,15 +775,13 @@ export function EditMetadata({ id }: { id: string }) {
             <FormLayout>
               <div className="mb-8 flex flex-col gap-8">
                 <div className="w-full">
-                  <TextField
-                    key="description"
-                    multiline={4}
-                    name="description"
+                  <RichTextEditor
                     label="Description *"
                     value={formData.description}
-                    helpText={`Character limit: ${formData?.description?.length}/1000`}
-                    onChange={(e) => handleChange('description', e)}
-                    onBlur={() => handleSave(formData)} // Save on blur
+                    onChange={(value) => handleChange('description', value)}
+                    onBlur={() => handleSave(formData)}
+                    placeholder="Enter dataset description..."
+                    helpText={`Character limit: ${formData?.description?.length || 0}/10000`}
                   />
                 </div>
 

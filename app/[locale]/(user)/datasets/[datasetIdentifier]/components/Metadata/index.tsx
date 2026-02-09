@@ -4,6 +4,7 @@ import { Button, Divider, Icon, Tag, Text, Tooltip } from 'opub-ui';
 import React, { useEffect, useState } from 'react';
 
 import { Icons } from '@/components/icons';
+import { RichTextRenderer } from '@/components/RichTextRenderer';
 import { cn, formatDate, getWebsiteTitle } from '@/lib/utils';
 import Styles from '../../../dataset.module.scss';
 
@@ -259,22 +260,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
           <Text variant="bodyMd" className="uppercase">
             Description
           </Text>
-          <Text variant="bodyLg">
-            {/* {data.description?.length > 260 && !isexpanded
-              ? `${data.description.slice(0, 260)}...`
-              : data.description}
-            {data.description?.length > 260 && (
-              <Button
-                kind="tertiary"
-                size="slim"
-                onClick={toggleDescription}
-                className="text-blue-600 w-fit"
-              >
-                {isexpanded ? 'See Less' : 'See More'}
-              </Button>
-            )} */}
-            {data.description}
-          </Text>
+          <RichTextRenderer content={data.description} />
         </div>
       </div>
     </div>
