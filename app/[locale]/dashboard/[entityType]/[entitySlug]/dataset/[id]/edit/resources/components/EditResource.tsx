@@ -1,21 +1,21 @@
 import { graphql } from '@/gql';
 import {
-  CreateFileResourceInput,
-  SchemaUpdateInput,
-  UpdateFileResourceInput,
+    CreateFileResourceInput,
+    SchemaUpdateInput,
+    UpdateFileResourceInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
 import { useParams } from 'next/navigation';
+import { parseAsString, useQueryState } from 'nuqs';
 import {
-  Button,
-  Checkbox,
-  Combobox,
-  Divider,
-  DropZone,
-  Text,
-  TextField,
-  toast,
+    Button,
+    Checkbox,
+    Combobox,
+    Divider,
+    DropZone,
+    Text,
+    TextField,
+    toast,
 } from 'opub-ui';
 import React, { useEffect, useState } from 'react';
 
@@ -26,9 +26,9 @@ import { useDatasetEditStatus } from '../../context';
 import { TListItem } from '../page-layout';
 import PreviewData from './PreviewData';
 import {
-  createResourceFilesDoc,
-  updateResourceDoc,
-  updateSchema,
+    createResourceFilesDoc,
+    updateResourceDoc,
+    updateSchema,
 } from './query';
 import ResourceHeader from './ResourceHeader';
 import { ResourceSchema } from './ResourceSchema';

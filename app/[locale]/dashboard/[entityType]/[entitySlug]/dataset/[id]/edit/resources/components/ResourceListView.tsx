@@ -1,7 +1,7 @@
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
 import { useMutation } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
 import { useParams, useRouter } from 'next/navigation';
+import { parseAsString, useQueryState } from 'nuqs';
 import {
     Button,
     DataTable,

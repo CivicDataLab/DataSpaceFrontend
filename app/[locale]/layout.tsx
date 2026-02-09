@@ -1,11 +1,12 @@
-import React from 'react';
-import { Inter as FontSans } from 'next/font/google';
-import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { unstable_setRequestLocale as setRequestLocale } from 'next-intl/server';
+import { Inter as FontSans } from 'next/font/google';
+import { notFound } from 'next/navigation';
+import React from 'react';
 
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import Provider from '@/components/provider';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import locales from '../../config/locales';
 
 const fontSans = FontSans({ subsets: ['latin'], display: 'swap' });
@@ -82,9 +83,11 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body className={fontSans.className}>
         <GoogleAnalytics />
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <Provider>{children}</Provider>
-        </NextIntlClientProvider>
+        <NuqsAdapter>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <Provider>{children}</Provider>
+          </NextIntlClientProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );

@@ -40,10 +40,10 @@
     "next": "15.5.9",
     "next-auth": "^4.24.7",
     "next-intl": "^3.4.0",
-    "next-usequerystate": "^1.17.2",
-    "opub-ui": "^0.4.26",
+    "nuqs": "^2.0.0",
+    "opub-ui": "^0.4.31",
     "react": "^19.2.0",
-    "react-aria": "3.22.0",
+    "react-aria": "^3.36.0",
     "react-dom": "^19.2.0",
     "react-joyride": "^3.0.0-7",
     "react-markdown": "^10.1.0",
@@ -51,7 +51,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "sharp": "^0.33.2",
-    "usehooks-ts": "^2.13.0",
+    "usehooks-ts": "^3.0.0",
     "zod": "^3.22.4",
     "zustand": "^4.3.8"
   },
@@ -77,6 +77,15 @@
     "release-it": "^17.1.1",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.0.4"
+  },
+  "overrides": {
+    "usehooks-ts": "^3.0.0",
+    "nuqs": {
+      "@remix-run/react": "$@remix-run/react",
+      "react-router-dom": "$react-router-dom",
+      "react-router": "$react-router",
+      "@tanstack/react-router": "$@tanstack/react-router"
+    }
   },
   "release-it": {
     "git": {

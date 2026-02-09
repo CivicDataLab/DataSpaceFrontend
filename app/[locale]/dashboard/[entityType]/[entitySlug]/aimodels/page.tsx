@@ -2,8 +2,8 @@
 
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
 import { useRouter } from 'next/navigation';
+import { parseAsString, useQueryState } from 'nuqs';
 import { Button, DataTable, Icon, IconButton, Text, toast } from 'opub-ui';
 import { use, useEffect } from 'react';
 import { twMerge } from 'tailwind-merge';

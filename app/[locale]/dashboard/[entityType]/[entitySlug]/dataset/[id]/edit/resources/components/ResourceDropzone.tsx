@@ -1,9 +1,9 @@
-import React from 'react';
-import { useParams } from 'next/navigation';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
 import { useMutation } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
+import { useParams } from 'next/navigation';
+import { parseAsString, useQueryState } from 'nuqs';
 import { Button, DropZone, Tag, Text, toast } from 'opub-ui';
+import React from 'react';
 
 import { GraphQL } from '@/lib/api';
 import { createResourceFilesDoc } from './query';
