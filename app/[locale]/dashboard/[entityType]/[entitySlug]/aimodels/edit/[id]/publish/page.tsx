@@ -3,8 +3,21 @@
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
-import { Button, Text, toast } from 'opub-ui';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+  Button,
+  Icon,
+  Spinner,
+  Table,
+  Tag,
+  Text,
+  toast,
+} from 'opub-ui';
 
+import { Icons } from '@/components/icons';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
@@ -61,6 +74,50 @@ const UpdateAIModelStatusMutation: any = graphql(`
     }
   }
 `);
+
+// Model type display names
+const modelTypeLabels: Record<string, string> = {
+  LLM: 'Large Language Model',
+  VISION: 'Vision Model',
+  AUDIO: 'Audio Model',
+  MULTIMODAL: 'Multimodal Model',
+  EMBEDDING: 'Embedding Model',
+  CLASSIFICATION: 'Classification Model',
+  GENERATION: 'Generation Model',
+  TEXT_GENERATION: 'Text Generation',
+  TRANSLATION: 'Translation',
+  SUMMARIZATION: 'Summarization',
+  QUESTION_ANSWERING: 'Question Answering',
+  SENTIMENT_ANALYSIS: 'Sentiment Analysis',
+  TEXT_CLASSIFICATION: 'Text Classification',
+  NAMED_ENTITY_RECOGNITION: 'Named Entity Recognition',
+  TEXT_TO_SPEECH: 'Text to Speech',
+  SPEECH_TO_TEXT: 'Speech to Text',
+  CUSTOM: 'Custom Model',
+  OTHER: 'Other',
+};
+
+// Lifecycle stage display names
+const lifecycleLabels: Record<string, string> = {
+  DEVELOPMENT: 'Development',
+  TESTING: 'Testing',
+  BETA: 'Beta Testing',
+  STAGING: 'Staging',
+  PRODUCTION: 'Production',
+  DEPRECATED: 'Deprecated',
+  RETIRED: 'Retired',
+};
+
+// Provider display names
+const providerLabels: Record<string, string> = {
+  OPENAI: 'OpenAI',
+  LLAMA_TOGETHER: 'Together AI (Llama)',
+  LLAMA_REPLICATE: 'Replicate (Llama)',
+  LLAMA_OLLAMA: 'Ollama (Llama)',
+  LLAMA_CUSTOM: 'Custom API (Llama)',
+  HUGGINGFACE: 'HuggingFace',
+  CUSTOM: 'Custom API',
+};
 
 export default function PublishPage() {
   const params = useParams<{
@@ -139,290 +196,281 @@ export default function PublishPage() {
     );
   };
 
-  // Model type display names
-  const modelTypeLabels: Record<string, string> = {
-    LLM: 'Large Language Model',
-    VISION: 'Vision Model',
-    AUDIO: 'Audio Model',
-    MULTIMODAL: 'Multimodal Model',
-    EMBEDDING: 'Embedding Model',
-    CLASSIFICATION: 'Classification Model',
-    GENERATION: 'Generation Model',
-    CUSTOM: 'Custom Model',
-  };
+  // Validation checks for each section
+  const metadataErrors = [];
+  if (!model?.description) metadataErrors.push('Description');
+  if (!model?.tags?.length) metadataErrors.push('Tags');
+  if (!model?.sectors?.length) metadataErrors.push('Sectors');
+  if (!model?.geographies?.length) metadataErrors.push('Geographies');
 
-  // Lifecycle stage display names
-  const lifecycleLabels: Record<string, string> = {
-    DEVELOPMENT: 'Development',
-    TESTING: 'Testing',
-    BETA: 'Beta Testing',
-    STAGING: 'Staging',
-    PRODUCTION: 'Production',
-    DEPRECATED: 'Deprecated',
-    RETIRED: 'Retired',
-  };
+  const versionErrors = [];
+  if (versions.length === 0) versionErrors.push('No versions created');
+  if (!primaryVersion) versionErrors.push('No primary version selected');
+  if (!hasProviders) versionErrors.push('No access methods configured');
 
-  // Checklist items
-  const checklistItems = [
+  const Summary = [
     {
-      id: 'name',
-      label: 'Model name added',
-      checked: !!model?.name && !!model?.displayName,
+      name: 'Metadata',
+      error:
+        metadataErrors.length > 0
+          ? `${metadataErrors.join(', ')} missing. Please add to continue.`
+          : '',
     },
     {
-      id: 'description',
-      label: 'Model description added',
-      checked: !!model?.description,
-    },
-    {
-      id: 'type',
-      label: 'Model type selected',
-      checked: !!model?.modelType,
-    },
-    {
-      id: 'tags',
-      label: 'Tags added',
-      checked: model?.tags?.length > 0,
-    },
-    {
-      id: 'sectors',
-      label: 'Sectors selected',
-      checked: model?.sectors?.length > 0,
-    },
-    {
-      id: 'geographies',
-      label: 'Geographies selected',
-      checked: model?.geographies?.length > 0,
-    },
-    {
-      id: 'version',
-      label: 'At least one version created',
-      checked: versions.length > 0,
-    },
-    {
-      id: 'primaryVersion',
-      label: 'Primary version selected',
-      checked: !!primaryVersion,
-    },
-    {
-      id: 'provider',
-      label: 'At least one access method configured',
-      checked: hasProviders,
+      name: 'Versions & Access Methods',
+      error:
+        versionErrors.length > 0
+          ? `${versionErrors.join('. ')}. Please configure to continue.`
+          : '',
     },
   ];
 
-  const completedCount = checklistItems.filter((item) => item.checked).length;
-  const allComplete = completedCount === checklistItems.length;
+  const isPublishDisabled =
+    metadataErrors.length > 0 || versionErrors.length > 0;
 
-  if (isLoading) {
-    return <div className="p-6">Loading...</div>;
-  }
+  // Table data for versions
+  const versionColumns = [
+    { accessorKey: 'version', header: 'Version' },
+    { accessorKey: 'lifecycleStage', header: 'Lifecycle Stage' },
+    { accessorKey: 'providers', header: 'Access Methods' },
+    { accessorKey: 'primary', header: 'Primary' },
+  ];
 
-  if (!model) {
-    return <div className="p-6">Model not found</div>;
-  }
+  const versionRows = versions.map((v: any) => ({
+    version: v.version,
+    lifecycleStage: lifecycleLabels[v.lifecycleStage] || v.lifecycleStage,
+    providers: v.providers?.length
+      ? v.providers.map((p: any) => providerLabels[p.provider] || p.provider).join(', ')
+      : 'None',
+    primary: v.isLatest ? 'Yes' : 'No',
+  }));
+
+  // Primary metadata details
+  const PrimaryMetadata = [
+    {
+      label: 'Model Name',
+      value: model?.displayName || model?.name || '',
+    },
+    {
+      label: 'Model Type',
+      value: modelTypeLabels[model?.modelType] || model?.modelType || '',
+    },
+  ];
 
   const isPublished = model?.status === 'ACTIVE' && model?.isPublic;
 
   return (
-    <div className="flex flex-col gap-6 py-6">
-      {/* Summary Section */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <Text variant="headingMd" as="h2" className="mb-6">
-          Model Summary
-        </Text>
-
-        <div className="grid grid-cols-2 gap-x-8 gap-y-5">
-          {/* Left Column */}
-          <div className="flex flex-col gap-1">
-            <Text variant="bodySm" color="subdued">
-              Model Name
-            </Text>
-            <Text variant="bodyMd" fontWeight="semibold">
-              {model.displayName || model.name || '-'}
-            </Text>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Text variant="bodySm" color="subdued">
-              Primary Version
-            </Text>
-            <Text variant="bodyMd" fontWeight="semibold">
-              {primaryVersion ? `Version ${primaryVersion.version}` : '-'}
-            </Text>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Text variant="bodySm" color="subdued">
-              Model Type
-            </Text>
-            <Text variant="bodyMd">
-              {modelTypeLabels[model.modelType] || model.modelType || '-'}
-            </Text>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Text variant="bodySm" color="subdued">
-              Lifecycle Stage
-            </Text>
-            <Text variant="bodyMd">
-              {primaryVersion
-                ? lifecycleLabels[primaryVersion.lifecycleStage] ||
-                  primaryVersion.lifecycleStage
-                : '-'}
-            </Text>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Text variant="bodySm" color="subdued">
-              Tags
-            </Text>
-            <Text variant="bodyMd">
-              {model.tags?.length > 0
-                ? model.tags.map((t: any) => t.value).join(', ')
-                : '-'}
-            </Text>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Text variant="bodySm" color="subdued">
-              Total Versions
-            </Text>
-            <Text variant="bodyMd">{versions.length}</Text>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Text variant="bodySm" color="subdued">
-              Sectors
-            </Text>
-            <Text variant="bodyMd">
-              {model.sectors?.length > 0
-                ? model.sectors.map((s: any) => s.name).join(', ')
-                : '-'}
-            </Text>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Text variant="bodySm" color="subdued">
-              Access Methods
-            </Text>
-            <Text variant="bodyMd">
-              {primaryVersion?.providers?.length || 0} configured
-            </Text>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Text variant="bodySm" color="subdued">
-              Geographies
-            </Text>
-            <Text variant="bodyMd">
-              {model.geographies?.length > 0
-                ? model.geographies.map((g: any) => g.name).join(', ')
-                : '-'}
-            </Text>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Text variant="bodySm" color="subdued">
-              Description
-            </Text>
-            {model.description ? (
-              <RichTextRenderer content={model.description} />
-            ) : (
-              <Text variant="bodyMd">-</Text>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Publication Checklist */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <Text variant="headingMd" as="h2">
-            Publication Checklist
+    <>
+      <div className="w-full py-6">
+        <div className="flex items-center justify-center gap-2 p-4">
+          <Text variant="bodyMd" className="font-semi-bold">
+            REVIEW AI MODEL DETAILS
           </Text>
-          <Text variant="bodySm" className="text-primaryText">
-            {completedCount} of {checklistItems.length} complete
+          :
+          <Text>
+            Please check all the model details below before publishing
           </Text>
         </div>
-
-        {/* Progress bar */}
-        <div className="mb-5 h-2 w-full overflow-hidden rounded-full bg-greyExtralight">
-          <div
-            className="h-full rounded-full bg-primaryBlue transition-all duration-300"
-            style={{ width: `${(completedCount / checklistItems.length) * 100}%` }}
-          />
-        </div>
-
-        <div className="space-y-3">
-          {checklistItems.map((item) => (
-            <div key={item.id} className="flex items-center gap-3">
-              <span
-                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
-                  item.checked
-                    ? 'border-primaryBlue bg-primaryBlue'
-                    : 'border-gray-300 bg-white'
-                }`}
-              >
-                {item.checked && (
-                  <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </span>
-              <Text
-                variant="bodyMd"
-                color={item.checked ? 'default' : 'subdued'}
-              >
-                {item.label}
-              </Text>
+        <div className="flex flex-col gap-10 pt-6">
+          {isLoading || updateLoading ? (
+            <div className="mt-8 flex justify-center">
+              <Spinner />
             </div>
-          ))}
+          ) : (
+            <>
+              {Summary.map((item, index) => (
+                <Accordion type="single" collapsible key={index}>
+                  <AccordionItem
+                    value={`item-${index}`}
+                    className="border-none"
+                  >
+                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-baseBlueSolid3 p-4 hover:no-underline">
+                      <div className="flex flex-wrap items-center justify-start gap-2">
+                        <Text className="w-48 text-justify font-semi-bold">
+                          {item.name}
+                        </Text>
+                        {item.error !== '' && (
+                          <div className="flex items-center gap-2">
+                            <Icon
+                              source={Icons.alert}
+                              color="critical"
+                              size={24}
+                            />
+                            <Text variant="bodyMd">{item.error}</Text>
+                          </div>
+                        )}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent
+                      className="flex w-full flex-col"
+                      style={{
+                        backgroundColor: 'var(--base-pure-white)',
+                        outline: '1px solid var(--base-pure-white)',
+                      }}
+                    >
+                      <div className="py-4">
+                        {item.name === 'Metadata' ? (
+                          <div className="flex flex-col gap-4 px-8 py-4">
+                            {PrimaryMetadata.map(
+                              (meta, idx) =>
+                                meta.value && (
+                                  <div
+                                    className="flex flex-wrap gap-2"
+                                    key={idx}
+                                  >
+                                    <Text
+                                      className="lg:basis-1/6"
+                                      variant="bodyMd"
+                                    >
+                                      {meta.label}:
+                                    </Text>
+                                    <Text
+                                      variant="bodyMd"
+                                      className="lg:basis-4/5"
+                                    >
+                                      {meta.value}
+                                    </Text>
+                                  </div>
+                                )
+                            )}
+
+                            {model?.description && (
+                              <div className="flex flex-wrap gap-2">
+                                <Text
+                                  className="lg:basis-1/6"
+                                  variant="bodyMd"
+                                >
+                                  Description:
+                                </Text>
+                                <div className="lg:basis-4/5">
+                                  <RichTextRenderer
+                                    content={model.description}
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="flex flex-wrap gap-2">
+                              <Text className="lg:basis-1/6" variant="bodyMd">
+                                Sectors:
+                              </Text>
+                              <div className="flex gap-2 lg:basis-4/5">
+                                {model?.sectors?.length > 0 ? (
+                                  model.sectors.map(
+                                    (s: any, idx: number) => (
+                                      <Tag key={idx}>{s.name}</Tag>
+                                    )
+                                  )
+                                ) : (
+                                  <Text variant="bodyMd" color="subdued">
+                                    None
+                                  </Text>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                              <Text className="lg:basis-1/6" variant="bodyMd">
+                                Tags:
+                              </Text>
+                              <div className="flex gap-2 lg:basis-4/5">
+                                {model?.tags?.length > 0 ? (
+                                  model.tags.map(
+                                    (t: any, idx: number) => (
+                                      <Tag key={idx}>{t.value}</Tag>
+                                    )
+                                  )
+                                ) : (
+                                  <Text variant="bodyMd" color="subdued">
+                                    None
+                                  </Text>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                              <Text className="lg:basis-1/6" variant="bodyMd">
+                                Geographies:
+                              </Text>
+                              <div className="flex gap-2 lg:basis-4/5">
+                                {model?.geographies?.length > 0 ? (
+                                  model.geographies.map(
+                                    (g: any, idx: number) => (
+                                      <Tag key={idx}>{g.name}</Tag>
+                                    )
+                                  )
+                                ) : (
+                                  <Text variant="bodyMd" color="subdued">
+                                    None
+                                  </Text>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          // Versions & Access Methods
+                          <div className="px-4">
+                            {versions.length > 0 ? (
+                              <Table
+                                columns={versionColumns}
+                                rows={versionRows}
+                                hideFooter
+                              />
+                            ) : (
+                              <Text variant="bodyMd" color="subdued" className="px-4 py-2">
+                                No versions found
+                              </Text>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              ))}
+
+              {/* Publication Status */}
+              {isPublished ? (
+                <div className="rounded-1 border border-tertiaryAccent bg-tertiaryAccent/10 p-4">
+                  <div className="flex items-center gap-2">
+                    <Icon source={Icons.check} color="success" size={24} />
+                    <Text variant="headingSm" className="text-primaryText">
+                      Model is Published and Active
+                    </Text>
+                  </div>
+                  <Text variant="bodySm" className="mt-2 text-primaryText/80">
+                    Your AI model is now publicly accessible and can be
+                    discovered by other users.
+                  </Text>
+                </div>
+              ) : (
+                <div className="rounded-1 border border-secondaryOrange bg-secondaryOrange/10 p-4">
+                  <div className="flex items-center gap-2">
+                    <Icon source={Icons.alert} color="warning" size={24} />
+                    <Text variant="headingSm" className="text-secondaryText">
+                      Model is not published
+                    </Text>
+                  </div>
+                  <Text variant="bodySm" className="mt-2 text-secondaryText/80">
+                    {!isPublishDisabled
+                      ? 'All checklist items are complete. You can now publish your model.'
+                      : 'Complete all required fields before publishing your model.'}
+                  </Text>
+                </div>
+              )}
+
+              <Button
+                className="m-auto w-fit"
+                onClick={handlePublish}
+                disabled={isPublishDisabled}
+                loading={updateLoading}
+              >
+                Publish
+              </Button>
+            </>
+          )}
         </div>
       </div>
-
-      {/* Publication Status */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <Text variant="headingMd" as="h2" className="mb-4">
-          Publication Status
-        </Text>
-
-        {isPublished ? (
-          <div className="mb-6 rounded-lg border border-tertiaryAccent bg-tertiaryAccent/10 p-4">
-            <Text variant="headingSm" className="text-primaryText">
-              ✓ Model is Published and Active
-            </Text>
-            <Text variant="bodySm" className="mt-2 text-primaryText/80">
-              Your AI model is now publicly accessible and can be discovered by
-              other users.
-            </Text>
-          </div>
-        ) : (
-          <div className="mb-6 rounded-lg border border-secondaryOrange bg-secondaryOrange/10 p-4">
-            <Text variant="headingSm" className="text-secondaryText">
-              Model is not published
-            </Text>
-            <Text variant="bodySm" className="mt-2 text-secondaryText/80">
-              {allComplete
-                ? 'All checklist items are complete. You can now publish your model.'
-                : 'Complete all checklist items before publishing your model.'}
-            </Text>
-          </div>
-        )}
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-4">
-        {!isPublished && (
-          <Button
-            onClick={handlePublish}
-            loading={updateLoading}
-            disabled={!allComplete}
-          >
-            PUBLISH MODEL
-          </Button>
-        )}
-      </div>
-    </div>
+    </>
   );
 }
