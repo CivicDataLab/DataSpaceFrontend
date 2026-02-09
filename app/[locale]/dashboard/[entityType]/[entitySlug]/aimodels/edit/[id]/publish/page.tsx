@@ -5,6 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Text, toast } from 'opub-ui';
 
+import { RichTextRenderer } from '@/components/RichTextRenderer';
 import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
 
@@ -325,13 +326,11 @@ export default function PublishPage() {
             <Text variant="bodySm" color="subdued">
               Description
             </Text>
-            <Text variant="bodyMd">
-              {model.description
-                ? model.description.length > 100
-                  ? `${model.description.substring(0, 100)}...`
-                  : model.description
-                : '-'}
-            </Text>
+            {model.description ? (
+              <RichTextRenderer content={model.description} />
+            ) : (
+              <Text variant="bodyMd">-</Text>
+            )}
           </div>
         </div>
       </div>
