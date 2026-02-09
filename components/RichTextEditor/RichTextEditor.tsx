@@ -124,7 +124,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           <ReactQuill
             theme="snow"
             value={value || ''}
-            onChange={onChange}
+            onChange={(content) => {
+              const stripped = content.replace(/<(.|\n)*?>/g, '').trim();
+              onChange(stripped === '' ? '' : content);
+            }}
             onBlur={onBlur}
             modules={modules}
             formats={formats}
