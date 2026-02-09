@@ -47,7 +47,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
   });
 
   const AIModelData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_AIModelData`],
+    [`fetch_AIModelData_${params.id}`],
     () =>
       GraphQL(
         FetchAIModelName,
