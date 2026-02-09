@@ -1,23 +1,16 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
-import {
-  Button,
-  Dialog,
-  FormLayout,
-  Icon,
-  IconButton,
-  Select,
-  Text,
-  TextField,
-  toast
-} from 'opub-ui';
-import { useEffect, useState } from 'react';
+import { Button, Dialog, FormLayout, Icon, IconButton, Select, Text, TextField, toast } from 'opub-ui';
 
-import { Icons } from '@/components/icons';
+
+
 import { GraphQL } from '@/lib/api';
+import { Icons } from '@/components/icons';
+
 
 const fetchModelVersions: any = graphql(`
   query FetchModelVersions($filters: AIModelFilter) {
@@ -606,19 +599,27 @@ export default function VersionsPage() {
       {/* Header with Version Selector */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Select
-            name="versionSelector"
-            label=""
-            options={versions.map((v: any) => ({
-              label: `Version ${v.version}`,
-              value: v.id.toString(),
-            }))}
-            value={selectedVersion?.id?.toString() || latestVersion?.id?.toString() || ''}
-            onChange={(value) => {
-              const version = versions.find((v: any) => v.id.toString() === value);
-              setSelectedVersion(version);
-            }}
-          />
+          {versions.length > 0 && (
+            <Select
+              name="versionSelector"
+              label=""
+              options={versions.map((v: any) => ({
+                label: `Version ${v.version}`,
+                value: v.id.toString(),
+              }))}
+              value={
+                selectedVersion?.id?.toString() ||
+                latestVersion?.id?.toString() ||
+                ''
+              }
+              onChange={(value) => {
+                const version = versions.find(
+                  (v: any) => v.id.toString() === value
+                );
+                setSelectedVersion(version);
+              }}
+            />
+          )}
         </div>
         <Button onClick={handleCreateNewVersion}>NEW VERSION</Button>
       </div>
@@ -628,7 +629,7 @@ export default function VersionsPage() {
         (() => {
           const currentVersion = selectedVersion || latestVersion;
           if (!currentVersion) return null;
-          
+
           return (
             <div className="space-y-6">
               {/* Lifecycle Stage */}
@@ -641,7 +642,9 @@ export default function VersionsPage() {
                   label=""
                   options={lifecycleStageOptions.filter((o) => o.value !== '')}
                   value={currentVersion.lifecycleStage || 'DEVELOPMENT'}
-                  onChange={(value) => handleLifecycleChange(currentVersion.id, value)}
+                  onChange={(value) =>
+                    handleLifecycleChange(currentVersion.id, value)
+                  }
                 />
               </div>
 
@@ -650,33 +653,35 @@ export default function VersionsPage() {
                 <input
                   type="checkbox"
                   checked={currentVersion.isLatest}
-                  onChange={(e) => handleSetPrimaryVersion(currentVersion.id, e.target.checked)}
-                  className="h-5 w-5 rounded border-gray-300"
+                  onChange={(e) =>
+                    handleSetPrimaryVersion(currentVersion.id, e.target.checked)
+                  }
+                  className="rounded border-gray-300 h-5 w-5"
                 />
                 <span>Select as Primary Version</span>
                 <span
                   onClick={() => setIsWhatsThisModalOpen(true)}
-                  className="cursor-pointer text-sm text-secondaryOrange underline"
+                  className="text-sm cursor-pointer text-secondaryOrange underline"
                 >
                   What&apos;s this?
                 </span>
               </div>
 
               {/* Providers Table */}
-              <div className="overflow-hidden rounded-lg border border-gray-200">
+              <div className="rounded-lg border border-gray-200 overflow-hidden">
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                      <th className="text-sm text-gray-600 px-4 py-3 text-left font-medium">
                         PROVIDER
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                      <th className="text-sm text-gray-600 px-4 py-3 text-left font-medium">
                         ENDPOINT URL
                       </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                      <th className="text-sm text-gray-600 px-4 py-3 text-left font-medium">
                         ACCESS PRIORITY
                       </th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">
+                      <th className="text-sm text-gray-600 px-4 py-3 text-right font-medium">
                         ACTIONS
                       </th>
                     </tr>
@@ -685,13 +690,13 @@ export default function VersionsPage() {
                     {currentVersion.providers?.length > 0 ? (
                       currentVersion.providers.map((provider: any) => (
                         <tr key={provider.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm">
+                          <td className="text-sm px-4 py-3">
                             {getProviderDisplayName(provider.provider)}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
+                          <td className="text-sm text-gray-600 px-4 py-3">
                             {getEndpointUrl(provider)}
                           </td>
-                          <td className="px-4 py-3 text-sm">
+                          <td className="text-sm px-4 py-3">
                             {getAccessPriority(provider)}
                           </td>
                           <td className="px-4 py-3 text-right">
@@ -699,7 +704,12 @@ export default function VersionsPage() {
                               <IconButton
                                 size="medium"
                                 icon={Icons.pencil}
-                                onClick={() => handleOpenProviderModal(currentVersion, provider)}
+                                onClick={() =>
+                                  handleOpenProviderModal(
+                                    currentVersion,
+                                    provider
+                                  )
+                                }
                               >
                                 Edit
                               </IconButton>
@@ -720,7 +730,10 @@ export default function VersionsPage() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                        <td
+                          colSpan={4}
+                          className="text-gray-500 px-4 py-8 text-center"
+                        >
                           No access methods configured
                         </td>
                       </tr>
@@ -744,7 +757,7 @@ export default function VersionsPage() {
           );
         })()
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 p-12">
+        <div className="rounded-lg border border-gray-300 flex flex-col items-center justify-center border-dashed p-12">
           <Icon source={Icons.light} size={48} color="subdued" />
           <Text variant="headingSm" color="subdued" className="mt-4">
             No versions yet
@@ -759,7 +772,10 @@ export default function VersionsPage() {
       )}
 
       {/* New Version Modal */}
-      <Dialog open={isNewVersionModalOpen} onOpenChange={setIsNewVersionModalOpen}>
+      <Dialog
+        open={isNewVersionModalOpen}
+        onOpenChange={setIsNewVersionModalOpen}
+      >
         {isNewVersionModalOpen && (
           <Dialog.Content title="Add a New Version">
             <FormLayout>
@@ -779,7 +795,10 @@ export default function VersionsPage() {
                 options={lifecycleStageOptions}
                 value={newVersionData.lifecycleStage}
                 onChange={(value) =>
-                  setNewVersionData((prev) => ({ ...prev, lifecycleStage: value }))
+                  setNewVersionData((prev) => ({
+                    ...prev,
+                    lifecycleStage: value,
+                  }))
                 }
                 required
               />
@@ -826,7 +845,11 @@ export default function VersionsPage() {
               </Text>
 
               <div className="flex justify-center pt-4">
-                <Button onClick={handleSaveNewVersion} loading={createLoading} fullWidth>
+                <Button
+                  onClick={handleSaveNewVersion}
+                  loading={createLoading}
+                  fullWidth
+                >
                   SAVE AND CLOSE
                 </Button>
               </div>
@@ -874,7 +897,10 @@ export default function VersionsPage() {
                     type="password"
                     value={providerFormData.apiKey}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, apiKey: value }))
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        apiKey: value,
+                      }))
                     }
                     helpText="Your OpenAI API key"
                     required
@@ -892,7 +918,10 @@ export default function VersionsPage() {
                     type="password"
                     value={providerFormData.apiKey}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, apiKey: value }))
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        apiKey: value,
+                      }))
                     }
                     helpText={`Your ${providerFormData.provider === 'LLAMA_TOGETHER' ? 'Together AI' : 'Replicate'} API key`}
                     required
@@ -908,7 +937,10 @@ export default function VersionsPage() {
                     label="Ollama Endpoint URL"
                     value={providerFormData.apiEndpointUrl}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, apiEndpointUrl: value }))
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        apiEndpointUrl: value,
+                      }))
                     }
                     placeholder="http://localhost:11434/api/generate"
                     helpText="URL where Ollama is running"
@@ -925,7 +957,10 @@ export default function VersionsPage() {
                     label="API Endpoint URL"
                     value={providerFormData.apiEndpointUrl}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, apiEndpointUrl: value }))
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        apiEndpointUrl: value,
+                      }))
                     }
                     placeholder="https://your-api.com/v1/chat/completions"
                     helpText="Full endpoint URL for your custom Llama API"
@@ -937,7 +972,10 @@ export default function VersionsPage() {
                     type="password"
                     value={providerFormData.apiKey}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, apiKey: value }))
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        apiKey: value,
+                      }))
                     }
                     helpText="API key for authentication (if required)"
                   />
@@ -952,7 +990,10 @@ export default function VersionsPage() {
                     label="API Endpoint URL"
                     value={providerFormData.apiEndpointUrl}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, apiEndpointUrl: value }))
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        apiEndpointUrl: value,
+                      }))
                     }
                     placeholder="https://your-api.com/v1/completions"
                     helpText="Full endpoint URL for your custom API"
@@ -964,7 +1005,10 @@ export default function VersionsPage() {
                     type="password"
                     value={providerFormData.apiKey}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, apiKey: value }))
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        apiKey: value,
+                      }))
                     }
                     helpText="API key or token for authentication"
                   />
@@ -981,7 +1025,10 @@ export default function VersionsPage() {
                     ]}
                     value={providerFormData.apiAuthType}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, apiAuthType: value }))
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        apiAuthType: value,
+                      }))
                     }
                   />
                   <TextField
@@ -989,17 +1036,23 @@ export default function VersionsPage() {
                     label="Auth Header Name"
                     value={providerFormData.apiAuthHeaderName}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, apiAuthHeaderName: value }))
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        apiAuthHeaderName: value,
+                      }))
                     }
                     placeholder="Authorization"
                     helpText="Header name for authentication (e.g., Authorization, X-API-Key)"
                   />
                   <TextField
-                   name="apiRequestTemplate"
+                    name="apiRequestTemplate"
                     label="Request Body Template"
                     value={providerFormData.apiRequestTemplate}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, apiRequestTemplate: value }))
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        apiRequestTemplate: value,
+                      }))
                     }
                     placeholder='{"model": "{model_id}",
                                   "messages": [{"role": "user", "content": "{input}"}]
@@ -1007,13 +1060,16 @@ export default function VersionsPage() {
                                   "max_tokens": {max_tokens}
                                   }'
                     helpText="Request body template with placeholders like {input}, {prompt}, {model_id}, {temperature}, {max_tokens}"
-                    />
+                  />
                   <TextField
                     name="apiResponsePath"
                     label="Response Path"
                     value={providerFormData.apiResponsePath}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, apiResponsePath: value }))
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        apiResponsePath: value,
+                      }))
                     }
                     placeholder="choices[0].message.content"
                     helpText="JSON path to extract response text"
@@ -1024,7 +1080,10 @@ export default function VersionsPage() {
                     type="number"
                     value={providerFormData.apiTimeoutSeconds.toString()}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, apiTimeoutSeconds: parseInt(value) || 60 }))
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        apiTimeoutSeconds: parseInt(value) || 60,
+                      }))
                     }
                     helpText="Request timeout in seconds"
                   />
@@ -1040,7 +1099,10 @@ export default function VersionsPage() {
                     type="password"
                     value={providerFormData.hfAuthToken}
                     onChange={(value) =>
-                      setProviderFormData((prev) => ({ ...prev, hfAuthToken: value }))
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        hfAuthToken: value,
+                      }))
                     }
                     helpText="Required for gated models"
                   />
@@ -1133,24 +1195,30 @@ export default function VersionsPage() {
       </Dialog>
 
       {/* What is Primary Version Modal */}
-      <Dialog open={isWhatsThisModalOpen} onOpenChange={setIsWhatsThisModalOpen}>
+      <Dialog
+        open={isWhatsThisModalOpen}
+        onOpenChange={setIsWhatsThisModalOpen}
+      >
         {isWhatsThisModalOpen && (
           <Dialog.Content title="What is a Primary Version?">
             <div className="space-y-4">
               <Text>
-                When you set up multiple versions of your AI model, you can select one version to
-                be the Primary Version.
+                When you set up multiple versions of your AI model, you can
+                select one version to be the Primary Version.
               </Text>
               <Text>
-                The Primary Version will be selected by default for audits. You can switch to
-                another version before starting your audits.
+                The Primary Version will be selected by default for audits. You
+                can switch to another version before starting your audits.
               </Text>
               <Text>
-                If your model is shared publicly, your primary version will be displayed at the top
-                of the list of versions.
+                If your model is shared publicly, your primary version will be
+                displayed at the top of the list of versions.
               </Text>
               <div className="flex justify-center pt-4">
-                <Button onClick={() => setIsWhatsThisModalOpen(false)} fullWidth>
+                <Button
+                  onClick={() => setIsWhatsThisModalOpen(false)}
+                  fullWidth
+                >
                   CLOSE
                 </Button>
               </div>
@@ -1160,22 +1228,30 @@ export default function VersionsPage() {
       </Dialog>
 
       {/* Primary Version Confirmation Modal */}
-      <Dialog open={isPrimaryConfirmModalOpen} onOpenChange={setIsPrimaryConfirmModalOpen}>
+      <Dialog
+        open={isPrimaryConfirmModalOpen}
+        onOpenChange={setIsPrimaryConfirmModalOpen}
+      >
         {isPrimaryConfirmModalOpen && (
           <Dialog.Content title="Select as Primary Version?">
             <div className="space-y-4">
               {(() => {
                 const currentPrimary = versions.find((v: any) => v.isLatest);
-                const pendingVersion = versions.find((v: any) => v.id === pendingPrimaryVersionId);
+                const pendingVersion = versions.find(
+                  (v: any) => v.id === pendingPrimaryVersionId
+                );
                 return (
                   <>
-                    {currentPrimary && currentPrimary.id !== pendingPrimaryVersionId && (
-                      <Text>
-                        If you confirm, version {currentPrimary.version} will no longer be your primary version.
-                      </Text>
-                    )}
+                    {currentPrimary &&
+                      currentPrimary.id !== pendingPrimaryVersionId && (
+                        <Text>
+                          If you confirm, version {currentPrimary.version} will
+                          no longer be your primary version.
+                        </Text>
+                      )}
                     <Text>
-                      Do you want to make version {pendingVersion?.version} your primary version?
+                      Do you want to make version {pendingVersion?.version} your
+                      primary version?
                     </Text>
                   </>
                 );
