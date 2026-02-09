@@ -170,6 +170,7 @@ export default function AIModelDetailsPage() {
       ),
     {
       refetchOnMount: true,
+      keepPreviousData: false,
     }
   );
 
@@ -205,6 +206,24 @@ export default function AIModelDetailsPage() {
       },
     }
   );
+
+  useEffect(() => {
+    setFormData({
+      name: '',
+      modelType: 'TEXT_GENERATION',
+      description: '',
+      targetUsers: '',
+      intendedUse: '',
+      sectors: [],
+      tags: [],
+      maxTokens: '',
+      supportedLanguages: [],
+      modelWebsite: '',
+      geographies: [],
+      usageLicense: '',
+      accessType: 'open',
+    });
+  }, [params.id]);
 
   useEffect(() => {
     if (model) {
