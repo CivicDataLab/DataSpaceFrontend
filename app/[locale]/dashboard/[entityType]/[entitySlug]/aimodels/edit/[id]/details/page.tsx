@@ -1,7 +1,7 @@
 'use client';
 
 import { graphql } from '@/gql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import {
   Combobox,
@@ -98,6 +98,7 @@ export default function AIModelDetailsPage() {
   }>();
 
   const { setStatus } = useEditStatus();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -199,6 +200,7 @@ export default function AIModelDetailsPage() {
           setIsTagsListUpdated(false);
         }
         AIModelData.refetch();
+        queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);

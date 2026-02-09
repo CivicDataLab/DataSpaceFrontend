@@ -1,15 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { Button, Dialog, FormLayout, Icon, IconButton, Select, Text, TextField, toast } from 'opub-ui';
+import { useEffect, useState } from 'react';
 
 
 
-import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import { GraphQL } from '@/lib/api';
 
 
 const fetchModelVersions: any = graphql(`
@@ -217,6 +217,7 @@ export default function VersionsPage() {
         toast('New version created successfully!');
         setIsNewVersionModalOpen(false);
         resetVersionForm();
+        queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
         // Select the newly created version after refetch
         const newVersionId = response?.createAiModelVersion?.data?.id;
         const result = await refetch();
@@ -249,6 +250,7 @@ export default function VersionsPage() {
         setIsProviderModalOpen(false);
         resetProviderForm();
         refetch();
+        queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -270,6 +272,7 @@ export default function VersionsPage() {
         setEditingProvider(null);
         resetProviderForm();
         refetch();
+        queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -288,6 +291,7 @@ export default function VersionsPage() {
       onSuccess: () => {
         toast('Provider deleted successfully!');
         refetch();
+        queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -514,6 +518,7 @@ export default function VersionsPage() {
       onSuccess: () => {
         toast('Version updated successfully!');
         refetch();
+        queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
