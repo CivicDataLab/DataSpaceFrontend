@@ -4,8 +4,10 @@ import { graphql } from '@/gql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import {
+  Checkbox,
   Combobox,
   Select,
+  Text,
   TextField,
   toast,
 } from 'opub-ui';
@@ -270,8 +272,6 @@ export default function AIModelDetailsPage() {
     setStatus('saving');
     const dataToUse = overrideData || formData;
     const updateData: any = {
-      displayName: dataToUse.name,
-      name: dataToUse.name.toLowerCase().replace(/\s+/g, '-'),
       description: dataToUse.description,
       modelType: dataToUse.modelType,
       domain: dataToUse.domain || null,
@@ -547,40 +547,37 @@ export default function AIModelDetailsPage() {
             Select Access Type
           </label>
           <div className="flex gap-6">
-            <label className="flex items-start gap-2">
-              <input
-                type="checkbox"
-                checked={formData.accessType === 'open'}
-                onChange={() => {
-                  handleInputChange('accessType', 'open');
-                  handleSave({ ...formData, accessType: 'open' });
-                }}
-                className="mt-1 h-4 w-4"
-              />
-              <div>
-                <span className="font-medium">Open Access</span>
-                <p className="text-xs text-gray-500">
-                  Model can be downloaded and used by everyone
-                </p>
+            <Checkbox
+              name="accessType"
+              checked={formData.accessType === 'open'}
+              onChange={() => {
+                handleInputChange('accessType', 'open');
+                handleSave({ ...formData, accessType: 'open' });
+              }}
+            >
+              <div className="flex flex-col gap-1">
+                <Text>Open Access</Text>
+                <Text>
+                  Model can be viewed and used by everyone
+                </Text>
               </div>
-            </label>
-            <label className="flex items-start gap-2">
-              <input
-                type="checkbox"
-                checked={formData.accessType === 'restricted'}
-                onChange={() => {
-                  handleInputChange('accessType', 'restricted');
-                  handleSave({ ...formData, accessType: 'restricted' });
-                }}
-                className="mt-1 h-4 w-4"
-              />
-              <div>
-                <span className="font-medium">Restricted Access</span>
-                <p className="text-xs text-gray-500">
-                  Users will request access to be able to download the model
-                </p>
+            </Checkbox>
+            <Checkbox
+              name="isRestricted"
+              checked={false}
+              defaultChecked={false}
+              disabled
+            >
+              <div className="flex flex-col gap-1" title="Coming Soon">
+                <Text className="text-textDisabled">
+                  Restricted Access
+                </Text>
+                <Text className="text-iconDisabled">
+                  Users would require to request access to the model.
+                  Recommended for sensitive models.
+                </Text>
               </div>
-            </label>
+            </Checkbox>
           </div>
         </div>
       </div>
