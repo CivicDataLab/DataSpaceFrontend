@@ -351,16 +351,6 @@ export default function AIModelDetailsPage() {
 
   return (
     <div className="flex flex-col gap-4 py-6">
-      {/* Model Name */}
-      <TextField
-        name="name"
-        label="Model Name"
-        value={formData.name}
-        onChange={(value) => handleInputChange('name', value)}
-        onBlur={() => handleSave()}
-        required
-      />
-
       {/* Model Type */}
       <Select
         name="modelType"
