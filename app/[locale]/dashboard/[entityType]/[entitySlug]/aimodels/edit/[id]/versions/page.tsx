@@ -3,7 +3,22 @@
 import { graphql } from '@/gql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
-import { Button, Dialog, FormLayout, Icon, IconButton, Select, Text, TextField, toast } from 'opub-ui';
+import {
+  Button,
+  Checkbox,
+  DataTable,
+  Dialog,
+  Divider,
+  FormLayout,
+  Icon,
+  IconButton,
+  Select,
+  Spinner,
+  Tag,
+  Text,
+  TextField,
+  toast
+} from 'opub-ui';
 import { useEffect, useState } from 'react';
 
 
@@ -195,8 +210,8 @@ export default function VersionsPage() {
       ),
     {
       enabled: !!params.id,
-      staleTime: 0, // Always consider data stale
-      refetchOnMount: true, // Override global default
+      staleTime: 0,
+      refetchOnMount: true,
     }
   );
 
@@ -218,11 +233,9 @@ export default function VersionsPage() {
         setIsNewVersionModalOpen(false);
         resetVersionForm();
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
-        // Select the newly created version after refetch
         const newVersionId = response?.createAiModelVersion?.data?.id;
         const result = await refetch();
         if (newVersionId && result.data) {
-          // Find and select the new version from refetched data
           const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
           const newVersion = refetchedVersions.find((v: any) => v.id === newVersionId);
           if (newVersion) {
@@ -423,8 +436,8 @@ export default function VersionsPage() {
     if (providerFormData.apiRequestTemplate) {
       try {
         parsedRequestTemplate = JSON.parse(providerFormData.apiRequestTemplate);
-      } catch (e) {
-        alert('Invalid JSON in Request Body Template. Please check the format.');
+      } catch (_) {
+        toast('Invalid JSON in Request Body Template. Please check the format.');
         return;
       }
     }
@@ -506,7 +519,6 @@ export default function VersionsPage() {
   ];
 
 
-  // Update version mutation for lifecycle stage changes
   const { mutate: updateVersion } = useMutation(
     (input: any) =>
       GraphQL(
@@ -527,7 +539,6 @@ export default function VersionsPage() {
   );
 
   const handleLifecycleChange = (versionId: number, lifecycleStage: string) => {
-    // Optimistically update local state - always set selectedVersion if not set
     const currentVersion = selectedVersion || latestVersion;
     if (currentVersion?.id === versionId) {
       setSelectedVersion({ ...currentVersion, lifecycleStage });
@@ -537,11 +548,9 @@ export default function VersionsPage() {
 
   const handleSetPrimaryVersion = (versionId: number, isLatest: boolean) => {
     if (isLatest) {
-      // Show confirmation dialog before setting as primary
       setPendingPrimaryVersionId(versionId);
       setIsPrimaryConfirmModalOpen(true);
     } else {
-      // Unchecking - just update directly
       const currentVersion = selectedVersion || latestVersion;
       if (currentVersion?.id === versionId) {
         setSelectedVersion({ ...currentVersion, isLatest: false });
@@ -562,7 +571,6 @@ export default function VersionsPage() {
     setPendingPrimaryVersionId(null);
   };
 
-  // Get provider display name
   const getProviderDisplayName = (provider: string) => {
     const names: Record<string, string> = {
       OPENAI: 'OpenAI',
@@ -576,7 +584,6 @@ export default function VersionsPage() {
     return names[provider] || provider;
   };
 
-  // Get endpoint URL from provider
   const getEndpointUrl = (provider: any) => {
     if (provider.apiEndpointUrl) {
       return provider.apiEndpointUrl;
@@ -590,18 +597,20 @@ export default function VersionsPage() {
     return provider.providerModelId || '-';
   };
 
-  // Get access priority label
   const getAccessPriority = (provider: any) => {
     return provider.isPrimary ? 'Primary Source' : 'Alternate Source';
   };
 
   if (isLoading) {
-    return <div className="p-6">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Spinner />
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col gap-6 py-6">
-      {/* Header with Version Selector */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           {versions.length > 0 && (
@@ -629,7 +638,6 @@ export default function VersionsPage() {
         <Button onClick={handleCreateNewVersion}>NEW VERSION</Button>
       </div>
 
-      {/* Selected Version Details */}
       {versions.length > 0 ? (
         (() => {
           const currentVersion = selectedVersion || latestVersion;
@@ -637,7 +645,6 @@ export default function VersionsPage() {
 
           return (
             <div className="space-y-6">
-              {/* Lifecycle Stage */}
               <div className="flex flex-col gap-2">
                 <Text variant="bodyMd" fontWeight="semibold">
                   Lifecycle Stage <span className="text-red-500">*</span>
@@ -653,17 +660,16 @@ export default function VersionsPage() {
                 />
               </div>
 
-              {/* Select as Primary Version */}
               <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
+                <Checkbox
+                  name="isLatest"
                   checked={currentVersion.isLatest}
-                  onChange={(e) =>
-                    handleSetPrimaryVersion(currentVersion.id, e.target.checked)
+                  onChange={() =>
+                    handleSetPrimaryVersion(currentVersion.id, !currentVersion.isLatest)
                   }
-                  className="rounded border-gray-300 h-5 w-5"
-                />
-                <span>Select as Primary Version</span>
+                >
+                  Select as Primary Version
+                </Checkbox>
                 <span
                   onClick={() => setIsWhatsThisModalOpen(true)}
                   className="text-sm cursor-pointer text-secondaryOrange underline"
@@ -672,82 +678,66 @@ export default function VersionsPage() {
                 </span>
               </div>
 
-              {/* Providers Table */}
-              <div className="rounded-lg border border-gray-200 overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="text-sm text-gray-600 px-4 py-3 text-left font-medium">
-                        PROVIDER
-                      </th>
-                      <th className="text-sm text-gray-600 px-4 py-3 text-left font-medium">
-                        ENDPOINT URL
-                      </th>
-                      <th className="text-sm text-gray-600 px-4 py-3 text-left font-medium">
-                        ACCESS PRIORITY
-                      </th>
-                      <th className="text-sm text-gray-600 px-4 py-3 text-right font-medium">
-                        ACTIONS
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {currentVersion.providers?.length > 0 ? (
-                      currentVersion.providers.map((provider: any) => (
-                        <tr key={provider.id} className="hover:bg-gray-50">
-                          <td className="text-sm px-4 py-3">
-                            {getProviderDisplayName(provider.provider)}
-                          </td>
-                          <td className="text-sm text-gray-600 px-4 py-3">
-                            {getEndpointUrl(provider)}
-                          </td>
-                          <td className="text-sm px-4 py-3">
-                            {getAccessPriority(provider)}
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <IconButton
-                                size="medium"
-                                icon={Icons.pencil}
-                                onClick={() =>
-                                  handleOpenProviderModal(
-                                    currentVersion,
-                                    provider
-                                  )
-                                }
-                              >
-                                Edit
-                              </IconButton>
-                              <IconButton
-                                size="medium"
-                                icon={Icons.delete}
-                                onClick={() => {
-                                  if (confirm('Delete this provider?')) {
-                                    deleteProvider(provider.id);
-                                  }
-                                }}
-                              >
-                                Delete
-                              </IconButton>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={4}
-                          className="text-gray-500 px-4 py-8 text-center"
-                        >
-                          No access methods configured
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+              <Divider />
+              <div className="overflow-x-auto">
+                {currentVersion.providers?.length > 0 ? (
+                  <DataTable
+                    columns={[
+                      { accessorKey: 'provider', header: 'Provider' },
+                      { accessorKey: 'endpoint', header: 'Endpoint URL' },
+                      { accessorKey: 'priority', header: 'Access Priority' },
+                      { accessorKey: 'actions', header: 'Actions' },
+                    ]}
+                    rows={currentVersion.providers.map((provider: any) => ({
+                      id: provider.id,
+                      provider: getProviderDisplayName(provider.provider),
+                      endpoint: getEndpointUrl(provider),
+                      priority: (
+                        <Tag>
+                          {getAccessPriority(provider)}
+                        </Tag>
+                      ),
+                      actions: (
+                        <div className="flex items-center gap-2">
+                          <IconButton
+                            size="medium"
+                            icon={Icons.pencil}
+                            onClick={() =>
+                              handleOpenProviderModal(
+                                currentVersion,
+                                provider
+                              )
+                            }
+                          >
+                            Edit
+                          </IconButton>
+                          <IconButton
+                            size="medium"
+                            icon={Icons.delete}
+                            onClick={() => {
+                              if (confirm('Delete this provider?')) {
+                                deleteProvider(provider.id);
+                              }
+                            }}
+                          >
+                            Delete
+                          </IconButton>
+                        </div>
+                      ),
+                    }))}
+                    hideSelection
+                    hideViewSelector
+                    hideFooter
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center rounded-1 border border-dashed border-borderDefault p-8">
+                    <Text variant="bodySm" color="subdued">
+                      No access methods configured
+                    </Text>
+                  </div>
+                )}
               </div>
 
-              {/* Add Access Method Button */}
               <div className="flex justify-center">
                 <Button
                   kind="tertiary"
@@ -762,7 +752,7 @@ export default function VersionsPage() {
           );
         })()
       ) : (
-        <div className="rounded-lg border border-gray-300 flex flex-col items-center justify-center border-dashed p-12">
+        <div className="flex flex-col items-center justify-center rounded-1 border border-dashed border-borderDefault p-12">
           <Icon source={Icons.light} size={48} color="subdued" />
           <Text variant="headingSm" color="subdued" className="mt-4">
             No versions yet
@@ -776,13 +766,12 @@ export default function VersionsPage() {
         </div>
       )}
 
-      {/* New Version Modal */}
       <Dialog
         open={isNewVersionModalOpen}
         onOpenChange={setIsNewVersionModalOpen}
       >
         {isNewVersionModalOpen && (
-          <Dialog.Content title="Add a New Version">
+          <Dialog.Content title="Add a New Version" limitHeight>
             <FormLayout>
               <TextField
                 name="version"
@@ -831,23 +820,23 @@ export default function VersionsPage() {
                 }
                 required
               />
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={newVersionData.isLatest}
-                  onChange={(e) =>
-                    setNewVersionData((prev) => ({
-                      ...prev,
-                      isLatest: e.target.checked,
-                    }))
-                  }
-                  className="h-4 w-4"
-                />
-                <span>Select as Primary Version</span>
-              </label>
-              <Text variant="bodySm" color="subdued">
-                This will be the default version for audits
-              </Text>
+              <Checkbox
+                name="isLatestNewVersion"
+                checked={newVersionData.isLatest}
+                onChange={() =>
+                  setNewVersionData((prev) => ({
+                    ...prev,
+                    isLatest: !prev.isLatest,
+                  }))
+                }
+              >
+                <div className="flex flex-col gap-1">
+                  <Text>Select as Primary Version</Text>
+                  <Text variant="bodySm" color="subdued">
+                    This will be the default version for audits
+                  </Text>
+                </div>
+              </Checkbox>
 
               <div className="flex justify-center pt-4">
                 <Button
@@ -868,6 +857,7 @@ export default function VersionsPage() {
         {isProviderModalOpen && (
           <Dialog.Content
             title={editingProvider ? 'Edit Provider' : 'Add New Provider'}
+            limitHeight
           >
             <FormLayout>
               <Select
@@ -1148,37 +1138,33 @@ export default function VersionsPage() {
                     }
                     helpText="e.g., flash_attention_2, eager, sdpa"
                   />
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={providerFormData.hfUsePipeline}
-                      onChange={(e) =>
-                        setProviderFormData((prev) => ({
-                          ...prev,
-                          hfUsePipeline: e.target.checked,
-                        }))
-                      }
-                      className="h-4 w-4"
-                    />
-                    <span>Use Pipeline API</span>
-                  </label>
+                  <Checkbox
+                    name="hfUsePipeline"
+                    checked={providerFormData.hfUsePipeline}
+                    onChange={() =>
+                      setProviderFormData((prev) => ({
+                        ...prev,
+                        hfUsePipeline: !prev.hfUsePipeline,
+                      }))
+                    }
+                  >
+                    Use Pipeline API
+                  </Checkbox>
                 </>
               )}
 
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={providerFormData.isPrimary}
-                  onChange={(e) =>
-                    setProviderFormData((prev) => ({
-                      ...prev,
-                      isPrimary: e.target.checked,
-                    }))
-                  }
-                  className="h-4 w-4"
-                />
-                <span>Set as Primary Provider</span>
-              </label>
+              <Checkbox
+                name="isPrimary"
+                checked={providerFormData.isPrimary}
+                onChange={() =>
+                  setProviderFormData((prev) => ({
+                    ...prev,
+                    isPrimary: !prev.isPrimary,
+                  }))
+                }
+              >
+                Set as Primary Provider
+              </Checkbox>
 
               <div className="flex justify-end gap-4 pt-4">
                 <Button
