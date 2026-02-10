@@ -56,6 +56,7 @@ const FetchAIModelDetails: any = graphql(`
       displayName
       description
       modelType
+      domain
       tags {
         id
         value
@@ -103,6 +104,7 @@ export default function AIModelDetailsPage() {
   const [formData, setFormData] = useState({
     name: '',
     modelType: 'TEXT_GENERATION',
+    domain: '',
     description: '',
     targetUsers: '',
     intendedUse: '',
@@ -213,6 +215,7 @@ export default function AIModelDetailsPage() {
     setFormData({
       name: '',
       modelType: 'TEXT_GENERATION',
+      domain: '',
       description: '',
       targetUsers: '',
       intendedUse: '',
@@ -233,6 +236,7 @@ export default function AIModelDetailsPage() {
       setFormData({
         name: model.displayName || model.name || '',
         modelType: model.modelType || 'TEXT_GENERATION',
+        domain: model.domain || '',
         description: model.description || '',
         targetUsers: metadata.targetUsers || '',
         intendedUse: metadata.intendedUse || '',
@@ -270,6 +274,7 @@ export default function AIModelDetailsPage() {
       name: dataToUse.name.toLowerCase().replace(/\s+/g, '-'),
       description: dataToUse.description,
       modelType: dataToUse.modelType,
+      domain: dataToUse.domain || null,
       tags: dataToUse.tags.map((item: any) => item.label),
       sectors: dataToUse.sectors.map((item: any) => item.label),
       geographies: dataToUse.geographies.map((item: any) => parseInt(item.value, 10)),
@@ -287,6 +292,24 @@ export default function AIModelDetailsPage() {
     };
     mutate(updateData);
   };
+
+  const domainOptions = [
+    { label: 'Click to select from dropdown', value: '' },
+    { label: 'Healthcare', value: 'HEALTHCARE' },
+    { label: 'Education', value: 'EDUCATION' },
+    { label: 'Legal', value: 'LEGAL' },
+    { label: 'Finance', value: 'FINANCE' },
+    { label: 'Agriculture', value: 'AGRICULTURE' },
+    { label: 'Environment', value: 'ENVIRONMENT' },
+    { label: 'Government', value: 'GOVERNMENT' },
+    { label: 'Technology', value: 'TECHNOLOGY' },
+    { label: 'Science', value: 'SCIENCE' },
+    { label: 'Social Services', value: 'SOCIAL_SERVICES' },
+    { label: 'Transportation', value: 'TRANSPORTATION' },
+    { label: 'Energy', value: 'ENERGY' },
+    { label: 'General', value: 'GENERAL' },
+    { label: 'Other', value: 'OTHER' },
+  ];
 
   const modelTypeOptions = [
     { label: 'Click to select from dropdown', value: '' },
@@ -351,18 +374,30 @@ export default function AIModelDetailsPage() {
 
   return (
     <div className="flex flex-col gap-4 py-6">
-      {/* Model Type */}
-      <Select
-        name="modelType"
-        label="Model Type"
-        options={modelTypeOptions}
-        value={formData.modelType}
-        onChange={(value) => {
-          handleInputChange('modelType', value);
-          handleSave({ ...formData, modelType: value });
-        }}
-        required
-      />
+      {/* Model Type & Domain - side by side */}
+      <div className="grid grid-cols-2 gap-4">
+        <Select
+          name="modelType"
+          label="Model Type"
+          options={modelTypeOptions}
+          value={formData.modelType}
+          onChange={(value) => {
+            handleInputChange('modelType', value);
+            handleSave({ ...formData, modelType: value });
+          }}
+          required
+        />
+        <Select
+          name="domain"
+          label="Domain"
+          options={domainOptions}
+          value={formData.domain}
+          onChange={(value) => {
+            handleInputChange('domain', value);
+            handleSave({ ...formData, domain: value });
+          }}
+        />
+      </div>
 
       {/* Description */}
       <RichTextEditor

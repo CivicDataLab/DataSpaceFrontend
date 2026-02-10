@@ -4,17 +4,17 @@ import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-  Button,
-  Icon,
-  Spinner,
-  Table,
-  Tag,
-  Text,
-  toast,
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+    Button,
+    Icon,
+    Spinner,
+    Table,
+    Tag,
+    Text,
+    toast,
 } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
@@ -30,6 +30,7 @@ const FetchAIModelForPublish: any = graphql(`
       displayName
       description
       modelType
+      domain
       status
       isPublic
       isActive
@@ -106,6 +107,24 @@ const lifecycleLabels: Record<string, string> = {
   PRODUCTION: 'Production',
   DEPRECATED: 'Deprecated',
   RETIRED: 'Retired',
+};
+
+// Domain display names
+const domainLabels: Record<string, string> = {
+  HEALTHCARE: 'Healthcare',
+  EDUCATION: 'Education',
+  LEGAL: 'Legal',
+  FINANCE: 'Finance',
+  AGRICULTURE: 'Agriculture',
+  ENVIRONMENT: 'Environment',
+  GOVERNMENT: 'Government',
+  TECHNOLOGY: 'Technology',
+  SCIENCE: 'Science',
+  SOCIAL_SERVICES: 'Social Services',
+  TRANSPORTATION: 'Transportation',
+  ENERGY: 'Energy',
+  GENERAL: 'General',
+  OTHER: 'Other',
 };
 
 // Provider display names
@@ -254,6 +273,10 @@ export default function PublishPage() {
     {
       label: 'Model Type',
       value: modelTypeLabels[model?.modelType] || model?.modelType || '',
+    },
+    {
+      label: 'Domain',
+      value: model?.domain ? (domainLabels[model.domain] || model.domain) : '',
     },
   ];
 

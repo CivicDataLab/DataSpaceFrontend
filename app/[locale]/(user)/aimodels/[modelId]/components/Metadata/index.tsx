@@ -48,6 +48,23 @@ export default function Metadata({ data }: MetadataProps) {
     OTHER: 'Other',
   };
 
+  const domainLabels: Record<string, string> = {
+    HEALTHCARE: 'Healthcare',
+    EDUCATION: 'Education',
+    LEGAL: 'Legal',
+    FINANCE: 'Finance',
+    AGRICULTURE: 'Agriculture',
+    ENVIRONMENT: 'Environment',
+    GOVERNMENT: 'Government',
+    TECHNOLOGY: 'Technology',
+    SCIENCE: 'Science',
+    SOCIAL_SERVICES: 'Social Services',
+    TRANSPORTATION: 'Transportation',
+    ENERGY: 'Energy',
+    GENERAL: 'General',
+    OTHER: 'Other',
+  };
+
   // Get primary version info
   const primaryVersion = data.versions?.find((v: any) => v.isLatest) || data.versions?.[0];
   const primaryProvider = primaryVersion?.providers?.find((p: any) => p.isPrimary) || primaryVersion?.providers?.[0];
@@ -130,6 +147,18 @@ export default function Metadata({ data }: MetadataProps) {
             {modelTypeLabels[data.modelType] || data.modelType}
           </Text>
         </div>
+
+        {/* Domain */}
+        {data.domain && (
+          <div className="flex items-center gap-2">
+            <Text className="min-w-[120px] basis-1/4 uppercase" variant="bodyMd">
+              Domain
+            </Text>
+            <Text variant="bodyLg" fontWeight="medium">
+              {domainLabels[data.domain] || data.domain}
+            </Text>
+          </div>
+        )}
 
         {/* Source/Provider */}
         {primaryProvider && (

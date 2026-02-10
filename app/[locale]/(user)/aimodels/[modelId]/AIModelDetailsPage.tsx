@@ -20,6 +20,7 @@ const aiModelQuery: any = graphql(`
       displayName
       description
       modelType
+      domain
       metadata
       status
       isPublic
