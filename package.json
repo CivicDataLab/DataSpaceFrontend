@@ -3,9 +3,8 @@
   "version": "0.1.3",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "dev:fresh": "graphql-codegen --config ./config/codegen.ts && next dev",
-    "dev:turbo": "next dev --turbo",
+    "dev": "next dev --turbo",
+    "dev:fresh": "graphql-codegen --config ./config/codegen.ts && next dev --turbo",
     "build": "graphql-codegen --config ./config/codegen.ts && NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",
     "lint": "eslint .",
