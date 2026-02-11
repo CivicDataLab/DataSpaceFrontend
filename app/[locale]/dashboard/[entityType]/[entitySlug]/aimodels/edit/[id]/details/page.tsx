@@ -312,7 +312,6 @@ export default function AIModelDetailsPage() {
   ];
 
   const modelTypeOptions = [
-    { label: 'Click to select from dropdown', value: '' },
     { label: 'Translation', value: 'TRANSLATION' },
     { label: 'Text Generation', value: 'TEXT_GENERATION' },
     { label: 'Summarization', value: 'SUMMARIZATION' },
