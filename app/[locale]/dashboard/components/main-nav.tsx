@@ -36,6 +36,7 @@ export function MainNav({ hideSearch = false }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isExploreOpen, setIsExploreOpen] = useState(false);
 
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const { data: session, status } = useSession();
@@ -94,11 +95,18 @@ export function MainNav({ hideSearch = false }) {
     return <LogginOutPage />;
   }
 
-  const Navigation = [
+  const exploreLinks = [
     {
-      title: 'All Data',
-      href: '/datasets',
+      title: 'Datasets',
+      href: '/datasets?dataset_type=DATA',
     },
+    {
+      title: 'Prompts',
+      href: '/datasets?dataset_type=PROMPT',
+    },
+  ];
+
+  const Navigation = [
     {
       title: 'Sectors',
       href: '/sectors',
@@ -134,7 +142,7 @@ export function MainNav({ hideSearch = false }) {
         <div className="flex items-center gap-1">
           <div className="lg:hidden">
             <Sidebar
-              data={Navigation}
+              data={[...exploreLinks, ...Navigation]}
               session={session}
               status={status}
               keycloakSessionLogOut={keycloakSessionLogOut}
@@ -201,6 +209,51 @@ export function MainNav({ hideSearch = false }) {
           )}
 
           <div className="flex items-center gap-5">
+            {/* Explore dropdown (desktop) */}
+            <div className="hidden lg:block">
+              <Popover open={isExploreOpen} onOpenChange={setIsExploreOpen}>
+                <Popover.Trigger>
+                  <button className="flex cursor-pointer items-center gap-1 border-none bg-transparent outline-none">
+                    <Text
+                      variant="headingMd"
+                      // as="span"
+                      className={`uppercase text-surfaceDefault ${
+                        pathname.startsWith(`/datasets`)
+                          ? 'text-[#84DCCF]'
+                          : 'text-surfaceDefault'
+                      }`}
+                      fontWeight="semibold"
+                    >
+                      Explore
+                    </Text>
+                    <Icons.chevronDown
+                      size={18}
+                      color={
+                        pathname.startsWith(`/datasets`) ? '#84DCCF' : '#fff'
+                      }
+                    />
+                  </button>
+                </Popover.Trigger>
+                <Popover.Content align="start">
+                  <div className="rounded-3 bg-surfaceDefault py-2 shadow-basicDeep">
+                    {exploreLinks.map((link) => (
+                      <Text variant="bodyMd" key={link.href}>
+                        <a
+                          href={link.href}
+                          // target="_blank"
+                          rel="noreferrer noopener"
+                          className="block w-full px-5 py-2 font-medium uppercase text-textSubdued transition-colors duration-100 ease-ease hover:bg-actionSecondaryNeutralHovered hover:text-textDefault"
+                        >
+                          {link.title}
+                        </a>
+                      </Text>
+                    ))}
+                  </div>
+                </Popover.Content>
+              </Popover>
+            </div>
+
+            {/* Regular navigation items */}
             {Navigation.map((item, index) => (
               <div className="hidden lg:block" key={index}>
                 <Link href={item.href}>

@@ -1,10 +1,11 @@
 'use client';
 
+import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import { fetchData } from '@/fetch';
 import { useTourTrigger } from '@/hooks/use-tour-trigger';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import {
   Button,
   ButtonGroup,
@@ -16,12 +17,15 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
-import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
+import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
-import { DatasetListingSkeleton, Loading, UseCaseListingSkeleton } from '@/components/loading';
-import { cn, formatDate } from '@/lib/utils';
+import {
+  DatasetListingSkeleton,
+  Loading,
+  UseCaseListingSkeleton,
+} from '@/components/loading';
 import Filter from '../datasets/components/FIlter/Filter';
 import Styles from '../datasets/dataset.module.scss';
 
@@ -310,11 +314,11 @@ const ListingComponent: React.FC<ListingProps> = ({
     setHasMounted(true);
   }, []);
   if (!hasMounted) {
-  if (type === 'usecase') {
-    return <UseCaseListingSkeleton cardCount={queryParams.pageSize} />;
+    if (type === 'usecase') {
+      return <UseCaseListingSkeleton cardCount={queryParams.pageSize} />;
+    }
+    return <DatasetListingSkeleton cardCount={queryParams.pageSize} />;
   }
-  return <DatasetListingSkeleton cardCount={queryParams.pageSize} />;
-}
 
   const handlePageChange = (newPage: number) => {
     setQueryParams({ type: 'SET_CURRENT_PAGE', payload: newPage });
@@ -686,6 +690,15 @@ const ListingComponent: React.FC<ListingProps> = ({
                               ? 'usecase-card'
                               : undefined
                         }
+                        {...(type === 'usecase' && {
+                          type: [
+                            {
+                              label: 'Use Case',
+                              fillColor: '#fff',
+                              borderColor: '#000',
+                            },
+                          ],
+                        })}
                       />
                     );
                   })}

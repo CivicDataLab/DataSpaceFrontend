@@ -1,17 +1,16 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-
-import { Button, Divider, Text } from 'opub-ui';
+import { Button, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { buildSectorSlugParam } from '@/lib/utils';
 import { SectorListingSkeleton } from '@/components/loading';
 import { Icons } from '@/components/icons';
+import { SectorCard } from '@/components/SectorCard';
 
 const sectorDetails = graphql(`
   query SectorsList {
@@ -31,15 +30,10 @@ const Sectors = () => {
     queryFn: () => GraphQL(sectorDetails, {}),
   });
   const router = useRouter();
-  function capitalizeWords(name: any) {
-    return name
-      .split('-') // Split by '-'
-      .map((word: any) => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize each word
-      .join('+'); // Join with '+'
-  }
+
   return (
     <div className="container pt-10 md:px-8 lg:pt-20">
-      <div className="flex flex-wrap items-center justify-between gap-4 lg:gap-2 px-4 md:px-12 lg:px-12 ">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-4 md:px-12 lg:gap-2 lg:px-12 ">
         <div className="flex flex-col gap-2">
           <Text variant="headingXl">Explore Sectors</Text>
           <Text variant="bodyLg" fontWeight="medium">
@@ -64,46 +58,17 @@ const Sectors = () => {
           </Button>
         </div>
       </div>
-      {isLoading ? (    
-         <SectorListingSkeleton 
-          cardCount={9}  
-        />
+      {isLoading ? (
+        <SectorListingSkeleton cardCount={9} />
       ) : (
-        <div className="mt-6 lg:mt-12 grid w-full grid-cols-1 gap-6 px-4 md:grid-cols-2 md:px-12 lg:grid-cols-3 lg:px-12">
-          {data?.activeSectors.map((sectors: any) => (
-            <Link
-              href={`/sectors/${sectors.slug}?size=9&page=1&sort=recent&sectors=${capitalizeWords(sectors.slug)}`}
-              key={sectors.id}
-            >
-              <div className="flex h-full min-h-[140px]w-full items-center gap-5 rounded-4 bg-surfaceDefault p-7 shadow-card transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
-                <div className="flex gap-4">
-                  <Image
-                    src={`/Sectors/${sectors.name}.svg`}
-                    width={80}
-                    height={80}
-                    alt={'Sectors Logo'}
-                  />
-                </div>
-                <div className="flex w-full flex-col gap-3">
-                  <div className="flex flex-col gap-2">
-                    <Text variant="headingLg" fontWeight="semibold">
-                      {sectors.name}
-                    </Text>
-                    <Divider />
-                  </div>
-                  <div className="flex gap-1">
-                    <Text
-                      variant="bodyMd"
-                      fontWeight="bold"
-                      className=" text-primaryBlue"
-                    >
-                      {sectors.datasetCount}
-                    </Text>
-                    <Text variant="bodyMd">Datasets</Text>
-                  </div>
-                </div>
-              </div>
-            </Link>
+        <div className="mt-6 grid w-full grid-cols-1 gap-10 px-4 md:grid-cols-2 md:px-12 lg:mt-12 lg:grid-cols-3 lg:px-12">
+          {data?.activeSectors.map((sector: any) => (
+            <SectorCard
+              key={sector.id}
+              sector={sector}
+              href={`/sectors/${sector.slug}?size=9&page=1&sort=recent&sectors=${buildSectorSlugParam(sector.slug)}`}
+              className="min-w-[280px] flex-1"
+            />
           ))}
         </div>
       )}
