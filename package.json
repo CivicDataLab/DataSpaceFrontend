@@ -40,7 +40,7 @@
     "next-auth": "^4.24.7",
     "next-intl": "^3.4.0",
     "nuqs": "^2.0.0",
-    "opub-ui": "^0.4.31",
+    "opub-ui": "^0.4.33",
     "react": "^19.2.0",
     "react-aria": "^3.36.0",
     "react-dom": "^19.2.0",

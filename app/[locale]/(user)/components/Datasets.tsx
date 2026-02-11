@@ -1,22 +1,22 @@
 'use client';
 
-import { fetchDatasets } from '@/fetch';
-import { useRouter } from 'next/navigation';
-import {
-    Button,
-    Card,
-    Carousel,
-    CarouselContent,
-    CarouselItem,
-    CarouselNext,
-    CarouselPrevious,
-    Text,
-} from 'opub-ui';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { fetchDatasets } from '@/fetch';
+import {
+  Button,
+  Card,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  Text,
+} from 'opub-ui';
 
+import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { DatasetListingSkeleton } from '@/components/loading';
-import { cn } from '@/lib/utils';
 import Styles from './datasets.module.scss';
 
 interface Bucket {
@@ -81,10 +81,7 @@ const Datasets = () => {
 
           <CarouselContent className="p-4">
             {isLoading ? (
-              <DatasetListingSkeleton 
-              cardCount={3}  
-              cardsOnly={true}  
-            />
+              <DatasetListingSkeleton cardCount={3} cardsOnly={true} />
             ) : (
               facets?.results?.map((item: any) => (
                 <CarouselItem
@@ -146,6 +143,13 @@ const Datasets = () => {
                     variation={'collapsed'}
                     iconColor="warning"
                     href={`/datasets/${item.id}`}
+                    // type={[
+                    //   {
+                    //     label: 'Dataset',
+                    //     fillColor: '#fff',
+                    //     borderColor: '#000',
+                    //   },
+                    // ]}
                   />
                 </CarouselItem>
               ))

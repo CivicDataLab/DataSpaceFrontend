@@ -1,7 +1,8 @@
 'use client';
 
-import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import {
   Button,
   ButtonGroup,
@@ -13,38 +14,68 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
-import React, { useEffect, useReducer, useRef, useState } from 'react';
 
+import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
-import { cn, formatDate } from '@/lib/utils';
 import Filter from '../../datasets/components/FIlter/Filter';
 import Styles from '../../datasets/dataset.module.scss';
 
 // Helper function to strip markdown and HTML tags for card preview
-const stripMarkdown = (markdown: string): string => {
+export const stripMarkdown = (markdown: string): string => {
   if (!markdown) return '';
-  return markdown
+
+  let cleaned = markdown
+    // Remove code blocks first (before other replacements)
     .replace(/```[\s\S]*?```/g, '')
+    // Remove inline code
     .replace(/`([^`]+)`/g, '$1')
+    // Remove images
     .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+    // Remove links
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Remove headers
     .replace(/^#{1,6}\s+/gm, '')
+    // Remove bold
     .replace(/\*\*([^*]+)\*\*/g, '$1')
     .replace(/__([^_]+)__/g, '$1')
+    // Remove italic
     .replace(/\*([^*]+)\*/g, '$1')
     .replace(/_([^_]+)_/g, '$1')
+    // Remove strikethrough
     .replace(/~~([^~]+)~~/g, '$1')
+    // Remove blockquotes
     .replace(/^\s*>\s+/gm, '')
+    // Remove horizontal rules
     .replace(/^(-{3,}|_{3,}|\*{3,})$/gm, '')
+    // Remove list markers
     .replace(/^\s*[-*+]\s+/gm, '')
     .replace(/^\s*\d+\.\s+/gm, '')
+    // Remove HTML tags
     .replace(/<[^>]*>/g, '')
+    // Replace HTML entities (like &nbsp;) with regular spaces - MUST come before other replacements
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&#x2F;/g, '/')
+    // Replace numeric HTML entities (like &#160;)
+    .replace(/&#\d+;/g, ' ')
+    // Replace hex HTML entities (like &#xA0;)
+    .replace(/&#x[0-9A-Fa-f]+;/g, ' ')
+    // Replace any remaining HTML entities with space
+    .replace(/&[#\w]+;/g, ' ')
+    // Remove extra whitespace and newlines
     .replace(/\n\s*\n/g, '\n')
     .replace(/\n/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+
+  return cleaned;
 };
 
 // Interfaces
@@ -232,18 +263,23 @@ const fetchUnifiedData = async (variables: string) => {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/search/unified/${variables}`
   );
-  
+
   if (!response.ok) {
     const text = await response.text();
     console.error('API Error Response:', text.substring(0, 500));
     throw new Error(`API returned ${response.status}: ${response.statusText}`);
   }
-  
+
   const text = await response.text();
   try {
     return JSON.parse(text);
   } catch (e) {
-    console.error('JSON Parse Error. Response text:', text.substring(0, 600), "Error: ", e);
+    console.error(
+      'JSON Parse Error. Response text:',
+      text.substring(0, 600),
+      'Error: ',
+      e
+    );
     throw new Error(`Failed to parse JSON response`);
   }
 };
