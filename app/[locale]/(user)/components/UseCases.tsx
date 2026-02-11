@@ -17,8 +17,8 @@ import {
 import { GraphQL } from '@/lib/api';
 import { cn, formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
-import Styles from './datasets.module.scss';
 import { UseCaseListingSkeleton } from '@/components/loading';
+import Styles from './datasets.module.scss';
 
 const useCasesListDoc: any = graphql(`
   query TopUseCases(
@@ -125,13 +125,10 @@ const UseCasesListingPage = () => {
         <Carousel className="flex w-full justify-between">
           <CarouselPrevious />
 
-          {getUseCasesList.isLoading ? (   
-           <UseCaseListingSkeleton 
-              cardCount={3}  
-              cardsOnly={true}  
-            />      
+          {getUseCasesList.isLoading ? (
+            <UseCaseListingSkeleton cardCount={3} cardsOnly={true} />
           ) : (
-            <CarouselContent className="p-4 ">
+            <CarouselContent className="items-stretch  p-4">
               {getUseCasesList &&
                 getUseCasesList?.data?.publishedUseCases.length > 0 &&
                 getUseCasesList?.data?.publishedUseCases.map(
@@ -184,6 +181,13 @@ const UseCasesListingPage = () => {
                         description={item.summary}
                         iconColor="warning"
                         variation={'collapsed'}
+                        type={[
+                          {
+                            label: 'Use Case',
+                            fillColor: '#fff',
+                            borderColor: '#000',
+                          },
+                        ]}
                       />
                     </CarouselItem>
                   )
