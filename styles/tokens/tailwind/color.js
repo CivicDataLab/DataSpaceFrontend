@@ -83,7 +83,7 @@ module.exports = {
   baseAmberSolid10: '#FFA01C',
   baseAmberSolid11: '#AD5700',
   baseAmberSolid12: '#4E2009',
-  basePureWhite: '#F2F7FE',
+  basePureWhite: '#FFFFFF',
   basePureBlack: '#000000',
   textDefault: 'var(--base-gray-slate-solid-12)',
   textMedium: 'var(--base-gray-slate-solid-11)',
