@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbo",
     "dev:fresh": "graphql-codegen --config ./config/codegen.ts && next dev --turbo",
-    "build": "graphql-codegen --config ./config/codegen.ts && NODE_OPTIONS=--'max-old-space-size=4096' next build",
+    "build": "graphql-codegen --config ./config/codegen.ts && NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",
     "lint": "eslint .",
     "generate": "graphql-codegen --config ./config/codegen.ts",
