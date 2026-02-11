@@ -121,6 +121,14 @@ export default function AIModelDetailsPage() {
   });
 
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
+  const isValidHttpUrl = (value: string) => {
+    try {
+      const parsed = new URL(value);
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
 
   const getTagsList: {
     data: any;
@@ -266,6 +274,29 @@ export default function AIModelDetailsPage() {
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setStatus('unsaved');
+  };
+
+  const handleWebsiteBlur = () => {
+    const trimmedWebsite = formData.modelWebsite.trim();
+
+    if (!trimmedWebsite) {
+      if (formData.modelWebsite !== '') {
+        setFormData((prev) => ({ ...prev, modelWebsite: '' }));
+      }
+      handleSave({ ...formData, modelWebsite: '' });
+      return;
+    }
+
+    if (!isValidHttpUrl(trimmedWebsite)) {
+      toast('Please enter a valid URL that includes http or https.');
+      return;
+    }
+
+    if (trimmedWebsite !== formData.modelWebsite) {
+      setFormData((prev) => ({ ...prev, modelWebsite: trimmedWebsite }));
+    }
+
+    handleSave({ ...formData, modelWebsite: trimmedWebsite });
   };
 
   const handleSave = (overrideData?: any) => {
@@ -506,7 +537,7 @@ export default function AIModelDetailsPage() {
           label="Model Website"
           value={formData.modelWebsite}
           onChange={(value) => handleInputChange('modelWebsite', value)}
-          onBlur={() => handleSave()}
+          onBlur={handleWebsiteBlur}
           placeholder="www.model.com"
           required
         />
