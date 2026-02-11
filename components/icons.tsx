@@ -16,6 +16,7 @@ import {
   IconChartLine,
   IconChartTreemap,
   IconCheck,
+  IconChevronDown,
   IconCircle5,
   IconCircleCheck,
   IconCircleCheckFilled,
@@ -127,4 +128,5 @@ export const Icons: {
   chartLine: IconChartLine,
   chartMapPolygon: IconTopologyStarRing3,
   chartMap: IconWorld,
+  chevronDown: IconChevronDown,
 };
