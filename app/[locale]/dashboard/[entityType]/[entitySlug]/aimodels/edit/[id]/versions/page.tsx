@@ -490,7 +490,7 @@ export default function VersionsPage() {
     { label: 'Llama (Replicate)', value: 'LLAMA_REPLICATE' },
     { label: 'Llama (Custom)', value: 'LLAMA_CUSTOM' },
     { label: 'Custom API', value: 'CUSTOM' },
-    { label: 'Huggingface', value: 'HUGGINGFACE' },
+    // { label: 'Huggingface', value: 'HUGGINGFACE' },
   ];
 
   const hfModelClassOptions = [
