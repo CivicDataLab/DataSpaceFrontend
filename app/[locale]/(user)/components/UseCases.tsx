@@ -109,15 +109,18 @@ const UseCasesListingPage = () => {
         </div>
         <div>
           <Button
-            kind="primary"
-            className=" bg-secondaryOrange text-basePureBlack"
+            kind="tertiary"
+            className="bg-transparent border-none shadow-none text-primaryText px-0 hover:underline"
             onClick={() => {
               router.push('/usecases');
             }}
           >
-            <Text variant="bodyLg" fontWeight="semibold">
-              Explore all Use Cases
-            </Text>
+            <span className="flex items-center gap-2">
+              <Text variant="bodyLg" fontWeight="semibold" color="inherit">
+                Explore all Use Cases
+              </Text>
+              <Icons.arrowRight size={18} />
+            </span>
           </Button>
         </div>
       </div>

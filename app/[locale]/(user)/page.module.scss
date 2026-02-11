@@ -1,4 +1,6 @@
 .Search {
+  max-width: 770px;      /* or whatever width you want */
+  width: 100%;     
   input {
     width: 100%;
     height: 36px;
@@ -9,6 +11,10 @@
   /* In your global CSS/SCSS file */
   div[class*='Input-module_Backdrop'] {
     border-top-color: var(--border-subdued);
+    border-radius: 8px;
+  }
+  button {
+    background-color: #EBF9FC;  /* same as surface-stats */
     border-radius: 8px;
   }
 }

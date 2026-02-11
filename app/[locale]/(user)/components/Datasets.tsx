@@ -60,18 +60,22 @@ const Datasets = () => {
             Discover high-impact datasets that are helping users power research,
             analysis, and action.
           </Text>
+          {/* #TODO*/}
         </div>
         <div>
           <Button
-            kind="primary"
-            className=" bg-secondaryOrange text-basePureBlack"
+            kind="tertiary"
+            className="bg-transparent border-none shadow-none text-primaryText px-0 hover:underline"
             onClick={() => {
               router.push('/datasets');
             }}
           >
-            <Text variant="bodyLg" fontWeight="semibold">
-              Explore all Datasets
-            </Text>
+            <span className="flex items-center gap-2">
+              <Text variant="bodyLg" fontWeight="semibold" color="inherit">
+                Explore all Datasets
+              </Text>
+              <Icons.arrowRight size={18} />
+            </span>
           </Button>
         </div>
       </div>
