@@ -1,6 +1,6 @@
 .List {
   > * {
-    min-height: 340px;
+    min-height: 320px;
     max-height: fit-content;
     @media screen and (max-width: 1280px) {
       min-height: 380px;
@@ -14,7 +14,7 @@
 }
 .UseCaseList {
   > * {
-    min-height: 520px;
+    min-height: 500px;
     max-height: fit-content;
     @media screen and (max-width: 1120px) {
       min-height: 520px;
