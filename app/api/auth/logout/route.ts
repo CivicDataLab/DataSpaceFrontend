@@ -10,7 +10,7 @@ export async function GET() {
   if (session) {
     const idToken = await getIdToken();
 
-    const url = `${env.END_SESSION_URL}?id_token_hint=${idToken}&post_logout_redirect_uri=${encodeURIComponent(env.NEXTAUTH_URL)}`;
+    const url = `${env.AUTH_ISSUER}/protocol/openid-connect/logout?id_token_hint=${idToken}&post_logout_redirect_uri=${encodeURIComponent(env.NEXTAUTH_URL)}`;
 
     try {
       await fetch(url, { method: 'GET' });
