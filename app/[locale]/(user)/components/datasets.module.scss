@@ -1,20 +1,24 @@
 .List {
   > * {
     min-height: 340px;
-    max-height: 340px;
-    @media screen and (max-width: 1120px) {
-      min-height: 340px;
-      max-height: 340px;
+    max-height: fit-content;
+    @media screen and (max-width: 1280px) {
+      min-height: 380px;
+      max-height: fit-content;
+    }
+    @media screen and (max-width: 1100px) {
+      min-height: 400px;
+      max-height: fit-content;
     }
   }
 }
 .UseCaseList {
   > * {
     min-height: 520px;
-    max-height: 520px;
+    max-height: fit-content;
     @media screen and (max-width: 1120px) {
-      min-height: 600px;
-      max-height: 600px;
+      min-height: 520px;
+      max-height: fit-content;
     }
   }
 }

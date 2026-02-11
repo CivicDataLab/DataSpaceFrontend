@@ -116,7 +116,7 @@ const SimilarDatasets: React.FC = () => {
                       <CarouselItem
                         key={item.id}
                         className={cn(
-                          'h-2/4 basis-full pl-4 sm:basis-1/2 lg:basis-1/3',
+                          'h-2/4 basis-full pl-4 sm:basis-1/2 lg:basis-1/2',
                           Styles.List
                         )}
                       >
