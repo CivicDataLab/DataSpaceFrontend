@@ -11,6 +11,7 @@ import { Button, Divider, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { SectorListingSkeleton } from '@/components/loading';
+import { Icons } from '@/components/icons';
 
 const sectorDetails = graphql(`
   query SectorsList {
@@ -48,15 +49,18 @@ const Sectors = () => {
         </div>
         <div>
           <Button
-            kind="primary"
-            className=" bg-secondaryOrange text-basePureBlack"
+            kind="tertiary"
+            className="bg-transparent border-none shadow-none text-primaryText px-0 hover:underline"
             onClick={() => {
               router.push('/sectors');
             }}
           >
-            <Text variant="bodyLg" fontWeight="semibold">
-              Explore all Sectors
-            </Text>
+            <span className="flex items-center gap-2">
+              <Text variant="bodyLg" fontWeight="semibold" color="inherit">
+                Explore all Sectors
+              </Text>
+              <Icons.arrowRight size={18} />
+            </span>
           </Button>
         </div>
       </div>

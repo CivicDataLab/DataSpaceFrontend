@@ -47,6 +47,8 @@
   --base-gray-slate-solid-10: #7e868c;
   --base-gray-slate-solid-11: #687076;
   --base-gray-slate-solid-12: #11181c;
+  --base-gray-slate-solid-13:#111111;
+  --base-gray-slate-solid-14:#545456;
   --base-red-solid-1: #fffcfc;
   --base-red-solid-2: #fff8f8;
   --base-red-solid-3: #ffefef;
@@ -83,7 +85,7 @@
   --base-amber-solid-10: #ffa01c;
   --base-amber-solid-11: #ad5700;
   --base-amber-solid-12: #4e2009;
-  --base-pure-white: #ffffff;
+  --base-pure-white: #ffffff ;
   --base-pure-black: #000000;
   --blue-primary-color: #0b3865;
   --orange-secondary-color: #fdb557;
@@ -102,6 +104,8 @@
   --text-highlight: var(--base-violet-solid-11);
   --text-interactive: var(--base-blue-solid-11);
   --text-onbg-default: var(--base-gray-slate-solid-1);
+  /* Text color for stats on surface-stats background */
+  --text-surface-stats: #4a7d75;
   --text-onbg-disabled: var(--base-gray-slate-solid-9);
   --border-default: var(--base-gray-slate-solid-8);
   --border-subdued: var(--base-gray-slate-solid-7);
@@ -189,6 +193,8 @@
   --background-solid-default: var(--base-indigo-solid-3);
   --surface-default: var(--base-pure-white);
   --surface-subdued: var(--base-gray-slate-solid-2);
+  /* Stats cards background */
+  --surface-stats: #ebf9fc;
   --base-indigo-alpha-10: #002cbdc4;
   --surface-selected: var(--base-blue-solid-2);
   --base-indigo-alpha-11: #00259ecc;

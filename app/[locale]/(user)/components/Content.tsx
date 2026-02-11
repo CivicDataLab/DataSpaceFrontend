@@ -91,47 +91,17 @@ export const Content = () => {
   ];
 
   return (
-    <main className="bg-primaryBlue py-6 md:px-8 md:py-10 lg:py-20">
-      <div className="container flex items-center justify-around gap-20 px-10 md:px-12 lg:px-8 ">
-        <div className="flex flex-col gap-11 lg:w-[49%]">
+    <main className="py-6 md:px-6 md:py-10 lg:py-16 ">
+      <div className=" flex justify-around gap-8 px-4 md:px-8 lg:px-18">
+        <div className="flex flex-col gap-11 lg:w-[60%]">
           <div className="flex flex-col gap-2">
-            <Text variant="heading3xl" color="onBgDefault">
-              An Open-Source Platform for Collaborative Data-Driven Change
+            <Text variant="heading3xl" color="onBgDefault" className='text-textOnBGDefault1'>
+            Discover datasets, AI use cases, and civic knowledge
             </Text>
-             <Text variant="headingLg" color="onBgDefault">
-              Share datasets, knowledge resources, and AI use-cases for data changemakers.
+             <Text variant="headingLg" color="onBgDefault" className='text-textOnBGDefault2'>
+             Open data and insights for public decision-making.
             </Text>
           </div>
-          {Stats.isLoading ? (
-            <div className=" flex w-fit justify-center rounded-2 bg-surfaceDefault p-4">
-              <Spinner />
-            </div>
-          ) : (
-            <div className="flex flex-wrap items-center gap-4 md:gap-0 lg:gap-0 ">
-              {Metrics.map((item, index) => (
-                <Link 
-                  key={`${item.label}_${index}`} 
-                  href={item.link}
-                  data-tour={index === 0 ? 'datasets-link' : index === 1 ? 'usecases-link' : index === 2 ? 'publishers-link' : undefined}
-                >
-                  <div
-                    key={index}
-                    className="flex flex-col border-x-[1px] border-solid border-tertiaryAccent px-4"
-                  >
-                    <Text
-                      variant="heading3xl"
-                      className=" text-secondaryOrange"
-                    >
-                      {item.count}
-                    </Text>
-                    <Text color="onBgDefault" className=" w-20 ">
-                      {item.label}
-                    </Text>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
           <div className="w-full" data-tour="search-bar">
             <SearchInput
               className={cn(Styles.Search)}
@@ -142,7 +112,45 @@ export const Content = () => {
               withButton
             />
           </div>
-          <div className="flex flex-wrap gap-4">
+          {Stats.isLoading ? (
+            <div className="flex w-fit justify-center rounded-2 bg-surfaceDefault p-4">
+              <Spinner />
+            </div>
+          ) : (
+            <div className="flex w-full flex-wrap items-center gap-4 md:flex-nowrap md:gap-5">
+              {Metrics.map((item, index) => (
+                <Link
+                  key={`${item.label}_${index}`}
+                  href={item.link}
+                  className="w-[177px] md:basis-[177px]"
+                  data-tour={
+                    index === 0
+                      ? 'datasets-link'
+                      : index === 1
+                        ? 'usecases-link'
+                        : index === 2
+                          ? 'publishers-link'
+                          : undefined
+                  }
+                >
+                  <div className="flex h-[100px] flex-col text-start justify-center rounded-[8px] bg-surfaceStats px-10 py-10 text-center">
+                    <Text variant="heading3xl" className="text-primaryBlue">
+                      {item.count}
+                    </Text>
+                    <Text
+                      color="onBgDefault"
+                      fontWeight="semibold"
+                      className="uppercase text-xs text-textSurfaceStats"
+                    >
+                      {item.label}
+                    </Text>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+          
+          {/* <div className="flex flex-wrap gap-4">
             {Sectors.map((item, index) => (
               <div key={index}>
                 <Tag
@@ -158,13 +166,13 @@ export const Content = () => {
                 </Tag>
               </div>
             ))}
-          </div>
+          </div> */}
         </div>
         <div className=" hidden lg:block">
           <Image
-            src="/homepage_illustration.png"
-            width={500}
-            height={400}
+            src="/hero-image.svg"
+            width={354}
+            height={275}
             alt="illustration"
           />
         </div>

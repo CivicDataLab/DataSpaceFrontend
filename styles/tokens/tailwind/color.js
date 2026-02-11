@@ -83,7 +83,7 @@ module.exports = {
   baseAmberSolid10: '#FFA01C',
   baseAmberSolid11: '#AD5700',
   baseAmberSolid12: '#4E2009',
-  basePureWhite: '#FFFFFF',
+  basePureWhite: '#F2F7FE',
   basePureBlack: '#000000',
   textDefault: 'var(--base-gray-slate-solid-12)',
   textMedium: 'var(--base-gray-slate-solid-11)',
@@ -95,6 +95,10 @@ module.exports = {
   textHighlight: 'var(--base-violet-solid-11)',
   textInteractive: 'var(--base-blue-solid-11)',
   textOnBGDefault: 'var(--base-gray-slate-solid-1)',
+  textOnBGDefault1: 'var(--base-gray-slate-solid-13)',
+  textOnBGDefault2: 'var(--base-gray-slate-solid-14)',
+  // Text color for stats on surface-stats background
+  textSurfaceStats: 'var(--text-surface-stats)',
   textOnBGDisabled: 'var(--base-gray-slate-solid-9)',
   borderDefault: 'var(--base-gray-slate-solid-8)',
   borderSubdued: 'var(--base-gray-slate-solid-7)',
@@ -181,6 +185,8 @@ module.exports = {
   backgroundSolidDefault: 'var(--base-indigo-solid-3)',
   surfaceDefault: 'var(--base-pure-white)',
   surfaceSubdued: 'var(--base-gray-slate-solid-2)',
+  // Stats cards background
+  surfaceStats: 'var(--surface-stats)',
   baseIndigoAlpha10: '#002CBDC4',
   surfaceSelected: 'var(--base-blue-solid-2)',
   baseIndigoAlpha11: '#00259ECC',

@@ -439,8 +439,8 @@ const ListingComponent: React.FC<ListingProps> = ({
                     onClear={(value) => handleSearch(value)}
                   />
                 </div>
-                <div className="flex flex-wrap justify-between gap-3 lg:flex-nowrap lg:justify-normal lg:gap-5">
-                  <div className="hidden items-center gap-2 lg:flex">
+                <div className="flex flex-wrap justify-between gap-2 lg:flex-nowrap lg:justify-normal lg:gap-5">
+                  {/* <div className="hidden items-center gap-2 lg:flex">
                     <ButtonGroup noWrap spacing="tight">
                       <Button
                         kind={'tertiary'}
@@ -463,7 +463,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                         />
                       </Button>
                     </ButtonGroup>
-                  </div>
+                  </div> */}
                   <div className="flex items-center gap-2">
                     <Button
                       onClick={() =>
