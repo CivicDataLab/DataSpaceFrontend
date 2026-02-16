@@ -52,8 +52,8 @@ export const stripMarkdown = (markdown: string): string => {
     // Remove list markers
     .replace(/^\s*[-*+]\s+/gm, '')
     .replace(/^\s*\d+\.\s+/gm, '')
-    // Remove HTML tags
-    .replace(/<[^>]*>/g, '')
+    // Remove HTML tags (improved to handle self-closing tags and attributes)
+    .replace(/<[^>]*\/?>/g, '')
     // Replace HTML entities (like &nbsp;) with regular spaces - MUST come before other replacements
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
@@ -421,7 +421,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       case 'aimodel':
         return `/aimodels/${item.id}`;
       case 'collaborative':
-        return `/collaboratives/${item.id}`;
+        return `/collaboratives/${item.slug}`;
       default:
         return `${redirectionURL}/${item.id}`;
     }
@@ -682,14 +682,57 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     const sdgs =
                       item.sdgs && item.sdgs.length > 0 ? item.sdgs : null;
 
-                    const MetadataContent = [
-                      {
+                    const MetadataContent = [];
+
+                    // Type-specific metadata
+                    if (item.type === 'collaborative') {
+                      MetadataContent.push({
+                        icon: Icons.calendar as any,
+                        label: 'Started',
+                        value: formatDate(item.started_on || item.created),
+                      });
+                      
+                      MetadataContent.push({
+                        icon: Icons.dataset as any,
+                        label: 'Datasets',
+                        value: item.dataset_count?.toString() || '0',
+                      });
+                      
+                      // Add geography with proper fallback like listing page
+                      if (geographies && geographies.length > 0) {
+                        const geoDisplay = geographies.join(', ');
+                        MetadataContent.push({
+                          icon: Icons.globe as any,
+                          label: 'Geography',
+                          value: geoDisplay,
+                        });
+                      } else {
+                        MetadataContent.push({
+                          icon: Icons.globe as any,
+                          label: 'Geography',
+                          value: 'N/A',
+                        });
+                      }
+                    } else {
+                      // For other types, use the generic date
+                      MetadataContent.push({
                         icon: Icons.calendar as any,
                         label: 'Date',
                         value: formatDate(item.modified || item.updated_at),
                         tooltip: 'Date',
-                      },
-                    ];
+                      });
+                      
+                      // Add geography for non-collaborative types
+                      if (geographies && geographies.length > 0) {
+                        const geoDisplay = geographies.join(', ');
+                        MetadataContent.push({
+                          icon: Icons.globe as any,
+                          label: 'Geography',
+                          value: geoDisplay,
+                          tooltip: geoDisplay,
+                        });
+                      }
+                    }
 
                     // Type-specific metadata for datasets
                     if (item.type === 'dataset' && item.download_count > 0) {
@@ -701,15 +744,6 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                       });
                     }
 
-                    if (geographies && geographies.length > 0) {
-                      const geoDisplay = geographies.join(', ');
-                      MetadataContent.push({
-                        icon: Icons.globe as any,
-                        label: 'Geography',
-                        value: geoDisplay,
-                        tooltip: geoDisplay,
-                      });
-                    }
 
                     // Add SDGs for datasets
                     if (item.type === 'dataset' && sdgs && sdgs.length > 0) {
@@ -738,33 +772,49 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                       });
                     }
 
-                    const FooterContent = [
-                      ...(item.sectors && item.sectors.length > 0
-                        ? [
-                            {
-                              icon: `/Sectors/${item.sectors?.[0]}.svg` as any,
-                              label: 'Sectors',
-                              tooltip: `${item.sectors?.[0]}`,
-                            },
-                          ]
-                        : []),
-                      ...(item.type === 'dataset' &&
-                      item.has_charts &&
-                      view !== 'expanded'
-                        ? [
-                            {
-                              icon: `/chart-bar.svg` as any,
-                              label: 'Charts',
-                              tooltip: 'Charts',
-                            },
-                          ]
-                        : []),
-                      {
-                        icon: image as any,
-                        label: 'Published by',
-                        tooltip: `${isIndividual ? item.user?.name : item.organization?.name}`,
-                      },
-                    ];
+                    const FooterContent = [];
+
+                    // Add sector icon - handle collaborative format vs other types
+                    if (item.type === 'collaborative') {
+                      // For collaboratives, match listing page format exactly
+                      if (item.sectors && item.sectors.length > 0) {
+                        const sectorName = typeof item.sectors[0] === 'string' ? item.sectors[0] : item.sectors[0]?.name;
+                        FooterContent.push({
+                          icon: sectorName ? `/Sectors/${sectorName}.svg` : '/Sectors/default.svg',
+                          label: 'Sectors',
+                        });
+                      } else {
+                        FooterContent.push({
+                          icon: '/Sectors/default.svg',
+                          label: 'Sectors',
+                        });
+                      }
+                    } else {
+                      // For other types, use existing format
+                      if (item.sectors && item.sectors.length > 0) {
+                        FooterContent.push({
+                          icon: `/Sectors/${item.sectors?.[0]}.svg` as any,
+                          label: 'Sectors',
+                          tooltip: `${item.sectors?.[0]}`,
+                        });
+                      }
+                    }
+
+                    // Add charts indicator for datasets
+                    if (item.type === 'dataset' && item.has_charts && view !== 'expanded') {
+                      FooterContent.push({
+                        icon: `/chart-bar.svg` as any,
+                        label: 'Charts',
+                        tooltip: 'Charts',
+                      });
+                    }
+
+                    // Add published by info
+                    FooterContent.push({
+                      icon: image as any,
+                      label: 'Published by',
+                      tooltip: `${isIndividual ? item.user?.name : item.organization?.name}`,
+                    });
 
                     const commonProps = {
                       title: item.title,
