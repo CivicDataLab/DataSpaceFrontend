@@ -722,45 +722,52 @@ export default function VersionsPage() {
                     columns={[
                       { accessorKey: 'provider', header: 'Provider' },
                       { accessorKey: 'endpoint', header: 'Endpoint URL' },
-                      { accessorKey: 'priority', header: 'Access Priority' },
-                      { accessorKey: 'actions', header: 'Actions' },
+                      { 
+                        accessorKey: 'priority', 
+                        header: 'Access Priority',
+                        cell: ({ row }: any) => (
+                          <Tag>
+                            {getAccessPriority(row.original)}
+                          </Tag>
+                        )
+                      },
+                      { 
+                        accessorKey: 'actions', 
+                        header: 'Actions',
+                        cell: ({ row }: any) => (
+                          <div className="flex items-center gap-2">
+                            <IconButton
+                              size="medium"
+                              icon={Icons.pencil}
+                              onClick={() =>
+                                handleOpenProviderModal(
+                                  currentVersion,
+                                  row.original
+                                )
+                              }
+                            >
+                              Edit
+                            </IconButton>
+                            <IconButton
+                              size="medium"
+                              icon={Icons.delete}
+                              onClick={() => {
+                                if (confirm('Delete this provider?')) {
+                                  deleteProvider(row.original.id);
+                                }
+                              }}
+                            >
+                              Delete
+                            </IconButton>
+                          </div>
+                        )
+                      },
                     ]}
                     rows={currentVersion.providers.map((provider: any) => ({
                       id: provider.id,
                       provider: getProviderDisplayName(provider.provider),
                       endpoint: getEndpointUrl(provider),
-                      priority: (
-                        <Tag>
-                          {getAccessPriority(provider)}
-                        </Tag>
-                      ),
-                      actions: (
-                        <div className="flex items-center gap-2">
-                          <IconButton
-                            size="medium"
-                            icon={Icons.pencil}
-                            onClick={() =>
-                              handleOpenProviderModal(
-                                currentVersion,
-                                provider
-                              )
-                            }
-                          >
-                            Edit
-                          </IconButton>
-                          <IconButton
-                            size="medium"
-                            icon={Icons.delete}
-                            onClick={() => {
-                              if (confirm('Delete this provider?')) {
-                                deleteProvider(provider.id);
-                              }
-                            }}
-                          >
-                            Delete
-                          </IconButton>
-                        </div>
-                      ),
+                      original: provider,
                     }))}
                     hideSelection
                     hideViewSelector
