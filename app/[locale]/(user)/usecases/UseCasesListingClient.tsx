@@ -36,7 +36,7 @@ const UseCasesListingClient = () => {
             width={600}
             height={316}
             alt={'Usecase Illustration'}
-            className="m-auto h-auto w-full"
+            className="m-auto h-auto w-1/2"
           />
         </div>
       </div>
