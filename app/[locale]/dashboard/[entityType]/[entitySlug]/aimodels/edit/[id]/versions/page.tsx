@@ -233,8 +233,11 @@ export default function VersionsPage() {
         setIsNewVersionModalOpen(false);
         resetVersionForm();
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
-        const newVersionId = response?.createAiModelVersion?.data?.id;
+        
+        // Force refetch and update selected version
         const result = await refetch();
+        const newVersionId = response?.createAiModelVersion?.data?.id;
+        
         if (newVersionId && result.data) {
           const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
           const newVersion = refetchedVersions.find((v: any) => v.id === newVersionId);
@@ -258,12 +261,21 @@ export default function VersionsPage() {
         { input }
       ),
     {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast('Provider added successfully!');
         setIsProviderModalOpen(false);
         resetProviderForm();
-        refetch();
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
+        
+        // Force refetch and update selected version with new provider
+        const result = await refetch();
+        if (result.data && selectedVersion) {
+          const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
+          const updatedVersion = refetchedVersions.find((v: any) => v.id === selectedVersion.id);
+          if (updatedVersion) {
+            setSelectedVersion(updatedVersion);
+          }
+        }
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -279,13 +291,22 @@ export default function VersionsPage() {
         { input }
       ),
     {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast('Provider updated successfully!');
         setIsProviderModalOpen(false);
         setEditingProvider(null);
         resetProviderForm();
-        refetch();
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
+        
+        // Force refetch and update selected version with updated provider
+        const result = await refetch();
+        if (result.data && selectedVersion) {
+          const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
+          const updatedVersion = refetchedVersions.find((v: any) => v.id === selectedVersion.id);
+          if (updatedVersion) {
+            setSelectedVersion(updatedVersion);
+          }
+        }
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -301,10 +322,19 @@ export default function VersionsPage() {
         { providerId } as any
       ),
     {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast('Provider deleted successfully!');
-        refetch();
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
+        
+        // Force refetch and update selected version after provider deletion
+        const result = await refetch();
+        if (result.data && selectedVersion) {
+          const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
+          const updatedVersion = refetchedVersions.find((v: any) => v.id === selectedVersion.id);
+          if (updatedVersion) {
+            setSelectedVersion(updatedVersion);
+          }
+        }
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -443,7 +473,7 @@ export default function VersionsPage() {
     if (providerFormData.apiRequestTemplate) {
       try {
         parsedRequestTemplate = JSON.parse(providerFormData.apiRequestTemplate);
-      } catch (_) {
+      } catch {
         toast('Invalid JSON in Request Body Template. Please check the format.');
         return;
       }
