@@ -856,7 +856,7 @@ export default function VersionsPage() {
       <Dialog open={isProviderModalOpen} onOpenChange={setIsProviderModalOpen}>
         {isProviderModalOpen && (
           <Dialog.Content
-            title={editingProvider ? 'Edit Provider' : 'Add New Provider'}
+            title={editingProvider ? 'Edit Access Method' : 'Add New Access Method'}
             limitHeight
           >
             <FormLayout>
