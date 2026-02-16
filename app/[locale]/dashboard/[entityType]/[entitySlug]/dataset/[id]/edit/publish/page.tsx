@@ -326,10 +326,7 @@ const Page = () => {
     };
 
     fetchTitle();
-  }, [
-    getDatasetsSummary.data?.datasets[0]?.metadata,
-    getDatasetsSummary.isLoading,
-  ]);
+  }, [getDatasetsSummary.data?.datasets, getDatasetsSummary.isLoading]);
 
   return (
     <>
