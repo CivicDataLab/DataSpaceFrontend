@@ -108,7 +108,7 @@ export default function Metadata({ data }: MetadataProps) {
 
       <div className="flex flex-col gap-8">
         {/* Organization Logo */}
-        <div className="hidden rounded-2 border-1 border-solid border-greyExtralight p-2 lg:block">
+        <div className="hidden rounded-2 border-1 border-solid border-greyExtralight bg-white p-2 lg:block">
           <Link href={getPublisherURL()}>
             <Image
               height={140}
