@@ -23,6 +23,7 @@ import { useEffect, useState } from 'react';
 import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
 import { formatDate, getWebsiteTitle, toTitleCase } from '@/lib/utils';
+import { RichTextRenderer } from '@/components/RichTextRenderer';
 
 const datasetSummaryQuery: any = graphql(`
   query datasetsSummary($filters: DatasetFilter) {
@@ -459,7 +460,7 @@ const Page = () => {
                                       variant="bodyMd"
                                       className="lg:basis-4/5"
                                     >
-                                      {item.value}
+                                      <RichTextRenderer content={item.value} />
                                     </Text>
                                   </div>
                                 )
