@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useEffect, useReducer, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
+import { useRouter } from 'next/navigation';
 import {
   Button,
   ButtonGroup,
@@ -14,11 +13,12 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 
-import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import { cn, formatDate } from '@/lib/utils';
 import Filter from '../../datasets/components/FIlter/Filter';
 import Styles from '../../datasets/dataset.module.scss';
 
@@ -193,7 +193,7 @@ const useUrlParams = (
       currentPage: pageParam ? Number(pageParam) : 1,
       filters,
       query: urlParams.get('query') || '',
-      types: typesParam || 'dataset,usecase,aimodel',
+      types: typesParam || 'dataset,usecase,aimodel,collaborative',
     };
 
     setQueryParams({ type: 'INITIALIZE', payload: initialParams });
@@ -457,12 +457,14 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                   All Results
                   {typeCounts.dataset !== undefined &&
                     typeCounts.usecase !== undefined &&
-                    typeCounts.aimodel !== undefined && (
+                    typeCounts.aimodel !== undefined &&
+                    typeCounts.collaborative !== undefined && (
                       <span className="text-xs ml-1">
                         (
                         {(typeCounts.dataset || 0) +
                           (typeCounts.usecase || 0) +
-                          (typeCounts.aimodel || 0)}
+                          (typeCounts.aimodel || 0) +
+                          (typeCounts.collaborative || 0)}
                         )
                       </span>
                     )}
@@ -506,6 +508,20 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                   {typeCounts.aimodel !== undefined && (
                     <span className="text-xs ml-1">
                       ({typeCounts.aimodel || 0})
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  kind={
+                    queryParams.types === 'collaborative' ? 'primary' : 'secondary'
+                  }
+                  onClick={() => handleTypeFilter('collaborative')}
+                  size="slim"
+                >
+                  Collaboratives
+                  {typeCounts.collaborative !== undefined && (
+                    <span className="text-xs ml-1">
+                      ({typeCounts.collaborative || 0})
                     </span>
                   )}
                 </Button>
@@ -647,7 +663,8 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     const isIndividual =
                       item.is_individual_dataset ||
                       item.is_individual_usecase ||
-                      item.is_individual_model;
+                      item.is_individual_model ||
+                      item.is_individual_collaborative;
 
                     const image = isIndividual
                       ? item?.user?.profile_picture
