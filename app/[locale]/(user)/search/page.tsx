@@ -10,13 +10,14 @@ export const generateMetadata = () =>
   generatePageMetadata({
     title: 'Search Across All Resources | CivicDataSpace',
     description:
-      'Search and explore datasets, use cases, and AI models in one place. Discover the most relevant resources for your research and projects.',
+      'Search and explore datasets, use cases, AI models and collboratives in one place. Discover the most relevant resources for your research and projects.',
     keywords: [
       'Unified Search',
       'Data Discovery',
       'Use Cases',
       'AI Models',
       'Datasets',
+      'Collaboratives',
       'Search All',
     ],
     openGraph: {
@@ -25,7 +26,7 @@ export const generateMetadata = () =>
       url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/search`,
       title: 'Search Across All Resources | CivicDataSpace',
       description:
-        'Find the most relevant datasets, use cases, and AI models across CivicDataSpace',
+        'Find the most relevant datasets, use cases, AI models and collaboratives across CivicDataSpace',
       siteName: 'CivicDataSpace',
       image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
     },
@@ -43,7 +44,7 @@ const UnifiedSearchPage = () => {
     name: 'Search Across All Resources | CivicDataSpace',
     url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/search`,
     description:
-      'Search and discover datasets, use cases, and AI models in one unified interface.',
+      'Search and discover datasets, use cases, AI models and collaboratives in one unified interface.',
     publisher: {
       '@type': 'Organization',
       name: 'CivicDataSpace',
@@ -57,7 +58,7 @@ const UnifiedSearchPage = () => {
       <UnifiedListingComponent
         breadcrumbData={breadcrumbData}
         redirectionURL="/search"
-        placeholder="Search across datasets, use cases, and AI models..."
+        placeholder="Search across datasets, use cases, AI models and collaboratives..."
       />
     </>
   );

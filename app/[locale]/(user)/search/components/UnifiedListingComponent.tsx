@@ -126,7 +126,7 @@ const initialState: QueryParams = {
   query: '',
   sort: 'recent',
   order: '',
-  types: 'dataset,usecase,aimodel', // Default: search all types
+  types: 'dataset,usecase,aimodel,collaborative', // Default: search all types
 };
 
 // Query Reducer
@@ -420,6 +420,8 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
         return `/usecases/${item.id}`;
       case 'aimodel':
         return `/aimodels/${item.id}`;
+      case 'collaborative':
+        return `/collaboratives/${item.id}`;
       default:
         return `${redirectionURL}/${item.id}`;
     }
@@ -445,11 +447,11 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
               <div className="rounded-lg border border-gray-200 flex flex-wrap gap-2 bg-white p-3">
                 <Button
                   kind={
-                    queryParams.types === 'dataset,usecase,aimodel'
+                    queryParams.types === 'dataset,usecase,aimodel,collaborative'
                       ? 'primary'
                       : 'secondary'
                   }
-                  onClick={() => handleTypeFilter('dataset,usecase,aimodel')}
+                  onClick={() => handleTypeFilter('dataset,usecase,aimodel,collaborative')}
                   size="slim"
                 >
                   All Results
