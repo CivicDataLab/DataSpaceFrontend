@@ -431,6 +431,13 @@ export default function VersionsPage() {
   const handleSaveProvider = () => {
     if (!selectedVersion) return;
 
+    const endpointRequiredProviders = ['CUSTOM', 'LLAMA_OLLAMA', 'LLAMA_CUSTOM'];
+    const isEndpointRequired = endpointRequiredProviders.includes(providerFormData.provider);
+    if (isEndpointRequired && !providerFormData.apiEndpointUrl?.trim()) {
+      toast('Endpoint URL is required for the selected provider.');
+      return;
+    }
+
     // Parse apiRequestTemplate string to JSON if provided
     let parsedRequestTemplate = null;
     if (providerFormData.apiRequestTemplate) {
