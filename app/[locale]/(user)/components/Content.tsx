@@ -24,14 +24,6 @@ const statsInfo: any = graphql(`
   }
 `);
 
-// const tagsInfo: any = graphql(`
-//   query TagsData {
-//     tags {
-//       id
-//       value
-//     }
-//   }
-// `);
 
 export const Content = () => {
   const router = useRouter();
@@ -42,9 +34,6 @@ export const Content = () => {
   const Stats: { data: any; isLoading: any } = useQuery([`statsDetails`], () =>
     GraphQL(statsInfo, {}, [])
   );
-  // const Tags: { data: any; isLoading: any } = useQuery([`tagDetails`], () =>
-  //   GraphQL(tagsInfo, {}, [])
-  // );
 
   const handleSearch = (value: string) => {
     if (value) {
@@ -68,10 +57,6 @@ export const Content = () => {
       count: Stats?.data?.stats?.totalPublishers,
       link: '/publishers',
     },
-    // {
-    //   label: 'Users',
-    //   count: Stats?.data?.stats?.totalUsers,
-    // },
     {
       label: 'Organizations',
       count: Stats?.data?.stats?.totalOrganizations,
@@ -86,10 +71,10 @@ export const Content = () => {
         <div className="flex flex-col gap-11 lg:w-[60%]">
           <div className="flex flex-col gap-2">
             <Text variant="heading3xl" color="onBgDefault" className='text-textOnBGDefault1'>
-            Discover datasets, AI use cases, and civic knowledge
+              An Open-Source Platform for Collaborative Data-Driven Change
             </Text>
              <Text variant="headingLg" color="onBgDefault" className='text-textOnBGDefault2'>
-             Open data and insights for public decision-making.
+              Share datasets, knowledge resources, and AI use-cases for data changemakers.
             </Text>
           </div>
           <div className="w-full" data-tour="search-bar">
