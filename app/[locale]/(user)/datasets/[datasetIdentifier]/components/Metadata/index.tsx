@@ -116,7 +116,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
       </div>
       <Divider />
       <div className=" flex flex-col gap-8">
-        <div className=" hidden rounded-2 border-1 border-solid border-greyExtralight p-2 lg:block">
+        <div className=" hidden rounded-2 border-1 border-solid border-greyExtralight bg-white p-2 lg:block">
           <Link href={getPublisherURL(data)}>
             <Image
               height={140}

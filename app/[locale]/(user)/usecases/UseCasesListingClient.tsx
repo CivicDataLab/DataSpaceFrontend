@@ -19,16 +19,18 @@ const UseCasesListingClient = () => {
         <div className="container flex flex-col-reverse justify-center gap-8 p-10 lg:flex-row">
           <div className="flex flex-col justify-center gap-6">
             <Text variant="heading2xl" className="text-surfaceDefault">
-              Our Use Cases
+              Use Cases
             </Text>
             <Text
               variant="headingLg"
               fontWeight="regular"
               className="leading-3 text-surfaceDefault lg:leading-5"
             >
-              By use case, we mean any data-led intervention across sectors that
-              can address challenges from hyper-local to global levels
-              effectively.
+              Use cases demonstrate how data and responsible AI translate into
+              real-world impact. Across sectors and scales, they show how
+              unlocking interoperable data and applying collaborative analytics
+              can drive measurable outcomes and scalable solutions for public
+              good.
             </Text>
           </div>
           <Image
@@ -36,7 +38,7 @@ const UseCasesListingClient = () => {
             width={600}
             height={316}
             alt={'Usecase Illustration'}
-            className="m-auto h-auto w-full"
+            className="m-auto h-auto w-1/2"
           />
         </div>
       </div>

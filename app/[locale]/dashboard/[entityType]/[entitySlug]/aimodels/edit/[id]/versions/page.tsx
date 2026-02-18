@@ -233,8 +233,11 @@ export default function VersionsPage() {
         setIsNewVersionModalOpen(false);
         resetVersionForm();
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
-        const newVersionId = response?.createAiModelVersion?.data?.id;
+        
+        // Force refetch and update selected version
         const result = await refetch();
+        const newVersionId = response?.createAiModelVersion?.data?.id;
+        
         if (newVersionId && result.data) {
           const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
           const newVersion = refetchedVersions.find((v: any) => v.id === newVersionId);
@@ -258,12 +261,21 @@ export default function VersionsPage() {
         { input }
       ),
     {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast('Provider added successfully!');
         setIsProviderModalOpen(false);
         resetProviderForm();
-        refetch();
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
+        
+        // Force refetch and update selected version with new provider
+        const result = await refetch();
+        if (result.data && selectedVersion) {
+          const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
+          const updatedVersion = refetchedVersions.find((v: any) => v.id === selectedVersion.id);
+          if (updatedVersion) {
+            setSelectedVersion(updatedVersion);
+          }
+        }
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -279,13 +291,22 @@ export default function VersionsPage() {
         { input }
       ),
     {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast('Provider updated successfully!');
         setIsProviderModalOpen(false);
         setEditingProvider(null);
         resetProviderForm();
-        refetch();
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
+        
+        // Force refetch and update selected version with updated provider
+        const result = await refetch();
+        if (result.data && selectedVersion) {
+          const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
+          const updatedVersion = refetchedVersions.find((v: any) => v.id === selectedVersion.id);
+          if (updatedVersion) {
+            setSelectedVersion(updatedVersion);
+          }
+        }
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -301,10 +322,19 @@ export default function VersionsPage() {
         { providerId } as any
       ),
     {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast('Provider deleted successfully!');
-        refetch();
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
+        
+        // Force refetch and update selected version after provider deletion
+        const result = await refetch();
+        if (result.data && selectedVersion) {
+          const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
+          const updatedVersion = refetchedVersions.find((v: any) => v.id === selectedVersion.id);
+          if (updatedVersion) {
+            setSelectedVersion(updatedVersion);
+          }
+        }
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`);
@@ -431,12 +461,19 @@ export default function VersionsPage() {
   const handleSaveProvider = () => {
     if (!selectedVersion) return;
 
+    const endpointRequiredProviders = ['CUSTOM', 'LLAMA_OLLAMA', 'LLAMA_CUSTOM'];
+    const isEndpointRequired = endpointRequiredProviders.includes(providerFormData.provider);
+    if (isEndpointRequired && !providerFormData.apiEndpointUrl?.trim()) {
+      toast('Endpoint URL is required for the selected provider.');
+      return;
+    }
+
     // Parse apiRequestTemplate string to JSON if provided
     let parsedRequestTemplate = null;
     if (providerFormData.apiRequestTemplate) {
       try {
         parsedRequestTemplate = JSON.parse(providerFormData.apiRequestTemplate);
-      } catch (_) {
+      } catch {
         toast('Invalid JSON in Request Body Template. Please check the format.');
         return;
       }
@@ -685,45 +722,52 @@ export default function VersionsPage() {
                     columns={[
                       { accessorKey: 'provider', header: 'Provider' },
                       { accessorKey: 'endpoint', header: 'Endpoint URL' },
-                      { accessorKey: 'priority', header: 'Access Priority' },
-                      { accessorKey: 'actions', header: 'Actions' },
+                      { 
+                        accessorKey: 'priority', 
+                        header: 'Access Priority',
+                        cell: ({ row }: any) => (
+                          <Tag>
+                            {getAccessPriority(row.original)}
+                          </Tag>
+                        )
+                      },
+                      { 
+                        accessorKey: 'actions', 
+                        header: 'Actions',
+                        cell: ({ row }: any) => (
+                          <div className="flex items-center gap-2">
+                            <IconButton
+                              size="medium"
+                              icon={Icons.pencil}
+                              onClick={() =>
+                                handleOpenProviderModal(
+                                  currentVersion,
+                                  row.original
+                                )
+                              }
+                            >
+                              Edit
+                            </IconButton>
+                            <IconButton
+                              size="medium"
+                              icon={Icons.delete}
+                              onClick={() => {
+                                if (confirm('Delete this provider?')) {
+                                  deleteProvider(row.original.id);
+                                }
+                              }}
+                            >
+                              Delete
+                            </IconButton>
+                          </div>
+                        )
+                      },
                     ]}
                     rows={currentVersion.providers.map((provider: any) => ({
                       id: provider.id,
                       provider: getProviderDisplayName(provider.provider),
                       endpoint: getEndpointUrl(provider),
-                      priority: (
-                        <Tag>
-                          {getAccessPriority(provider)}
-                        </Tag>
-                      ),
-                      actions: (
-                        <div className="flex items-center gap-2">
-                          <IconButton
-                            size="medium"
-                            icon={Icons.pencil}
-                            onClick={() =>
-                              handleOpenProviderModal(
-                                currentVersion,
-                                provider
-                              )
-                            }
-                          >
-                            Edit
-                          </IconButton>
-                          <IconButton
-                            size="medium"
-                            icon={Icons.delete}
-                            onClick={() => {
-                              if (confirm('Delete this provider?')) {
-                                deleteProvider(provider.id);
-                              }
-                            }}
-                          >
-                            Delete
-                          </IconButton>
-                        </div>
-                      ),
+                      original: provider,
                     }))}
                     hideSelection
                     hideViewSelector
@@ -856,7 +900,7 @@ export default function VersionsPage() {
       <Dialog open={isProviderModalOpen} onOpenChange={setIsProviderModalOpen}>
         {isProviderModalOpen && (
           <Dialog.Content
-            title={editingProvider ? 'Edit Provider' : 'Add New Provider'}
+            title={editingProvider ? 'Edit Access Method' : 'Add New Access Method'}
             limitHeight
           >
             <FormLayout>

@@ -8,8 +8,6 @@ export const env = createEnv({
     AUTH_ISSUER: z.string().min(1).default('http://localhost:8080'),
     NEXTAUTH_URL: z.string().url().default('http://localhost:3000'),
     NEXTAUTH_SECRET: z.string().min(1).default('default-secret'),
-    END_SESSION_URL: z.string().url().default('http://localhost:8080/logout'),
-    REFRESH_TOKEN_URL: z.string().url().default('http://localhost:8080/token'),
     BACKEND_URL: z.string().url().default('http://localhost:8000'),
     SENTRY_FEATURE_ENABLED: z.string().optional(),
     SENTRY_ORG_NAME: z.string().optional(),

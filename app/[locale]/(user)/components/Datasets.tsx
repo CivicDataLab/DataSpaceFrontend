@@ -145,7 +145,7 @@ const Datasets = () => {
                       },
                     ]}
                     variation={'collapsed'}
-                    iconColor="warning"
+                    iconColor="metadata"
                     href={`/datasets/${item.id}`}
                     // type={[
                     //   {

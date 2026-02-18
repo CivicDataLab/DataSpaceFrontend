@@ -1,16 +1,16 @@
 'use client';
 
+import { graphql } from '@/gql';
+import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
-import { SearchInput, Spinner, Tag, Text } from 'opub-ui';
+import { SearchInput, Spinner, Text } from 'opub-ui';
 
+import { useTourTrigger } from '@/hooks/use-tour-trigger';
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import Styles from '../page.module.scss';
-import { useTourTrigger } from '@/hooks/use-tour-trigger';
 
 const statsInfo: any = graphql(`
   query StatsList {
@@ -24,14 +24,6 @@ const statsInfo: any = graphql(`
   }
 `);
 
-// const tagsInfo: any = graphql(`
-//   query TagsData {
-//     tags {
-//       id
-//       value
-//     }
-//   }
-// `);
 
 export const Content = () => {
   const router = useRouter();
@@ -42,9 +34,6 @@ export const Content = () => {
   const Stats: { data: any; isLoading: any } = useQuery([`statsDetails`], () =>
     GraphQL(statsInfo, {}, [])
   );
-  // const Tags: { data: any; isLoading: any } = useQuery([`tagDetails`], () =>
-  //   GraphQL(tagsInfo, {}, [])
-  // );
 
   const handleSearch = (value: string) => {
     if (value) {
@@ -68,10 +57,6 @@ export const Content = () => {
       count: Stats?.data?.stats?.totalPublishers,
       link: '/publishers',
     },
-    // {
-    //   label: 'Users',
-    //   count: Stats?.data?.stats?.totalUsers,
-    // },
     {
       label: 'Organizations',
       count: Stats?.data?.stats?.totalOrganizations,
@@ -79,27 +64,17 @@ export const Content = () => {
     },
   ];
 
-  const Sectors = [
-    'Public Finance',
-    'Law And Justice',
-    'Climate Action',
-    'Urban Development',
-    'Gender',
-    'Coastal',
-    'Disaster Risk Reduction',
-    'Child Rights'
-  ];
 
   return (
-    <main className="py-6 md:px-6 md:py-10 lg:py-16 ">
-      <div className=" flex justify-around gap-8 px-4 md:px-8 lg:px-18">
+    <main className="container py-10 md:px-8 lg:py-20">
+      <div className="flex justify-around gap-8 px-4 md:px-12 lg:px-12">
         <div className="flex flex-col gap-11 lg:w-[60%]">
           <div className="flex flex-col gap-2">
             <Text variant="heading3xl" color="onBgDefault" className='text-textOnBGDefault1'>
-            Discover datasets, AI use cases, and civic knowledge
+              An Open-Source Platform for Collaborative Data-Driven Change
             </Text>
              <Text variant="headingLg" color="onBgDefault" className='text-textOnBGDefault2'>
-             Open data and insights for public decision-making.
+              Share datasets, knowledge resources, and AI use-cases for data changemakers.
             </Text>
           </div>
           <div className="w-full" data-tour="search-bar">
@@ -133,7 +108,7 @@ export const Content = () => {
                           : undefined
                   }
                 >
-                  <div className="flex h-[100px] flex-col text-start justify-center rounded-[8px] bg-surfaceStats px-10 py-10 text-center">
+                  <div className="flex h-[100px] flex-col justify-center rounded-[8px] bg-surfaceStats px-10 py-10 text-center">
                     <Text variant="heading3xl" className="text-primaryBlue">
                       {item.count}
                     </Text>
