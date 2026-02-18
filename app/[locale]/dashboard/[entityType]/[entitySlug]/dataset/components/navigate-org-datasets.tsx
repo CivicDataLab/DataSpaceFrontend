@@ -11,7 +11,7 @@ export const Navigation = ({
     url: string;
     selected: boolean;
   }>;
-  currentValue: string;
+  currentValue?: string;
 }) => {
   const handleTabClick = (url: string) => {
     setNavigationTab(url);
