@@ -127,7 +127,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       </div>
       <div className="h-0.5 bg-baseGraySlateSolid9 w-full" ></div>
       <div className=" flex flex-col gap-8">
-        <div className="hidden rounded-2  p-2 lg:block">
+        <div className="hidden rounded-2 border-1 border-solid border-greyExtralight bg-white p-2 lg:block">
           <Image
             height={180}
             width={120}

@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Divider, Icon, Text, Tooltip } from 'opub-ui';
+import { useEffect, useState } from 'react';
 
-import { formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import { formatDate, getWebsiteTitle } from '@/lib/utils';
 
 const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
   const [platformTitle, setPlatformTitle] = useState<string | null>(null);
@@ -184,7 +184,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       <Divider />
       <div className=" flex flex-col gap-8">
         <Link href={getOrganizationLink()}>
-          <div className="hidden rounded-2 border-1 border-solid border-greyExtralight p-2 lg:block">
+          <div className="hidden rounded-2 border-1 border-solid border-greyExtralight bg-white p-2 lg:block">
             <Image
               height={140}
               width={100}

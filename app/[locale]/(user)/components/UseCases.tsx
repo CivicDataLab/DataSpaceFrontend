@@ -182,7 +182,7 @@ const UseCasesListingPage = () => {
                         ]}
                         imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo?.path.replace('/code/files/', '')}`}
                         description={item.summary}
-                        iconColor="warning"
+                        iconColor="metadata"
                         variation={'collapsed'}
                         type={[
                           {

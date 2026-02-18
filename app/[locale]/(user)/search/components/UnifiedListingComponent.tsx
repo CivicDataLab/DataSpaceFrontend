@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useReducer, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Button,
   ButtonGroup,
@@ -14,11 +14,12 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 
-import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import { cn, formatDate } from '@/lib/utils';
 import Filter from '../../datasets/components/FIlter/Filter';
 import Styles from '../../datasets/dataset.module.scss';
 
@@ -52,8 +53,8 @@ export const stripMarkdown = (markdown: string): string => {
     // Remove list markers
     .replace(/^\s*[-*+]\s+/gm, '')
     .replace(/^\s*\d+\.\s+/gm, '')
-    // Remove HTML tags
-    .replace(/<[^>]*>/g, '')
+    // Remove HTML tags (improved to handle self-closing tags and attributes)
+    .replace(/<[^>]*\/?>/g, '')
     // Replace HTML entities (like &nbsp;) with regular spaces - MUST come before other replacements
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
@@ -126,7 +127,7 @@ const initialState: QueryParams = {
   query: '',
   sort: 'recent',
   order: '',
-  types: 'dataset,usecase,aimodel', // Default: search all types
+  types: 'dataset,usecase,aimodel,collaborative,publisher', // Default: search all types
 };
 
 // Query Reducer
@@ -193,7 +194,7 @@ const useUrlParams = (
       currentPage: pageParam ? Number(pageParam) : 1,
       filters,
       query: urlParams.get('query') || '',
-      types: typesParam || 'dataset,usecase,aimodel',
+      types: typesParam || 'dataset,usecase,aimodel,collaborative,publisher',
     };
 
     setQueryParams({ type: 'INITIALIZE', payload: initialParams });
@@ -201,7 +202,7 @@ const useUrlParams = (
 
   useEffect(() => {
     const filtersString = Object.entries(queryParams.filters)
-      .filter(([_key, values]) => values.length > 0)
+      .filter(([, values]) => values.length > 0)
       .map(([key, values]) => `${key}=${values.join(',')}`)
       .join('&');
 
@@ -313,8 +314,8 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   useUrlParams(queryParams, setQueryParams, setVariables);
   const latestFetchId = useRef(0);
 
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setError] = useState<string | null>(null);
+  const [, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (variables) {
@@ -420,6 +421,15 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
         return `/usecases/${item.id}`;
       case 'aimodel':
         return `/aimodels/${item.id}`;
+      case 'collaborative':
+        return `/collaboratives/${item.slug}`;
+      case 'publisher':
+        // For publishers, redirect based on publisher_type
+        if (item.publisher_type === 'organization') {
+          return `/publishers/organization/${item.id}`;
+        } else {
+          return `/publishers/${item.id}`;
+        }
       default:
         return `${redirectionURL}/${item.id}`;
     }
@@ -445,22 +455,26 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
               <div className="rounded-lg border border-gray-200 flex flex-wrap gap-2 bg-white p-3">
                 <Button
                   kind={
-                    queryParams.types === 'dataset,usecase,aimodel'
+                    queryParams.types === 'dataset,usecase,aimodel,collaborative,publisher'
                       ? 'primary'
                       : 'secondary'
                   }
-                  onClick={() => handleTypeFilter('dataset,usecase,aimodel')}
+                  onClick={() => handleTypeFilter('dataset,usecase,aimodel,collaborative,publisher')}
                   size="slim"
                 >
                   All Results
                   {typeCounts.dataset !== undefined &&
                     typeCounts.usecase !== undefined &&
-                    typeCounts.aimodel !== undefined && (
+                    typeCounts.aimodel !== undefined &&
+                    typeCounts.collaborative !== undefined &&
+                    typeCounts.publisher !== undefined && (
                       <span className="text-xs ml-1">
                         (
                         {(typeCounts.dataset || 0) +
                           (typeCounts.usecase || 0) +
-                          (typeCounts.aimodel || 0)}
+                          (typeCounts.aimodel || 0) +
+                          (typeCounts.collaborative || 0) +
+                          (typeCounts.publisher || 0)}
                         )
                       </span>
                     )}
@@ -504,6 +518,34 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                   {typeCounts.aimodel !== undefined && (
                     <span className="text-xs ml-1">
                       ({typeCounts.aimodel || 0})
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  kind={
+                    queryParams.types === 'collaborative' ? 'primary' : 'secondary'
+                  }
+                  onClick={() => handleTypeFilter('collaborative')}
+                  size="slim"
+                >
+                  Collaboratives
+                  {typeCounts.collaborative !== undefined && (
+                    <span className="text-xs ml-1">
+                      ({typeCounts.collaborative || 0})
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  kind={
+                    queryParams.types === 'publisher' ? 'primary' : 'secondary'
+                  }
+                  onClick={() => handleTypeFilter('publisher')}
+                  size="slim"
+                >
+                  Publishers
+                  {typeCounts.publisher !== undefined && (
+                    <span className="text-xs ml-1">
+                      ({typeCounts.publisher || 0})
                     </span>
                   )}
                 </Button>
@@ -645,15 +687,23 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     const isIndividual =
                       item.is_individual_dataset ||
                       item.is_individual_usecase ||
-                      item.is_individual_model;
+                      item.is_individual_model ||
+                      item.is_individual_collaborative ||
+                      (item.type === 'publisher' && item.publisher_type === 'user');
 
-                    const image = isIndividual
-                      ? item?.user?.profile_picture
-                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
-                        : '/profile.png'
-                      : item?.organization?.logo
-                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
-                        : '/org.png';
+                    const image = item.type === 'publisher'
+                      ? item.logo
+                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`
+                        : item.publisher_type === 'user' 
+                          ? '/profile.png'
+                          : '/org.png'
+                      : isIndividual
+                        ? item?.user?.profile_picture
+                          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
+                          : '/profile.png'
+                        : item?.organization?.logo
+                          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
+                          : '/org.png';
 
                     const geographies =
                       item.geographies && item.geographies.length > 0
@@ -663,14 +713,89 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     const sdgs =
                       item.sdgs && item.sdgs.length > 0 ? item.sdgs : null;
 
-                    const MetadataContent = [
-                      {
+                    const MetadataContent = [];
+
+                    // Type-specific metadata
+                    if (item.type === 'publisher') {
+                      // Publisher-specific metadata
+                      MetadataContent.push({
+                        icon: Icons.calendar as any,
+                        label: 'Joined',
+                        value: formatDate(item.created),
+                        tooltip: 'Date joined',
+                      });
+                      
+                      MetadataContent.push({
+                        icon: Icons.dataset as any,
+                        label: 'Datasets',
+                        value: item.published_datasets_count?.toString() || '0',
+                        tooltip: 'Published datasets',
+                      });
+                      
+                      MetadataContent.push({
+                        icon: Icons.usecase as any,
+                        label: 'Use Cases',
+                        value: item.published_usecases_count?.toString() || '0',
+                        tooltip: 'Published use cases',
+                      });
+                      
+                      // Add members count for organizations
+                      if (item.publisher_type === 'organization' && item.members_count > 0) {
+                        MetadataContent.push({
+                          icon: Icons.users as any,
+                          label: 'Members',
+                          value: item.members_count?.toString() || '0',
+                          tooltip: 'Organization members',
+                        });
+                      }
+                    } else if (item.type === 'collaborative') {
+                      MetadataContent.push({
+                        icon: Icons.calendar as any,
+                        label: 'Started',
+                        value: formatDate(item.started_on || item.created),
+                      });
+                      
+                      MetadataContent.push({
+                        icon: Icons.dataset as any,
+                        label: 'Datasets',
+                        value: item.dataset_count?.toString() || '0',
+                      });
+                      
+                      // Add geography with proper fallback like listing page
+                      if (geographies && geographies.length > 0) {
+                        const geoDisplay = geographies.join(', ');
+                        MetadataContent.push({
+                          icon: Icons.globe as any,
+                          label: 'Geography',
+                          value: geoDisplay,
+                        });
+                      } else {
+                        MetadataContent.push({
+                          icon: Icons.globe as any,
+                          label: 'Geography',
+                          value: 'N/A',
+                        });
+                      }
+                    } else {
+                      // For other types, use the generic date
+                      MetadataContent.push({
                         icon: Icons.calendar as any,
                         label: 'Date',
                         value: formatDate(item.modified || item.updated_at),
                         tooltip: 'Date',
-                      },
-                    ];
+                      });
+                      
+                      // Add geography for non-collaborative types
+                      if (geographies && geographies.length > 0) {
+                        const geoDisplay = geographies.join(', ');
+                        MetadataContent.push({
+                          icon: Icons.globe as any,
+                          label: 'Geography',
+                          value: geoDisplay,
+                          tooltip: geoDisplay,
+                        });
+                      }
+                    }
 
                     // Type-specific metadata for datasets
                     if (item.type === 'dataset' && item.download_count > 0) {
@@ -682,15 +807,6 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                       });
                     }
 
-                    if (geographies && geographies.length > 0) {
-                      const geoDisplay = geographies.join(', ');
-                      MetadataContent.push({
-                        icon: Icons.globe as any,
-                        label: 'Geography',
-                        value: geoDisplay,
-                        tooltip: geoDisplay,
-                      });
-                    }
 
                     // Add SDGs for datasets
                     if (item.type === 'dataset' && sdgs && sdgs.length > 0) {
@@ -719,59 +835,153 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                       });
                     }
 
-                    const FooterContent = [
-                      ...(item.sectors && item.sectors.length > 0
-                        ? [
-                            {
-                              icon: `/Sectors/${item.sectors?.[0]}.svg` as any,
-                              label: 'Sectors',
-                              tooltip: `${item.sectors?.[0]}`,
-                            },
-                          ]
-                        : []),
-                      ...(item.type === 'dataset' &&
-                      item.has_charts &&
-                      view !== 'expanded'
-                        ? [
-                            {
-                              icon: `/chart-bar.svg` as any,
-                              label: 'Charts',
-                              tooltip: 'Charts',
-                            },
-                          ]
-                        : []),
-                      {
+                    const FooterContent = [];
+
+                    // Add sector icon - handle different types
+                    if (item.type === 'publisher') {
+                      // For publishers, show publisher type badge
+                      FooterContent.push({
+                        icon: item.publisher_type === 'organization' ? '/org.png' : '/profile.png',
+                        label: item.publisher_type === 'organization' ? 'Organization' : 'Individual Publisher',
+                        tooltip: item.publisher_type === 'organization' ? 'Organization Publisher' : 'Individual Publisher',
+                      });
+                    } else if (item.type === 'collaborative') {
+                      // For collaboratives, match listing page format exactly
+                      if (item.sectors && item.sectors.length > 0) {
+                        const sectorName = typeof item.sectors[0] === 'string' ? item.sectors[0] : item.sectors[0]?.name;
+                        FooterContent.push({
+                          icon: sectorName ? `/Sectors/${sectorName}.svg` : '/Sectors/default.svg',
+                          label: 'Sectors',
+                        });
+                      } else {
+                        FooterContent.push({
+                          icon: '/Sectors/default.svg',
+                          label: 'Sectors',
+                        });
+                      }
+                    } else {
+                      // For other types, use existing format
+                      if (item.sectors && item.sectors.length > 0) {
+                        FooterContent.push({
+                          icon: `/Sectors/${item.sectors?.[0]}.svg` as any,
+                          label: 'Sectors',
+                          tooltip: `${item.sectors?.[0]}`,
+                        });
+                      }
+                    }
+
+                    // Add charts indicator for datasets
+                    if (item.type === 'dataset' && item.has_charts && view !== 'expanded') {
+                      FooterContent.push({
+                        icon: `/chart-bar.svg` as any,
+                        label: 'Charts',
+                        tooltip: 'Charts',
+                      });
+                    }
+
+                    // Add published by info (skip for publishers since they are the publishers themselves)
+                    if (item.type !== 'publisher') {
+                      FooterContent.push({
                         icon: image as any,
                         label: 'Published by',
                         tooltip: `${isIndividual ? item.user?.name : item.organization?.name}`,
-                      },
-                    ];
+                      });
+                    }
 
                     const commonProps = {
-                      title: item.title,
-                      description: stripMarkdown(item.description || ''),
+                      title: item.title || item.name || '',
+                      description: stripMarkdown(item.description || item.bio || ''),
                       metadataContent: MetadataContent,
-                      tag: item.tags,
-                      formats: item.type === 'dataset' ? item.formats : [],
+                      tag: item.tags || [],
+                      formats: item.type === 'dataset' ? item.formats || [] : [],
                       footerContent: FooterContent,
                       imageUrl: '',
                     };
 
-                    if (item.logo) {
+                    // Handle different image sources for publishers vs other types
+                    if (item.type === 'publisher') {
+                      if (item.logo) {
+                        commonProps.imageUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`;
+                      } else if (item.profile_picture) {
+                        commonProps.imageUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.profile_picture}`;
+                      }
+                    } else if (item.logo) {
                       commonProps.imageUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`;
                     }
 
-                    return (
-                      <Card
-                        {...commonProps}
-                        key={`${item.type}-${item.id}`}
-                        variation={
-                          view === 'expanded' ? 'expanded' : 'collapsed'
-                        }
-                        iconColor="warning"
-                        href={getRedirectUrl(item)}
-                      />
-                    );
+                    // Use different rendering for publishers vs other types
+                    if (item.type === 'publisher') {
+                      return (
+                        <Link
+                          href={getRedirectUrl(item)}
+                          key={item.type === 'publisher' ? `${item.type}-${item.publisher_type}-${item.id}` : `${item.type}-${item.id}`}
+                          className="flex flex-col gap-4 rounded-4 p-6 shadow-card"
+                        >
+                          <div className="flex items-center gap-4">
+                            <img
+                              height={80}
+                              width={80}
+                              src={
+                                item.publisher_type === 'user'
+                                  ? item.profile_picture
+                                    ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.profile_picture}`
+                                    : '/profile.png'
+                                  : item.logo
+                                    ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`
+                                    : '/org.png'
+                              }
+                              alt="publisher logo"
+                              className="rounded-2 border-2 border-solid border-greyExtralight object-contain p-2"
+                            />
+                            <div className="flex flex-col gap-2">
+                              <Text className="text-primaryBlue" fontWeight="semibold">
+                                {item.name || item.title}
+                              </Text>
+                              <div className="flex w-fit rounded-full border-1 border-solid border-[#D5E1EA] bg-[#E9EFF4] px-3 py-1">
+                                <Text variant="bodySm">
+                                  {item.publisher_type === 'user'
+                                    ? 'Individual Publisher'
+                                    : 'Organization'}
+                                </Text>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-3">
+                            <div className="flex w-fit rounded-full border-1 border-solid border-[#D5E1EA] px-3 py-1">
+                              <Text variant="bodySm" className="text-primaryBlue">
+                                {item.published_usecases_count || 0} Use Cases
+                              </Text>
+                            </div>
+                            <div className="flex w-fit rounded-full border-1 border-solid border-[#D5E1EA] px-3 py-1">
+                              <Text variant="bodySm" className="text-primaryBlue">
+                                {item.published_datasets_count || 0} Datasets
+                              </Text>
+                            </div>
+                          </div>
+                          {(item.bio || item.description) && (
+                            <div>
+                              <Text className="line-clamp-2">
+                                {(item.bio || item.description)?.length > 220
+                                  ? (item.bio || item.description).slice(0, 220) + '...'
+                                  : (item.bio || item.description)}
+                              </Text>
+                            </div>
+                          )}
+                        </Link>
+                      );
+                    } else {
+                      return (
+                        <Card
+                          {...commonProps}
+                          key={item.type === 'publisher' ? `${item.type}-${item.publisher_type}-${item.id}` : `${item.type}-${item.id}`}
+                          variation={
+                            view === 'expanded' ? 'expanded' : 'collapsed'
+                          }
+                          iconColor="warning"
+                          href={getRedirectUrl(item)}
+                        />
+                      );
+                    }
                   })}
                 </GraphqlPagination>
               ) : (

@@ -34,6 +34,9 @@ const FetchAIModelForPublish: any = graphql(`
       status
       isPublic
       isActive
+      supportedLanguages
+      maxTokens
+      metadata
       tags {
         id
         value
@@ -221,6 +224,15 @@ export default function PublishPage() {
   if (!model?.tags?.length) metadataErrors.push('Tags');
   if (!model?.sectors?.length) metadataErrors.push('Sectors');
   if (!model?.geographies?.length) metadataErrors.push('Geographies');
+  
+  // Check required fields from metadata
+  const metadata = model?.metadata || {};
+  if (!metadata.targetUsers) metadataErrors.push('Target Users');
+  if (!metadata.intendedUse) metadataErrors.push('Intended Use');
+  if (!metadata.modelWebsite) metadataErrors.push('Model Website');
+  if (!model?.maxTokens) metadataErrors.push('Maximum Tokens');
+  if (!model?.supportedLanguages?.length) metadataErrors.push('Supported Languages');
+  if (!model?.modelType) metadataErrors.push('Model Type');
 
   const versionErrors = [];
   if (versions.length === 0) versionErrors.push('No versions created');
@@ -277,6 +289,26 @@ export default function PublishPage() {
     {
       label: 'Domain',
       value: model?.domain ? (domainLabels[model.domain] || model.domain) : '',
+    },
+    {
+      label: 'Target Users',
+      value: metadata?.targetUsers || '',
+    },
+    {
+      label: 'Intended Use',
+      value: metadata?.intendedUse || '',
+    },
+    {
+      label: 'Model Website',
+      value: metadata?.modelWebsite || '',
+    },
+    {
+      label: 'Maximum Tokens',
+      value: model?.maxTokens ? model.maxTokens.toString() : '',
+    },
+    {
+      label: 'Supported Languages',
+      value: model?.supportedLanguages?.length ? model.supportedLanguages.join(', ') : '',
     },
   ];
 
