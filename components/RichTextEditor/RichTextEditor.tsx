@@ -37,7 +37,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   );
 
   // Custom image handler to use URLs instead of base64
-  const imageHandler = function(this: any) {
+  const imageHandler = function (this: any) {
     const url = prompt('Enter image URL:');
     if (url) {
       const quill = this.quill;
@@ -53,21 +53,21 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       toolbar: readOnly
         ? false
         : {
-            container: [
-              [{ header: [1, 2, 3, false] }],
-              ['bold', 'italic', 'underline', 'strike'],
-              [{ list: 'ordered' }, { list: 'bullet' }],
-              [{ indent: '-1' }, { indent: '+1' }],
-              ['link', 'image'],
-              [{ align: [] }],
-              ['clean'],
-              ['preview'], // Custom preview button
-            ],
-            handlers: {
-              preview: () => setIsPreview(!isPreview),
-              image: imageHandler,
-            },
+          container: [
+            [{ header: [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ indent: '-1' }, { indent: '+1' }],
+            ['link', 'image'],
+            [{ align: [] }],
+            ['clean'],
+            ['preview'], // Custom preview button
+          ],
+          handlers: {
+            preview: () => setIsPreview(!isPreview),
+            image: imageHandler,
           },
+        },
       clipboard: {
         matchVisual: false,
       },
@@ -96,7 +96,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           {label}
         </label>
       )}
-      
+
       {isPreview ? (
         <div className="min-h-[200px] rounded-md border border-gray-300 bg-white">
           <div className="flex items-center justify-between border-b border-gray-300 bg-gray-50 px-4 py-2">
@@ -137,7 +137,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           />
         </div>
       )}
-      
+
       {helpText && (
         <p className="mt-1 text-sm text-gray-500">{helpText}</p>
       )}
@@ -199,6 +199,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           display: inline-flex;
           align-items: center;
           gap: 4px;
+        }
+        .rich-text-editor + p {
+          font-size: 12px;
         }
         
         .preview-content {

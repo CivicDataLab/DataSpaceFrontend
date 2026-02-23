@@ -258,6 +258,7 @@ export default function AIModelsPage({
         <Navigation
           setNavigationTab={setNavigationTab}
           options={navigationOptions}
+          currentValue={navigationTab ?? 'registered'}
         />
 
         {AllAIModels.data?.aiModels.length > 0 ? (
