@@ -83,6 +83,8 @@ export function TourGuide() {
           borderRadius: 'var(--border-radius-md, 8px)',
           padding: isMobile ? 16 : 20,
           boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+          maxHeight: '100vh',       
+          overflowY: 'auto',       
         },
         tooltipContainer: {
           textAlign: 'left',
