@@ -1,26 +1,26 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { Session } from 'next-auth';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Session } from 'next-auth';
-import { signIn, signOut, useSession } from 'next-auth/react';
 import {
-  Avatar,
-  Button,
-  Dialog,
-  Divider,
-  IconButton,
-  Popover,
-  SearchInput,
-  Spinner,
-  Text,
+    Avatar,
+    Button,
+    Dialog,
+    Divider,
+    IconButton,
+    Popover,
+    SearchInput,
+    Spinner,
+    Text,
 } from 'opub-ui';
+import React, { useEffect, useState } from 'react';
 
+import { Icons } from '@/components/icons';
 import { useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
-import { Icons } from '@/components/icons';
 import { UserDetailsQryDoc } from '../[entityType]/[entitySlug]/schema';
 import { allOrganizationsListingDoc } from '../[entityType]/schema';
 import Sidebar from './sidebar';
@@ -38,19 +38,8 @@ export function MainNav({ hideSearch = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExploreOpen, setIsExploreOpen] = useState(false);
 
-  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const { data: session, status } = useSession();
   const { setUserDetails, setAllEntityDetails } = useDashboardStore();
-
-  async function keycloakSessionLogOut() {
-    try {
-      setIsLoggingOut(true);
-      await fetch(`/api/auth/logout`, { method: 'GET' });
-    } catch (err) {
-      setIsLoggingOut(false);
-      console.error(err);
-    }
-  }
 
   const handleSignIn = async () => {
     try {
@@ -90,10 +79,6 @@ export function MainNav({ hideSearch = false }) {
 
     fetchData();
   }, [session, hasFetched, setUserDetails, setAllEntityDetails]);
-
-  if (isLoggingOut) {
-    return <LogginOutPage />;
-  }
 
   const exploreLinks = [
     {
@@ -145,7 +130,6 @@ export function MainNav({ hideSearch = false }) {
               data={[...exploreLinks, ...Navigation]}
               session={session}
               status={status}
-              keycloakSessionLogOut={keycloakSessionLogOut}
               signIn={signIn}
             />
           </div>
@@ -279,7 +263,6 @@ export function MainNav({ hideSearch = false }) {
               {session?.user ? (
                 <ProfileContent
                   session={session}
-                  keycloakSessionLogOut={keycloakSessionLogOut}
                 />
               ) : (
                 <Button
@@ -302,10 +285,8 @@ export function MainNav({ hideSearch = false }) {
 
 export const ProfileContent = ({
   session,
-  keycloakSessionLogOut,
 }: {
   session: Session;
-  keycloakSessionLogOut: () => Promise<void>;
 }) => {
   const [open, setOpen] = React.useState(false);
 
@@ -362,11 +343,16 @@ export const ProfileContent = ({
           <Divider className="mx-3 my-3 w-auto" />
           <div className="px-3">
             <Button
-              onClick={() => {
+              onClick={async () => {
                 setOpen(false);
-                keycloakSessionLogOut().then(() =>
-                  signOut({ callbackUrl: '/' })
-                );
+                const response = await fetch(`/api/auth/logout`, { method: 'GET' });
+                const data = await response.json();
+                
+                await signOut({ redirect: false });
+                
+                if (data.url) {
+                  window.location.href = data.url;
+                }
               }}
               kind="secondary"
               size="slim"
@@ -381,11 +367,3 @@ export const ProfileContent = ({
   );
 };
 
-const LogginOutPage = () => {
-  return (
-    <div className=" flex items-center justify-end gap-4 bg-surfaceDefault p-5 lg:p-7">
-      <Spinner color="surface" />
-      <Text variant="headingLg">Logging out...</Text>
-    </div>
-  );
-};
