@@ -1,13 +1,13 @@
 'use client';
 
-import { graphql } from '@/gql';
-import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { graphql } from '@/gql';
+import { useTourTrigger } from '@/hooks/use-tour-trigger';
+import { useQuery } from '@tanstack/react-query';
 import { SearchInput, Spinner, Text } from 'opub-ui';
 
-import { useTourTrigger } from '@/hooks/use-tour-trigger';
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import Styles from '../page.module.scss';
@@ -24,13 +24,12 @@ const statsInfo: any = graphql(`
   }
 `);
 
-
 export const Content = () => {
   const router = useRouter();
-  
+
   // Enable tour for first-time users
   useTourTrigger(true, 1500);
-  
+
   const Stats: { data: any; isLoading: any } = useQuery([`statsDetails`], () =>
     GraphQL(statsInfo, {}, [])
   );
@@ -64,17 +63,25 @@ export const Content = () => {
     },
   ];
 
-
   return (
     <main className="container py-10 md:px-8 lg:py-20">
       <div className="flex justify-around gap-8 px-4 md:px-12 lg:px-12">
         <div className="flex flex-col gap-11 lg:w-[60%]">
           <div className="flex flex-col gap-2">
-            <Text variant="heading3xl" color="onBgDefault" className='text-textOnBGDefault1'>
+            <Text
+              variant="heading3xl"
+              color="onBgDefault"
+              className="text-textOnBGDefault1"
+            >
               An Open-Source Platform for Collaborative Data-Driven Change
             </Text>
-             <Text variant="headingLg" color="onBgDefault" className='text-textOnBGDefault2'>
-              Share datasets, knowledge resources, and AI use-cases for data changemakers.
+            <Text
+              variant="headingLg"
+              color="onBgDefault"
+              className="text-textOnBGDefault2"
+            >
+              Share datasets, knowledge resources, and AI use-cases for data
+              changemakers.
             </Text>
           </div>
           <div className="w-full" data-tour="search-bar">
@@ -115,7 +122,7 @@ export const Content = () => {
                     <Text
                       color="onBgDefault"
                       fontWeight="semibold"
-                      className="uppercase text-xs text-textSurfaceStats"
+                      className="text-xs uppercase text-textSurfaceStats"
                     >
                       {item.label}
                     </Text>
@@ -124,7 +131,7 @@ export const Content = () => {
               ))}
             </div>
           )}
-          
+
           {/* <div className="flex flex-wrap gap-4">
             {Sectors.map((item, index) => (
               <div key={index}>
