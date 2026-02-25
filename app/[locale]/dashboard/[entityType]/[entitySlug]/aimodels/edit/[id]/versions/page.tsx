@@ -952,331 +952,336 @@ export default function VersionsPage() {
             limitHeight
           >
             <FormLayout>
-              <Select
-                name="provider"
-                label="Provider Type"
-                options={providerOptions}
-                value={providerFormData.provider}
-                onChange={(value) =>
-                  setProviderFormData((prev) => ({ ...prev, provider: value }))
-                }
-                disabled={!!editingProvider}
-              />
-              <TextField
-                name="providerModelId"
-                label="Provider Model ID"
-                value={providerFormData.providerModelId}
-                onChange={(value) =>
-                  setProviderFormData((prev) => ({
-                    ...prev,
-                    providerModelId: value,
-                  }))
-                }
-                helpText="e.g., gpt-4, meta-llama/Llama-2-7b-chat-hf"
-              />
+              <div className="flex flex-col gap-6">
+                <Select
+                  name="provider"
+                  label="Provider Type"
+                  options={providerOptions}
+                  value={providerFormData.provider}
+                  onChange={(value) =>
+                    setProviderFormData((prev) => ({
+                      ...prev,
+                      provider: value,
+                    }))
+                  }
+                  disabled={!!editingProvider}
+                />
+                <TextField
+                  name="providerModelId"
+                  label="Provider Model ID"
+                  value={providerFormData.providerModelId}
+                  onChange={(value) =>
+                    setProviderFormData((prev) => ({
+                      ...prev,
+                      providerModelId: value,
+                    }))
+                  }
+                  helpText="e.g., gpt-4, meta-llama/Llama-2-7b-chat-hf"
+                />
 
-              {/* OpenAI-specific fields */}
-              {providerFormData.provider === 'OPENAI' && (
-                <>
-                  <TextField
-                    name="apiKey"
-                    label="API Key"
-                    type="password"
-                    value={providerFormData.apiKey}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        apiKey: value,
-                      }))
-                    }
-                    helpText="Your OpenAI API key"
-                    required
-                    requiredIndicator={true}
-                  />
-                </>
-              )}
+                {/* OpenAI-specific fields */}
+                {providerFormData.provider === 'OPENAI' && (
+                  <>
+                    <TextField
+                      name="apiKey"
+                      label="API Key"
+                      type="password"
+                      value={providerFormData.apiKey}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          apiKey: value,
+                        }))
+                      }
+                      helpText="Your OpenAI API key"
+                      required
+                      requiredIndicator={true}
+                    />
+                  </>
+                )}
 
-              {/* Llama variants - Together AI, Replicate */}
-              {(providerFormData.provider === 'LLAMA_TOGETHER' ||
-                providerFormData.provider === 'LLAMA_REPLICATE') && (
-                <>
-                  <TextField
-                    name="apiKey"
-                    label="API Key"
-                    type="password"
-                    value={providerFormData.apiKey}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        apiKey: value,
-                      }))
-                    }
-                    helpText={`Your ${providerFormData.provider === 'LLAMA_TOGETHER' ? 'Together AI' : 'Replicate'} API key`}
-                    required
-                    requiredIndicator={true}
-                  />
-                </>
-              )}
+                {/* Llama variants - Together AI, Replicate */}
+                {(providerFormData.provider === 'LLAMA_TOGETHER' ||
+                  providerFormData.provider === 'LLAMA_REPLICATE') && (
+                  <>
+                    <TextField
+                      name="apiKey"
+                      label="API Key"
+                      type="password"
+                      value={providerFormData.apiKey}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          apiKey: value,
+                        }))
+                      }
+                      helpText={`Your ${providerFormData.provider === 'LLAMA_TOGETHER' ? 'Together AI' : 'Replicate'} API key`}
+                      required
+                      requiredIndicator={true}
+                    />
+                  </>
+                )}
 
-              {/* Llama Ollama - needs endpoint URL */}
-              {providerFormData.provider === 'LLAMA_OLLAMA' && (
-                <>
-                  <TextField
-                    name="apiEndpointUrl"
-                    label="Ollama Endpoint URL"
-                    value={providerFormData.apiEndpointUrl}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        apiEndpointUrl: value,
-                      }))
-                    }
-                    placeholder="http://localhost:11434/api/generate"
-                    helpText="URL where Ollama is running"
-                    required
-                    requiredIndicator={true}
-                  />
-                </>
-              )}
+                {/* Llama Ollama - needs endpoint URL */}
+                {providerFormData.provider === 'LLAMA_OLLAMA' && (
+                  <>
+                    <TextField
+                      name="apiEndpointUrl"
+                      label="Ollama Endpoint URL"
+                      value={providerFormData.apiEndpointUrl}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          apiEndpointUrl: value,
+                        }))
+                      }
+                      placeholder="http://localhost:11434/api/generate"
+                      helpText="URL where Ollama is running"
+                      required
+                      requiredIndicator={true}
+                    />
+                  </>
+                )}
 
-              {/* Llama Custom - needs endpoint URL and API key */}
-              {providerFormData.provider === 'LLAMA_CUSTOM' && (
-                <>
-                  <TextField
-                    name="apiEndpointUrl"
-                    label="API Endpoint URL"
-                    value={providerFormData.apiEndpointUrl}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        apiEndpointUrl: value,
-                      }))
-                    }
-                    placeholder="https://your-api.com/v1/chat/completions"
-                    helpText="Full endpoint URL for your custom Llama API"
-                    required
-                    requiredIndicator={true}
-                  />
-                  <TextField
-                    name="apiKey"
-                    label="API Key"
-                    type="password"
-                    value={providerFormData.apiKey}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        apiKey: value,
-                      }))
-                    }
-                    helpText="API key for authentication (if required)"
-                  />
-                </>
-              )}
+                {/* Llama Custom - needs endpoint URL and API key */}
+                {providerFormData.provider === 'LLAMA_CUSTOM' && (
+                  <>
+                    <TextField
+                      name="apiEndpointUrl"
+                      label="API Endpoint URL"
+                      value={providerFormData.apiEndpointUrl}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          apiEndpointUrl: value,
+                        }))
+                      }
+                      placeholder="https://your-api.com/v1/chat/completions"
+                      helpText="Full endpoint URL for your custom Llama API"
+                      required
+                      requiredIndicator={true}
+                    />
+                    <TextField
+                      name="apiKey"
+                      label="API Key"
+                      type="password"
+                      value={providerFormData.apiKey}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          apiKey: value,
+                        }))
+                      }
+                      helpText="API key for authentication (if required)"
+                    />
+                  </>
+                )}
 
-              {/* Custom API - full configuration */}
-              {providerFormData.provider === 'CUSTOM' && (
-                <>
-                  <TextField
-                    name="apiEndpointUrl"
-                    label="API Endpoint URL"
-                    value={providerFormData.apiEndpointUrl}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        apiEndpointUrl: value,
-                      }))
-                    }
-                    placeholder="https://your-api.com/v1/completions"
-                    helpText="Full endpoint URL for your custom API"
-                    required
-                    requiredIndicator={true}
-                  />
-                  <TextField
-                    name="apiKey"
-                    label="API Key / Token"
-                    type="password"
-                    value={providerFormData.apiKey}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        apiKey: value,
-                      }))
-                    }
-                    helpText="API key or token for authentication"
-                  />
-                  <Select
-                    name="apiAuthType"
-                    label="Authentication Type"
-                    options={[
-                      { label: 'Bearer Token', value: 'BEARER' },
-                      { label: 'API Key Header', value: 'API_KEY' },
-                      { label: 'Basic Auth', value: 'BASIC' },
-                      { label: 'OAuth2', value: 'OAUTH2' },
-                      { label: 'Custom', value: 'CUSTOM' },
-                      { label: 'None', value: 'NONE' },
-                    ]}
-                    value={providerFormData.apiAuthType}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        apiAuthType: value,
-                      }))
-                    }
-                  />
-                  <TextField
-                    name="apiAuthHeaderName"
-                    label="Auth Header Name"
-                    value={providerFormData.apiAuthHeaderName}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        apiAuthHeaderName: value,
-                      }))
-                    }
-                    placeholder="Authorization"
-                    helpText="Header name for authentication (e.g., Authorization, X-API-Key)"
-                  />
-                  <TextField
-                    name="apiRequestTemplate"
-                    label="Request Body Template"
-                    value={providerFormData.apiRequestTemplate}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        apiRequestTemplate: value,
-                      }))
-                    }
-                    placeholder='{"model": "{model_id}",
+                {/* Custom API - full configuration */}
+                {providerFormData.provider === 'CUSTOM' && (
+                  <>
+                    <TextField
+                      name="apiEndpointUrl"
+                      label="API Endpoint URL"
+                      value={providerFormData.apiEndpointUrl}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          apiEndpointUrl: value,
+                        }))
+                      }
+                      placeholder="https://your-api.com/v1/completions"
+                      helpText="Full endpoint URL for your custom API"
+                      required
+                      requiredIndicator={true}
+                    />
+                    <TextField
+                      name="apiKey"
+                      label="API Key / Token"
+                      type="password"
+                      value={providerFormData.apiKey}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          apiKey: value,
+                        }))
+                      }
+                      helpText="API key or token for authentication"
+                    />
+                    <Select
+                      name="apiAuthType"
+                      label="Authentication Type"
+                      options={[
+                        { label: 'Bearer Token', value: 'BEARER' },
+                        { label: 'API Key Header', value: 'API_KEY' },
+                        { label: 'Basic Auth', value: 'BASIC' },
+                        { label: 'OAuth2', value: 'OAUTH2' },
+                        { label: 'Custom', value: 'CUSTOM' },
+                        { label: 'None', value: 'NONE' },
+                      ]}
+                      value={providerFormData.apiAuthType}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          apiAuthType: value,
+                        }))
+                      }
+                    />
+                    <TextField
+                      name="apiAuthHeaderName"
+                      label="Auth Header Name"
+                      value={providerFormData.apiAuthHeaderName}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          apiAuthHeaderName: value,
+                        }))
+                      }
+                      placeholder="Authorization"
+                      helpText="Header name for authentication (e.g., Authorization, X-API-Key)"
+                    />
+                    <TextField
+                      name="apiRequestTemplate"
+                      label="Request Body Template"
+                      value={providerFormData.apiRequestTemplate}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          apiRequestTemplate: value,
+                        }))
+                      }
+                      placeholder='{"model": "{model_id}",
                                   "messages": [{"role": "user", "content": "{input}"}]
                                   "temperature": {temperature},
                                   "max_tokens": {max_tokens}
                                   }'
-                    helpText="Request body template with placeholders like {input}, {prompt}, {model_id}, {temperature}, {max_tokens}"
-                  />
-                  <TextField
-                    name="apiResponsePath"
-                    label="Response Path"
-                    value={providerFormData.apiResponsePath}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        apiResponsePath: value,
-                      }))
-                    }
-                    placeholder="choices[0].message.content"
-                    helpText="JSON path to extract response text"
-                  />
-                  <TextField
-                    name="apiTimeoutSeconds"
-                    label="Timeout (seconds)"
-                    type="number"
-                    value={providerFormData.apiTimeoutSeconds.toString()}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        apiTimeoutSeconds: parseInt(value) || 60,
-                      }))
-                    }
-                    helpText="Request timeout in seconds"
-                  />
-                </>
-              )}
+                      helpText="Request body template with placeholders like {input}, {prompt}, {model_id}, {temperature}, {max_tokens}"
+                    />
+                    <TextField
+                      name="apiResponsePath"
+                      label="Response Path"
+                      value={providerFormData.apiResponsePath}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          apiResponsePath: value,
+                        }))
+                      }
+                      placeholder="choices[0].message.content"
+                      helpText="JSON path to extract response text"
+                    />
+                    <TextField
+                      name="apiTimeoutSeconds"
+                      label="Timeout (seconds)"
+                      type="number"
+                      value={providerFormData.apiTimeoutSeconds.toString()}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          apiTimeoutSeconds: parseInt(value) || 60,
+                        }))
+                      }
+                      helpText="Request timeout in seconds"
+                    />
+                  </>
+                )}
 
-              {/* Huggingface-specific fields */}
-              {providerFormData.provider === 'HUGGINGFACE' && (
-                <>
-                  <TextField
-                    name="hfAuthToken"
-                    label="Huggingface Auth Token"
-                    type="password"
-                    value={providerFormData.hfAuthToken}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        hfAuthToken: value,
-                      }))
-                    }
-                    helpText="Required for gated models"
-                  />
-                  <Select
-                    name="hfModelClass"
-                    label="Model Class"
-                    options={hfModelClassOptions}
-                    value={providerFormData.hfModelClass}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        hfModelClass: value,
-                      }))
-                    }
-                    required
-                    requiredIndicator={true}
-                  />
-                  <Select
-                    name="framework"
-                    label="Framework"
-                    options={frameworkOptions}
-                    value={providerFormData.framework}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        framework: value,
-                      }))
-                    }
-                  />
-                  <TextField
-                    name="hfAttnImplementation"
-                    label="Attention Implementation"
-                    value={providerFormData.hfAttnImplementation}
-                    onChange={(value) =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        hfAttnImplementation: value,
-                      }))
-                    }
-                    helpText="e.g., flash_attention_2, eager, sdpa"
-                  />
-                  <Checkbox
-                    name="hfUsePipeline"
-                    checked={providerFormData.hfUsePipeline}
-                    onChange={() =>
-                      setProviderFormData((prev) => ({
-                        ...prev,
-                        hfUsePipeline: !prev.hfUsePipeline,
-                      }))
-                    }
+                {/* Huggingface-specific fields */}
+                {providerFormData.provider === 'HUGGINGFACE' && (
+                  <>
+                    <TextField
+                      name="hfAuthToken"
+                      label="Huggingface Auth Token"
+                      type="password"
+                      value={providerFormData.hfAuthToken}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          hfAuthToken: value,
+                        }))
+                      }
+                      helpText="Required for gated models"
+                    />
+                    <Select
+                      name="hfModelClass"
+                      label="Model Class"
+                      options={hfModelClassOptions}
+                      value={providerFormData.hfModelClass}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          hfModelClass: value,
+                        }))
+                      }
+                      required
+                      requiredIndicator={true}
+                    />
+                    <Select
+                      name="framework"
+                      label="Framework"
+                      options={frameworkOptions}
+                      value={providerFormData.framework}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          framework: value,
+                        }))
+                      }
+                    />
+                    <TextField
+                      name="hfAttnImplementation"
+                      label="Attention Implementation"
+                      value={providerFormData.hfAttnImplementation}
+                      onChange={(value) =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          hfAttnImplementation: value,
+                        }))
+                      }
+                      helpText="e.g., flash_attention_2, eager, sdpa"
+                    />
+                    <Checkbox
+                      name="hfUsePipeline"
+                      checked={providerFormData.hfUsePipeline}
+                      onChange={() =>
+                        setProviderFormData((prev) => ({
+                          ...prev,
+                          hfUsePipeline: !prev.hfUsePipeline,
+                        }))
+                      }
+                    >
+                      Use Pipeline API
+                    </Checkbox>
+                  </>
+                )}
+
+                <Checkbox
+                  name="isPrimary"
+                  checked={providerFormData.isPrimary}
+                  onChange={() =>
+                    setProviderFormData((prev) => ({
+                      ...prev,
+                      isPrimary: !prev.isPrimary,
+                    }))
+                  }
+                >
+                  Set as Primary Provider
+                </Checkbox>
+
+                <div className="flex justify-end gap-4 pt-4">
+                  <Button
+                    onClick={() => setIsProviderModalOpen(false)}
+                    kind="secondary"
                   >
-                    Use Pipeline API
-                  </Checkbox>
-                </>
-              )}
-
-              <Checkbox
-                name="isPrimary"
-                checked={providerFormData.isPrimary}
-                onChange={() =>
-                  setProviderFormData((prev) => ({
-                    ...prev,
-                    isPrimary: !prev.isPrimary,
-                  }))
-                }
-              >
-                Set as Primary Provider
-              </Checkbox>
-
-              <div className="flex justify-end gap-4 pt-4">
-                <Button
-                  onClick={() => setIsProviderModalOpen(false)}
-                  kind="secondary"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSaveProvider}
-                  loading={createProviderLoading || updateProviderLoading}
-                >
-                  {editingProvider ? 'Update' : 'Add Provider'}
-                </Button>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSaveProvider}
+                    loading={createProviderLoading || updateProviderLoading}
+                  >
+                    {editingProvider ? 'Update' : 'Add Provider'}
+                  </Button>
+                </div>
               </div>
             </FormLayout>
           </Dialog.Content>
