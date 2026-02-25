@@ -1,21 +1,21 @@
 import { graphql } from '@/gql';
 import {
-    CreateFileResourceInput,
-    SchemaUpdateInput,
-    UpdateFileResourceInput,
+  CreateFileResourceInput,
+  SchemaUpdateInput,
+  UpdateFileResourceInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { parseAsString, useQueryState } from 'nuqs';
 import {
-    Button,
-    Checkbox,
-    Combobox,
-    Divider,
-    DropZone,
-    Text,
-    TextField,
-    toast,
+  Button,
+  Checkbox,
+  Combobox,
+  Divider,
+  DropZone,
+  Text,
+  TextField,
+  toast,
 } from 'opub-ui';
 import React, { useEffect, useState } from 'react';
 
@@ -26,9 +26,9 @@ import { useDatasetEditStatus } from '../../context';
 import { TListItem } from '../page-layout';
 import PreviewData from './PreviewData';
 import {
-    createResourceFilesDoc,
-    updateResourceDoc,
-    updateSchema,
+  createResourceFilesDoc,
+  updateResourceDoc,
+  updateSchema,
 } from './query';
 import ResourceHeader from './ResourceHeader';
 import { ResourceSchema } from './ResourceSchema';
@@ -37,18 +37,6 @@ interface EditProps {
   refetch: () => void;
   allResources: TListItem[];
   isPromptDataset?: boolean;
-}
-
-// Type for GraphQL introspection query response
-interface IntrospectionEnumValue {
-  name: string;
-  description?: string;
-}
-
-interface IntrospectionTypeResponse {
-  __type: {
-    enumValues: IntrospectionEnumValue[];
-  } | null;
 }
 
 const resourceDetails: any = graphql(`
@@ -104,18 +92,6 @@ const resourceDetails: any = graphql(`
   }
 `);
 
-// Introspection query to get PromptFormat enum values from schema
-const promptFormatEnumQuery: any = graphql(`
-  query PromptFormatEnumResource {
-    __type(name: "PromptFormat") {
-      enumValues {
-        name
-        description
-      }
-    }
-  }
-`);
-
 // Mutation to update prompt resource metadata
 const updatePromptResourceMutationDoc: any = graphql(`
   mutation UpdatePromptResource($updateInput: UpdatePromptResourceInput!) {
@@ -140,7 +116,6 @@ const updatePromptResourceMutationDoc: any = graphql(`
   }
 `);
 
-// Prompt format templates for different prompt types (CSV format for multiple prompts)
 const PROMPT_FORMAT_TEMPLATES: Record<
   string,
   { description: string; template: string }
@@ -196,6 +171,15 @@ const PROMPT_FORMAT_TEMPLATES: Record<
 "value7","value8","value9"`,
   },
 };
+
+const PROMPT_FORMAT_OPTIONS = Object.keys(PROMPT_FORMAT_TEMPLATES).map(
+  (key) => ({
+    label: key
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+    value: key,
+  })
+);
 
 export const EditResource = ({
   refetch,
@@ -350,22 +334,6 @@ export const EditResource = ({
   const [hasSystemPrompt, setHasSystemPrompt] = useState(false);
   const [hasExampleResponses, setHasExampleResponses] = useState(false);
 
-  // Fetch PromptFormat enum values from GraphQL schema
-  const getPromptFormatEnum = useQuery<IntrospectionTypeResponse>(
-    ['prompt_format_enum_resource'],
-    () => GraphQL(promptFormatEnumQuery, {}, []),
-    { staleTime: Infinity, enabled: isPromptDataset }
-  );
-
-  // Debug: Log enum data when it changes
-  React.useEffect(() => {
-    if (getPromptFormatEnum.data) {
-      console.log(
-        'PromptFormat enum raw data:',
-        JSON.stringify(getPromptFormatEnum.data, null, 2)
-      );
-    }
-  }, [getPromptFormatEnum.data]);
 
   // Mutation for updating prompt resource metadata
   const updatePromptResourceMutation = useMutation(
@@ -617,19 +585,7 @@ export const EditResource = ({
                     name="promptFormat"
                     label="Prompt Format"
                     displaySelected
-                    list={
-                      getPromptFormatEnum.data?.__type?.enumValues?.map(
-                        (enumValue: {
-                          name: string;
-                          description?: string;
-                        }) => ({
-                          label: enumValue.name
-                            .replace(/_/g, ' ')
-                            .replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                          value: enumValue.name,
-                        })
-                      ) || []
-                    }
+                    list={PROMPT_FORMAT_OPTIONS}
                     selectedValue={
                       promptFormat
                         ? promptFormat
