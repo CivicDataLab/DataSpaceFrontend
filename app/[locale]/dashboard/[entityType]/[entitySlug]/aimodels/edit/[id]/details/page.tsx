@@ -6,7 +6,10 @@ import { useParams } from 'next/navigation';
 import {
   Checkbox,
   Combobox,
+  FormLayout,
+  Labelled,
   Select,
+  Spinner,
   Text,
   TextField,
   toast,
@@ -302,6 +305,14 @@ export default function AIModelDetailsPage() {
   const handleSave = (overrideData?: any) => {
     setStatus('saving');
     const dataToUse = overrideData || formData;
+    
+    // Ensure access type is always 'open' (required field)
+    if (dataToUse.accessType !== 'open') {
+      toast('Open access is required for all models');
+      setStatus('unsaved');
+      return;
+    }
+    
     const updateData: any = {
       description: dataToUse.description,
       modelType: dataToUse.modelType,
@@ -399,35 +410,41 @@ export default function AIModelDetailsPage() {
   ];
 
   if (AIModelData.isLoading) {
-    return <div className="p-6">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center p-6">
+        <Spinner size={32} />
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col gap-4 py-6">
       {/* Model Type & Domain - side by side */}
-      <div className="grid grid-cols-2 gap-4">
-        <Select
-          name="modelType"
-          label="Model Type"
-          options={modelTypeOptions}
-          value={formData.modelType}
-          onChange={(value) => {
-            handleInputChange('modelType', value);
-            handleSave({ ...formData, modelType: value });
-          }}
-          required
-        />
-        <Select
-          name="domain"
-          label="Domain"
-          options={domainOptions}
-          value={formData.domain}
-          onChange={(value) => {
-            handleInputChange('domain', value);
-            handleSave({ ...formData, domain: value });
-          }}
-        />
-      </div>
+      <FormLayout>
+        <FormLayout.Group>
+          <Select
+            name="modelType"
+            label="Model Type"
+            options={modelTypeOptions}
+            value={formData.modelType}
+            onChange={(value) => {
+              handleInputChange('modelType', value);
+              handleSave({ ...formData, modelType: value });
+            }}
+            required
+          />
+          <Select
+            name="domain"
+            label="Domain"
+            options={domainOptions}
+            value={formData.domain}
+            onChange={(value) => {
+              handleInputChange('domain', value);
+              handleSave({ ...formData, domain: value });
+            }}
+          />
+        </FormLayout.Group>
+      </FormLayout>
 
       {/* Description */}
       <RichTextEditor
@@ -440,26 +457,28 @@ export default function AIModelDetailsPage() {
       />
 
       {/* Target Users & Intended Use - side by side */}
-      <div className="grid grid-cols-2 gap-4">
-        <TextField
-          name="targetUsers"
-          label="Target Users"
-          value={formData.targetUsers}
-          onChange={(value) => handleInputChange('targetUsers', value)}
-          onBlur={() => handleSave()}
-          multiline={3}
-          required
-        />
-        <TextField
-          name="intendedUse"
-          label="Intended Use"
-          value={formData.intendedUse}
-          onChange={(value) => handleInputChange('intendedUse', value)}
-          onBlur={() => handleSave()}
-          multiline={3}
-          required
-        />
-      </div>
+      <FormLayout>
+        <FormLayout.Group>
+          <TextField
+            name="targetUsers"
+            label="Target Users"
+            value={formData.targetUsers}
+            onChange={(value) => handleInputChange('targetUsers', value)}
+            onBlur={() => handleSave()}
+            multiline={3}
+            required
+          />
+          <TextField
+            name="intendedUse"
+            label="Intended Use"
+            value={formData.intendedUse}
+            onChange={(value) => handleInputChange('intendedUse', value)}
+            onBlur={() => handleSave()}
+            multiline={3}
+            required
+          />
+        </FormLayout.Group>
+      </FormLayout>
 
       {/* Sectors */}
       <Combobox
@@ -503,114 +522,127 @@ export default function AIModelDetailsPage() {
       />
 
       {/* Maximum Tokens & Languages - side by side */}
-      <div className="grid grid-cols-2 gap-4">
-        <Select
-          name="maxTokens"
-          label="Maximum Tokens"
-          options={maxTokensOptions}
-          value={formData.maxTokens}
-          onChange={(value) => {
-            handleInputChange('maxTokens', value);
-            handleSave({ ...formData, maxTokens: value });
-          }}
-          required
-        />
-        <Combobox
-          displaySelected
-          name="supportedLanguages"
-          list={languageOptions}
-          label="Languages"
-          key={`languages-${formData.supportedLanguages.length}`}
-          selectedValue={formData.supportedLanguages}
-          onChange={(value) => {
-            handleInputChange('supportedLanguages', value);
-            handleSave({ ...formData, supportedLanguages: value });
-          }}
-          required
-        />
-      </div>
+      <FormLayout>
+        <FormLayout.Group>
+          <Select
+            name="maxTokens"
+            label="Maximum Tokens"
+            options={maxTokensOptions}
+            value={formData.maxTokens}
+            onChange={(value) => {
+              handleInputChange('maxTokens', value);
+              handleSave({ ...formData, maxTokens: value });
+            }}
+            required
+          />
+          <Combobox
+            displaySelected
+            name="supportedLanguages"
+            list={languageOptions}
+            label="Languages"
+            key={`languages-${formData.supportedLanguages.length}`}
+            selectedValue={formData.supportedLanguages}
+            onChange={(value) => {
+              handleInputChange('supportedLanguages', value);
+              handleSave({ ...formData, supportedLanguages: value });
+            }}
+            required
+          />
+        </FormLayout.Group>
+      </FormLayout>
 
       {/* Model Website & Locations/Geography - side by side */}
-      <div className="grid grid-cols-2 gap-4">
-        <TextField
-          name="modelWebsite"
-          label="Model Website"
-          value={formData.modelWebsite}
-          onChange={(value) => handleInputChange('modelWebsite', value)}
-          onBlur={handleWebsiteBlur}
-          placeholder="www.model.com"
-          required
-        />
-        <Combobox
-          displaySelected
-          name="geographies"
-          list={
-            getGeographiesList.data?.geographies?.map((item: any) => ({
-              label: `${item.name}${item.parentId ? ` (${item.parentId.name})` : ''}`,
-              value: item.id,
-            })) || []
-          }
-          key={`geographies-${getGeographiesList.data?.geographies?.length || 0}-${formData.geographies.length}`}
-          label="Locations / Geography"
-          selectedValue={formData.geographies}
-          onChange={(value) => {
-            handleInputChange('geographies', value);
-            handleSave({ ...formData, geographies: value });
-          }}
-        />
-      </div>
+      <FormLayout>
+        <FormLayout.Group>
+          <TextField
+            name="modelWebsite"
+            label="Model Website"
+            value={formData.modelWebsite}
+            onChange={(value) => handleInputChange('modelWebsite', value)}
+            onBlur={handleWebsiteBlur}
+            placeholder="www.model.com"
+            required
+          />
+          <Combobox
+            displaySelected
+            name="geographies"
+            list={
+              getGeographiesList.data?.geographies?.map((item: any) => ({
+                label: `${item.name}${item.parentId ? ` (${item.parentId.name})` : ''}`,
+                value: item.id,
+              })) || []
+            }
+            key={`geographies-${getGeographiesList.data?.geographies?.length || 0}-${formData.geographies.length}`}
+            label="Locations / Geography"
+            selectedValue={formData.geographies}
+            onChange={(value) => {
+              handleInputChange('geographies', value);
+              handleSave({ ...formData, geographies: value });
+            }}
+          />
+        </FormLayout.Group>
+      </FormLayout>
 
       {/* Usage License & Access Type - side by side */}
-      <div className="grid grid-cols-2 gap-4">
-        <Select
-          name="usageLicense"
-          label="Usage License"
-          options={licenseOptions}
-          value={formData.usageLicense}
-          onChange={(value) => {
-            handleInputChange('usageLicense', value);
-            handleSave({ ...formData, usageLicense: value });
-          }}
-        />
-        <div>
-          <label className="mb-2 block text-sm font-medium">
-            Select Access Type
-          </label>
-          <div className="flex gap-6">
-            <Checkbox
-              name="accessType"
-              checked={formData.accessType === 'open'}
-              onChange={() => {
-                handleInputChange('accessType', 'open');
-                handleSave({ ...formData, accessType: 'open' });
-              }}
-            >
-              <div className="flex flex-col gap-1">
-                <Text>Open Access</Text>
-                <Text>
-                  Model can be viewed and used by everyone
-                </Text>
-              </div>
-            </Checkbox>
-            <Checkbox
-              name="isRestricted"
-              checked={false}
-              defaultChecked={false}
-              disabled
-            >
-              <div className="flex flex-col gap-1" title="Coming Soon">
-                <Text className="text-textDisabled">
-                  Restricted Access
-                </Text>
-                <Text className="text-iconDisabled">
-                  Users would require to request access to the model.
-                  Recommended for sensitive models.
-                </Text>
-              </div>
-            </Checkbox>
-          </div>
-        </div>
-      </div>
+      <FormLayout>
+        <FormLayout.Group>
+          <Select
+            name="usageLicense"
+            label="Usage License"
+            options={licenseOptions}
+            value={formData.usageLicense}
+            onChange={(value) => {
+              handleInputChange('usageLicense', value);
+              handleSave({ ...formData, usageLicense: value });
+            }}
+          />
+          <Labelled
+            id="accessType"
+            label="Select Access Type"
+            requiredIndicator
+            error={
+              formData.accessType !== 'open'
+                ? 'Open access is required for all models'
+                : undefined
+            }
+          >
+            <div className="flex gap-6">
+              <Checkbox
+                name="accessType"
+                checked={formData.accessType === 'open'}
+                onChange={() => {
+                  handleInputChange('accessType', 'open');
+                  handleSave({ ...formData, accessType: 'open' });
+                }}
+                required
+              >
+                <div className="flex flex-col gap-1">
+                  <Text>Open Access</Text>
+                  <Text>
+                    Model can be viewed and used by everyone
+                  </Text>
+                </div>
+              </Checkbox>
+              <Checkbox
+                name="isRestricted"
+                checked={false}
+                defaultChecked={false}
+                disabled
+              >
+                <div className="flex flex-col gap-1" title="Coming Soon">
+                  <Text className="text-textDisabled">
+                    Restricted Access
+                  </Text>
+                  <Text className="text-iconDisabled">
+                    Users would require to request access to the model.
+                    Recommended for sensitive models.
+                  </Text>
+                </div>
+              </Checkbox>
+            </div>
+          </Labelled>
+        </FormLayout.Group>
+      </FormLayout>
     </div>
   );
 }
