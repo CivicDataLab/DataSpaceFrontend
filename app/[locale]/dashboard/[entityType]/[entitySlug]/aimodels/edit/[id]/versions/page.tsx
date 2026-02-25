@@ -463,12 +463,24 @@ export default function VersionsPage() {
 
     const endpointRequiredProviders = ['CUSTOM', 'LLAMA_OLLAMA', 'LLAMA_CUSTOM'];
     const isEndpointRequired = endpointRequiredProviders.includes(providerFormData.provider);
+    
     if (isEndpointRequired && !providerFormData.apiEndpointUrl?.trim()) {
       toast('Endpoint URL is required for the selected provider.');
       return;
     }
 
-    // Parse apiRequestTemplate string to JSON if provided
+    if (providerFormData.apiEndpointUrl?.trim()) {
+      try {
+        const url = new URL(providerFormData.apiEndpointUrl);
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          toast('Endpoint URL must use HTTP or HTTPS protocol.');
+          return;
+        }
+      } catch {
+        toast('Please enter a valid endpoint URL (e.g., https://api.example.com/v1/chat)');
+        return;
+      }
+    }
     let parsedRequestTemplate = null;
     if (providerFormData.apiRequestTemplate) {
       try {
