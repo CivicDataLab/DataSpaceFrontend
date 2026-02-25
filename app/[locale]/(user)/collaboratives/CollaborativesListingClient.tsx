@@ -300,6 +300,7 @@ const CollaborativesListingClient = () => {
                         title={collaborative.title || ''}
                         variation="collapsed"
                         iconColor="warning"
+                        imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.logo?.path.replace('/code/files/', '')}`}
                         metadataContent={[
                           {
                             icon: Icons.calendar as any,
@@ -343,7 +344,7 @@ const CollaborativesListingClient = () => {
                             label: 'Published by',
                           },
                         ]}
-                        description={`rest ${stripMarkdown(collaborative.summary || '')}`}
+                        description={stripMarkdown(collaborative.summary || '')}
                       />
                     )
                   )}

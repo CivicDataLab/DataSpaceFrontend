@@ -28,46 +28,7 @@ import {
 } from '@/components/loading';
 import Filter from '../datasets/components/FIlter/Filter';
 import Styles from '../datasets/dataset.module.scss';
-
-// Helper function to strip markdown and HTML tags for card preview
-const stripMarkdown = (markdown: string): string => {
-  if (!markdown) return '';
-  return (
-    markdown
-      // Remove code blocks first (before other replacements)
-      .replace(/```[\s\S]*?```/g, '')
-      // Remove inline code
-      .replace(/`([^`]+)`/g, '$1')
-      // Remove images
-      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
-      // Remove links
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      // Remove headers
-      .replace(/^#{1,6}\s+/gm, '')
-      // Remove bold
-      .replace(/\*\*([^*]+)\*\*/g, '$1')
-      .replace(/__([^_]+)__/g, '$1')
-      // Remove italic
-      .replace(/\*([^*]+)\*/g, '$1')
-      .replace(/_([^_]+)_/g, '$1')
-      // Remove strikethrough
-      .replace(/~~([^~]+)~~/g, '$1')
-      // Remove blockquotes
-      .replace(/^\s*>\s+/gm, '')
-      // Remove horizontal rules
-      .replace(/^(-{3,}|_{3,}|\*{3,})$/gm, '')
-      // Remove list markers
-      .replace(/^\s*[-*+]\s+/gm, '')
-      .replace(/^\s*\d+\.\s+/gm, '')
-      // Remove HTML tags
-      .replace(/<[^>]*>/g, '')
-      // Remove extra whitespace and newlines
-      .replace(/\n\s*\n/g, '\n')
-      .replace(/\n/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-  );
-};
+import { stripMarkdown } from '../search/components/UnifiedListingComponent';
 
 // Interfaces
 interface Bucket {

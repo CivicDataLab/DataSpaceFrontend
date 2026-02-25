@@ -7,6 +7,7 @@ import { Card, Icon, Spinner, Text } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { cn, formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 
 const userPublishedUseCasesDoc: any = graphql(`
   query userPublishedUseCasesList($userId: ID!) {
@@ -180,7 +181,7 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
                   label: 'Published by',
                 },
               ]}
-              description={item.summary}
+              description={stripMarkdown(item.summary || '')}
               iconColor="warning"
               variation={'collapsed'}
             />

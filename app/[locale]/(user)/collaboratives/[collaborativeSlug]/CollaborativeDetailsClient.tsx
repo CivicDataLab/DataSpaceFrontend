@@ -20,6 +20,7 @@ import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import JsonLd from '@/components/JsonLd';
 import { Loading } from '@/components/loading';
+import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 import PrimaryDetails from '../components/Details';
 import Metadata from '../components/Metadata';
 
@@ -476,7 +477,7 @@ const CollaborativeDetailClient = () => {
 
                       const commonProps = {
                         title: useCase.title || '',
-                        description: useCase.summary || '',
+                        description: stripMarkdown(useCase.summary || ''),
                         metadataContent: MetadataContent,
                         tag: useCase.tags?.map((t: any) => t.value) || [],
                         footerContent: FooterContent,
@@ -558,7 +559,7 @@ const CollaborativeDetailClient = () => {
                             label: 'Published by',
                           },
                         ]}
-                        description={dataset.description || ''}
+                        description={stripMarkdown(dataset.description || '')}
                       />
                     ))}
                 </div>
