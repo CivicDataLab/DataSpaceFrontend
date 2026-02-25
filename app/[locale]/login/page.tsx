@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
-import { Icon, Spinner, Text } from 'opub-ui';
+import { useRouter } from 'next/navigation';
+import { Spinner, Text } from 'opub-ui';
+import { useEffect } from 'react';
 
-import { Icons } from '@/components/icons';
+import MainFooter from '../dashboard/components/main-footer';
+import { MainNav } from '../dashboard/components/main-nav';
 
 const SignIn = () => {
   const router = useRouter();
@@ -33,19 +33,17 @@ export default SignIn;
 
 const LogginInPage = () => {
   return (
-    <div className="h-screen w-screen overflow-hidden bg-surfaceDefault">
-      <Link href="/">
-        <div className="flex items-center gap-2 pl-4 pt-[18px]">
-          <Icon source={Icons.logo} size={24} color="success" />
-          <Text variant="headingLg" as="h1">
-            OPub
-          </Text>
-        </div>
-      </Link>
-      <div className="flex h-full w-full flex-col items-center justify-center gap-1">
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-surfaceDefault">
+      <header className="sticky top-0 z-1 bg-primaryBlue pointer-events-none select-none">
+        <MainNav />
+      </header>
+      <div className="flex flex-1 w-full flex-col items-center justify-center gap-1">
         <Spinner />
         <Text variant="headingLg">Logging In</Text>
       </div>
+      <footer className="pointer-events-none select-none">
+        <MainFooter />
+      </footer>
     </div>
   );
 };
