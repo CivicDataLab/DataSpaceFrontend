@@ -459,6 +459,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                   label="Access Type Name"
                   name="name"
                   required
+                  requiredIndicator={true}
                   helpText="To know about best practices for naming Resources go to our User Guide"
                 />
               </div>

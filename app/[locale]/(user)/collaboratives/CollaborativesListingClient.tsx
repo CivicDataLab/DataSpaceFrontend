@@ -14,31 +14,7 @@ import { Icons } from '@/components/icons';
 import JsonLd from '@/components/JsonLd';
 import { Loading } from '@/components/loading';
 import Styles from '../datasets/dataset.module.scss';
-
-// Helper function to strip markdown and HTML tags for card preview
-const stripMarkdown = (markdown: string): string => {
-  if (!markdown) return '';
-  return markdown
-    .replace(/```[\s\S]*?```/g, '')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/__([^_]+)__/g, '$1')
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/_([^_]+)_/g, '$1')
-    .replace(/~~([^~]+)~~/g, '$1')
-    .replace(/^\s*>\s+/gm, '')
-    .replace(/^(-{3,}|_{3,}|\*{3,})$/gm, '')
-    .replace(/^\s*[-*+]\s+/gm, '')
-    .replace(/^\s*\d+\.\s+/gm, '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/\n\s*\n/g, '\n')
-    .replace(/\n/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-};
+import { stripMarkdown } from '../search/components/UnifiedListingComponent';
 
 const PublishedCollaboratives = graphql(`
   query PublishedCollaboratives {
@@ -367,7 +343,7 @@ const CollaborativesListingClient = () => {
                             label: 'Published by',
                           },
                         ]}
-                        description={stripMarkdown(collaborative.summary || '')}
+                        description={`rest ${stripMarkdown(collaborative.summary || '')}`}
                       />
                     )
                   )}

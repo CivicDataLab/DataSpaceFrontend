@@ -16,8 +16,8 @@ import {
 } from 'opub-ui';
 import { useEffect, useState } from 'react';
 
-import RichTextEditor from '@/components/RichTextEditor/RichTextEditor';
 import { GraphQL } from '@/lib/api';
+import RichTextEditor from '@/components/RichTextEditor/RichTextEditor';
 import { useEditStatus } from '../../context';
 
 const tagsListQueryDoc: any = graphql(`
@@ -170,7 +170,12 @@ export default function AIModelDetailsPage() {
       )
     );
 
-  const AIModelData: { data: any; isLoading: boolean; refetch: any; error: any } = useQuery(
+  const AIModelData: {
+    data: any;
+    isLoading: boolean;
+    refetch: any;
+    error: any;
+  } = useQuery(
     [`fetch_AIModelDetails_${params.id}`],
     () =>
       GraphQL(
@@ -266,8 +271,10 @@ export default function AIModelDetailsPage() {
           })) || [],
         modelWebsite: metadata.modelWebsite || '',
         geographies:
-          model.geographies?.map((g: any) => ({ label: g.name, value: g.id })) ||
-          [],
+          model.geographies?.map((g: any) => ({
+            label: g.name,
+            value: g.id,
+          })) || [],
         usageLicense: metadata.usageLicense || '',
         accessType: model.isPublic ? 'open' : 'restricted',
       });
@@ -319,7 +326,9 @@ export default function AIModelDetailsPage() {
       domain: dataToUse.domain || null,
       tags: dataToUse.tags.map((item: any) => item.label),
       sectors: dataToUse.sectors.map((item: any) => item.label),
-      geographies: dataToUse.geographies.map((item: any) => parseInt(item.value, 10)),
+      geographies: dataToUse.geographies.map((item: any) =>
+        parseInt(item.value, 10)
+      ),
       supportedLanguages: dataToUse.supportedLanguages.map(
         (item: any) => item.value
       ),
@@ -425,6 +434,7 @@ export default function AIModelDetailsPage() {
           <Select
             name="modelType"
             label="Model Type"
+            requiredIndicator={true}
             options={modelTypeOptions}
             value={formData.modelType}
             onChange={(value) => {
@@ -467,6 +477,7 @@ export default function AIModelDetailsPage() {
             onBlur={() => handleSave()}
             multiline={3}
             required
+            requiredIndicator={true}
           />
           <TextField
             name="intendedUse"
@@ -476,6 +487,7 @@ export default function AIModelDetailsPage() {
             onBlur={() => handleSave()}
             multiline={3}
             required
+            requiredIndicator={true}
           />
         </FormLayout.Group>
       </FormLayout>
@@ -498,6 +510,7 @@ export default function AIModelDetailsPage() {
           handleSave({ ...formData, sectors: value });
         }}
         required
+        requiredIndicator={true}
       />
 
       {/* Tags */}
@@ -534,6 +547,7 @@ export default function AIModelDetailsPage() {
               handleSave({ ...formData, maxTokens: value });
             }}
             required
+            requiredIndicator={true}
           />
           <Combobox
             displaySelected
@@ -547,6 +561,7 @@ export default function AIModelDetailsPage() {
               handleSave({ ...formData, supportedLanguages: value });
             }}
             required
+            requiredIndicator={true}
           />
         </FormLayout.Group>
       </FormLayout>
@@ -562,6 +577,7 @@ export default function AIModelDetailsPage() {
             onBlur={handleWebsiteBlur}
             placeholder="www.model.com"
             required
+            requiredIndicator={true}
           />
           <Combobox
             displaySelected

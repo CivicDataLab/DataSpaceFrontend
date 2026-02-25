@@ -17,6 +17,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { DatasetListingSkeleton } from '@/components/loading';
+import { stripMarkdown } from '../search/components/UnifiedListingComponent';
 import Styles from './datasets.module.scss';
 
 interface Bucket {
@@ -65,7 +66,7 @@ const Datasets = () => {
         <div>
           <Button
             kind="tertiary"
-            className="bg-transparent border-none shadow-none text-primaryText px-0 hover:underline"
+            className="shadow-none border-none bg-transparent px-0 text-primaryText hover:underline"
             onClick={() => {
               router.push('/datasets');
             }}
@@ -98,7 +99,7 @@ const Datasets = () => {
                   {' '}
                   <Card
                     title={item.title}
-                    description={item.description}
+                    description={stripMarkdown(item.description)}
                     metadataContent={[
                       {
                         icon: Icons.calendar as any,

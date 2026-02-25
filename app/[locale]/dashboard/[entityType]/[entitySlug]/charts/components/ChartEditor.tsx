@@ -205,6 +205,7 @@ const ChartImageUpload = ({
                 setSelectedDataset(e);
               }}
               required
+              requiredIndicator={true}
             />
           </Labelled>
 
@@ -614,6 +615,7 @@ const ChartCreateViz = ({
                 };
               })}
               required
+              requiredIndicator={true}
               onChange={(e) => {
                 setChartDataset(e);
                 setChartResource('');
@@ -626,6 +628,7 @@ const ChartCreateViz = ({
               name={'chartCreateSelectResource'}
               label=""
               required
+              requiredIndicator={true}
               options={allDatasetsRes?.data?.datasets
                 ?.find((item: any) => item.id === chartDataset)
                 ?.resources?.map((item: any) => {

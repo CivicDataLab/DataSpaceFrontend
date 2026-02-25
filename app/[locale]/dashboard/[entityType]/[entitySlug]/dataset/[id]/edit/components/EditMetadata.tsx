@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   TypeDataset,
@@ -9,7 +11,6 @@ import {
   UpdateMetadataInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
 import {
   Checkbox,
   Combobox,
@@ -18,12 +19,11 @@ import {
   Input,
   Select,
   Text,
-  toast
+  toast,
 } from 'opub-ui';
-import { useEffect, useState } from 'react';
 
-import { RichTextEditor } from '@/components/RichTextEditor';
 import { GraphQL } from '@/lib/api';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import DatasetLoading from '../../../components/loading-dataset';
 import { useDatasetEditStatus } from '../context';
 
@@ -389,7 +389,8 @@ export function EditMetadata({ id }: { id: string }) {
             'Error: ' +
               (res.updatePromptMetadata?.errors?.fieldErrors
                 ? res.updatePromptMetadata?.errors?.fieldErrors[0]?.messages[0]
-                : res.updatePromptMetadata?.errors?.nonFieldErrors?.[0] || 'Unknown error')
+                : res.updatePromptMetadata?.errors?.nonFieldErrors?.[0] ||
+                  'Unknown error')
           );
         }
       },
@@ -403,7 +404,7 @@ export function EditMetadata({ id }: { id: string }) {
   const savePromptMetadata = (updates: Partial<typeof promptMetadataState>) => {
     const newState = { ...promptMetadataState, ...updates };
     setPromptMetadataState(newState);
-    
+
     updatePromptMetadataMutation.mutate({
       updateInput: {
         dataset: params.id,
@@ -526,7 +527,9 @@ export function EditMetadata({ id }: { id: string }) {
   };
 
   const [formData, setFormData] = useState(
-    defaultValuesPrepFn(getDatasetMetadata?.data?.datasets?.[0] || {} as TypeDataset)
+    defaultValuesPrepFn(
+      getDatasetMetadata?.data?.datasets?.[0] || ({} as TypeDataset)
+    )
   );
   const [previousFormData, setPreviousFormData] = useState(formData);
 
@@ -621,7 +624,9 @@ export function EditMetadata({ id }: { id: string }) {
           sectors: changedFields.sectors.map((item: any) => item.value),
         }),
         ...(changedFields.geographies && {
-          geographies: changedFields.geographies.map((item: any) => parseInt(item.value, 10)),
+          geographies: changedFields.geographies.map((item: any) =>
+            parseInt(item.value, 10)
+          ),
         }),
       },
     });
@@ -850,13 +855,15 @@ export function EditMetadata({ id }: { id: string }) {
               </div>
 
               {/* Prompt-specific metadata fields - only shown for PROMPT type datasets */}
-              {getDatasetMetadata.data?.datasets?.[0]?.datasetType === 'PROMPT' && (
-                <div className="mb-8 rounded-lg border border-borderSubdued bg-surfaceNeutralSubdued p-6">
+              {getDatasetMetadata.data?.datasets?.[0]?.datasetType ===
+                'PROMPT' && (
+                <div className="rounded-lg border bg-surfaceNeutralSubdued mb-8 border-borderSubdued p-6">
                   <Text variant="headingMd" as="h3" className="mb-4">
                     Prompt Dataset Metadata
                   </Text>
                   <Text variant="bodySm" color="subdued" className="mb-6">
-                    Additional metadata specific to prompt datasets for AI/ML use cases.
+                    Additional metadata specific to prompt datasets for AI/ML
+                    use cases.
                   </Text>
                   <div className="flex flex-col gap-6">
                     <Combobox
@@ -865,22 +872,35 @@ export function EditMetadata({ id }: { id: string }) {
                       displaySelected
                       list={
                         getPromptTaskTypeEnum.data?.__type?.enumValues?.map(
-                          (enumValue: { name: string; description?: string }) => ({
-                            label: enumValue.name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                          (enumValue: {
+                            name: string;
+                            description?: string;
+                          }) => ({
+                            label: enumValue.name
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
                             value: enumValue.name,
                           })
                         ) || []
                       }
                       selectedValue={
                         promptMetadataState.taskType
-                          ? [{ 
-                              label: promptMetadataState.taskType.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                              value: promptMetadataState.taskType 
-                            }]
+                          ? [
+                              {
+                                label: promptMetadataState.taskType
+                                  .replace(/_/g, ' ')
+                                  .replace(/\b\w/g, (c: string) =>
+                                    c.toUpperCase()
+                                  ),
+                                value: promptMetadataState.taskType,
+                              },
+                            ]
                           : []
                       }
                       onChange={(value) => {
-                        const selectedValue = Array.isArray(value) ? value[0]?.value : value;
+                        const selectedValue = Array.isArray(value)
+                          ? value[0]?.value
+                          : value;
                         savePromptMetadata({ taskType: selectedValue });
                       }}
                     />
@@ -890,22 +910,35 @@ export function EditMetadata({ id }: { id: string }) {
                       displaySelected
                       list={
                         getPromptDomainEnum.data?.__type?.enumValues?.map(
-                          (enumValue: { name: string; description?: string }) => ({
-                            label: enumValue.name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                          (enumValue: {
+                            name: string;
+                            description?: string;
+                          }) => ({
+                            label: enumValue.name
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
                             value: enumValue.name,
                           })
                         ) || []
                       }
                       selectedValue={
                         promptMetadataState.domain
-                          ? [{
-                              label: promptMetadataState.domain.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                              value: promptMetadataState.domain
-                            }]
+                          ? [
+                              {
+                                label: promptMetadataState.domain
+                                  .replace(/_/g, ' ')
+                                  .replace(/\b\w/g, (c: string) =>
+                                    c.toUpperCase()
+                                  ),
+                                value: promptMetadataState.domain,
+                              },
+                            ]
                           : []
                       }
                       onChange={(value) => {
-                        const selectedValue = Array.isArray(value) ? value[0]?.value : value;
+                        const selectedValue = Array.isArray(value)
+                          ? value[0]?.value
+                          : value;
                         savePromptMetadata({ domain: selectedValue });
                       }}
                     />
@@ -916,22 +949,31 @@ export function EditMetadata({ id }: { id: string }) {
                       creatable
                       list={
                         getTargetLanguageEnum.data?.__type?.enumValues?.map(
-                          (enumValue: { name: string; description?: string }) => ({
-                            label: enumValue.name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                          (enumValue: {
+                            name: string;
+                            description?: string;
+                          }) => ({
+                            label: enumValue.name
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
                             value: enumValue.name,
                           })
                         ) || []
                       }
                       selectedValue={
                         promptMetadataState.targetLanguages?.map(
-                          (lang: string) => ({ 
-                            label: lang.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()), 
-                            value: lang 
+                          (lang: string) => ({
+                            label: lang
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            value: lang,
                           })
                         ) || []
                       }
                       onChange={(value) => {
-                        const languages = Array.isArray(value) ? value.map((v: any) => v.value) : [];
+                        const languages = Array.isArray(value)
+                          ? value.map((v: any) => v.value)
+                          : [];
                         savePromptMetadata({ targetLanguages: languages });
                       }}
                     />
@@ -942,22 +984,31 @@ export function EditMetadata({ id }: { id: string }) {
                       creatable
                       list={
                         getTargetModelTypeEnum.data?.__type?.enumValues?.map(
-                          (enumValue: { name: string; description?: string }) => ({
-                            label: enumValue.name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                          (enumValue: {
+                            name: string;
+                            description?: string;
+                          }) => ({
+                            label: enumValue.name
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
                             value: enumValue.name,
                           })
                         ) || []
                       }
                       selectedValue={
                         promptMetadataState.targetModelTypes?.map(
-                          (model: string) => ({ 
-                            label: model.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()), 
-                            value: model 
+                          (model: string) => ({
+                            label: model
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            value: model,
                           })
                         ) || []
                       }
                       onChange={(value) => {
-                        const models = Array.isArray(value) ? value.map((v: any) => v.value) : [];
+                        const models = Array.isArray(value)
+                          ? value.map((v: any) => v.value)
+                          : [];
                         savePromptMetadata({ targetModelTypes: models });
                       }}
                     />

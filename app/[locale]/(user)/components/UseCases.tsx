@@ -18,6 +18,7 @@ import { GraphQL } from '@/lib/api';
 import { cn, formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { UseCaseListingSkeleton } from '@/components/loading';
+import { stripMarkdown } from '../search/components/UnifiedListingComponent';
 import Styles from './datasets.module.scss';
 
 const useCasesListDoc: any = graphql(`
@@ -110,7 +111,7 @@ const UseCasesListingPage = () => {
         <div>
           <Button
             kind="tertiary"
-            className="bg-transparent border-none shadow-none text-primaryText px-0 hover:underline"
+            className="shadow-none border-none bg-transparent px-0 text-primaryText hover:underline"
             onClick={() => {
               router.push('/usecases');
             }}
@@ -181,7 +182,7 @@ const UseCasesListingPage = () => {
                           },
                         ]}
                         imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo?.path.replace('/code/files/', '')}`}
-                        description={item.summary}
+                        description={stripMarkdown(item.summary)}
                         iconColor="metadata"
                         variation={'collapsed'}
                         type={[

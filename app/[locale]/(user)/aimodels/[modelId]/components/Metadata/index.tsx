@@ -66,8 +66,11 @@ export default function Metadata({ data }: MetadataProps) {
   };
 
   // Get primary version info
-  const primaryVersion = data.versions?.find((v: any) => v.isLatest) || data.versions?.[0];
-  const primaryProvider = primaryVersion?.providers?.find((p: any) => p.isPrimary) || primaryVersion?.providers?.[0];
+  const primaryVersion =
+    data.versions?.find((v: any) => v.isLatest) || data.versions?.[0];
+  const primaryProvider =
+    primaryVersion?.providers?.find((p: any) => p.isPrimary) ||
+    primaryVersion?.providers?.[0];
 
   const providerLabels: Record<string, string> = {
     OPENAI: 'OpenAI',
@@ -151,7 +154,10 @@ export default function Metadata({ data }: MetadataProps) {
         {/* Domain */}
         {data.domain && (
           <div className="flex items-center gap-2">
-            <Text className="min-w-[120px] basis-1/4 uppercase" variant="bodyMd">
+            <Text
+              className="min-w-[120px] basis-1/4 uppercase"
+              variant="bodyMd"
+            >
               Domain
             </Text>
             <Text variant="bodyLg" fontWeight="medium">
@@ -163,11 +169,19 @@ export default function Metadata({ data }: MetadataProps) {
         {/* Source/Provider */}
         {primaryProvider && (
           <div className="flex items-center gap-2">
-            <Text className="min-w-[120px] basis-1/4 uppercase" variant="bodyMd">
+            <Text
+              className="min-w-[120px] basis-1/4 uppercase"
+              variant="bodyMd"
+            >
               Source
             </Text>
-            <Text variant="bodyLg" fontWeight="medium" className="text-primaryBlue">
-              {providerLabels[primaryProvider.provider] || primaryProvider.provider}
+            <Text
+              variant="bodyLg"
+              fontWeight="medium"
+              className="text-primaryBlue"
+            >
+              {providerLabels[primaryProvider.provider] ||
+                primaryProvider.provider}
             </Text>
           </div>
         )}
@@ -175,11 +189,15 @@ export default function Metadata({ data }: MetadataProps) {
         {/* License */}
         {data.metadata?.usageLicense && (
           <div className="flex gap-2">
-            <Text className="min-w-[120px] basis-1/4 uppercase" variant="bodyMd">
+            <Text
+              className="min-w-[120px] basis-1/4 uppercase"
+              variant="bodyMd"
+            >
               License
             </Text>
             <Text variant="bodyLg" fontWeight="medium">
-              {licenseLabels[data.metadata.usageLicense] || data.metadata.usageLicense}
+              {licenseLabels[data.metadata.usageLicense] ||
+                data.metadata.usageLicense}
             </Text>
           </div>
         )}
@@ -187,7 +205,10 @@ export default function Metadata({ data }: MetadataProps) {
         {/* Sectors */}
         {data.sectors && data.sectors.length > 0 && (
           <div className="flex gap-2">
-            <Text className="min-w-[120px] basis-1/4 uppercase" variant="bodyMd">
+            <Text
+              className="min-w-[120px] basis-1/4 uppercase"
+              variant="bodyMd"
+            >
               Sector
             </Text>
             <div className="flex flex-wrap gap-2">
@@ -209,7 +230,10 @@ export default function Metadata({ data }: MetadataProps) {
         {/* Geographies */}
         {data.geographies && data.geographies.length > 0 && (
           <div className="flex items-center gap-2">
-            <Text className="min-w-[120px] basis-1/4 uppercase" variant="bodyMd">
+            <Text
+              className="min-w-[120px] basis-1/4 uppercase"
+              variant="bodyMd"
+            >
               Geography
             </Text>
             <div className="flex flex-wrap gap-2">
@@ -226,7 +250,6 @@ export default function Metadata({ data }: MetadataProps) {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

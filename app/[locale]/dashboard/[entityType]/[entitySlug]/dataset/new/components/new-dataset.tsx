@@ -101,6 +101,7 @@ export function CreateDataset({
                 showCharacterCount
                 autoComplete="off"
                 required
+                requiredIndicator={true}
                 error="This field is required"
                 readOnly={isLoading}
               />
@@ -137,7 +138,9 @@ function DescriptionEditor({ readOnly }: { readOnly?: boolean }) {
     <RichTextEditor
       label="Description"
       value={description || ''}
-      onChange={(value) => setValue('description', value, { shouldDirty: true })}
+      onChange={(value) =>
+        setValue('description', value, { shouldDirty: true })
+      }
       placeholder="Some information about this dataset."
       helpText={`Character limit: ${description?.length || 0}/10000`}
       readOnly={readOnly}

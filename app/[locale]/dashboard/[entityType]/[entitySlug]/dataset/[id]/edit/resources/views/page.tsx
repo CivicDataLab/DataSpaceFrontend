@@ -40,6 +40,7 @@ export default function Views() {
             value={viewName}
             onChange={setViewName}
             required
+            requiredIndicator={true}
             error="View name is required"
             connectedRight={
               <Button variant="interactive" submit>
