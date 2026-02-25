@@ -16,6 +16,7 @@ import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import JsonLd from '@/components/JsonLd';
 import { Loading } from '@/components/loading';
+import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 import PrimaryDetails from '../components/Details';
 import Metadata from '../components/Metadata';
 import Dashboards from './Dashboards';
@@ -334,7 +335,7 @@ const UseCaseDetailClient = () => {
                             label: 'Published by',
                           },
                         ]}
-                        description={dataset.description || ''}
+                        description={stripMarkdown(dataset.description || '')}
                       />
                     ))}
                 </div>

@@ -1,4 +1,5 @@
 import { useParams } from 'next/navigation';
+import { stripMarkdown } from '@/app/[locale]/(user)/search/components/UnifiedListingComponent';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -123,7 +124,7 @@ const SimilarDatasets: React.FC = () => {
                         {' '}
                         <Card
                           title={item.title}
-                          description={item.description}
+                          description={stripMarkdown(item.description || '')}
                           metadataContent={[
                             {
                               icon: Icons.calendar as any,
