@@ -735,6 +735,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                         }
                       )}
                       required
+                      requiredIndicator={true}
                       defaultValue={chartData?.dataset?.id}
                       onChange={(e) => {
                         if (
@@ -774,6 +775,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                         handleSave('resource', e);
                       }}
                       required
+                      requiredIndicator={true}
                     />
 
                     {/* Chart Type */}
@@ -782,6 +784,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                       label="Select Chart Type"
                       options={chartTypesOptions}
                       required
+                      requiredIndicator={true}
                       value={chartData?.type}
                       onChange={(e) => {
                         handleSave('chartType', e);
@@ -803,6 +806,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                         handleSave('xAxisColumn', e);
                       }}
                       required
+                      requiredIndicator={true}
                     />
 
                     {/* Y-axis columns */}
@@ -942,6 +946,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                         handleSave('aggregateType', e);
                       }}
                       required
+                      requiredIndicator={true}
                     />
                   </div>
                 ) : (
@@ -995,6 +1000,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                           handleSave('orientation', e);
                         }}
                         required
+                        requiredIndicator={true}
                       />
                     )}
 
@@ -1061,6 +1067,7 @@ const YaxisColumnForm = ({
             setYAxisColumn(e);
           }}
           required
+          requiredIndicator={true}
         />
 
         {/* Label for specific element */}

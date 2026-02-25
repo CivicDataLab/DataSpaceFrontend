@@ -157,6 +157,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
         name="name"
         onBlur={() => handleSave(chartData)}
         required
+        requiredIndicator={true}
       />
       <TextField
         onChange={(e) => handleChange('description', e)}
@@ -165,6 +166,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
         name="description"
         onBlur={() => handleSave(chartData)}
         required
+        requiredIndicator={true}
       />
       <Select
         name="type"
@@ -256,6 +258,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
               name="xAxisLabel"
               onBlur={() => handleSave(chartData)}
               required
+              requiredIndicator={true}
             />
             <TextField
               onChange={(e) =>
@@ -269,6 +272,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
               name="yAxisLabel"
               onBlur={() => handleSave(chartData)}
               required
+              requiredIndicator={true}
             />
           </div>
 

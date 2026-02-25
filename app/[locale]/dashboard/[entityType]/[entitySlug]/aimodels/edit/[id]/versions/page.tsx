@@ -1,8 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
 import {
   Button,
   Checkbox,
@@ -17,15 +18,11 @@ import {
   Tag,
   Text,
   TextField,
-  toast
+  toast,
 } from 'opub-ui';
-import { useEffect, useState } from 'react';
 
-
-
-import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
-
+import { Icons } from '@/components/icons';
 
 const fetchModelVersions: any = graphql(`
   query FetchModelVersions($filters: AIModelFilter) {
@@ -105,7 +102,6 @@ const updateVersionMutation: any = graphql(`
   }
 `);
 
-
 const createProviderMutation: any = graphql(`
   mutation CreateModelVersionProvider($input: CreateVersionProviderInput!) {
     createVersionProvider(input: $input) {
@@ -142,7 +138,6 @@ const deleteProviderMutation: any = graphql(`
   }
 `);
 
-
 export default function VersionsPage() {
   const params = useParams<{
     entityType: string;
@@ -159,10 +154,13 @@ export default function VersionsPage() {
   const [isNewVersionModalOpen, setIsNewVersionModalOpen] = useState(false);
   const [isProviderModalOpen, setIsProviderModalOpen] = useState(false);
   const [isWhatsThisModalOpen, setIsWhatsThisModalOpen] = useState(false);
-  const [isPrimaryConfirmModalOpen, setIsPrimaryConfirmModalOpen] = useState(false);
+  const [isPrimaryConfirmModalOpen, setIsPrimaryConfirmModalOpen] =
+    useState(false);
   const [selectedVersion, setSelectedVersion] = useState<any>(null);
   const [editingProvider, setEditingProvider] = useState<any>(null);
-  const [pendingPrimaryVersionId, setPendingPrimaryVersionId] = useState<number | null>(null);
+  const [pendingPrimaryVersionId, setPendingPrimaryVersionId] = useState<
+    number | null
+  >(null);
 
   const [newVersionData, setNewVersionData] = useState({
     version: '',
@@ -203,11 +201,9 @@ export default function VersionsPage() {
   const { data, isLoading, refetch } = useQuery(
     [`fetch_model_versions_${params.id}`],
     () =>
-      GraphQL(
-        fetchModelVersions,
-        { [params.entityType]: params.entitySlug },
-        { filters: { id: parseInt(params.id) } } as any
-      ),
+      GraphQL(fetchModelVersions, { [params.entityType]: params.entitySlug }, {
+        filters: { id: parseInt(params.id) },
+      } as any),
     {
       enabled: !!params.id,
       staleTime: 0,
@@ -233,14 +229,17 @@ export default function VersionsPage() {
         setIsNewVersionModalOpen(false);
         resetVersionForm();
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
-        
+
         // Force refetch and update selected version
         const result = await refetch();
         const newVersionId = response?.createAiModelVersion?.data?.id;
-        
+
         if (newVersionId && result.data) {
-          const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
-          const newVersion = refetchedVersions.find((v: any) => v.id === newVersionId);
+          const refetchedVersions =
+            (result.data as any)?.aiModels?.[0]?.versions || [];
+          const newVersion = refetchedVersions.find(
+            (v: any) => v.id === newVersionId
+          );
           if (newVersion) {
             setSelectedVersion(newVersion);
           }
@@ -252,67 +251,77 @@ export default function VersionsPage() {
     }
   );
 
+  const { mutate: createProvider, isLoading: createProviderLoading } =
+    useMutation(
+      (input: any) =>
+        GraphQL(
+          createProviderMutation,
+          { [params.entityType]: params.entitySlug },
+          { input }
+        ),
+      {
+        onSuccess: async () => {
+          toast('Provider added successfully!');
+          setIsProviderModalOpen(false);
+          resetProviderForm();
+          queryClient.invalidateQueries([
+            `fetch_AIModelForPublish_${params.id}`,
+          ]);
 
-  const { mutate: createProvider, isLoading: createProviderLoading } = useMutation(
-    (input: any) =>
-      GraphQL(
-        createProviderMutation,
-        { [params.entityType]: params.entitySlug },
-        { input }
-      ),
-    {
-      onSuccess: async () => {
-        toast('Provider added successfully!');
-        setIsProviderModalOpen(false);
-        resetProviderForm();
-        queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
-        
-        // Force refetch and update selected version with new provider
-        const result = await refetch();
-        if (result.data && selectedVersion) {
-          const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
-          const updatedVersion = refetchedVersions.find((v: any) => v.id === selectedVersion.id);
-          if (updatedVersion) {
-            setSelectedVersion(updatedVersion);
+          // Force refetch and update selected version with new provider
+          const result = await refetch();
+          if (result.data && selectedVersion) {
+            const refetchedVersions =
+              (result.data as any)?.aiModels?.[0]?.versions || [];
+            const updatedVersion = refetchedVersions.find(
+              (v: any) => v.id === selectedVersion.id
+            );
+            if (updatedVersion) {
+              setSelectedVersion(updatedVersion);
+            }
           }
-        }
-      },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`);
-      },
-    }
-  );
+        },
+        onError: (error: any) => {
+          toast(`Error: ${error.message}`);
+        },
+      }
+    );
+  const { mutate: updateProvider, isLoading: updateProviderLoading } =
+    useMutation(
+      (input: any) =>
+        GraphQL(
+          updateProviderMutation,
+          { [params.entityType]: params.entitySlug },
+          { input }
+        ),
+      {
+        onSuccess: async () => {
+          toast('Provider updated successfully!');
+          setIsProviderModalOpen(false);
+          setEditingProvider(null);
+          resetProviderForm();
+          queryClient.invalidateQueries([
+            `fetch_AIModelForPublish_${params.id}`,
+          ]);
 
-  const { mutate: updateProvider, isLoading: updateProviderLoading } = useMutation(
-    (input: any) =>
-      GraphQL(
-        updateProviderMutation,
-        { [params.entityType]: params.entitySlug },
-        { input }
-      ),
-    {
-      onSuccess: async () => {
-        toast('Provider updated successfully!');
-        setIsProviderModalOpen(false);
-        setEditingProvider(null);
-        resetProviderForm();
-        queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
-        
-        // Force refetch and update selected version with updated provider
-        const result = await refetch();
-        if (result.data && selectedVersion) {
-          const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
-          const updatedVersion = refetchedVersions.find((v: any) => v.id === selectedVersion.id);
-          if (updatedVersion) {
-            setSelectedVersion(updatedVersion);
+          // Force refetch and update selected version with updated provider
+          const result = await refetch();
+          if (result.data && selectedVersion) {
+            const refetchedVersions =
+              (result.data as any)?.aiModels?.[0]?.versions || [];
+            const updatedVersion = refetchedVersions.find(
+              (v: any) => v.id === selectedVersion.id
+            );
+            if (updatedVersion) {
+              setSelectedVersion(updatedVersion);
+            }
           }
-        }
-      },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`);
-      },
-    }
-  );
+        },
+        onError: (error: any) => {
+          toast(`Error: ${error.message}`);
+        },
+      }
+    );
 
   const { mutate: deleteProvider } = useMutation(
     (providerId: number) =>
@@ -325,12 +334,15 @@ export default function VersionsPage() {
       onSuccess: async () => {
         toast('Provider deleted successfully!');
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
-        
+
         // Force refetch and update selected version after provider deletion
         const result = await refetch();
         if (result.data && selectedVersion) {
-          const refetchedVersions = (result.data as any)?.aiModels?.[0]?.versions || [];
-          const updatedVersion = refetchedVersions.find((v: any) => v.id === selectedVersion.id);
+          const refetchedVersions =
+            (result.data as any)?.aiModels?.[0]?.versions || [];
+          const updatedVersion = refetchedVersions.find(
+            (v: any) => v.id === selectedVersion.id
+          );
           if (updatedVersion) {
             setSelectedVersion(updatedVersion);
           }
@@ -439,13 +451,16 @@ export default function VersionsPage() {
         apiKeyPrefix: provider.apiKeyPrefix || 'Bearer',
         // Request/Response Configuration
         apiHeaders: provider.apiHeaders || {},
-        apiRequestTemplate: provider.apiRequestTemplate ? JSON.stringify(provider.apiRequestTemplate, null, 2) : '',
+        apiRequestTemplate: provider.apiRequestTemplate
+          ? JSON.stringify(provider.apiRequestTemplate, null, 2)
+          : '',
         apiResponsePath: provider.apiResponsePath || '',
         // HuggingFace Configuration
         hfUsePipeline: provider.hfUsePipeline || false,
         hfAuthToken: provider.hfAuthToken || '',
         hfModelClass: provider.hfModelClass || '',
-        hfAttnImplementation: provider.hfAttnImplementation || 'flash_attention_2',
+        hfAttnImplementation:
+          provider.hfAttnImplementation || 'flash_attention_2',
         hfTrustRemoteCode: provider.hfTrustRemoteCode ?? true,
         hfTorchDtype: provider.hfTorchDtype || 'auto',
         hfDeviceMap: provider.hfDeviceMap || 'auto',
@@ -461,9 +476,15 @@ export default function VersionsPage() {
   const handleSaveProvider = () => {
     if (!selectedVersion) return;
 
-    const endpointRequiredProviders = ['CUSTOM', 'LLAMA_OLLAMA', 'LLAMA_CUSTOM'];
-    const isEndpointRequired = endpointRequiredProviders.includes(providerFormData.provider);
-    
+    const endpointRequiredProviders = [
+      'CUSTOM',
+      'LLAMA_OLLAMA',
+      'LLAMA_CUSTOM',
+    ];
+    const isEndpointRequired = endpointRequiredProviders.includes(
+      providerFormData.provider
+    );
+
     if (isEndpointRequired && !providerFormData.apiEndpointUrl?.trim()) {
       toast('Endpoint URL is required for the selected provider.');
       return;
@@ -477,7 +498,9 @@ export default function VersionsPage() {
           return;
         }
       } catch {
-        toast('Please enter a valid endpoint URL (e.g., https://api.example.com/v1/chat)');
+        toast(
+          'Please enter a valid endpoint URL (e.g., https://api.example.com/v1/chat)'
+        );
         return;
       }
     }
@@ -486,7 +509,9 @@ export default function VersionsPage() {
       try {
         parsedRequestTemplate = JSON.parse(providerFormData.apiRequestTemplate);
       } catch {
-        toast('Invalid JSON in Request Body Template. Please check the format.');
+        toast(
+          'Invalid JSON in Request Body Template. Please check the format.'
+        );
         return;
       }
     }
@@ -504,7 +529,10 @@ export default function VersionsPage() {
       apiKey: providerFormData.apiKey || null,
       apiKeyPrefix: providerFormData.apiKeyPrefix || 'Bearer',
       // Request/Response Configuration
-      apiHeaders: Object.keys(providerFormData.apiHeaders).length > 0 ? providerFormData.apiHeaders : null,
+      apiHeaders:
+        Object.keys(providerFormData.apiHeaders).length > 0
+          ? providerFormData.apiHeaders
+          : null,
       apiRequestTemplate: parsedRequestTemplate,
       apiResponsePath: providerFormData.apiResponsePath || null,
       // HuggingFace Configuration
@@ -545,7 +573,10 @@ export default function VersionsPage() {
   const hfModelClassOptions = [
     { label: 'Causal LM', value: 'AutoModelForCausalLM' },
     { label: 'Seq2Seq LM', value: 'AutoModelForSeq2SeqLM' },
-    { label: 'Sequence Classification', value: 'AutoModelForSequenceClassification' },
+    {
+      label: 'Sequence Classification',
+      value: 'AutoModelForSequenceClassification',
+    },
     { label: 'Token Classification', value: 'AutoModelForTokenClassification' },
     { label: 'Question Answering', value: 'AutoModelForQuestionAnswering' },
     { label: 'Masked LM', value: 'AutoModelForMaskedLM' },
@@ -566,7 +597,6 @@ export default function VersionsPage() {
     { label: 'Deprecated', value: 'DEPRECATED' },
     { label: 'Retired', value: 'RETIRED' },
   ];
-
 
   const { mutate: updateVersion } = useMutation(
     (input: any) =>
@@ -714,7 +744,10 @@ export default function VersionsPage() {
                   name="isLatest"
                   checked={currentVersion.isLatest}
                   onChange={() =>
-                    handleSetPrimaryVersion(currentVersion.id, !currentVersion.isLatest)
+                    handleSetPrimaryVersion(
+                      currentVersion.id,
+                      !currentVersion.isLatest
+                    )
                   }
                 >
                   Select as Primary Version
@@ -734,17 +767,15 @@ export default function VersionsPage() {
                     columns={[
                       { accessorKey: 'provider', header: 'Provider' },
                       { accessorKey: 'endpoint', header: 'Endpoint URL' },
-                      { 
-                        accessorKey: 'priority', 
+                      {
+                        accessorKey: 'priority',
                         header: 'Access Priority',
                         cell: ({ row }: any) => (
-                          <Tag>
-                            {getAccessPriority(row.original)}
-                          </Tag>
-                        )
+                          <Tag>{getAccessPriority(row.original)}</Tag>
+                        ),
                       },
-                      { 
-                        accessorKey: 'actions', 
+                      {
+                        accessorKey: 'actions',
                         header: 'Actions',
                         cell: ({ row }: any) => (
                           <div className="flex items-center gap-2">
@@ -772,7 +803,7 @@ export default function VersionsPage() {
                               Delete
                             </IconButton>
                           </div>
-                        )
+                        ),
                       },
                     ]}
                     rows={currentVersion.providers.map((provider: any) => ({
@@ -786,7 +817,7 @@ export default function VersionsPage() {
                     hideFooter
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center rounded-1 border border-dashed border-borderDefault p-8">
+                  <div className="border flex flex-col items-center justify-center rounded-1 border-dashed border-borderDefault p-8">
                     <Text variant="bodySm" color="subdued">
                       No access methods configured
                     </Text>
@@ -808,7 +839,7 @@ export default function VersionsPage() {
           );
         })()
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-1 border border-dashed border-borderDefault p-12">
+        <div className="border flex flex-col items-center justify-center rounded-1 border-dashed border-borderDefault p-12">
           <Icon source={Icons.light} size={48} color="subdued" />
           <Text variant="headingSm" color="subdued" className="mt-4">
             No versions yet
@@ -838,6 +869,7 @@ export default function VersionsPage() {
                 }
                 helpText="E.g Version 1.2"
                 required
+                requiredIndicator={true}
               />
               <Select
                 name="lifecycleStage"
@@ -851,6 +883,7 @@ export default function VersionsPage() {
                   }))
                 }
                 required
+                requiredIndicator={true}
               />
               {!newVersionData.lifecycleStage && (
                 <Text variant="bodySm" color="critical">
@@ -875,6 +908,7 @@ export default function VersionsPage() {
                   }))
                 }
                 required
+                requiredIndicator={true}
               />
               <Checkbox
                 name="isLatestNewVersion"
@@ -912,7 +946,9 @@ export default function VersionsPage() {
       <Dialog open={isProviderModalOpen} onOpenChange={setIsProviderModalOpen}>
         {isProviderModalOpen && (
           <Dialog.Content
-            title={editingProvider ? 'Edit Access Method' : 'Add New Access Method'}
+            title={
+              editingProvider ? 'Edit Access Method' : 'Add New Access Method'
+            }
             limitHeight
           >
             <FormLayout>
@@ -955,6 +991,7 @@ export default function VersionsPage() {
                     }
                     helpText="Your OpenAI API key"
                     required
+                    requiredIndicator={true}
                   />
                 </>
               )}
@@ -976,6 +1013,7 @@ export default function VersionsPage() {
                     }
                     helpText={`Your ${providerFormData.provider === 'LLAMA_TOGETHER' ? 'Together AI' : 'Replicate'} API key`}
                     required
+                    requiredIndicator={true}
                   />
                 </>
               )}
@@ -996,6 +1034,7 @@ export default function VersionsPage() {
                     placeholder="http://localhost:11434/api/generate"
                     helpText="URL where Ollama is running"
                     required
+                    requiredIndicator={true}
                   />
                 </>
               )}
@@ -1016,6 +1055,7 @@ export default function VersionsPage() {
                     placeholder="https://your-api.com/v1/chat/completions"
                     helpText="Full endpoint URL for your custom Llama API"
                     required
+                    requiredIndicator={true}
                   />
                   <TextField
                     name="apiKey"
@@ -1049,6 +1089,7 @@ export default function VersionsPage() {
                     placeholder="https://your-api.com/v1/completions"
                     helpText="Full endpoint URL for your custom API"
                     required
+                    requiredIndicator={true}
                   />
                   <TextField
                     name="apiKey"
@@ -1169,6 +1210,7 @@ export default function VersionsPage() {
                       }))
                     }
                     required
+                    requiredIndicator={true}
                   />
                   <Select
                     name="framework"
