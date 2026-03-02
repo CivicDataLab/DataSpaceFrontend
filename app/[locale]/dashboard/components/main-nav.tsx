@@ -1,26 +1,26 @@
 'use client';
 
-import { Session } from 'next-auth';
-import { signIn, signOut, useSession } from 'next-auth/react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { Session } from 'next-auth';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import {
-    Avatar,
-    Button,
-    Dialog,
-    Divider,
-    IconButton,
-    Popover,
-    SearchInput,
-    Spinner,
-    Text,
+  Avatar,
+  Button,
+  Dialog,
+  Divider,
+  IconButton,
+  Popover,
+  SearchInput,
+  Spinner,
+  Text,
 } from 'opub-ui';
-import React, { useEffect, useState } from 'react';
 
-import { Icons } from '@/components/icons';
 import { useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
+import { Icons } from '@/components/icons';
 import { UserDetailsQryDoc } from '../[entityType]/[entitySlug]/schema';
 import { allOrganizationsListingDoc } from '../[entityType]/schema';
 import Sidebar from './sidebar';
@@ -60,25 +60,41 @@ export function MainNav({ hideSearch = false }) {
   const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (session?.user && !hasFetched) {
-        try {
-          const [userDetailsRes, entityDetailsRes] = await Promise.all([
-            GraphQL(UserDetailsQryDoc, {}, []),
-            GraphQL(allOrganizationsListingDoc, {}, []),
-          ]);
+    if (status !== 'authenticated' || !session?.user) {
+      // Reset when user is not authenticated to allow a clean fetch after login.
+      if (hasFetched) setHasFetched(false);
+      return;
+    }
 
-          setUserDetails(userDetailsRes);
-          setAllEntityDetails(entityDetailsRes);
-          setHasFetched(true);
-        } catch (err) {
+    const fetchData = async () => {
+      if (hasFetched) return;
+
+      try {
+        const [userDetailsRes, entityDetailsRes] = await Promise.all([
+          GraphQL(UserDetailsQryDoc, {}, []),
+          GraphQL(allOrganizationsListingDoc, {}, []),
+        ]);
+
+        setUserDetails(userDetailsRes);
+        setAllEntityDetails(entityDetailsRes);
+        setHasFetched(true);
+      } catch (err: any) {
+        const errorMessage = String(err?.message || err || '');
+        const isUnauthenticated = errorMessage.includes(
+          'User is not authenticated'
+        );
+
+        if (!isUnauthenticated) {
           console.error('Error fetching user/org data:', err);
         }
+
+        // Stop repeated retries/log spam for unauthenticated sessions.
+        setHasFetched(true);
       }
     };
 
     fetchData();
-  }, [session, hasFetched, setUserDetails, setAllEntityDetails]);
+  }, [status, session?.user, hasFetched, setUserDetails, setAllEntityDetails]);
 
   const exploreLinks = [
     {
@@ -118,7 +134,7 @@ export function MainNav({ hideSearch = false }) {
     if (value) {
       setIsOpen(false);
 
-      router.push(`/datasets?query=${encodeURIComponent(value)}`);
+      router.push(`/search?query=${encodeURIComponent(value)}`);
     }
   };
   return (
@@ -261,9 +277,7 @@ export function MainNav({ hideSearch = false }) {
           ) : (
             <div className=" hidden lg:block">
               {session?.user ? (
-                <ProfileContent
-                  session={session}
-                />
+                <ProfileContent session={session} />
               ) : (
                 <Button
                   onClick={() => {
@@ -283,11 +297,7 @@ export function MainNav({ hideSearch = false }) {
   );
 }
 
-export const ProfileContent = ({
-  session,
-}: {
-  session: Session;
-}) => {
+export const ProfileContent = ({ session }: { session: Session }) => {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -345,11 +355,13 @@ export const ProfileContent = ({
             <Button
               onClick={async () => {
                 setOpen(false);
-                const response = await fetch(`/api/auth/logout`, { method: 'GET' });
+                const response = await fetch(`/api/auth/logout`, {
+                  method: 'GET',
+                });
                 const data = await response.json();
-                
+
                 await signOut({ redirect: false });
-                
+
                 if (data.url) {
                   window.location.href = data.url;
                 }
@@ -366,4 +378,3 @@ export const ProfileContent = ({
     </Popover>
   );
 };
-

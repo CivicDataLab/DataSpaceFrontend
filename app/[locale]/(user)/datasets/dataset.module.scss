@@ -1,7 +1,7 @@
 .Search {
   input {
     width: 80%;
-    height: 36px;
+    height: 46px;
   }
   /* In your global CSS/SCSS file */
   div[class*='Input-module_Backdrop'] {
@@ -18,3 +18,7 @@
     max-width: 120px;
   }
 }
+
+// .Select {
+//   height: 100%;
+// }

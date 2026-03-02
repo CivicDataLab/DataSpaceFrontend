@@ -36,7 +36,7 @@ export const Content = () => {
 
   const handleSearch = (value: string) => {
     if (value) {
-      router.push(`/datasets?query=${encodeURIComponent(value)}`);
+      router.push(`/search?query=${encodeURIComponent(value)}`);
     }
   };
   const Metrics = [
