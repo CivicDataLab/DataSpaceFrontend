@@ -392,7 +392,6 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   const aggregations: Aggregations = facets?.aggregations || {};
 
   const getFilterPriority = (key: string) => {
-    console.log('key', key);
     const normalized = key.toLowerCase().replace(/[\s_-]/g, '');
 
     if (normalized === 'geographies') return 1;

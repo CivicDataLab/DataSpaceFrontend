@@ -37,8 +37,6 @@ const Filter: React.FC<FilterProps> = ({
     });
   };
 
-  console.log('options', options);
-
   return (
     <div className="rounded-4 bg-surfaceDefault px-4 py-6 shadow-card">
       <div className="mb-5 flex justify-between">
