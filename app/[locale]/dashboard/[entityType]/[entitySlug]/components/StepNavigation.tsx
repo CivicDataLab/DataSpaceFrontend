@@ -1,15 +1,46 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { Button, Icon, Text } from 'opub-ui';
+import { useEffect, useState } from 'react';
 
 import { Icons } from '@/components/icons';
 
 interface StepNavigationProps {
   steps: string[]; // Array of steps (e.g., ['metadata', 'details', 'publish'])
+  onBeforeNavigate?: () => Promise<void> | void;
 }
 
-const StepNavigation = ({ steps }: StepNavigationProps) => {
+const StepNavigation = ({ steps, onBeforeNavigate }: StepNavigationProps) => {
   const pathname = usePathname(); // Get the current URL path
   const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  useEffect(() => {
+    // Route has changed (or initial mount), re-enable navigation controls.
+    setIsNavigating(false);
+  }, [pathname]);
+
+  const navigateWithBlur = async (newPath: string) => {
+    setIsNavigating(true);
+
+    const activeElement = document.activeElement as HTMLElement | null;
+    if (activeElement && typeof activeElement.blur === 'function') {
+      activeElement.blur();
+    }
+
+    if (onBeforeNavigate) {
+      try {
+        await onBeforeNavigate();
+      } catch {
+        // Preserve current behavior: navigation should still continue.
+      }
+    }
+
+    try {
+      router.push(newPath);
+    } catch {
+      setIsNavigating(false);
+    }
+  };
 
   // Find the current step's index based on the pathname (without query params)
   const currentIndex = steps.findIndex((step) =>
@@ -26,7 +57,7 @@ const StepNavigation = ({ steps }: StepNavigationProps) => {
         steps[currentIndex],
         steps[currentIndex - 1]
       );
-      router.push(newPath); // Update the URL to the previous step
+      void navigateWithBlur(newPath); // Update the URL to the previous step
     }
   };
 
@@ -36,7 +67,7 @@ const StepNavigation = ({ steps }: StepNavigationProps) => {
         steps[currentIndex],
         steps[currentIndex + 1]
       );
-      router.push(newPath); // Update the URL to the next step
+      void navigateWithBlur(newPath); // Update the URL to the next step
     }
   };
 
@@ -44,7 +75,7 @@ const StepNavigation = ({ steps }: StepNavigationProps) => {
     <div className="flex items-center justify-center gap-10">
       <Button
         onClick={goToPrevious}
-        disabled={currentIndex === 0} // Disable if at the first step
+        disabled={currentIndex === 0 || isNavigating} // Disable if at the first step
         kind="tertiary"
       >
         <div className="flex items-center gap-1">
@@ -63,7 +94,7 @@ const StepNavigation = ({ steps }: StepNavigationProps) => {
       </Text>
       <Button
         onClick={goToNext}
-        disabled={currentIndex === steps.length - 1} // Disable if at the last step
+        disabled={currentIndex === steps.length - 1 || isNavigating} // Disable if at the last step
         kind="tertiary"
         className="flex gap-1"
       >

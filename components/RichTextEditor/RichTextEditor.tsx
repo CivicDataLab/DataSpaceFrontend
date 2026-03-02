@@ -7,7 +7,7 @@ import 'react-quill-new/dist/quill.snow.css';
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
-  onBlur?: () => void;
+  onBlur?: (value: string) => void;
   placeholder?: string;
   label?: string;
   helpText?: string;
@@ -128,7 +128,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               const stripped = content.replace(/<(.|\n)*?>/g, '').trim();
               onChange(stripped === '' ? '' : content);
             }}
-            onBlur={onBlur}
+            onBlur={(_range: any, _source: any, editor: any) => {
+              const html = editor?.getHTML?.() || value || '';
+              const stripped = html.replace(/<(.|\n)*?>/g, '').trim();
+              onBlur?.(stripped === '' ? '' : html);
+            }}
             modules={modules}
             formats={formats}
             placeholder={placeholder}

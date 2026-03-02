@@ -107,7 +107,7 @@ export function EditLayout({ children, params }: LayoutProps) {
     return pathName.indexOf(v) >= 0;
   });
 
-  const { status, setStatus } = useDatasetEditStatus();
+  const { status, setStatus, runBeforeNavigateHandler } = useDatasetEditStatus();
 
   // if not from the layoutList, return children
   if (!pathItem) {
@@ -150,7 +150,10 @@ export function EditLayout({ children, params }: LayoutProps) {
           {children}
         </div>
       <div>
-        <StepNavigation steps={['metadata','resources','publish']}/>
+        <StepNavigation
+          steps={['metadata', 'resources', 'publish']}
+          onBeforeNavigate={runBeforeNavigateHandler}
+        />
       </div>
       </div>
     </div>
@@ -214,11 +217,12 @@ const Navigation = ({
 
   const handleTabClick = (item: {
     label: string;
+    id: string;
     url: string;
     // selected: boolean;
   }) => {
-    if (item.label !== selectedTab) {
-      setSelectedTab(item.label);
+    if (item.id !== selectedTab) {
+      setSelectedTab(item.id);
       router.replace(item.url);
     }
   };
