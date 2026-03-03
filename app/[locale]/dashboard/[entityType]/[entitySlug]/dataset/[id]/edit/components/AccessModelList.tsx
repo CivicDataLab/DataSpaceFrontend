@@ -48,6 +48,15 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
   list,
   setAccessModelId,
 }) => {
+  const ACCESS_MODEL_DELETE_ERROR_TOAST_ID = 'dataset-access-model-delete-error';
+  const getErrorMessage = (
+    err: any,
+    fallback: string
+  ) =>
+    typeof err?.message === 'string' && err.message.trim()
+      ? err.message.trim()
+      : fallback;
+
   const params = useParams<{
     entityType: string;
     entitySlug: string;
@@ -96,7 +105,10 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
         refetch();
       },
       onError: (err: any) => {
-        toast(`Received ${err} while deleting Access model `);
+        toast(
+          `Error: ${getErrorMessage(err, 'Unable to delete access model right now.')}`,
+          { id: ACCESS_MODEL_DELETE_ERROR_TOAST_ID }
+        );
       },
     }
   );

@@ -238,6 +238,17 @@ export function EditMetadata({ id }: { id: string }) {
   }>();
 
   const queryClient = useQueryClient();
+  const PROMPT_METADATA_SUCCESS_TOAST_ID = 'dataset-prompt-metadata-success';
+  const PROMPT_METADATA_ERROR_TOAST_ID = 'dataset-prompt-metadata-error';
+  const DATASET_METADATA_SUCCESS_TOAST_ID = 'dataset-metadata-save-success';
+  const DATASET_METADATA_ERROR_TOAST_ID = 'dataset-metadata-save-error';
+  const getErrorMessage = (
+    err: any,
+    fallback: string
+  ) =>
+    typeof err?.message === 'string' && err.message.trim()
+      ? err.message.trim()
+      : fallback;
 
   const getDatasetMetadata: {
     data: any;
@@ -380,22 +391,28 @@ export function EditMetadata({ id }: { id: string }) {
     {
       onSuccess: (res: any) => {
         if (res.updatePromptMetadata.success) {
-          toast('Prompt metadata updated successfully!');
+          toast('Prompt metadata updated successfully!', {
+            id: PROMPT_METADATA_SUCCESS_TOAST_ID,
+          });
           queryClient.invalidateQueries({
             queryKey: [`metadata_values_query_${params.id}`],
           });
         } else {
+          const responseError =
+            res.updatePromptMetadata?.errors?.fieldErrors?.[0]?.messages?.[0] ||
+            res.updatePromptMetadata?.errors?.nonFieldErrors?.[0] ||
+            'Unable to update prompt metadata right now. Please try again.';
           toast(
-            'Error: ' +
-              (res.updatePromptMetadata?.errors?.fieldErrors
-                ? res.updatePromptMetadata?.errors?.fieldErrors[0]?.messages[0]
-                : res.updatePromptMetadata?.errors?.nonFieldErrors?.[0] ||
-                  'Unknown error')
+            `Error: ${responseError}`,
+            { id: PROMPT_METADATA_ERROR_TOAST_ID }
           );
         }
       },
       onError: (err: any) => {
-        toast('Error: ' + err.message);
+        toast(
+          `Error: ${getErrorMessage(err, 'Unable to update prompt metadata right now. Please try again.')}`,
+          { id: PROMPT_METADATA_ERROR_TOAST_ID }
+        );
       },
     }
   );
@@ -428,7 +445,9 @@ export function EditMetadata({ id }: { id: string }) {
     {
       onSuccess: (res: any) => {
         if (res.addUpdateDatasetMetadata.success) {
-          toast('Details updated successfully!');
+          toast('Details updated successfully!', {
+            id: DATASET_METADATA_SUCCESS_TOAST_ID,
+          });
           queryClient.invalidateQueries({
             queryKey: [`metadata_values_query_${params.id}`],
           });
@@ -445,14 +464,21 @@ export function EditMetadata({ id }: { id: string }) {
           setFormData(updatedData);
           setPreviousFormData(updatedData);
         } else {
+          const responseError =
+            res.addUpdateDatasetMetadata?.errors?.fieldErrors?.[0]?.messages?.[0] ||
+            res.addUpdateDatasetMetadata?.errors?.nonFieldErrors?.[0] ||
+            'Unable to update details right now. Please try again.';
           toast(
-            'Error: ' +
-              (res.addUpdateDatasetMetadata?.errors?.fieldErrors
-                ? res.addUpdateDatasetMetadata?.errors?.fieldErrors[0]
-                    ?.messages[0]
-                : res.addUpdateDatasetMetadata?.errors?.nonFieldErrors[0])
+            `Error: ${responseError}`,
+            { id: DATASET_METADATA_ERROR_TOAST_ID }
           );
         }
+      },
+      onError: (err: any) => {
+        toast(
+          `Error: ${getErrorMessage(err, 'Unable to update details right now. Please try again.')}`,
+          { id: DATASET_METADATA_ERROR_TOAST_ID }
+        );
       },
     }
   );

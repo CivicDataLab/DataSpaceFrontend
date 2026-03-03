@@ -50,6 +50,15 @@ interface LayoutProps {
 const layoutList = ['metadata', 'resources', 'publish'];
 
 export function EditLayout({ children, params }: LayoutProps) {
+  const DATASET_TITLE_SAVE_ERROR_TOAST_ID = 'dataset-title-save-error';
+  const getErrorMessage = (
+    err: any,
+    fallback: string
+  ) =>
+    typeof err?.message === 'string' && err.message.trim()
+      ? err.message.trim()
+      : fallback;
+
   // const { data } = useQuery([`dataset_layout_${params.id}`], () =>
   //   GraphQL(datasetQueryDoc, { dataset_id: Number(params.id) })
   // );
@@ -98,7 +107,9 @@ export function EditLayout({ children, params }: LayoutProps) {
         getDatasetTitleRes.refetch();
       },
       onError: (err: any) => {
-        toast(err.message.split(':')[0]);
+        toast(getErrorMessage(err, 'Unable to update dataset title right now.'), {
+          id: DATASET_TITLE_SAVE_ERROR_TOAST_ID,
+        });
       },
     }
   );
