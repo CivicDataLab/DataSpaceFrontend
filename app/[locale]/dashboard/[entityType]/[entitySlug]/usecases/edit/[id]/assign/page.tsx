@@ -47,6 +47,12 @@ const Assign = () => {
     entitySlug: string;
     id: string;
   }>();
+  const USECASE_ASSIGN_SUCCESS_TOAST_ID = 'usecase-assign-datasets-success';
+  const USECASE_ASSIGN_ERROR_TOAST_ID = 'usecase-assign-datasets-error';
+  const getErrorMessage = (error: any, fallback: string) =>
+    typeof error?.message === 'string' && error.message.trim()
+      ? error.message.trim()
+      : fallback;
   const router = useRouter();
 
   const [data, setData] = useState<any[]>([]); // Ensure `data` is an array
@@ -126,14 +132,19 @@ const Assign = () => {
       ),
     {
       onSuccess: () => {
-        toast('Dataset Assigned Successfully');
+        toast('Dataset Assigned Successfully', {
+          id: USECASE_ASSIGN_SUCCESS_TOAST_ID,
+        });
         UseCaseDetails.refetch();
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/dashboards`
         );
       },
       onError: (err: any) => {
-        toast(`Received ${err} on dataset publish `);
+        toast(
+          `Error: ${getErrorMessage(err, 'Unable to assign datasets right now. Please try again.')}`,
+          { id: USECASE_ASSIGN_ERROR_TOAST_ID }
+        );
       },
     }
   );

@@ -68,6 +68,12 @@ const Details = () => {
     entitySlug: string;
     id: string;
   }>();
+  const USECASE_EDIT_SUCCESS_TOAST_ID = 'usecase-edit-save-success';
+  const USECASE_DETAILS_ERROR_TOAST_ID = 'usecase-details-save-error';
+  const getErrorMessage = (error: any, fallback: string) =>
+    typeof error?.message === 'string' && error.message.trim()
+      ? error.message.trim()
+      : fallback;
 
 
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
@@ -162,7 +168,9 @@ const Details = () => {
       ),
     {
       onSuccess: (res: any) => {
-        toast('Use case updated successfully');
+        toast('Use case updated successfully', {
+          id: USECASE_EDIT_SUCCESS_TOAST_ID,
+        });
         setFormData((prev) => ({
           ...prev,
           ...res.updateUseCase,
@@ -173,7 +181,10 @@ const Details = () => {
         }));
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(
+          `Error: ${getErrorMessage(error, 'Unable to update use case right now. Please try again.')}`,
+          { id: USECASE_DETAILS_ERROR_TOAST_ID }
+        );
       },
     }
   );
@@ -198,8 +209,11 @@ const Details = () => {
   );
 
   const handleSave = (updatedData: any) => {
-    if (JSON.stringify(updatedData) !== JSON.stringify(previousFormData)) {
-      setPreviousFormData(updatedData);
+    const updatedSnapshot = JSON.stringify(updatedData);
+    setPreviousFormData((prevData) => {
+      if (JSON.stringify(prevData) === updatedSnapshot) {
+        return prevData;
+      }
 
       mutate({
         data: {
@@ -214,7 +228,9 @@ const Details = () => {
           platformUrl: updatedData.platformUrl || '',
         },
       });
-    }
+
+      return updatedData;
+    });
   };
   const { setStatus } = useEditStatus();
 
@@ -229,7 +245,7 @@ const Details = () => {
           label="Summary *"
           value={formData.summary}
           onChange={(value) => handleChange('summary', value)}
-          onBlur={() => handleSave(formData)}
+          onBlur={(value) => handleSave({ ...formData, summary: value })}
           placeholder="Enter use case summary with rich formatting..."
           helpText={`Character limit: ${formData?.summary?.length || 0}/10000`}
         />

@@ -1,8 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
 import {
   Checkbox,
   Combobox,
@@ -14,7 +15,6 @@ import {
   TextField,
   toast,
 } from 'opub-ui';
-import { useEffect, useState } from 'react';
 
 import { GraphQL } from '@/lib/api';
 import RichTextEditor from '@/components/RichTextEditor/RichTextEditor';
@@ -124,6 +124,8 @@ export default function AIModelDetailsPage() {
   });
 
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
+  const SAVE_SUCCESS_TOAST_ID = 'ai-model-details-save-success';
+  const SAVE_ERROR_TOAST_ID = 'ai-model-details-save-error';
   const isValidHttpUrl = (value: string) => {
     try {
       const parsed = new URL(value);
@@ -213,7 +215,7 @@ export default function AIModelDetailsPage() {
       ),
     {
       onSuccess: () => {
-        toast('AI Model updated successfully');
+        toast('AI Model updated successfully', { id: SAVE_SUCCESS_TOAST_ID });
         setStatus('saved');
         if (isTagsListUpdated) {
           getTagsList.refetch();
@@ -223,7 +225,11 @@ export default function AIModelDetailsPage() {
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        const errorMessage =
+          typeof error?.message === 'string' && error.message.trim()
+            ? error.message.trim()
+            : 'Unable to update AI Model right now. Please try again.';
+        toast(`Error: ${errorMessage}`, { id: SAVE_ERROR_TOAST_ID });
         setStatus('unsaved');
       },
     }
@@ -312,14 +318,14 @@ export default function AIModelDetailsPage() {
   const handleSave = (overrideData?: any) => {
     setStatus('saving');
     const dataToUse = overrideData || formData;
-    
+
     // Ensure access type is always 'open' (required field)
     if (dataToUse.accessType !== 'open') {
       toast('Open access is required for all models');
       setStatus('unsaved');
       return;
     }
-    
+
     const updateData: any = {
       description: dataToUse.description,
       modelType: dataToUse.modelType,
@@ -634,9 +640,7 @@ export default function AIModelDetailsPage() {
               >
                 <div className="flex flex-col gap-1">
                   <Text>Open Access</Text>
-                  <Text>
-                    Model can be viewed and used by everyone
-                  </Text>
+                  <Text>Model can be viewed and used by everyone</Text>
                 </div>
               </Checkbox>
               <Checkbox
@@ -646,9 +650,7 @@ export default function AIModelDetailsPage() {
                 disabled
               >
                 <div className="flex flex-col gap-1" title="Coming Soon">
-                  <Text className="text-textDisabled">
-                    Restricted Access
-                  </Text>
+                  <Text className="text-textDisabled">Restricted Access</Text>
                   <Text className="text-iconDisabled">
                     Users would require to request access to the model.
                     Recommended for sensitive models.

@@ -262,6 +262,8 @@ const Page = () => {
     },
   ];
   const router = useRouter();
+  const PUBLISH_SUCCESS_TOAST_ID = 'dataset-publish-success';
+  const PUBLISH_ERROR_TOAST_ID = 'dataset-publish-error';
 
   const { mutate, isLoading: mutationLoading } = useMutation(
     () =>
@@ -274,13 +276,17 @@ const Page = () => {
       ),
     {
       onSuccess: (data: any) => {
-        toast('Dataset Published Successfully');
+        toast('Dataset Published Successfully', { id: PUBLISH_SUCCESS_TOAST_ID });
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/dataset`
         );
       },
       onError: (err: any) => {
-        toast(`Received ${err} on dataset publish `);
+        const errorMessage =
+          typeof err?.message === 'string' && err.message.trim()
+            ? err.message.trim()
+            : 'Unable to publish dataset right now. Please try again.';
+        toast(`Error: ${errorMessage}`, { id: PUBLISH_ERROR_TOAST_ID });
       },
     }
   );
@@ -528,6 +534,7 @@ const Page = () => {
                   getDatasetsSummary.data?.datasets[0]
                 )}
                 onClick={() => mutate()}
+                loading={mutationLoading}
               >
                 Publish
               </Button>

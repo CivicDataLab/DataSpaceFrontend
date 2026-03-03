@@ -26,6 +26,22 @@ import {
 
 const Details = () => {
   const params = useParams<{ entityType: string; entitySlug: string; id: string }>();
+  const CONTRIBUTORS_ADD_SUCCESS_TOAST_ID = 'usecase-contributor-add-success';
+  const CONTRIBUTORS_ADD_ERROR_TOAST_ID = 'usecase-contributor-add-error';
+  const CONTRIBUTORS_REMOVE_SUCCESS_TOAST_ID = 'usecase-contributor-remove-success';
+  const CONTRIBUTORS_REMOVE_ERROR_TOAST_ID = 'usecase-contributor-remove-error';
+  const SUPPORTER_ADD_SUCCESS_TOAST_ID = 'usecase-supporter-add-success';
+  const SUPPORTER_ADD_ERROR_TOAST_ID = 'usecase-supporter-add-error';
+  const SUPPORTER_REMOVE_SUCCESS_TOAST_ID = 'usecase-supporter-remove-success';
+  const SUPPORTER_REMOVE_ERROR_TOAST_ID = 'usecase-supporter-remove-error';
+  const PARTNER_ADD_SUCCESS_TOAST_ID = 'usecase-partner-add-success';
+  const PARTNER_ADD_ERROR_TOAST_ID = 'usecase-partner-add-error';
+  const PARTNER_REMOVE_SUCCESS_TOAST_ID = 'usecase-partner-remove-success';
+  const PARTNER_REMOVE_ERROR_TOAST_ID = 'usecase-partner-remove-error';
+  const getErrorMessage = (error: any, fallback: string) =>
+    typeof error?.message === 'string' && error.message.trim()
+      ? error.message.trim()
+      : fallback;
   const [searchValue, setSearchValue] = useState('');
   const [formData, setFormData] = useState({
     contributors: [] as { label: string; value: string }[],
@@ -111,11 +127,16 @@ const Details = () => {
         }, input),
       {
         onSuccess: () => {
-          toast('Contributor added successfully');
+          toast('Contributor added successfully', {
+            id: CONTRIBUTORS_ADD_SUCCESS_TOAST_ID,
+          });
           UseCaseData.refetch();
         },
         onError: (error: any) => {
-          toast(`Error: ${error.message}`);
+          toast(
+            `Error: ${getErrorMessage(error, 'Unable to add contributor right now. Please try again.')}`,
+            { id: CONTRIBUTORS_ADD_ERROR_TOAST_ID }
+          );
         },
       }
     );
@@ -128,10 +149,15 @@ const Details = () => {
         }, input),
       {
         onSuccess: () => {
-          toast('Contributor removed successfully');
+          toast('Contributor removed successfully', {
+            id: CONTRIBUTORS_REMOVE_SUCCESS_TOAST_ID,
+          });
         },
         onError: (error: any) => {
-          toast(`Error: ${error.message}`);
+          toast(
+            `Error: ${getErrorMessage(error, 'Unable to remove contributor right now. Please try again.')}`,
+            { id: CONTRIBUTORS_REMOVE_ERROR_TOAST_ID }
+          );
         },
       }
     );
@@ -143,11 +169,16 @@ const Details = () => {
       }, input),
     {
       onSuccess: () => {
-        toast('Supporter added successfully');
+        toast('Supporter added successfully', {
+          id: SUPPORTER_ADD_SUCCESS_TOAST_ID,
+        });
         UseCaseData.refetch();
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(
+          `Error: ${getErrorMessage(error, 'Unable to add supporter right now. Please try again.')}`,
+          { id: SUPPORTER_ADD_ERROR_TOAST_ID }
+        );
       },
     }
   );
@@ -160,10 +191,15 @@ const Details = () => {
         }, input),
       {
         onSuccess: () => {
-          toast('Supporter removed successfully');
+          toast('Supporter removed successfully', {
+            id: SUPPORTER_REMOVE_SUCCESS_TOAST_ID,
+          });
         },
         onError: (error: any) => {
-          toast(`Error: ${error.message}`);
+          toast(
+            `Error: ${getErrorMessage(error, 'Unable to remove supporter right now. Please try again.')}`,
+            { id: SUPPORTER_REMOVE_ERROR_TOAST_ID }
+          );
         },
       }
     );
@@ -175,11 +211,14 @@ const Details = () => {
       }, input),
     {
       onSuccess: () => {
-        toast('Partner added successfully');
+        toast('Partner added successfully', { id: PARTNER_ADD_SUCCESS_TOAST_ID });
         UseCaseData.refetch();
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(
+          `Error: ${getErrorMessage(error, 'Unable to add partner right now. Please try again.')}`,
+          { id: PARTNER_ADD_ERROR_TOAST_ID }
+        );
       },
     }
   );
@@ -192,10 +231,15 @@ const Details = () => {
         }, input),
       {
         onSuccess: () => {
-          toast('Partner removed successfully');
+          toast('Partner removed successfully', {
+            id: PARTNER_REMOVE_SUCCESS_TOAST_ID,
+          });
         },
         onError: (error: any) => {
-          toast(`Error: ${error.message}`);
+          toast(
+            `Error: ${getErrorMessage(error, 'Unable to remove partner right now. Please try again.')}`,
+            { id: PARTNER_REMOVE_ERROR_TOAST_ID }
+          );
         },
       }
     );

@@ -1,25 +1,25 @@
 'use client';
 
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
 import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-    Button,
-    Icon,
-    Spinner,
-    Table,
-    Tag,
-    Text,
-    toast,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+  Button,
+  Icon,
+  Spinner,
+  Table,
+  Tag,
+  Text,
+  toast,
 } from 'opub-ui';
 
+import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
-import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
 
 const FetchAIModelForPublish: any = graphql(`
@@ -173,6 +173,8 @@ export default function PublishPage() {
   const versions = model?.versions || [];
   const primaryVersion = versions.find((v: any) => v.isLatest) || versions[0];
   const hasProviders = versions.some((v: any) => v.providers?.length > 0);
+  const PUBLISH_SUCCESS_TOAST_ID = 'publish-ai-model-success';
+  const PUBLISH_ERROR_TOAST_ID = 'publish-ai-model-error';
 
   const { mutate, isLoading: updateLoading } = useMutation(
     (mutationData: any) =>
@@ -188,17 +190,7 @@ export default function PublishPage() {
           },
         }
       ),
-    {
-      onSuccess: () => {
-        toast('Model status updated successfully');
-        setStatus('saved');
-        refetch();
-      },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`);
-        setStatus('unsaved');
-      },
-    }
+    {}
   );
 
   const handlePublish = () => {
@@ -211,8 +203,22 @@ export default function PublishPage() {
       },
       {
         onSuccess: () => {
-          toast('Model published successfully');
-          router.push(`/dashboard/${params.entityType}/${params.entitySlug}/aimodels`);
+          toast('Model published successfully', {
+            id: PUBLISH_SUCCESS_TOAST_ID,
+          });
+          setStatus('saved');
+          refetch();
+          router.push(
+            `/dashboard/${params.entityType}/${params.entitySlug}/aimodels`
+          );
+        },
+        onError: (error: any) => {
+          const errorMessage =
+            typeof error?.message === 'string' && error.message.trim()
+              ? error.message.trim()
+              : 'Unable to publish model right now. Please try again.';
+          toast(`Error: ${errorMessage}`, { id: PUBLISH_ERROR_TOAST_ID });
+          setStatus('unsaved');
         },
       }
     );
@@ -224,14 +230,15 @@ export default function PublishPage() {
   if (!model?.tags?.length) metadataErrors.push('Tags');
   if (!model?.sectors?.length) metadataErrors.push('Sectors');
   if (!model?.geographies?.length) metadataErrors.push('Geographies');
-  
+
   // Check required fields from metadata
   const metadata = model?.metadata || {};
   if (!metadata.targetUsers) metadataErrors.push('Target Users');
   if (!metadata.intendedUse) metadataErrors.push('Intended Use');
   if (!metadata.modelWebsite) metadataErrors.push('Model Website');
   if (!model?.maxTokens) metadataErrors.push('Maximum Tokens');
-  if (!model?.supportedLanguages?.length) metadataErrors.push('Supported Languages');
+  if (!model?.supportedLanguages?.length)
+    metadataErrors.push('Supported Languages');
   if (!model?.modelType) metadataErrors.push('Model Type');
 
   const versionErrors = [];
@@ -271,7 +278,9 @@ export default function PublishPage() {
     version: v.version,
     lifecycleStage: lifecycleLabels[v.lifecycleStage] || v.lifecycleStage,
     providers: v.providers?.length
-      ? v.providers.map((p: any) => providerLabels[p.provider] || p.provider).join(', ')
+      ? v.providers
+          .map((p: any) => providerLabels[p.provider] || p.provider)
+          .join(', ')
       : 'None',
     primary: v.isLatest ? 'Yes' : 'No',
   }));
@@ -288,7 +297,7 @@ export default function PublishPage() {
     },
     {
       label: 'Domain',
-      value: model?.domain ? (domainLabels[model.domain] || model.domain) : '',
+      value: model?.domain ? domainLabels[model.domain] || model.domain : '',
     },
     {
       label: 'Target Users',
@@ -308,7 +317,9 @@ export default function PublishPage() {
     },
     {
       label: 'Supported Languages',
-      value: model?.supportedLanguages?.length ? model.supportedLanguages.join(', ') : '',
+      value: model?.supportedLanguages?.length
+        ? model.supportedLanguages.join(', ')
+        : '',
     },
   ];
 
@@ -391,10 +402,7 @@ export default function PublishPage() {
 
                             {model?.description && (
                               <div className="flex flex-wrap gap-2">
-                                <Text
-                                  className="lg:basis-1/6"
-                                  variant="bodyMd"
-                                >
+                                <Text className="lg:basis-1/6" variant="bodyMd">
                                   Description:
                                 </Text>
                                 <div className="lg:basis-4/5">
@@ -411,11 +419,9 @@ export default function PublishPage() {
                               </Text>
                               <div className="flex gap-2 lg:basis-4/5">
                                 {model?.sectors?.length > 0 ? (
-                                  model.sectors.map(
-                                    (s: any, idx: number) => (
-                                      <Tag key={idx}>{s.name}</Tag>
-                                    )
-                                  )
+                                  model.sectors.map((s: any, idx: number) => (
+                                    <Tag key={idx}>{s.name}</Tag>
+                                  ))
                                 ) : (
                                   <Text variant="bodyMd" color="subdued">
                                     None
@@ -430,11 +436,9 @@ export default function PublishPage() {
                               </Text>
                               <div className="flex gap-2 lg:basis-4/5">
                                 {model?.tags?.length > 0 ? (
-                                  model.tags.map(
-                                    (t: any, idx: number) => (
-                                      <Tag key={idx}>{t.value}</Tag>
-                                    )
-                                  )
+                                  model.tags.map((t: any, idx: number) => (
+                                    <Tag key={idx}>{t.value}</Tag>
+                                  ))
                                 ) : (
                                   <Text variant="bodyMd" color="subdued">
                                     None
@@ -472,7 +476,11 @@ export default function PublishPage() {
                                 hideFooter
                               />
                             ) : (
-                              <Text variant="bodyMd" color="subdued" className="px-4 py-2">
+                              <Text
+                                variant="bodyMd"
+                                color="subdued"
+                                className="px-4 py-2"
+                              >
                                 No versions found
                               </Text>
                             )}
@@ -486,27 +494,27 @@ export default function PublishPage() {
 
               {/* Publication Status */}
               {isPublished ? (
-                <div className="rounded-1 border border-tertiaryAccent bg-tertiaryAccent/10 p-4">
+                <div className="border bg-tertiaryAccent/10 rounded-1 border-tertiaryAccent p-4">
                   <div className="flex items-center gap-2">
                     <Icon source={Icons.check} color="success" size={24} />
                     <Text variant="headingSm" className="text-primaryText">
                       Model is Published and Active
                     </Text>
                   </div>
-                  <Text variant="bodySm" className="mt-2 text-primaryText/80">
+                  <Text variant="bodySm" className="text-primaryText/80 mt-2">
                     Your AI model is now publicly accessible and can be
                     discovered by other users.
                   </Text>
                 </div>
               ) : (
-                <div className="rounded-1 border border-secondaryOrange bg-secondaryOrange/10 p-4">
+                <div className="border bg-secondaryOrange/10 rounded-1 border-secondaryOrange p-4">
                   <div className="flex items-center gap-2">
                     <Icon source={Icons.alert} color="warning" size={24} />
                     <Text variant="headingSm" className="text-secondaryText">
                       Model is not published
                     </Text>
                   </div>
-                  <Text variant="bodySm" className="mt-2 text-secondaryText/80">
+                  <Text variant="bodySm" className="text-secondaryText/80 mt-2">
                     {!isPublishDisabled
                       ? 'All checklist items are complete. You can now publish your model.'
                       : 'Complete all required fields before publishing your model.'}

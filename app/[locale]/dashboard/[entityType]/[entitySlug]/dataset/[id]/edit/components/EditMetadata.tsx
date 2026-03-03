@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
@@ -238,6 +238,17 @@ export function EditMetadata({ id }: { id: string }) {
   }>();
 
   const queryClient = useQueryClient();
+  const PROMPT_METADATA_SUCCESS_TOAST_ID = 'dataset-prompt-metadata-success';
+  const PROMPT_METADATA_ERROR_TOAST_ID = 'dataset-prompt-metadata-error';
+  const DATASET_METADATA_SUCCESS_TOAST_ID = 'dataset-metadata-save-success';
+  const DATASET_METADATA_ERROR_TOAST_ID = 'dataset-metadata-save-error';
+  const getErrorMessage = (
+    err: any,
+    fallback: string
+  ) =>
+    typeof err?.message === 'string' && err.message.trim()
+      ? err.message.trim()
+      : fallback;
 
   const getDatasetMetadata: {
     data: any;
@@ -380,22 +391,28 @@ export function EditMetadata({ id }: { id: string }) {
     {
       onSuccess: (res: any) => {
         if (res.updatePromptMetadata.success) {
-          toast('Prompt metadata updated successfully!');
+          toast('Prompt metadata updated successfully!', {
+            id: PROMPT_METADATA_SUCCESS_TOAST_ID,
+          });
           queryClient.invalidateQueries({
             queryKey: [`metadata_values_query_${params.id}`],
           });
         } else {
+          const responseError =
+            res.updatePromptMetadata?.errors?.fieldErrors?.[0]?.messages?.[0] ||
+            res.updatePromptMetadata?.errors?.nonFieldErrors?.[0] ||
+            'Unable to update prompt metadata right now. Please try again.';
           toast(
-            'Error: ' +
-              (res.updatePromptMetadata?.errors?.fieldErrors
-                ? res.updatePromptMetadata?.errors?.fieldErrors[0]?.messages[0]
-                : res.updatePromptMetadata?.errors?.nonFieldErrors?.[0] ||
-                  'Unknown error')
+            `Error: ${responseError}`,
+            { id: PROMPT_METADATA_ERROR_TOAST_ID }
           );
         }
       },
       onError: (err: any) => {
-        toast('Error: ' + err.message);
+        toast(
+          `Error: ${getErrorMessage(err, 'Unable to update prompt metadata right now. Please try again.')}`,
+          { id: PROMPT_METADATA_ERROR_TOAST_ID }
+        );
       },
     }
   );
@@ -428,12 +445,14 @@ export function EditMetadata({ id }: { id: string }) {
     {
       onSuccess: (res: any) => {
         if (res.addUpdateDatasetMetadata.success) {
-          toast('Details updated successfully!');
+          toast('Details updated successfully!', {
+            id: DATASET_METADATA_SUCCESS_TOAST_ID,
+          });
           queryClient.invalidateQueries({
-            queryKey: [
-              `metadata_values_query_${params.id}`,
-              `metadata_fields_list_${id}`,
-            ],
+            queryKey: [`metadata_values_query_${params.id}`],
+          });
+          queryClient.invalidateQueries({
+            queryKey: [`metadata_fields_list_${id}`],
           });
           const updatedData = defaultValuesPrepFn(
             res.addUpdateDatasetMetadata.data
@@ -445,14 +464,21 @@ export function EditMetadata({ id }: { id: string }) {
           setFormData(updatedData);
           setPreviousFormData(updatedData);
         } else {
+          const responseError =
+            res.addUpdateDatasetMetadata?.errors?.fieldErrors?.[0]?.messages?.[0] ||
+            res.addUpdateDatasetMetadata?.errors?.nonFieldErrors?.[0] ||
+            'Unable to update details right now. Please try again.';
           toast(
-            'Error: ' +
-              (res.addUpdateDatasetMetadata?.errors?.fieldErrors
-                ? res.addUpdateDatasetMetadata?.errors?.fieldErrors[0]
-                    ?.messages[0]
-                : res.addUpdateDatasetMetadata?.errors?.nonFieldErrors[0])
+            `Error: ${responseError}`,
+            { id: DATASET_METADATA_ERROR_TOAST_ID }
           );
         }
+      },
+      onError: (err: any) => {
+        toast(
+          `Error: ${getErrorMessage(err, 'Unable to update details right now. Please try again.')}`,
+          { id: DATASET_METADATA_ERROR_TOAST_ID }
+        );
       },
     }
   );
@@ -532,6 +558,7 @@ export function EditMetadata({ id }: { id: string }) {
     )
   );
   const [previousFormData, setPreviousFormData] = useState(formData);
+  const formDataRef = useRef(formData);
 
   useEffect(() => {
     if (getDatasetMetadata.data?.datasets[0]) {
@@ -539,18 +566,27 @@ export function EditMetadata({ id }: { id: string }) {
         getDatasetMetadata.data.datasets[0]
       );
       setFormData(updatedData);
+      formDataRef.current = updatedData;
       setPreviousFormData(updatedData);
     }
   }, [getDatasetMetadata.data]);
 
   const handleChange = (field: string, value: any) => {
-    setFormData((prevData) => ({
-      ...prevData,
+    formDataRef.current = {
+      ...formDataRef.current,
       [field]: value,
-    }));
+    };
+
+    setFormData((prevData) => {
+      const nextData = {
+        ...prevData,
+        [field]: value,
+      };
+      return nextData;
+    });
   };
 
-  const handleSave = (updatedData: any) => {
+  const getUpdateInput = (updatedData: any): UpdateMetadataInput | null => {
     const changedFields: any = {};
 
     for (const key in updatedData) {
@@ -574,10 +610,7 @@ export function EditMetadata({ id }: { id: string }) {
       }
     }
 
-    // Exit early if nothing changed
-    if (Object.keys(changedFields).length === 0) return;
-
-    setPreviousFormData(updatedData); // Update local copy
+    if (Object.keys(changedFields).length === 0) return null;
 
     const transformedValues = Object.keys(changedFields).reduce(
       (acc: any, key) => {
@@ -591,46 +624,70 @@ export function EditMetadata({ id }: { id: string }) {
       {}
     );
 
-    updateMetadataMutation.mutate({
-      UpdateMetadataInput: {
-        dataset: id,
-        metadata: Object.keys(transformedValues)
-          .filter(
-            (key) =>
-              ![
-                'sectors',
-                'description',
-                'tags',
-                'geographies',
-                'isPublic',
-                'license',
-              ].includes(key) && transformedValues[key] !== ''
-          )
-          .map((key) => ({
-            id: key,
-            value: transformedValues[key],
-          })),
-        ...(changedFields.license && { license: changedFields.license }),
-        ...(changedFields.accessType && {
-          accessType: changedFields.accessType,
-        }),
-        ...(changedFields.description !== undefined && {
-          description: changedFields.description,
-        }),
-        ...(changedFields.tags && {
-          tags: changedFields.tags.map((item: any) => item.label),
-        }),
-        ...(changedFields.sectors && {
-          sectors: changedFields.sectors.map((item: any) => item.value),
-        }),
-        ...(changedFields.geographies && {
-          geographies: changedFields.geographies.map((item: any) =>
-            parseInt(item.value, 10)
-          ),
-        }),
-      },
+    return {
+      dataset: id,
+      metadata: Object.keys(transformedValues)
+        .filter(
+          (key) =>
+            ![
+              'sectors',
+              'description',
+              'tags',
+              'geographies',
+              'isPublic',
+              'license',
+            ].includes(key) && transformedValues[key] !== ''
+        )
+        .map((key) => ({
+          id: key,
+          value: transformedValues[key],
+        })),
+      ...(changedFields.license && { license: changedFields.license }),
+      ...(changedFields.accessType && {
+        accessType: changedFields.accessType,
+      }),
+      ...(changedFields.description !== undefined && {
+        description: changedFields.description,
+      }),
+      ...(changedFields.tags && {
+        tags: changedFields.tags.map((item: any) => item.label),
+      }),
+      ...(changedFields.sectors && {
+        sectors: changedFields.sectors.map((item: any) => item.value),
+      }),
+      ...(changedFields.geographies && {
+        geographies: changedFields.geographies.map((item: any) =>
+          parseInt(item.value, 10)
+        ),
+      }),
+    };
+  };
+
+  const handleSave = (updatedData: any) => {
+    const updateInput = getUpdateInput(updatedData);
+    if (!updateInput) return;
+
+    updateMetadataMutation.mutate({ UpdateMetadataInput: updateInput });
+  };
+
+  const handleSaveAsync = async (updatedData: any) => {
+    const updateInput = getUpdateInput(updatedData);
+    if (!updateInput) return;
+
+    await updateMetadataMutation.mutateAsync({
+      UpdateMetadataInput: updateInput,
     });
   };
+
+  const { setStatus, registerBeforeNavigateHandler } = useDatasetEditStatus();
+
+  useEffect(() => {
+    registerBeforeNavigateHandler(() => handleSaveAsync(formDataRef.current));
+
+    return () => {
+      registerBeforeNavigateHandler(null);
+    };
+  }, [previousFormData, registerBeforeNavigateHandler]);
 
   function renderInputField(metadataFormItem: any) {
     if (metadataFormItem.dataType === 'STRING') {
@@ -755,8 +812,6 @@ export function EditMetadata({ id }: { id: string }) {
     },
   ];
 
-  const { setStatus } = useDatasetEditStatus();
-
   useEffect(() => {
     setStatus(updateMetadataMutation.isLoading ? 'loading' : 'success'); // update based on mutation state
   }, [updateMetadataMutation.isLoading]);
@@ -784,7 +839,9 @@ export function EditMetadata({ id }: { id: string }) {
                     label="Description *"
                     value={formData.description}
                     onChange={(value) => handleChange('description', value)}
-                    onBlur={() => handleSave(formData)}
+                    onBlur={(value) =>
+                      handleSave({ ...formData, description: value })
+                    }
                     placeholder="Enter dataset description..."
                     helpText={`Character limit: ${formData?.description?.length || 0}/10000`}
                   />

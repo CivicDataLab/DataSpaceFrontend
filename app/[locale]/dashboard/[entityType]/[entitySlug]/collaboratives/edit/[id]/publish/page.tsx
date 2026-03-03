@@ -148,6 +148,8 @@ const Publish = () => {
     }
   );
   const router = useRouter();
+  const PUBLISH_SUCCESS_TOAST_ID = 'collaborative-publish-success';
+  const PUBLISH_ERROR_TOAST_ID = 'collaborative-publish-error';
 
   const { mutate, isLoading: mutationLoading } = useMutation(
     () => GraphQL(publishCollaborativeMutation, {
@@ -155,13 +157,19 @@ const Publish = () => {
     }, { collaborativeId: params.id }),
     {
       onSuccess: (data: any) => {
-        toast('Collaborative Published Successfully');
+        toast('Collaborative Published Successfully', {
+          id: PUBLISH_SUCCESS_TOAST_ID,
+        });
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives`
         );
       },
       onError: (err: any) => {
-        toast(`Received ${err} on dataset publish `);
+        const errorMessage =
+          typeof err?.message === 'string' && err.message.trim()
+            ? err.message.trim()
+            : 'Unable to publish collaborative right now. Please try again.';
+        toast(`Error: ${errorMessage}`, { id: PUBLISH_ERROR_TOAST_ID });
       },
     }
   );
@@ -289,6 +297,7 @@ const Publish = () => {
                 className="m-auto w-fit"
                 onClick={() => mutate()}
                 disabled={isPublishDisabled(CollaborativeData?.data?.collaboratives[0])}
+                loading={mutationLoading}
               >
                 Publish
               </Button>

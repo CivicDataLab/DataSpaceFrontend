@@ -76,6 +76,15 @@ const deleteDashboard: any = graphql(`
 
 const Dashboard = () => {
   const params = useParams<{ entityType?: string; entitySlug?: string; id?: string }>();
+  const DASHBOARD_ADD_SUCCESS_TOAST_ID = 'usecase-dashboard-add-success';
+  const DASHBOARD_SAVE_SUCCESS_TOAST_ID = 'usecase-dashboard-save-success';
+  const DASHBOARD_DELETE_SUCCESS_TOAST_ID = 'usecase-dashboard-delete-success';
+  const DASHBOARD_SAVE_ERROR_TOAST_ID = 'usecase-dashboard-save-error';
+  const DASHBOARD_DELETE_ERROR_TOAST_ID = 'usecase-dashboard-delete-error';
+  const getErrorMessage = (error: any, fallback: string) =>
+    typeof error?.message === 'string' && error.message.trim()
+      ? error.message.trim()
+      : fallback;
   const entityType = params?.entityType;
   const entitySlug = params?.entitySlug;
   const idParam = params?.id;
@@ -130,7 +139,7 @@ const Dashboard = () => {
           ...prev,
           [newDashboard.id]: { ...newDashboard },
         }));
-        toast.success('Dashboard added');
+        toast.success('Dashboard added', { id: DASHBOARD_ADD_SUCCESS_TOAST_ID });
       },
     }
   );
@@ -139,14 +148,17 @@ const Dashboard = () => {
       GraphQL(updateDashboard, ownerArgs || {}, { id, name, link }),
     {
       onSuccess: ({ updateUsecaseDashboard }: any) => {
-        toast.success('Changes saved');
+        toast.success('Changes saved', { id: DASHBOARD_SAVE_SUCCESS_TOAST_ID });
         setPreviousState((prev: any) => ({
           ...prev,
           [updateUsecaseDashboard.data.id]: { ...updateUsecaseDashboard.data },
         }));
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(
+          `Error: ${getErrorMessage(error, 'Unable to save dashboard changes right now. Please try again.')}`,
+          { id: DASHBOARD_SAVE_ERROR_TOAST_ID }
+        );
       },
     }
   );
@@ -156,10 +168,13 @@ const Dashboard = () => {
     {
       onSuccess: (_, id) => {
         setDashboards((prev) => prev.filter((d) => d.id !== id.toString()));
-        toast.success('Dashboard deleted');
+        toast.success('Dashboard deleted', { id: DASHBOARD_DELETE_SUCCESS_TOAST_ID });
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(
+          `Error: ${getErrorMessage(error, 'Unable to delete dashboard right now. Please try again.')}`,
+          { id: DASHBOARD_DELETE_ERROR_TOAST_ID }
+        );
       },
     }
   );

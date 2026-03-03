@@ -12,14 +12,29 @@ const RichTextRenderer: React.FC<RichTextRendererProps> = ({
   content,
   className = '',
 }) => {
+  const rawContent = content || '';
+
+  // Normalize non-breaking spaces only when we detect overflow-prone content
+  // (e.g. very long runs of nbsp that prevent wrapping).
+  const hasOverflowRiskNbsp =
+    /(?:&nbsp;|\u00A0){6,}/.test(rawContent) ||
+    /(?:\w(?:&nbsp;|\u00A0)){12,}\w/i.test(rawContent);
+
+  const normalizedContent = hasOverflowRiskNbsp
+    ? rawContent.replace(/&nbsp;/g, ' ').replace(/\u00A0/g, ' ')
+    : rawContent;
+
   return (
     <div className={`rich-text-content ${className}`}>
       <div
         className="ql-editor"
-        dangerouslySetInnerHTML={{ __html: content || '' }}
+        dangerouslySetInnerHTML={{ __html: normalizedContent }}
       />
       <style jsx global>{`
         .rich-text-content .ql-editor {
+          max-width: 100%;
+          overflow-wrap: anywhere;
+          word-break: break-word;
           padding: 0;
           font-size: 16px;
           line-height: 1.6;
@@ -49,12 +64,40 @@ const RichTextRenderer: React.FC<RichTextRendererProps> = ({
         
         .rich-text-content .ql-editor ul,
         .rich-text-content .ql-editor ol {
+          list-style-position: outside;
           padding-left: 1.5em;
           margin-bottom: 1em;
+        }
+
+        .rich-text-content .ql-editor ul {
+          list-style-type: disc !important;
+        }
+
+        .rich-text-content .ql-editor ul ul {
+          list-style-type: circle !important;
+        }
+
+        .rich-text-content .ql-editor ol {
+          list-style-type: decimal !important;
         }
         
         .rich-text-content .ql-editor li {
           margin-bottom: 0.25em;
+        }
+
+        /*
+         * Keep Quill-managed lists (li[data-list]) untouched.
+         * Only normalize plain HTML lists from backend content.
+         */
+        .rich-text-content .ql-editor ul > li:not([data-list]),
+        .rich-text-content .ql-editor ol > li:not([data-list]) {
+          display: list-item !important;
+          list-style-type: inherit !important;
+          padding-left: 0 !important;
+        }
+
+        .rich-text-content .ql-editor li:not([data-list])::before {
+          content: none !important;
         }
         
         .rich-text-content .ql-editor a {
@@ -80,8 +123,9 @@ const RichTextRenderer: React.FC<RichTextRendererProps> = ({
           margin: 1em 0;
         }
         
-        .rich-text-content .ql-editor strong {
-          font-weight: bold;
+        .rich-text-content .ql-editor strong,
+        .rich-text-content .ql-editor b {
+          font-weight: 700 !important;
         }
         
         .rich-text-content .ql-editor em {

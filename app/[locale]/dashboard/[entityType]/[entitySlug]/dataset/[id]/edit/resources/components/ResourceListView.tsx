@@ -36,6 +36,15 @@ type ResourceListProps = {
 export const ResourceListView = ({ data, refetch, isPromptDataset = false }: ResourceListProps) => {
   const fileLabel = isPromptDataset ? 'Prompt Files' : 'Data Files';
   const fileButtonLabel = isPromptDataset ? 'ADD NEW PROMPT FILE' : 'ADD NEW DATA FILE';
+  const RESOURCE_DELETE_ERROR_TOAST_ID = 'dataset-resource-delete-error';
+  const RESOURCE_ADD_ERROR_TOAST_ID = 'dataset-resource-add-error';
+  const getErrorMessage = (
+    err: any,
+    fallback: string
+  ) =>
+    typeof err?.message === 'string' && err.message.trim()
+      ? err.message.trim()
+      : fallback;
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
   const [file, setFile] = React.useState<File[]>([]);
 
@@ -74,7 +83,9 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
         });
       },
       onError: (err: any) => {
-        toast(err);
+        toast(getErrorMessage(err, 'Unable to delete resource right now.'), {
+          id: RESOURCE_DELETE_ERROR_TOAST_ID,
+        });
       },
     }
   );
@@ -116,7 +127,8 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
         );
       },
       onError: (err: any) => {
-        toast(err.message, {
+        toast(getErrorMessage(err, 'Unable to add resource right now.'), {
+          id: RESOURCE_ADD_ERROR_TOAST_ID,
           action: {
             label: 'Dismiss',
             onClick: () => {},

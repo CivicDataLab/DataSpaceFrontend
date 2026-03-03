@@ -208,6 +208,18 @@ export const EditResource = ({
   allResources,
   isPromptDataset = false,
 }: EditProps) => {
+  const UPDATE_RESOURCE_ERROR_TOAST_ID = 'dataset-resource-update-error';
+  const UPDATE_SCHEMA_ERROR_TOAST_ID = 'dataset-schema-update-error';
+  const CREATE_RESOURCE_ERROR_TOAST_ID = 'dataset-resource-create-error';
+  const PROMPT_RESOURCE_ERROR_TOAST_ID = 'dataset-prompt-resource-error';
+  const getErrorMessage = (
+    err: any,
+    fallback: string
+  ) =>
+    typeof err?.message === 'string' && err.message.trim()
+      ? err.message.trim()
+      : fallback;
+
   const params = useParams<{
     entityType: string;
     entitySlug: string;
@@ -268,7 +280,9 @@ export const EditResource = ({
         resourceDetailsQuery.refetch();
       },
       onError: (err: any) => {
-        toast(err.message || String(err));
+        toast(getErrorMessage(err, 'Unable to save file changes right now.'), {
+          id: UPDATE_RESOURCE_ERROR_TOAST_ID,
+        });
         setFile([]);
       },
     }
@@ -293,7 +307,9 @@ export const EditResource = ({
         });
       },
       onError: (err: any) => {
-        toast('Error ::: ', err);
+        toast(`Error: ${getErrorMessage(err, 'Unable to update schema right now.')}`, {
+          id: UPDATE_SCHEMA_ERROR_TOAST_ID,
+        });
       },
     }
   );
@@ -320,7 +336,8 @@ export const EditResource = ({
         resourceDetailsQuery.refetch();
       },
       onError: (err: any) => {
-        toast(err.message, {
+        toast(getErrorMessage(err, 'Unable to add resource right now.'), {
+          id: CREATE_RESOURCE_ERROR_TOAST_ID,
           action: {
             label: 'Dismiss',
             onClick: () => {},
@@ -397,7 +414,10 @@ export const EditResource = ({
         }
       },
       onError: (err: any) => {
-        toast('Error: ' + err.message);
+        toast(
+          `Error: ${getErrorMessage(err, 'Unable to update prompt metadata right now.')}`,
+          { id: PROMPT_RESOURCE_ERROR_TOAST_ID }
+        );
       },
     }
   );

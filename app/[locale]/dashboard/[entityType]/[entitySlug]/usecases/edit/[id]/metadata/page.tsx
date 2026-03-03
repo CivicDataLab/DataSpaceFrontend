@@ -159,6 +159,12 @@ const Metadata = () => {
     entitySlug: string;
     id: string;
   }>();
+  const USECASE_EDIT_SUCCESS_TOAST_ID = 'usecase-edit-save-success';
+  const USECASE_METADATA_ERROR_TOAST_ID = 'usecase-metadata-save-error';
+  const getErrorMessage = (error: any, fallback: string) =>
+    typeof error?.message === 'string' && error.message.trim()
+      ? error.message.trim()
+      : fallback;
 
   const { setStatus } = useEditStatus();
 
@@ -331,7 +337,9 @@ const Metadata = () => {
       }, data),
     {
       onSuccess: (res: any) => {
-        toast('Use case updated successfully');
+        toast('Use case updated successfully', {
+          id: USECASE_EDIT_SUCCESS_TOAST_ID,
+        });
         const updatedData = defaultValuesPrepFn(res.addUpdateUsecaseMetadata);
         if (isTagsListUpdated) {
           getTagsList.refetch();
@@ -341,7 +349,10 @@ const Metadata = () => {
         setPreviousFormData(updatedData);
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(
+          `Error: ${getErrorMessage(error, 'Unable to update use case metadata right now. Please try again.')}`,
+          { id: USECASE_METADATA_ERROR_TOAST_ID }
+        );
       },
     }
   );
@@ -358,9 +369,12 @@ const Metadata = () => {
   };
 
   const handleSave = (updatedData: any) => {
-    if (JSON.stringify(updatedData) !== JSON.stringify(previousFormData)) {
-      // Ensure metadata exists before mapping
-      setPreviousFormData(updatedData);
+    const updatedSnapshot = JSON.stringify(updatedData);
+    setPreviousFormData((prevData) => {
+      if (JSON.stringify(prevData) === updatedSnapshot) {
+        return prevData;
+      }
+
       const transformedValues = Object.keys(updatedData)?.reduce(
         (acc: any, key) => {
           acc[key] = Array.isArray(updatedData[key])
@@ -391,10 +405,15 @@ const Metadata = () => {
           sectors: updatedData.sectors?.map((item: any) => item.value) || [],
           tags: updatedData.tags?.map((item: any) => item.label) || [],
           sdgs: updatedData.sdgs?.map((item: any) => item.value) || [],
-          geographies: updatedData.geographies?.map((item: any) => parseInt(item.value, 10)) || [],
+          geographies:
+            updatedData.geographies?.map((item: any) =>
+              parseInt(item.value, 10)
+            ) || [],
         },
       });
-    }
+
+      return updatedData;
+    });
   };
 
   if (
