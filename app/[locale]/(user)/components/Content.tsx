@@ -122,7 +122,7 @@ export const Content = () => {
                     <Text
                       color="onBgDefault"
                       fontWeight="semibold"
-                      className="text-xs uppercase text-textSurfaceStats"
+                      className="whitespace-nowrap text-xs uppercase text-textSurfaceStats"
                     >
                       {item.label}
                     </Text>
