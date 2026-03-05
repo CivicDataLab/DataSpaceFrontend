@@ -88,76 +88,87 @@ const Datasets = () => {
             {isLoading ? (
               <DatasetListingSkeleton cardCount={3} cardsOnly={true} />
             ) : (
-              facets?.results?.map((item: any) => (
-                <CarouselItem
-                  key={item.id}
-                  className={cn(
-                    'h-2/4 basis-full pl-4 sm:basis-1/2  lg:basis-1/3',
-                    Styles.List
-                  )}
-                >
-                  {' '}
-                  <Card
-                    title={item.title}
-                    description={stripMarkdown(item.description)}
-                    metadataContent={[
-                      {
-                        icon: Icons.calendar as any,
-                        label: 'Date',
-                        value: new Date(item.modified).toLocaleDateString(
-                          'en-US',
-                          {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          }
-                        ),
-                      },
-                      {
-                        icon: Icons.download as any,
-                        label: 'Download',
-                        value: item.download_count.toString(),
-                      },
-                      {
-                        icon: Icons.globe,
-                        label: 'Geography',
-                        value:
-                          item.geographies?.length > 0
-                            ? item.geographies.join(', ')
-                            : 'Not specified',
-                      },
-                    ]}
-                    tag={item.tags}
-                    formats={item.formats}
-                    footerContent={[
-                      {
-                        icon: `/Sectors/${item.sectors[0]}.svg`,
-                        label: 'Sectors',
-                      },
-                      {
-                        icon: item.is_individual_dataset
-                          ? item?.user?.profile_picture
-                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
-                            : '/profile.png'
-                          : item?.organization?.logo
-                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
-                            : '/org.png',
-                        label: 'Published by',
-                      },
-                    ]}
-                    variation={'collapsed'}
-                    iconColor="metadata"
-                    href={`/datasets/${item.id}`}
-                    // type={[
-                    //   {
-                    //     label: 'Dataset',
-                    //     fillColor: '#fff',
-                    //     borderColor: '#000',
-                    //   },
-                    // ]}
-                  />
-                </CarouselItem>
-              ))
+              facets?.results?.map((item: any) => {
+                const geographies =
+                  Array.isArray(item.geographies) && item.geographies.length > 0
+                    ? item.geographies
+                        .map((geo: any) =>
+                          typeof geo === 'string' ? geo : geo?.name
+                        )
+                        .filter(Boolean)
+                    : [];
+
+                return (
+                  <CarouselItem
+                    key={item.id}
+                    className={cn(
+                      'h-2/4 basis-full pl-4 sm:basis-1/2  lg:basis-1/3',
+                      Styles.List
+                    )}
+                  >
+                    {' '}
+                    <Card
+                      title={item.title}
+                      description={stripMarkdown(item.description)}
+                      metadataContent={[
+                        {
+                          icon: Icons.calendar as any,
+                          label: 'Date',
+                          value: new Date(item.modified).toLocaleDateString(
+                            'en-US',
+                            {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                            }
+                          ),
+                        },
+                        {
+                          icon: Icons.download as any,
+                          label: 'Download',
+                          value: item.download_count.toString(),
+                        },
+                        {
+                          icon: Icons.globe,
+                          label: 'Geography',
+                          value:
+                            geographies.length > 0
+                              ? geographies.join(', ')
+                              : 'Not specified',
+                        },
+                      ]}
+                      tag={item.tags}
+                      formats={item.formats}
+                      footerContent={[
+                        {
+                          icon: `/Sectors/${item.sectors[0]}.svg`,
+                          label: 'Sectors',
+                        },
+                        {
+                          icon: item.is_individual_dataset
+                            ? item?.user?.profile_picture
+                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
+                              : '/profile.png'
+                            : item?.organization?.logo
+                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
+                              : '/org.png',
+                          label: 'Published by',
+                        },
+                      ]}
+                      variation={'collapsed'}
+                      iconColor="metadata"
+                      href={`/datasets/${item.id}`}
+                      // type={[
+                      //   {
+                      //     label: 'Dataset',
+                      //     fillColor: '#fff',
+                      //     borderColor: '#000',
+                      //   },
+                      // ]}
+                    />
+                  </CarouselItem>
+                );
+              })
             )}
           </CarouselContent>
           <CarouselNext />

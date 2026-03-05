@@ -350,7 +350,7 @@ export default function PublishPage() {
                     value={`item-${index}`}
                     className="border-none"
                   >
-                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-baseBlueSolid3 p-4 hover:no-underline">
+                    <AccordionTrigger className="flex w-full items-center gap-2 rounded-1 bg-baseBlueSolid3 p-4 hover:no-underline">
                       <div className="flex flex-wrap items-center justify-start gap-2">
                         <Text className="w-48 text-justify font-semi-bold">
                           {item.name}
@@ -362,7 +362,9 @@ export default function PublishPage() {
                               color="critical"
                               size={24}
                             />
-                            <Text variant="bodyMd">{item.error}</Text>
+                            <Text variant="bodyMd" className="text-justify">
+                              {item.error}
+                            </Text>
                           </div>
                         )}
                       </div>

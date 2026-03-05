@@ -1,9 +1,10 @@
 'use client';
 
-import { graphql } from '@/gql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { graphql } from '@/gql';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Accordion,
   AccordionContent,
@@ -18,11 +19,10 @@ import {
   Text,
   toast,
 } from 'opub-ui';
-import { useEffect, useState } from 'react';
 
-import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
 import { formatDate, getWebsiteTitle, toTitleCase } from '@/lib/utils';
+import { Icons } from '@/components/icons';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 
 const datasetSummaryQuery: any = graphql(`
@@ -192,7 +192,8 @@ const Page = () => {
     getDatasetsSummary.refetch();
   });
 
-  const isPromptDataset = getDatasetsSummary.data?.datasets[0]?.datasetType === 'PROMPT';
+  const isPromptDataset =
+    getDatasetsSummary.data?.datasets[0]?.datasetType === 'PROMPT';
   const promptMetadata = getDatasetsSummary.data?.datasets[0]?.promptMetadata;
 
   const Summary = [
@@ -202,7 +203,9 @@ const Page = () => {
       error:
         getDatasetsSummary.data &&
         getDatasetsSummary.data?.datasets[0]?.resources.length === 0
-          ? isPromptDataset ? 'No Prompt Files found. Please add to continue.' : 'No Resources found. Please add to continue.'
+          ? isPromptDataset
+            ? 'No Prompt Files found. Please add to continue.'
+            : 'No Resources found. Please add to continue.'
           : '',
       errorType: 'critical',
     },
@@ -276,7 +279,9 @@ const Page = () => {
       ),
     {
       onSuccess: (data: any) => {
-        toast('Dataset Published Successfully', { id: PUBLISH_SUCCESS_TOAST_ID });
+        toast('Dataset Published Successfully', {
+          id: PUBLISH_SUCCESS_TOAST_ID,
+        });
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/dataset`
         );
@@ -359,7 +364,7 @@ const Page = () => {
                     value={`item-${index}`}
                     className=" border-none"
                   >
-                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-baseBlueSolid3  p-4 hover:no-underline ">
+                    <AccordionTrigger className="flex w-full items-center gap-2 rounded-1 bg-baseBlueSolid3  p-4 hover:no-underline ">
                       <div className="flex flex-wrap items-center justify-start gap-2">
                         <Text className=" w-32 text-justify font-semi-bold">
                           {item.name}
@@ -371,7 +376,9 @@ const Page = () => {
                               color="critical"
                               size={24}
                             />
-                            <Text variant="bodyMd">{item.error}</Text>
+                            <Text variant="bodyMd" className="text-justify">
+                              {item.error}
+                            </Text>
                           </div>
                         )}
                       </div>
@@ -388,51 +395,89 @@ const Page = () => {
                           <div className="flex flex-col gap-4 px-8 py-4">
                             {item.data?.task_type && (
                               <div className="flex flex-wrap gap-2">
-                                <Text className="lg:basis-1/6" variant="bodyMd">Task Type:</Text>
+                                <Text className="lg:basis-1/6" variant="bodyMd">
+                                  Task Type:
+                                </Text>
                                 <Text variant="bodyMd" className="lg:basis-4/5">
-                                  {item.data.task_type.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                                  {item.data.task_type
+                                    .replace(/_/g, ' ')
+                                    .replace(/\b\w/g, (c: string) =>
+                                      c.toUpperCase()
+                                    )}
                                 </Text>
                               </div>
                             )}
                             {item.data?.domain && (
                               <div className="flex flex-wrap gap-2">
-                                <Text className="lg:basis-1/6" variant="bodyMd">Domain:</Text>
-                                <Text variant="bodyMd" className="lg:basis-4/5">{item.data.domain}</Text>
+                                <Text className="lg:basis-1/6" variant="bodyMd">
+                                  Domain:
+                                </Text>
+                                <Text variant="bodyMd" className="lg:basis-4/5">
+                                  {item.data.domain}
+                                </Text>
                               </div>
                             )}
                             {item.data?.target_languages?.length > 0 && (
                               <div className="flex flex-wrap gap-2">
-                                <Text className="lg:basis-1/6" variant="bodyMd">Target Languages:</Text>
+                                <Text className="lg:basis-1/6" variant="bodyMd">
+                                  Target Languages:
+                                </Text>
                                 <div className="flex gap-2 lg:basis-4/5">
-                                  {item.data.target_languages.map((lang: string, idx: number) => (
-                                    <Tag key={idx}>{lang}</Tag>
-                                  ))}
+                                  {item.data.target_languages.map(
+                                    (lang: string, idx: number) => (
+                                      <Tag key={idx}>{lang}</Tag>
+                                    )
+                                  )}
                                 </div>
                               </div>
                             )}
                             {item.data?.prompt_format && (
                               <div className="flex flex-wrap gap-2">
-                                <Text className="lg:basis-1/6" variant="bodyMd">Prompt Format:</Text>
-                                <Text variant="bodyMd" className="lg:basis-4/5">{item.data.prompt_format}</Text>
+                                <Text className="lg:basis-1/6" variant="bodyMd">
+                                  Prompt Format:
+                                </Text>
+                                <Text variant="bodyMd" className="lg:basis-4/5">
+                                  {item.data.prompt_format}
+                                </Text>
                               </div>
                             )}
                             {item.data?.target_model_types?.length > 0 && (
                               <div className="flex flex-wrap gap-2">
-                                <Text className="lg:basis-1/6" variant="bodyMd">Target Model Types:</Text>
+                                <Text className="lg:basis-1/6" variant="bodyMd">
+                                  Target Model Types:
+                                </Text>
                                 <div className="flex gap-2 lg:basis-4/5">
-                                  {item.data.target_model_types.map((model: string, idx: number) => (
-                                    <Tag key={idx}>{model.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}</Tag>
-                                  ))}
+                                  {item.data.target_model_types.map(
+                                    (model: string, idx: number) => (
+                                      <Tag key={idx}>
+                                        {model
+                                          .replace(/_/g, ' ')
+                                          .replace(/\b\w/g, (c: string) =>
+                                            c.toUpperCase()
+                                          )}
+                                      </Tag>
+                                    )
+                                  )}
                                 </div>
                               </div>
                             )}
                             <div className="flex flex-wrap gap-2">
-                              <Text className="lg:basis-1/6" variant="bodyMd">Has System Prompt:</Text>
-                              <Text variant="bodyMd" className="lg:basis-4/5">{item.data?.has_system_prompt ? 'Yes' : 'No'}</Text>
+                              <Text className="lg:basis-1/6" variant="bodyMd">
+                                Has System Prompt:
+                              </Text>
+                              <Text variant="bodyMd" className="lg:basis-4/5">
+                                {item.data?.has_system_prompt ? 'Yes' : 'No'}
+                              </Text>
                             </div>
                             <div className="flex flex-wrap gap-2">
-                              <Text className="lg:basis-1/6" variant="bodyMd">Has Example Responses:</Text>
-                              <Text variant="bodyMd" className="lg:basis-4/5">{item.data?.has_example_responses ? 'Yes' : 'No'}</Text>
+                              <Text className="lg:basis-1/6" variant="bodyMd">
+                                Has Example Responses:
+                              </Text>
+                              <Text variant="bodyMd" className="lg:basis-4/5">
+                                {item.data?.has_example_responses
+                                  ? 'Yes'
+                                  : 'No'}
+                              </Text>
                             </div>
                           </div>
                         ) : item.name !== 'Metadata' ? (
