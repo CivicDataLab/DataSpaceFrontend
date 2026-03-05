@@ -151,12 +151,19 @@ const Publish = () => {
   const PUBLISH_ERROR_TOAST_ID = 'usecase-publish-error';
 
   const { mutate, isLoading: mutationLoading } = useMutation(
-    () => GraphQL(publishUseCaseMutation, {
-      [params.entityType]: params.entitySlug,
-    }, { useCaseId: params.id }),
+    () =>
+      GraphQL(
+        publishUseCaseMutation,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        { useCaseId: params.id }
+      ),
     {
       onSuccess: () => {
-        toast('UseCase Published Successfully', { id: PUBLISH_SUCCESS_TOAST_ID });
+        toast('UseCase Published Successfully', {
+          id: PUBLISH_SUCCESS_TOAST_ID,
+        });
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/usecases`
         );
@@ -246,7 +253,7 @@ const Publish = () => {
                     value={`item-${index}`}
                     className=" border-none"
                   >
-                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-baseBlueSolid3  p-4 hover:no-underline ">
+                    <AccordionTrigger className="flex w-full items-center gap-2 rounded-1 bg-baseBlueSolid3  p-4 hover:no-underline ">
                       <div className="flex flex-wrap items-center justify-start gap-2">
                         <Text className=" w-32 text-justify font-semi-bold">
                           {item.name}
@@ -258,7 +265,9 @@ const Publish = () => {
                               color="critical"
                               size={24}
                             />
-                            <Text variant="bodyMd">{item.error}</Text>
+                            <Text variant="bodyMd" className="text-justify">
+                              {item.error}
+                            </Text>
                           </div>
                         )}
                       </div>

@@ -242,10 +242,7 @@ export function EditMetadata({ id }: { id: string }) {
   const PROMPT_METADATA_ERROR_TOAST_ID = 'dataset-prompt-metadata-error';
   const DATASET_METADATA_SUCCESS_TOAST_ID = 'dataset-metadata-save-success';
   const DATASET_METADATA_ERROR_TOAST_ID = 'dataset-metadata-save-error';
-  const getErrorMessage = (
-    err: any,
-    fallback: string
-  ) =>
+  const getErrorMessage = (err: any, fallback: string) =>
     typeof err?.message === 'string' && err.message.trim()
       ? err.message.trim()
       : fallback;
@@ -402,10 +399,9 @@ export function EditMetadata({ id }: { id: string }) {
             res.updatePromptMetadata?.errors?.fieldErrors?.[0]?.messages?.[0] ||
             res.updatePromptMetadata?.errors?.nonFieldErrors?.[0] ||
             'Unable to update prompt metadata right now. Please try again.';
-          toast(
-            `Error: ${responseError}`,
-            { id: PROMPT_METADATA_ERROR_TOAST_ID }
-          );
+          toast(`Error: ${responseError}`, {
+            id: PROMPT_METADATA_ERROR_TOAST_ID,
+          });
         }
       },
       onError: (err: any) => {
@@ -465,13 +461,13 @@ export function EditMetadata({ id }: { id: string }) {
           setPreviousFormData(updatedData);
         } else {
           const responseError =
-            res.addUpdateDatasetMetadata?.errors?.fieldErrors?.[0]?.messages?.[0] ||
+            res.addUpdateDatasetMetadata?.errors?.fieldErrors?.[0]
+              ?.messages?.[0] ||
             res.addUpdateDatasetMetadata?.errors?.nonFieldErrors?.[0] ||
             'Unable to update details right now. Please try again.';
-          toast(
-            `Error: ${responseError}`,
-            { id: DATASET_METADATA_ERROR_TOAST_ID }
-          );
+          toast(`Error: ${responseError}`, {
+            id: DATASET_METADATA_ERROR_TOAST_ID,
+          });
         }
       },
       onError: (err: any) => {
@@ -843,7 +839,7 @@ export function EditMetadata({ id }: { id: string }) {
                       handleSave({ ...formData, description: value })
                     }
                     placeholder="Enter dataset description..."
-                    helpText={`Character limit: ${formData?.description?.length || 0}/10000`}
+                    helpText={`Character limit: ${formData?.description?.length || 0}/1000`}
                   />
                 </div>
 

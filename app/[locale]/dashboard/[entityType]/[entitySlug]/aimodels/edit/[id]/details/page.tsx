@@ -469,7 +469,7 @@ export default function AIModelDetailsPage() {
         onChange={(value) => handleInputChange('description', value)}
         onBlur={() => handleSave()}
         placeholder="Enter model description with rich formatting..."
-        helpText={`Character limit: ${formData?.description?.length || 0}/10000`}
+        helpText={`Character limit: ${formData?.description?.length || 0}/1000`}
       />
 
       {/* Target Users & Intended Use - side by side */}

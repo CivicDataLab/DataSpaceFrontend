@@ -1,8 +1,9 @@
 'use client';
 
-import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import {
   Button,
   ButtonGroup,
@@ -14,12 +15,11 @@ import {
   Text,
   Tray,
 } from 'opub-ui';
-import React, { useEffect, useReducer, useRef, useState } from 'react';
 
+import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
-import { cn, formatDate } from '@/lib/utils';
 import Filter from '../../datasets/components/FIlter/Filter';
 import Styles from '../../datasets/dataset.module.scss';
 
@@ -455,11 +455,16 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
               <div className="rounded-lg border border-gray-200 flex flex-wrap gap-2 bg-white p-3">
                 <Button
                   kind={
-                    queryParams.types === 'dataset,usecase,aimodel,collaborative,publisher'
+                    queryParams.types ===
+                    'dataset,usecase,aimodel,collaborative,publisher'
                       ? 'primary'
                       : 'secondary'
                   }
-                  onClick={() => handleTypeFilter('dataset,usecase,aimodel,collaborative,publisher')}
+                  onClick={() =>
+                    handleTypeFilter(
+                      'dataset,usecase,aimodel,collaborative,publisher'
+                    )
+                  }
                   size="slim"
                 >
                   All Results
@@ -523,7 +528,9 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                 </Button>
                 <Button
                   kind={
-                    queryParams.types === 'collaborative' ? 'primary' : 'secondary'
+                    queryParams.types === 'collaborative'
+                      ? 'primary'
+                      : 'secondary'
                   }
                   onClick={() => handleTypeFilter('collaborative')}
                   size="slim"
@@ -689,21 +696,23 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                       item.is_individual_usecase ||
                       item.is_individual_model ||
                       item.is_individual_collaborative ||
-                      (item.type === 'publisher' && item.publisher_type === 'user');
+                      (item.type === 'publisher' &&
+                        item.publisher_type === 'user');
 
-                    const image = item.type === 'publisher'
-                      ? item.logo
-                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`
-                        : item.publisher_type === 'user' 
-                          ? '/profile.png'
-                          : '/org.png'
-                      : isIndividual
-                        ? item?.user?.profile_picture
-                          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
-                          : '/profile.png'
-                        : item?.organization?.logo
-                          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
-                          : '/org.png';
+                    const image =
+                      item.type === 'publisher'
+                        ? item.logo
+                          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`
+                          : item.publisher_type === 'user'
+                            ? '/profile.png'
+                            : '/org.png'
+                        : isIndividual
+                          ? item?.user?.profile_picture
+                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
+                            : '/profile.png'
+                          : item?.organization?.logo
+                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
+                            : '/org.png';
 
                     const geographies =
                       item.geographies && item.geographies.length > 0
@@ -724,23 +733,26 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                         value: formatDate(item.created),
                         tooltip: 'Date joined',
                       });
-                      
+
                       MetadataContent.push({
                         icon: Icons.dataset as any,
                         label: 'Datasets',
                         value: item.published_datasets_count?.toString() || '0',
                         tooltip: 'Published datasets',
                       });
-                      
+
                       MetadataContent.push({
                         icon: Icons.usecase as any,
                         label: 'Use Cases',
                         value: item.published_usecases_count?.toString() || '0',
                         tooltip: 'Published use cases',
                       });
-                      
+
                       // Add members count for organizations
-                      if (item.publisher_type === 'organization' && item.members_count > 0) {
+                      if (
+                        item.publisher_type === 'organization' &&
+                        item.members_count > 0
+                      ) {
                         MetadataContent.push({
                           icon: Icons.users as any,
                           label: 'Members',
@@ -754,13 +766,13 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                         label: 'Started',
                         value: formatDate(item.started_on || item.created),
                       });
-                      
+
                       MetadataContent.push({
                         icon: Icons.dataset as any,
                         label: 'Datasets',
                         value: item.dataset_count?.toString() || '0',
                       });
-                      
+
                       // Add geography with proper fallback like listing page
                       if (geographies && geographies.length > 0) {
                         const geoDisplay = geographies.join(', ');
@@ -784,7 +796,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                         value: formatDate(item.modified || item.updated_at),
                         tooltip: 'Date',
                       });
-                      
+
                       // Add geography for non-collaborative types
                       if (geographies && geographies.length > 0) {
                         const geoDisplay = geographies.join(', ');
@@ -806,7 +818,6 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                         tooltip: 'Download',
                       });
                     }
-
 
                     // Add SDGs for datasets
                     if (item.type === 'dataset' && sdgs && sdgs.length > 0) {
@@ -841,16 +852,30 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     if (item.type === 'publisher') {
                       // For publishers, show publisher type badge
                       FooterContent.push({
-                        icon: item.publisher_type === 'organization' ? '/org.png' : '/profile.png',
-                        label: item.publisher_type === 'organization' ? 'Organization' : 'Individual Publisher',
-                        tooltip: item.publisher_type === 'organization' ? 'Organization Publisher' : 'Individual Publisher',
+                        icon:
+                          item.publisher_type === 'organization'
+                            ? '/org.png'
+                            : '/profile.png',
+                        label:
+                          item.publisher_type === 'organization'
+                            ? 'Organization'
+                            : 'Individual Publisher',
+                        tooltip:
+                          item.publisher_type === 'organization'
+                            ? 'Organization Publisher'
+                            : 'Individual Publisher',
                       });
                     } else if (item.type === 'collaborative') {
                       // For collaboratives, match listing page format exactly
                       if (item.sectors && item.sectors.length > 0) {
-                        const sectorName = typeof item.sectors[0] === 'string' ? item.sectors[0] : item.sectors[0]?.name;
+                        const sectorName =
+                          typeof item.sectors[0] === 'string'
+                            ? item.sectors[0]
+                            : item.sectors[0]?.name;
                         FooterContent.push({
-                          icon: sectorName ? `/Sectors/${sectorName}.svg` : '/Sectors/default.svg',
+                          icon: sectorName
+                            ? `/Sectors/${sectorName}.svg`
+                            : '/Sectors/default.svg',
                           label: 'Sectors',
                         });
                       } else {
@@ -871,7 +896,11 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     }
 
                     // Add charts indicator for datasets
-                    if (item.type === 'dataset' && item.has_charts && view !== 'expanded') {
+                    if (
+                      item.type === 'dataset' &&
+                      item.has_charts &&
+                      view !== 'expanded'
+                    ) {
                       FooterContent.push({
                         icon: `/chart-bar.svg` as any,
                         label: 'Charts',
@@ -890,10 +919,13 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
 
                     const commonProps = {
                       title: item.title || item.name || '',
-                      description: stripMarkdown(item.description || item.bio || ''),
+                      description: stripMarkdown(
+                        item.description || item.bio || ''
+                      ),
                       metadataContent: MetadataContent,
                       tag: item.tags || [],
-                      formats: item.type === 'dataset' ? item.formats || [] : [],
+                      formats:
+                        item.type === 'dataset' ? item.formats || [] : [],
                       footerContent: FooterContent,
                       imageUrl: '',
                     };
@@ -914,7 +946,11 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                       return (
                         <Link
                           href={getRedirectUrl(item)}
-                          key={item.type === 'publisher' ? `${item.type}-${item.publisher_type}-${item.id}` : `${item.type}-${item.id}`}
+                          key={
+                            item.type === 'publisher'
+                              ? `${item.type}-${item.publisher_type}-${item.id}`
+                              : `${item.type}-${item.id}`
+                          }
                           className="flex flex-col gap-4 rounded-4 p-6 shadow-card"
                         >
                           <div className="flex items-center gap-4">
@@ -934,7 +970,10 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                               className="rounded-2 border-2 border-solid border-greyExtralight object-contain p-2"
                             />
                             <div className="flex flex-col gap-2">
-                              <Text className="text-primaryBlue" fontWeight="semibold">
+                              <Text
+                                className="text-primaryBlue"
+                                fontWeight="semibold"
+                              >
                                 {item.name || item.title}
                               </Text>
                               <div className="flex w-fit rounded-full border-1 border-solid border-[#D5E1EA] bg-[#E9EFF4] px-3 py-1">
@@ -948,12 +987,18 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                           </div>
                           <div className="flex flex-wrap gap-3">
                             <div className="flex w-fit rounded-full border-1 border-solid border-[#D5E1EA] px-3 py-1">
-                              <Text variant="bodySm" className="text-primaryBlue">
+                              <Text
+                                variant="bodySm"
+                                className="text-primaryBlue"
+                              >
                                 {item.published_usecases_count || 0} Use Cases
                               </Text>
                             </div>
                             <div className="flex w-fit rounded-full border-1 border-solid border-[#D5E1EA] px-3 py-1">
-                              <Text variant="bodySm" className="text-primaryBlue">
+                              <Text
+                                variant="bodySm"
+                                className="text-primaryBlue"
+                              >
                                 {item.published_datasets_count || 0} Datasets
                               </Text>
                             </div>
@@ -962,8 +1007,11 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                             <div>
                               <Text className="line-clamp-2">
                                 {(item.bio || item.description)?.length > 220
-                                  ? (item.bio || item.description).slice(0, 220) + '...'
-                                  : (item.bio || item.description)}
+                                  ? (item.bio || item.description).slice(
+                                      0,
+                                      220
+                                    ) + '...'
+                                  : item.bio || item.description}
                               </Text>
                             </div>
                           )}
@@ -973,7 +1021,11 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                       return (
                         <Card
                           {...commonProps}
-                          key={item.type === 'publisher' ? `${item.type}-${item.publisher_type}-${item.id}` : `${item.type}-${item.id}`}
+                          key={
+                            item.type === 'publisher'
+                              ? `${item.type}-${item.publisher_type}-${item.id}`
+                              : `${item.type}-${item.id}`
+                          }
                           variation={
                             view === 'expanded' ? 'expanded' : 'collapsed'
                           }
