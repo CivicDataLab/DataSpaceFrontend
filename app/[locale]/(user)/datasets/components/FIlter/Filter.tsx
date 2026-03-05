@@ -89,7 +89,7 @@ const Filter: React.FC<FilterProps> = ({
                   value={category}
                   className=" border-surfaceDefault"
                 >
-                  <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-[#1F5F8D1A] py-[10px] px-3 hover:no-underline">
+                  <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-[#1F5F8D1A] px-3 py-[10px] hover:no-underline">
                     <Text fontWeight="medium">{toTitleCase(category)}</Text>
                   </AccordionTrigger>
                   <AccordionContent
@@ -103,7 +103,9 @@ const Filter: React.FC<FilterProps> = ({
                       name={category}
                       options={data.map((option) => ({
                         ...option,
-                        disabled: lockedFilters[category]?.includes(option.value) || false,
+                        disabled:
+                          lockedFilters[category]?.includes(option.value) ||
+                          false,
                       }))}
                       title={undefined}
                       value={selectedOptions[category] || []}
@@ -111,10 +113,12 @@ const Filter: React.FC<FilterProps> = ({
                         // Prevent unselecting locked filters
                         const locked = lockedFilters[category] || [];
                         const newValues = values as string[];
-                        
+
                         // Ensure all locked values remain selected
-                        const finalValues = Array.from(new Set([...locked, ...newValues]));
-                        
+                        const finalValues = Array.from(
+                          new Set([...locked, ...newValues])
+                        );
+
                         setSelectedOptions(category, finalValues);
                       }}
                     />

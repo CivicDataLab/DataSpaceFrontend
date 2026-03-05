@@ -1,4 +1,4 @@
-module.exports = { 
+module.exports = {
   "transparent": "#00000000",
   "background": "#f6f6f7ff",
   "backgroundHovered": "#f1f2f3ff",
