@@ -23,6 +23,7 @@
   --base-blue-solid-10: #0081f1;
   --base-blue-solid-11: #006adc;
   --base-blue-solid-12: #00254d;
+  --base-blue-solid-14: #f9fcff;
   --base-violet-solid-1: #fdfcfe;
   --base-violet-solid-2: #fbfaff;
   --base-violet-solid-3: #f5f2ff;
@@ -174,6 +175,7 @@
   --action-secondary-basic-hovered: var(--base-violet-solid-4);
   --action-secondary-neutral-depressed: var(--base-gray-slate-solid-6);
   --action-tertiary-basic-hover: var(--base-violet-alpha-2);
+  --alternate-background-color: var(--base-blue-solid-14);
   --base-indigo-alpha-1: #05058203;
   --action-tertiary-interactive-hover: var(--base-blue-alpha-2);
   --base-indigo-alpha-2: #054cff08;
