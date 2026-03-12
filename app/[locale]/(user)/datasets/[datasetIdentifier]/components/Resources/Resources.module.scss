@@ -1,0 +1,25 @@
+.tableWrapper {
+  :global(thead th) {
+    background-color: var(--grey-extralight) !important;
+  }
+  :global(thead th),
+  :global(thead th *),
+  :global(thead th button),
+  :global(thead th span),
+  :global(thead th a) {
+    color: #000000 !important;
+  }
+}
+
+.dialogTableWrapper {
+  :global(thead th) {
+    background-color: var(--grey-extralight) !important;
+  }
+  :global(thead th),
+  :global(thead th *),
+  :global(thead th button),
+  :global(thead th span),
+  :global(thead th a) {
+    color: #000000 !important;
+  }
+}

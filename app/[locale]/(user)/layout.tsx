@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
 import { notFound, usePathname } from 'next/navigation';
+import React from 'react';
 
 import MainFooter from '../dashboard/components/main-footer';
 import { MainNav } from '../dashboard/components/main-nav';
@@ -20,11 +20,11 @@ export default function Layout({ children }: UserLayoutProps) {
   }
 
   return (
-    <div className="flex h-full grow flex-col">
+    <div className="flex min-h-screen flex-col">
       <header className="z-1 sticky top-0 bg-primaryBlue">
         <MainNav hideSearch={hideSearch} />
       </header>
-      <>{children}</>
+      <main className="grow">{children}</main>
       <footer>
         <MainFooter />
       </footer>

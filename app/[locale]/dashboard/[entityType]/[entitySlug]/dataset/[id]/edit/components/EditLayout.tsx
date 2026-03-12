@@ -1,16 +1,16 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
-import { useParams, usePathname, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UpdateDatasetInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { Tab, TabList, Tabs, toast } from 'opub-ui';
+import { ReactNode, useEffect, useState } from 'react';
 
 import { GraphQL } from '@/lib/api';
+import StepNavigation from '../../../../components/StepNavigation';
 import TitleBar from '../../../../components/title-bar';
 import { useDatasetEditStatus } from '../context';
-import StepNavigation from '../../../../components/StepNavigation';
 
 const datasetQueryDoc: any = graphql(`
   query datasetTitleQuery($filters: DatasetFilter) {
@@ -18,6 +18,7 @@ const datasetQueryDoc: any = graphql(`
       id
       title
       created
+      datasetType
     }
   }
 `);
@@ -49,6 +50,15 @@ interface LayoutProps {
 const layoutList = ['metadata', 'resources', 'publish'];
 
 export function EditLayout({ children, params }: LayoutProps) {
+  const DATASET_TITLE_SAVE_ERROR_TOAST_ID = 'dataset-title-save-error';
+  const getErrorMessage = (
+    err: any,
+    fallback: string
+  ) =>
+    typeof err?.message === 'string' && err.message.trim()
+      ? err.message.trim()
+      : fallback;
+
   // const { data } = useQuery([`dataset_layout_${params.id}`], () =>
   //   GraphQL(datasetQueryDoc, { dataset_id: Number(params.id) })
   // );
@@ -97,7 +107,9 @@ export function EditLayout({ children, params }: LayoutProps) {
         getDatasetTitleRes.refetch();
       },
       onError: (err: any) => {
-        toast(err.message.split(':')[0]);
+        toast(getErrorMessage(err, 'Unable to update dataset title right now.'), {
+          id: DATASET_TITLE_SAVE_ERROR_TOAST_ID,
+        });
       },
     }
   );
@@ -106,7 +118,7 @@ export function EditLayout({ children, params }: LayoutProps) {
     return pathName.indexOf(v) >= 0;
   });
 
-  const { status, setStatus } = useDatasetEditStatus();
+  const { status, setStatus, runBeforeNavigateHandler } = useDatasetEditStatus();
 
   // if not from the layoutList, return children
   if (!pathItem) {
@@ -142,13 +154,17 @@ export function EditLayout({ children, params }: LayoutProps) {
             pathItem={pathItem}
             organization={routerParams.entitySlug.toString()}
             entityType={routerParams.entityType.toString()}
+            isPromptDataset={getDatasetTitleRes?.data?.datasets?.[0]?.datasetType === 'PROMPT'}
           />
         </div>
         <div className="bg-surface border-l-divider rounded-tl-none  my-6  flex-grow">
           {children}
         </div>
       <div>
-        <StepNavigation steps={['metadata','resources','publish']}/>
+        <StepNavigation
+          steps={['metadata', 'resources', 'publish']}
+          onBeforeNavigate={runBeforeNavigateHandler}
+        />
       </div>
       </div>
     </div>
@@ -160,11 +176,13 @@ const Navigation = ({
   pathItem,
   organization,
   entityType,
+  isPromptDataset,
 }: {
   id: string;
   pathItem: string;
   organization: string;
   entityType: string;
+  isPromptDataset?: boolean;
 }) => {
   const router = useRouter();
 
@@ -176,7 +194,7 @@ const Navigation = ({
       // selected: pathItem === 'metadata',
     },
     {
-      label: 'Data Files',
+      label: isPromptDataset ? 'Prompt Files' : 'Data Files',
       id: 'resources',
       url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/resources`,
       // selected: pathItem === 'resources',
@@ -210,11 +228,12 @@ const Navigation = ({
 
   const handleTabClick = (item: {
     label: string;
+    id: string;
     url: string;
     // selected: boolean;
   }) => {
-    if (item.label !== selectedTab) {
-      setSelectedTab(item.label);
+    if (item.id !== selectedTab) {
+      setSelectedTab(item.id);
       router.replace(item.url);
     }
   };

@@ -38,6 +38,12 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     entitySlug: string;
     id: string;
   }>();
+  const USECASE_TITLE_SUCCESS_TOAST_ID = 'usecase-title-save-success';
+  const USECASE_TITLE_ERROR_TOAST_ID = 'usecase-title-save-error';
+  const getErrorMessage = (error: any, fallback: string) =>
+    typeof error?.message === 'string' && error.message.trim()
+      ? error.message.trim()
+      : fallback;
 
   const layoutList = [
     'details',
@@ -78,12 +84,17 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       }, data),
     {
       onSuccess: () => {
-        toast('Use case updated successfully');
+        toast('Use case updated successfully', {
+          id: USECASE_TITLE_SUCCESS_TOAST_ID,
+        });
         // Optionally, reset form or perform other actions
         UseCaseData.refetch();
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(
+          `Error: ${getErrorMessage(error, 'Unable to update use case title right now. Please try again.')}`,
+          { id: USECASE_TITLE_ERROR_TOAST_ID }
+        );
       },
     }
   );

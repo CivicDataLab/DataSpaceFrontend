@@ -1,23 +1,23 @@
-import React, { useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
 import { useMutation } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
+import { useParams, useRouter } from 'next/navigation';
+import { parseAsString, useQueryState } from 'nuqs';
 import {
-  Button,
-  DataTable,
-  Dialog,
-  DropZone,
-  IconButton,
-  SearchInput,
-  Text,
-  toast,
+    Button,
+    DataTable,
+    Dialog,
+    DropZone,
+    IconButton,
+    SearchInput,
+    Text,
+    toast,
 } from 'opub-ui';
+import React, { useEffect } from 'react';
 
-import { GraphQL } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
+import { GraphQL } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 import { createResourceFilesDoc, updateResourceList } from './query';
 
 type FilteredRow = {
@@ -30,9 +30,21 @@ type FilteredRow = {
 type ResourceListProps = {
   data: any[];
   refetch: () => void;
+  isPromptDataset?: boolean;
 };
 
-export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
+export const ResourceListView = ({ data, refetch, isPromptDataset = false }: ResourceListProps) => {
+  const fileLabel = isPromptDataset ? 'Prompt Files' : 'Data Files';
+  const fileButtonLabel = isPromptDataset ? 'ADD NEW PROMPT FILE' : 'ADD NEW DATA FILE';
+  const RESOURCE_DELETE_ERROR_TOAST_ID = 'dataset-resource-delete-error';
+  const RESOURCE_ADD_ERROR_TOAST_ID = 'dataset-resource-add-error';
+  const getErrorMessage = (
+    err: any,
+    fallback: string
+  ) =>
+    typeof err?.message === 'string' && err.message.trim()
+      ? err.message.trim()
+      : fallback;
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
   const [file, setFile] = React.useState<File[]>([]);
 
@@ -71,7 +83,9 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
         });
       },
       onError: (err: any) => {
-        toast(err);
+        toast(getErrorMessage(err, 'Unable to delete resource right now.'), {
+          id: RESOURCE_DELETE_ERROR_TOAST_ID,
+        });
       },
     }
   );
@@ -113,7 +127,8 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
         );
       },
       onError: (err: any) => {
-        toast(err.message, {
+        toast(getErrorMessage(err, 'Unable to add resource right now.'), {
+          id: RESOURCE_ADD_ERROR_TOAST_ID,
           action: {
             label: 'Dismiss',
             onClick: () => {},
@@ -240,10 +255,10 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
       <div className="my-8 flex flex-wrap items-center justify-between gap-6 ">
         <div className="flex flex-wrap items-center gap-2">
           <Text>
-            Showing {filteredRows.length} of {filteredRows.length} Data Files
+            Showing {filteredRows.length} of {filteredRows.length} {fileLabel}
           </Text>
           <SearchInput
-            placeholder="Search in Data Files"
+            placeholder={`Search in ${fileLabel}`}
             label="Search"
             name="Search"
             onChange={(e) => handleSearchChange(e)}
@@ -252,7 +267,7 @@ export const ResourceListView = ({ data, refetch }: ResourceListProps) => {
         </div>
         <Dialog>
           <Dialog.Trigger>
-            <Button size="medium">ADD NEW DATA FILE</Button>
+            <Button size="medium">{fileButtonLabel}</Button>
           </Dialog.Trigger>
           <Dialog.Content title={'Add New Resource'}>
             {createResourceMutation.isLoading ? (

@@ -1,10 +1,10 @@
 'use client';
 
 import {
-  parseAsBoolean,
-  parseAsString,
-  useQueryState,
-} from 'next-usequerystate';
+    parseAsBoolean,
+    parseAsString,
+    useQueryState,
+} from 'nuqs';
 
 import AccessModelForm from '../components/AccessModelForm';
 import AccessModelList from '../components/AccessModelList';

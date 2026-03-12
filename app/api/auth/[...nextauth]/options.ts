@@ -13,7 +13,7 @@ async function refreshAccessToken(token: JWT) {
     refresh_token: token.refresh_token,
   };
 
-  const resp = await fetch(`${env.REFRESH_TOKEN_URL}`, {
+  const resp = await fetch(`${env.AUTH_ISSUER}/protocol/openid-connect/token`, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams(urlObj),
     method: 'POST',

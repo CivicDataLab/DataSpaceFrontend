@@ -95,6 +95,15 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   setAccessModelId,
   accessModelId,
 }) => {
+  const ACCESS_MODEL_SAVE_ERROR_TOAST_ID = 'dataset-access-model-save-error';
+  const getErrorMessage = (
+    err: any,
+    fallback: string
+  ) =>
+    typeof err?.message === 'string' && err.message.trim()
+      ? err.message.trim()
+      : fallback;
+
   useEffect(() => {
     setList(false);
   }, []);
@@ -326,7 +335,10 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
         setPreviousAccessModelData(accessModelData);
       },
       onError: (err: any) => {
-        toast(`Received ${err} during access model saving`);
+        toast(
+          `Error: ${getErrorMessage(err, 'Unable to save access model right now.')}`,
+          { id: ACCESS_MODEL_SAVE_ERROR_TOAST_ID }
+        );
       },
     }
   );
@@ -459,6 +471,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                   label="Access Type Name"
                   name="name"
                   required
+                  requiredIndicator={true}
                   helpText="To know about best practices for naming Resources go to our User Guide"
                 />
               </div>

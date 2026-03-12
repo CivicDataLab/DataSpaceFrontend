@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UseCaseInputPartial } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -12,6 +12,7 @@ import { DropZone, Select, TextField, toast } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
 import Metadata from '../metadata/page';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 const UpdateUseCaseMutation: any = graphql(`
   mutation updateUseCase($data: UseCaseInputPartial!) {
@@ -67,8 +68,13 @@ const Details = () => {
     entitySlug: string;
     id: string;
   }>();
+  const USECASE_EDIT_SUCCESS_TOAST_ID = 'usecase-edit-save-success';
+  const USECASE_DETAILS_ERROR_TOAST_ID = 'usecase-details-save-error';
+  const getErrorMessage = (error: any, fallback: string) =>
+    typeof error?.message === 'string' && error.message.trim()
+      ? error.message.trim()
+      : fallback;
 
-  const router = useRouter();
 
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_UseCaseData_details`],
@@ -162,7 +168,9 @@ const Details = () => {
       ),
     {
       onSuccess: (res: any) => {
-        toast('Use case updated successfully');
+        toast('Use case updated successfully', {
+          id: USECASE_EDIT_SUCCESS_TOAST_ID,
+        });
         setFormData((prev) => ({
           ...prev,
           ...res.updateUseCase,
@@ -173,7 +181,10 @@ const Details = () => {
         }));
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(
+          `Error: ${getErrorMessage(error, 'Unable to update use case right now. Please try again.')}`,
+          { id: USECASE_DETAILS_ERROR_TOAST_ID }
+        );
       },
     }
   );
@@ -198,8 +209,11 @@ const Details = () => {
   );
 
   const handleSave = (updatedData: any) => {
-    if (JSON.stringify(updatedData) !== JSON.stringify(previousFormData)) {
-      setPreviousFormData(updatedData);
+    const updatedSnapshot = JSON.stringify(updatedData);
+    setPreviousFormData((prevData) => {
+      if (JSON.stringify(prevData) === updatedSnapshot) {
+        return prevData;
+      }
 
       mutate({
         data: {
@@ -214,7 +228,9 @@ const Details = () => {
           platformUrl: updatedData.platformUrl || '',
         },
       });
-    }
+
+      return updatedData;
+    });
   };
   const { setStatus } = useEditStatus();
 
@@ -225,14 +241,13 @@ const Details = () => {
   return (
     <div className=" flex flex-col gap-6">
       <div>
-        <TextField
+        <RichTextEditor
           label="Summary *"
-          name="summary"
           value={formData.summary}
-          multiline={7}
-          helpText={`Character limit: ${formData?.summary?.length}/10000`}
-          onChange={(e) => handleChange('summary', e)}
-          onBlur={() => handleSave(formData)}
+          onChange={(value) => handleChange('summary', value)}
+          onBlur={(value) => handleSave({ ...formData, summary: value })}
+          placeholder="Enter use case summary with rich formatting..."
+          helpText={`Character limit: ${formData?.summary?.length || 0}/10000`}
         />
       </div>
       <div className="flex flex-wrap gap-6 md:flex-nowrap lg:flex-nowrap">

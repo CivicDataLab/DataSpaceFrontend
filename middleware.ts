@@ -1,10 +1,10 @@
-import { NextRequest } from 'next/server';
 import { withAuth } from 'next-auth/middleware';
 import createIntlMiddleware from 'next-intl/middleware';
+import { NextRequest } from 'next/server';
 
 import locales from './config/locales';
 
-const publicPages = ['/', '/datasets', '/datasets/(.*)', '/login', '/chart', '/sectors', '/sectors/(.*)', '/usecases', '/usecases/(.*)', '/collaboratives', '/collaboratives/(.*)', '/about-us', '/publishers', '/publishers/(.*)'];
+const publicPages = ['/', '/datasets', '/datasets/(.*)', '/login', '/chart', '/sectors', '/sectors/(.*)', '/usecases', '/usecases/(.*)', '/collaboratives', '/collaboratives/(.*)', '/about-us', '/publishers', '/publishers/(.*)', '/search', '/search/(.*)', '/aimodels', '/aimodels/(.*)'];
 
 const intlMiddleware = createIntlMiddleware({
   locales: locales.all,

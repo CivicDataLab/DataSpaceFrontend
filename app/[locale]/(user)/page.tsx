@@ -60,9 +60,13 @@ export default async function Home() {
       <JsonLd json={jsonLd} />
       <div className="bg-surfaceDefault">
         <Content />
-        <UseCases />
+        <section className="w-full bg-alternateBackgroundColor pb-10 lg:pb-20">
+          <UseCases />
+        </section>
         <Sectors />
+        <section className="w-full bg-alternateBackgroundColor">
         <Datasets />
+        </section>
       </div>
     </>
   );

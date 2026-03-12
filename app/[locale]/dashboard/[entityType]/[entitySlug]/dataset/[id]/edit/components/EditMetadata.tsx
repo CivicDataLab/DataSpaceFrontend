@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
@@ -19,11 +19,11 @@ import {
   Input,
   Select,
   Text,
-  TextField,
   toast,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import DatasetLoading from '../../../components/loading-dataset';
 import { useDatasetEditStatus } from '../context';
 
@@ -66,6 +66,7 @@ const datasetMetadataQueryDoc: any = graphql(`
       title
       id
       description
+      datasetType
       tags {
         id
         value
@@ -91,6 +92,7 @@ const datasetMetadataQueryDoc: any = graphql(`
         value
       }
       accessType
+      promptMetadata
     }
   }
 `);
@@ -109,6 +111,76 @@ const metadataQueryDoc: any = graphql(`
       model
       enabled
       filterable
+    }
+  }
+`);
+
+// Introspection query to get PromptTaskType enum values from schema
+const promptTaskTypeEnumQuery: any = graphql(`
+  query PromptTaskTypeEnum {
+    __type(name: "PromptTaskType") {
+      enumValues {
+        name
+        description
+      }
+    }
+  }
+`);
+
+// Introspection query to get PromptDomain enum values from schema
+const promptDomainEnumQuery: any = graphql(`
+  query PromptDomainEnum {
+    __type(name: "PromptDomain") {
+      enumValues {
+        name
+        description
+      }
+    }
+  }
+`);
+
+// Introspection query to get TargetLanguage enum values from schema
+const targetLanguageEnumQuery: any = graphql(`
+  query TargetLanguageEnum {
+    __type(name: "TargetLanguage") {
+      enumValues {
+        name
+        description
+      }
+    }
+  }
+`);
+
+// Introspection query to get TargetModelType enum values from schema
+const targetModelTypeEnumQuery: any = graphql(`
+  query TargetModelTypeEnum {
+    __type(name: "TargetModelType") {
+      enumValues {
+        name
+        description
+      }
+    }
+  }
+`);
+
+// Mutation to update prompt-specific metadata
+const updatePromptMetadataMutationDoc: any = graphql(`
+  mutation UpdatePromptMetadata($updateInput: UpdatePromptMetadataInput!) {
+    updatePromptMetadata(updateInput: $updateInput) {
+      success
+      errors {
+        fieldErrors {
+          field
+          messages
+        }
+        nonFieldErrors
+      }
+      data {
+        id
+        taskType
+        targetLanguages
+        domain
+      }
     }
   }
 `);
@@ -166,6 +238,14 @@ export function EditMetadata({ id }: { id: string }) {
   }>();
 
   const queryClient = useQueryClient();
+  const PROMPT_METADATA_SUCCESS_TOAST_ID = 'dataset-prompt-metadata-success';
+  const PROMPT_METADATA_ERROR_TOAST_ID = 'dataset-prompt-metadata-error';
+  const DATASET_METADATA_SUCCESS_TOAST_ID = 'dataset-metadata-save-success';
+  const DATASET_METADATA_ERROR_TOAST_ID = 'dataset-metadata-save-error';
+  const getErrorMessage = (err: any, fallback: string) =>
+    typeof err?.message === 'string' && err.message.trim()
+      ? err.message.trim()
+      : fallback;
 
   const getDatasetMetadata: {
     data: any;
@@ -244,7 +324,110 @@ export function EditMetadata({ id }: { id: string }) {
     )
   );
 
+  // Fetch PromptTaskType enum values from GraphQL schema
+  const getPromptTaskTypeEnum: { data: any; isLoading: boolean } = useQuery(
+    ['prompt_task_type_enum'],
+    () => GraphQL(promptTaskTypeEnumQuery, {}, []),
+    { staleTime: Infinity } // Enum values don't change, cache indefinitely
+  );
+
+  // Fetch PromptDomain enum values from GraphQL schema
+  const getPromptDomainEnum: { data: any; isLoading: boolean } = useQuery(
+    ['prompt_domain_enum'],
+    () => GraphQL(promptDomainEnumQuery, {}, []),
+    { staleTime: Infinity }
+  );
+
+  // Fetch TargetLanguage enum values from GraphQL schema
+  const getTargetLanguageEnum: { data: any; isLoading: boolean } = useQuery(
+    ['target_language_enum'],
+    () => GraphQL(targetLanguageEnumQuery, {}, []),
+    { staleTime: Infinity }
+  );
+
+  // Fetch TargetModelType enum values from GraphQL schema
+  const getTargetModelTypeEnum: { data: any; isLoading: boolean } = useQuery(
+    ['target_model_type_enum'],
+    () => GraphQL(targetModelTypeEnumQuery, {}, []),
+    { staleTime: Infinity }
+  );
+
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
+
+  // State for prompt metadata fields
+  const [promptMetadataState, setPromptMetadataState] = useState<{
+    taskType?: string;
+    domain?: string;
+    targetLanguages?: string[];
+    targetModelTypes?: string[];
+  }>({});
+
+  // Initialize prompt metadata state when data loads
+  useEffect(() => {
+    const promptMeta = getDatasetMetadata.data?.datasets?.[0]?.promptMetadata;
+    if (promptMeta) {
+      setPromptMetadataState({
+        taskType: promptMeta.task_type || undefined,
+        domain: promptMeta.domain || undefined,
+        targetLanguages: promptMeta.target_languages || [],
+        targetModelTypes: promptMeta.target_model_types || [],
+      });
+    }
+  }, [getDatasetMetadata.data?.datasets]);
+
+  // Mutation for updating prompt metadata
+  const updatePromptMetadataMutation = useMutation(
+    (data: { updateInput: any }) =>
+      GraphQL(
+        updatePromptMetadataMutationDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        data
+      ),
+    {
+      onSuccess: (res: any) => {
+        if (res.updatePromptMetadata.success) {
+          toast('Prompt metadata updated successfully!', {
+            id: PROMPT_METADATA_SUCCESS_TOAST_ID,
+          });
+          queryClient.invalidateQueries({
+            queryKey: [`metadata_values_query_${params.id}`],
+          });
+        } else {
+          const responseError =
+            res.updatePromptMetadata?.errors?.fieldErrors?.[0]?.messages?.[0] ||
+            res.updatePromptMetadata?.errors?.nonFieldErrors?.[0] ||
+            'Unable to update prompt metadata right now. Please try again.';
+          toast(`Error: ${responseError}`, {
+            id: PROMPT_METADATA_ERROR_TOAST_ID,
+          });
+        }
+      },
+      onError: (err: any) => {
+        toast(
+          `Error: ${getErrorMessage(err, 'Unable to update prompt metadata right now. Please try again.')}`,
+          { id: PROMPT_METADATA_ERROR_TOAST_ID }
+        );
+      },
+    }
+  );
+
+  // Function to save prompt metadata
+  const savePromptMetadata = (updates: Partial<typeof promptMetadataState>) => {
+    const newState = { ...promptMetadataState, ...updates };
+    setPromptMetadataState(newState);
+
+    updatePromptMetadataMutation.mutate({
+      updateInput: {
+        dataset: params.id,
+        taskType: newState.taskType,
+        domain: newState.domain,
+        targetLanguages: newState.targetLanguages,
+        targetModelTypes: newState.targetModelTypes,
+      },
+    });
+  };
 
   const updateMetadataMutation = useMutation(
     (data: { UpdateMetadataInput: UpdateMetadataInput }) =>
@@ -258,12 +441,14 @@ export function EditMetadata({ id }: { id: string }) {
     {
       onSuccess: (res: any) => {
         if (res.addUpdateDatasetMetadata.success) {
-          toast('Details updated successfully!');
+          toast('Details updated successfully!', {
+            id: DATASET_METADATA_SUCCESS_TOAST_ID,
+          });
           queryClient.invalidateQueries({
-            queryKey: [
-              `metadata_values_query_${params.id}`,
-              `metadata_fields_list_${id}`,
-            ],
+            queryKey: [`metadata_values_query_${params.id}`],
+          });
+          queryClient.invalidateQueries({
+            queryKey: [`metadata_fields_list_${id}`],
           });
           const updatedData = defaultValuesPrepFn(
             res.addUpdateDatasetMetadata.data
@@ -275,14 +460,21 @@ export function EditMetadata({ id }: { id: string }) {
           setFormData(updatedData);
           setPreviousFormData(updatedData);
         } else {
-          toast(
-            'Error: ' +
-              (res.addUpdateDatasetMetadata?.errors?.fieldErrors
-                ? res.addUpdateDatasetMetadata?.errors?.fieldErrors[0]
-                    ?.messages[0]
-                : res.addUpdateDatasetMetadata?.errors?.nonFieldErrors[0])
-          );
+          const responseError =
+            res.addUpdateDatasetMetadata?.errors?.fieldErrors?.[0]
+              ?.messages?.[0] ||
+            res.addUpdateDatasetMetadata?.errors?.nonFieldErrors?.[0] ||
+            'Unable to update details right now. Please try again.';
+          toast(`Error: ${responseError}`, {
+            id: DATASET_METADATA_ERROR_TOAST_ID,
+          });
         }
+      },
+      onError: (err: any) => {
+        toast(
+          `Error: ${getErrorMessage(err, 'Unable to update details right now. Please try again.')}`,
+          { id: DATASET_METADATA_ERROR_TOAST_ID }
+        );
       },
     }
   );
@@ -303,7 +495,7 @@ export function EditMetadata({ id }: { id: string }) {
       };
     }
 
-    (dataset?.metadata || []).length > 0 &&
+    if ((dataset?.metadata || []).length > 0) {
       (dataset?.metadata || []).map((field) => {
         if (
           field.metadataItem.dataType === 'MULTISELECT' &&
@@ -321,6 +513,7 @@ export function EditMetadata({ id }: { id: string }) {
           defaultVal[field.metadataItem.id] = field.value;
         }
       });
+    }
 
     defaultVal['description'] = dataset?.description || '';
 
@@ -356,9 +549,12 @@ export function EditMetadata({ id }: { id: string }) {
   };
 
   const [formData, setFormData] = useState(
-    defaultValuesPrepFn(getDatasetMetadata?.data?.datasets?.[0] || {} as TypeDataset)
+    defaultValuesPrepFn(
+      getDatasetMetadata?.data?.datasets?.[0] || ({} as TypeDataset)
+    )
   );
   const [previousFormData, setPreviousFormData] = useState(formData);
+  const formDataRef = useRef(formData);
 
   useEffect(() => {
     if (getDatasetMetadata.data?.datasets[0]) {
@@ -366,18 +562,27 @@ export function EditMetadata({ id }: { id: string }) {
         getDatasetMetadata.data.datasets[0]
       );
       setFormData(updatedData);
+      formDataRef.current = updatedData;
       setPreviousFormData(updatedData);
     }
   }, [getDatasetMetadata.data]);
 
   const handleChange = (field: string, value: any) => {
-    setFormData((prevData) => ({
-      ...prevData,
+    formDataRef.current = {
+      ...formDataRef.current,
       [field]: value,
-    }));
+    };
+
+    setFormData((prevData) => {
+      const nextData = {
+        ...prevData,
+        [field]: value,
+      };
+      return nextData;
+    });
   };
 
-  const handleSave = (updatedData: any) => {
+  const getUpdateInput = (updatedData: any): UpdateMetadataInput | null => {
     const changedFields: any = {};
 
     for (const key in updatedData) {
@@ -401,10 +606,7 @@ export function EditMetadata({ id }: { id: string }) {
       }
     }
 
-    // Exit early if nothing changed
-    if (Object.keys(changedFields).length === 0) return;
-
-    setPreviousFormData(updatedData); // Update local copy
+    if (Object.keys(changedFields).length === 0) return null;
 
     const transformedValues = Object.keys(changedFields).reduce(
       (acc: any, key) => {
@@ -418,44 +620,70 @@ export function EditMetadata({ id }: { id: string }) {
       {}
     );
 
-    updateMetadataMutation.mutate({
-      UpdateMetadataInput: {
-        dataset: id,
-        metadata: Object.keys(transformedValues)
-          .filter(
-            (key) =>
-              ![
-                'sectors',
-                'description',
-                'tags',
-                'geographies',
-                'isPublic',
-                'license',
-              ].includes(key) && transformedValues[key] !== ''
-          )
-          .map((key) => ({
-            id: key,
-            value: transformedValues[key],
-          })),
-        ...(changedFields.license && { license: changedFields.license }),
-        ...(changedFields.accessType && {
-          accessType: changedFields.accessType,
-        }),
-        ...(changedFields.description !== undefined && {
-          description: changedFields.description,
-        }),
-        ...(changedFields.tags && {
-          tags: changedFields.tags.map((item: any) => item.label),
-        }),
-        ...(changedFields.sectors && {
-          sectors: changedFields.sectors.map((item: any) => item.value),
-        }),
-        ...(changedFields.geographies && {
-          geographies: changedFields.geographies.map((item: any) => parseInt(item.value, 10)),
-        }),
-      },
+    return {
+      dataset: id,
+      metadata: Object.keys(transformedValues)
+        .filter(
+          (key) =>
+            ![
+              'sectors',
+              'description',
+              'tags',
+              'geographies',
+              'isPublic',
+              'license',
+            ].includes(key) && transformedValues[key] !== ''
+        )
+        .map((key) => ({
+          id: key,
+          value: transformedValues[key],
+        })),
+      ...(changedFields.license && { license: changedFields.license }),
+      ...(changedFields.accessType && {
+        accessType: changedFields.accessType,
+      }),
+      ...(changedFields.description !== undefined && {
+        description: changedFields.description,
+      }),
+      ...(changedFields.tags && {
+        tags: changedFields.tags.map((item: any) => item.label),
+      }),
+      ...(changedFields.sectors && {
+        sectors: changedFields.sectors.map((item: any) => item.value),
+      }),
+      ...(changedFields.geographies && {
+        geographies: changedFields.geographies.map((item: any) =>
+          parseInt(item.value, 10)
+        ),
+      }),
+    };
+  };
+
+  const handleSave = (updatedData: any) => {
+    const updateInput = getUpdateInput(updatedData);
+    if (!updateInput) return;
+
+    updateMetadataMutation.mutate({ UpdateMetadataInput: updateInput });
+  };
+
+  const handleSaveAsync = async (updatedData: any) => {
+    const updateInput = getUpdateInput(updatedData);
+    if (!updateInput) return;
+
+    await updateMetadataMutation.mutateAsync({
+      UpdateMetadataInput: updateInput,
     });
   };
+
+  const { setStatus, registerBeforeNavigateHandler } = useDatasetEditStatus();
+
+  useEffect(() => {
+    registerBeforeNavigateHandler(() => handleSaveAsync(formDataRef.current));
+
+    return () => {
+      registerBeforeNavigateHandler(null);
+    };
+  }, [previousFormData, registerBeforeNavigateHandler]);
 
   function renderInputField(metadataFormItem: any) {
     if (metadataFormItem.dataType === 'STRING') {
@@ -580,8 +808,6 @@ export function EditMetadata({ id }: { id: string }) {
     },
   ];
 
-  const { setStatus } = useDatasetEditStatus();
-
   useEffect(() => {
     setStatus(updateMetadataMutation.isLoading ? 'loading' : 'success'); // update based on mutation state
   }, [updateMetadataMutation.isLoading]);
@@ -605,15 +831,15 @@ export function EditMetadata({ id }: { id: string }) {
             <FormLayout>
               <div className="mb-8 flex flex-col gap-8">
                 <div className="w-full">
-                  <TextField
-                    key="description"
-                    multiline={4}
-                    name="description"
+                  <RichTextEditor
                     label="Description *"
                     value={formData.description}
-                    helpText={`Character limit: ${formData?.description?.length}/1000`}
-                    onChange={(e) => handleChange('description', e)}
-                    onBlur={() => handleSave(formData)} // Save on blur
+                    onChange={(value) => handleChange('description', value)}
+                    onBlur={(value) =>
+                      handleSave({ ...formData, description: value })
+                    }
+                    placeholder="Enter dataset description..."
+                    helpText={`Character limit: ${formData?.description?.length || 0}/1000`}
                   />
                 </div>
 
@@ -680,6 +906,168 @@ export function EditMetadata({ id }: { id: string }) {
                     .map((item: TypeMetadata) => renderInputField(item))}
                 </div>
               </div>
+
+              {/* Prompt-specific metadata fields - only shown for PROMPT type datasets */}
+              {getDatasetMetadata.data?.datasets?.[0]?.datasetType ===
+                'PROMPT' && (
+                <div className="rounded-lg border bg-surfaceNeutralSubdued mb-8 border-borderSubdued p-6">
+                  <Text variant="headingMd" as="h3" className="mb-4">
+                    Prompt Dataset Metadata
+                  </Text>
+                  <Text variant="bodySm" color="subdued" className="mb-6">
+                    Additional metadata specific to prompt datasets for AI/ML
+                    use cases.
+                  </Text>
+                  <div className="flex flex-col gap-6">
+                    <Combobox
+                      name="taskType"
+                      label="Task Type"
+                      displaySelected
+                      list={
+                        getPromptTaskTypeEnum.data?.__type?.enumValues?.map(
+                          (enumValue: {
+                            name: string;
+                            description?: string;
+                          }) => ({
+                            label: enumValue.name
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            value: enumValue.name,
+                          })
+                        ) || []
+                      }
+                      selectedValue={
+                        promptMetadataState.taskType
+                          ? [
+                              {
+                                label: promptMetadataState.taskType
+                                  .replace(/_/g, ' ')
+                                  .replace(/\b\w/g, (c: string) =>
+                                    c.toUpperCase()
+                                  ),
+                                value: promptMetadataState.taskType,
+                              },
+                            ]
+                          : []
+                      }
+                      onChange={(value) => {
+                        const selectedValue = Array.isArray(value)
+                          ? value[0]?.value
+                          : value;
+                        savePromptMetadata({ taskType: selectedValue });
+                      }}
+                    />
+                    <Combobox
+                      name="domain"
+                      label="Domain"
+                      displaySelected
+                      list={
+                        getPromptDomainEnum.data?.__type?.enumValues?.map(
+                          (enumValue: {
+                            name: string;
+                            description?: string;
+                          }) => ({
+                            label: enumValue.name
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            value: enumValue.name,
+                          })
+                        ) || []
+                      }
+                      selectedValue={
+                        promptMetadataState.domain
+                          ? [
+                              {
+                                label: promptMetadataState.domain
+                                  .replace(/_/g, ' ')
+                                  .replace(/\b\w/g, (c: string) =>
+                                    c.toUpperCase()
+                                  ),
+                                value: promptMetadataState.domain,
+                              },
+                            ]
+                          : []
+                      }
+                      onChange={(value) => {
+                        const selectedValue = Array.isArray(value)
+                          ? value[0]?.value
+                          : value;
+                        savePromptMetadata({ domain: selectedValue });
+                      }}
+                    />
+                    <Combobox
+                      name="targetLanguages"
+                      label="Target Languages"
+                      displaySelected
+                      creatable
+                      list={
+                        getTargetLanguageEnum.data?.__type?.enumValues?.map(
+                          (enumValue: {
+                            name: string;
+                            description?: string;
+                          }) => ({
+                            label: enumValue.name
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            value: enumValue.name,
+                          })
+                        ) || []
+                      }
+                      selectedValue={
+                        promptMetadataState.targetLanguages?.map(
+                          (lang: string) => ({
+                            label: lang
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            value: lang,
+                          })
+                        ) || []
+                      }
+                      onChange={(value) => {
+                        const languages = Array.isArray(value)
+                          ? value.map((v: any) => v.value)
+                          : [];
+                        savePromptMetadata({ targetLanguages: languages });
+                      }}
+                    />
+                    <Combobox
+                      name="targetModelTypes"
+                      label="Target Model Types"
+                      displaySelected
+                      creatable
+                      list={
+                        getTargetModelTypeEnum.data?.__type?.enumValues?.map(
+                          (enumValue: {
+                            name: string;
+                            description?: string;
+                          }) => ({
+                            label: enumValue.name
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            value: enumValue.name,
+                          })
+                        ) || []
+                      }
+                      selectedValue={
+                        promptMetadataState.targetModelTypes?.map(
+                          (model: string) => ({
+                            label: model
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                            value: model,
+                          })
+                        ) || []
+                      }
+                      onChange={(value) => {
+                        const models = Array.isArray(value)
+                          ? value.map((v: any) => v.value)
+                          : [];
+                        savePromptMetadata({ targetModelTypes: models });
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-col items-center gap-8 lg:flex-row">
                 <div className="flex w-full flex-wrap gap-2 md:flex-nowrap lg:w-2/4 lg:flex-nowrap">

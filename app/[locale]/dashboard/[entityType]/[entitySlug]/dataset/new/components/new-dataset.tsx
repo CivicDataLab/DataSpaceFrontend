@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 // import { CreateDatasetInput, PatchDatasetInput } from '@/gql/generated/graphql';
 import { PatchDataset, CreateDataset as Props } from '@/types';
@@ -10,9 +12,11 @@ import {
   RadioGroup,
   Text,
 } from 'opub-ui';
+import { useFormContext } from 'react-hook-form';
 
 import { Icons } from '@/components/icons';
 import { RadioCard } from '@/components/radio-card';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { DatasetForm } from '../../components/dataset-form';
 import styles from '../new.module.scss';
 
@@ -43,8 +47,7 @@ export function CreateDataset({
   return (
     <DatasetForm
       onSubmit={(value: any) => {
-        mutatePatch &&
-          defaultVal &&
+        if (mutatePatch && defaultVal) {
           mutatePatch({
             dataset_data: {
               title: value.title,
@@ -52,8 +55,9 @@ export function CreateDataset({
               id: defaultVal.id,
             },
           });
+        }
 
-        mutate &&
+        if (mutate) {
           mutate({
             dataset_data: {
               title: value.title,
@@ -61,6 +65,7 @@ export function CreateDataset({
               dataset_type: value.type,
             },
           });
+        }
       }}
       formOptions={{ defaultValues: defaultValue }}
       submitRef={submitRef}
@@ -96,21 +101,11 @@ export function CreateDataset({
                 showCharacterCount
                 autoComplete="off"
                 required
+                requiredIndicator={true}
                 error="This field is required"
                 readOnly={isLoading}
               />
-              <Input
-                name="description"
-                label="Description"
-                multiline={5}
-                placeholder="some information about this dataset."
-                maxLength={300}
-                showCharacterCount
-                autoComplete="off"
-                required
-                error="This field is required"
-                readOnly={isLoading}
-              />
+              <DescriptionEditor readOnly={isLoading} />
             </FormLayout>
           </div>
 
@@ -132,6 +127,24 @@ export function CreateDataset({
         </div>
       </div>
     </DatasetForm>
+  );
+}
+
+function DescriptionEditor({ readOnly }: { readOnly?: boolean }) {
+  const { setValue, watch } = useFormContext();
+  const description = watch('description');
+
+  return (
+    <RichTextEditor
+      label="Description"
+      value={description || ''}
+      onChange={(value) =>
+        setValue('description', value, { shouldDirty: true })
+      }
+      placeholder="Some information about this dataset."
+      helpText={`Character limit: ${description?.length || 0}/10000`}
+      readOnly={readOnly}
+    />
   );
 }
 

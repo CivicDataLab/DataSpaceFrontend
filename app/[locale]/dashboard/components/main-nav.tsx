@@ -36,20 +36,10 @@ export function MainNav({ hideSearch = false }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isExploreOpen, setIsExploreOpen] = useState(false);
 
-  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const { data: session, status } = useSession();
   const { setUserDetails, setAllEntityDetails } = useDashboardStore();
-
-  async function keycloakSessionLogOut() {
-    try {
-      setIsLoggingOut(true);
-      await fetch(`/api/auth/logout`, { method: 'GET' });
-    } catch (err) {
-      setIsLoggingOut(false);
-      console.error(err);
-    }
-  }
 
   const handleSignIn = async () => {
     try {
@@ -70,35 +60,54 @@ export function MainNav({ hideSearch = false }) {
   const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (session?.user && !hasFetched) {
-        try {
-          const [userDetailsRes, entityDetailsRes] = await Promise.all([
-            GraphQL(UserDetailsQryDoc, {}, []),
-            GraphQL(allOrganizationsListingDoc, {}, []),
-          ]);
+    if (status !== 'authenticated' || !session?.user) {
+      // Reset when user is not authenticated to allow a clean fetch after login.
+      if (hasFetched) setHasFetched(false);
+      return;
+    }
 
-          setUserDetails(userDetailsRes);
-          setAllEntityDetails(entityDetailsRes);
-          setHasFetched(true);
-        } catch (err) {
+    const fetchData = async () => {
+      if (hasFetched) return;
+
+      try {
+        const [userDetailsRes, entityDetailsRes] = await Promise.all([
+          GraphQL(UserDetailsQryDoc, {}, []),
+          GraphQL(allOrganizationsListingDoc, {}, []),
+        ]);
+
+        setUserDetails(userDetailsRes);
+        setAllEntityDetails(entityDetailsRes);
+        setHasFetched(true);
+      } catch (err: any) {
+        const errorMessage = String(err?.message || err || '');
+        const isUnauthenticated = errorMessage.includes(
+          'User is not authenticated'
+        );
+
+        if (!isUnauthenticated) {
           console.error('Error fetching user/org data:', err);
         }
+
+        // Stop repeated retries/log spam for unauthenticated sessions.
+        setHasFetched(true);
       }
     };
 
     fetchData();
-  }, [session, hasFetched, setUserDetails, setAllEntityDetails]);
+  }, [status, session?.user, hasFetched, setUserDetails, setAllEntityDetails]);
 
-  if (isLoggingOut) {
-    return <LogginOutPage />;
-  }
+  const exploreLinks = [
+    {
+      title: 'Datasets',
+      href: '/datasets?dataset_type=DATA',
+    },
+    {
+      title: 'Prompts',
+      href: '/datasets?dataset_type=PROMPT',
+    },
+  ];
 
   const Navigation = [
-    {
-      title: 'All Data',
-      href: '/datasets',
-    },
     {
       title: 'Sectors',
       href: '/sectors',
@@ -125,25 +134,24 @@ export function MainNav({ hideSearch = false }) {
     if (value) {
       setIsOpen(false);
 
-      router.push(`/datasets?query=${encodeURIComponent(value)}`);
+      router.push(`/search?query=${encodeURIComponent(value)}`);
     }
   };
   return (
-    <nav className="px-4 py-6 lg:px-6 md:py-5 sm:py-8 lg:py-3 min-h-[80px] sticky top-1 z-50">
+    <nav className="z-50 sticky top-1 min-h-[80px] px-4 py-6 sm:py-8 md:py-5 lg:px-6 lg:py-3">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-1">
           <div className="lg:hidden">
             <Sidebar
-              data={Navigation}
+              data={[...exploreLinks, ...Navigation]}
               session={session}
               status={status}
-              keycloakSessionLogOut={keycloakSessionLogOut}
               signIn={signIn}
             />
           </div>
           <Link href="/">
             <div className="flex items-center gap-2">
-              <div className="group relative h-[35px] md:h-[40px] lg:h-[68px] w-[130px] md:w-[150px] lg:w-[183px] overflow-hidden">
+              <div className="group relative h-[35px] w-[130px] overflow-hidden md:h-[40px] md:w-[150px] lg:h-[68px] lg:w-[183px]">
                 {/* Static Logo */}
                 <div className="absolute inset-0">
                   <Image
@@ -172,33 +180,80 @@ export function MainNav({ hideSearch = false }) {
         </div>
 
         <div className="flex items-center gap-8">
-          <div className="relative hidden lg:block">
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-              <Dialog.Trigger>
-                <IconButton
-                  size="slim"
-                  icon={Icons.search}
-                  withTooltip
-                  color="onBgDefault"
-                  onClick={() => setIsOpen(true)}
-                >
-                  Search
-                </IconButton>
-              </Dialog.Trigger>
-              <Dialog.Content title={'Search'}>
-                <div className="p-3">
-                  <SearchInput
-                    onSubmit={handleSearch}
-                    label={''}
-                    placeholder="Search for any data"
-                    name={''}
-                  />
-                </div>
-              </Dialog.Content>
-            </Dialog>
-          </div>
+          {!hideSearch && (
+            <div className="relative hidden lg:block">
+              <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <Dialog.Trigger>
+                  <IconButton
+                    size="slim"
+                    icon={Icons.search}
+                    withTooltip
+                    color="onBgDefault"
+                    onClick={() => setIsOpen(true)}
+                  >
+                    Search
+                  </IconButton>
+                </Dialog.Trigger>
+                <Dialog.Content title={'Search'}>
+                  <div className="p-3">
+                    <SearchInput
+                      onSubmit={handleSearch}
+                      label={''}
+                      placeholder="Search for any data"
+                      name={''}
+                    />
+                  </div>
+                </Dialog.Content>
+              </Dialog>
+            </div>
+          )}
 
           <div className="flex items-center gap-5">
+            {/* Explore dropdown (desktop) */}
+            <div className="hidden lg:block">
+              <Popover open={isExploreOpen} onOpenChange={setIsExploreOpen}>
+                <Popover.Trigger>
+                  <button className="flex cursor-pointer items-center gap-1 border-none bg-transparent outline-none">
+                    <Text
+                      variant="headingMd"
+                      // as="span"
+                      className={`uppercase text-surfaceDefault ${
+                        pathname.startsWith(`/datasets`)
+                          ? 'text-[#84DCCF]'
+                          : 'text-surfaceDefault'
+                      }`}
+                      fontWeight="semibold"
+                    >
+                      Explore
+                    </Text>
+                    <Icons.chevronDown
+                      size={18}
+                      color={
+                        pathname.startsWith(`/datasets`) ? '#84DCCF' : '#fff'
+                      }
+                    />
+                  </button>
+                </Popover.Trigger>
+                <Popover.Content align="start">
+                  <div className="rounded-3 bg-surfaceDefault py-2 shadow-basicDeep">
+                    {exploreLinks.map((link) => (
+                      <Text variant="bodyMd" key={link.href}>
+                        <a
+                          href={link.href}
+                          // target="_blank"
+                          rel="noreferrer noopener"
+                          className="block w-full px-5 py-2 font-medium uppercase text-textSubdued transition-colors duration-100 ease-ease hover:bg-actionSecondaryNeutralHovered hover:text-textDefault"
+                        >
+                          {link.title}
+                        </a>
+                      </Text>
+                    ))}
+                  </div>
+                </Popover.Content>
+              </Popover>
+            </div>
+
+            {/* Regular navigation items */}
             {Navigation.map((item, index) => (
               <div className="hidden lg:block" key={index}>
                 <Link href={item.href}>
@@ -222,10 +277,7 @@ export function MainNav({ hideSearch = false }) {
           ) : (
             <div className=" hidden lg:block">
               {session?.user ? (
-                <ProfileContent
-                  session={session}
-                  keycloakSessionLogOut={keycloakSessionLogOut}
-                />
+                <ProfileContent session={session} />
               ) : (
                 <Button
                   onClick={() => {
@@ -245,13 +297,7 @@ export function MainNav({ hideSearch = false }) {
   );
 }
 
-export const ProfileContent = ({
-  session,
-  keycloakSessionLogOut,
-}: {
-  session: Session;
-  keycloakSessionLogOut: () => Promise<void>;
-}) => {
+export const ProfileContent = ({ session }: { session: Session }) => {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -307,11 +353,18 @@ export const ProfileContent = ({
           <Divider className="mx-3 my-3 w-auto" />
           <div className="px-3">
             <Button
-              onClick={() => {
+              onClick={async () => {
                 setOpen(false);
-                keycloakSessionLogOut().then(() =>
-                  signOut({ callbackUrl: '/' })
-                );
+                const response = await fetch(`/api/auth/logout`, {
+                  method: 'GET',
+                });
+                const data = await response.json();
+
+                await signOut({ redirect: false });
+
+                if (data.url) {
+                  window.location.href = data.url;
+                }
               }}
               kind="secondary"
               size="slim"
@@ -323,14 +376,5 @@ export const ProfileContent = ({
         </div>
       </Popover.Content>
     </Popover>
-  );
-};
-
-const LogginOutPage = () => {
-  return (
-    <div className=" flex items-center justify-end gap-4 bg-surfaceDefault p-5 lg:p-7">
-      <Spinner color="surface" />
-      <Text variant="headingLg">Logging out...</Text>
-    </div>
   );
 };

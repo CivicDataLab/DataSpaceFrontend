@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { graphql } from '@/gql';
 import {
   Ordering,
@@ -10,13 +9,15 @@ import {
   SectorsListsQuery,
 } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
-import { Divider, SearchInput, Select, Spinner, Text, Tooltip } from 'opub-ui';
+import { SearchInput, Select, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { cn, generateJsonLd } from '@/lib/utils';
+import { buildSectorSlugParam, cn, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { ErrorPage } from '@/components/error';
 import JsonLd from '@/components/JsonLd';
+import { SectorListingSkeleton } from '@/components/loading';
+import { SectorCard } from '@/components/SectorCard';
 import Styles from '../datasets/dataset.module.scss';
 
 const sectorsListQueryDoc: any = graphql(`
@@ -44,13 +45,6 @@ const SectorsListing = () => {
         { filters: searchText ? { search: searchText } : {}, order: sort }
       ) as Promise<SectorsListsQuery>
   );
-
-  function capitalizeWords(name: any) {
-    return name
-      .split('-')
-      .map((word: any) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join('+');
-  }
 
   useEffect(() => {
     refetch();
@@ -191,58 +185,18 @@ const SectorsListing = () => {
                 </div>
               </div>
               {isLoading ? (
-                <div className="m-4 flex justify-center">
-                  <Spinner />
-                </div>
+                <SectorListingSkeleton cardCount={9} />
               ) : data && data?.activeSectors?.length > 0 ? (
                 <>
                   <div className="grid w-full grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
-                    {data?.activeSectors.map((sectors: any) => (
-                      <Link
-                        href={`/sectors/${sectors.slug}?sectors=${capitalizeWords(sectors.slug)}`}
-                        key={sectors.id}
-                        className="h-full" // Ensure link takes full height
-                      >
-                        <div className="flex h-full min-h-[140px] w-full items-center gap-5 rounded-4 bg-surfaceDefault p-7 shadow-card transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
-                          <div className="flex flex-shrink-0 gap-4">
-                            <Image
-                              src={`/Sectors/${sectors.name}.svg`}
-                              width={80}
-                              height={80}
-                              alt={'Sectors Logo'}
-                              className="h-20 w-20 object-contain" // Ensure consistent image sizing
-                            />
-                          </div>
-                          <div className="flex w-full min-w-0 flex-col justify-between h-full gap-3">
-                            {' '}
-                            {/* min-w-0 prevents text overflow */}
-                            <div className="flex flex-col gap-2">
-                             <Tooltip content={sectors.name}>
-                                <Text
-                                variant="headingLg"
-                                fontWeight="semibold"
-                                className="line-clamp-1 text-ellipsis overflow-hidden"
-                              >
-                                {sectors.name}
-                              </Text>
-                              </Tooltip>
-                              <Divider className="h-[2px] bg-greyExtralight" />
-                            </div>
-                            <div className="flex gap-1">
-                              {' '}
-                              {/* mt-auto pushes to bottom */}
-                              <Text
-                                variant="bodyMd"
-                                fontWeight="bold"
-                                className="text-primaryBlue"
-                              >
-                                {sectors.datasetCount}
-                              </Text>
-                              <Text variant="bodyMd">Datasets</Text>
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
+                    {data?.activeSectors.map((sector: any) => (
+                      <SectorCard
+                        key={sector.id}
+                        sector={sector}
+                        href={`/sectors/${sector.slug}?sectors=${buildSectorSlugParam(sector.slug)}`}
+                        showNameTooltip
+                        className="h-full"
+                      />
                     ))}
                   </div>
                 </>

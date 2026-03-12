@@ -128,40 +128,54 @@ const Publish = () => {
     entitySlug: string;
     id: string;
   }>();
-  const CollaborativeData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_CollaborativeDetails`],
+  const CollaborativeData: { data: any; isLoading: boolean; refetch: any } =
+    useQuery(
+      [`fetch_CollaborativeDetails`],
+      () =>
+        GraphQL(
+          CollaborativeDetails,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          {
+            filters: {
+              id: params.id,
+            },
+          }
+        ),
+      {
+        refetchOnMount: true,
+        refetchOnReconnect: true,
+      }
+    );
+  const router = useRouter();
+  const PUBLISH_SUCCESS_TOAST_ID = 'collaborative-publish-success';
+  const PUBLISH_ERROR_TOAST_ID = 'collaborative-publish-error';
+
+  const { mutate, isLoading: mutationLoading } = useMutation(
     () =>
       GraphQL(
-        CollaborativeDetails,
+        publishCollaborativeMutation,
         {
           [params.entityType]: params.entitySlug,
         },
-        {
-          filters: {
-            id: params.id,
-          },
-        }
+        { collaborativeId: params.id }
       ),
     {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
-  );
-  const router = useRouter();
-
-  const { mutate, isLoading: mutationLoading } = useMutation(
-    () => GraphQL(publishCollaborativeMutation, {
-      [params.entityType]: params.entitySlug,
-    }, { collaborativeId: params.id }),
-    {
       onSuccess: (data: any) => {
-        toast('Collaborative Published Successfully');
+        toast('Collaborative Published Successfully', {
+          id: PUBLISH_SUCCESS_TOAST_ID,
+        });
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives`
         );
       },
       onError: (err: any) => {
-        toast(`Received ${err} on dataset publish `);
+        const errorMessage =
+          typeof err?.message === 'string' && err.message.trim()
+            ? err.message.trim()
+            : 'Unable to publish collaborative right now. Please try again.';
+        toast(`Error: ${errorMessage}`, { id: PUBLISH_ERROR_TOAST_ID });
       },
     }
   );
@@ -183,7 +197,8 @@ const Publish = () => {
       name: 'Datasets',
       data: CollaborativeData?.data?.collaboratives[0]?.datasets,
       error:
-        CollaborativeData.data && CollaborativeData.data?.collaboratives[0]?.datasets.length === 0
+        CollaborativeData.data &&
+        CollaborativeData.data?.collaboratives[0]?.datasets.length === 0
           ? 'No datasets assigned. Please assign to continue.'
           : '',
     },
@@ -246,7 +261,7 @@ const Publish = () => {
                     value={`item-${index}`}
                     className=" border-none"
                   >
-                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-baseBlueSolid3  p-4 hover:no-underline ">
+                    <AccordionTrigger className="flex w-full items-center gap-2 rounded-1 bg-baseBlueSolid3  p-4 hover:no-underline ">
                       <div className="flex flex-wrap items-center justify-start gap-2">
                         <Text className=" w-32 text-justify font-semi-bold">
                           {item.name}
@@ -258,7 +273,9 @@ const Publish = () => {
                               color="critical"
                               size={24}
                             />
-                            <Text variant="bodyMd">{item.error}</Text>
+                            <Text variant="bodyMd" className="text-justify">
+                              {item.error}
+                            </Text>
                           </div>
                         )}
                       </div>
@@ -288,7 +305,10 @@ const Publish = () => {
               <Button
                 className="m-auto w-fit"
                 onClick={() => mutate()}
-                disabled={isPublishDisabled(CollaborativeData?.data?.collaboratives[0])}
+                disabled={isPublishDisabled(
+                  CollaborativeData?.data?.collaboratives[0]
+                )}
+                loading={mutationLoading}
               >
                 Publish
               </Button>

@@ -109,6 +109,7 @@ export const ViewDialog = ({
                 value={viewName}
                 onChange={setViewName}
                 required
+                requiredIndicator={true}
                 error="View name is required"
               />
               <Select
@@ -116,6 +117,7 @@ export const ViewDialog = ({
                 label="Type"
                 options={DISTRIBUTION_VIEW_OPTIONS}
                 required
+                requiredIndicator={true}
                 error="View type is required"
                 value={viewChart}
                 onChange={(e) => {

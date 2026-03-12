@@ -4,7 +4,6 @@ import { Text } from 'opub-ui';
 import { generateJsonLd, generatePageMetadata } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import JsonLd from '@/components/JsonLd';
-import Team from './components/Team';
 
 export const generateMetadata = () =>
   generatePageMetadata({

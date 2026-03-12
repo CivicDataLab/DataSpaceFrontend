@@ -38,10 +38,10 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           'N/A'
         ) : (
           <Link
-            className="text-primaryBlue underline"
+            className="text-primaryBlue underline lg:text-white"
             href={data.collaborativeBySlug.platformUrl}
           >
-            <Text className="underline" color="onBgDefault" variant="bodyLg">
+            <Text className="underline text-primaryBlue lg:text-white" variant="bodyLg">
               {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
             </Text>
           </Link>
@@ -78,15 +78,15 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     {
       label: 'SDG Goals',
       value: (
-        <div className="flex flex-wrap  gap-2">
+        <div className="flex flex-wrap gap-2">
           {data.collaborativeBySlug.sdgs && data.collaborativeBySlug.sdgs.length > 0 ? (
             data.collaborativeBySlug.sdgs.map((sdg: any, index: number) => (
               <Tooltip content={`${sdg.code} - ${sdg.name}`} key={index}>
                 <Image
                   src={`/SDG/${sdg.code}.svg`}
                   alt={sdg.name || ''}
-                  width={60}
-                  height={60}
+                  width={50}
+                  height={50}
                   className="bg-white"
                 />
               </Tooltip>
@@ -111,11 +111,11 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           <Text
             variant="headingLg"
             fontWeight="semibold"
-            color="onBgDefault"
+            className="text-primaryBlue lg:text-white"
           >
             ABOUT THE COLLABORATIVE{' '}
           </Text>
-          <Text variant="bodyLg" color="onBgDefault">DETAILS</Text>
+          <Text variant="bodyLg" className="text-gray-900 lg:text-white">DETAILS</Text>
         </div>
         <div className="flex items-center justify-between">
           {setOpen && (
@@ -127,7 +127,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       </div>
       <div className="h-0.5 bg-baseGraySlateSolid9 w-full" ></div>
       <div className=" flex flex-col gap-8">
-        <div className="hidden rounded-2  p-2 lg:block">
+        <div className="hidden rounded-2 border-1 border-solid border-greyExtralight bg-white p-2 lg:block">
           <Image
             height={180}
             width={120}
@@ -140,18 +140,16 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           {metadata.map((item, index) => (
             <div key={index} className="flex gap-2">
               <Text
-                className="min-w-[120px]  basis-1/4 uppercase"
+                className="min-w-[120px]  basis-1/4 uppercase text-gray-900 lg:text-white"
                 variant="bodyMd"
-                color="onBgDefault"
               >
                 {item.label}
               </Text>
               <Tooltip content={item?.tooltipContent}>
                 <Text
-                  className="max-w-xs truncate"
+                  className={`${item.label === 'SDG Goals' || item.label === 'Sectors' ? 'max-w-full' : 'max-w-xs truncate'} text-gray-900 lg:text-white`}
                   variant="bodyLg"
                   fontWeight="medium"
-                  color="onBgDefault"
                 >
                   {typeof item.value === 'string' ? item.value : item.value}
                 </Text>
@@ -162,9 +160,8 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           {data.collaborativeBySlug.contributors && data.collaborativeBySlug.contributors.length > 0 && (
             <div className="flex gap-2">
               <Text
-                className="min-w-[120px] basis-1/4 uppercase"
+                className="min-w-[120px] basis-1/4 uppercase text-gray-900 lg:text-white"
                 variant="bodyMd"
-                color="onBgDefault"
               >
                 Contributors
               </Text>

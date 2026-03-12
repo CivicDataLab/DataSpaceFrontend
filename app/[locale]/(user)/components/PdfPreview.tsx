@@ -10,6 +10,8 @@ export default function PdfPreview({ url }: PdfPreviewProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    let objectUrl: string | null = null;
+
     const fetchPdf = async () => {
       try {
         const response = await fetch(url);
@@ -17,7 +19,7 @@ export default function PdfPreview({ url }: PdfPreviewProps) {
 
         // Manually set MIME type to PDF (in case it's sent as octet-stream)
         const pdfBlob = new Blob([blobData], { type: 'application/pdf' });
-        const objectUrl = URL.createObjectURL(pdfBlob);
+        objectUrl = URL.createObjectURL(pdfBlob);
         setPreviewUrl(objectUrl);
       } catch (error) {
         console.error('Failed to load PDF:', error);
@@ -27,8 +29,8 @@ export default function PdfPreview({ url }: PdfPreviewProps) {
     fetchPdf();
 
     return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
       }
     };
   }, [url]);

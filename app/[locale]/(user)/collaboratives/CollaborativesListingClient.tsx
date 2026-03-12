@@ -1,57 +1,20 @@
 'use client';
 
+import { ComponentType, useState } from 'react';
+import Image from 'next/image';
+import { graphql } from '@/gql';
+import { TypeCollaborative } from '@/gql/generated/graphql';
+import { useQuery } from '@tanstack/react-query';
+import { Button, Card, Icon, SearchInput, Select, Text } from 'opub-ui';
+
+import { GraphQLPublic } from '@/lib/api';
+import { cn, formatDate, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import JsonLd from '@/components/JsonLd';
 import { Loading } from '@/components/loading';
-import { graphql } from '@/gql';
-import { TypeCollaborative } from '@/gql/generated/graphql';
-import { GraphQLPublic } from '@/lib/api';
-import { formatDate, generateJsonLd } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
-import Image from 'next/image';
-import { Button, Card, Icon, SearchInput, Select, Text } from 'opub-ui';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
 import Styles from '../datasets/dataset.module.scss';
-
-// Helper function to strip markdown and HTML tags for card preview
-const stripMarkdown = (markdown: string): string => {
-  if (!markdown) return '';
-  return markdown
-    // Remove code blocks first (before other replacements)
-    .replace(/```[\s\S]*?```/g, '')
-    // Remove inline code
-    .replace(/`([^`]+)`/g, '$1')
-    // Remove images
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
-    // Remove links
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    // Remove headers
-    .replace(/^#{1,6}\s+/gm, '')
-    // Remove bold
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/__([^_]+)__/g, '$1')
-    // Remove italic
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/_([^_]+)_/g, '$1')
-    // Remove strikethrough
-    .replace(/~~([^~]+)~~/g, '$1')
-    // Remove blockquotes
-    .replace(/^\s*>\s+/gm, '')
-    // Remove horizontal rules
-    .replace(/^(-{3,}|_{3,}|\*{3,})$/gm, '')
-    // Remove list markers
-    .replace(/^\s*[-*+]\s+/gm, '')
-    .replace(/^\s*\d+\.\s+/gm, '')
-    // Remove HTML tags
-    .replace(/<[^>]*>/g, '')
-    // Remove extra whitespace and newlines
-    .replace(/\n\s*\n/g, '\n')
-    .replace(/\n/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-};
+import { stripMarkdown } from '../search/components/UnifiedListingComponent';
 
 const PublishedCollaboratives = graphql(`
   query PublishedCollaboratives {
@@ -129,10 +92,7 @@ const CollaborativesListingClient = () => {
       console.log('Fetching collaboratives...');
       try {
         // @ts-expect-error - Query has no variables
-        const result = await GraphQLPublic(
-          PublishedCollaboratives as any,
-          {}
-        );
+        const result = await GraphQLPublic(PublishedCollaboratives as any, {});
         console.log('Collaboratives result:', result);
         return result as { publishedCollaboratives: TypeCollaborative[] };
       } catch (err) {
@@ -154,13 +114,14 @@ const CollaborativesListingClient = () => {
   // Filter and sort collaboratives
   const filteredAndSortedCollaboratives = collaboratives
     .filter((collaborative) => {
-      const matchesSearch = collaborative.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           collaborative.summary?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch =
+        collaborative.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        collaborative.summary?.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesSearch;
     })
     .sort((a, b) => {
       const [field, direction] = sortBy.split('_');
-      
+
       if (field === 'title') {
         const comparison = (a.title || '').localeCompare(b.title || '');
         return direction === 'asc' ? comparison : -comparison;
@@ -175,14 +136,16 @@ const CollaborativesListingClient = () => {
       }
       return 0;
     });
+
   const jsonLd = generateJsonLd({
-      '@context': 'https://schema.org',
-      '@type': 'WebPage',
-      name: 'CivicDataLab',
-      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/collaboratives`,
-      description:
-        'Solving the world\'s major challenges requires greater access to interoperable data that currently resides in silos. Data Collaboratives bring together government, academia, civil society, philanthropy, and companies to responsibly share and use data for public value. Building on trusted, long-term relationships among stakeholders, we can open access to high-impact datasets and responsible AI use-cases to generate insights for climate action, public health, gender equity, and other major shared problems, thereby advancing progress toward the Sustainable Development Goals. Our goal is to accelerate the formation of Data Collaboratives with shared governance, clear safeguards, and collaborative analytics, allowing stakeholders to harness data and AI for the public good.',
-    });
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'CivicDataLab',
+    url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/collaboratives`,
+    description:
+      "Solving the world's major challenges requires greater access to interoperable data that currently resides in silos. Data Collaboratives bring together government, academia, civil society, philanthropy, and companies to responsibly share and use data for public value. Building on trusted, long-term relationships among stakeholders, we can open access to high-impact datasets and responsible AI use-cases to generate insights for climate action, public health, gender equity, and other major shared problems, thereby advancing progress toward the Sustainable Development Goals. Our goal is to accelerate the formation of Data Collaboratives with shared governance, clear safeguards, and collaborative analytics, allowing stakeholders to harness data and AI for the public good.",
+  });
+
   return (
     <main>
       <JsonLd json={jsonLd} />
@@ -193,42 +156,55 @@ const CollaborativesListingClient = () => {
         ]}
       />
       <>
-      <>
-      <div className="w-full">
-        <div className=" bg-primaryBlue">
-          <div className=" container flex flex-col-reverse items-center gap-8 py-10 lg:flex-row ">
-            <div className="flex flex-col gap-5 lg:w-3/5">
-              <Text
-                variant="heading2xl"
-                fontWeight="bold"
-                color="onBgDefault"
-              >
-                Our Collaboratives
-              </Text>
-              <Text
-                variant="headingLg"
-                color="onBgDefault"
-                fontWeight="regular"
-                className="leading-3 lg:leading-5"
-              >
-                Solving the world&apos;s major challenges requires greater access to interoperable data that currently resides in silos. Data Collaboratives bring together government, academia, civil society, philanthropy, and companies to responsibly share and use data for public value. Building on trusted, long-term relationships among stakeholders, we can open access to high-impact datasets and responsible AI use-cases to generate insights for climate action, public health, gender equity, and other major shared problems, thereby advancing progress toward the Sustainable Development Goals. Our goal is to accelerate the formation of Data Collaboratives with shared governance, clear safeguards, and collaborative analytics, allowing stakeholders to harness data and AI for the public good.
-              </Text>
-            </div>
-            <div className="flex w-full items-center justify-center lg:w-2/5">
-              <Image
-                src={'/collaborative.svg'}
-                alt={'collaborative'}
-                width={1700}
-                height={800}
-                className="h-auto w-full object-contain"
-              />
+        <>
+          <div className="w-full">
+            <div className=" bg-primaryBlue">
+              <div className=" container flex flex-col-reverse items-center gap-8 py-10 lg:flex-row ">
+                <div className="flex flex-col gap-5 lg:w-3/5">
+                  <Text
+                    variant="heading2xl"
+                    fontWeight="bold"
+                    color="onBgDefault"
+                  >
+                    Our Collaboratives
+                  </Text>
+                  <Text
+                    variant="headingLg"
+                    color="onBgDefault"
+                    fontWeight="regular"
+                    className="leading-3 lg:leading-5"
+                  >
+                    Solving the world&apos;s major challenges requires greater
+                    access to interoperable data that currently resides in
+                    silos. Data Collaboratives bring together government,
+                    academia, civil society, philanthropy, and companies to
+                    responsibly share and use data for public value. Building on
+                    trusted, long-term relationships among stakeholders, we can
+                    open access to high-impact datasets and responsible AI
+                    use-cases to generate insights for climate action, public
+                    health, gender equity, and other major shared problems,
+                    thereby advancing progress toward the Sustainable
+                    Development Goals. Our goal is to accelerate the formation
+                    of Data Collaboratives with shared governance, clear
+                    safeguards, and collaborative analytics, allowing
+                    stakeholders to harness data and AI for the public good.
+                  </Text>
+                </div>
+                <div className="flex w-full items-center justify-center lg:w-2/5">
+                  <Image
+                    src={'/collaborative.svg'}
+                    alt={'collaborative'}
+                    width={1700}
+                    height={800}
+                    className="h-auto w-full object-contain"
+                  />
+                </div>
+              </div>
             </div>
           </div>
-          </div>
-        </div>
+        </>
       </>
-      </>
-      
+
       <div className="bg-onSurfaceDefault">
         <div className="container py-8 lg:py-14">
           {/* Header Section */}
@@ -236,7 +212,7 @@ const CollaborativesListingClient = () => {
             <Text variant="heading2xl" fontWeight="bold" className="mb-8">
               Explore Collaboratives
             </Text>
-            
+
             {/* Search and Filter Section */}
             <div className="flex flex-wrap gap-6 lg:flex-nowrap">
               <SearchInput
@@ -296,11 +272,11 @@ const CollaborativesListingClient = () => {
             </div>
           </div>
 
-          {isLoading? (
+          {isLoading ? (
             <div className="flex justify-center p-10">
               <Loading />
             </div>
-          ):error?(
+          ) : error ? (
             <div className="flex flex-col items-center justify-center gap-4 py-10">
               <Text variant="headingXl" color="critical">
                 Error Loading Collaboratives
@@ -309,7 +285,7 @@ const CollaborativesListingClient = () => {
                 Failed to load collaboratives. Please try again later.
               </Text>
             </div>
-          ):null}
+          ) : null}
 
           {/* Results Section */}
           {!isLoading && !error && (
@@ -317,54 +293,61 @@ const CollaborativesListingClient = () => {
               {/* Collaboratives Grid */}
               {filteredAndSortedCollaboratives.length > 0 ? (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredAndSortedCollaboratives.map((collaborative: TypeCollaborative) => (
-                    <Card
-                      key={collaborative.id}
-                      title={collaborative.title || ''}
-                      variation="collapsed"
-                      iconColor="warning"
-                      metadataContent={[
-                        {
-                          icon: Icons.calendar,
-                          label: 'Started',
-                          value: formatDate(collaborative.startedOn),
-                        },
-                        {
-                          icon: Icons.dataset,
-                          label: 'Datasets',
-                          value: collaborative.datasetCount?.toString() || '0',
-                        },
-                        {
-                          icon: Icons.globe,
-                          label: 'Geography',
-                          value:
-                            collaborative.geographies && collaborative.geographies.length > 0
-                              ? collaborative.geographies.map((geo: any) => geo.name).join(', ')
-                              : 'N/A',
-                        },
-                      ]}
-                      href={`/collaboratives/${collaborative.slug}`}
-                      footerContent={[
-                        {
-                          icon: collaborative.sectors?.[0]?.name 
-                            ? `/Sectors/${collaborative.sectors[0].name}.svg`
-                            : '/Sectors/default.svg',
-                          label: 'Sectors',
-                        },
-                        {
-                          icon: collaborative.isIndividualCollaborative
-                            ? collaborative?.user?.profilePicture
-                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.user.profilePicture.url}`
-                              : '/profile.png'
-                            : collaborative?.organization?.logo
-                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.organization.logo.url}`
-                              : '/org.png',
-                          label: 'Published by',
-                        },
-                      ]}
-                      description={stripMarkdown(collaborative.summary || '')}
-                    />
-                  ))}
+                  {filteredAndSortedCollaboratives.map(
+                    (collaborative: TypeCollaborative) => (
+                      <Card
+                        key={collaborative.id}
+                        title={collaborative.title || ''}
+                        variation="collapsed"
+                        iconColor="warning"
+                        imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.logo?.path.replace('/code/files/', '')}`}
+                        metadataContent={[
+                          {
+                            icon: Icons.calendar as any,
+                            label: 'Started',
+                            value: formatDate(collaborative.startedOn),
+                          },
+                          {
+                            icon: Icons.dataset as any,
+                            label: 'Datasets',
+                            value:
+                              collaborative.datasetCount?.toString() || '0',
+                          },
+                          {
+                            icon: Icons.globe as ComponentType<any>,
+                            label: 'Geography',
+                            value:
+                              collaborative.geographies &&
+                              collaborative.geographies.length > 0
+                                ? collaborative.geographies
+                                    .map((geo: any) => geo.name)
+                                    .join(', ')
+                                : 'N/A',
+                          },
+                        ]}
+                        href={`/collaboratives/${collaborative.slug}`}
+                        footerContent={[
+                          {
+                            icon: collaborative.sectors?.[0]?.name
+                              ? `/Sectors/${collaborative.sectors[0].name}.svg`
+                              : '/Sectors/default.svg',
+                            label: 'Sectors',
+                          },
+                          {
+                            icon: collaborative.isIndividualCollaborative
+                              ? collaborative?.user?.profilePicture
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.user.profilePicture.url}`
+                                : '/profile.png'
+                              : collaborative?.organization?.logo
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.organization.logo.url}`
+                                : '/org.png',
+                            label: 'Published by',
+                          },
+                        ]}
+                        description={stripMarkdown(collaborative.summary || '')}
+                      />
+                    )
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center gap-4 py-20">

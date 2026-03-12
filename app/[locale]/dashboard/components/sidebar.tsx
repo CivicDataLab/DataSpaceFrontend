@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button, Icon, Sheet, Spinner, Text } from 'opub-ui';
+import React, { useState } from 'react';
 
 import { Icons } from '@/components/icons';
 import { ProfileContent } from './main-nav';
@@ -8,7 +8,6 @@ import { ProfileContent } from './main-nav';
 interface SidebarProps {
   data: { href: string; title: string }[];
   session: any;
-  keycloakSessionLogOut: any;
   signIn: any;
   status: any;
 }
@@ -16,7 +15,6 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({
   data,
   session,
-  keycloakSessionLogOut,
   signIn,
   status,
 }) => {
@@ -49,7 +47,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                   {session?.user ? (
                     <ProfileContent
                       session={session}
-                      keycloakSessionLogOut={keycloakSessionLogOut}
                     />
                   ) : (
                     <Button

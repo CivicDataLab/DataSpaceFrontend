@@ -84,6 +84,7 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
           label="X Axis"
           selectedValue={xAxis}
           required
+          requiredIndicator={true}
           error="X Axis is required"
           onChange={(e) => {
             setXAxis(e);
@@ -96,6 +97,7 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
           label="Y Axis"
           selectedValue={yAxis}
           required
+          requiredIndicator={true}
           error="Y Axis is required"
           onChange={(e) => {
             setYAxis(e);

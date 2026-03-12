@@ -23,6 +23,7 @@
   --base-blue-solid-10: #0081f1;
   --base-blue-solid-11: #006adc;
   --base-blue-solid-12: #00254d;
+  --base-blue-solid-14: #f9fcff;
   --base-violet-solid-1: #fdfcfe;
   --base-violet-solid-2: #fbfaff;
   --base-violet-solid-3: #f5f2ff;
@@ -47,6 +48,8 @@
   --base-gray-slate-solid-10: #7e868c;
   --base-gray-slate-solid-11: #687076;
   --base-gray-slate-solid-12: #11181c;
+  --base-gray-slate-solid-13:#111111;
+  --base-gray-slate-solid-14:#545456;
   --base-red-solid-1: #fffcfc;
   --base-red-solid-2: #fff8f8;
   --base-red-solid-3: #ffefef;
@@ -83,11 +86,11 @@
   --base-amber-solid-10: #ffa01c;
   --base-amber-solid-11: #ad5700;
   --base-amber-solid-12: #4e2009;
-  --base-pure-white: #ffffff;
+  --base-pure-white: #ffffff ;
   --base-pure-black: #000000;
   --blue-primary-color: #0b3865;
   --orange-secondary-color: #fdb557;
-  --blue-primary-text: #194C71;
+  --blue-primary-text: #194c71;
   --orange-secondary-text: #b17f3d;
   --accent-tertiary-color: #84dccf;
   --grey-extralight: #eeeeee;
@@ -102,6 +105,8 @@
   --text-highlight: var(--base-violet-solid-11);
   --text-interactive: var(--base-blue-solid-11);
   --text-onbg-default: var(--base-gray-slate-solid-1);
+  /* Text color for stats on surface-stats background */
+  --text-surface-stats: #4a7d75;
   --text-onbg-disabled: var(--base-gray-slate-solid-9);
   --border-default: var(--base-gray-slate-solid-8);
   --border-subdued: var(--base-gray-slate-solid-7);
@@ -170,6 +175,7 @@
   --action-secondary-basic-hovered: var(--base-violet-solid-4);
   --action-secondary-neutral-depressed: var(--base-gray-slate-solid-6);
   --action-tertiary-basic-hover: var(--base-violet-alpha-2);
+  --alternate-background-color: var(--base-blue-solid-14);
   --base-indigo-alpha-1: #05058203;
   --action-tertiary-interactive-hover: var(--base-blue-alpha-2);
   --base-indigo-alpha-2: #054cff08;
@@ -189,6 +195,8 @@
   --background-solid-default: var(--base-indigo-solid-3);
   --surface-default: var(--base-pure-white);
   --surface-subdued: var(--base-gray-slate-solid-2);
+  /* Stats cards background */
+  --surface-stats: #ebf9fc;
   --base-indigo-alpha-10: #002cbdc4;
   --surface-selected: var(--base-blue-solid-2);
   --base-indigo-alpha-11: #00259ecc;
@@ -312,35 +320,43 @@
   --border-width-2: var(--space-05);
   --border-width-4: var(--space-1);
   --shadow-card: 0px 0px 12px 0px rgba(0, 0, 0, 0.16);
-  --shadow-modal: 0px 26px 80px 0px rgba(0, 0, 0, 0.2),
-    0px 0px 1px 0px rgba(0, 0, 0, 0.2);
-  --shadow-layer: 0px 31px 41px 0px rgba(32, 42, 53, 0.2),
+  --shadow-modal:
+    0px 26px 80px 0px rgba(0, 0, 0, 0.2), 0px 0px 1px 0px rgba(0, 0, 0, 0.2);
+  --shadow-layer:
+    0px 31px 41px 0px rgba(32, 42, 53, 0.2),
     0px 2px 16px 0px rgba(32, 42, 54, 0.08);
   --shadow-inset-basic: inset -1px 0px 0px 0px rgba(228, 229, 231, 1);
   --shadow-inset-button: inset 0px -1px 0px 0px rgba(0, 0, 0, 0.2);
   --shadow-button-pressed: inset 0px 1px 0px 0px rgba(0, 0, 0, 0.15);
   --shadow-button-default: 0px 1px 0px 0px rgba(0, 0, 0, 0.05);
-  --shadow-basic-deep: 0px 2px 16px 0px rgba(33, 43, 54, 0.08),
+  --shadow-basic-deep:
+    0px 2px 16px 0px rgba(33, 43, 54, 0.08),
     0px 0px 0px 1px rgba(6, 44, 82, 0.1);
   --shadow-basic-faint: 0px 1px 0px 0px rgba(22, 29, 37, 0.05);
   --shadow-basic-transparent: 0px 0px 0px 0px rgba(0, 0, 0, 0);
   --shadow-basic-xs: 0px 0px 2px 0px rgba(31, 33, 36, 0.24);
   --shadow-basic-sm: 0px 1px 1px 0px rgba(31, 33, 36, 0.1);
-  --shadow-basic-md: 0px 1px 6px 0px rgba(31, 33, 36, 0.05),
+  --shadow-basic-md:
+    0px 1px 6px 0px rgba(31, 33, 36, 0.05),
     0px 2px 4px 0px rgba(31, 33, 36, 0.1);
-  --shadow-basic-lg: 0px 2px 6px 0px rgba(31, 33, 36, 0.05),
+  --shadow-basic-lg:
+    0px 2px 6px 0px rgba(31, 33, 36, 0.05),
     0px 4px 12px 0px rgba(31, 33, 36, 0.2);
-  --shadow-basic-xl: 0px 12px 18px -2px rgba(31, 33, 36, 0.15),
+  --shadow-basic-xl:
+    0px 12px 18px -2px rgba(31, 33, 36, 0.15),
     0px 4px 18px -2px rgba(31, 33, 36, 0.08);
-  --shadow-basic-2xl: 0px 32px 56px -2px rgba(31, 33, 36, 0.16),
+  --shadow-basic-2xl:
+    0px 32px 56px -2px rgba(31, 33, 36, 0.16),
     0px 32px 32px 0px rgba(31, 33, 36, 0.15);
-  --shadow-element-popover: 0px 8px 20px -4px rgba(23, 24, 24, 0.12),
+  --shadow-element-popover:
+    0px 8px 20px -4px rgba(23, 24, 24, 0.12),
     0px 3px 6px -3px rgba(23, 24, 24, 0.08);
-  --shadow-element-card: 0px 1px 2px 0px rgba(0, 0, 0, 0.15),
-    0px 0px 5px 0px rgba(23, 24, 24, 0.05);
+  --shadow-element-card:
+    0px 1px 2px 0px rgba(0, 0, 0, 0.15), 0px 0px 5px 0px rgba(23, 24, 24, 0.05);
   --shadow-element-topnav: 0px 2px 2px -1px rgba(0, 0, 0, 0.15);
   --shadow-element-focus: 0px 0px 0px 2px rgba(0, 145, 255, 1);
-
+  --icon-metadata: #4a7d75;
+  --text-metadata: #4a7d75;
   --z-1: 100;
   --z-2: 400;
   --z-3: 513;

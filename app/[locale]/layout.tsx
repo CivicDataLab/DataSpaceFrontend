@@ -1,11 +1,12 @@
-import React from 'react';
+import { NextIntlClientProvider } from 'next-intl';
+import { unstable_setRequestLocale as setRequestLocale } from 'next-intl/server';
 import { Inter as FontSans } from 'next/font/google';
 import { notFound } from 'next/navigation';
-import { NextIntlClientProvider } from 'next-intl';
-import { unstable_setRequestLocale } from 'next-intl/server';
+import React from 'react';
 
-import Provider from '@/components/provider';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import Provider from '@/components/provider';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import locales from '../../config/locales';
 
 const fontSans = FontSans({ subsets: ['latin'], display: 'swap' });
@@ -64,26 +65,29 @@ export function generateStaticParams() {
 
 export default async function LocaleLayout({
   children,
-  params: { locale },
+  params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   let messages;
   try {
     messages = (await import(`../../locales/${locale}.json`)).default;
   } catch (error) {
     notFound();
   }
-  unstable_setRequestLocale(locale);
+  setRequestLocale(locale);
 
   return (
     <html lang={locale}>
       <body className={fontSans.className}>
         <GoogleAnalytics />
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <Provider>{children}</Provider>
-        </NextIntlClientProvider>
+        <NuqsAdapter>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <Provider>{children}</Provider>
+          </NextIntlClientProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );

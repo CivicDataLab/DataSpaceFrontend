@@ -6,7 +6,7 @@ import { ChartTypes } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts/core';
-import { Button, Divider, Icon, Sheet, Spinner, Text, toast } from 'opub-ui';
+import { Divider, Icon, Spinner, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';

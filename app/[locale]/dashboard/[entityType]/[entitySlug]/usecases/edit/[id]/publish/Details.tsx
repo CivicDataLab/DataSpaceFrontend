@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Text } from 'opub-ui';
 
 import { getWebsiteTitle } from '@/lib/utils';
+import { RichTextRenderer } from '@/components/RichTextRenderer';
 
 const Details = ({ data }: { data: any }) => {
   const [platformTitle, setPlatformTitle] = useState<string | null>(null);
@@ -62,7 +63,9 @@ const Details = ({ data }: { data: any }) => {
                     <Text variant="bodyMd">{item.label}:</Text>
                   </div>
                   <div>
-                    <Text variant="bodyMd">{item.value}</Text>
+                    <Text variant="bodyMd"><RichTextRenderer
+                                    content={item.value}
+                                  /></Text>
                   </div>
                 </div>
               )

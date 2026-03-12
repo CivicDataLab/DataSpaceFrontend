@@ -1,4 +1,5 @@
 import { useParams } from 'next/navigation';
+import { stripMarkdown } from '@/app/[locale]/(user)/search/components/UnifiedListingComponent';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -112,59 +113,76 @@ const SimilarDatasets: React.FC = () => {
               <CarouselContent className="p-4">
                 {SimilatDatasetdetails?.data?.getDataset &&
                   SimilatDatasetdetails?.data?.getDataset.similarDatasets.map(
-                    (item: any) => (
-                      <CarouselItem
-                        key={item.id}
-                        className={cn(
-                          'h-2/4 basis-full pl-4 md:basis-1/2  xl:basis-1/3',
-                          Styles.List
-                        )}
-                      >
-                        {' '}
-                        <Card
-                          title={item.title}
-                          description={item.description}
-                          metadataContent={[
-                            {
-                              icon: Icons.calendar,
-                              label: 'Date',
-                              value: '19 July 2024',
-                            },
-                            {
-                              icon: Icons.download,
-                              label: 'Download',
-                              value: item.downloadCount.toString(),
-                            },
-                            {
-                              icon: Icons.globe,
-                              label: 'Geography',
-                              value: item.geographies.join(', '),
-                            },
-                          ]}
-                          tag={item.tags}
-                          formats={item.formats}
-                          footerContent={[
-                            {
-                              icon: `/Sectors/${item.sectors[0]?.name}.svg`,
-                              label: 'Sectors',
-                            },
-                            {
-                              icon: item.isIndividualDataset
-                                ? item?.user?.profilePicture
-                                  ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
-                                  : '/profile.png'
-                                : item?.organization?.logo
-                                  ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
-                                  : '/org.png',
-                              label: 'Published by',
-                            },
-                          ]}
-                          variation={'collapsed'}
-                          iconColor="warning"
-                          href={`/datasets/${item.id}`}
-                        />
-                      </CarouselItem>
-                    )
+                    (item: any) => {
+                      const geographies =
+                        Array.isArray(item.geographies) &&
+                        item.geographies.length > 0
+                          ? item.geographies
+                              .map((geo: any) =>
+                                typeof geo === 'string' ? geo : geo?.name
+                              )
+                              .filter(Boolean)
+                          : null;
+
+                      const metadataContent: any[] = [
+                        {
+                          icon: Icons.calendar as any,
+                          label: 'Date',
+                          value: '19 July 2024',
+                        },
+                        {
+                          icon: Icons.download as any,
+                          label: 'Download',
+                          value: item.downloadCount.toString(),
+                        },
+                      ];
+
+                      if (geographies && geographies.length > 0) {
+                        metadataContent.push({
+                          icon: Icons.globe as any,
+                          label: 'Geography',
+                          value: geographies.join(', '),
+                        });
+                      }
+
+                      return (
+                        <CarouselItem
+                          key={item.id}
+                          className={cn(
+                            'h-2/4 basis-full pl-4 sm:basis-1/2 lg:basis-1/2',
+                            Styles.List
+                          )}
+                        >
+                          {' '}
+                          <Card
+                            title={item.title}
+                            description={stripMarkdown(item.description || '')}
+                            metadataContent={metadataContent}
+                            tag={item.tags}
+                            formats={item.formats}
+                            footerContent={[
+                              {
+                                icon: `/Sectors/${item.sectors[0]?.name}.svg` as any,
+                                label: 'Sectors',
+                              },
+                              {
+                                icon: item.isIndividualDataset
+                                  ? (item?.user?.profilePicture as any)
+                                    ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
+                                    : ('/profile.png' as any)
+                                  : (item?.organization?.logo as any)
+                                    ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
+                                    : ('/org.png' as any),
+                                label: 'Published by',
+                              },
+                            ]}
+                            variation={'collapsed'}
+                            iconColor="warning"
+                            href={`/datasets/${item.id}`}
+                          />
+                        </CarouselItem>
+                      );
+                    }
                   )}
               </CarouselContent>
               <CarouselNext />

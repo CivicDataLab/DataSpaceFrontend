@@ -6,6 +6,7 @@ import { Card, Icon, Spinner, Text } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 
 const userPublishedDatasetsDoc: any = graphql(`
   query userPublishedDatasetsList($userId: ID!) {
@@ -152,20 +153,20 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
               ]}
               key={index}
               title={item.title}
-              description={item.description}
+              description={stripMarkdown(item.description || '')}
               metadataContent={[
                 {
-                  icon: Icons.calendar,
+                  icon: Icons.calendar as any,
                   label: 'Date',
                   value: '19 July 2024',
                 },
                 {
-                  icon: Icons.download,
+                  icon: Icons.download as any,
                   label: 'Download',
                   value: item.downloadCount.toString(),
                 },
                 {
-                  icon: Icons.globe,
+                  icon: Icons.globe as any,
                   label: 'Geography',
                   value: 'India',
                 },

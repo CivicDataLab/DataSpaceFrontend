@@ -73,6 +73,14 @@ export function toTitleCase(str: string) {
   });
 }
 
+/** Converts sector slug (e.g. "climate-action") to filter param format (e.g. "Climate+Action") */
+export function buildSectorSlugParam(slug: string): string {
+  return slug
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('+');
+}
+
 const convertMap: any = {
   border: (value: { width: any; style: any; color: any }) => {
     return `${value.width} ${value.style} ${value.color}`;

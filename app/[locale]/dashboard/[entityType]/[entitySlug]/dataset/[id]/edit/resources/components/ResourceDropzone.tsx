@@ -1,15 +1,23 @@
-import React from 'react';
-import { useParams } from 'next/navigation';
 import { CreateFileResourceInput } from '@/gql/generated/graphql';
 import { useMutation } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'next-usequerystate';
+import { useParams } from 'next/navigation';
+import { parseAsString, useQueryState } from 'nuqs';
 import { Button, DropZone, Tag, Text, toast } from 'opub-ui';
+import React from 'react';
 
 import { GraphQL } from '@/lib/api';
 import { createResourceFilesDoc } from './query';
 
 export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
   const fileTypes = ['CSV', 'JSON', 'PDF', 'XLS', 'XLSX', 'XML', 'ZIP'];
+  const RESOURCE_UPLOAD_ERROR_TOAST_ID = 'dataset-resource-upload-error';
+  const getErrorMessage = (
+    err: any,
+    fallback: string
+  ) =>
+    typeof err?.message === 'string' && err.message.trim()
+      ? err.message.trim()
+      : fallback;
   const params = useParams<{
     entityType: string;
     entitySlug: string;
@@ -34,7 +42,9 @@ export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
         setResourceId(data.createFileResources[0].id);
       },
       onError: (err: any) => {
-        toast(err.message);
+        toast(getErrorMessage(err, 'Unable to upload resource right now.'), {
+          id: RESOURCE_UPLOAD_ERROR_TOAST_ID,
+        });
         setFile([]);
       },
     }

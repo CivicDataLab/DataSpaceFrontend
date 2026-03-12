@@ -3,6 +3,7 @@ import { graphql } from '@/gql';
 export const getResourceDoc = graphql(`
   query getResources($filters: DatasetFilter) {
     datasets(filters: $filters) {
+      datasetType
       resources {
         id
         dataset {

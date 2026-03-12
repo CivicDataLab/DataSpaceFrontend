@@ -1,14 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
 import LoadingPage from '@/app/[locale]/dashboard/loading';
 import { graphql } from '@/gql';
 import { ChartTypes } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
-import * as echarts from 'echarts/core';
 import {
   Button,
-  Dialog,
   Form,
   Label,
   Popover,
@@ -25,7 +22,6 @@ import {
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import TitleBar from '../../../components/title-bar';
-import { datasetResource } from '../../queries';
 
 interface YAxisColumnItem {
   fieldName: string;
@@ -739,6 +735,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                         }
                       )}
                       required
+                      requiredIndicator={true}
                       defaultValue={chartData?.dataset?.id}
                       onChange={(e) => {
                         if (
@@ -778,6 +775,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                         handleSave('resource', e);
                       }}
                       required
+                      requiredIndicator={true}
                     />
 
                     {/* Chart Type */}
@@ -786,6 +784,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                       label="Select Chart Type"
                       options={chartTypesOptions}
                       required
+                      requiredIndicator={true}
                       value={chartData?.type}
                       onChange={(e) => {
                         handleSave('chartType', e);
@@ -807,6 +806,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                         handleSave('xAxisColumn', e);
                       }}
                       required
+                      requiredIndicator={true}
                     />
 
                     {/* Y-axis columns */}
@@ -946,6 +946,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                         handleSave('aggregateType', e);
                       }}
                       required
+                      requiredIndicator={true}
                     />
                   </div>
                 ) : (
@@ -999,6 +1000,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                           handleSave('orientation', e);
                         }}
                         required
+                        requiredIndicator={true}
                       />
                     )}
 
@@ -1065,6 +1067,7 @@ const YaxisColumnForm = ({
             setYAxisColumn(e);
           }}
           required
+          requiredIndicator={true}
         />
 
         {/* Label for specific element */}

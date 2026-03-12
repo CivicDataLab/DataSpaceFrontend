@@ -85,7 +85,7 @@ const UserProfile = () => {
     location: '',
   };
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
+  const { mutate } = useMutation(
     (input: { input: UpdateUserInput }) =>
       GraphQL(
         updateUserMutation,

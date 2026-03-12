@@ -21,12 +21,13 @@ const orgDataQuery = graphql(`
 export async function generateMetadata({
   params,
 }: {
-  params: { organizationSlug: string };
+  params: Promise<{ organizationSlug: string }>;
 }): Promise<Metadata> {
+  const { organizationSlug } = await params;
   const data = await GraphQL(
     orgDataQuery,
     {},
-    { id: extractPublisherId(params.organizationSlug) }
+    { id: extractPublisherId(organizationSlug) }
   );
 
   const org = data.organization;
@@ -49,7 +50,7 @@ export async function generateMetadata({
         org?.description || 'Explore datasets and use cases by this publisher.',
       type: 'profile',
       siteName: 'CivicDataSpace',
-      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/publishers/${params.organizationSlug}`,
+      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/publishers/${organizationSlug}`,
       image: org?.logo?.url
         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo.url}`
         : `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
@@ -58,14 +59,15 @@ export async function generateMetadata({
   });
 }
 
-export default function OrgPage({
+export default async function OrgPage({
   params,
 }: {
-  params: { organizationSlug: string };
+  params: Promise<{ organizationSlug: string }>;
 }) {
+  const { organizationSlug } = await params;
   return (
     <OrgPageClient
-      organizationSlug={extractPublisherId(params.organizationSlug)}
+      organizationSlug={extractPublisherId(organizationSlug)}
     />
   );
 }

@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-  Text,
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+    Text,
 } from 'opub-ui';
+import React, { useEffect, useState, useRef } from 'react';
 
-import { toTitleCase } from '@/lib/utils';
 import { TreeView } from '@/components/ui/tree-view';
+import { toTitleCase } from '@/lib/utils';
 
 interface Geography {
   id: number;
@@ -40,6 +40,8 @@ const GeographyFilter: React.FC<GeographyFilterProps> = ({
   const [geographies, setGeographies] = useState<GeographyNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const geographyOptionsRef = useRef(geographyOptions);
+  geographyOptionsRef.current = geographyOptions;
 
   useEffect(() => {
     const fetchGeographies = async () => {
@@ -73,14 +75,22 @@ const GeographyFilter: React.FC<GeographyFilterProps> = ({
           }
         );
 
-        const { data } = await response.json();
+        const text = await response.text();
+        let data;
+        try {
+          const parsed = JSON.parse(text);
+          data = parsed.data;
+        } catch {
+          console.error('GeographyFilter JSON parse error:', text.substring(0, 500));
+          throw new Error('Failed to parse geography response');
+        }
         
         if (data && data.geographies && data.geographies.length > 0) {
           const hierarchicalData = buildHierarchy(data.geographies);
           setGeographies(hierarchicalData);
-        } else if (geographyOptions && geographyOptions.length > 0) {
+        } else if (geographyOptionsRef.current && geographyOptionsRef.current.length > 0) {
           // Fallback to aggregations if GraphQL fails
-          const flatGeographies: GeographyNode[] = geographyOptions.map((opt, idx) => ({
+          const flatGeographies: GeographyNode[] = geographyOptionsRef.current.map((opt, idx) => ({
             id: idx,
             name: opt.label,
             code: '',
@@ -93,8 +103,8 @@ const GeographyFilter: React.FC<GeographyFilterProps> = ({
       } catch (error) {
         console.error('Error fetching geographies:', error);
         // Use aggregations as fallback on error
-        if (geographyOptions && geographyOptions.length > 0) {
-          const flatGeographies: GeographyNode[] = geographyOptions.map((opt, idx) => ({
+        if (geographyOptionsRef.current && geographyOptionsRef.current.length > 0) {
+          const flatGeographies: GeographyNode[] = geographyOptionsRef.current.map((opt, idx) => ({
             id: idx,
             name: opt.label,
             code: '',
@@ -110,7 +120,7 @@ const GeographyFilter: React.FC<GeographyFilterProps> = ({
     };
 
     fetchGeographies();
-  }, []); // Only run once on mount
+  }, []);
 
   const buildHierarchy = (flatList: Geography[]): GeographyNode[] => {
     const map = new Map<number, GeographyNode>();

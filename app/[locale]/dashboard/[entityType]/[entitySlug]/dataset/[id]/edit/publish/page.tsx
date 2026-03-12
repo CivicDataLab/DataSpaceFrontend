@@ -23,6 +23,7 @@ import {
 import { GraphQL } from '@/lib/api';
 import { formatDate, getWebsiteTitle, toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import { RichTextRenderer } from '@/components/RichTextRenderer';
 
 const datasetSummaryQuery: any = graphql(`
   query datasetsSummary($filters: DatasetFilter) {
@@ -61,6 +62,8 @@ const datasetSummaryQuery: any = graphql(`
       description
       created
       modified
+      datasetType
+      promptMetadata
     }
   }
 `);
@@ -189,14 +192,20 @@ const Page = () => {
     getDatasetsSummary.refetch();
   });
 
+  const isPromptDataset =
+    getDatasetsSummary.data?.datasets[0]?.datasetType === 'PROMPT';
+  const promptMetadata = getDatasetsSummary.data?.datasets[0]?.promptMetadata;
+
   const Summary = [
     {
-      name: 'Resource',
+      name: isPromptDataset ? 'Prompt Files' : 'Resource',
       data: getDatasetsSummary.data?.datasets[0]?.resources,
       error:
         getDatasetsSummary.data &&
         getDatasetsSummary.data?.datasets[0]?.resources.length === 0
-          ? 'No Resources found. Please add to continue.'
+          ? isPromptDataset
+            ? 'No Prompt Files found. Please add to continue.'
+            : 'No Resources found. Please add to continue.'
           : '',
       errorType: 'critical',
     },
@@ -225,6 +234,16 @@ const Page = () => {
           : '',
       errorType: 'critical',
     },
+    ...(isPromptDataset
+      ? [
+          {
+            name: 'Prompt Metadata',
+            data: promptMetadata,
+            error: '',
+            errorType: 'info',
+          },
+        ]
+      : []),
   ];
 
   const PrimaryMetadata = [
@@ -246,6 +265,8 @@ const Page = () => {
     },
   ];
   const router = useRouter();
+  const PUBLISH_SUCCESS_TOAST_ID = 'dataset-publish-success';
+  const PUBLISH_ERROR_TOAST_ID = 'dataset-publish-error';
 
   const { mutate, isLoading: mutationLoading } = useMutation(
     () =>
@@ -258,13 +279,19 @@ const Page = () => {
       ),
     {
       onSuccess: (data: any) => {
-        toast('Dataset Published Successfully');
+        toast('Dataset Published Successfully', {
+          id: PUBLISH_SUCCESS_TOAST_ID,
+        });
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/dataset`
         );
       },
       onError: (err: any) => {
-        toast(`Received ${err} on dataset publish `);
+        const errorMessage =
+          typeof err?.message === 'string' && err.message.trim()
+            ? err.message.trim()
+            : 'Unable to publish dataset right now. Please try again.';
+        toast(`Error: ${errorMessage}`, { id: PUBLISH_ERROR_TOAST_ID });
       },
     }
   );
@@ -310,10 +337,7 @@ const Page = () => {
     };
 
     fetchTitle();
-  }, [
-    getDatasetsSummary.data?.datasets[0]?.metadata,
-    getDatasetsSummary.isLoading,
-  ]);
+  }, [getDatasetsSummary.data?.datasets, getDatasetsSummary.isLoading]);
 
   return (
     <>
@@ -340,7 +364,7 @@ const Page = () => {
                     value={`item-${index}`}
                     className=" border-none"
                   >
-                    <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-baseBlueSolid3  p-4 hover:no-underline ">
+                    <AccordionTrigger className="flex w-full items-center gap-2 rounded-1 bg-baseBlueSolid3  p-4 hover:no-underline ">
                       <div className="flex flex-wrap items-center justify-start gap-2">
                         <Text className=" w-32 text-justify font-semi-bold">
                           {item.name}
@@ -352,7 +376,9 @@ const Page = () => {
                               color="critical"
                               size={24}
                             />
-                            <Text variant="bodyMd">{item.error}</Text>
+                            <Text variant="bodyMd" className="text-justify">
+                              {item.error}
+                            </Text>
                           </div>
                         )}
                       </div>
@@ -365,7 +391,96 @@ const Page = () => {
                       }}
                     >
                       <div className=" py-4">
-                        {item.name !== 'Metadata' ? (
+                        {item.name === 'Prompt Metadata' ? (
+                          <div className="flex flex-col gap-4 px-8 py-4">
+                            {item.data?.task_type && (
+                              <div className="flex flex-wrap gap-2">
+                                <Text className="lg:basis-1/6" variant="bodyMd">
+                                  Task Type:
+                                </Text>
+                                <Text variant="bodyMd" className="lg:basis-4/5">
+                                  {item.data.task_type
+                                    .replace(/_/g, ' ')
+                                    .replace(/\b\w/g, (c: string) =>
+                                      c.toUpperCase()
+                                    )}
+                                </Text>
+                              </div>
+                            )}
+                            {item.data?.domain && (
+                              <div className="flex flex-wrap gap-2">
+                                <Text className="lg:basis-1/6" variant="bodyMd">
+                                  Domain:
+                                </Text>
+                                <Text variant="bodyMd" className="lg:basis-4/5">
+                                  {item.data.domain}
+                                </Text>
+                              </div>
+                            )}
+                            {item.data?.target_languages?.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                <Text className="lg:basis-1/6" variant="bodyMd">
+                                  Target Languages:
+                                </Text>
+                                <div className="flex gap-2 lg:basis-4/5">
+                                  {item.data.target_languages.map(
+                                    (lang: string, idx: number) => (
+                                      <Tag key={idx}>{lang}</Tag>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            {item.data?.prompt_format && (
+                              <div className="flex flex-wrap gap-2">
+                                <Text className="lg:basis-1/6" variant="bodyMd">
+                                  Prompt Format:
+                                </Text>
+                                <Text variant="bodyMd" className="lg:basis-4/5">
+                                  {item.data.prompt_format}
+                                </Text>
+                              </div>
+                            )}
+                            {item.data?.target_model_types?.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                <Text className="lg:basis-1/6" variant="bodyMd">
+                                  Target Model Types:
+                                </Text>
+                                <div className="flex gap-2 lg:basis-4/5">
+                                  {item.data.target_model_types.map(
+                                    (model: string, idx: number) => (
+                                      <Tag key={idx}>
+                                        {model
+                                          .replace(/_/g, ' ')
+                                          .replace(/\b\w/g, (c: string) =>
+                                            c.toUpperCase()
+                                          )}
+                                      </Tag>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            <div className="flex flex-wrap gap-2">
+                              <Text className="lg:basis-1/6" variant="bodyMd">
+                                Has System Prompt:
+                              </Text>
+                              <Text variant="bodyMd" className="lg:basis-4/5">
+                                {item.data?.has_system_prompt ? 'Yes' : 'No'}
+                              </Text>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Text className="lg:basis-1/6" variant="bodyMd">
+                                Has Example Responses:
+                              </Text>
+                              <Text variant="bodyMd" className="lg:basis-4/5">
+                                {item.data?.has_example_responses
+                                  ? 'Yes'
+                                  : 'No'}
+                              </Text>
+                            </div>
+                          </div>
+                        ) : item.name !== 'Metadata' ? (
                           item.data &&
                           item?.data.length > 0 && (
                             <Table
@@ -393,7 +508,7 @@ const Page = () => {
                                       variant="bodyMd"
                                       className="lg:basis-4/5"
                                     >
-                                      {item.value}
+                                      <RichTextRenderer content={item.value} />
                                     </Text>
                                   </div>
                                 )
@@ -464,6 +579,7 @@ const Page = () => {
                   getDatasetsSummary.data?.datasets[0]
                 )}
                 onClick={() => mutate()}
+                loading={mutationLoading}
               >
                 Publish
               </Button>

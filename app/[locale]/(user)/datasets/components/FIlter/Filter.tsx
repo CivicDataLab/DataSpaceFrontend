@@ -19,6 +19,7 @@ interface FilterProps {
   options: Record<string, { label: string; value: string }[]>;
   setSelectedOptions: (category: string, values: string[]) => void;
   selectedOptions: Record<string, string[]>;
+  lockedFilters?: Record<string, string[]>;
 }
 
 const Filter: React.FC<FilterProps> = ({
@@ -26,10 +27,13 @@ const Filter: React.FC<FilterProps> = ({
   options,
   setSelectedOptions,
   selectedOptions,
+  lockedFilters = {},
 }) => {
   const handleReset = () => {
     Object.keys(options).forEach((category) => {
-      setSelectedOptions(category, []); // Reset selected options for each category
+      // Keep locked filters when resetting
+      const locked = lockedFilters[category] || [];
+      setSelectedOptions(category, locked);
     });
   };
 
@@ -85,7 +89,7 @@ const Filter: React.FC<FilterProps> = ({
                   value={category}
                   className=" border-surfaceDefault"
                 >
-                  <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-[#1F5F8D1A] py-[10px] px-3 hover:no-underline">
+                  <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-[#1F5F8D1A] px-3 py-[10px] hover:no-underline">
                     <Text fontWeight="medium">{toTitleCase(category)}</Text>
                   </AccordionTrigger>
                   <AccordionContent
@@ -97,11 +101,25 @@ const Filter: React.FC<FilterProps> = ({
                   >
                     <CheckboxGroup
                       name={category}
-                      options={data}
+                      options={data.map((option) => ({
+                        ...option,
+                        disabled:
+                          lockedFilters[category]?.includes(option.value) ||
+                          false,
+                      }))}
                       title={undefined}
                       value={selectedOptions[category] || []}
                       onChange={(values) => {
-                        setSelectedOptions(category, values as string[]);
+                        // Prevent unselecting locked filters
+                        const locked = lockedFilters[category] || [];
+                        const newValues = values as string[];
+
+                        // Ensure all locked values remain selected
+                        const finalValues = Array.from(
+                          new Set([...locked, ...newValues])
+                        );
+
+                        setSelectedOptions(category, finalValues);
                       }}
                     />
                   </AccordionContent>
