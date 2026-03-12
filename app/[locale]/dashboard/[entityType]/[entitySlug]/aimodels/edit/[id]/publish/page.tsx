@@ -209,7 +209,7 @@ export default function PublishPage() {
           setStatus('saved');
           refetch();
           router.push(
-            `/dashboard/${params.entityType}/${params.entitySlug}/aimodels`
+            `/dashboard/${params.entityType}/${params.entitySlug}/aimodels?tab=active`
           );
         },
         onError: (error: any) => {

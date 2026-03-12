@@ -184,7 +184,7 @@ export default function AIModelsPage({
         <LinkButton
           kind="tertiary"
           size="medium"
-          href={`/dashboard/${entityType}/${entitySlug}/aimodels/edit/${row.original.id}/details`}
+          href={`/dashboard/${entityType}/${entitySlug}/aimodels/edit/${row.original.id}/details?tab=${navigationTab ?? 'registered'}`}
         >
           <span className="line-clamp-1 max-w-[280px]">
             {row.original.displayName}

@@ -32,7 +32,7 @@ const Sectors = () => {
   const router = useRouter();
 
   return (
-    <div className="container pt-10 md:px-8 lg:pt-20">
+    <div className="container pt-10 pb-12 md:px-8 lg:pt-20 lg:pb-24">
       <div className="flex flex-wrap items-center justify-between gap-4 px-4 md:px-12 lg:gap-2 lg:px-12 ">
         <div className="flex flex-col gap-2">
           <Text variant="headingXl">Explore Sectors</Text>
@@ -41,7 +41,7 @@ const Sectors = () => {
             matters most to your domain.
           </Text>
         </div>
-        <div>
+        <div className="mr-8 lg:mr-12">
           <Button
             kind="tertiary"
             className="bg-transparent border-none shadow-none text-primaryText px-0 hover:underline"

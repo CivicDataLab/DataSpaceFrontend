@@ -117,7 +117,7 @@ export default function DatasetDetailsPage({
             { href: '#', label: 'Dataset Details' },
           ]}
         />
-        <div className="flex">
+        <div className="container flex">
           <div className="w-full gap-10 border-r-2 border-solid border-greyExtralight p-6 lg:w-3/4 lg:p-10" data-tour="dataset-info">
             {Datasetdetails.isLoading ? (
               <div className=" mt-8 flex justify-center">

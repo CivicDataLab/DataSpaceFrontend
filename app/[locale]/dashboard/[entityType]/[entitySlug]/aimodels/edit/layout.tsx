@@ -2,7 +2,12 @@
 
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useParams, usePathname, useRouter } from 'next/navigation';
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from 'next/navigation';
 import { Tab, TabList, Tabs, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -27,6 +32,8 @@ const FetchAIModelName: any = graphql(`
     aiModels(filters: $filters) {
       id
       displayName
+      status
+      isPublic
     }
   }
 `);
@@ -34,6 +41,7 @@ const FetchAIModelName: any = graphql(`
 const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const pathName = usePathname();
+  const searchParams = useSearchParams();
   const params = useParams<{
     entityType: string;
     entitySlug: string;
@@ -91,6 +99,13 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     }
   );
 
+  const sourceTab = searchParams.get('tab');
+
+  const goBackURL =
+    sourceTab === 'active'
+      ? `/dashboard/${params.entityType}/${params.entitySlug}/aimodels?tab=active`
+      : `/dashboard/${params.entityType}/${params.entitySlug}/aimodels`;
+
   const links = [
     {
       label: 'Metadata',
@@ -131,7 +146,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       <TitleBar
         label={'AI MODEL NAME'}
         title={AIModelData?.data?.aiModels[0]?.displayName}
-        goBackURL={`/dashboard/${params.entityType}/${params.entitySlug}/aimodels`}
+        goBackURL={goBackURL}
         onSave={(e) => mutate({ displayName: e })}
         loading={editMutationLoading}
         status={titleBarStatus}

@@ -166,6 +166,7 @@ module.exports = {
   actionSecondaryBasicHovered: 'var(--base-violet-solid-4)',
   actionSecondaryNeutralDepressed: 'var(--base-gray-slate-solid-6)',
   actionTertiaryBasicHover: 'var(--base-violet-alpha-2)',
+  alternateBackgroundColor: 'var(--alternate-background-color)',
   baseIndigoAlpha1: '#05058203',
   actionTertiaryInteractiveHover: 'var(--base-blue-alpha-2)',
   baseIndigoAlpha2: '#054CFF08',

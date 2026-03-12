@@ -6,10 +6,6 @@ import PdfPreview from '@/app/[locale]/(user)/components/PdfPreview';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
   Button,
   Dialog,
   Format,
@@ -21,7 +17,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-
+import styles from './Resources.module.scss';
 const datasetResourceQuery: any = graphql(`
   query datasetResources($datasetId: UUID!) {
     datasetResources(datasetId: $datasetId) {
@@ -82,7 +78,7 @@ const Resources = () => {
                   View All Columns
                 </Button>
               </Dialog.Trigger>
-              <Dialog.Content title={'All Columns'} limitHeight>
+              <Dialog.Content title={'All Columns'} limitHeight className={styles.dialogTableWrapper}>
                 <Table
                   columns={[
                     {
@@ -168,7 +164,7 @@ const Resources = () => {
                   Preview
                 </Button>
               </Dialog.Trigger>
-              <Dialog.Content title={'Preview'} limitHeight large>
+              <Dialog.Content title={'Preview'} limitHeight large className={styles.dialogTableWrapper}>
                 {row.original.format === 'PDF' ? (
                   <PdfPreview
                     url={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${row.original.id}`}
@@ -225,63 +221,49 @@ const Resources = () => {
                   className="mt-5 flex flex-col gap-6 border-1 border-solid border-greyExtralight bg-surfaceDefault p-4 lg:mx-0 lg:p-6"
                 >
                   <div>
-                    <Accordion type="single" collapsible className="w-full">
-                      <AccordionItem value="item-1" className=" border-none">
-                        <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
-                          <div className="flex flex-wrap md:flex-nowrap items-center gap-2 ">
-                            {item.fileDetails?.format && (
-                              <Format fileType={item.fileDetails?.format} />
-                            )}
-                            <Text variant="headingMd" className=" line-clamp-1">
-                              {item.name}
-                            </Text>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <AccordionTrigger className="flex w-full items-center gap-2 p-0 hover:no-underline">
+                    <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
+                      <div className="flex flex-wrap md:flex-nowrap items-center gap-2 ">
+                        {item.fileDetails?.format && (
+                          <Format fileType={item.fileDetails?.format} />
+                        )}
+                        <Text variant="headingMd" className=" line-clamp-1">
+                          {item.name}
+                        </Text>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Link
+                          href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${item.id}`}
+                          target="_blank"
+                          className="flex justify-center"
+                        >
+                          <Button kind="tertiary">
+                            <div className="flex gap-1">
                               <Text
                                 variant="bodyLg"
-                                className=" w-[100px] text-secondaryText"
+                                className=" text-primaryText"
+                                fontWeight="semibold"
                               >
-                                {' '}
-                                View Details
+                                Download
                               </Text>
-                            </AccordionTrigger>
-                            <Link
-                              href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${item.id}`}
-                              target="_blank"
-                              className="flex justify-center"
-                            >
-                              <Button kind="tertiary">
-                                  <div className="flex gap-1">
-                                    <Text
-                                      variant="bodyLg"
-                                      className=" text-primaryText"
-                                      fontWeight="semibold"
-                                    >
-                                      {' '}
-                                      Download
-                                    </Text>
-                                    <Icon source={Icons.download} size={20} />
-                                  </div>
-                                </Button>
-                              </Link>
+                              <Icon source={Icons.download} size={20} />
                             </div>
-                        </div>
-                        <AccordionContent
-                          className="flex w-full flex-col py-5"
-                          style={{
-                            backgroundColor: 'var( --base-pure-white)',
-                            outline: '1px solid var( --base-pure-white)',
-                          }}
-                        >
-                          <Table
-                            columns={generateColumnData()}
-                            rows={generateTableData(item)}
-                            hideFooter
-                          />
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                    <div
+                      className={`flex w-full flex-col py-5 ${styles.tableWrapper}`}
+                      style={{
+                        backgroundColor: 'var( --base-pure-white)',
+                        outline: '1px solid var( --base-pure-white)',
+                      }}
+                    >
+                      <Table
+                        columns={generateColumnData()}
+                        rows={generateTableData(item)}
+                        hideFooter
+                      />
+                    </div>
                   </div>
                 </div>
               )
