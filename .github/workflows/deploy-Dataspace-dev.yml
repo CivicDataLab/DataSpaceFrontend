@@ -3,28 +3,28 @@ name: Update DataSpace Dev
 on:
   push:
     branches: ['dev']
-env:
-  KEYCLOAK_CLIENT_ID: 'dataspace'
-  KEYCLOAK_CLIENT_SECRET: 'Q2iHhyXNOqOu7Xaln7Z45QrDnbff13eu'
-  AUTH_ISSUER: 'https://opub-kc.civicdatalab.in/auth/realms/DataSpace'
-  NEXTAUTH_URL: 'https://dev.civicdataspace.in'
-  NEXT_PUBLIC_NEXTAUTH_URL: 'https://dev.civicdataspace.in'
-  NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
-  END_SESSION_URL: 'https://opub-kc.civicdatalab.in/auth/realms/DataSpace/protocol/openid-connect/logout'
-  REFRESH_TOKEN_URL: 'https://opub-kc.civicdatalab.in/auth/realms/DataSpace/protocol/openid-connect/token'
-  NEXT_PUBLIC_BACKEND_URL: 'https://dev.api.civicdataspace.in'
-  BACKEND_GRAPHQL_URL: 'https://dev.api.civicdataspace.in/api/graphql'
-  NEXT_PUBLIC_ENABLE_ACCESSMODEL: ${{secrets.NEXT_PUBLIC_ENABLE_ACCESSMODEL_DS}}
-  NEXT_PUBLIC_BACKEND_GRAPHQL_URL: 'https://dev.api.civicdataspace.in/api/graphql'
-  BACKEND_URL: 'https://dev.api.civicdataspace.in'
-  NEXT_PUBLIC_PLATFORM_URL: 'https://dev.civicdataspace.in'
-  NEXT_PUBLIC_ANALYTICS_URL: ${{secrets.NEXT_PUBLIC_ANALYTICS_URL}}
-
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    environment: development
+    env:
+      KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
+      KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+      AUTH_ISSUER: ${{secrets.AUTH_ISSUER}}
+      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+      NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
+      NEXT_PUBLIC_NEXTAUTH_URL: ${{ secrets.NEXT_PUBLIC_NEXTAUTH_URL }}
+      END_SESSION_URL: ${{ secrets.END_SESSION_URL }}
+      REFRESH_TOKEN_URL: ${{ secrets.REFRESH_TOKEN_URL }}
+      NEXT_PUBLIC_BACKEND_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
+      BACKEND_URL: ${{secrets.BACKEND_URL}}
+      NEXT_PUBLIC_BACKEND_GRAPHQL_URL: ${{secrets.NEXT_PUBLIC_BACKEND_GRAPHQL_URL}}
+      BACKEND_GRAPHQL_URL: ${{ secrets.BACKEND_GRAPHQL_URL }}
+      NEXT_PUBLIC_ENABLE_ACCESSMODEL: ${{secrets.NEXT_PUBLIC_ENABLE_ACCESSMODEL_DS}}
+      NEXT_PUBLIC_ANALYTICS_URL: ${{secrets.NEXT_PUBLIC_ANALYTICS_URL}}
+      NEXT_PUBLIC_PLATFORM_URL: ${{secrets.NEXT_PUBLIC_PLATFORM_URL}}
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -47,8 +47,8 @@ jobs:
       - name: Send .next2 to EC2
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.EC2_HOST_DEV_DS }}
-          username: ${{ secrets.EC2_USERNAME_DS }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           source: .next2
           target: DataExchange/DataExFrontend
@@ -56,8 +56,8 @@ jobs:
       - name: Send public2 to EC2
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.EC2_HOST_DEV_DS }}
-          username: ${{ secrets.EC2_USERNAME_DS }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           source: public2
           target: DataExchange/DataExFrontend
@@ -65,7 +65,7 @@ jobs:
       - name: Update with new Build
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST_DEV_DS }}
-          username: ${{ secrets.EC2_USERNAME_DS }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: rm -rf DataExchange/DataExFrontend/.next; rm -rf DataExchange/DataExFrontend/public; mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next; mv DataExchange/DataExFrontend/public2 DataExchange/DataExFrontend/public; /home/ubuntu/.nvm/versions/node/v20.11.1/bin/pm2 restart dataspace
