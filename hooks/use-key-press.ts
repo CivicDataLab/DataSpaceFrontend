@@ -25,7 +25,6 @@ export function useKeyPress(targetKey: string, withMeta?: boolean): boolean {
   // If released key is our target key then set to false
   const upHandler = ({
     key,
-    metaKey,
   }: {
     key: string;
     metaKey?: boolean;
