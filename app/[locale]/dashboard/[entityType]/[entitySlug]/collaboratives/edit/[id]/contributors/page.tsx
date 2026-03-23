@@ -33,6 +33,8 @@ const Details = () => {
     partners: [] as { label: string; value: string }[],
   });
 
+  const COLLAB_CONTRIBUTORS_TOAST_ID = 'collaboratives-contributors-toast';
+
   const Users: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_users`],
     () =>
@@ -111,11 +113,11 @@ const Details = () => {
         }, input),
       {
         onSuccess: () => {
-          toast('Contributor added successfully');
+          toast('Contributor added successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
           CollaborativeData.refetch();
         },
         onError: (error: any) => {
-          toast(`Error: ${error.message}`);
+          toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
         },
       }
     );
@@ -128,11 +130,11 @@ const Details = () => {
         }, input),
       {
         onSuccess: () => {
-          toast('Contributor removed successfully');
+          toast('Contributor removed successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
           CollaborativeData.refetch();
         },
         onError: (error: any) => {
-          toast(`Error: ${error.message}`);
+          toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
         },
       }
     );
@@ -144,11 +146,11 @@ const Details = () => {
       }, input),
     {
       onSuccess: () => {
-        toast('Supporter added successfully');
+        toast('Supporter added successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
         CollaborativeData.refetch();
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
       },
     }
   );
@@ -161,11 +163,11 @@ const Details = () => {
         }, input),
       {
         onSuccess: () => {
-          toast('Supporter removed successfully');
+          toast('Supporter removed successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
           CollaborativeData.refetch();
         },
         onError: (error: any) => {
-          toast(`Error: ${error.message}`);
+          toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
         },
       }
     );
@@ -177,11 +179,11 @@ const Details = () => {
       }, input),
     {
       onSuccess: () => {
-        toast('Partner added successfully');
+        toast('Partner added successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
         CollaborativeData.refetch();
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
       },
     }
   );
@@ -194,11 +196,11 @@ const Details = () => {
         }, input),
       {
         onSuccess: () => {
-          toast('Partner removed successfully');
+        toast('Partner removed successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
           CollaborativeData.refetch();
         },
         onError: (error: any) => {
-          toast(`Error: ${error.message}`);
+        toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
         },
       }
     );

@@ -73,6 +73,7 @@ const Details = () => {
   }>();
 
   const router = useRouter();
+  const COLLAB_DETAILS_TOAST_ID = 'collaboratives-details-toast';
 
   const CollaborativeData: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_CollaborativeData_details`],
@@ -145,7 +146,7 @@ const Details = () => {
       ),
     {
       onSuccess: (res: any) => {
-        toast('Collaborative updated successfully');
+        toast('Collaborative updated successfully', { id: COLLAB_DETAILS_TOAST_ID });
         setFormData((prev) => ({
           ...prev,
           ...res.updateCollaborative,
@@ -156,7 +157,7 @@ const Details = () => {
         }));
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(`Error: ${error.message}`, { id: COLLAB_DETAILS_TOAST_ID });
       },
     }
   );

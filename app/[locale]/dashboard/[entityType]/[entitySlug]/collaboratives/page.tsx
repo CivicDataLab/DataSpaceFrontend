@@ -102,6 +102,8 @@ export default function CollaborativePage() {
     }
   }, [navigationTab, isValidParams]);
 
+  const COLLAB_LIST_TOAST_ID = 'collaboratives-list-toast';
+
   const DeleteCollaborativeMutation: {
     mutate: any;
     isLoading: boolean;
@@ -114,13 +116,13 @@ export default function CollaborativePage() {
       }),
     {
       onSuccess: () => {
-        toast(`Deleted Collaborative successfully`);
+        toast(`Deleted Collaborative successfully`, { id: COLLAB_LIST_TOAST_ID });
         if (isValidParams) {
           AllCollaboratives.refetch();
         }
       },
       onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
+        toast('Error:  ' + err.message.split(':')[0], { id: COLLAB_LIST_TOAST_ID });
       },
     }
   );
@@ -134,7 +136,7 @@ export default function CollaborativePage() {
     () => GraphQL(AddCollaborative, ownerArgs || {}, []),
     {
       onSuccess: (response: any) => {
-        toast(`Collaborative created successfully`);
+        toast(`Collaborative created successfully`, { id: COLLAB_LIST_TOAST_ID });
         if (isValidParams && entityType && entitySlug) {
           router.push(
             `/dashboard/${entityType}/${entitySlug}/collaboratives/edit/${response.addCollaborative.id}/details`
@@ -143,7 +145,7 @@ export default function CollaborativePage() {
         }
       },
       onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
+        toast('Error:  ' + err.message.split(':')[0], { id: COLLAB_LIST_TOAST_ID });
       },
     }
   );
@@ -160,13 +162,13 @@ export default function CollaborativePage() {
       }),
     {
       onSuccess: () => {
-        toast(`Unpublished collaborative successfully`);
+        toast(`Unpublished collaborative successfully`, { id: COLLAB_LIST_TOAST_ID });
         if (isValidParams) {
           AllCollaboratives.refetch();
         }
       },
       onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
+        toast('Error:  ' + err.message.split(':')[0], { id: COLLAB_LIST_TOAST_ID });
       },
     }
   );
