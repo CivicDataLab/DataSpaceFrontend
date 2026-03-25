@@ -10,7 +10,6 @@ import { Toaster, Tooltip } from 'opub-ui';
 
 import { RouterEvents } from '@/lib/navigation';
 import SessionGuard from './SessionGuard';
-import { TourGuide } from './Tour';
 
 export default function Provider({ children }: { children: React.ReactNode }) {
   const [client] = React.useState(
