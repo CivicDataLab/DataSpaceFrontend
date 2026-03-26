@@ -129,7 +129,7 @@ export default function AIModelDetailsPage() {
   const isValidHttpUrl = (value: string) => {
     try {
       const parsed = new URL(value);
-      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+      return parsed.protocol === 'https:';
     } catch {
       return false;
     }
@@ -304,7 +304,7 @@ export default function AIModelDetailsPage() {
     }
 
     if (!isValidHttpUrl(trimmedWebsite)) {
-      toast('Please enter a valid URL that includes http or https.');
+      toast('Please enter a valid URL that includes https.');
       return;
     }
 
