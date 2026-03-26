@@ -64,6 +64,10 @@ const PublishedCollaboratives = graphql(`
         id
         name
       }
+      coverImage {
+        name
+        path
+      }
       datasetCount
       metadata {
         metadataItem {
@@ -300,12 +304,17 @@ const CollaborativesListingClient = () => {
                         title={collaborative.title || ''}
                         variation="collapsed"
                         iconColor="warning"
-                        imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.logo?.path.replace('/code/files/', '')}`}
+                        imageUrl={
+                          collaborative.coverImage
+                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.coverImage?.path.replace('/code/files/', '')}`
+                            : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.logo?.path.replace('/code/files/', '')}`
+                        }
+                        // imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.logo?.path.replace('/code/files/', '')}`}
                         metadataContent={[
                           {
                             icon: Icons.calendar as any,
                             label: 'Started',
-                            value: formatDate(collaborative.startedOn),
+                            value: formatDate(collaborative.startedOn) || 'N/A',
                           },
                           {
                             icon: Icons.dataset as any,

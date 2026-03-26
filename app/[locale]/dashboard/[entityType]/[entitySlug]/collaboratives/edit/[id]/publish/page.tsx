@@ -188,8 +188,9 @@ const Publish = () => {
         CollaborativeData.data?.collaboratives[0]?.sectors.length === 0 ||
         CollaborativeData.data?.collaboratives[0]?.summary.length === 0 ||
         CollaborativeData.data?.collaboratives[0]?.sdgs.length === 0 ||
-        CollaborativeData.data?.collaboratives[0]?.logo === null
-          ? 'Summary or SDG or Sectors or Logo is missing. Please add to continue.'
+        CollaborativeData.data?.collaboratives[0]?.logo === null ||
+        CollaborativeData.data?.collaboratives[0]?.coverImage === null
+          ? 'Summary, SDG, Sectors, Logo, or Cover Image is missing. Please add to continue.'
           : '',
       errorType: 'critical',
     },
@@ -227,7 +228,8 @@ const Publish = () => {
       collaborative.sectors.length > 0 &&
       collaborative?.summary.length > 0 &&
       collaborative?.sdgs.length > 0 &&
-      collaborative?.logo !== null;
+      collaborative?.logo !== null &&
+      collaborative?.coverImage !== null;
 
     // No datasets assigned
     if (!hasDatasets) return true;
