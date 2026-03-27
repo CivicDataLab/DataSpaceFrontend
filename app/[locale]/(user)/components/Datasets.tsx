@@ -86,7 +86,7 @@ const Datasets = () => {
 
           <CarouselContent className="p-4">
             {isLoading ? (
-              <DatasetListingSkeleton cardCount={3} cardsOnly={true} />
+              <DatasetListingSkeleton cardCount={4} cardsOnly={true} />
             ) : (
               facets?.results?.map((item: any) => {
                 const geographies =
@@ -102,7 +102,7 @@ const Datasets = () => {
                   <CarouselItem
                     key={item.id}
                     className={cn(
-                      'h-2/4 basis-full pl-4 sm:basis-1/2  lg:basis-1/3',
+                      'h-2/4 basis-full pl-4 sm:basis-1/2 md:basis-1/3 lg:basis-1/4',
                       Styles.List
                     )}
                   >
@@ -112,7 +112,7 @@ const Datasets = () => {
                       description={stripMarkdown(item.description)}
                       metadataContent={[
                         {
-                          icon: Icons.calendar as any,
+                          icon: Icons.calendarEvent as any,
                           label: 'Date',
                           value: new Date(item.modified).toLocaleDateString(
                             'en-US',
@@ -122,28 +122,33 @@ const Datasets = () => {
                               year: 'numeric',
                             }
                           ),
+                          stroke: 1.2,
                         },
                         {
-                          icon: Icons.download as any,
+                          icon: Icons.fileDownload as any,
                           label: 'Download',
-                          value: item.download_count.toString(),
+                          value: item.download_count || 0,
+                          stroke: 1.2,
                         },
                         {
-                          icon: Icons.globe,
+                          icon: Icons.worldPin,
                           label: 'Geography',
                           value:
                             geographies.length > 0
                               ? geographies.join(', ')
-                              : 'Not specified',
+                              : '',
+                          stroke: 1.2,
                         },
                       ]}
                       tag={item.tags}
                       formats={item.formats}
-                      footerContent={[
+                      leftFooterChips={[
                         {
                           icon: `/Sectors/${item.sectors[0]}.svg`,
                           label: 'Sectors',
                         },
+                      ]}
+                      rightFooterChips={[
                         {
                           icon: item.is_individual_dataset
                             ? item?.user?.profile_picture
@@ -158,6 +163,7 @@ const Datasets = () => {
                       variation={'collapsed'}
                       iconColor="metadata"
                       href={`/datasets/${item.id}`}
+                      withViewButton={false}
                       // type={[
                       //   {
                       //     label: 'Dataset',

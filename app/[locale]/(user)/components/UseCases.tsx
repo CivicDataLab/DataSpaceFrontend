@@ -150,26 +150,30 @@ const UseCasesListingPage = () => {
                         href={`/usecases/${item.id}`}
                         metadataContent={[
                           {
-                            icon: Icons.calendar as any,
+                            icon: Icons.calendarEvent as any,
                             label: 'Date',
-                            value: formatDate(item.modified),
+                            value: formatDate(item.modified) || '',
+                            stroke: 1.2,
                           },
                           {
-                            icon: Icons.globe as any,
+                            icon: Icons.worldPin as any,
                             label: 'Geography',
                             value:
                               item.geographies?.length > 0
                                 ? item.geographies
                                     .map((geo: any) => geo.name)
                                     .join(', ')
-                                : 'Not specified',
+                                : '',
+                            stroke: 1.2,
                           },
                         ]}
-                        footerContent={[
+                        leftFooterChips={[
                           {
                             icon: `/Sectors/${item?.sectors[0]?.name}.svg` as any,
                             label: 'Sectors',
                           },
+                        ]}
+                        rightFooterChips={[
                           {
                             icon: item.isIndividualUsecase
                               ? (item?.user?.profilePicture as any)
@@ -185,13 +189,13 @@ const UseCasesListingPage = () => {
                         description={stripMarkdown(item.summary)}
                         iconColor="metadata"
                         variation={'collapsed'}
-                        type={[
-                          {
-                            label: 'Use Case',
-                            fillColor: '#fff',
-                            borderColor: '#000',
-                          },
-                        ]}
+                        // type={[
+                        //   {
+                        //     label: 'Use Case',
+                        //     fillColor: '#fff',
+                        //     borderColor: '#000',
+                        //   },
+                        // ]}
                       />
                     </CarouselItem>
                   )
