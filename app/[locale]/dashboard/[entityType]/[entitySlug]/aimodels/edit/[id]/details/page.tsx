@@ -305,7 +305,7 @@ export default function AIModelDetailsPage() {
     }
 
     if (!isValidHttpUrl(trimmedWebsite)) {
-      toast('Please enter a valid URL that includes http or https.', {
+      toast('Please enter a valid URL that includes https.', {
         id: AI_MODEL_VALIDATION_TOAST_ID,
       });
       return;
