@@ -130,7 +130,7 @@ export default function AIModelDetailsPage() {
   const isValidHttpUrl = (value: string) => {
     try {
       const parsed = new URL(value);
-      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+      return parsed.protocol === 'https:';
     } catch {
       return false;
     }
