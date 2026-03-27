@@ -307,6 +307,8 @@ const Metadata = () => {
     );
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
 
+  const COLLAB_METADATA_TOAST_ID = 'collaboratives-metadata-toast';
+
   // Update mutation
   const updateCollaborative = useMutation(
     (data: { updateMetadataInput: any }) =>
@@ -315,7 +317,7 @@ const Metadata = () => {
       }, data),
     {
       onSuccess: (res: any) => {
-        toast('Collaborative updated successfully');
+        toast('Collaborative updated successfully', { id: COLLAB_METADATA_TOAST_ID });
         const updatedData = defaultValuesPrepFn(res.addUpdateCollaborativeMetadata);
         if (isTagsListUpdated) {
           getTagsList.refetch();
@@ -325,7 +327,7 @@ const Metadata = () => {
         setPreviousFormData(updatedData);
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(`Error: ${error.message}`, { id: COLLAB_METADATA_TOAST_ID });
       },
     }
   );

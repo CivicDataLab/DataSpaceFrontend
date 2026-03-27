@@ -50,6 +50,7 @@ const UseCases = () => {
     id: string;
   }>();
   const router = useRouter();
+  const COLLAB_USECASES_TOAST_ID = 'collaboratives-usecases-toast';
 
   const [data, setData] = useState<any[]>([]); // Ensure `data` is an array
   const [selectedRow, setSelectedRows] = useState<any[]>([]);
@@ -128,14 +129,14 @@ const UseCases = () => {
       ),
     {
       onSuccess: (data: any) => {
-        toast('Use Cases Assigned Successfully');
+        toast('Use Cases Assigned Successfully', { id: COLLAB_USECASES_TOAST_ID });
         CollaborativeDetails.refetch();
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives/edit/${params.id}/contributors`
         );
       },
       onError: (err: any) => {
-        toast(`Received ${err} on use case assignment`);
+        toast(`Received ${err} on use case assignment`, { id: COLLAB_USECASES_TOAST_ID });
       },
     }
   );

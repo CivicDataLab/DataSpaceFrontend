@@ -149,8 +149,8 @@ const Publish = () => {
       }
     );
   const router = useRouter();
-  const PUBLISH_SUCCESS_TOAST_ID = 'collaborative-publish-success';
-  const PUBLISH_ERROR_TOAST_ID = 'collaborative-publish-error';
+  const PUBLISH_SUCCESS_TOAST_ID = 'collaboratives-publish-toast';
+  const PUBLISH_ERROR_TOAST_ID = 'collaboratives-publish-toast';
 
   const { mutate, isLoading: mutationLoading } = useMutation(
     () =>

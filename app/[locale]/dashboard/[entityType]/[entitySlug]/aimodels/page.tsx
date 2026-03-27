@@ -53,6 +53,8 @@ const createAIModel: any = graphql(`
   }
 `);
 
+const AIMODELS_ACTION_TOAST_ID = 'aimodels-list-action-toast';
+
 export default function AIModelsPage({
   params,
 }: {
@@ -128,11 +130,11 @@ export default function AIModelsPage({
       ),
     {
       onSuccess: () => {
-        toast(`Deleted AI Model successfully`);
+        toast(`Deleted AI Model successfully`,{id: AIMODELS_ACTION_TOAST_ID});
         AllAIModels.refetch();
       },
       onError: (err: any) => {
-        toast('Error: ' + err.message.split(':')[0]);
+        toast('Error: ' + err.message.split(':')[0],{id: AIMODELS_ACTION_TOAST_ID});
       },
     }
   );
@@ -161,13 +163,13 @@ export default function AIModelsPage({
     {
       onSuccess: (data: any) => {
         const newModelId = data.createAiModel.data.id;
-        toast(`Created AI Model successfully`);
+        toast(`Created AI Model successfully`,{id: AIMODELS_ACTION_TOAST_ID});
         router.push(
           `/dashboard/${entityType}/${entitySlug}/aimodels/edit/${newModelId}/details`
         );
       },
       onError: (err: any) => {
-        toast('Error: ' + err.message.split(':')[0]);
+        toast('Error: ' + err.message.split(':')[0],{id: AIMODELS_ACTION_TOAST_ID});
       },
     }
   );

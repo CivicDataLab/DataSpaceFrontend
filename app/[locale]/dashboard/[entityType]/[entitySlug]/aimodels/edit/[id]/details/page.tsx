@@ -126,6 +126,7 @@ export default function AIModelDetailsPage() {
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
   const SAVE_SUCCESS_TOAST_ID = 'ai-model-details-save-success';
   const SAVE_ERROR_TOAST_ID = 'ai-model-details-save-error';
+  const AI_MODEL_VALIDATION_TOAST_ID = 'ai-model-details-validation-toast';
   const isValidHttpUrl = (value: string) => {
     try {
       const parsed = new URL(value);
@@ -304,7 +305,9 @@ export default function AIModelDetailsPage() {
     }
 
     if (!isValidHttpUrl(trimmedWebsite)) {
-      toast('Please enter a valid URL that includes https.');
+      toast('Please enter a valid URL that includes https.', {
+        id: AI_MODEL_VALIDATION_TOAST_ID,
+      });
       return;
     }
 
@@ -321,7 +324,7 @@ export default function AIModelDetailsPage() {
 
     // Ensure access type is always 'open' (required field)
     if (dataToUse.accessType !== 'open') {
-      toast('Open access is required for all models');
+      toast('Open access is required for all models',{id: OPEN_ACCESS_REQUIRED_TOAST_ID});
       setStatus('unsaved');
       return;
     }
@@ -431,7 +434,7 @@ export default function AIModelDetailsPage() {
       </div>
     );
   }
-
+const OPEN_ACCESS_REQUIRED_TOAST_ID = SAVE_SUCCESS_TOAST_ID;
   return (
     <div className="flex flex-col gap-4 py-6">
       {/* Model Type & Domain - side by side */}
