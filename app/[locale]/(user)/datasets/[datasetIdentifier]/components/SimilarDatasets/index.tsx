@@ -126,22 +126,25 @@ const SimilarDatasets: React.FC = () => {
 
                       const metadataContent: any[] = [
                         {
-                          icon: Icons.calendar as any,
+                          icon: Icons.calendarEvent as any,
                           label: 'Date',
                           value: '19 July 2024',
+                          stroke: 1.2,
                         },
                         {
-                          icon: Icons.download as any,
+                          icon: Icons.fileDownload as any,
                           label: 'Download',
                           value: item.downloadCount.toString(),
+                          stroke: 1.2,
                         },
                       ];
 
                       if (geographies && geographies.length > 0) {
                         metadataContent.push({
-                          icon: Icons.globe as any,
+                          icon: Icons.worldPin as any,
                           label: 'Geography',
                           value: geographies.join(', '),
+                          stroke: 1.2,
                         });
                       }
 
@@ -149,22 +152,24 @@ const SimilarDatasets: React.FC = () => {
                         <CarouselItem
                           key={item.id}
                           className={cn(
-                            'h-2/4 basis-full pl-4 sm:basis-1/2 lg:basis-1/2',
+                            'h-2/4 basis-full pl-4 sm:basis-1/2 md:basis-1/2 lg:basis-1/3',
                             Styles.List
                           )}
                         >
                           {' '}
                           <Card
                             title={item.title}
-                            description={stripMarkdown(item.description || '')}
-                            metadataContent={metadataContent}
+                            // description={stripMarkdown(item.description || '')}
+                            metadataContent={metadataContent as any}
                             tag={item.tags}
                             formats={item.formats}
-                            footerContent={[
+                            leftFooterChips={[
                               {
                                 icon: `/Sectors/${item.sectors[0]?.name}.svg` as any,
                                 label: 'Sectors',
                               },
+                            ]}
+                            rightFooterChips={[
                               {
                                 icon: item.isIndividualDataset
                                   ? (item?.user?.profilePicture as any)
@@ -179,6 +184,7 @@ const SimilarDatasets: React.FC = () => {
                             variation={'collapsed'}
                             iconColor="warning"
                             href={`/datasets/${item.id}`}
+                            withViewButton={false}
                           />
                         </CarouselItem>
                       );

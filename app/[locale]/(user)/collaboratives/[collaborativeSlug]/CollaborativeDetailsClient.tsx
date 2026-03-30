@@ -441,23 +441,25 @@ const CollaborativeDetailClient = () => {
 
                       const MetadataContent = [
                         {
-                          icon: Icons.calendar as any,
+                          icon: Icons.calendarEvent as any,
                           label: 'Date',
-                          value: formatDate(useCase.modified),
+                          value: formatDate(useCase.modified) || '',
                           tooltip: 'Date',
+                          stroke: 1.2,
                         },
                       ];
 
                       if (Geography) {
                         MetadataContent.push({
-                          icon: Icons.globe as any,
+                          icon: Icons.worldPin as any,
                           label: 'Geography',
                           value: Geography,
                           tooltip: 'Geography',
+                          stroke: 1.2,
                         });
                       }
 
-                      const FooterContent = [
+                      const LeftFooterChips = [
                         {
                           icon:
                             useCase.sectors && useCase.sectors[0]?.name
@@ -466,6 +468,8 @@ const CollaborativeDetailClient = () => {
                           label: 'Sectors',
                           tooltip: useCase.sectors?.[0]?.name || 'Sector',
                         },
+                      ];
+                      const RightFooterChips = [
                         {
                           icon: image,
                           label: 'Published by',
@@ -478,9 +482,10 @@ const CollaborativeDetailClient = () => {
                       const commonProps = {
                         title: useCase.title || '',
                         description: stripMarkdown(useCase.summary || ''),
-                        metadataContent: MetadataContent,
+                        metadataContent: MetadataContent as any,
                         tag: useCase.tags?.map((t: any) => t.value) || [],
-                        footerContent: FooterContent,
+                        leftFooterChips: LeftFooterChips,
+                        rightFooterChips: RightFooterChips,
                         imageUrl: '',
                       };
 
@@ -511,7 +516,7 @@ const CollaborativeDetailClient = () => {
                     Explore datasets related to this collaborative{' '}
                   </Text>
                 </div>
-                <div className="grid  grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3 ">
+                <div className="grid  grid-cols-1 gap-6 pt-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ">
                   {datasets.length > 0 &&
                     datasets.map((dataset: TypeDataset) => (
                       <Card
@@ -521,17 +526,19 @@ const CollaborativeDetailClient = () => {
                         iconColor={'warning'}
                         metadataContent={[
                           {
-                            icon: Icons.calendar as any,
+                            icon: Icons.calendarEvent as any,
                             label: 'Date',
-                            value: formatDate(dataset.modified),
+                            value: formatDate(dataset.modified) || '',
+                            stroke: 1.2,
                           },
                           {
-                            icon: Icons.download as any,
+                            icon: Icons.fileDownload as any,
                             label: 'Download',
                             value: dataset.downloadCount.toString(),
+                            stroke: 1.2,
                           },
                           {
-                            icon: Icons.globe as any,
+                            icon: Icons.worldPin as any,
                             label: 'Geography',
                             value:
                               dataset.geographies &&
@@ -540,14 +547,17 @@ const CollaborativeDetailClient = () => {
                                     .map((geo: any) => geo.name)
                                     .join(', ')
                                 : '',
+                            stroke: 1.2,
                           },
                         ]}
                         href={`/datasets/${dataset.id}`}
-                        footerContent={[
+                        leftFooterChips={[
                           {
                             icon: `/Sectors/${dataset.sectors[0]?.name}.svg`,
                             label: 'Sectors',
                           },
+                        ]}
+                        rightFooterChips={[
                           {
                             icon: dataset.isIndividualDataset
                               ? dataset?.user?.profilePicture
@@ -560,6 +570,7 @@ const CollaborativeDetailClient = () => {
                           },
                         ]}
                         description={stripMarkdown(dataset.description || '')}
+                        withViewButton={false}
                       />
                     ))}
                 </div>

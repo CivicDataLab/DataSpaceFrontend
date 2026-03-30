@@ -254,8 +254,8 @@ export default function CollaborativePage() {
       return {
         title: item.title,
         id: item.id,
-        created: formatDate(item.created),
-        modified: formatDate(item.modified),
+        created: formatDate(item.created) || '',
+        modified: formatDate(item.modified) || '',
       };
     });
   };

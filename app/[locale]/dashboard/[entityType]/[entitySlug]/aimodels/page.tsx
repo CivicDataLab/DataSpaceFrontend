@@ -248,8 +248,8 @@ export default function AIModelsPage({
         modelType: item.modelType,
         provider: item.provider,
         status: item.status,
-        createdAt: formatDate(item.createdAt),
-        updatedAt: formatDate(item.updatedAt),
+        createdAt: formatDate(item.createdAt) || '',
+        updatedAt: formatDate(item.updatedAt) || '',
       };
     });
   };

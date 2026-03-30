@@ -134,7 +134,7 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
     <div>
       <div
         className={cn(
-          'grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2'
+          'grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'
         )}
       >
         {PublishedDatasetsList.isLoading ? (
@@ -144,40 +144,45 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
         ) : DatasetData?.length > 0 ? (
           DatasetData?.map((item: any, index: any) => (
             <Card
-              type={[
-                {
-                  label: 'Dataset',
-                  fillColor: '#E9EFF4',
-                  borderColor: '#F9C74F',
-                },
-              ]}
+              // type={[
+              //   {
+              //     label: 'Dataset',
+              //     fillColor: '#E9EFF4',
+              //     borderColor: '#F9C74F',
+              //   },
+              // ]}
               key={index}
               title={item.title}
               description={stripMarkdown(item.description || '')}
               metadataContent={[
                 {
-                  icon: Icons.calendar as any,
+                  icon: Icons.calendarEvent as any,
                   label: 'Date',
                   value: '19 July 2024',
+                  stroke: 1.2,
                 },
                 {
-                  icon: Icons.download as any,
+                  icon: Icons.fileDownload as any,
                   label: 'Download',
                   value: item.downloadCount.toString(),
+                  stroke: 1.2,
                 },
                 {
-                  icon: Icons.globe as any,
+                  icon: Icons.worldPin as any,
                   label: 'Geography',
                   value: 'India',
+                  stroke: 1.2,
                 },
               ]}
               tag={item.tags}
               formats={item.formats}
-              footerContent={[
+              leftFooterChips={[
                 {
                   icon: `/Sectors/${item.sectors[0]?.name}.svg`,
                   label: 'Sectors',
                 },
+              ]}
+              rightFooterChips={[
                 {
                   icon: item.isIndividualDataset
                     ? item?.user?.profilePicture
@@ -192,6 +197,7 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
               variation={'collapsed'}
               iconColor="warning"
               href={`/datasets/${item.id}`}
+              withViewButton={false}
             />
           ))
         ) : (
