@@ -286,7 +286,7 @@ const UseCaseDetailClient = () => {
                     Explore datasets related to this use case{' '}
                   </Text>
                 </div>
-                <div className="grid  grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3 ">
+                <div className="grid  grid-cols-1 gap-6 pt-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ">
                   {/* <div className="grid grid-cols-1 p-4 gap-6 overflow-y-auto  md:grid-cols-2 lg:grid-cols-3 max-h-[calc(100vh-250px)]"> */}
                   {datasets.length > 0 &&
                     datasets.map((dataset: TypeDataset) => (
@@ -297,17 +297,19 @@ const UseCaseDetailClient = () => {
                         iconColor={'warning'}
                         metadataContent={[
                           {
-                            icon: Icons.calendar as any,
+                            icon: Icons.calendarEvent as any,
                             label: 'Date',
-                            value: formatDate(dataset.modified),
+                            value: formatDate(dataset.modified) || '',
+                            stroke: 1.2,
                           },
                           {
-                            icon: Icons.download as any,
+                            icon: Icons.fileDownload as any,
                             label: 'Download',
                             value: dataset.downloadCount.toString(),
+                            stroke: 1.2,
                           },
                           {
-                            icon: Icons.globe as any,
+                            icon: Icons.worldPin as any,
                             label: 'Geography',
                             value:
                               dataset.geographies &&
@@ -316,14 +318,17 @@ const UseCaseDetailClient = () => {
                                     .map((geo: any) => geo.name)
                                     .join(', ')
                                 : '',
+                            stroke: 1.2,
                           },
                         ]}
                         href={`/datasets/${dataset.id}`}
-                        footerContent={[
+                        leftFooterChips={[
                           {
                             icon: `/Sectors/${dataset.sectors[0]?.name}.svg` as any,
                             label: 'Sectors',
                           },
+                        ]}
+                        rightFooterChips={[
                           {
                             icon: dataset.isIndividualDataset
                               ? dataset?.user?.profilePicture
@@ -336,6 +341,7 @@ const UseCaseDetailClient = () => {
                           },
                         ]}
                         description={stripMarkdown(dataset.description || '')}
+                        withViewButton={false}
                       />
                     ))}
                 </div>

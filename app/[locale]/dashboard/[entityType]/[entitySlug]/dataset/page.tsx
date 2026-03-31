@@ -260,8 +260,8 @@ export default function DatasetPage() {
         title: item.title,
         id: item.id,
         datasetType: item.datasetType,
-        created: formatDate(item.created),
-        modified: formatDate(item.modified),
+        created: formatDate(item.created) || '',
+        modified: formatDate(item.modified) || '',
       };
     });
   };

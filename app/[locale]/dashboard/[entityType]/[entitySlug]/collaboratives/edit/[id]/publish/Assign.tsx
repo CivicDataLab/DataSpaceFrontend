@@ -15,7 +15,7 @@ const Assign = ({ data }: { data: any }) => {
         title: item.title,
         id: item.id,
         sector: item.sectors[0]?.name,
-        modified: formatDate(item.modified),
+        modified: formatDate(item.modified) || '',
       };
     });
   };

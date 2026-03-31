@@ -1,11 +1,11 @@
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Divider, Icon, Tag, Text, Tooltip } from 'opub-ui';
-import React, { useEffect, useState } from 'react';
 
+import { cn, formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
-import { cn, formatDate, getWebsiteTitle } from '@/lib/utils';
 import Styles from '../../../dataset.module.scss';
 
 interface MetadataProps {
@@ -180,7 +180,10 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
         </div>
         {data.geographies && data.geographies.length > 0 && (
           <div className="flex items-center gap-2 ">
-            <Text className="min-w-[120px]  basis-1/4 uppercase" variant="bodyMd">
+            <Text
+              className="min-w-[120px]  basis-1/4 uppercase"
+              variant="bodyMd"
+            >
               Geography
             </Text>
             <div className="flex flex-wrap gap-2">
@@ -213,7 +216,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
               </Link>
             ) : item.type === 'DATE' ? (
               <Text className="max-w-xs " variant="bodyLg" fontWeight="medium">
-                {formatDate(item.value)}
+                {formatDate(item.value) || ''}
               </Text>
             ) : item.type === 'MULTISELECT' ? (
               <div className={cn('flex flex-wrap gap-2', Styles.Tag)}>

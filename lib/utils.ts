@@ -58,7 +58,8 @@ export function cn(...inputs: ClassNameValue[]) {
   return twMerge(inputs);
 }
 
-export function formatDate(input: string | number): string {
+export function formatDate(input: string | number | null): string | null {
+  if (input === null || input === undefined) return null;
   const date = new Date(input);
   return date.toLocaleDateString('en-US', {
     month: 'long',

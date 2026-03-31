@@ -64,6 +64,10 @@ const PublishedCollaboratives = graphql(`
         id
         name
       }
+      coverImage {
+        name
+        path
+      }
       datasetCount
       metadata {
         metadataItem {
@@ -214,7 +218,7 @@ const CollaborativesListingClient = () => {
             </Text>
 
             {/* Search and Filter Section */}
-            <div className="flex flex-wrap gap-6 lg:flex-nowrap">
+            <div className="flex flex-wrap gap-6 pt-4 lg:flex-nowrap">
               <SearchInput
                 label={''}
                 className={cn('w-full', Styles.Search)}
@@ -300,12 +304,18 @@ const CollaborativesListingClient = () => {
                         title={collaborative.title || ''}
                         variation="collapsed"
                         iconColor="warning"
-                        imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.logo?.path.replace('/code/files/', '')}`}
+                        imageUrl={
+                          collaborative.coverImage
+                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.coverImage?.path.replace('/code/files/', '')}`
+                            : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.logo?.path.replace('/code/files/', '')}`
+                        }
+                        // imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.logo?.path.replace('/code/files/', '')}`}
                         metadataContent={[
                           {
-                            icon: Icons.calendar as any,
+                            icon: Icons.calendarEvent as any,
                             label: 'Started',
-                            value: formatDate(collaborative.startedOn),
+                            value: formatDate(collaborative.startedOn) || '',
+                            stroke: 1.2,
                           },
                           {
                             icon: Icons.dataset as any,
@@ -314,7 +324,7 @@ const CollaborativesListingClient = () => {
                               collaborative.datasetCount?.toString() || '0',
                           },
                           {
-                            icon: Icons.globe as ComponentType<any>,
+                            icon: Icons.worldPin as ComponentType<any>,
                             label: 'Geography',
                             value:
                               collaborative.geographies &&
@@ -323,16 +333,19 @@ const CollaborativesListingClient = () => {
                                     .map((geo: any) => geo.name)
                                     .join(', ')
                                 : 'N/A',
+                            stroke: 1.2,
                           },
                         ]}
                         href={`/collaboratives/${collaborative.slug}`}
-                        footerContent={[
+                        leftFooterChips={[
                           {
                             icon: collaborative.sectors?.[0]?.name
                               ? `/Sectors/${collaborative.sectors[0].name}.svg`
                               : '/Sectors/default.svg',
                             label: 'Sectors',
                           },
+                        ]}
+                        rightFooterChips={[
                           {
                             icon: collaborative.isIndividualCollaborative
                               ? collaborative?.user?.profilePicture

@@ -82,7 +82,7 @@ const UseCases = () => {
         title: item.title,
         id: item.id,
         category: item.sectors[0]?.name || 'N/A', // Safeguard in case of missing category
-        modified: formatDate(item.modified),
+        modified: formatDate(item.modified) || '',
       };
     });
 
@@ -108,7 +108,7 @@ const UseCases = () => {
         title: item.title,
         id: item.id,
         category: item.sectors[0],
-        modified: formatDate(item.modified),
+        modified: formatDate(item.modified) || '',
       };
     });
   };

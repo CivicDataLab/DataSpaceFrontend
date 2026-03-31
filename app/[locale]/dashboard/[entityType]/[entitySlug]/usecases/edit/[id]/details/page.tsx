@@ -10,9 +10,9 @@ import { DropZone, Select, TextField, toast } from 'opub-ui';
 // Assuming you are using these components
 
 import { GraphQL } from '@/lib/api';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { useEditStatus } from '../../context';
 import Metadata from '../metadata/page';
-import { RichTextEditor } from '@/components/RichTextEditor';
 
 const UpdateUseCaseMutation: any = graphql(`
   mutation updateUseCase($data: UseCaseInputPartial!) {
@@ -74,7 +74,6 @@ const Details = () => {
     typeof error?.message === 'string' && error.message.trim()
       ? error.message.trim()
       : fallback;
-
 
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`fetch_UseCaseData_details`],
@@ -285,6 +284,7 @@ const Details = () => {
             label="Started On"
             name="startedOn"
             type="date"
+            required
             max={new Date().toISOString().split('T')[0]}
             value={formData.startedOn || ''}
             onChange={(e) => {

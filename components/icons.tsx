@@ -12,6 +12,7 @@ import {
   IconBrandTwitter,
   IconBulb,
   IconCalendar,
+  IconCalendarEvent,
   IconChartBar,
   IconChartLine,
   IconChartTreemap,
@@ -28,6 +29,7 @@ import {
   IconDatabasePlus,
   IconDotsVertical,
   IconDownload,
+  IconFileDownload,
   IconFilePlus,
   IconFileUpload,
   IconFolder,
@@ -58,6 +60,7 @@ import {
   IconUsers,
   IconUsersGroup,
   IconWorld,
+  IconWorldPin,
   IconX,
   // TablerIconsProps,
 } from '@tabler/icons-react';
@@ -129,4 +132,7 @@ export const Icons: {
   chartMapPolygon: IconTopologyStarRing3,
   chartMap: IconWorld,
   chevronDown: IconChevronDown,
+  calendarEvent: IconCalendarEvent,
+  fileDownload: IconFileDownload,
+  worldPin: IconWorldPin,
 };

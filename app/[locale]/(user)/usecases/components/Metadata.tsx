@@ -1,10 +1,10 @@
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Divider, Icon, Text, Tooltip } from 'opub-ui';
-import { useEffect, useState } from 'react';
 
-import { Icons } from '@/components/icons';
 import { formatDate, getWebsiteTitle } from '@/lib/utils';
+import { Icons } from '@/components/icons';
 
 const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
   const [platformTitle, setPlatformTitle] = useState<string | null>(null);
@@ -43,6 +43,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
 
     return '/publishers';
   };
+  console.log('data?.useCase ', data?.useCase);
 
   const metadata = [
     {
@@ -92,11 +93,15 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
         ),
       tooltipContent: data.useCase.platformUrl === null ? 'N/A' : platformTitle,
     },
-    {
-      label: 'Started On',
-      value: formatDate(data.useCase.startedOn) || 'N/A',
-      tooltipContent: formatDate(data.useCase.startedOn) || 'N/A',
-    },
+    ...(data.useCase.startedOn
+      ? [
+          {
+            label: 'Started On',
+            value: formatDate(data.useCase.startedOn) || 'N/A',
+            tooltipContent: formatDate(data.useCase.startedOn) || 'N/A',
+          },
+        ]
+      : []),
     {
       label: 'Status',
       value: data.useCase.runningStatus.split('_').join('') || 'N/A',

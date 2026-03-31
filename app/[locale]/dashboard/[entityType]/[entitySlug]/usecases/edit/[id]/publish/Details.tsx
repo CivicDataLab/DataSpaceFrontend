@@ -43,8 +43,18 @@ const Details = ({ data }: { data: any }) => {
       value: data?.useCases[0]?.completedOn,
     },
     { label: 'Sector', value: data?.useCases[0]?.sectors[0]?.name },
-    { label: 'Geography', value: data?.useCases[0]?.geographies?.map((geo: any) => geo.name).join(', ') },
-    { label: 'SDG Goals', value: data?.useCases[0]?.sdgs?.map((sdg: any) => `${sdg.code} - ${sdg.name}`).join(', ') },
+    {
+      label: 'Geography',
+      value: data?.useCases[0]?.geographies
+        ?.map((geo: any) => geo.name)
+        .join(', '),
+    },
+    {
+      label: 'SDG Goals',
+      value: data?.useCases[0]?.sdgs
+        ?.map((sdg: any) => `${sdg.code} - ${sdg.name}`)
+        .join(', '),
+    },
     { label: 'Tags', value: data?.useCases[0]?.tags[0]?.value },
     ...(data?.useCases[0]?.metadata?.map((meta: any) => ({
       label: meta.metadataItem?.label,
@@ -63,9 +73,9 @@ const Details = ({ data }: { data: any }) => {
                     <Text variant="bodyMd">{item.label}:</Text>
                   </div>
                   <div>
-                    <Text variant="bodyMd"><RichTextRenderer
-                                    content={item.value}
-                                  /></Text>
+                    <Text variant="bodyMd">
+                      <RichTextRenderer content={item.value} />
+                    </Text>
                   </div>
                 </div>
               )
@@ -81,7 +91,11 @@ const Details = ({ data }: { data: any }) => {
                   className="text-primaryBlue underline"
                   href={data.useCases[0].platformUrl}
                 >
-                  <Text className="underline" color="highlight" variant="bodyLg">
+                  <Text
+                    className="underline"
+                    color="highlight"
+                    variant="bodyLg"
+                  >
                     {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
                   </Text>
                 </Link>
@@ -102,6 +116,7 @@ const Details = ({ data }: { data: any }) => {
                 src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data?.useCases[0]?.logo?.path.replace('/code/files/', '')}`}
                 alt={data?.useCases[0]?.title}
                 width={240}
+                className="object-contain"
                 height={240}
               />
             </div>

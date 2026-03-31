@@ -8,9 +8,9 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { DropZone, Select, TextField, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { useEditStatus } from '../../context';
 import Metadata from '../metadata/page';
-import { RichTextEditor } from '@/components/RichTextEditor';
 
 const UpdateCollaborativeMutation: any = graphql(`
   mutation updateCollaborative($data: CollaborativeInputPartial!) {
@@ -75,31 +75,32 @@ const Details = () => {
   const router = useRouter();
   const COLLAB_DETAILS_TOAST_ID = 'collaboratives-details-toast';
 
-  const CollaborativeData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_CollaborativeData_details`],
-    () =>
-      GraphQL(
-        FetchCollaborative,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        {
-          filters: {
-            id: params.id,
+  const CollaborativeData: { data: any; isLoading: boolean; refetch: any } =
+    useQuery(
+      [`fetch_CollaborativeData_details`],
+      () =>
+        GraphQL(
+          FetchCollaborative,
+          {
+            [params.entityType]: params.entitySlug,
           },
-        }
-      ),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
-  );
+          {
+            filters: {
+              id: params.id,
+            },
+          }
+        ),
+      {
+        refetchOnMount: true,
+        refetchOnReconnect: true,
+      }
+    );
 
   const CollaborativesData =
-    CollaborativeData?.data?.collaboratives && 
-    Array.isArray(CollaborativeData?.data?.collaboratives) && 
-    CollaborativeData?.data?.collaboratives?.length > 0 
-      ? CollaborativeData?.data?.collaboratives[0] 
+    CollaborativeData?.data?.collaboratives &&
+    Array.isArray(CollaborativeData?.data?.collaboratives) &&
+    CollaborativeData?.data?.collaboratives?.length > 0
+      ? CollaborativeData?.data?.collaboratives[0]
       : null;
 
   const initialFormData = {
@@ -252,7 +253,7 @@ const Details = () => {
       </div>
 
       <Metadata />
-      
+
       <div className="flex flex-wrap gap-6 md:flex-nowrap lg:flex-nowrap">
         <div className="w-full">
           <TextField
@@ -283,7 +284,7 @@ const Details = () => {
           />
         </div>
       </div>
-      
+
       <div>
         <DropZone
           label={!formData?.logo ? 'Logo *' : 'Change Logo *'}
@@ -293,25 +294,33 @@ const Details = () => {
           <DropZone.FileUpload
             actionHint="Only one image can be added. Recommended resolution: Square (400x400) - Supported File Types: PNG/JPG/SVG "
             actionTitle={
-              formData.logo && typeof formData.logo === 'object' && 'name' in formData.logo
+              formData.logo &&
+              typeof formData.logo === 'object' &&
+              'name' in formData.logo
                 ? (formData.logo as any).name?.split('/').pop() || 'Logo file'
                 : 'Name of the logo'
             }
           />
         </DropZone>
       </div>
-      
+
       <div>
         <DropZone
-          label={!formData?.coverImage ? 'Cover Image' : 'Change Cover Image'}
+          label={
+            !formData?.coverImage ? 'Cover Image *' : 'Change Cover Image *'
+          }
           onDrop={onCoverImageDrop}
           name={'CoverImage'}
+          required
         >
           <DropZone.FileUpload
             actionHint="Only one image can be added. Recommended resolution: 16:9 - (1280x720), (1920x1080) - Supported File Types: PNG/JPG "
             actionTitle={
-              formData.coverImage && typeof formData.coverImage === 'object' && 'name' in formData.coverImage
-                ? (formData.coverImage as any).name?.split('/').pop() || 'Cover image file'
+              formData.coverImage &&
+              typeof formData.coverImage === 'object' &&
+              'name' in formData.coverImage
+                ? (formData.coverImage as any).name?.split('/').pop() ||
+                  'Cover image file'
                 : 'Name of the cover image'
             }
           />
