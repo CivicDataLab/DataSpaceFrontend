@@ -48,6 +48,7 @@ const Assign = () => {
     id: string;
   }>();
   const router = useRouter();
+  const COLLAB_ASSIGN_TOAST_ID = 'collaboratives-assign-toast';
 
   const [data, setData] = useState<any[]>([]); // Ensure `data` is an array
   const [selectedRow, setSelectedRows] = useState<any[]>([]);
@@ -79,7 +80,7 @@ const Assign = () => {
         title: item.title,
         id: item.id,
         category: item.sectors[0]?.name || 'N/A', // Safeguard in case of missing category
-        modified: formatDate(item.modified),
+        modified: formatDate(item.modified) || '',
       };
     });
 
@@ -105,7 +106,7 @@ const Assign = () => {
         title: item.title,
         id: item.id,
         category: item.sectors[0],
-        modified: formatDate(item.modified),
+        modified: formatDate(item.modified) || '',
       };
     });
   };
@@ -126,14 +127,14 @@ const Assign = () => {
       ),
     {
       onSuccess: () => {
-        toast('Dataset Assigned Successfully');
+        toast('Dataset Assigned Successfully', { id: COLLAB_ASSIGN_TOAST_ID });
         CollaborativeDetails.refetch();
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives/edit/${params.id}/usecases`
         );
       },
       onError: (err: any) => {
-        toast(`Received ${err} on dataset publish `);
+        toast(`Received ${err} on dataset publish `, { id: COLLAB_ASSIGN_TOAST_ID });
       },
     }
   );

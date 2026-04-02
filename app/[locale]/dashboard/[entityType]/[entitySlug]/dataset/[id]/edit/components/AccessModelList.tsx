@@ -136,7 +136,7 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
         accessorKey: 'date',
         header: 'Date Added',
         cell: ({ row }: any) => {
-          return <Text>{formatDate(row.original.date)}</Text>;
+          return <Text>{formatDate(row.original.date) || ''}</Text>;
         },
       },
       {

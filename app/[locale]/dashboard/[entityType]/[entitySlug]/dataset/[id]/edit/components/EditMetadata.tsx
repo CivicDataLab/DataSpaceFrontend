@@ -865,7 +865,8 @@ export function EditMetadata({ id }: { id: string }) {
                     value: item.id,
                   }))}
                   key={`tags-${getTagsList.data?.tags?.length}`} // forces remount on change
-                  label="Tags *"
+                  label="Tags"
+                  requiredIndicator
                   creatable
                   onChange={(value) => {
                     setIsTagsListUpdated(true);

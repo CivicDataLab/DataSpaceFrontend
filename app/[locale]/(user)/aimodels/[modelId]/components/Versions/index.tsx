@@ -72,7 +72,7 @@ export default function Versions({ data }: VersionsProps) {
         header: 'Last Updated',
         cell: ({ row }: any) => (
           <Text variant="bodyMd">
-            {formatDate(row.original.updatedAt || row.original.createdAt)}
+            {formatDate(row.original.updatedAt || row.original.createdAt) || ''}
           </Text>
         ),
       },

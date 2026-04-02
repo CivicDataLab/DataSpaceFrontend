@@ -50,6 +50,7 @@ const UseCases = () => {
     id: string;
   }>();
   const router = useRouter();
+  const COLLAB_USECASES_TOAST_ID = 'collaboratives-usecases-toast';
 
   const [data, setData] = useState<any[]>([]); // Ensure `data` is an array
   const [selectedRow, setSelectedRows] = useState<any[]>([]);
@@ -81,7 +82,7 @@ const UseCases = () => {
         title: item.title,
         id: item.id,
         category: item.sectors[0]?.name || 'N/A', // Safeguard in case of missing category
-        modified: formatDate(item.modified),
+        modified: formatDate(item.modified) || '',
       };
     });
 
@@ -107,7 +108,7 @@ const UseCases = () => {
         title: item.title,
         id: item.id,
         category: item.sectors[0],
-        modified: formatDate(item.modified),
+        modified: formatDate(item.modified) || '',
       };
     });
   };
@@ -128,14 +129,14 @@ const UseCases = () => {
       ),
     {
       onSuccess: (data: any) => {
-        toast('Use Cases Assigned Successfully');
+        toast('Use Cases Assigned Successfully', { id: COLLAB_USECASES_TOAST_ID });
         CollaborativeDetails.refetch();
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives/edit/${params.id}/contributors`
         );
       },
       onError: (err: any) => {
-        toast(`Received ${err} on use case assignment`);
+        toast(`Received ${err} on use case assignment`, { id: COLLAB_USECASES_TOAST_ID });
       },
     }
   );

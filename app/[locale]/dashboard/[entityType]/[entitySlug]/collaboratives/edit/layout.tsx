@@ -69,6 +69,8 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     }
   );
 
+  const COLLAB_EDIT_TOAST_ID = 'collaboratives-edit-toast';
+
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { data: CollaborativeInputPartial }) =>
       GraphQL(UpdateCollaborativeTitleMutation, {
@@ -76,12 +78,12 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       }, data),
     {
       onSuccess: () => {
-        toast('Collaborative updated successfully');
+        toast('Collaborative updated successfully', { id: COLLAB_EDIT_TOAST_ID });
         // Optionally, reset form or perform other actions
         CollaborativeData.refetch();
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(`Error: ${error.message}`, { id: COLLAB_EDIT_TOAST_ID });
       },
     }
   );

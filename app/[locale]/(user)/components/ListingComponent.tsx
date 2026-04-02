@@ -548,19 +548,21 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     const MetadataContent = [
                       {
-                        icon: Icons.calendar as any,
+                        icon: Icons.calendarEvent as any,
                         label: 'Date',
-                        value: formatDate(item.modified),
+                        value: formatDate(item.modified) || '',
                         tooltip: 'Date',
+                        stroke: 1.2,
                       },
                     ];
 
                     if (item.download_count > 0) {
                       MetadataContent.push({
-                        icon: Icons.download as any,
+                        icon: Icons.fileDownload as any,
                         label: 'Download',
-                        value: item.download_count?.toString() || '0',
+                        value: item.download_count || 0,
                         tooltip: 'Download',
+                        stroke: 1.2,
                       });
                     }
 
@@ -569,10 +571,11 @@ const ListingComponent: React.FC<ListingProps> = ({
                       const geoDisplay = geographies.join(', ');
 
                       MetadataContent.push({
-                        icon: Icons.globe as any,
+                        icon: Icons.worldPin as any,
                         label: 'Geography',
                         value: geoDisplay,
                         tooltip: geoDisplay,
+                        stroke: 1.2,
                       });
                     }
 
@@ -587,6 +590,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                         label: 'SDG Goals',
                         value: sdgDisplay,
                         tooltip: sdgDisplay,
+                        stroke: 1.2,
                       });
                     }
 
@@ -596,10 +600,11 @@ const ListingComponent: React.FC<ListingProps> = ({
                         label: '',
                         value: 'With Charts',
                         tooltip: 'Charts',
+                        stroke: 1.2,
                       });
                     }
 
-                    const FooterContent = [
+                    const LeftFooterChips = [
                       {
                         icon: `/Sectors/${item.sectors?.[0]}.svg` as any,
                         label: 'Sectors',
@@ -614,6 +619,9 @@ const ListingComponent: React.FC<ListingProps> = ({
                             },
                           ]
                         : []),
+                    ];
+
+                    const RightFooterChips = [
                       {
                         icon: image as any,
                         label: 'Published by',
@@ -624,10 +632,11 @@ const ListingComponent: React.FC<ListingProps> = ({
                     const commonProps = {
                       title: item.title,
                       description: stripMarkdown(item.description || ''),
-                      metadataContent: MetadataContent,
+                      metadataContent: MetadataContent as any,
                       tag: item.tags,
                       formats: item.formats,
-                      footerContent: FooterContent,
+                      leftFooterChips: LeftFooterChips,
+                      rightFooterChips: RightFooterChips,
                       imageUrl: '',
                     };
 
@@ -651,14 +660,17 @@ const ListingComponent: React.FC<ListingProps> = ({
                               ? 'usecase-card'
                               : undefined
                         }
-                        {...(type === 'usecase' && {
-                          type: [
-                            {
-                              label: 'Use Case',
-                              fillColor: '#fff',
-                              borderColor: '#000',
-                            },
-                          ],
+                        // {...(type === 'usecase' && {
+                        //   type: [
+                        //     {
+                        //       label: 'Use Case',
+                        //       fillColor: '#fff',
+                        //       borderColor: '#000',
+                        //     },
+                        //   ],
+                        // })}
+                        {...(type === 'dataset' && {
+                          withViewButton: false,
                         })}
                       />
                     );

@@ -44,8 +44,8 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ data, type }) => {
           <Text variant="bodySm">
             Joined on:{' '}
             {type === 'organization'
-              ? formatDate(data?.created)
-              : formatDate(data?.dateJoined)}
+              ? formatDate(data?.created) || ''
+              : formatDate(data?.dateJoined) || ''}
           </Text>
         </div>
         <div>

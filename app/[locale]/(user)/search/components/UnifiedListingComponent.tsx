@@ -549,10 +549,11 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
 
     if (item.type === 'publisher') {
       MetadataContent.push({
-        icon: Icons.calendar as any,
+        icon: Icons.calendarEvent as any,
         label: 'Joined',
-        value: formatDate(item.created),
+        value: formatDate(item.created) || '',
         tooltip: 'Date joined',
+        stroke: 1.2,
       });
       MetadataContent.push({
         icon: Icons.dataset as any,
@@ -576,9 +577,10 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       }
     } else if (item.type === 'collaborative') {
       MetadataContent.push({
-        icon: Icons.calendar as any,
+        icon: Icons.calendarEvent as any,
         label: 'Started',
-        value: formatDate(item.started_on || item.created),
+        value: formatDate(item.started_on || item.created) || '',
+        stroke: 1.2,
       });
       MetadataContent.push({
         icon: Icons.dataset as any,
@@ -588,42 +590,47 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       if (geographies && geographies.length > 0) {
         const geoDisplay = geographies.join(', ');
         MetadataContent.push({
-          icon: Icons.globe as any,
+          icon: Icons.worldPin as any,
           label: 'Geography',
           value: geoDisplay,
+          stroke: 1.2,
         });
       } else {
         MetadataContent.push({
-          icon: Icons.globe as any,
+          icon: Icons.worldPin as any,
           label: 'Geography',
           value: 'N/A',
+          stroke: 1.2,
         });
       }
     } else {
       MetadataContent.push({
-        icon: Icons.calendar as any,
+        icon: Icons.calendarEvent as any,
         label: 'Date',
-        value: formatDate(item.modified || item.updated_at),
+        value: formatDate(item.modified || item.updated_at) || '',
         tooltip: 'Date',
+        stroke: 1.2,
       });
 
       if (geographies && geographies.length > 0) {
         const geoDisplay = geographies.join(', ');
         MetadataContent.push({
-          icon: Icons.globe as any,
+          icon: Icons.worldPin as any,
           label: 'Geography',
           value: geoDisplay,
           tooltip: geoDisplay,
+          stroke: 1.2,
         });
       }
     }
 
     if (item.type === 'dataset' && item.download_count > 0) {
       MetadataContent.push({
-        icon: Icons.download as any,
+        icon: Icons.fileDownload as any,
         label: 'Download',
-        value: item.download_count?.toString() || '0',
+        value: item.download_count || 0,
         tooltip: 'Download',
+        stroke: 1.2,
       });
     }
 
@@ -648,10 +655,11 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       });
     }
 
-    const FooterContent = [];
+    const LeftFooterChips = [];
+    const RightFooterChips = [];
 
     if (item.type === 'publisher') {
-      FooterContent.push({
+      LeftFooterChips.push({
         icon:
           item.publisher_type === 'organization' ? '/org.png' : '/profile.png',
         label:
@@ -669,20 +677,20 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
           typeof item.sectors[0] === 'string'
             ? item.sectors[0]
             : item.sectors[0]?.name;
-        FooterContent.push({
+        LeftFooterChips.push({
           icon: sectorName
             ? `/Sectors/${sectorName}.svg`
             : '/Sectors/default.svg',
           label: 'Sectors',
         });
       } else {
-        FooterContent.push({
+        LeftFooterChips.push({
           icon: '/Sectors/default.svg',
           label: 'Sectors',
         });
       }
     } else if (item.sectors && item.sectors.length > 0) {
-      FooterContent.push({
+      LeftFooterChips.push({
         icon: `/Sectors/${item.sectors?.[0]}.svg` as any,
         label: 'Sectors',
         tooltip: `${item.sectors?.[0]}`,
@@ -690,7 +698,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
     }
 
     if (item.type === 'dataset' && item.has_charts && view !== 'expanded') {
-      FooterContent.push({
+      LeftFooterChips.push({
         icon: `/chart-bar.svg` as any,
         label: 'Charts',
         tooltip: 'Charts',
@@ -698,7 +706,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
     }
 
     if (item.type !== 'publisher') {
-      FooterContent.push({
+      RightFooterChips.push({
         icon: image as any,
         label: 'Published by',
         tooltip: `${isIndividual ? item.user?.name : item.organization?.name}`,
@@ -708,14 +716,29 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
     const commonProps = {
       title: item.title || item.name || '',
       description: stripMarkdown(item.description || item.bio || ''),
-      // ...(item.type === 'usecase' && {
+      // ...((item.type === 'usecase' || item.type === 'dataset') && {
       //   description: stripMarkdown(item.description || item.bio || ''),
       // }),
-      metadataContent: MetadataContent,
+      metadataContent: MetadataContent as any,
       tag: item.tags || [],
       formats: item.type === 'dataset' ? item.formats || [] : [],
-      footerContent: FooterContent,
+      leftFooterChips: LeftFooterChips,
+      rightFooterChips: RightFooterChips,
       imageUrl: '',
+      ...(item.type === 'usecase'
+        ? {
+            withViewButton: true,
+          }
+        : {
+            withViewButton: false,
+          }),
+      ...(item.type === 'usecase'
+        ? {
+            reserveDescriptionSpace: true,
+          }
+        : {
+            reserveDescriptionSpace: false,
+          }),
     };
 
     if (item.type === 'publisher') {
@@ -804,15 +827,15 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
         variation={view === 'expanded' ? 'expanded' : 'collapsed'}
         iconColor="metadata"
         href={getRedirectUrl(item)}
-        {...(item.type === 'usecase' && {
-          type: [
-            {
-              label: 'Use Case',
-              fillColor: '#fff',
-              borderColor: '#000',
-            },
-          ],
-        })}
+        // {...(item.type === 'usecase' && {
+        //   type: [
+        //     {
+        //       label: 'Use Case',
+        //       fillColor: '#fff',
+        //       borderColor: '#000',
+        //     },
+        //   ],
+        // })}
       />
     );
   };
@@ -997,7 +1020,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                   size="large"
                   className={getTypeButtonClass('aimodel')}
                 >
-                  AI Insights
+                  AI Models
                   {displayTypeCounts.aimodel !== undefined && (
                     <span className="text-xs ml-1">
                       ({displayTypeCounts.aimodel || 0})

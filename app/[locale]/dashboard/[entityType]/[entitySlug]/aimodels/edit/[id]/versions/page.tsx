@@ -197,6 +197,8 @@ export default function VersionsPage() {
     framework: '',
   });
 
+  const VERSIONS_ACTION_TOAST_ID = 'aimodel-versions-action-toast';
+  const VERSIONS_VALIDATION_TOAST_ID = 'aimodel-versions-validation-toast';
   // Fetch model versions - override default refetchOnMount: false
   const { data, isLoading, refetch } = useQuery(
     [`fetch_model_versions_${params.id}`],
@@ -225,7 +227,7 @@ export default function VersionsPage() {
       ),
     {
       onSuccess: async (response: any) => {
-        toast('New version created successfully!');
+        toast('New version created successfully!',{id: VERSIONS_ACTION_TOAST_ID});
         setIsNewVersionModalOpen(false);
         resetVersionForm();
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
@@ -246,7 +248,7 @@ export default function VersionsPage() {
         }
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(`Error: ${error.message}`,{id: VERSIONS_ACTION_TOAST_ID});
       },
     }
   );
@@ -261,7 +263,7 @@ export default function VersionsPage() {
         ),
       {
         onSuccess: async () => {
-          toast('Provider added successfully!');
+          toast('Provider added successfully!',{id: VERSIONS_ACTION_TOAST_ID});
           setIsProviderModalOpen(false);
           resetProviderForm();
           queryClient.invalidateQueries([
@@ -282,7 +284,7 @@ export default function VersionsPage() {
           }
         },
         onError: (error: any) => {
-          toast(`Error: ${error.message}`);
+          toast(`Error: ${error.message}`,{id: VERSIONS_ACTION_TOAST_ID});
         },
       }
     );
@@ -296,7 +298,7 @@ export default function VersionsPage() {
         ),
       {
         onSuccess: async () => {
-          toast('Provider updated successfully!');
+          toast('Provider updated successfully!',{id: VERSIONS_ACTION_TOAST_ID});
           setIsProviderModalOpen(false);
           setEditingProvider(null);
           resetProviderForm();
@@ -318,7 +320,7 @@ export default function VersionsPage() {
           }
         },
         onError: (error: any) => {
-          toast(`Error: ${error.message}`);
+          toast(`Error: ${error.message}`,{id: VERSIONS_ACTION_TOAST_ID});
         },
       }
     );
@@ -332,7 +334,7 @@ export default function VersionsPage() {
       ),
     {
       onSuccess: async () => {
-        toast('Provider deleted successfully!');
+        toast('Provider deleted successfully!',{id: VERSIONS_ACTION_TOAST_ID});
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
 
         // Force refetch and update selected version after provider deletion
@@ -349,7 +351,7 @@ export default function VersionsPage() {
         }
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(`Error: ${error.message}`,{id: VERSIONS_ACTION_TOAST_ID});
       },
     }
   );
@@ -415,11 +417,11 @@ export default function VersionsPage() {
 
   const handleSaveNewVersion = () => {
     if (!newVersionData.version) {
-      toast('Please enter a version number');
+      toast('Please enter a version number', { id: VERSIONS_VALIDATION_TOAST_ID });
       return;
     }
     if (!newVersionData.lifecycleStage) {
-      toast('Please select a lifecycle stage');
+      toast('Please select a lifecycle stage', { id: VERSIONS_VALIDATION_TOAST_ID });
       return;
     }
 
@@ -486,7 +488,9 @@ export default function VersionsPage() {
     );
 
     if (isEndpointRequired && !providerFormData.apiEndpointUrl?.trim()) {
-      toast('Endpoint URL is required for the selected provider.');
+      toast('Endpoint URL is required for the selected provider.', {
+        id: VERSIONS_VALIDATION_TOAST_ID,
+      });
       return;
     }
 
@@ -494,12 +498,15 @@ export default function VersionsPage() {
       try {
         const url = new URL(providerFormData.apiEndpointUrl);
         if (!['http:', 'https:'].includes(url.protocol)) {
-          toast('Endpoint URL must use HTTP or HTTPS protocol.');
+          toast('Endpoint URL must use HTTP or HTTPS protocol.', {
+            id: VERSIONS_VALIDATION_TOAST_ID,
+          });
           return;
         }
       } catch {
         toast(
           'Please enter a valid endpoint URL (e.g., https://api.example.com/v1/chat)'
+          ,{ id: VERSIONS_VALIDATION_TOAST_ID }
         );
         return;
       }
@@ -511,6 +518,7 @@ export default function VersionsPage() {
       } catch {
         toast(
           'Invalid JSON in Request Body Template. Please check the format.'
+          ,{ id: VERSIONS_VALIDATION_TOAST_ID }
         );
         return;
       }
@@ -607,12 +615,12 @@ export default function VersionsPage() {
       ),
     {
       onSuccess: () => {
-        toast('Version updated successfully!');
+        toast('Version updated successfully!',{id: VERSIONS_ACTION_TOAST_ID});
         refetch();
         queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(`Error: ${error.message}`,{id: VERSIONS_ACTION_TOAST_ID});
       },
     }
   );

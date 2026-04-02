@@ -257,11 +257,11 @@ const Page = () => {
     },
     {
       label: 'Date of Creation',
-      value: formatDate(getDatasetsSummary.data?.datasets[0].created),
+      value: formatDate(getDatasetsSummary.data?.datasets[0].created) || '',
     },
     {
       label: 'Date of Last Update',
-      value: formatDate(getDatasetsSummary.data?.datasets[0].modified),
+      value: formatDate(getDatasetsSummary.data?.datasets[0].modified) || '',
     },
   ];
   const router = useRouter();

@@ -101,6 +101,7 @@ const Details = ({ data }: { data: any }) => {
                 src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data?.collaboratives[0]?.logo?.path.replace('/code/files/', '')}`}
                 alt={data?.collaboratives[0]?.title}
                 width={240}
+                className="object-contain"
                 height={240}
               />
             </div>

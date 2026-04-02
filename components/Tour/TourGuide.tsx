@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import Joyride, { CallBackProps, STATUS, EVENTS, ACTIONS } from 'react-joyride';
+import { Joyride, EventData, STATUS, EVENTS, ACTIONS } from 'react-joyride';
 import { useTour } from '@/contexts/TourContext';
 
 /**
@@ -12,7 +12,7 @@ export function TourGuide() {
   const { activeTour, isTourRunning, stepIndex, nextStep, prevStep, stopTour, isMobile } = useTour();
 
   // Handle Joyride callbacks
-  const handleJoyrideCallback = (data: CallBackProps) => {
+  const handleJoyrideCallback = (data: EventData) => {
     const { status, type, action } = data;
 
     // Tour finished or skipped
@@ -59,32 +59,36 @@ export function TourGuide() {
       run={isTourRunning}
       stepIndex={stepIndex}
       continuous={activeTour.continuous ?? true}
-      showProgress={activeTour.showProgress ?? true}
-      showSkipButton={activeTour.showSkipButton ?? true}
-      callback={handleJoyrideCallback}
-      disableScrolling={activeTour.disableScrolling ?? false}
-      disableOverlayClose={false}
-      hideCloseButton={false}
+      onEvent={handleJoyrideCallback}
       scrollToFirstStep={true}
-      scrollOffset={100}
-      spotlightClicks={false}
+      options={{
+        showProgress: activeTour.showProgress ?? true,
+        scrollOffset: 100,
+        overlayClickAction: false,
+        blockTargetInteraction: true,
+        ...(activeTour.showSkipButton ? { buttons: ['back', 'close', 'primary', 'skip'] } : {}),
+      }}
       // Custom styles matching platform design
       styles={{
-        options: {
-          arrowColor: 'var(--base-pure-white)',
-          backgroundColor: 'var(--base-pure-white)',
-          overlayColor: 'rgba(0, 0, 0, 0.5)',
-          primaryColor: 'var(--base-violet-solid-9)',
-          textColor: 'var(--text-default)',
-          width: isMobile ? 300 : 400,
+        arrow: {
+          color: 'var(--base-pure-white)',
+        },
+        overlay: {
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 10000,
+        },
+        floater: {
           zIndex: 10000,
         },
         tooltip: {
+          backgroundColor: 'var(--base-pure-white)',
+          color: 'var(--text-default)',
+          width: isMobile ? 300 : 400,
           borderRadius: 'var(--border-radius-md, 8px)',
           padding: isMobile ? 16 : 20,
           boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
-          maxHeight: '100vh',       
-          overflowY: 'auto',       
+          maxHeight: '100vh',
+          overflowY: 'auto',
         },
         tooltipContainer: {
           textAlign: 'left',
@@ -101,7 +105,7 @@ export function TourGuide() {
           color: 'var(--text-medium)',
           padding: '8px 0',
         },
-        buttonNext: {
+        buttonPrimary: {
           backgroundColor: 'var(--action-primary-basic-default)',
           borderRadius: 'var(--border-radius-sm, 6px)',
           color: 'var(--text-on-bg-default)',
@@ -145,9 +149,6 @@ export function TourGuide() {
           border: 'none',
           cursor: 'pointer',
           transition: 'color 0.2s ease',
-        },
-        spotlight: {
-          borderRadius: 'var(--border-radius-md, 8px)',
         },
         beacon: {
           backgroundColor: 'var(--action-primary-basic-default)',

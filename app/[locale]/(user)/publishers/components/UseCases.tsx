@@ -131,7 +131,7 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
     <div>
       <div
         className={cn(
-          'grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2'
+          'grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'
         )}
       >
         {PublishedUseCasesList.isLoading ? (
@@ -141,35 +141,39 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
         ) : UseCaseData?.length > 0 ? (
           UseCaseData?.map((item: any, index: any) => (
             <Card
-              type={[
-                {
-                  label: 'Use Case',
-                  fillColor: '#FEF7E5',
-                  borderColor: '#F9C74F',
-                },
-              ]}
+              // type={[
+              //   {
+              //     label: 'Use Case',
+              //     fillColor: '#FEF7E5',
+              //     borderColor: '#F9C74F',
+              //   },
+              // ]}
               title={item.title}
               key={index}
               href={`/usecases/${item.id}`}
               metadataContent={[
                 {
-                  icon: Icons.calendar as any,
+                  icon: Icons.calendarEvent as any,
                   label: 'Date',
-                  value: formatDate(item.modified),
+                  value: formatDate(item.modified) || '',
+                  stroke: 1.2,
                 },
                 {
-                  icon: Icons.globe as any,
+                  icon: Icons.worldPin as any,
                   label: 'Geography',
                   value: item.metadata?.find(
                     (meta: any) => meta.metadataItem?.label === 'Geography'
                   )?.value,
+                  stroke: 1.2,
                 },
               ]}
-              footerContent={[
+              leftFooterChips={[
                 {
                   icon: `/Sectors/${item?.sectors[0]?.name}.svg` as any,
                   label: 'Sectors',
                 },
+              ]}
+              rightFooterChips={[
                 {
                   icon: item.isIndividualUsecase
                     ? item?.user?.profilePicture

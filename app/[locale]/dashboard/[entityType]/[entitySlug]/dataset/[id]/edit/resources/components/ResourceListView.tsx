@@ -104,7 +104,7 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
         const updatedRows = data.createFileResources.map((item: any) => ({
           name_of_resource: item.name,
           type: item.type,
-          date_added: formatDate(item.created),
+          date_added: formatDate(item.created) || '',
           id: item.id,
         }));
 
@@ -196,7 +196,7 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
       data.map((item: any) => ({
         name_of_resource: item.name,
         type: item.type,
-        date_added: formatDate(item.created),
+        date_added: formatDate(item.created) || '',
         id: item.id,
       })) || [],
   };
@@ -210,7 +210,7 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
       data.map((item: any) => ({
         name_of_resource: item.name,
         type: item.type,
-        date_added: formatDate(item.created),
+        date_added: formatDate(item.created) || '',
         id: item.id,
       })) || [];
 

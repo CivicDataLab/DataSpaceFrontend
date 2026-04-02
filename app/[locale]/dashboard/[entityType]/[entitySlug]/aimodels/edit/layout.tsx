@@ -73,6 +73,8 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       refetchOnReconnect: true,
     }
   );
+  const AIMODEL_TITLE_SUCCESS_TOAST_ID = 'aimodel-title-save-success';
+  const AIMODEL_TITLE_ERROR_TOAST_ID = 'aimodel-title-save-error';
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { displayName: string }) =>
@@ -90,11 +92,11 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       ),
     {
       onSuccess: () => {
-        toast('AI Model updated successfully');
+        toast('AI Model updated successfully',{id: AIMODEL_TITLE_SUCCESS_TOAST_ID});
         AIModelData.refetch();
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+        toast(`Error: ${error.message}`,{id: AIMODEL_TITLE_ERROR_TOAST_ID});
       },
     }
   );

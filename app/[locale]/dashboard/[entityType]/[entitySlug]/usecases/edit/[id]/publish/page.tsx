@@ -186,8 +186,9 @@ const Publish = () => {
         UseCaseData.data?.useCases[0]?.sectors.length === 0 ||
         UseCaseData.data?.useCases[0]?.summary.length === 0 ||
         UseCaseData.data?.useCases[0]?.sdgs.length === 0 ||
-        UseCaseData.data?.useCases[0]?.logo === null
-          ? 'Summary or SDG or Sectors or Logo is missing. Please add to continue.'
+        UseCaseData.data?.useCases[0]?.logo === null ||
+        !UseCaseData.data?.useCases[0]?.startedOn
+          ? 'Summary, SDG, Sectors, Logo, or Started On is missing. Please add to continue.'
           : '',
       errorType: 'critical',
     },
@@ -219,7 +220,8 @@ const Publish = () => {
       useCase.sectors.length > 0 &&
       useCase?.summary.length > 0 &&
       useCase?.sdgs.length > 0 &&
-      useCase?.logo !== null;
+      useCase?.logo !== null &&
+      !!useCase?.startedOn;
 
     // No datasets assigned
     if (!hasDatasets) return true;
