@@ -96,6 +96,24 @@ const UpdateAIModelMutation: any = graphql(`
   }
 `);
 
+const LANGUAGE_OPTIONS = [
+  { label: 'English', value: 'en' },
+  { label: 'Hindi', value: 'hi' },
+  { label: 'Spanish', value: 'es' },
+  { label: 'French', value: 'fr' },
+  { label: 'German', value: 'de' },
+  { label: 'Chinese', value: 'zh' },
+  { label: 'Japanese', value: 'ja' },
+  { label: 'Korean', value: 'ko' },
+  { label: 'Arabic', value: 'ar' },
+  { label: 'Portuguese', value: 'pt' },
+  { label: 'Russian', value: 'ru' },
+  { label: 'Tamil', value: 'ta' },
+  { label: 'Telugu', value: 'te' },
+  { label: 'Bengali', value: 'bn' },
+  { label: 'Marathi', value: 'mr' },
+];
+
 export default function AIModelDetailsPage() {
   const params = useParams<{
     entityType: string;
@@ -273,7 +291,8 @@ export default function AIModelDetailsPage() {
         maxTokens: model.maxTokens?.toString() || '',
         supportedLanguages:
           model.supportedLanguages?.map((l: string) => ({
-            label: l,
+            label:
+              LANGUAGE_OPTIONS.find((option) => option.value === l)?.label || l,
             value: l,
           })) || [],
         modelWebsite: metadata.modelWebsite || '',
@@ -289,6 +308,7 @@ export default function AIModelDetailsPage() {
   }, [model]);
 
   const handleInputChange = (field: string, value: any) => {
+    console.log('handleInputChange', field, value);
     setFormData((prev) => ({ ...prev, [field]: value }));
     setStatus('unsaved');
   };
@@ -324,7 +344,9 @@ export default function AIModelDetailsPage() {
 
     // Ensure access type is always 'open' (required field)
     if (dataToUse.accessType !== 'open') {
-      toast('Open access is required for all models',{id: OPEN_ACCESS_REQUIRED_TOAST_ID});
+      toast('Open access is required for all models', {
+        id: OPEN_ACCESS_REQUIRED_TOAST_ID,
+      });
       setStatus('unsaved');
       return;
     }
@@ -396,23 +418,7 @@ export default function AIModelDetailsPage() {
     { label: '131072', value: '131072' },
   ];
 
-  const languageOptions = [
-    { label: 'English', value: 'en' },
-    { label: 'Hindi', value: 'hi' },
-    { label: 'Spanish', value: 'es' },
-    { label: 'French', value: 'fr' },
-    { label: 'German', value: 'de' },
-    { label: 'Chinese', value: 'zh' },
-    { label: 'Japanese', value: 'ja' },
-    { label: 'Korean', value: 'ko' },
-    { label: 'Arabic', value: 'ar' },
-    { label: 'Portuguese', value: 'pt' },
-    { label: 'Russian', value: 'ru' },
-    { label: 'Tamil', value: 'ta' },
-    { label: 'Telugu', value: 'te' },
-    { label: 'Bengali', value: 'bn' },
-    { label: 'Marathi', value: 'mr' },
-  ];
+  const languageOptions = LANGUAGE_OPTIONS;
 
   const licenseOptions = [
     { label: 'Click to select from dropdown', value: '' },
@@ -434,7 +440,7 @@ export default function AIModelDetailsPage() {
       </div>
     );
   }
-const OPEN_ACCESS_REQUIRED_TOAST_ID = SAVE_SUCCESS_TOAST_ID;
+  const OPEN_ACCESS_REQUIRED_TOAST_ID = SAVE_SUCCESS_TOAST_ID;
   return (
     <div className="flex flex-col gap-4 py-6">
       {/* Model Type & Domain - side by side */}
@@ -536,6 +542,7 @@ const OPEN_ACCESS_REQUIRED_TOAST_ID = SAVE_SUCCESS_TOAST_ID;
         label="Tags"
         creatable
         selectedValue={formData.tags}
+        requiredIndicator
         onChange={(value) => {
           setIsTagsListUpdated(true);
           handleInputChange('tags', value);
@@ -599,6 +606,7 @@ const OPEN_ACCESS_REQUIRED_TOAST_ID = SAVE_SUCCESS_TOAST_ID;
             }
             key={`geographies-${getGeographiesList.data?.geographies?.length || 0}-${formData.geographies.length}`}
             label="Locations / Geography"
+            requiredIndicator
             selectedValue={formData.geographies}
             onChange={(value) => {
               handleInputChange('geographies', value);

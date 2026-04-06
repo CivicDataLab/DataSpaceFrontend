@@ -407,11 +407,12 @@ export default function PublishPage() {
                                 <Text className="lg:basis-1/6" variant="bodyMd">
                                   Description:
                                 </Text>
-                                <div className="lg:basis-4/5">
+
+                                <Text variant="bodyMd" className="lg:basis-4/5">
                                   <RichTextRenderer
                                     content={model.description}
                                   />
-                                </div>
+                                </Text>
                               </div>
                             )}
 

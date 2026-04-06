@@ -1020,7 +1020,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                   size="large"
                   className={getTypeButtonClass('aimodel')}
                 >
-                  AI Insights
+                  AI Models
                   {displayTypeCounts.aimodel !== undefined && (
                     <span className="text-xs ml-1">
                       ({displayTypeCounts.aimodel || 0})

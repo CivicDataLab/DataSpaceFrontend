@@ -94,7 +94,7 @@ const Details = ({ data }: { data: any }) => {
                   <Text
                     className="underline"
                     color="highlight"
-                    variant="bodyLg"
+                    variant="bodyMd"
                   >
                     {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
                   </Text>

@@ -83,7 +83,7 @@ const Details = ({ data }: { data: any }) => {
                 className="text-primaryBlue underline"
                 href={data.collaboratives[0].platformUrl}
               >
-                <Text className="underline" color="highlight" variant="bodyLg">
+                <Text className="underline" color="highlight" variant="bodyMd">
                   {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
                 </Text>
               </Link>
