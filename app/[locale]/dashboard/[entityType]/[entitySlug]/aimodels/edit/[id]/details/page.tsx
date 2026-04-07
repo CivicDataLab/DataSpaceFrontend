@@ -148,7 +148,7 @@ export default function AIModelDetailsPage() {
   const isValidHttpUrl = (value: string) => {
     try {
       const parsed = new URL(value);
-      return parsed.protocol === 'https:';
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
     } catch {
       return false;
     }
@@ -325,7 +325,7 @@ export default function AIModelDetailsPage() {
     }
 
     if (!isValidHttpUrl(trimmedWebsite)) {
-      toast('Please enter a valid URL that includes https.', {
+      toast('Please enter a valid URL that includes http or https.', {
         id: AI_MODEL_VALIDATION_TOAST_ID,
       });
       return;
@@ -591,7 +591,7 @@ export default function AIModelDetailsPage() {
             value={formData.modelWebsite}
             onChange={(value) => handleInputChange('modelWebsite', value)}
             onBlur={handleWebsiteBlur}
-            placeholder="www.model.com"
+            placeholder="https://www.model.com"
             required
             requiredIndicator={true}
           />
