@@ -53,6 +53,17 @@ const geographiesListQueryDoc: any = graphql(`
   }
 `);
 
+const promptDomainEnumValuesQueryDoc: any = graphql(`
+  query PromptDomainEnum {
+    __type(name: "PromptDomain") {
+      enumValues {
+        name
+        description
+      }
+    }
+  }
+`);
+
 const FetchAIModelDetails: any = graphql(`
   query AIModelDetails($filters: AIModelFilter) {
     aiModels(filters: $filters) {
@@ -189,6 +200,11 @@ export default function AIModelDetailsPage() {
         },
         {} as any
       )
+    );
+
+  const getPromptDomainEnumValues: { data: any; isLoading: boolean; error: any } =
+    useQuery([`prompt_domain_enum_values_query`], () =>
+      GraphQL(promptDomainEnumValuesQueryDoc, {}, [] as any)
     );
 
   const AIModelData: {
@@ -377,20 +393,16 @@ export default function AIModelDetailsPage() {
 
   const domainOptions = [
     { label: 'Click to select from dropdown', value: '' },
-    { label: 'Healthcare', value: 'HEALTHCARE' },
-    { label: 'Education', value: 'EDUCATION' },
-    { label: 'Legal', value: 'LEGAL' },
-    { label: 'Finance', value: 'FINANCE' },
-    { label: 'Agriculture', value: 'AGRICULTURE' },
-    { label: 'Environment', value: 'ENVIRONMENT' },
-    { label: 'Government', value: 'GOVERNMENT' },
-    { label: 'Technology', value: 'TECHNOLOGY' },
-    { label: 'Science', value: 'SCIENCE' },
-    { label: 'Social Services', value: 'SOCIAL_SERVICES' },
-    { label: 'Transportation', value: 'TRANSPORTATION' },
-    { label: 'Energy', value: 'ENERGY' },
-    { label: 'General', value: 'GENERAL' },
-    { label: 'Other', value: 'OTHER' },
+    ...(
+      getPromptDomainEnumValues.data?.__type?.enumValues?.map((item: { name: string }) => ({
+        label: item.name
+          .toLowerCase()
+          .split('_')
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' '),
+        value: item.name,
+      })) || []
+    ),
   ];
 
   const modelTypeOptions = [
