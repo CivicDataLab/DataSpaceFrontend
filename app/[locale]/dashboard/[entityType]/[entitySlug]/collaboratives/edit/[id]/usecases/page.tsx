@@ -76,16 +76,6 @@ const UseCases = () => {
       }
     );
 
-  const formattedData = (data: any) =>
-    data.map((item: any) => {
-      return {
-        title: item.title,
-        id: item.id,
-        category: item.sectors[0]?.name || 'N/A', // Safeguard in case of missing category
-        modified: formatDate(item.modified) || '',
-      };
-    });
-
   useEffect(() => {
     fetchData('usecase', '?size=1000&page=1')
       .then((res) => {
@@ -104,16 +94,28 @@ const UseCases = () => {
 
   const generateTableData = (list: Array<any>) => {
     return list.map((item) => {
+      const sector = item.sectors?.[0];
       return {
         title: item.title,
-        id: item.id,
-        category: item.sectors[0],
+        id: String(item.id),
+        category:
+          typeof sector === 'string'
+            ? sector
+            : sector?.name || 'N/A',
         modified: formatDate(item.modified) || '',
       };
     });
   };
 
-  const { mutate, isLoading: mutationLoading } = useMutation(
+  const rows = generateTableData(data);
+  const assignedUseCaseIds = new Set(
+    (CollaborativeDetails?.data?.collaboratives[0]?.useCases ?? []).map(
+      (item: any) => String(item.id)
+    )
+  );
+  const defaultSelectedRows = rows.filter((row) => assignedUseCaseIds.has(row.id));
+
+  const { mutate } = useMutation(
     () =>
       GraphQL(
         AssignCollaborativeUseCases,
@@ -128,7 +130,7 @@ const UseCases = () => {
         }
       ),
     {
-      onSuccess: (data: any) => {
+      onSuccess: () => {
         toast('Use Cases Assigned Successfully', { id: COLLAB_USECASES_TOAST_ID });
         CollaborativeDetails.refetch();
         router.push(
@@ -162,10 +164,8 @@ const UseCases = () => {
 
           <DataTable
             columns={columns}
-            rows={generateTableData(data)}
-            defaultSelectedRows={formattedData(
-              CollaborativeDetails?.data?.collaboratives[0]?.useCases
-            )}
+            rows={rows}
+            defaultSelectedRows={defaultSelectedRows}
             onRowSelectionChange={(selected) => {
               setSelectedRows(Array.isArray(selected) ? selected : []); // Ensure selected is always an array
             }}
