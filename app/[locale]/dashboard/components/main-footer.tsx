@@ -1,12 +1,53 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Icon, Text } from 'opub-ui';
+import { useEffect, useMemo, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import { isCollaborativeSubdomainHost } from '@/lib/collaborativesRouting';
 import styles from './styles.module.scss';
 
+const getPlatformPageUrl = (pagePath: string, locale?: string) => {
+  const normalizedPagePath = pagePath.startsWith('/') ? pagePath : `/${pagePath}`;
+
+  // Removes trailing slash
+  const platformBaseUrl = (process.env.NEXT_PUBLIC_PLATFORM_URL || '').replace(
+    /\/$/,
+    ''
+  );
+  const localeSegment = locale ? `/${locale}` : '';
+
+  if (!platformBaseUrl) {
+    return `${localeSegment}${normalizedPagePath}`;
+  }
+
+  return `${platformBaseUrl}${localeSegment}${normalizedPagePath}`;
+};
+
 const MainFooter = () => {
+  const [isCollaborativeSubdomain, setIsCollaborativeSubdomain] =
+    useState(false);
+
+  const currentLocale = useMemo(() => {
+    if (typeof window === 'undefined') return undefined;
+    const match = window.location.pathname.match(/^\/([a-z]{2})(\/|$)/i);
+    return match?.[1]?.toLowerCase();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setIsCollaborativeSubdomain(
+      isCollaborativeSubdomainHost(window.location.hostname)
+    );
+  }, []);
+
+  const aboutUsHref = isCollaborativeSubdomain
+    ? getPlatformPageUrl('/about-us', currentLocale)
+    : '/about-us';
+
   const socialMedia = [
     {
       icon: Icons.github,
@@ -29,7 +70,7 @@ const MainFooter = () => {
     <div className="bg-primaryBlue">
       <div className="flex items-center justify-between p-4 lg:px-20 lg:py-6 relative lg:flex-row flex-wrap gap-2">
         <div className="flex gap-3 lg:gap-6 uppercase text-sm lg:text-base order-1 lg:order-none">
-          <Link href={'/about-us'}>
+          <Link href={aboutUsHref}>
             <Text color="onBgDefault">About Us</Text>
           </Link>
           <Link href={'mailto:info@civicdatalab.in'}>

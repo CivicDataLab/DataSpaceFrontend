@@ -149,7 +149,7 @@ export function MainNav({ hideSearch = false }) {
               signIn={signIn}
             />
           </div>
-          <Link href="/">
+          <Link href={'/'}>
             <div className="flex items-center gap-2">
               <div className="group relative h-[35px] w-[130px] overflow-hidden md:h-[40px] md:w-[150px] lg:h-[68px] lg:w-[183px]">
                 {/* Static Logo */}
