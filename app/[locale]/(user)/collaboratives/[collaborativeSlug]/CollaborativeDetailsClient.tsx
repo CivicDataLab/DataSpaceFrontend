@@ -15,7 +15,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
-import { isCollaborativeSubdomainHost as isCollaborativeSubdomainHostname } from '@/lib/collaborativesRouting';
+import {
+  getPlatformRootUrl,
+  isCollaborativeSubdomainHost as isCollaborativeSubdomainHostname,
+} from '@/lib/collaborativesRouting';
 import { formatDate, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
@@ -322,6 +325,12 @@ const CollaborativeDetailClient = () => {
     },
   });
 
+  const platformRootUrl = getPlatformRootUrl();
+  const organizationPublisherHref = (org: any) => {
+    const path = `/publishers/organization/${org.slug + '_' + org.id}`;
+    return platformRootUrl === '/' ? path : `${platformRootUrl}${path}`;
+  };
+
   return (
     <>
       <JsonLd json={jsonLd} />
@@ -393,7 +402,7 @@ const CollaborativeDetailClient = () => {
                           {CollaborativeDetailsData?.collaborativeBySlug?.supportingOrganizations?.map(
                             (org: any) => (
                               <Link
-                                href={`/publishers/organization/${org.slug + '_' + org.id}`}
+                                href={organizationPublisherHref(org)}
                                 key={org.id}
                               >
                                 <div className=" rounded-4 bg-surfaceDefault  p-4">
@@ -420,7 +429,7 @@ const CollaborativeDetailClient = () => {
                           {CollaborativeDetailsData?.collaborativeBySlug?.partnerOrganizations?.map(
                             (org: any) => (
                               <Link
-                                href={`/publishers/organization/${org.slug + '_' + org.id}`}
+                                href={organizationPublisherHref(org)}
                                 key={org.id}
                               >
                                 <div className=" rounded-4 bg-surfaceDefault  p-4">
