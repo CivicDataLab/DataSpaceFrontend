@@ -4,6 +4,7 @@ import { Button, Icon, Text, Tooltip } from 'opub-ui';
 import { useEffect, useState } from 'react';
 
 import { Icons } from '@/components/icons';
+import { getPlatformRootUrl } from '@/lib/collaborativesRouting';
 import { formatDate, getWebsiteTitle } from '@/lib/utils';
 
 const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
@@ -104,6 +105,12 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.logo.path.replace('/code/files/', '')}`
     : '/org.png';
 
+  const platformRootUrl = getPlatformRootUrl();
+  const contributorHref = (contributor: any) => {
+    const path = `/publishers/${contributor.fullName + '_' + contributor.id}`;
+    return platformRootUrl === '/' ? path : `${platformRootUrl}${path}`;
+  };
+
   return (
     <div className="flex flex-col gap-10 px-7 py-10">
       <div className=" flex items-center justify-between">
@@ -168,7 +175,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
               <div className="flex flex-wrap gap-2">
                 {data.collaborativeBySlug.contributors.map((contributor: any) => (
                   <Link
-                    href={`/publishers/${contributor.fullName + '_' + contributor.id}`}
+                    href={contributorHref(contributor)}
                     key={contributor.id}
                   >
                     <Tooltip content={contributor.fullName}>
