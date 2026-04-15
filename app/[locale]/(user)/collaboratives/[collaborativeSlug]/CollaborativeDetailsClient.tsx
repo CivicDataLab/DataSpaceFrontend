@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -15,6 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
+import { isCollaborativeSubdomainHost as isCollaborativeSubdomainHostname } from '@/lib/collaborativesRouting';
 import { formatDate, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
@@ -217,9 +218,41 @@ const CollaborativeDetails = graphql(`
   }
 `);
 
+const getPlatformEntityUrl = (
+  entityPath: 'usecases' | 'datasets',
+  entityId: string | number,
+  locale?: string
+) => {
+  //Removes trailing slash
+  const platformBaseUrl = (process.env.NEXT_PUBLIC_PLATFORM_URL || '').replace(
+    /\/$/,
+    ''
+  );
+  const localeSegment = locale ? `/${locale}` : '';
+
+  if (!platformBaseUrl) {
+    return `/${entityPath}/${entityId}`;
+  }
+
+  return `${platformBaseUrl}${localeSegment}/${entityPath}/${entityId}`;
+};
+
 const CollaborativeDetailClient = () => {
   const params = useParams();
   const { trackCollaborative } = useAnalytics();
+  const locale =
+    typeof (params as any)?.locale === 'string'
+      ? (params as any).locale
+      : undefined;
+  const [isCollaborativeSubdomainHost, setIsCollaborativeSubdomainHost] =
+    useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setIsCollaborativeSubdomainHost(
+      isCollaborativeSubdomainHostname(window.location.hostname)
+    );
+  }, []);
 
   const {
     data: CollaborativeDetailsData,
@@ -249,12 +282,6 @@ const CollaborativeDetailClient = () => {
       },
     }
   );
-
-  console.log('Collaborative details query state:', {
-    isLoading,
-    error,
-    data: CollaborativeDetailsData,
-  });
 
   // Track collaborative view when data is loaded
   useEffect(() => {
@@ -328,20 +355,23 @@ const CollaborativeDetailClient = () => {
           </div>
         ) : (
           <>
-            <BreadCrumbs
-              data={[
-                { href: '/', label: 'Home' },
-                { href: '/collaboratives', label: 'Collaboratives' },
-                {
-                  href: '#',
-                  label:
-                    CollaborativeDetailsData?.collaborativeBySlug?.title || '',
-                },
-              ]}
-            />
+            {!isCollaborativeSubdomainHost && (
+              <BreadCrumbs
+                data={[
+                  { href: '/', label: 'Home' },
+                  { href: '/collaboratives', label: 'Collaboratives' },
+                  {
+                    href: '#',
+                    label:
+                      CollaborativeDetailsData?.collaborativeBySlug?.title ||
+                      '',
+                  },
+                ]}
+              />
+            )}
             <div className=" bg-primaryBlue">
               <div className="container flex flex-row">
-                <div className="w-full border-solid border-baseGraySlateSolid9 py-8 pr-8 lg:w-3/4 lg:border-r-2 lg:py-10 lg:pr-8">
+                <div className="w-full border-solid border-baseGraySlateSolid9 py-8 pr-8 lg:w-3/4  lg:py-10 lg:pr-8">
                   <PrimaryDetails
                     data={CollaborativeDetailsData}
                     isLoading={isLoading}
@@ -415,7 +445,10 @@ const CollaborativeDetailClient = () => {
             <div className="container py-8 lg:py-14" color="onBgDefault">
               {/* Use Cases Section */}
               {useCases.length > 0 && (
-                <div className="container py-8 lg:py-14">
+                <div
+                  id="collaborative-use-cases"
+                  className="container scroll-mt-28 py-8 lg:py-14"
+                >
                   <div className=" flex flex-col gap-1 ">
                     <Text variant="headingXl">Use Cases</Text>
                     <Text variant="bodyLg" fontWeight="regular">
@@ -499,7 +532,11 @@ const CollaborativeDetailClient = () => {
                           key={useCase.id}
                           variation={'collapsed'}
                           iconColor="success"
-                          href={`/usecases/${useCase.id}`}
+                          href={getPlatformEntityUrl(
+                            'usecases',
+                            useCase.id,
+                            locale
+                          )}
                         />
                       );
                     })}
@@ -507,7 +544,10 @@ const CollaborativeDetailClient = () => {
                 </div>
               )}
               {/* Datasets Section */}
-              <div className="container py-8 lg:py-14">
+              <div
+                id="collaborative-datasets"
+                className="container scroll-mt-28 py-8 lg:py-14"
+              >
                 <div className=" flex flex-col gap-1 ">
                   <Text variant="headingXl">
                     Datasets in this Collaborative
@@ -550,7 +590,11 @@ const CollaborativeDetailClient = () => {
                             stroke: 1.2,
                           },
                         ]}
-                        href={`/datasets/${dataset.id}`}
+                        href={getPlatformEntityUrl(
+                          'datasets',
+                          dataset.id,
+                          locale
+                        )}
                         leftFooterChips={[
                           {
                             icon: `/Sectors/${dataset.sectors[0]?.name}.svg`,

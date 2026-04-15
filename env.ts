@@ -18,12 +18,18 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_GA_ID: z.string().optional(),
     NEXT_PUBLIC_PLATFORM_URL: z.string().url().default('http://localhost:3000'),
+    NEXT_PUBLIC_PLATFORM_PROTOCOL: z.string().optional(),
+    NEXT_PUBLIC_PLATFORM_PORT: z.string().optional(),
+    NEXT_PUBLIC_PLATFORM_DOMAIN: z.string().optional(),
   },
 
   experimental__runtimeEnv: {
     NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
     NEXT_PUBLIC_PLATFORM_URL: process.env.NEXT_PUBLIC_PLATFORM_URL,
+    NEXT_PUBLIC_PLATFORM_PROTOCOL: process.env.NEXT_PUBLIC_PLATFORM_PROTOCOL,
+    NEXT_PUBLIC_PLATFORM_PORT: process.env.NEXT_PUBLIC_PLATFORM_PORT,
+    NEXT_PUBLIC_PLATFORM_DOMAIN: process.env.NEXT_PUBLIC_PLATFORM_DOMAIN,
   },
-  
+
   skipValidation: process.env.NODE_ENV === 'development' && !process.env.CI,
 });
