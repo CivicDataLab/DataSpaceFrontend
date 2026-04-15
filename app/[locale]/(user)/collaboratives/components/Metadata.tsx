@@ -113,8 +113,21 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     : '/org.png';
 
   const platformRootUrl = getPlatformRootUrl();
+  const getLocaleSegment = () => {
+    if (typeof window === 'undefined') return '';
+    const match = window.location.pathname.match(/^\/([a-z]{2})(\/|$)/i);
+    return match ? `/${match[1].toLowerCase()}` : '';
+  };
   const contributorHref = (contributor: any) => {
     const path = `/publishers/${contributor.fullName + '_' + contributor.id}`;
+    // Match getPlatformEntityUrl() behavior (absolute to NEXT_PUBLIC_PLATFORM_URL + locale)
+    const platformBaseUrl = (process.env.NEXT_PUBLIC_PLATFORM_URL || '').replace(
+      /\/$/,
+      ''
+    );
+    const localeSegment = getLocaleSegment();
+    if (platformBaseUrl) return `${platformBaseUrl}${localeSegment}${path}`;
+
     return platformRootUrl === '/' ? path : `${platformRootUrl}${path}`;
   };
 
