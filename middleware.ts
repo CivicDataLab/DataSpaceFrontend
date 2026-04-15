@@ -93,10 +93,15 @@ const getCollaborativeSlugFromHostname = (hostname: string) => {
     'cdn',
   ]);
 
-  // Local development support: <slug>.localhost
-  if (baseHostname === 'localhost' || baseHostname === '127.0.0.1') {
+  // Local: <slug>.collab.localhost OR <slug>.collab.127.0.0.1
+  if (
+    baseHostname === 'collab.localhost' ||
+    baseHostname === 'collab.127.0.0.1'
+  ) {
     const localSuffix =
-      baseHostname === 'localhost' ? '.localhost' : '.127.0.0.1';
+      baseHostname === 'collab.localhost'
+        ? '.collab.localhost'
+        : '.collab.127.0.0.1';
     if (!normalizedHost.endsWith(localSuffix)) return null;
     const slug = normalizedHost.slice(0, -localSuffix.length);
     if (!slug || slug.includes('.')) return null;
@@ -118,6 +123,23 @@ export default function middleware(req: NextRequest) {
   const localeRootMatch = req.nextUrl.pathname.match(localeRootRegex);
   const localePathRegex = RegExp(`^/(${locales.all.join('|')})(/.*)$`, 'i');
   const localePathMatch = req.nextUrl.pathname.match(localePathRegex);
+
+  const baseHostname = getBaseHostname();
+  const isPlatformHost = Boolean(baseHostname) && hostname === baseHostname;
+
+  // Ensure collab.<domain>/ shows collaboratives listing (not main homepage)
+  if (
+    isPlatformHost &&
+    (req.nextUrl.pathname === '/' || Boolean(localeRootMatch))
+  ) {
+    const rewriteUrl = req.nextUrl.clone();
+    const defaultLocalePrefix = `/${locales.default}`;
+    const localePrefix = localeRootMatch
+      ? `/${localeRootMatch[1]}`
+      : defaultLocalePrefix;
+    rewriteUrl.pathname = `${localePrefix}/collaboratives`;
+    return NextResponse.rewrite(rewriteUrl);
+  }
 
   const collaborativeSlug = getCollaborativeSlugFromHostname(hostname);
   if (collaborativeSlug) {

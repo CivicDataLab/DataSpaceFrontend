@@ -15,10 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
-import {
-  getPlatformRootUrl,
-  isCollaborativeSubdomainHost as isCollaborativeSubdomainHostname,
-} from '@/lib/collaborativesRouting';
+import { isCollaborativeSubdomainHost as isCollaborativeSubdomainHostname } from '@/lib/collaborativesRouting';
 import { formatDate, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
@@ -325,10 +322,14 @@ const CollaborativeDetailClient = () => {
     },
   });
 
-  const platformRootUrl = getPlatformRootUrl();
   const organizationPublisherHref = (org: any) => {
     const path = `/publishers/organization/${org.slug + '_' + org.id}`;
-    return platformRootUrl === '/' ? path : `${platformRootUrl}${path}`;
+    // Match getPlatformEntityUrl() behavior (absolute to platform host + locale)
+    const platformBaseUrl = (
+      process.env.NEXT_PUBLIC_PLATFORM_URL || ''
+    ).replace(/\/$/, '');
+    const localeSegment = locale ? `/${locale}` : '';
+    return platformBaseUrl ? `${platformBaseUrl}${localeSegment}${path}` : path;
   };
 
   return (

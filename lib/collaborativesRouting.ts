@@ -92,8 +92,10 @@ export const isCollaborativeSubdomainHost = (
 
   let slug: string | null = null;
 
-  if (domain === 'localhost' || domain === '127.0.0.1') {
-    const localSuffix = domain === 'localhost' ? '.localhost' : '.127.0.0.1';
+  // Local development support: <slug>.collab.localhost
+  if (domain === 'collab.localhost' || domain === 'collab.127.0.0.1') {
+    const localSuffix =
+      domain === 'collab.localhost' ? '.collab.localhost' : '.collab.127.0.0.1';
     if (!currentHost.endsWith(localSuffix)) return false;
     slug = currentHost.slice(0, -localSuffix.length);
   } else {
@@ -117,9 +119,12 @@ export const getCollaborativeDetailUrl = (slug?: string | null) => {
   const protocol = getConfiguredProtocol();
   const localePrefix = getCurrentLocalePrefix();
 
-  if (domain === 'localhost' || domain === '127.0.0.1') {
+  if (domain === 'collab.localhost' || domain === 'collab.127.0.0.1') {
     const portSuffix = getConfiguredPortSuffix();
-    return `${protocol}//${slug}.localhost${portSuffix}${localePrefix}`;
+    console.log('portSuffix', portSuffix);
+    const host =
+      domain === 'collab.127.0.0.1' ? 'collab.127.0.0.1' : 'collab.localhost';
+    return `${protocol}//${slug}.${host}${portSuffix}${localePrefix}`;
   }
   return `${protocol}//${slug}.${domain}${localePrefix}`;
 };
@@ -131,9 +136,10 @@ export const getPlatformRootUrl = () => {
   const protocol = getConfiguredProtocol();
   const localePrefix = getCurrentLocalePrefix();
 
-  if (domain === 'localhost' || domain === '127.0.0.1') {
+  // Local dev: keep port (e.g. collab.localhost:3000)
+  if (domain === 'collab.localhost' || domain === 'collab.127.0.0.1') {
     const portSuffix = getConfiguredPortSuffix();
-    return `${protocol}//localhost${portSuffix}${localePrefix}`;
+    return `${protocol}//${domain}${portSuffix}${localePrefix}`;
   }
 
   return `${protocol}//${domain}${localePrefix}`;
