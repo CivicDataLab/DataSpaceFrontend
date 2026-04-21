@@ -190,7 +190,11 @@ const Details = () => {
         });
       },
       onError: (error: any) => {
-        toast(`Error: ${error.message}`, { id: COLLAB_DETAILS_TOAST_ID });
+        const msg =
+          error?.response?.errors?.[0]?.message ??
+          error?.message ??
+          'Something went wrong';
+        toast(`Error: ${msg}`, { id: COLLAB_DETAILS_TOAST_ID });
       },
     }
   );
