@@ -33,7 +33,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
 
   const metadata = [
     {
-      label: 'Platform URL',
+      label: 'External Link',
       value:
         data.collaborativeBySlug.platformUrl === null ? (
           'N/A'
@@ -46,7 +46,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
               className="text-primaryBlue underline lg:text-white"
               variant="bodyLg"
             >
-              {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
+              {platformTitle?.trim() ? platformTitle : 'Open Link'}
             </Text>
           </Link>
         ),
@@ -119,12 +119,12 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     return match ? `/${match[1].toLowerCase()}` : '';
   };
   const contributorHref = (contributor: any) => {
-    const path = `/publishers/${contributor.fullName + '_' + contributor.id}`;
+    const path = `/publishers/${contributor.id}`;
+    // Original: `/publishers/${contributor.fullName + '_' + contributor.id}`;
     // Match getPlatformEntityUrl() behavior (absolute to NEXT_PUBLIC_PLATFORM_URL + locale)
-    const platformBaseUrl = (process.env.NEXT_PUBLIC_PLATFORM_URL || '').replace(
-      /\/$/,
-      ''
-    );
+    const platformBaseUrl = (
+      process.env.NEXT_PUBLIC_PLATFORM_URL || ''
+    ).replace(/\/$/, '');
     const localeSegment = getLocaleSegment();
     if (platformBaseUrl) return `${platformBaseUrl}${localeSegment}${path}`;
 

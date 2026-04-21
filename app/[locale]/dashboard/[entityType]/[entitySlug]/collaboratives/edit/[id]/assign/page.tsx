@@ -4,13 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchDatasets } from '@/fetch';
 import { graphql } from '@/gql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, DataTable, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Loading } from '@/components/loading';
 
+// prettier-ignore
 const FetchCollaborativeDetails: any = graphql(`
   query CollaborativeDetails($filters: CollaborativeFilter) {
     collaboratives(filters: $filters) {
@@ -28,6 +29,7 @@ const FetchCollaborativeDetails: any = graphql(`
   }
 `);
 
+// prettier-ignore
 const AssignCollaborativeDatasets: any = graphql(`
   mutation assignCollaborativeDatasets($collaborativeId: String!, $datasetIds: [UUID!]!) {
     updateCollaborativeDatasets(collaborativeId: $collaborativeId, datasetIds: $datasetIds) {
@@ -48,6 +50,7 @@ const Assign = () => {
     id: string;
   }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const COLLAB_ASSIGN_TOAST_ID = 'collaboratives-assign-toast';
 
   const [data, setData] = useState<any[]>([]); // Ensure `data` is an array
@@ -128,13 +131,25 @@ const Assign = () => {
     {
       onSuccess: () => {
         toast('Dataset Assigned Successfully', { id: COLLAB_ASSIGN_TOAST_ID });
-        CollaborativeDetails.refetch();
+        queryClient.invalidateQueries({
+          queryKey: [`Collaborative_Details`, params.id],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_CollaborativeDetails`,
+            params.entityType,
+            params.entitySlug,
+            params.id,
+          ],
+        });
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives/edit/${params.id}/usecases`
         );
       },
       onError: (err: any) => {
-        toast(`Received ${err} on dataset publish `, { id: COLLAB_ASSIGN_TOAST_ID });
+        toast(`Received ${err} on dataset publish `, {
+          id: COLLAB_ASSIGN_TOAST_ID,
+        });
       },
     }
   );
