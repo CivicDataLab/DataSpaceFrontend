@@ -323,7 +323,8 @@ const CollaborativeDetailClient = () => {
   });
 
   const organizationPublisherHref = (org: any) => {
-    const path = `/publishers/organization/${org.slug + '_' + org.id}`;
+    const path = `/publishers/organization/${org.id}`;
+    // Original: `/publishers/organization/${org.slug + '_' + org.id}`;
     // Match getPlatformEntityUrl() behavior (absolute to platform host + locale)
     const platformBaseUrl = (
       process.env.NEXT_PUBLIC_PLATFORM_URL || ''

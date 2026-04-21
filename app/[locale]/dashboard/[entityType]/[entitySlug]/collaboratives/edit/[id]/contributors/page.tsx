@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { Button, Icon, Text, toast } from 'opub-ui';
@@ -26,6 +26,7 @@ import {
 
 const Details = () => {
   const params = useParams<{ entityType: string; entitySlug: string; id: string }>();
+  const queryClient = useQueryClient();
   const [searchValue, setSearchValue] = useState('');
   const [formData, setFormData] = useState({
     contributors: [] as { label: string; value: string }[],
@@ -114,7 +115,17 @@ const Details = () => {
       {
         onSuccess: () => {
           toast('Contributor added successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
-          CollaborativeData.refetch();
+          queryClient.invalidateQueries({
+            queryKey: [`fetch_collaborative_${params.id}`],
+          });
+          queryClient.invalidateQueries({
+            queryKey: [
+              `fetch_CollaborativeDetails`,
+              params.entityType,
+              params.entitySlug,
+              params.id,
+            ],
+          });
         },
         onError: (error: any) => {
           toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
@@ -131,7 +142,17 @@ const Details = () => {
       {
         onSuccess: () => {
           toast('Contributor removed successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
-          CollaborativeData.refetch();
+          queryClient.invalidateQueries({
+            queryKey: [`fetch_collaborative_${params.id}`],
+          });
+          queryClient.invalidateQueries({
+            queryKey: [
+              `fetch_CollaborativeDetails`,
+              params.entityType,
+              params.entitySlug,
+              params.id,
+            ],
+          });
         },
         onError: (error: any) => {
           toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
@@ -147,7 +168,17 @@ const Details = () => {
     {
       onSuccess: () => {
         toast('Supporter added successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
-        CollaborativeData.refetch();
+        queryClient.invalidateQueries({
+          queryKey: [`fetch_collaborative_${params.id}`],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_CollaborativeDetails`,
+            params.entityType,
+            params.entitySlug,
+            params.id,
+          ],
+        });
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
@@ -164,7 +195,17 @@ const Details = () => {
       {
         onSuccess: () => {
           toast('Supporter removed successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
-          CollaborativeData.refetch();
+          queryClient.invalidateQueries({
+            queryKey: [`fetch_collaborative_${params.id}`],
+          });
+          queryClient.invalidateQueries({
+            queryKey: [
+              `fetch_CollaborativeDetails`,
+              params.entityType,
+              params.entitySlug,
+              params.id,
+            ],
+          });
         },
         onError: (error: any) => {
           toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
@@ -180,7 +221,17 @@ const Details = () => {
     {
       onSuccess: () => {
         toast('Partner added successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
-        CollaborativeData.refetch();
+        queryClient.invalidateQueries({
+          queryKey: [`fetch_collaborative_${params.id}`],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_CollaborativeDetails`,
+            params.entityType,
+            params.entitySlug,
+            params.id,
+          ],
+        });
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
@@ -197,7 +248,17 @@ const Details = () => {
       {
         onSuccess: () => {
         toast('Partner removed successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
-          CollaborativeData.refetch();
+          queryClient.invalidateQueries({
+            queryKey: [`fetch_collaborative_${params.id}`],
+          });
+          queryClient.invalidateQueries({
+            queryKey: [
+              `fetch_CollaborativeDetails`,
+              params.entityType,
+              params.entitySlug,
+              params.id,
+            ],
+          });
         },
         onError: (error: any) => {
         toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });

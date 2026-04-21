@@ -21,6 +21,7 @@ import Assign from './Assign';
 import Contributors from './Contributors';
 import Details from './Details';
 
+// prettier-ignore
 const CollaborativeDetails: any = graphql(`
   query CollabDetails($filters: CollaborativeFilter) {
     collaboratives(filters: $filters) {
@@ -130,7 +131,12 @@ const Publish = () => {
   }>();
   const CollaborativeData: { data: any; isLoading: boolean; refetch: any } =
     useQuery(
-      [`fetch_CollaborativeDetails`],
+      [
+        `fetch_CollaborativeDetails`,
+        params.entityType,
+        params.entitySlug,
+        params.id,
+      ],
       () =>
         GraphQL(
           CollaborativeDetails,
@@ -144,8 +150,9 @@ const Publish = () => {
           }
         ),
       {
-        refetchOnMount: true,
-        refetchOnReconnect: true,
+        // We navigate between tabs via routing; always refetch to avoid showing stale cached data.
+        refetchOnMount: 'always',
+        refetchOnReconnect: 'always',
       }
     );
   const router = useRouter();
@@ -208,11 +215,11 @@ const Publish = () => {
       data: CollaborativeData?.data?.collaboratives[0]?.useCases,
       error: '',
     },
-    {
-      name: 'Dashboards',
-      data: CollaborativeData?.data?.collaboratives[0]?.length > 0,
-      error: '',
-    },
+    // {
+    //   name: 'Dashboards',
+    //   data: CollaborativeData?.data?.collaboratives[0]?.length > 0,
+    //   error: '',
+    // },
     {
       name: 'Contributors',
       data: CollaborativeData?.data?.collaboratives[0]?.length > 0,
