@@ -1,10 +1,11 @@
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Icon, Text, Tooltip } from 'opub-ui';
-import { useEffect, useState } from 'react';
 
-import { Icons } from '@/components/icons';
+import { getPlatformRootUrl } from '@/lib/collaborativesRouting';
 import { formatDate, getWebsiteTitle } from '@/lib/utils';
+import { Icons } from '@/components/icons';
 
 const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
   const [platformTitle, setPlatformTitle] = useState<string | null>(null);
@@ -32,7 +33,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
 
   const metadata = [
     {
-      label: 'Platform URL',
+      label: 'External Link',
       value:
         data.collaborativeBySlug.platformUrl === null ? (
           'N/A'
@@ -41,12 +42,16 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
             className="text-primaryBlue underline lg:text-white"
             href={data.collaborativeBySlug.platformUrl}
           >
-            <Text className="underline text-primaryBlue lg:text-white" variant="bodyLg">
-              {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
+            <Text
+              className="text-primaryBlue underline lg:text-white"
+              variant="bodyLg"
+            >
+              {platformTitle?.trim() ? platformTitle : 'Open Link'}
             </Text>
           </Link>
         ),
-      tooltipContent: data.collaborativeBySlug.platformUrl === null ? 'N/A' : platformTitle,
+      tooltipContent:
+        data.collaborativeBySlug.platformUrl === null ? 'N/A' : platformTitle,
     },
     {
       label: 'Last Updated',
@@ -58,17 +63,19 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       value: (
         <div className="flex flex-wrap  gap-2">
           {data.collaborativeBySlug.sectors.length > 0 ? (
-            data.collaborativeBySlug.sectors.map((sector: any, index: number) => (
-              <Tooltip content={sector.name} key={index}>
-                <Image
-                  src={`/Sectors/${sector.name}.svg`}
-                  alt={sector.name || ''}
-                  width={52}
-                  height={52}
-                  className="bg-white"
-                />
-              </Tooltip>
-            ))
+            data.collaborativeBySlug.sectors.map(
+              (sector: any, index: number) => (
+                <Tooltip content={sector.name} key={index}>
+                  <Image
+                    src={`/Sectors/${sector.name}.svg`}
+                    alt={sector.name || ''}
+                    width={52}
+                    height={52}
+                    className="bg-white"
+                  />
+                </Tooltip>
+              )
+            )
           ) : (
             <span>N/A</span> // Fallback if no sectors are available
           )}
@@ -79,7 +86,8 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       label: 'SDG Goals',
       value: (
         <div className="flex flex-wrap gap-2">
-          {data.collaborativeBySlug.sdgs && data.collaborativeBySlug.sdgs.length > 0 ? (
+          {data.collaborativeBySlug.sdgs &&
+          data.collaborativeBySlug.sdgs.length > 0 ? (
             data.collaborativeBySlug.sdgs.map((sdg: any, index: number) => (
               <Tooltip content={`${sdg.code} - ${sdg.name}`} key={index}>
                 <Image
@@ -98,11 +106,30 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       ),
     },
   ];
-  
+
   // Use collaborative logo if available, otherwise use a default
   const image = data.collaborativeBySlug?.logo?.path
     ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.logo.path.replace('/code/files/', '')}`
     : '/org.png';
+
+  const platformRootUrl = getPlatformRootUrl();
+  const getLocaleSegment = () => {
+    if (typeof window === 'undefined') return '';
+    const match = window.location.pathname.match(/^\/([a-z]{2})(\/|$)/i);
+    return match ? `/${match[1].toLowerCase()}` : '';
+  };
+  const contributorHref = (contributor: any) => {
+    const path = `/publishers/${contributor.id}`;
+    // Original: `/publishers/${contributor.fullName + '_' + contributor.id}`;
+    // Match getPlatformEntityUrl() behavior (absolute to NEXT_PUBLIC_PLATFORM_URL + locale)
+    const platformBaseUrl = (
+      process.env.NEXT_PUBLIC_PLATFORM_URL || ''
+    ).replace(/\/$/, '');
+    const localeSegment = getLocaleSegment();
+    if (platformBaseUrl) return `${platformBaseUrl}${localeSegment}${path}`;
+
+    return platformRootUrl === '/' ? path : `${platformRootUrl}${path}`;
+  };
 
   return (
     <div className="flex flex-col gap-10 px-7 py-10">
@@ -115,7 +142,9 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           >
             ABOUT THE COLLABORATIVE{' '}
           </Text>
-          <Text variant="bodyLg" className="text-gray-900 lg:text-white">DETAILS</Text>
+          <Text variant="bodyLg" className="text-gray-900 lg:text-white">
+            DETAILS
+          </Text>
         </div>
         <div className="flex items-center justify-between">
           {setOpen && (
@@ -125,7 +154,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           )}
         </div>
       </div>
-      <div className="h-0.5 bg-baseGraySlateSolid9 w-full" ></div>
+      <div className="h-0.5 w-full bg-baseGraySlateSolid9"></div>
       <div className=" flex flex-col gap-8">
         <div className="hidden rounded-2 border-1 border-solid border-greyExtralight bg-white p-2 lg:block">
           <Image
@@ -140,7 +169,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           {metadata.map((item, index) => (
             <div key={index} className="flex gap-2">
               <Text
-                className="min-w-[120px]  basis-1/4 uppercase text-gray-900 lg:text-white"
+                className="text-gray-900  min-w-[120px] basis-1/4 uppercase lg:text-white"
                 variant="bodyMd"
               >
                 {item.label}
@@ -157,38 +186,41 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
             </div>
           ))}
           {/* Contributors Section */}
-          {data.collaborativeBySlug.contributors && data.collaborativeBySlug.contributors.length > 0 && (
-            <div className="flex gap-2">
-              <Text
-                className="min-w-[120px] basis-1/4 uppercase text-gray-900 lg:text-white"
-                variant="bodyMd"
-              >
-                Contributors
-              </Text>
-              <div className="flex flex-wrap gap-2">
-                {data.collaborativeBySlug.contributors.map((contributor: any) => (
-                  <Link
-                    href={`/publishers/${contributor.fullName + '_' + contributor.id}`}
-                    key={contributor.id}
-                  >
-                    <Tooltip content={contributor.fullName}>
-                      <Image
-                        alt={contributor.fullName}
-                        width={40}
-                        height={40}
-                        className="rounded-full object-cover"
-                        src={
-                          contributor.profilePicture?.url
-                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${contributor.profilePicture?.url}`
-                            : '/profile.png'
-                        }
-                      />
-                    </Tooltip>
-                  </Link>
-                ))}
+          {data.collaborativeBySlug.contributors &&
+            data.collaborativeBySlug.contributors.length > 0 && (
+              <div className="flex gap-2">
+                <Text
+                  className="text-gray-900 min-w-[120px] basis-1/4 uppercase lg:text-white"
+                  variant="bodyMd"
+                >
+                  Contributors
+                </Text>
+                <div className="flex flex-wrap gap-2">
+                  {data.collaborativeBySlug.contributors.map(
+                    (contributor: any) => (
+                      <Link
+                        href={contributorHref(contributor)}
+                        key={contributor.id}
+                      >
+                        <Tooltip content={contributor.fullName}>
+                          <Image
+                            alt={contributor.fullName}
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover"
+                            src={
+                              contributor.profilePicture?.url
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${contributor.profilePicture?.url}`
+                                : '/profile.png'
+                            }
+                          />
+                        </Tooltip>
+                      </Link>
+                    )
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       </div>
     </div>

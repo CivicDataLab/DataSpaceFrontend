@@ -17,6 +17,7 @@ import {
 } from 'opub-ui';
 
 import { cn, formatDate } from '@/lib/utils';
+import { getCollaborativeDetailUrl } from '@/lib/collaborativesRouting';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
@@ -489,7 +490,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       case 'aimodel':
         return `/aimodels/${item.id}`;
       case 'collaborative':
-        return `/collaboratives/${item.slug}`;
+        return getCollaborativeDetailUrl(item.slug);
       case 'publisher':
         // For publishers, redirect based on publisher_type
         if (item.publisher_type === 'organization') {

@@ -1,10 +1,12 @@
 'use client';
 
 import { notFound, usePathname } from 'next/navigation';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import MainFooter from '../dashboard/components/main-footer';
 import { MainNav } from '../dashboard/components/main-nav';
+import { CollaborativeSubdomainNav } from '../dashboard/components/CollaborativeSubdomainNav';
+import { isCollaborativeSubdomainHost } from '@/lib/collaborativesRouting';
 
 interface UserLayoutProps {
   children?: React.ReactNode;
@@ -14,16 +16,41 @@ export default function Layout({ children }: UserLayoutProps) {
   const user = true; // await getCurrentUser()
   const routerPath = usePathname();
   const hideSearch = routerPath === '/' || routerPath === '/datasets';
+  const [isCollaborativeSubdomain, setIsCollaborativeSubdomain] = useState<
+    boolean | null
+  >(null);
+  const shouldHideMainNav = isCollaborativeSubdomain === true;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      setIsCollaborativeSubdomain(false);
+      return;
+    }
+
+    setIsCollaborativeSubdomain(
+      isCollaborativeSubdomainHost(window.location.hostname)
+    );
+  }, [routerPath]);
 
   if (!user) {
     return notFound();
   }
 
+  const shouldRenderMainNav =
+    isCollaborativeSubdomain !== null && !shouldHideMainNav;
+  const shouldRenderCollaborativeSubdomainNav = isCollaborativeSubdomain === true;
+
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="z-1 sticky top-0 bg-primaryBlue">
-        <MainNav hideSearch={hideSearch} />
-      </header>
+      {isCollaborativeSubdomain !== null && (
+        <header className="z-1 sticky top-0 bg-primaryBlue">
+          {shouldRenderMainNav ? (
+            <MainNav hideSearch={hideSearch} />
+          ) : shouldRenderCollaborativeSubdomainNav ? (
+            <CollaborativeSubdomainNav />
+          ) : null}
+        </header>
+      )}
       <main className="grow">{children}</main>
       <footer>
         <MainFooter />

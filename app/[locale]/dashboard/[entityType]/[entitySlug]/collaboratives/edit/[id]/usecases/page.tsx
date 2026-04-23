@@ -4,13 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchData } from '@/fetch';
 import { graphql } from '@/gql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, DataTable, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Loading } from '@/components/loading';
 
+// prettier-ignore
 const FetchCollaborativeDetails: any = graphql(`
   query CollaborativeUseCaseDetails($filters: CollaborativeFilter) {
     collaboratives(filters: $filters) {
@@ -29,6 +30,7 @@ const FetchCollaborativeDetails: any = graphql(`
   }
 `);
 
+// prettier-ignore
 const AssignCollaborativeUseCases: any = graphql(`
   mutation assignCollaborativeUseCases($collaborativeId: String!, $useCaseIds: [String!]!) {
     updateCollaborativeUseCases(collaborativeId: $collaborativeId, useCaseIds: $useCaseIds) {
@@ -50,6 +52,7 @@ const UseCases = () => {
     id: string;
   }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const COLLAB_USECASES_TOAST_ID = 'collaboratives-usecases-toast';
 
   const [data, setData] = useState<any[]>([]); // Ensure `data` is an array
@@ -76,16 +79,6 @@ const UseCases = () => {
       }
     );
 
-  const formattedData = (data: any) =>
-    data.map((item: any) => {
-      return {
-        title: item.title,
-        id: item.id,
-        category: item.sectors[0]?.name || 'N/A', // Safeguard in case of missing category
-        modified: formatDate(item.modified) || '',
-      };
-    });
-
   useEffect(() => {
     fetchData('usecase', '?size=1000&page=1')
       .then((res) => {
@@ -104,16 +97,27 @@ const UseCases = () => {
 
   const generateTableData = (list: Array<any>) => {
     return list.map((item) => {
+      const sector = item.sectors?.[0];
       return {
         title: item.title,
-        id: item.id,
-        category: item.sectors[0],
+        id: String(item.id),
+        category: typeof sector === 'string' ? sector : sector?.name || 'N/A',
         modified: formatDate(item.modified) || '',
       };
     });
   };
 
-  const { mutate, isLoading: mutationLoading } = useMutation(
+  const rows = generateTableData(data);
+  const assignedUseCaseIds = new Set(
+    (CollaborativeDetails?.data?.collaboratives[0]?.useCases ?? []).map(
+      (item: any) => String(item.id)
+    )
+  );
+  const defaultSelectedRows = rows.filter((row) =>
+    assignedUseCaseIds.has(row.id)
+  );
+
+  const { mutate } = useMutation(
     () =>
       GraphQL(
         AssignCollaborativeUseCases,
@@ -128,15 +132,29 @@ const UseCases = () => {
         }
       ),
     {
-      onSuccess: (data: any) => {
-        toast('Use Cases Assigned Successfully', { id: COLLAB_USECASES_TOAST_ID });
-        CollaborativeDetails.refetch();
+      onSuccess: () => {
+        toast('Use Cases Assigned Successfully', {
+          id: COLLAB_USECASES_TOAST_ID,
+        });
+        queryClient.invalidateQueries({
+          queryKey: [`Collaborative_UseCase_Details`, params.id],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_CollaborativeDetails`,
+            params.entityType,
+            params.entitySlug,
+            params.id,
+          ],
+        });
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives/edit/${params.id}/contributors`
         );
       },
       onError: (err: any) => {
-        toast(`Received ${err} on use case assignment`, { id: COLLAB_USECASES_TOAST_ID });
+        toast(`Received ${err} on use case assignment`, {
+          id: COLLAB_USECASES_TOAST_ID,
+        });
       },
     }
   );
@@ -162,10 +180,8 @@ const UseCases = () => {
 
           <DataTable
             columns={columns}
-            rows={generateTableData(data)}
-            defaultSelectedRows={formattedData(
-              CollaborativeDetails?.data?.collaboratives[0]?.useCases
-            )}
+            rows={rows}
+            defaultSelectedRows={defaultSelectedRows}
             onRowSelectionChange={(selected) => {
               setSelectedRows(Array.isArray(selected) ? selected : []); // Ensure selected is always an array
             }}

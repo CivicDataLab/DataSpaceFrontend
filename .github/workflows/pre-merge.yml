@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: ['dev']
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,6 +26,8 @@ jobs:
       BACKEND_URL: ${{vars.BACKEND_URL}}
       NEXT_PUBLIC_PLATFORM_URL: ${{vars.NEXT_PUBLIC_PLATFORM_URL}}
       NEXT_PUBLIC_ANALYTICS_URL: ${{vars.NEXT_PUBLIC_ANALYTICS_URL}}
+      NEXT_PUBLIC_PLATFORM_PROTOCOL: ${{ vars.NEXT_PUBLIC_PLATFORM_PROTOCOL }}
+      NEXT_PUBLIC_PLATFORM_DOMAIN: ${{ vars.NEXT_PUBLIC_PLATFORM_DOMAIN }}
     strategy:
       matrix:
         node-version: [20.x]

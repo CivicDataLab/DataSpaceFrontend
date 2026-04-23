@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { MetadataModels } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Combobox, Spinner, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
 
+// prettier-ignore
 const FetchCollaborativeMetadata: any = graphql(`
   query CollaborativeMetadata($filters: CollaborativeFilter) {
     collaboratives(filters: $filters) {
@@ -47,6 +48,7 @@ const FetchCollaborativeMetadata: any = graphql(`
   }
 `);
 
+// prettier-ignore
 const metadataQueryDoc = graphql(`
   query CollaborativeMetaDataList($filters: MetadataFilter) {
     metadata(filters: $filters) {
@@ -61,6 +63,7 @@ const metadataQueryDoc = graphql(`
   }
 `);
 
+// prettier-ignore
 const sectorsListQueryDoc: any = graphql(`
   query SectorList {
     sectors {
@@ -70,6 +73,7 @@ const sectorsListQueryDoc: any = graphql(`
   }
 `);
 
+// prettier-ignore
 const sdgsListQueryDoc: any = graphql(`
   query SDGList {
     sdgs {
@@ -81,6 +85,7 @@ const sdgsListQueryDoc: any = graphql(`
   }
 `);
 
+// prettier-ignore
 const tagsListQueryDoc: any = graphql(`
   query TagsList {
     tags {
@@ -90,6 +95,7 @@ const tagsListQueryDoc: any = graphql(`
   }
 `);
 
+// prettier-ignore
 const geographiesListQueryDoc: any = graphql(`
   query GeographiesList {
     geographies {
@@ -105,6 +111,7 @@ const geographiesListQueryDoc: any = graphql(`
   }
 `);
 
+// prettier-ignore
 const UpdateCollaborativeMetadata: any = graphql(`
   mutation addUpdateCollaborativeMetadata($updateMetadataInput: UpdateCollaborativeMetadataInput!) {
     addUpdateCollaborativeMetadata(updateMetadataInput: $updateMetadataInput) {
@@ -153,9 +160,15 @@ const Metadata = () => {
   }>();
 
   const { setStatus } = useEditStatus();
+  const queryClient = useQueryClient();
 
   const collaborativeData: { data: any; isLoading: boolean } = useQuery(
-    [`fetch_CollaborativeData_Metadata`],
+    [
+      `fetch_CollaborativeData_Metadata`,
+      params.entityType,
+      params.entitySlug,
+      params.id,
+    ],
     () =>
       GraphQL(
         FetchCollaborativeMetadata,
@@ -217,7 +230,7 @@ const Metadata = () => {
 
     defaultVal['sdgs'] =
       data?.sdgs?.map((sdg: any) => {
-        const num = sdg.number 
+        const num = sdg.number
           ? String(sdg.number).padStart(2, '0')
           : sdg.code.replace('SDG', '').padStart(2, '0');
         return {
@@ -252,7 +265,9 @@ const Metadata = () => {
 
   useEffect(() => {
     if (collaborativeData.data?.collaboratives?.[0]) {
-      const updatedData = defaultValuesPrepFn(collaborativeData.data.collaboratives[0]);
+      const updatedData = defaultValuesPrepFn(
+        collaborativeData.data.collaboratives[0]
+      );
       setFormData(updatedData);
       setPreviousFormData(updatedData);
     }
@@ -269,8 +284,9 @@ const Metadata = () => {
       )
     );
 
-  const getSDGsList: { data: any; isLoading: boolean; error: any } =
-    useQuery([`sdgs_list_query`], () =>
+  const getSDGsList: { data: any; isLoading: boolean; error: any } = useQuery(
+    [`sdgs_list_query`],
+    () =>
       GraphQL(
         sdgsListQueryDoc,
         {
@@ -278,7 +294,7 @@ const Metadata = () => {
         },
         []
       )
-    );
+  );
 
   const getTagsList: {
     data: any;
@@ -312,19 +328,53 @@ const Metadata = () => {
   // Update mutation
   const updateCollaborative = useMutation(
     (data: { updateMetadataInput: any }) =>
-      GraphQL(UpdateCollaborativeMetadata, {
-        [params.entityType]: params.entitySlug,
-      }, data),
+      GraphQL(
+        UpdateCollaborativeMetadata,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        data
+      ),
     {
       onSuccess: (res: any) => {
-        toast('Collaborative updated successfully', { id: COLLAB_METADATA_TOAST_ID });
-        const updatedData = defaultValuesPrepFn(res.addUpdateCollaborativeMetadata);
+        toast('Collaborative updated successfully', {
+          id: COLLAB_METADATA_TOAST_ID,
+        });
+        const updatedData = defaultValuesPrepFn(
+          res.addUpdateCollaborativeMetadata
+        );
         if (isTagsListUpdated) {
           getTagsList.refetch();
           setIsTagsListUpdated(false);
         }
         setFormData(updatedData);
         setPreviousFormData(updatedData);
+
+        // Keep other edit tabs in sync (Details/Publish) without requiring a full reload.
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_CollaborativeData_details`,
+            params.entityType,
+            params.entitySlug,
+            params.id,
+          ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_CollaborativeDetails`,
+            params.entityType,
+            params.entitySlug,
+            params.id,
+          ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_CollaborativeData_Metadata`,
+            params.entityType,
+            params.entitySlug,
+            params.id,
+          ],
+        });
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`, { id: COLLAB_METADATA_TOAST_ID });
@@ -355,13 +405,18 @@ const Metadata = () => {
             .map((key) => ({
               id: key,
               value: Array.isArray(updatedData[key])
-                ? updatedData[key].map((item: any) => item.value || item).join(', ')
+                ? updatedData[key]
+                    .map((item: any) => item.value || item)
+                    .join(', ')
                 : updatedData[key],
             })),
           sectors: updatedData.sectors?.map((item: any) => item.value) || [],
           sdgs: updatedData.sdgs?.map((item: any) => item.value) || [],
           tags: updatedData.tags?.map((item: any) => item.label) || [],
-          geographies: updatedData.geographies?.map((item: any) => parseInt(item.value, 10)) || [],
+          geographies:
+            updatedData.geographies?.map((item: any) =>
+              parseInt(item.value, 10)
+            ) || [],
         },
       });
     }
@@ -442,7 +497,7 @@ const Metadata = () => {
               name="sdgs"
               list={
                 getSDGsList?.data?.sdgs?.map((item: any) => {
-                  const num = item.number 
+                  const num = item.number
                     ? String(item.number).padStart(2, '0')
                     : item.code.replace('SDG', '').padStart(2, '0');
                   return {
@@ -518,9 +573,7 @@ const Metadata = () => {
         </div>
 
         <div className="flex flex-wrap">
-          {metadataFields?.metadata?.map((item: any) =>
-            renderInputField(item)
-          )}
+          {metadataFields?.metadata?.map((item: any) => renderInputField(item))}
         </div>
       </div>
     </div>

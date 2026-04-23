@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Text } from 'opub-ui';
+import { Tag, Text } from 'opub-ui';
 
 import { getWebsiteTitle } from '@/lib/utils';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 
 const Details = ({ data }: { data: any }) => {
   const [platformTitle, setPlatformTitle] = useState<string | null>(null);
+  const collaborative = data?.collaboratives?.[0];
 
   useEffect(() => {
     const fetchTitle = async () => {
@@ -31,20 +32,48 @@ const Details = ({ data }: { data: any }) => {
   }, [data?.collaboratives[0]?.platformUrl]);
 
   const PrimaryDetails = [
-    { label: 'Collaborative Name', value: data?.collaboratives[0]?.title },
-    { label: 'Summary', value: data?.collaboratives[0]?.summary },
+    { label: 'Collaborative Name', value: collaborative?.title },
+    { label: 'Summary', value: collaborative?.summary },
     {
       label: 'Running Status',
-      value: data?.collaboratives[0]?.runningStatus,
+      value: collaborative?.runningStatus,
     },
-    { label: 'Started On', value: data?.collaboratives[0]?.startedOn },
+    { label: 'Started On', value: collaborative?.startedOn },
     {
       label: 'Completed On',
-      value: data?.collaboratives[0]?.completedOn,
+      value: collaborative?.completedOn,
     },
-    { label: 'Sector', value: data?.collaboratives[0]?.sectors[0]?.name },
-    { label: 'Tags', value: data?.collaboratives[0]?.tags[0]?.value },
-    ...(data?.collaboratives[0]?.metadata?.map((meta: any) => ({
+    {
+      label: 'Sectors',
+      value: collaborative?.sectors?.length ? (
+        <div className="flex flex-wrap gap-2">
+          {collaborative.sectors.map((s: any, idx: number) => (
+            <Tag key={s?.id ?? `${s?.name}-${idx}`}>{s?.name}</Tag>
+          ))}
+        </div>
+      ) : null,
+    },
+    {
+      label: 'SDG Goals',
+      value: collaborative?.sdgs?.length ? (
+        <div className="flex flex-wrap gap-2">
+          {collaborative.sdgs.map((s: any, idx: number) => (
+            <Tag key={s?.id ?? `${s?.code}-${idx}`}>{s?.name || s?.code}</Tag>
+          ))}
+        </div>
+      ) : null,
+    },
+    {
+      label: 'Tags',
+      value: collaborative?.tags?.length ? (
+        <div className="flex flex-wrap gap-2">
+          {collaborative.tags.map((t: any, idx: number) => (
+            <Tag key={t?.id ?? `${t?.value}-${idx}`}>{t?.value}</Tag>
+          ))}
+        </div>
+      ) : null,
+    },
+    ...(collaborative?.metadata?.map((meta: any) => ({
       label: meta.metadataItem?.label,
       value: meta.value,
     })) || []),
@@ -53,52 +82,80 @@ const Details = ({ data }: { data: any }) => {
     <div>
       <div className="flex flex-col gap-4 px-8 py-4">
         <>
-          {PrimaryDetails.map(
-            (item, index) =>
-              item.value && (
-                <div className="flex flex-wrap gap-2" key={index}>
-                  <div className="md:w-1/6 lg:w-1/6">
-                    <Text variant="bodyMd">{item.label}:</Text>
-                  </div>
-                  <div>
-                    {item.label === 'Summary' ? (
-                      <RichTextRenderer
-                        content={item.value}
-                        className="text-black"
-                      />
-                    ) : (
-                      <Text variant="bodyMd">{item.value}</Text>
-                    )}
-                  </div>
+          {PrimaryDetails.map((item, index) =>
+            item.value ? (
+              <div className="flex flex-wrap gap-2" key={index}>
+                <div className="md:w-1/6 lg:w-1/6">
+                  <Text variant="bodyMd">{item.label}:</Text>
                 </div>
-              )
+                <div>
+                  {item.label === 'Summary' ? (
+                    <RichTextRenderer
+                      content={item.value as any}
+                      className="text-black"
+                    />
+                  ) : (
+                    <>
+                      {typeof item.value === 'string' ||
+                      typeof item.value === 'number' ? (
+                        <Text variant="bodyMd">{item.value}</Text>
+                      ) : (
+                        item.value
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            ) : null
           )}
 
-          <div className="flex flex-wrap gap-2">
-            <div className="md:w-1/6 lg:w-1/6">
-              <Text variant="bodyMd">Platform URL:</Text>
+          {data.collaboratives[0].platformUrl && (
+            <div className="flex flex-wrap gap-2">
+              <div className="md:w-1/6 lg:w-1/6">
+                <Text variant="bodyMd">External Link:</Text>
+              </div>
+              <div>
+                <Link
+                  className="text-primaryBlue underline"
+                  href={data.collaboratives[0].platformUrl}
+                >
+                  <Text
+                    className="underline"
+                    color="highlight"
+                    variant="bodyMd"
+                  >
+                    {platformTitle?.trim() ? platformTitle : 'Open Link'}
+                  </Text>
+                </Link>
+              </div>
             </div>
-            <div>
-              <Link
-                className="text-primaryBlue underline"
-                href={data.collaboratives[0].platformUrl}
-              >
-                <Text className="underline" color="highlight" variant="bodyLg">
-                  {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
-                </Text>
-              </Link>
-            </div>
-          </div>
+          )}
 
           {data?.collaboratives[0]?.logo && (
             <div className="flex flex-wrap items-center gap-2">
               <div className="md:w-1/6 lg:w-1/6">
                 <Text className="" variant="bodyMd">
-                  Image:
+                  Logo:
                 </Text>
               </div>
               <Image
                 src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data?.collaboratives[0]?.logo?.path.replace('/code/files/', '')}`}
+                alt={data?.collaboratives[0]?.title}
+                width={240}
+                className="object-contain"
+                height={240}
+              />
+            </div>
+          )}
+          {data?.collaboratives[0]?.coverImage && (
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="md:w-1/6 lg:w-1/6">
+                <Text className="" variant="bodyMd">
+                  Cover Image:
+                </Text>
+              </div>
+              <Image
+                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data?.collaboratives[0]?.coverImage?.path.replace('/code/files/', '')}`}
                 alt={data?.collaboratives[0]?.title}
                 width={240}
                 className="object-contain"

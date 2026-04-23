@@ -53,6 +53,17 @@ const geographiesListQueryDoc: any = graphql(`
   }
 `);
 
+const promptDomainEnumValuesQueryDoc: any = graphql(`
+  query PromptDomainEnum {
+    __type(name: "PromptDomain") {
+      enumValues {
+        name
+        description
+      }
+    }
+  }
+`);
+
 const FetchAIModelDetails: any = graphql(`
   query AIModelDetails($filters: AIModelFilter) {
     aiModels(filters: $filters) {
@@ -96,6 +107,24 @@ const UpdateAIModelMutation: any = graphql(`
   }
 `);
 
+const LANGUAGE_OPTIONS = [
+  { label: 'English', value: 'en' },
+  { label: 'Hindi', value: 'hi' },
+  { label: 'Spanish', value: 'es' },
+  { label: 'French', value: 'fr' },
+  { label: 'German', value: 'de' },
+  { label: 'Chinese', value: 'zh' },
+  { label: 'Japanese', value: 'ja' },
+  { label: 'Korean', value: 'ko' },
+  { label: 'Arabic', value: 'ar' },
+  { label: 'Portuguese', value: 'pt' },
+  { label: 'Russian', value: 'ru' },
+  { label: 'Tamil', value: 'ta' },
+  { label: 'Telugu', value: 'te' },
+  { label: 'Bengali', value: 'bn' },
+  { label: 'Marathi', value: 'mr' },
+];
+
 export default function AIModelDetailsPage() {
   const params = useParams<{
     entityType: string;
@@ -127,10 +156,11 @@ export default function AIModelDetailsPage() {
   const SAVE_SUCCESS_TOAST_ID = 'ai-model-details-save-success';
   const SAVE_ERROR_TOAST_ID = 'ai-model-details-save-error';
   const AI_MODEL_VALIDATION_TOAST_ID = 'ai-model-details-validation-toast';
+  const OPEN_ACCESS_REQUIRED_TOAST_ID = SAVE_SUCCESS_TOAST_ID;
   const isValidHttpUrl = (value: string) => {
     try {
       const parsed = new URL(value);
-      return parsed.protocol === 'https:';
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
     } catch {
       return false;
     }
@@ -171,6 +201,11 @@ export default function AIModelDetailsPage() {
         },
         {} as any
       )
+    );
+
+  const getPromptDomainEnumValues: { data: any; isLoading: boolean; error: any } =
+    useQuery([`prompt_domain_enum_values_query`], () =>
+      GraphQL(promptDomainEnumValuesQueryDoc, {}, [] as any)
     );
 
   const AIModelData: {
@@ -273,7 +308,8 @@ export default function AIModelDetailsPage() {
         maxTokens: model.maxTokens?.toString() || '',
         supportedLanguages:
           model.supportedLanguages?.map((l: string) => ({
-            label: l,
+            label:
+              LANGUAGE_OPTIONS.find((option) => option.value === l)?.label || l,
             value: l,
           })) || [],
         modelWebsite: metadata.modelWebsite || '',
@@ -289,6 +325,7 @@ export default function AIModelDetailsPage() {
   }, [model]);
 
   const handleInputChange = (field: string, value: any) => {
+    console.log('handleInputChange', field, value);
     setFormData((prev) => ({ ...prev, [field]: value }));
     setStatus('unsaved');
   };
@@ -305,7 +342,7 @@ export default function AIModelDetailsPage() {
     }
 
     if (!isValidHttpUrl(trimmedWebsite)) {
-      toast('Please enter a valid URL that includes https.', {
+      toast('Please enter a valid URL that includes http or https.', {
         id: AI_MODEL_VALIDATION_TOAST_ID,
       });
       return;
@@ -324,7 +361,9 @@ export default function AIModelDetailsPage() {
 
     // Ensure access type is always 'open' (required field)
     if (dataToUse.accessType !== 'open') {
-      toast('Open access is required for all models',{id: OPEN_ACCESS_REQUIRED_TOAST_ID});
+      toast('Open access is required for all models', {
+        id: OPEN_ACCESS_REQUIRED_TOAST_ID,
+      });
       setStatus('unsaved');
       return;
     }
@@ -355,20 +394,16 @@ export default function AIModelDetailsPage() {
 
   const domainOptions = [
     { label: 'Click to select from dropdown', value: '' },
-    { label: 'Healthcare', value: 'HEALTHCARE' },
-    { label: 'Education', value: 'EDUCATION' },
-    { label: 'Legal', value: 'LEGAL' },
-    { label: 'Finance', value: 'FINANCE' },
-    { label: 'Agriculture', value: 'AGRICULTURE' },
-    { label: 'Environment', value: 'ENVIRONMENT' },
-    { label: 'Government', value: 'GOVERNMENT' },
-    { label: 'Technology', value: 'TECHNOLOGY' },
-    { label: 'Science', value: 'SCIENCE' },
-    { label: 'Social Services', value: 'SOCIAL_SERVICES' },
-    { label: 'Transportation', value: 'TRANSPORTATION' },
-    { label: 'Energy', value: 'ENERGY' },
-    { label: 'General', value: 'GENERAL' },
-    { label: 'Other', value: 'OTHER' },
+    ...(
+      getPromptDomainEnumValues.data?.__type?.enumValues?.map((item: { name: string }) => ({
+        label: item.name
+          .toLowerCase()
+          .split('_')
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' '),
+        value: item.name,
+      })) || []
+    ),
   ];
 
   const modelTypeOptions = [
@@ -396,23 +431,7 @@ export default function AIModelDetailsPage() {
     { label: '131072', value: '131072' },
   ];
 
-  const languageOptions = [
-    { label: 'English', value: 'en' },
-    { label: 'Hindi', value: 'hi' },
-    { label: 'Spanish', value: 'es' },
-    { label: 'French', value: 'fr' },
-    { label: 'German', value: 'de' },
-    { label: 'Chinese', value: 'zh' },
-    { label: 'Japanese', value: 'ja' },
-    { label: 'Korean', value: 'ko' },
-    { label: 'Arabic', value: 'ar' },
-    { label: 'Portuguese', value: 'pt' },
-    { label: 'Russian', value: 'ru' },
-    { label: 'Tamil', value: 'ta' },
-    { label: 'Telugu', value: 'te' },
-    { label: 'Bengali', value: 'bn' },
-    { label: 'Marathi', value: 'mr' },
-  ];
+  const languageOptions = LANGUAGE_OPTIONS;
 
   const licenseOptions = [
     { label: 'Click to select from dropdown', value: '' },
@@ -434,7 +453,6 @@ export default function AIModelDetailsPage() {
       </div>
     );
   }
-const OPEN_ACCESS_REQUIRED_TOAST_ID = SAVE_SUCCESS_TOAST_ID;
   return (
     <div className="flex flex-col gap-4 py-6">
       {/* Model Type & Domain - side by side */}
@@ -536,6 +554,7 @@ const OPEN_ACCESS_REQUIRED_TOAST_ID = SAVE_SUCCESS_TOAST_ID;
         label="Tags"
         creatable
         selectedValue={formData.tags}
+        requiredIndicator
         onChange={(value) => {
           setIsTagsListUpdated(true);
           handleInputChange('tags', value);
@@ -584,7 +603,7 @@ const OPEN_ACCESS_REQUIRED_TOAST_ID = SAVE_SUCCESS_TOAST_ID;
             value={formData.modelWebsite}
             onChange={(value) => handleInputChange('modelWebsite', value)}
             onBlur={handleWebsiteBlur}
-            placeholder="www.model.com"
+            placeholder="https://www.model.com"
             required
             requiredIndicator={true}
           />
@@ -599,6 +618,7 @@ const OPEN_ACCESS_REQUIRED_TOAST_ID = SAVE_SUCCESS_TOAST_ID;
             }
             key={`geographies-${getGeographiesList.data?.geographies?.length || 0}-${formData.geographies.length}`}
             label="Locations / Geography"
+            requiredIndicator
             selectedValue={formData.geographies}
             onChange={(value) => {
               handleInputChange('geographies', value);

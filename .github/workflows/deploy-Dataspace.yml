@@ -1,38 +1,52 @@
-name: Update DataSpace Prod
+name: Deploy DataSpace
 
 on:
   push:
-    branches: ['main']
-env:
-  KEYCLOAK_CLIENT_ID: ${{secrets.KEYCLOAK_CLIENT_ID}}
-  KEYCLOAK_CLIENT_SECRET: ${{secrets.KEYCLOAK_CLIENT_SECRET}}
-  AUTH_ISSUER: ${{secrets.AUTH_ISSUER}}
-  NEXTAUTH_URL: ${{secrets.NEXTAUTH_URL_DS}}
-  NEXT_PUBLIC_NEXTAUTH_URL: ${{secrets.NEXT_PUBLIC_NEXTAUTH_URL_DS}}
-  NEXTAUTH_SECRET: ${{secrets.NEXTAUTH_SECRET}}
-  END_SESSION_URL: ${{secrets.END_SESSION_URL}}
-  REFRESH_TOKEN_URL: ${{secrets.REFRESH_TOKEN_URL}}
-  NEXT_PUBLIC_BACKEND_URL: ${{secrets.NEXT_PUBLIC_BACKEND_URL_DS}}
-  BACKEND_GRAPHQL_URL: ${{secrets.BACKEND_GRAPHQL_URL_DS}}
-  NEXT_PUBLIC_ENABLE_ACCESSMODEL: ${{secrets.NEXT_PUBLIC_ENABLE_ACCESSMODEL_DS}}
-  NEXT_PUBLIC_BACKEND_GRAPHQL_URL: ${{secrets.NEXT_PUBLIC_BACKEND_GRAPHQL_URL_DS}}
-  BACKEND_URL: ${{secrets.BACKEND_URL}}
-  NEXT_PUBLIC_PLATFORM_URL: ${{secrets.NEXT_PUBLIC_PLATFORM_URL}}
-  NEXT_PUBLIC_ANALYTICS_URL: ${{secrets.NEXT_PUBLIC_ANALYTICS_URL}}
+    branches:
+      - dev
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
+    env:
+      KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
+      KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+      AUTH_ISSUER: ${{ secrets.AUTH_ISSUER }}
+      NEXTAUTH_URL: ${{ vars.NEXTAUTH_URL }}
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      NEXT_PUBLIC_NEXTAUTH_URL: ${{ vars.NEXT_PUBLIC_NEXTAUTH_URL }}
+      END_SESSION_URL: ${{ secrets.END_SESSION_URL }}
+      REFRESH_TOKEN_URL: ${{ secrets.REFRESH_TOKEN_URL }}
+      NEXT_PUBLIC_BACKEND_URL: ${{ vars.NEXT_PUBLIC_BACKEND_URL }}
+      BACKEND_URL: ${{ vars.BACKEND_URL }}
+      NEXT_PUBLIC_BACKEND_GRAPHQL_URL: ${{ vars.NEXT_PUBLIC_BACKEND_GRAPHQL_URL }}
+      BACKEND_GRAPHQL_URL: ${{ vars.BACKEND_GRAPHQL_URL }}
+      NEXT_PUBLIC_ENABLE_ACCESSMODEL: ${{ vars.NEXT_PUBLIC_ENABLE_ACCESSMODEL }}
+      NEXT_PUBLIC_ANALYTICS_URL: ${{ vars.NEXT_PUBLIC_ANALYTICS_URL }}
+      NEXT_PUBLIC_PLATFORM_URL: ${{ vars.NEXT_PUBLIC_PLATFORM_URL }}
+      NEXT_PUBLIC_PLATFORM_PROTOCOL: ${{ vars.NEXT_PUBLIC_PLATFORM_PROTOCOL }}
+      NEXT_PUBLIC_PLATFORM_DOMAIN: ${{ vars.NEXT_PUBLIC_PLATFORM_DOMAIN }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
       - name: Generate
-        run: npm run generate
+        run: npm run generate:ci
+        env:
+          BACKEND_GRAPHQL_URL: ${{ vars.BACKEND_GRAPHQL_URL }}
+          NODE_ENV: production
 
       - name: Build
         run: npm run build
@@ -41,30 +55,31 @@ jobs:
         run: mv .next .next2
 
       - name: Rename public to public2
-        run: mv public public2  
+        run: mv public public2
 
       - name: Send .next2 to EC2
-        uses: appleboy/scp-action@master
+        uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST_DS }}
-          username: ${{ secrets.EC2_USERNAME_DS }}
+          host: ${{ vars.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           source: .next2
           target: DataExchange/DataExFrontend
 
       - name: Send public2 to EC2
-        uses: appleboy/scp-action@master
+        uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST_DS }}
-          username: ${{ secrets.EC2_USERNAME_DS }}
+          host: ${{ vars.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           source: public2
-          target: DataExchange/DataExFrontend    
-      
+          target: DataExchange/DataExFrontend
+
       - name: Update with new Build
         uses: appleboy/ssh-action@v1.0.3
+        continue-on-error: false
         with:
-          host: ${{ secrets.EC2_HOST_DS }}
-          username: ${{ secrets.EC2_USERNAME_DS }}
+          host: ${{ vars.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: rm -rf DataExchange/DataExFrontend/.next; rm -rf DataExchange/DataExFrontend/public; mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next; mv DataExchange/DataExFrontend/public2 DataExchange/DataExFrontend/public; /home/ubuntu/.nvm/versions/node/v20.11.1/bin/pm2 restart dataspace

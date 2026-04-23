@@ -393,7 +393,7 @@ export default function PublishPage() {
                                       {meta.label}:
                                     </Text>
                                     <Text
-                                      variant="bodyLg"
+                                      variant="bodyMd"
                                       className="lg:basis-4/5"
                                     >
                                       {meta.value}

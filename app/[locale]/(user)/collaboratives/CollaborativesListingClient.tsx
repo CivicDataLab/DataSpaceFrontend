@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button, Card, Icon, SearchInput, Select, Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
+import { getCollaborativeDetailUrl } from '@/lib/collaborativesRouting';
 import { cn, formatDate, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
@@ -97,7 +98,7 @@ const CollaborativesListingClient = () => {
       try {
         // @ts-expect-error - Query has no variables
         const result = await GraphQLPublic(PublishedCollaboratives as any, {});
-        console.log('Collaboratives result:', result);
+        // console.log('Collaboratives result:', result);
         return result as { publishedCollaboratives: TypeCollaborative[] };
       } catch (err) {
         console.error('Error fetching collaboratives:', err);
@@ -336,7 +337,7 @@ const CollaborativesListingClient = () => {
                             stroke: 1.2,
                           },
                         ]}
-                        href={`/collaboratives/${collaborative.slug}`}
+                        href={getCollaborativeDetailUrl(collaborative.slug)}
                         leftFooterChips={[
                           {
                             icon: collaborative.sectors?.[0]?.name

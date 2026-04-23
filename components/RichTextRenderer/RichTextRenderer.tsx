@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+
 import 'react-quill-new/dist/quill.snow.css';
 
 interface RichTextRendererProps {
@@ -36,32 +37,32 @@ const RichTextRenderer: React.FC<RichTextRendererProps> = ({
           overflow-wrap: anywhere;
           word-break: break-word;
           padding: 0;
-          font-size: 16px;
+          font-size: 14px;
           line-height: 1.6;
         }
-        
+
         .rich-text-content .ql-editor p {
           margin-bottom: 1em;
         }
-        
+
         .rich-text-content .ql-editor h1 {
           font-size: 2em;
           font-weight: bold;
           margin-bottom: 0.5em;
         }
-        
+
         .rich-text-content .ql-editor h2 {
           font-size: 1.5em;
           font-weight: bold;
           margin-bottom: 0.5em;
         }
-        
+
         .rich-text-content .ql-editor h3 {
           font-size: 1.25em;
           font-weight: bold;
           margin-bottom: 0.5em;
         }
-        
+
         .rich-text-content .ql-editor ul,
         .rich-text-content .ql-editor ol {
           list-style-position: outside;
@@ -80,7 +81,7 @@ const RichTextRenderer: React.FC<RichTextRendererProps> = ({
         .rich-text-content .ql-editor ol {
           list-style-type: decimal !important;
         }
-        
+
         .rich-text-content .ql-editor li {
           margin-bottom: 0.25em;
         }
@@ -99,43 +100,43 @@ const RichTextRenderer: React.FC<RichTextRendererProps> = ({
         .rich-text-content .ql-editor li:not([data-list])::before {
           content: none !important;
         }
-        
+
         .rich-text-content .ql-editor a {
           color: #3b82f6;
           text-decoration: underline;
         }
-        
+
         .rich-text-content .ql-editor a:hover {
           color: #2563eb;
         }
-        
+
         .rich-text-content.text-white .ql-editor a {
           color: #60a5fa;
         }
-        
+
         .rich-text-content.text-white .ql-editor a:hover {
           color: #93c5fd;
         }
-        
+
         .rich-text-content .ql-editor img {
           max-width: 100%;
           height: auto;
           margin: 1em 0;
         }
-        
+
         .rich-text-content .ql-editor strong,
         .rich-text-content .ql-editor b {
           font-weight: 700 !important;
         }
-        
+
         .rich-text-content .ql-editor em {
           font-style: italic;
         }
-        
+
         .rich-text-content .ql-editor u {
           text-decoration: underline;
         }
-        
+
         .rich-text-content .ql-editor s {
           text-decoration: line-through;
         }
