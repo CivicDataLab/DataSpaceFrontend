@@ -106,7 +106,11 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
   const params = useParams();
 
   const PublishedDatasetsList: any = useQuery(
-    [`userDataset_${params.publisherSlug}`],
+    [
+      type === 'organization'
+        ? `orgPublishedDatasets_${params.organizationSlug}`
+        : `userPublishedDatasets_${params.publisherSlug}`,
+    ],
     () =>
       type === 'organization'
         ? GraphQL(
