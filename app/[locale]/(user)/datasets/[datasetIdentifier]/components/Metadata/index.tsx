@@ -83,11 +83,11 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
     if (!data) return '/publishers';
 
     if (data.isIndividualDataset && data.user) {
-      return `/publishers/${data.user.id}`;
+      return `/publishers/${data.user.fullName}_${data.user.id}`;
     }
 
     if (data.organization) {
-      return `/publishers/organization/${data.organization.id}`;
+      return `/publishers/organization/${data.organization.slug}_${data.organization.id}`;
     }
 
     return '/publishers';
