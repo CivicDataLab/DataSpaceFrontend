@@ -15,8 +15,8 @@ const PublisherCard: React.FC<CardProps> = ({ data }) => {
           <Link
             href={
               item.__typename === 'TypeOrganization'
-                ? `/publishers/organization/${item.id}`
-                : `/publishers/${item.id}`
+                ? `/publishers/organization/${item.slug || item.name}_${item.id}`
+                : `/publishers/${item.fullName}_${item.id}`
             }
             key={index}
             className="flex flex-col gap-4 rounded-4 p-6 shadow-card"
