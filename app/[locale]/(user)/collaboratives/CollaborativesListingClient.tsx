@@ -337,7 +337,7 @@ const CollaborativesListingClient = () => {
                             stroke: 1.2,
                           },
                         ]}
-                        href={getCollaborativeDetailUrl(collaborative.slug)}
+                        href={`/collaboratives/${collaborative.slug}`}
                         leftFooterChips={[
                           {
                             icon: collaborative.sectors?.[0]?.name
