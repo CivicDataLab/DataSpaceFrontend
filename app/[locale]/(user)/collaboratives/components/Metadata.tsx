@@ -119,7 +119,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     return match ? `/${match[1].toLowerCase()}` : '';
   };
   const contributorHref = (contributor: any) => {
-    const path = `/publishers/${contributor.id}`;
+    const path = `/publishers/${contributor.fullName}_${contributor.id}`;
     // Original: `/publishers/${contributor.fullName + '_' + contributor.id}`;
     // Match getPlatformEntityUrl() behavior (absolute to NEXT_PUBLIC_PLATFORM_URL + locale)
     const platformBaseUrl = (

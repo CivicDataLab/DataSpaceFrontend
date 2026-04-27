@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Icon, Spinner, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { cn, formatDate } from '@/lib/utils';
+import { cn, extractPublisherId, formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 
@@ -101,13 +101,12 @@ const orgPublishedUseCasesDoc: any = graphql(`
 
 const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
   const params = useParams();
+  const id = extractPublisherId(
+    String(type === 'organization' ? params.organizationSlug : params.publisherSlug)
+  );
 
   const PublishedUseCasesList: any = useQuery(
-    [
-      type === 'organization'
-        ? `orgPublishedUseCases_${params.organizationSlug}`
-        : `userPublishedUseCases_${params.publisherSlug}`,
-    ],
+    ['publishedUseCases', type, id],
     () =>
       type === 'organization'
         ? GraphQL(
@@ -115,14 +114,14 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
             {
               // Entity Headers
             },
-            { organizationId: params.organizationSlug } // ✅ exact match for expected shape
+            { organizationId: id } // ✅ exact match for expected shape
           )
         : GraphQL(
             userPublishedUseCasesDoc,
             {
               // Entity Headers
             },
-            { userId: params.publisherSlug } // ✅ exact match for expected shape
+            { userId: id } // ✅ exact match for expected shape
           )
   );
 
