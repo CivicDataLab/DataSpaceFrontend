@@ -567,6 +567,7 @@ const Metadata = () => {
                 handleSave({ ...formData, sectors: value });
               }}
             />
+            {/* Geographies - added space */}
             <div className="mt-6">
             <Combobox
               displaySelected
