@@ -8,7 +8,7 @@ import {
   TypeTag,
   UpdateUseCaseMetadataInput,
 } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { Combobox, Spinner, toast } from 'opub-ui';
 import { useEffect, useState } from 'react';
@@ -159,6 +159,7 @@ const Metadata = () => {
     entitySlug: string;
     id: string;
   }>();
+  const queryClient = useQueryClient();
   const USECASE_EDIT_SUCCESS_TOAST_ID = 'usecase-edit-save-success';
   const USECASE_METADATA_ERROR_TOAST_ID = 'usecase-metadata-save-error';
   const getErrorMessage = (error: any, fallback: string) =>
@@ -168,21 +169,24 @@ const Metadata = () => {
 
   const { setStatus } = useEditStatus();
 
-  const useCaseData: { data: any; isLoading: boolean } = useQuery(
-    [`fetch_UseCaseData_Metadata`],
-    () =>
-      GraphQL(
-        FetchUseCasedetails,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        { filters: { id: params.id } }
-      ),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
-  );
+  const queryKey = ['fetch_UseCaseData_Metadata', params.id];
+
+  const { data: useCaseQueryData, isLoading: useCaseLoading }: { data: any; isLoading: boolean } =
+    useQuery(
+      queryKey,
+      () =>
+        GraphQL(
+          FetchUseCasedetails,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          { filters: { id: params.id } }
+        ),
+      {
+        refetchOnMount: true,
+        refetchOnReconnect: true,
+      }
+    );
   const { data: metadataFields } = useQuery(
     [`metadata_fields_USECASE_${params.id}`],
     () =>
@@ -247,7 +251,7 @@ const Metadata = () => {
 
     defaultVal['sdgs'] =
       data?.sdgs?.map((sdg: any) => {
-        const num = sdg.number 
+        const num = sdg.number
           ? String(sdg.number).padStart(2, '0')
           : sdg.code.replace('SDG', '').padStart(2, '0');
         return {
@@ -268,17 +272,18 @@ const Metadata = () => {
   };
 
   const [formData, setFormData] = useState(
-    defaultValuesPrepFn(useCaseData?.data?.useCases?.[0] || {})
+    defaultValuesPrepFn(useCaseQueryData?.useCases?.[0] || {})
   );
   const [previousFormData, setPreviousFormData] = useState(formData);
 
+  // Sync local state from cache/query data, not onSuccess alone
   useEffect(() => {
-    if (useCaseData.data?.useCases[0]) {
-      const updatedData = defaultValuesPrepFn(useCaseData.data.useCases[0]);
+    if (useCaseQueryData?.useCases?.[0]) {
+      const updatedData = defaultValuesPrepFn(useCaseQueryData.useCases[0]);
       setFormData(updatedData);
       setPreviousFormData(updatedData);
     }
-  }, [useCaseData.data]);
+  }, [useCaseQueryData]);
 
   const getSectorsList: { data: any; isLoading: boolean; error: any } =
     useQuery([`sectors_list_query`], () =>
@@ -340,13 +345,30 @@ const Metadata = () => {
         toast('Use case updated successfully', {
           id: USECASE_EDIT_SUCCESS_TOAST_ID,
         });
-        const updatedData = defaultValuesPrepFn(res.addUpdateUsecaseMetadata);
+        const updatedUseCase = res.addUpdateUsecaseMetadata;
+        const updatedData = defaultValuesPrepFn(updatedUseCase);
         if (isTagsListUpdated) {
           getTagsList.refetch();
           setIsTagsListUpdated(false);
         }
         setFormData(updatedData);
         setPreviousFormData(updatedData);
+
+        queryClient.setQueryData(queryKey, (old: any) => {
+          if (!old?.useCases?.[0]) {
+            return { useCases: [updatedUseCase] };
+          }
+          return {
+            ...old,
+            useCases: [
+              {
+                ...old.useCases[0],
+                ...updatedUseCase,
+              },
+              ...old.useCases.slice(1),
+            ],
+          };
+        });
       },
       onError: (error: any) => {
         toast(
@@ -421,7 +443,7 @@ const Metadata = () => {
     getTagsList.isLoading ||
     getSDGsList.isLoading ||
     getGeographiesList.isLoading ||
-    useCaseData.isLoading
+    useCaseLoading
   ) {
     return (
       <div className="flex h-36 w-full items-center justify-center">
@@ -541,6 +563,7 @@ const Metadata = () => {
                 handleSave({ ...formData, sectors: value });
               }}
             />
+            <div className="mt-6">
             <Combobox
               displaySelected
               label="Geographies"
@@ -557,6 +580,7 @@ const Metadata = () => {
                 handleSave({ ...formData, geographies: value });
               }}
             />
+            </div>
           </div>
         </div>
 

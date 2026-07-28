@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Icon, Text, TextField, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -76,6 +76,7 @@ const deleteDashboard: any = graphql(`
 
 const Dashboard = () => {
   const params = useParams<{ entityType?: string; entitySlug?: string; id?: string }>();
+  const queryClient = useQueryClient();
   const DASHBOARD_ADD_SUCCESS_TOAST_ID = 'usecase-dashboard-add-success';
   const DASHBOARD_SAVE_SUCCESS_TOAST_ID = 'usecase-dashboard-save-success';
   const DASHBOARD_DELETE_SUCCESS_TOAST_ID = 'usecase-dashboard-delete-success';
@@ -109,23 +110,31 @@ const Dashboard = () => {
   >([]);
   const [previousState, setPreviousState] = useState<any>({});
 
-  useQuery(
-    ['fetch_dashboardData', usecaseId],
+  const queryKey = ['fetch_dashboardData', usecaseId];
+
+  const { data: dashboardData }: { data: any } = useQuery(
+    queryKey,
     () => GraphQL(dashboardList, ownerArgs || {}, { usecaseId }),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
       enabled: isValidId,
-      onSuccess: (res: any) => {
-        setDashboards(res.usecaseDashboards || []);
-        setPreviousState(
-          Object.fromEntries(
-            res.usecaseDashboards.map((item: any) => [item.id, { ...item }])
-          )
-        );
-      },
     }
   );
+
+  useEffect(() => {
+    if (dashboardData?.usecaseDashboards) {
+      setDashboards(dashboardData.usecaseDashboards);
+      setPreviousState(
+        Object.fromEntries(
+          dashboardData.usecaseDashboards.map((item: any) => [
+            item.id,
+            { ...item },
+          ])
+        )
+      );
+    }
+  }, [dashboardData]);
 
   const { mutate: addDashboard, isLoading: addLoading } = useMutation(
     ({ usecaseId }: { usecaseId: number }) =>
@@ -140,6 +149,10 @@ const Dashboard = () => {
           [newDashboard.id]: { ...newDashboard },
         }));
         toast.success('Dashboard added', { id: DASHBOARD_ADD_SUCCESS_TOAST_ID });
+
+        queryClient.setQueryData(queryKey, (old: any) => ({
+          usecaseDashboards: [...(old?.usecaseDashboards || []), newDashboard],
+        }));
       },
     }
   );
@@ -152,6 +165,14 @@ const Dashboard = () => {
         setPreviousState((prev: any) => ({
           ...prev,
           [updateUsecaseDashboard.data.id]: { ...updateUsecaseDashboard.data },
+        }));
+
+        queryClient.setQueryData(queryKey, (old: any) => ({
+          usecaseDashboards: (old?.usecaseDashboards || []).map((item: any) =>
+            item.id === updateUsecaseDashboard.data.id
+              ? { ...item, ...updateUsecaseDashboard.data }
+              : item
+          ),
         }));
       },
       onError: (error: any) => {
@@ -169,6 +190,12 @@ const Dashboard = () => {
       onSuccess: (_, id) => {
         setDashboards((prev) => prev.filter((d) => d.id !== id.toString()));
         toast.success('Dashboard deleted', { id: DASHBOARD_DELETE_SUCCESS_TOAST_ID });
+
+        queryClient.setQueryData(queryKey, (old: any) => ({
+          usecaseDashboards: (old?.usecaseDashboards || []).filter(
+            (item: any) => item.id !== id.toString()
+          ),
+        }));
       },
       onError: (error: any) => {
         toast(
