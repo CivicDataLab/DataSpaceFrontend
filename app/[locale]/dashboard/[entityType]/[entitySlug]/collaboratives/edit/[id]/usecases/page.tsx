@@ -4,13 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchData } from '@/fetch';
 import { graphql } from '@/gql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, DataTable, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Loading } from '@/components/loading';
 
+// prettier-ignore
 const FetchCollaborativeDetails: any = graphql(`
   query CollaborativeUseCaseDetails($filters: CollaborativeFilter) {
     collaboratives(filters: $filters) {
@@ -29,6 +30,7 @@ const FetchCollaborativeDetails: any = graphql(`
   }
 `);
 
+// prettier-ignore
 const AssignCollaborativeUseCases: any = graphql(`
   mutation assignCollaborativeUseCases($collaborativeId: String!, $useCaseIds: [String!]!) {
     updateCollaborativeUseCases(collaborativeId: $collaborativeId, useCaseIds: $useCaseIds) {
@@ -50,6 +52,7 @@ const UseCases = () => {
     id: string;
   }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const COLLAB_USECASES_TOAST_ID = 'collaboratives-usecases-toast';
 
   const [data, setData] = useState<any[]>([]); // Ensure `data` is an array
@@ -98,10 +101,7 @@ const UseCases = () => {
       return {
         title: item.title,
         id: String(item.id),
-        category:
-          typeof sector === 'string'
-            ? sector
-            : sector?.name || 'N/A',
+        category: typeof sector === 'string' ? sector : sector?.name || 'N/A',
         modified: formatDate(item.modified) || '',
       };
     });
@@ -113,7 +113,9 @@ const UseCases = () => {
       (item: any) => String(item.id)
     )
   );
-  const defaultSelectedRows = rows.filter((row) => assignedUseCaseIds.has(row.id));
+  const defaultSelectedRows = rows.filter((row) =>
+    assignedUseCaseIds.has(row.id)
+  );
 
   const { mutate } = useMutation(
     () =>
@@ -131,14 +133,28 @@ const UseCases = () => {
       ),
     {
       onSuccess: () => {
-        toast('Use Cases Assigned Successfully', { id: COLLAB_USECASES_TOAST_ID });
-        CollaborativeDetails.refetch();
+        toast('Use Cases Assigned Successfully', {
+          id: COLLAB_USECASES_TOAST_ID,
+        });
+        queryClient.invalidateQueries({
+          queryKey: [`Collaborative_UseCase_Details`, params.id],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_CollaborativeDetails`,
+            params.entityType,
+            params.entitySlug,
+            params.id,
+          ],
+        });
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives/edit/${params.id}/contributors`
         );
       },
       onError: (err: any) => {
-        toast(`Received ${err} on use case assignment`, { id: COLLAB_USECASES_TOAST_ID });
+        toast(`Received ${err} on use case assignment`, {
+          id: COLLAB_USECASES_TOAST_ID,
+        });
       },
     }
   );

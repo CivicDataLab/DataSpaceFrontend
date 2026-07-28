@@ -3,7 +3,7 @@
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { CollaborativeInputPartial } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Tab, TabList, Tabs, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -38,6 +38,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     entitySlug: string;
     id: string;
   }>();
+  const queryClient = useQueryClient();
 
   const layoutList = [
     'details',
@@ -51,7 +52,12 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     return pathName.indexOf(v) >= 0;
   });
 
-  const CollaborativeData: { data: any; isLoading: boolean; error: any; refetch: any } = useQuery(
+  const CollaborativeData: {
+    data: any;
+    isLoading: boolean;
+    error: any;
+    refetch: any;
+  } = useQuery(
     [`fetch_CollaborativeData_${params.id}`],
     () =>
       GraphQL(
@@ -73,14 +79,37 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { data: CollaborativeInputPartial }) =>
-      GraphQL(UpdateCollaborativeTitleMutation, {
-        [params.entityType]: params.entitySlug,
-      }, data),
+      GraphQL(
+        UpdateCollaborativeTitleMutation,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        data
+      ),
     {
       onSuccess: () => {
-        toast('Collaborative updated successfully', { id: COLLAB_EDIT_TOAST_ID });
-        // Optionally, reset form or perform other actions
-        CollaborativeData.refetch();
+        toast('Collaborative updated successfully', {
+          id: COLLAB_EDIT_TOAST_ID,
+        });
+        queryClient.invalidateQueries({
+          queryKey: [`fetch_CollaborativeData_${params.id}`],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_CollaborativeData_details`,
+            params.entityType,
+            params.entitySlug,
+            params.id,
+          ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_CollaborativeDetails`,
+            params.entityType,
+            params.entitySlug,
+            params.id,
+          ],
+        });
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`, { id: COLLAB_EDIT_TOAST_ID });
@@ -125,17 +154,9 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
 
   const { status, setStatus } = useEditStatus();
 
-  // Debug logging
-  console.log('Layout - params:', params);
-  console.log('Layout - CollaborativeData:', CollaborativeData);
-  console.log('Layout - isLoading:', CollaborativeData.isLoading);
-  console.log('Layout - error:', CollaborativeData.error);
-  console.log('Layout - data:', CollaborativeData.data);
-
   // Safely extract collaborative title - now using direct collaborative object
-  const collaborativeTitle = CollaborativeData?.data?.collaborative?.title || '';
-
-  console.log('Layout - collaborativeTitle:', collaborativeTitle);
+  const collaborativeTitle =
+    CollaborativeData?.data?.collaborative?.title || '';
 
   // Show loading state while fetching
   if (CollaborativeData.isLoading) {

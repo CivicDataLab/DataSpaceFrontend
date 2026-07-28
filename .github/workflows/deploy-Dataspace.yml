@@ -26,6 +26,14 @@ jobs:
       NEXT_PUBLIC_ENABLE_ACCESSMODEL: ${{ vars.NEXT_PUBLIC_ENABLE_ACCESSMODEL }}
       NEXT_PUBLIC_ANALYTICS_URL: ${{ vars.NEXT_PUBLIC_ANALYTICS_URL }}
       NEXT_PUBLIC_PLATFORM_URL: ${{ vars.NEXT_PUBLIC_PLATFORM_URL }}
+      NEXT_PUBLIC_PLATFORM_PROTOCOL: ${{ vars.NEXT_PUBLIC_PLATFORM_PROTOCOL }}
+      NEXT_PUBLIC_PLATFORM_DOMAIN: ${{ vars.NEXT_PUBLIC_PLATFORM_DOMAIN }}
+      NEXT_PUBLIC_GA_ID: ${{ secrets.NEXT_PUBLIC_GA_ID }}
+      FEATURE_SITEMAPS: ${{ vars.FEATURE_SITEMAPS }}
+      FEATURE_SITEMAP_BACKEND_BASE_URL: ${{ vars.FEATURE_SITEMAP_BACKEND_BASE_URL }}
+      FEATURE_SITEMAP_ITEMS_PER_PAGE: ${{ vars.FEATURE_SITEMAP_ITEMS_PER_PAGE }}
+      FEATURE_SITEMAP_CACHE_DURATION: ${{ vars.FEATURE_SITEMAP_CACHE_DURATION }}
+      FEATURE_SITEMAP_CHILD_CACHE_DURATION: ${{ vars.FEATURE_SITEMAP_CHILD_CACHE_DURATION }}
 
     steps:
       - name: Checkout code
@@ -81,3 +89,14 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: rm -rf DataExchange/DataExFrontend/.next; rm -rf DataExchange/DataExFrontend/public; mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next; mv DataExchange/DataExFrontend/public2 DataExchange/DataExFrontend/public; /home/ubuntu/.nvm/versions/node/v20.11.1/bin/pm2 restart dataspace
+
+  smoke-tests:
+    needs: deploy
+    if: github.ref_name == 'dev'
+    uses: CivicDataLab/CivicDataSpace-test/.github/workflows/run-smoke.yml@CI
+    secrets:
+      HOME_URL_DEV:    ${{ secrets.HOME_URL_DEV }}
+      TEST_EMAIL_1:    ${{ secrets.TEST_EMAIL_1 }}
+      TEST_PASSWORD_1: ${{ secrets.TEST_PASSWORD_1 }}
+      TEST_EMAIL_2:    ${{ secrets.TEST_EMAIL_2 }}
+      TEST_PASSWORD_2: ${{ secrets.TEST_PASSWORD_2 }}

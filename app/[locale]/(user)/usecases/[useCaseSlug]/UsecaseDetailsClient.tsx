@@ -362,7 +362,7 @@ const UseCaseDetailClient = () => {
                         {UseCaseDetails?.useCase?.supportingOrganizations?.map(
                           (org: any) => (
                             <Link
-                              href={`/publishers/organization/${org.slug + '_' + org.id}`}
+                              href={`/publishers/organization/${org.slug || org.name}_${org.id}`}
                               key={org.id}
                             >
                               <div className=" rounded-4 bg-surfaceDefault  p-4">
@@ -389,7 +389,7 @@ const UseCaseDetailClient = () => {
                         {UseCaseDetails?.useCase?.partnerOrganizations?.map(
                           (org: any) => (
                             <Link
-                              href={`/publishers/organization/${org.slug + '_' + org.id}`}
+                              href={`/publishers/organization/${org.slug || org.name}_${org.id}`}
                               key={org.id}
                             >
                               <div className=" rounded-4 bg-surfaceDefault  p-4">
@@ -423,7 +423,7 @@ const UseCaseDetailClient = () => {
                       {UseCaseDetails?.useCase?.contributors?.map(
                         (contributor: any) => (
                           <Link
-                            href={`/publishers/${contributor.fullName + '_' + contributor.id}`}
+                            href={`/publishers/${contributor.fullName}_${contributor.id}`}
                             key={contributor.id}
                           >
                             <Image

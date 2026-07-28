@@ -34,16 +34,15 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     if (!data) return '/publishers';
 
     if (data.useCase.isIndividualUsecase && data.useCase.user) {
-      return `/publishers/${data.useCase.user.fullName + '_' + data.useCase.user.id}`;
+      return `/publishers/${data.useCase.user.fullName}_${data.useCase.user.id}`;
     }
 
     if (data.useCase.organization) {
-      return `/publishers/organization/${data.useCase.organization.slug + '_' + data.useCase.organization.id}`;
+      return `/publishers/organization/${data.useCase.organization.slug || data.useCase.organization.name}_${data.useCase.organization.id}`;
     }
 
     return '/publishers';
   };
-  console.log('data?.useCase ', data?.useCase);
 
   const metadata = [
     {

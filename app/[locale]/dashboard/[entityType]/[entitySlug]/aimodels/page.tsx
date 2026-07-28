@@ -70,20 +70,20 @@ export default function AIModelsPage({
 
   let navigationOptions = [
     {
-      label: 'Registered',
-      url: `registered`,
-      selected: navigationTab === 'registered',
+      label: 'Draft',
+      url: `draft`,
+      selected: navigationTab === 'draft',
     },
     {
-      label: 'Active',
-      url: `active`,
-      selected: navigationTab === 'active',
+      label: 'Published',
+      url: `published`,
+      selected: navigationTab === 'published',
     },
-    {
-      label: 'Approved',
-      url: `approved`,
-      selected: navigationTab === 'approved',
-    },
+    // {
+    //   label: 'Approved',
+    //   url: `approved`,
+    //   selected: navigationTab === 'approved',
+    // },
   ];
 
   const AllAIModels: { data: any; isLoading: boolean; refetch: any } = useQuery(
@@ -97,11 +97,11 @@ export default function AIModelsPage({
         {
           filters: {
             status:
-              navigationTab === 'active'
+              navigationTab === 'published'
                 ? 'ACTIVE'
-                : navigationTab === 'approved'
-                  ? 'APPROVED'
-                  : 'REGISTERED',
+                : navigationTab === 'draft'
+                  ? 'REGISTERED'
+                  : 'APPROVED',
           },
           order: { updatedAt: 'DESC' },
         }
@@ -110,7 +110,7 @@ export default function AIModelsPage({
 
   useEffect(() => {
     if (navigationTab === null || navigationTab === undefined)
-      setNavigationTab('registered');
+      setNavigationTab('draft');
     AllAIModels.refetch();
   }, [AllAIModels, navigationTab, setNavigationTab]);
 
@@ -130,11 +130,15 @@ export default function AIModelsPage({
       ),
     {
       onSuccess: () => {
-        toast(`Deleted AI Model successfully`,{id: AIMODELS_ACTION_TOAST_ID});
+        toast(`Deleted AI Model successfully`, {
+          id: AIMODELS_ACTION_TOAST_ID,
+        });
         AllAIModels.refetch();
       },
       onError: (err: any) => {
-        toast('Error: ' + err.message.split(':')[0],{id: AIMODELS_ACTION_TOAST_ID});
+        toast('Error: ' + err.message.split(':')[0], {
+          id: AIMODELS_ACTION_TOAST_ID,
+        });
       },
     }
   );
@@ -163,13 +167,17 @@ export default function AIModelsPage({
     {
       onSuccess: (data: any) => {
         const newModelId = data.createAiModel.data.id;
-        toast(`Created AI Model successfully`,{id: AIMODELS_ACTION_TOAST_ID});
+        toast(`Created AI Model successfully`, {
+          id: AIMODELS_ACTION_TOAST_ID,
+        });
         router.push(
           `/dashboard/${entityType}/${entitySlug}/aimodels/edit/${newModelId}/details`
         );
       },
       onError: (err: any) => {
-        toast('Error: ' + err.message.split(':')[0],{id: AIMODELS_ACTION_TOAST_ID});
+        toast('Error: ' + err.message.split(':')[0], {
+          id: AIMODELS_ACTION_TOAST_ID,
+        });
       },
     }
   );
@@ -186,7 +194,7 @@ export default function AIModelsPage({
         <LinkButton
           kind="tertiary"
           size="medium"
-          href={`/dashboard/${entityType}/${entitySlug}/aimodels/edit/${row.original.id}/details?tab=${navigationTab ?? 'registered'}`}
+          href={`/dashboard/${entityType}/${entitySlug}/aimodels/edit/${row.original.id}/details?tab=${navigationTab ?? 'draft'}`}
         >
           <span className="line-clamp-1 max-w-[280px]">
             {row.original.displayName}
@@ -260,7 +268,7 @@ export default function AIModelsPage({
         <Navigation
           setNavigationTab={setNavigationTab}
           options={navigationOptions}
-          currentValue={navigationTab ?? 'registered'}
+          currentValue={navigationTab ?? 'draft'}
         />
 
         {AllAIModels.data?.aiModels.length > 0 ? (

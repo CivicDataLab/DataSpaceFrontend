@@ -197,27 +197,37 @@ export default function PublishPage() {
     setStatus('saving');
     mutate(
       {
-        status: 'ACTIVE',
-        isPublic: true,
-        isActive: true,
+        status: isPublished ? 'REGISTERED' : 'ACTIVE',
+        isPublic: isPublished ? false : true,
+        isActive: isPublished ? false : true,
       },
       {
         onSuccess: () => {
-          toast('Model published successfully', {
-            id: PUBLISH_SUCCESS_TOAST_ID,
-          });
+          toast(
+            isPublished
+              ? 'Model unpublished successfully'
+              : 'Model published successfully',
+            {
+              id: PUBLISH_SUCCESS_TOAST_ID,
+            }
+          );
           setStatus('saved');
           refetch();
           router.push(
-            `/dashboard/${params.entityType}/${params.entitySlug}/aimodels?tab=active`
+            `/dashboard/${params.entityType}/${params.entitySlug}/aimodels?tab=${isPublished ? 'draft' : 'published'}`
           );
         },
         onError: (error: any) => {
           const errorMessage =
             typeof error?.message === 'string' && error.message.trim()
               ? error.message.trim()
-              : 'Unable to publish model right now. Please try again.';
-          toast(`Error: ${errorMessage}`, { id: PUBLISH_ERROR_TOAST_ID });
+              : isPublished
+                ? 'Unable to unpublish model right now. Please try again.'
+                : 'Unable to publish model right now. Please try again.';
+          toast(
+            isPublished ? `Error: ${errorMessage}` : `Error: ${errorMessage}`,
+            { id: PUBLISH_ERROR_TOAST_ID }
+          );
           setStatus('unsaved');
         },
       }
@@ -531,7 +541,7 @@ export default function PublishPage() {
                 disabled={isPublishDisabled}
                 loading={updateLoading}
               >
-                Publish
+                {isPublished ? 'Unpublish' : 'Publish'}
               </Button>
             </>
           )}

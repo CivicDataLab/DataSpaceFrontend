@@ -505,8 +505,10 @@ const Metadata = () => {
           <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
             <Combobox
               displaySelected
-              label="SDG Goals *"
+              label="SDG Goals"
               name="sdgs"
+              required
+              requiredIndicator={true}
               list={
                 getSDGsList?.data?.sdgs?.map((item: any) => {
                   const num = item.number 
@@ -525,7 +527,7 @@ const Metadata = () => {
               }}
             />
           </div>
-          <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
+          <div className="w-full py-4 pl-2 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
             <Combobox
               displaySelected
               name="tags"
@@ -549,8 +551,10 @@ const Metadata = () => {
           <div className="w-full py-4 pr-4 sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2">
             <Combobox
               displaySelected
-              label="Sectors *"
+              label="Sectors"
               name="sectors"
+              required
+              requiredIndicator={true}
               list={
                 getSectorsList?.data.sectors?.map((item: TypeSector) => ({
                   label: item.name,

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Icon, Spinner, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { cn } from '@/lib/utils';
+import { cn, extractPublisherId } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 
@@ -104,9 +104,12 @@ const organizationPublishedDatasetsDoc: any = graphql(`
 
 const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
   const params = useParams();
+  const id = extractPublisherId(
+    String(type === 'organization' ? params.organizationSlug : params.publisherSlug)
+  );
 
   const PublishedDatasetsList: any = useQuery(
-    [`userDataset_${params.publisherSlug}`],
+    ['publishedDatasets', type, id],
     () =>
       type === 'organization'
         ? GraphQL(
@@ -114,14 +117,14 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
             {
               // Entity Headers
             },
-            { organizationId: params.organizationSlug } // ✅ exact match for expected shape
+            { organizationId: id } // ✅ exact match for expected shape
           )
         : GraphQL(
             userPublishedDatasetsDoc,
             {
               // Entity Headers
             },
-            { userId: params.publisherSlug } // ✅ exact match for expected shape
+            { userId: id } // ✅ exact match for expected shape
           )
   );
 
