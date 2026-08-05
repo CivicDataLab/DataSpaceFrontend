@@ -262,6 +262,29 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     path: 'sectors',
     priority: '0.6',
   },
+  aimodels: {
+    source: 'graphql',
+    graphqlQuery: `query AIModelsList {
+      aiModels {
+        id
+      }
+    }`,
+    queryResKey: 'aiModels',
+    path: 'aimodels',
+    priority: '0.7',
+  },
+  collaboratives: {
+    source: 'graphql',
+    graphqlQuery: `query PublishedCollaborativesList {
+      publishedCollaboratives {
+        id
+        slug
+      }
+    }`,
+    queryResKey: 'publishedCollaboratives',
+    path: 'collaboratives',
+    priority: '0.7',
+  },
 };
 export const extractPublisherId = (publisherSlug: any) => {
   // If the param contains an underscore, split and take the last part

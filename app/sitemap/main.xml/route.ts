@@ -14,6 +14,8 @@ function generateStaticUrls(): string {
     { path: '/usecases', priority: '0.8', changefreq: 'weekly' },
     { path: '/publishers', priority: '0.7', changefreq: 'weekly' },
     { path: '/sectors', priority: '0.7', changefreq: 'weekly' },
+    { path: '/collaboratives', priority: '0.7', changefreq: 'weekly' },
+    { path: '/about-us', priority: '0.5', changefreq: 'monthly' },
   ];
 
   return staticPages
@@ -96,6 +98,24 @@ export async function GET() {
       const sectorPages = Math.ceil(entityCounts.sectors / ITEMS_PER_SITEMAP);
       for (let i = 1; i <= sectorPages; i++) {
         sitemapUrls.push(`${baseUrl}/sitemap/sectors-${i}.xml`);
+      }
+    }
+
+    // AI Models sitemaps
+    if (entityCounts.aimodels > 0) {
+      const aimodelPages = Math.ceil(entityCounts.aimodels / ITEMS_PER_SITEMAP);
+      for (let i = 1; i <= aimodelPages; i++) {
+        sitemapUrls.push(`${baseUrl}/sitemap/aimodels-${i}.xml`);
+      }
+    }
+
+    // Collaboratives sitemaps
+    if (entityCounts.collaboratives > 0) {
+      const collaborativePages = Math.ceil(
+        entityCounts.collaboratives / ITEMS_PER_SITEMAP
+      );
+      for (let i = 1; i <= collaborativePages; i++) {
+        sitemapUrls.push(`${baseUrl}/sitemap/collaboratives-${i}.xml`);
       }
     }
 
