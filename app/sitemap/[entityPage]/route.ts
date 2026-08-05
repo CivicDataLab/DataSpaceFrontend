@@ -56,26 +56,34 @@ function getEntityLoc(
 ): string {
   switch (entity) {
     case 'organizations': {
-      const orgSlug = item.slug || item.name || item.id;
+      const orgSlug = encodeURIComponent(item.slug || item.name || item.id);
       return `${baseUrl}/publishers/organization/${orgSlug}_${item.id}`;
     }
     case 'users': {
-      const userSlug = item.fullName || item.id;
+      const userSlug = encodeURIComponent(item.fullName || item.id);
       return `${baseUrl}/publishers/${userSlug}_${item.id}`;
     }
     case 'collaboratives':
-      return `${baseUrl}/collaboratives/${item.slug || item.id}`;
+      return `${baseUrl}/collaboratives/${encodeURIComponent(item.slug || item.id)}`;
     case 'datasets':
-      return `${baseUrl}/datasets/${item.slug || item.id}`;
+      // App routes use dataset id (not slug).
+      return `${baseUrl}/datasets/${item.id}`;
     case 'aimodels':
       return `${baseUrl}/aimodels/${item.id}`;
     case 'usecases':
-      return `${baseUrl}/usecases/${item.slug || item.id}`;
+      // App routes use usecase id (not slug).
+      return `${baseUrl}/usecases/${item.id}`;
     case 'sectors':
-      return `${baseUrl}/sectors/${item.slug || item.id}`;
+      return `${baseUrl}/sectors/${encodeURIComponent(item.slug || item.id)}`;
     default:
-      return `${baseUrl}/${path}/${item.slug || item.id}`;
+      return `${baseUrl}/${path}/${encodeURIComponent(item.slug || item.id)}`;
   }
+}
+
+function formatLastmod(value: string): string | null {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
 }
 
 function generateEntitySitemap(items: EntityItem[], entity: string): string {
@@ -84,34 +92,30 @@ function generateEntitySitemap(items: EntityItem[], entity: string): string {
 
   if (!config) {
     return `<?xml version="1.0" encoding="UTF-8"?>
-    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    </urlset>`;
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+</urlset>`;
   }
 
   const urls = items
     ?.map((item) => {
       const loc = escapeXml(getEntityLoc(baseUrl, entity, item, config.path));
       const modifiedAt = item.updated_at || item.updatedAt || item.modified;
-      const lastmod = modifiedAt
-        ? new Date(modifiedAt).toISOString()
-        : new Date().toISOString();
+      const lastmod = modifiedAt ? formatLastmod(modifiedAt) : null;
 
       return `
-        <url>
-          <loc>${loc}</loc>
-          <lastmod>${lastmod}</lastmod>
-          <changefreq>weekly</changefreq>
-          <priority>${config.priority}</priority>
-        </url>
-      `;
+  <url>
+    <loc>${loc}</loc>${lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : ''}
+  </url>`;
     })
     .join('');
 
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}
+</urlset>`;
 }
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ entityPage: string }> }
 ) {
   if (!isSitemapEnabled()) {
@@ -143,7 +147,7 @@ export async function GET(
     const flags = getSiteMapConfig();
     return new Response(sitemap, {
       headers: {
-        'Content-Type': 'application/xml',
+        'Content-Type': 'application/xml; charset=utf-8',
         'Cache-Control': `public, max-age=${flags.childCacheDuration}`,
       },
     });
@@ -151,13 +155,13 @@ export async function GET(
     console.error('Error generating entity sitemap:', error);
 
     const errorSitemap = `<?xml version="1.0" encoding="UTF-8"?>
-    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    </urlset>`;
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+</urlset>`;
 
     return new Response(errorSitemap, {
       status: 500,
       headers: {
-        'Content-Type': 'application/xml',
+        'Content-Type': 'application/xml; charset=utf-8',
       },
     });
   }

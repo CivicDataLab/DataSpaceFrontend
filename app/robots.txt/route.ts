@@ -1,22 +1,16 @@
-// app/robots.txt/route.ts
+import { getSitemapBaseUrl } from '@/lib/sitemap-utils';
 import { isSitemapEnabled } from '@/lib/utils';
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_PLATFORM_URL;
+  const lines = ['User-agent: *', 'Allow: /'];
 
-  const robotsTxt = `User-agent: *
-    Allow: /
-
-    Sitemap: ${baseUrl}/sitemap/main.xml
-    `;
-
-  if (!isSitemapEnabled()) {
-    return new Response('Sitemaps are not enabled', { status: 404 });
+  if (isSitemapEnabled()) {
+    lines.push('', `Sitemap: ${getSitemapBaseUrl()}/sitemap.xml`);
   }
 
-  return new Response(robotsTxt, {
+  return new Response(`${lines.join('\n')}\n`, {
     headers: {
-      'Content-Type': 'text/plain',
+      'Content-Type': 'text/plain; charset=utf-8',
     },
   });
 }

@@ -179,7 +179,6 @@ export async function getWebsiteTitle(url: string): Promise<string | null> {
 }
 
 // Feature Sitemaps
-// Get configuration from environment
 export const getSiteMapConfig = () => ({
   itemsPerPage: parseInt(process.env.FEATURE_SITEMAP_ITEMS_PER_PAGE || '1000'),
   cacheDuration: parseInt(process.env.FEATURE_SITEMAP_CACHE_DURATION || '3600'),
@@ -202,7 +201,6 @@ export type ENTITY_CONFIG_TYPE = Record<
     // Optional filter when a GraphQL union returns mixed types
     filterTypename?: 'TypeOrganization' | 'TypeUser';
     path: string;
-    priority: string;
   }
 >;
 
@@ -220,7 +218,6 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     source: 'search',
     endpoint: '/search/dataset/',
     path: 'datasets',
-    priority: '0.8',
   },
   aimodels: {
     source: 'graphql',
@@ -232,7 +229,6 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     }`,
     queryResKey: 'aiModels',
     path: 'aimodels',
-    priority: '0.8',
   },
   usecases: {
     source: 'graphql',
@@ -244,7 +240,6 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     }`,
     queryResKey: 'publishedUseCases',
     path: 'usecases',
-    priority: '0.7',
   },
   collaboratives: {
     source: 'graphql',
@@ -256,7 +251,6 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     }`,
     queryResKey: 'publishedCollaboratives',
     path: 'collaboratives',
-    priority: '0.7',
   },
   organizations: {
     source: 'graphql',
@@ -273,7 +267,6 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     queryResKey: 'getPublishers',
     filterTypename: 'TypeOrganization',
     path: 'publishers/organization',
-    priority: '0.6',
   },
   users: {
     source: 'graphql',
@@ -289,7 +282,6 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     queryResKey: 'getPublishers',
     filterTypename: 'TypeUser',
     path: 'publishers',
-    priority: '0.6',
   },
   sectors: {
     source: 'graphql',
@@ -301,7 +293,6 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     }`,
     queryResKey: 'activeSectors',
     path: 'sectors',
-    priority: '0.6',
   },
 };
 export const extractPublisherId = (publisherSlug: any) => {
