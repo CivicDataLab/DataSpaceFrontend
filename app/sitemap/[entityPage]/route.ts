@@ -2,12 +2,21 @@
 import { type NextRequest } from 'next/server';
 
 import { ENTITY_CONFIG, getSiteMapConfig, isSitemapEnabled } from '@/lib/utils';
-import { getGraphqlEntityCount, getSearchEntityCount } from '@/lib/sitemap-utils';
+import {
+  escapeXml,
+  getGraphqlEntityCount,
+  getSearchEntityCount,
+  getSitemapBaseUrl,
+} from '@/lib/sitemap-utils';
 
 interface EntityItem {
   id: string;
   slug?: string;
+  name?: string;
+  fullName?: string;
   updated_at?: string;
+  updatedAt?: string;
+  modified?: string;
   __typename?: 'TypeUser' | 'TypeOrganization';
 }
 
@@ -17,30 +26,60 @@ async function fetchEntityData(
 ): Promise<EntityItem[]> {
   const config = ENTITY_CONFIG[entity];
 
-  // If no config is found, return empty array
   if (!config) return [];
 
+  const itemsPerPage = getSiteMapConfig().itemsPerPage;
+
   if (config.source === 'search') {
-    // Fetch entity based on general rest query
-    const response = await getSearchEntityCount(
-      entity,
-      getSiteMapConfig().itemsPerPage,
-      page
-    );
+    const response = await getSearchEntityCount(entity, itemsPerPage, page);
     if (!response || !response.list) return [];
     return response.list;
-  } else if (config.source === 'graphql') {
-    // Fetch entity based on graphql query
+  }
+
+  if (config.source === 'graphql') {
     const response = await getGraphqlEntityCount(entity, config);
     if (!response || !response.list) return [];
-    return response.list;
-  } else {
-    return [];
+
+    // GraphQL endpoints return the full list; slice for the requested page.
+    const start = (page - 1) * itemsPerPage;
+    return response.list.slice(start, start + itemsPerPage);
+  }
+
+  return [];
+}
+
+function getEntityLoc(
+  baseUrl: string,
+  entity: string,
+  item: EntityItem,
+  path: string
+): string {
+  switch (entity) {
+    case 'organizations': {
+      const orgSlug = item.slug || item.name || item.id;
+      return `${baseUrl}/publishers/organization/${orgSlug}_${item.id}`;
+    }
+    case 'users': {
+      const userSlug = item.fullName || item.id;
+      return `${baseUrl}/publishers/${userSlug}_${item.id}`;
+    }
+    case 'collaboratives':
+      return `${baseUrl}/collaboratives/${item.slug || item.id}`;
+    case 'datasets':
+      return `${baseUrl}/datasets/${item.slug || item.id}`;
+    case 'aimodels':
+      return `${baseUrl}/aimodels/${item.id}`;
+    case 'usecases':
+      return `${baseUrl}/usecases/${item.slug || item.id}`;
+    case 'sectors':
+      return `${baseUrl}/sectors/${item.slug || item.id}`;
+    default:
+      return `${baseUrl}/${path}/${item.slug || item.id}`;
   }
 }
 
 function generateEntitySitemap(items: EntityItem[], entity: string): string {
-  const baseUrl = process.env.NEXTAUTH_URL;
+  const baseUrl = getSitemapBaseUrl();
   const config = ENTITY_CONFIG[entity];
 
   if (!config) {
@@ -51,22 +90,10 @@ function generateEntitySitemap(items: EntityItem[], entity: string): string {
 
   const urls = items
     ?.map((item) => {
-      console.log(item, entity);
-
-      // Function to handle loc or URLs for different types of entities especially for contributors or organizations
-      const getLoc = () => {
-        if (item.__typename === 'TypeOrganization') {
-          return `${baseUrl}/${config.path}/organization/${item.id}`;
-        } else if (item.__typename === 'TypeUser') {
-          return `${baseUrl}/${config.path}/${item.id}`;
-        } else {
-          return `${baseUrl}/${config.path}/${item.slug || item.id}`;
-        }
-      };
-
-      const loc = getLoc();
-      const lastmod = item.updated_at
-        ? new Date(item.updated_at).toISOString()
+      const loc = escapeXml(getEntityLoc(baseUrl, entity, item, config.path));
+      const modifiedAt = item.updated_at || item.updatedAt || item.modified;
+      const lastmod = modifiedAt
+        ? new Date(modifiedAt).toISOString()
         : new Date().toISOString();
 
       return `
@@ -87,7 +114,6 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ entityPage: string }> }
 ) {
-  // Check if sitemaps are enabled via feature flag
   if (!isSitemapEnabled()) {
     return new Response('Sitemaps are not enabled', { status: 404 });
   }

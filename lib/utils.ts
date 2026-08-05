@@ -199,6 +199,8 @@ export type ENTITY_CONFIG_TYPE = Record<
     // For GraphQL type queries
     graphqlQuery?: string;
     queryResKey?: string;
+    // Optional filter when a GraphQL union returns mixed types
+    filterTypename?: 'TypeOrganization' | 'TypeUser';
     path: string;
     priority: string;
   }
@@ -217,36 +219,75 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
   datasets: {
     source: 'search',
     endpoint: '/search/dataset/',
-    // ?=&size=9&page=1&sort=recent
     path: 'datasets',
+    priority: '0.8',
+  },
+  aimodels: {
+    source: 'graphql',
+    graphqlQuery: `query SitemapAIModels {
+      aiModels(filters: { isPublic: true, status: ACTIVE }) {
+        id
+        updatedAt
+      }
+    }`,
+    queryResKey: 'aiModels',
+    path: 'aimodels',
     priority: '0.8',
   },
   usecases: {
     source: 'graphql',
-    graphqlQuery: `query UseCasesList {
-      useCases {
+    graphqlQuery: `query PublishedUseCasesList {
+      publishedUseCases {
         id
         slug
       }
     }`,
-    queryResKey: 'useCases',
+    queryResKey: 'publishedUseCases',
     path: 'usecases',
     priority: '0.7',
   },
-  contributors: {
+  collaboratives: {
     source: 'graphql',
-    graphqlQuery: `query getContributors {
-    getPublishers {
+    graphqlQuery: `query PublishedCollaborativesList {
+      publishedCollaboratives {
+        id
+        slug
+      }
+    }`,
+    queryResKey: 'publishedCollaboratives',
+    path: 'collaboratives',
+    priority: '0.7',
+  },
+  organizations: {
+    source: 'graphql',
+    graphqlQuery: `query SitemapOrganizations {
+      getPublishers {
         __typename
         ... on TypeOrganization {
           id
-        }
-        ... on TypeUser {
-          id
+          name
+          slug
         }
       }
     }`,
     queryResKey: 'getPublishers',
+    filterTypename: 'TypeOrganization',
+    path: 'publishers/organization',
+    priority: '0.6',
+  },
+  users: {
+    source: 'graphql',
+    graphqlQuery: `query SitemapUsers {
+      getPublishers {
+        __typename
+        ... on TypeUser {
+          id
+          fullName
+        }
+      }
+    }`,
+    queryResKey: 'getPublishers',
+    filterTypename: 'TypeUser',
     path: 'publishers',
     priority: '0.6',
   },
