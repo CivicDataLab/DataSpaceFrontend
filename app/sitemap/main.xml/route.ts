@@ -10,6 +10,7 @@ function generateStaticUrls(baseUrl: string): string {
     { path: '/collaboratives', priority: '0.8', changefreq: 'weekly' },
     { path: '/publishers', priority: '0.7', changefreq: 'weekly' },
     { path: '/sectors', priority: '0.7', changefreq: 'weekly' },
+    { path: '/about-us', priority: '0.5', changefreq: 'monthly' },
   ];
 
   return staticPages
