@@ -1,11 +1,7 @@
-import { ENTITY_CONFIG, ENTITY_CONFIG_TYPE } from '@/lib/utils';
+import { ENTITY_CONFIG, ENTITY_CONFIG_TYPE, getSiteMapConfig } from '@/lib/utils';
 
 export function getSitemapBaseUrl(): string {
-  return (
-    process.env.NEXTAUTH_URL ||
-    process.env.NEXT_PUBLIC_PLATFORM_URL ||
-    ''
-  ).replace(/\/$/, '');
+  return (process.env.NEXT_PUBLIC_PLATFORM_URL || '').replace(/\/$/, '');
 }
 
 export function escapeXml(value: string): string {
@@ -33,6 +29,7 @@ export async function getGraphqlEntityCount(
           query: config.graphqlQuery,
           variables: {},
         }),
+        cache: 'no-store',
       }
     );
 
@@ -84,7 +81,7 @@ export async function getSearchEntityCount(
         headers: {
           'Content-Type': 'application/json',
         },
-        next: { revalidate: 3600 },
+        cache: 'no-store',
       }
     );
 
@@ -129,3 +126,61 @@ export const getAllEntityCounts = async (): Promise<Record<string, number>> => {
 
   return counts;
 };
+
+export async function getChildSitemapUrls(): Promise<string[]> {
+  const baseUrl = getSitemapBaseUrl();
+  const itemsPerPage = getSiteMapConfig().itemsPerPage;
+  const urls: string[] = [`${baseUrl}/sitemap/static.xml`];
+
+  const entityCounts = await getAllEntityCounts();
+
+  Object.keys(ENTITY_CONFIG).forEach((entity) => {
+    const count = entityCounts[entity] || 0;
+    if (count <= 0) return;
+
+    const pages = Math.ceil(count / itemsPerPage);
+    for (let i = 1; i <= pages; i++) {
+      urls.push(`${baseUrl}/sitemap/${entity}-${i}.xml`);
+    }
+  });
+
+  return urls;
+}
+
+export function generateSitemapIndexXml(sitemapUrls: string[]): string {
+  const entries = sitemapUrls
+    .map(
+      (url) => `
+  <sitemap>
+    <loc>${escapeXml(url)}</loc>
+  </sitemap>`
+    )
+    .join('');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${entries}
+</sitemapindex>`;
+}
+
+export const STATIC_SITEMAP_PATHS = [
+  '',
+  '/datasets',
+  '/usecases',
+  '/collaboratives',
+  '/publishers',
+  '/sectors',
+  '/about-us',
+] as const;
+
+export function generateStaticSitemapXml(baseUrl: string): string {
+  const urls = STATIC_SITEMAP_PATHS.map(
+    (path) => `
+  <url>
+    <loc>${escapeXml(`${baseUrl}${path}`)}</loc>
+  </url>`
+  ).join('');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}
+</urlset>`;
+}
