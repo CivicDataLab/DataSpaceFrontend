@@ -19,7 +19,8 @@ const RichTextRenderer: React.FC<RichTextRendererProps> = ({
   // (e.g. very long runs of nbsp that prevent wrapping).
   const hasOverflowRiskNbsp =
     /(?:&nbsp;|\u00A0){6,}/.test(rawContent) ||
-    /(?:\w(?:&nbsp;|\u00A0)){12,}\w/i.test(rawContent);
+    /(?:\w(?:&nbsp;|\u00A0)){12,}\w/i.test(rawContent) ||
+    (rawContent.match(/&nbsp;|\u00A0/g)?.length ?? 0) >= 10
 
   const normalizedContent = hasOverflowRiskNbsp
     ? rawContent.replace(/&nbsp;/g, ' ').replace(/\u00A0/g, ' ')
