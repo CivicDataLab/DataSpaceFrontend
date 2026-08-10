@@ -46,7 +46,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm install
 
       - name: Generate
         run: npm run generate:ci
@@ -95,8 +95,8 @@ jobs:
     if: github.ref_name == 'dev'
     uses: CivicDataLab/CivicDataSpace-test/.github/workflows/run-smoke.yml@CI
     secrets:
-      HOME_URL_DEV:    ${{ secrets.HOME_URL_DEV }}
-      TEST_EMAIL_1:    ${{ secrets.TEST_EMAIL_1 }}
+      HOME_URL_DEV: ${{ secrets.HOME_URL_DEV }}
+      TEST_EMAIL_1: ${{ secrets.TEST_EMAIL_1 }}
       TEST_PASSWORD_1: ${{ secrets.TEST_PASSWORD_1 }}
-      TEST_EMAIL_2:    ${{ secrets.TEST_EMAIL_2 }}
+      TEST_EMAIL_2: ${{ secrets.TEST_EMAIL_2 }}
       TEST_PASSWORD_2: ${{ secrets.TEST_PASSWORD_2 }}

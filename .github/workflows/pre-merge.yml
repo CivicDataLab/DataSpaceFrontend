@@ -41,7 +41,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --force
+        run: npm ci
 
       - name: Generate GraphQL types (CI-safe)
         run: npm run generate
