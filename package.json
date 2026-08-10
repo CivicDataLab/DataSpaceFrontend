@@ -78,13 +78,7 @@
     "typescript": "^5.0.4"
   },
   "overrides": {
-    "usehooks-ts": "^3.0.0",
-    "nuqs": {
-      "@remix-run/react": "$@remix-run/react",
-      "react-router-dom": "$react-router-dom",
-      "react-router": "$react-router",
-      "@tanstack/react-router": "$@tanstack/react-router"
-    }
+    "usehooks-ts": "^3.0.0"
   },
   "release-it": {
     "git": {
