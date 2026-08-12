@@ -3,7 +3,7 @@
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UseCaseInputPartial } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Tab, TabList, Tabs, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -40,6 +40,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
   }>();
   const USECASE_TITLE_SUCCESS_TOAST_ID = 'usecase-title-save-success';
   const USECASE_TITLE_ERROR_TOAST_ID = 'usecase-title-save-error';
+  const queryClient = useQueryClient();
   const getErrorMessage = (error: any, fallback: string) =>
     typeof error?.message === 'string' && error.message.trim()
       ? error.message.trim()
@@ -89,6 +90,14 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
         });
         // Optionally, reset form or perform other actions
         UseCaseData.refetch();
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_UsecaseDetails`,
+            params.id,
+            params.entityType,
+            params.entitySlug,
+          ],
+        });
       },
       onError: (error: any) => {
         toast(

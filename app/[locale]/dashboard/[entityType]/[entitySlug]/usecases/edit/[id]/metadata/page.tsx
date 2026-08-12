@@ -359,6 +359,14 @@ const Metadata = () => {
             params.entitySlug,
           ],
         });
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_UsecaseDetails`,
+            params.id,
+            params.entityType,
+            params.entitySlug,
+          ],
+        });
       },
       onError: (error: any) => {
         toast(
