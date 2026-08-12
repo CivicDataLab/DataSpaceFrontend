@@ -43,7 +43,7 @@ const PrimaryData: React.FC<PrimaryDataProps> = ({ data, isLoading }) => {
                 <Button
                   kind="tertiary"
                   className="lg:hidden"
-                  onClick={(e) => setOpen(true)}
+                  onClick={() => setOpen(true)}
                 >
                   <div className="flex items-center gap-2 py-2">
                     <Icon source={Icons.info} size={24} color="default" />

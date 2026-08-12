@@ -8,11 +8,13 @@ import { RichTextRenderer } from '@/components/RichTextRenderer';
 
 const Details = ({ data }: { data: any }) => {
   const [platformTitle, setPlatformTitle] = useState<string | null>(null);
+  const useCase = data?.useCases?.[0];
+  const platformUrl = useCase?.platformUrl;
 
   useEffect(() => {
     const fetchTitle = async () => {
       try {
-        const urlItem = data.useCases[0].platformUrl;
+        const urlItem = useCase?.platformUrl;
 
         if (urlItem && urlItem.value) {
           const title = await getWebsiteTitle(urlItem.value);
@@ -23,12 +25,14 @@ const Details = ({ data }: { data: any }) => {
       }
     };
 
-    if (data.useCases[0].platformUrl === null) {
+    if (!useCase) return;
+
+    if (platformUrl === null) {
       setPlatformTitle('N/A');
     } else {
       fetchTitle();
     }
-  }, [data?.useCases, data?.useCases[0]?.platformUrl]);
+  }, [useCase, platformUrl]);
 
   const PrimaryDetails = [
     { label: 'Use Case Name', value: data?.useCases[0]?.title },

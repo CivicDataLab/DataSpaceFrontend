@@ -55,7 +55,7 @@ export async function generateMetadata({
         image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
       },
     });
-  } catch (error) {
+  } catch {
     // Fallback to generic metadata if the API call fails
     return generatePageMetadata({
       title: `Collaborative Details | CivicDataSpace`,

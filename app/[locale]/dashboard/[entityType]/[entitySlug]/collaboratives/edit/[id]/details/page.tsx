@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { CollaborativeInputPartial } from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { DropZone, Select, Text, TextField, toast } from 'opub-ui';
+import { DropZone, Text, TextField, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { RichTextEditor } from '@/components/RichTextEditor';
@@ -74,7 +74,6 @@ const Details = () => {
     id: string;
   }>();
 
-  const router = useRouter();
   const queryClient = useQueryClient();
   const COLLAB_DETAILS_TOAST_ID = 'collaboratives-details-toast';
 
@@ -215,7 +214,7 @@ const Details = () => {
         },
       });
     },
-    []
+    [mutate, params.id]
   );
 
   const onCoverImageDrop = React.useCallback(
@@ -227,7 +226,7 @@ const Details = () => {
         },
       });
     },
-    []
+    [mutate, params.id]
   );
 
   const handleSave = (updatedData: any) => {

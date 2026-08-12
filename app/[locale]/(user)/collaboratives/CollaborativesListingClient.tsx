@@ -8,7 +8,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Button, Card, Icon, SearchInput, Select, Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
-import { getCollaborativeDetailUrl } from '@/lib/collaborativesRouting';
 import { cn, formatDate, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';

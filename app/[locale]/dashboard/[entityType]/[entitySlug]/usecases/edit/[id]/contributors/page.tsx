@@ -329,7 +329,7 @@ const Details = () => {
 
   useEffect(() => {
     Users.refetch();
-  }, [searchValue]);
+  }, [searchValue, Users]);
 
   const selectedContributors = formData.contributors;
 
@@ -341,18 +341,28 @@ const Details = () => {
 
   const { setStatus } = useEditStatus();
 
-  const loadingStates = [
+  useEffect(() => {
+    setStatus(
+      [
+        addContributorLoading,
+        removeContributorLoading,
+        addSupporterLoading,
+        removeSupporterLoading,
+        addPartnerLoading,
+        removePartnerLoading,
+      ].some(Boolean)
+        ? 'loading'
+        : 'success'
+    );
+  }, [
     addContributorLoading,
     removeContributorLoading,
     addSupporterLoading,
     removeSupporterLoading,
     addPartnerLoading,
     removePartnerLoading,
-  ];
-
-  useEffect(() => {
-    setStatus(loadingStates.some(Boolean) ? 'loading' : 'success');
-  }, loadingStates);
+    setStatus,
+  ]);
 
   return (
     <div>

@@ -1,6 +1,5 @@
 import { UUID } from 'crypto';
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -88,7 +87,7 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
     if (data?.accessModelResources) {
       setFilteredRows(data.accessModelResources);
     }
-  }, [data, list]);
+  }, [data, list, refetch]);
 
   const { mutate, isLoading: deleteLoading } = useMutation(
     (data: { accessModelId: UUID }) =>
@@ -197,7 +196,7 @@ const AccessModelList: React.FC<AccessModelListProps> = ({
               name="Search"
               onChange={(e) => handleSearchChange(e)}
             />
-            <Button onClick={(e) => setList(false)}>Add Access Type</Button>
+            <Button onClick={() => setList(false)}>Add Access Type</Button>
           </div>
 
           <DataTable

@@ -25,9 +25,9 @@ export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
   }>();
   const [file, setFile] = React.useState<File[]>([]);
 
-  const [resourceId, setResourceId] = useQueryState('id', parseAsString);
+  const [, setResourceId] = useQueryState('id', parseAsString);
 
-  const { mutate, isLoading } = useMutation(
+  const { mutate } = useMutation(
     (data: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(
         createResourceFilesDoc,
@@ -60,7 +60,7 @@ export const ResourceDropzone = ({ reload }: { reload: () => void }) => {
       });
       setFile((files) => [...files, ...acceptedFiles]);
     },
-    []
+    [mutate, params.id]
   );
 
   const hint = (

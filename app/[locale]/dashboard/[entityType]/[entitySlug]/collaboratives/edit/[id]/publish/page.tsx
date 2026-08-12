@@ -169,7 +169,7 @@ const Publish = () => {
         { collaborativeId: params.id }
       ),
     {
-      onSuccess: (data: any) => {
+      onSuccess: () => {
         toast('Collaborative Published Successfully', {
           id: PUBLISH_SUCCESS_TOAST_ID,
         });

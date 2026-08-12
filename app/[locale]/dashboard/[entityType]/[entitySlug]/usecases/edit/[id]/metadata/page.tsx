@@ -275,7 +275,7 @@ const Metadata = () => {
   const [formData, setFormData] = useState(
     defaultValuesPrepFn(useCaseData?.data?.useCases?.[0] || {})
   );
-  const [previousFormData, setPreviousFormData] = useState(formData);
+  const [, setPreviousFormData] = useState(formData);
 
   const getSectorsList: { data: any; isLoading: boolean; error: any } =
     useQuery([`sectors_list_query`], () =>
@@ -371,7 +371,7 @@ const Metadata = () => {
 
   useEffect(() => {
     setStatus(updateUseCase.isLoading ? 'loading' : 'success'); // update based on mutation state
-  }, [updateUseCase.isLoading]);
+  }, [updateUseCase.isLoading, setStatus]);
 
   useEffect(() => {
     if (useCaseData.data?.useCases?.[0]) {

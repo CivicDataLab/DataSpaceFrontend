@@ -41,14 +41,14 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
 
   useEffect(() => {
     EntityDetailsQryRes.refetch();
-  }, []);
+  }, [EntityDetailsQryRes]);
 
 
   useEffect(() => {
     if (EntityDetailsQryRes.data) {
       setEntityDetails(EntityDetailsQryRes.data);
     }
-  }, [EntityDetailsQryRes.data]);
+  }, [EntityDetailsQryRes.data, setEntityDetails]);
 
   if (
     process.env.NEXT_PUBLIC_DATASPACE_FEATURE_ENABLED !== 'true' &&

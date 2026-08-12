@@ -138,7 +138,7 @@ const Details = () => {
 
   const [formData, setFormData] = useState(initialFormData);
 
-  const [previousFormData, setPreviousFormData] = useState(initialFormData);
+  const [, setPreviousFormData] = useState(initialFormData);
 
   useEffect(() => {
     if (UsecasesData) {
@@ -219,7 +219,7 @@ const Details = () => {
         },
       });
     },
-    []
+    [mutate, params.id]
   );
 
   const handleSave = (updatedData: any) => {
@@ -250,7 +250,7 @@ const Details = () => {
 
   useEffect(() => {
     setStatus(editMutationLoading ? 'loading' : 'success'); // update based on mutation state
-  }, [editMutationLoading]);
+  }, [editMutationLoading, setStatus]);
 
   return (
     <div className=" flex flex-col gap-6">
