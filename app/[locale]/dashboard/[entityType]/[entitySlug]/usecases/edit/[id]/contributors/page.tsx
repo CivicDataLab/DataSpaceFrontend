@@ -1,14 +1,14 @@
 'use client';
 
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Icon, Text, toast } from 'opub-ui';
-import { useEffect, useState } from 'react';
 
+import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
-import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
 import CustomCombobox from './CustomCombobox';
 import EntitySection from './EntitySelection';
@@ -25,10 +25,15 @@ import {
 } from './query';
 
 const Details = () => {
-  const params = useParams<{ entityType: string; entitySlug: string; id: string }>();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
   const CONTRIBUTORS_ADD_SUCCESS_TOAST_ID = 'usecase-contributor-add-success';
   const CONTRIBUTORS_ADD_ERROR_TOAST_ID = 'usecase-contributor-add-error';
-  const CONTRIBUTORS_REMOVE_SUCCESS_TOAST_ID = 'usecase-contributor-remove-success';
+  const CONTRIBUTORS_REMOVE_SUCCESS_TOAST_ID =
+    'usecase-contributor-remove-success';
   const CONTRIBUTORS_REMOVE_ERROR_TOAST_ID = 'usecase-contributor-remove-error';
   const SUPPORTER_ADD_SUCCESS_TOAST_ID = 'usecase-supporter-add-success';
   const SUPPORTER_ADD_ERROR_TOAST_ID = 'usecase-supporter-add-error';
@@ -69,13 +74,18 @@ const Details = () => {
   );
 
   const Organizations: { data: any; isLoading: boolean; refetch: any } =
-    useQuery([`fetch_orgs`], () => GraphQL(OrgList, {
-      [params.entityType]: params.entitySlug,
-    }, []));
-
+    useQuery([`fetch_orgs`], () =>
+      GraphQL(
+        OrgList,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        []
+      )
+    );
 
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_usecase_${params.id}`],
+    [`fetch_usecase`, params.id, params.entityType, params.entitySlug],
     () =>
       GraphQL(
         FetchUsecaseInfo,
@@ -119,18 +129,31 @@ const Details = () => {
     }));
   }, [UseCaseData?.data]);
 
+  const queryClient = useQueryClient();
+
   const { mutate: addContributor, isLoading: addContributorLoading } =
     useMutation(
       (input: { useCaseId: string; userId: string }) =>
-        GraphQL(AddContributors, {
-          [params.entityType]: params.entitySlug,
-        }, input),
+        GraphQL(
+          AddContributors,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          input
+        ),
       {
         onSuccess: () => {
           toast('Contributor added successfully', {
             id: CONTRIBUTORS_ADD_SUCCESS_TOAST_ID,
           });
-          UseCaseData.refetch();
+          queryClient.invalidateQueries({
+            queryKey: [
+              `fetch_usecase`,
+              params.id,
+              params.entityType,
+              params.entitySlug,
+            ],
+          });
         },
         onError: (error: any) => {
           toast(
@@ -144,13 +167,25 @@ const Details = () => {
   const { mutate: removeContributor, isLoading: removeContributorLoading } =
     useMutation(
       (input: { useCaseId: string; userId: string }) =>
-        GraphQL(RemoveContributor, {
-          [params.entityType]: params.entitySlug,
-        }, input),
+        GraphQL(
+          RemoveContributor,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          input
+        ),
       {
         onSuccess: () => {
           toast('Contributor removed successfully', {
             id: CONTRIBUTORS_REMOVE_SUCCESS_TOAST_ID,
+          });
+          queryClient.invalidateQueries({
+            queryKey: [
+              `fetch_usecase`,
+              params.id,
+              params.entityType,
+              params.entitySlug,
+            ],
           });
         },
         onError: (error: any) => {
@@ -164,15 +199,26 @@ const Details = () => {
 
   const { mutate: addSupporter, isLoading: addSupporterLoading } = useMutation(
     (input: { useCaseId: string; organizationId: string }) =>
-      GraphQL(AddSupporters, {
-        [params.entityType]: params.entitySlug,
-      }, input),
+      GraphQL(
+        AddSupporters,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        input
+      ),
     {
       onSuccess: () => {
         toast('Supporter added successfully', {
           id: SUPPORTER_ADD_SUCCESS_TOAST_ID,
         });
-        UseCaseData.refetch();
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_usecase`,
+            params.id,
+            params.entityType,
+            params.entitySlug,
+          ],
+        });
       },
       onError: (error: any) => {
         toast(
@@ -186,13 +232,25 @@ const Details = () => {
   const { mutate: removeSupporter, isLoading: removeSupporterLoading } =
     useMutation(
       (input: { useCaseId: string; organizationId: string }) =>
-        GraphQL(RemoveSupporters, {
-          [params.entityType]: params.entitySlug,
-        }, input),
+        GraphQL(
+          RemoveSupporters,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          input
+        ),
       {
         onSuccess: () => {
           toast('Supporter removed successfully', {
             id: SUPPORTER_REMOVE_SUCCESS_TOAST_ID,
+          });
+          queryClient.invalidateQueries({
+            queryKey: [
+              `fetch_usecase`,
+              params.id,
+              params.entityType,
+              params.entitySlug,
+            ],
           });
         },
         onError: (error: any) => {
@@ -206,13 +264,26 @@ const Details = () => {
 
   const { mutate: addPartner, isLoading: addPartnerLoading } = useMutation(
     (input: { useCaseId: string; organizationId: string }) =>
-      GraphQL(AddPartners, {
-        [params.entityType]: params.entitySlug,
-      }, input),
+      GraphQL(
+        AddPartners,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        input
+      ),
     {
       onSuccess: () => {
-        toast('Partner added successfully', { id: PARTNER_ADD_SUCCESS_TOAST_ID });
-        UseCaseData.refetch();
+        toast('Partner added successfully', {
+          id: PARTNER_ADD_SUCCESS_TOAST_ID,
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_usecase`,
+            params.id,
+            params.entityType,
+            params.entitySlug,
+          ],
+        });
       },
       onError: (error: any) => {
         toast(
@@ -226,13 +297,25 @@ const Details = () => {
   const { mutate: removePartner, isLoading: removePartnerLoading } =
     useMutation(
       (input: { useCaseId: string; organizationId: string }) =>
-        GraphQL(RemovePartners, {
-          [params.entityType]: params.entitySlug,
-        }, input),
+        GraphQL(
+          RemovePartners,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          input
+        ),
       {
         onSuccess: () => {
           toast('Partner removed successfully', {
             id: PARTNER_REMOVE_SUCCESS_TOAST_ID,
+          });
+          queryClient.invalidateQueries({
+            queryKey: [
+              `fetch_usecase`,
+              params.id,
+              params.entityType,
+              params.entitySlug,
+            ],
           });
         },
         onError: (error: any) => {
@@ -353,7 +436,7 @@ const Details = () => {
                         }}
                         kind="tertiary"
                       >
-                        <div className="flex items-center gap-2 max-w-40 rounded-2 bg-greyExtralight p-2 ">
+                        <div className="flex max-w-40 items-center gap-2 rounded-2 bg-greyExtralight p-2 ">
                           <Text>{item.label}</Text>
                           <Icon source={Icons.cross} size={18} />
                         </div>

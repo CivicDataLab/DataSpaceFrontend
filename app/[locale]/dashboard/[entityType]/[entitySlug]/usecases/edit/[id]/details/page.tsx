@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UseCaseInputPartial } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DropZone, Select, TextField, toast } from 'opub-ui';
 
 // Assuming you are using these components
@@ -76,7 +76,12 @@ const Details = () => {
       : fallback;
 
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_UseCaseData_details`],
+    [
+      `fetch_UseCaseData_details`,
+      params.id,
+      params.entityType,
+      params.entitySlug,
+    ],
     () =>
       GraphQL(
         FetchUseCase,
@@ -156,6 +161,8 @@ const Details = () => {
     }
   }, [params.id, UsecasesData]);
 
+  const queryClient = useQueryClient();
+
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { data: UseCaseInputPartial }) =>
       GraphQL(
@@ -178,6 +185,14 @@ const Details = () => {
           ...prev,
           ...res.updateUseCase,
         }));
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_UseCaseData_details`,
+            params.id,
+            params.entityType,
+            params.entitySlug,
+          ],
+        });
       },
       onError: (error: any) => {
         toast(

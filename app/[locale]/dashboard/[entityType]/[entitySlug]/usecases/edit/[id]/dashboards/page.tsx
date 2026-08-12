@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, Icon, Text, TextField, toast } from 'opub-ui';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Button, Icon, Spinner, Text, TextField, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
@@ -75,7 +75,11 @@ const deleteDashboard: any = graphql(`
 `);
 
 const Dashboard = () => {
-  const params = useParams<{ entityType?: string; entitySlug?: string; id?: string }>();
+  const params = useParams<{
+    entityType?: string;
+    entitySlug?: string;
+    id?: string;
+  }>();
   const DASHBOARD_ADD_SUCCESS_TOAST_ID = 'usecase-dashboard-add-success';
   const DASHBOARD_SAVE_SUCCESS_TOAST_ID = 'usecase-dashboard-save-success';
   const DASHBOARD_DELETE_SUCCESS_TOAST_ID = 'usecase-dashboard-delete-success';
@@ -94,9 +98,8 @@ const Dashboard = () => {
     typeof entitySlug === 'string' &&
     typeof idParam === 'string';
 
-  const usecaseId = isValidParams && idParam
-    ? Number.parseInt(idParam, 10)
-    : NaN;
+  const usecaseId =
+    isValidParams && idParam ? Number.parseInt(idParam, 10) : NaN;
 
   const isValidId = !Number.isNaN(usecaseId) && isValidParams;
 
@@ -109,37 +112,46 @@ const Dashboard = () => {
   >([]);
   const [previousState, setPreviousState] = useState<any>({});
 
-  useQuery(
-    ['fetch_dashboardData', usecaseId],
+  const queryKey = [
+    'fetch_dashboardData',
+    params.entityType,
+    params.entitySlug,
+    usecaseId,
+  ];
+
+  const { data: dashboardData, isLoading }: { data: any; isLoading: boolean } =
+    useQuery(
+    queryKey,
     () => GraphQL(dashboardList, ownerArgs || {}, { usecaseId }),
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
       enabled: isValidId,
-      onSuccess: (res: any) => {
-        setDashboards(res.usecaseDashboards || []);
-        setPreviousState(
-          Object.fromEntries(
-            res.usecaseDashboards.map((item: any) => [item.id, { ...item }])
-          )
-        );
-      },
     }
   );
+
+  useEffect(() => {
+    if (dashboardData?.usecaseDashboards) {
+      setDashboards(dashboardData.usecaseDashboards);
+      setPreviousState(
+        Object.fromEntries(
+          dashboardData.usecaseDashboards.map((item: any) => [item.id, { ...item }])
+        )
+      );
+    }
+  }, [dashboardData]);
+
+  const queryClient = useQueryClient();
 
   const { mutate: addDashboard, isLoading: addLoading } = useMutation(
     ({ usecaseId }: { usecaseId: number }) =>
       GraphQL(AddDashboard, ownerArgs || {}, { usecaseId }),
     {
-      onSuccess: (res: any) => {
-        const newDashboard = res.addUsecaseDashboard.data;
-
-        setDashboards((prev: any) => [...prev, newDashboard]);
-        setPreviousState((prev: any) => ({
-          ...prev,
-          [newDashboard.id]: { ...newDashboard },
-        }));
-        toast.success('Dashboard added', { id: DASHBOARD_ADD_SUCCESS_TOAST_ID });
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey });
+        toast.success('Dashboard added', {
+          id: DASHBOARD_ADD_SUCCESS_TOAST_ID,
+        });
       },
     }
   );
@@ -148,6 +160,7 @@ const Dashboard = () => {
       GraphQL(updateDashboard, ownerArgs || {}, { id, name, link }),
     {
       onSuccess: ({ updateUsecaseDashboard }: any) => {
+        queryClient.invalidateQueries({ queryKey });
         toast.success('Changes saved', { id: DASHBOARD_SAVE_SUCCESS_TOAST_ID });
         setPreviousState((prev: any) => ({
           ...prev,
@@ -166,9 +179,11 @@ const Dashboard = () => {
   const { mutate: removeDashboard, isLoading: deleteLoading } = useMutation(
     (id: number) => GraphQL(deleteDashboard, ownerArgs || {}, { id }),
     {
-      onSuccess: (_, id) => {
-        setDashboards((prev) => prev.filter((d) => d.id !== id.toString()));
-        toast.success('Dashboard deleted', { id: DASHBOARD_DELETE_SUCCESS_TOAST_ID });
+      onSuccess: () => {
+        toast.success('Dashboard deleted', {
+          id: DASHBOARD_DELETE_SUCCESS_TOAST_ID,
+        });
+        queryClient.invalidateQueries({ queryKey });
       },
       onError: (error: any) => {
         toast(
@@ -236,42 +251,50 @@ const Dashboard = () => {
         .
       </Text>
 
-      {dashboards?.map((item) => (
-        <div
-          key={item.id}
-          className="flex w-full flex-wrap items-center gap-5  lg:flex-nowrap"
-        >
-          <div className="w-full">
-            <TextField
-              label="Dashboard Name"
-              name="dashboardName"
-              value={item.name}
-              onChange={(e) => handleChange(item.id, 'name', e)}
-              onBlur={() => handleSave(item)}
-            />
-          </div>
-          <div className="w-full">
-            <TextField
-              label="Dashboard URL"
-              name="dashboardUrl"
-              type="url"
-              value={item.link}
-              onChange={(e) => handleChange(item.id, 'link', e)}
-              onBlur={() => handleSave(item)}
-            />
-          </div>
-          <Button
-            kind="tertiary"
-            onClick={() => handleDelete(item.id)}
-            className=" mt-5"
-          >
-            <Icon source={Icons.delete} size={32} />
-          </Button>
+      {isLoading ? (
+        <div className="flex h-36 w-full items-center justify-center">
+          <Spinner />
         </div>
-      ))}
-      <Button className="mx-auto mt-4 h-fit w-fit" onClick={handleAdd}>
-        {dashboards.length > 0 ? 'Add Another Dashboard' : 'Add Dashboard'}
-      </Button>
+      ) : (
+        <>
+          {dashboards?.map((item) => (
+            <div
+              key={item.id}
+              className="flex w-full flex-wrap items-center gap-5  lg:flex-nowrap"
+            >
+              <div className="w-full">
+                <TextField
+                  label="Dashboard Name"
+                  name="dashboardName"
+                  value={item.name}
+                  onChange={(e) => handleChange(item.id, 'name', e)}
+                  onBlur={() => handleSave(item)}
+                />
+              </div>
+              <div className="w-full">
+                <TextField
+                  label="Dashboard URL"
+                  name="dashboardUrl"
+                  type="url"
+                  value={item.link}
+                  onChange={(e) => handleChange(item.id, 'link', e)}
+                  onBlur={() => handleSave(item)}
+                />
+              </div>
+              <Button
+                kind="tertiary"
+                onClick={() => handleDelete(item.id)}
+                className=" mt-5"
+              >
+                <Icon source={Icons.delete} size={32} />
+              </Button>
+            </div>
+          ))}
+          <Button className="mx-auto mt-4 h-fit w-fit" onClick={handleAdd}>
+            {dashboards.length > 0 ? 'Add Another Dashboard' : 'Add Dashboard'}
+          </Button>
+        </>
+      )}
     </div>
   );
 };

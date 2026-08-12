@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   MetadataModels,
@@ -8,10 +10,8 @@ import {
   TypeTag,
   UpdateUseCaseMetadataInput,
 } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Combobox, Spinner, toast } from 'opub-ui';
-import { useEffect, useState } from 'react';
 
 import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
@@ -169,7 +169,12 @@ const Metadata = () => {
   const { setStatus } = useEditStatus();
 
   const useCaseData: { data: any; isLoading: boolean } = useQuery(
-    [`fetch_UseCaseData_Metadata`],
+    [
+      `fetch_UseCaseData_Metadata`,
+      params.id,
+      params.entityType,
+      params.entitySlug,
+    ],
     () =>
       GraphQL(
         FetchUseCasedetails,
@@ -247,7 +252,7 @@ const Metadata = () => {
 
     defaultVal['sdgs'] =
       data?.sdgs?.map((sdg: any) => {
-        const num = sdg.number 
+        const num = sdg.number
           ? String(sdg.number).padStart(2, '0')
           : sdg.code.replace('SDG', '').padStart(2, '0');
         return {
@@ -272,14 +277,6 @@ const Metadata = () => {
   );
   const [previousFormData, setPreviousFormData] = useState(formData);
 
-  useEffect(() => {
-    if (useCaseData.data?.useCases[0]) {
-      const updatedData = defaultValuesPrepFn(useCaseData.data.useCases[0]);
-      setFormData(updatedData);
-      setPreviousFormData(updatedData);
-    }
-  }, [useCaseData.data]);
-
   const getSectorsList: { data: any; isLoading: boolean; error: any } =
     useQuery([`sectors_list_query`], () =>
       GraphQL(
@@ -302,8 +299,9 @@ const Metadata = () => {
       )
     );
 
-  const getSDGsList: { data: any; isLoading: boolean; error: any } =
-    useQuery([`sdgs_list_query`], () =>
+  const getSDGsList: { data: any; isLoading: boolean; error: any } = useQuery(
+    [`sdgs_list_query`],
+    () =>
       GraphQL(
         sdgsListQueryDoc,
         {
@@ -311,7 +309,7 @@ const Metadata = () => {
         },
         []
       )
-    );
+  );
 
   const getTagsList: {
     data: any;
@@ -329,12 +327,18 @@ const Metadata = () => {
   );
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
 
+  const queryClient = useQueryClient();
+
   // Update mutation
   const updateUseCase = useMutation(
     (data: { updateMetadataInput: UpdateUseCaseMetadataInput }) =>
-      GraphQL(UpdateUseCaseMetadataMutation, {
-        [params.entityType]: params.entitySlug,
-      }, data),
+      GraphQL(
+        UpdateUseCaseMetadataMutation,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        data
+      ),
     {
       onSuccess: (res: any) => {
         toast('Use case updated successfully', {
@@ -347,6 +351,14 @@ const Metadata = () => {
         }
         setFormData(updatedData);
         setPreviousFormData(updatedData);
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_UseCaseData_Metadata`,
+            params.id,
+            params.entityType,
+            params.entitySlug,
+          ],
+        });
       },
       onError: (error: any) => {
         toast(
@@ -360,6 +372,14 @@ const Metadata = () => {
   useEffect(() => {
     setStatus(updateUseCase.isLoading ? 'loading' : 'success'); // update based on mutation state
   }, [updateUseCase.isLoading]);
+
+  useEffect(() => {
+    if (useCaseData.data?.useCases?.[0]) {
+      const updatedData = defaultValuesPrepFn(useCaseData.data.useCases[0]);
+      setFormData(updatedData);
+      setPreviousFormData(updatedData);
+    }
+  }, [useCaseData.data]);
 
   const handleChange = (field: string, value: any) => {
     setFormData((prevData) => ({
@@ -392,8 +412,9 @@ const Metadata = () => {
             ...Object.keys(transformedValues)
               .filter(
                 (valueItem) =>
-                  !['sectors', 'tags', 'geographies', 'sdgs'].includes(valueItem) &&
-                  transformedValues[valueItem] !== ''
+                  !['sectors', 'tags', 'geographies', 'sdgs'].includes(
+                    valueItem
+                  ) && transformedValues[valueItem] !== ''
               )
               .map((key) => {
                 return {
@@ -441,7 +462,7 @@ const Metadata = () => {
               value: option,
             }))}
             label={metadataFormItem.label}
-            selectedValue={formData[metadataFormItem.id]}
+            selectedValue={formData[metadataFormItem.id] || ''}
             displaySelected
             onChange={(value) => {
               handleChange(metadataFormItem.id, value);
@@ -464,7 +485,7 @@ const Metadata = () => {
               })) || []),
             ]}
             label={metadataFormItem.label + ' *'}
-            selectedValue={formData[metadataFormItem.id]}
+            selectedValue={formData[metadataFormItem.id] || []}
             displaySelected
             onChange={(value) => {
               handleChange(metadataFormItem.id, value);
@@ -489,7 +510,7 @@ const Metadata = () => {
               requiredIndicator={true}
               list={
                 getSDGsList?.data?.sdgs?.map((item: any) => {
-                  const num = item.number 
+                  const num = item.number
                     ? String(item.number).padStart(2, '0')
                     : item.code.replace('SDG', '').padStart(2, '0');
                   return {
@@ -498,7 +519,7 @@ const Metadata = () => {
                   };
                 }) || []
               }
-              selectedValue={formData.sdgs}
+              selectedValue={formData.sdgs || []}
               onChange={(value) => {
                 handleChange('sdgs', value);
                 handleSave({ ...formData, sdgs: value });
@@ -518,7 +539,7 @@ const Metadata = () => {
                 })) || []
               }
               key={`tags-${getTagsList.data?.tags?.length}`} // forces remount on change
-              selectedValue={formData.tags}
+              selectedValue={formData.tags || []}
               onChange={(value) => {
                 setIsTagsListUpdated(true);
                 handleChange('tags', value);
@@ -539,7 +560,7 @@ const Metadata = () => {
                   value: item.id,
                 })) || []
               }
-              selectedValue={formData.sectors}
+              selectedValue={formData.sectors || []}
               onChange={(value) => {
                 handleChange('sectors', value);
                 handleSave({ ...formData, sectors: value });
@@ -556,7 +577,7 @@ const Metadata = () => {
                     value: item.id,
                   })) || []
                 }
-                selectedValue={formData.geographies}
+                selectedValue={formData.geographies || []}
                 onChange={(value) => {
                   handleChange('geographies', value);
                   handleSave({ ...formData, geographies: value });
