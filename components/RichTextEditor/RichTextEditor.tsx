@@ -23,7 +23,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   label,
   helpText,
   readOnly = false,
-  showPreview = true,
 }) => {
   const [isPreview, setIsPreview] = useState(false);
   // Dynamically import ReactQuill to avoid SSR issues

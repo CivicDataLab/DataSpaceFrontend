@@ -54,6 +54,9 @@ jobs:
           BACKEND_GRAPHQL_URL: ${{ vars.BACKEND_GRAPHQL_URL }}
           NODE_ENV: production
 
+      - name: Lint
+        run: npm run lint
+
       - name: Build
         run: npm run build
 

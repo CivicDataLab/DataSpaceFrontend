@@ -142,13 +142,24 @@ const Dashboard = () => {
   }, [dashboardData]);
 
   const queryClient = useQueryClient();
+  const invalidateDashboardQueries = () => {
+    queryClient.invalidateQueries({ queryKey });
+    queryClient.invalidateQueries({
+      queryKey: [
+        `fetch_UsecaseDetails`,
+        params.id,
+        params.entityType,
+        params.entitySlug,
+      ],
+    });
+  };
 
   const { mutate: addDashboard, isLoading: addLoading } = useMutation(
     ({ usecaseId }: { usecaseId: number }) =>
       GraphQL(AddDashboard, ownerArgs || {}, { usecaseId }),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey });
+        invalidateDashboardQueries();
         toast.success('Dashboard added', {
           id: DASHBOARD_ADD_SUCCESS_TOAST_ID,
         });
@@ -160,7 +171,7 @@ const Dashboard = () => {
       GraphQL(updateDashboard, ownerArgs || {}, { id, name, link }),
     {
       onSuccess: ({ updateUsecaseDashboard }: any) => {
-        queryClient.invalidateQueries({ queryKey });
+        invalidateDashboardQueries();
         toast.success('Changes saved', { id: DASHBOARD_SAVE_SUCCESS_TOAST_ID });
         setPreviousState((prev: any) => ({
           ...prev,
@@ -183,7 +194,7 @@ const Dashboard = () => {
         toast.success('Dashboard deleted', {
           id: DASHBOARD_DELETE_SUCCESS_TOAST_ID,
         });
-        queryClient.invalidateQueries({ queryKey });
+        invalidateDashboardQueries();
       },
       onError: (error: any) => {
         toast(

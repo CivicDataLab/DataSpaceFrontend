@@ -278,7 +278,7 @@ const Page = () => {
         { datasetId: params.id }
       ),
     {
-      onSuccess: (data: any) => {
+      onSuccess: () => {
         toast('Dataset Published Successfully', {
           id: PUBLISH_SUCCESS_TOAST_ID,
         });

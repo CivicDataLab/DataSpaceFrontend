@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useEffect, useReducer, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import {
   Button,
-  ButtonGroup,
   Card,
-  Icon,
   Pill,
   SearchInput,
   Select,
@@ -315,7 +313,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   const [variables, setVariables] = useState('');
   const [open, setOpen] = useState(false);
   const [queryParams, setQueryParams] = useReducer(queryReducer, initialState);
-  const [view, setView] = useState<'collapsed' | 'expanded'>('collapsed');
+  const [view] = useState<'collapsed' | 'expanded'>('collapsed');
   const [persistedTypeCounts, setPersistedTypeCounts] = useState<
     Record<string, number>
   >({});
@@ -382,10 +380,6 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
     setQueryParams({ type: 'SET_SORT', payload: sortOption });
   };
 
-  const handleOrderChange = (sortOrder: string) => {
-    setQueryParams({ type: 'SET_ORDER', payload: sortOrder });
-  };
-
   const handleTypeFilter = (types: string) => {
     setQueryParams({ type: 'SET_TYPES', payload: types });
   };
@@ -444,7 +438,10 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
     );
 
   // Get type counts from aggregations
-  const typeCounts = aggregations.types || {};
+  const typeCounts = useMemo(
+    () => aggregations.types || {},
+    [aggregations.types]
+  );
   const liveTypeCounts = Object.entries(typeCounts).reduce(
     (acc, [key, value]) => {
       if (typeof value === 'number') {
@@ -457,13 +454,23 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   const displayTypeCounts = { ...persistedTypeCounts, ...liveTypeCounts };
 
   useEffect(() => {
-    if (Object.keys(liveTypeCounts).length === 0) return;
+    const counts = Object.entries(typeCounts).reduce(
+      (acc, [key, value]) => {
+        if (typeof value === 'number') {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    if (Object.keys(counts).length === 0) return;
 
     setPersistedTypeCounts((prev) => {
       const next = { ...prev };
       let changed = false;
 
-      Object.entries(liveTypeCounts).forEach(([key, value]) => {
+      Object.entries(counts).forEach(([key, value]) => {
         if (next[key] !== value) {
           next[key] = value;
           changed = true;

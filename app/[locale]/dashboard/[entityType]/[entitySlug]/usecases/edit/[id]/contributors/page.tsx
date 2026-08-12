@@ -130,6 +130,24 @@ const Details = () => {
   }, [UseCaseData?.data]);
 
   const queryClient = useQueryClient();
+  const invalidateUseCaseQueries = () => {
+    queryClient.invalidateQueries({
+      queryKey: [
+        `fetch_usecase`,
+        params.id,
+        params.entityType,
+        params.entitySlug,
+      ],
+    });
+    queryClient.invalidateQueries({
+      queryKey: [
+        `fetch_UsecaseDetails`,
+        params.id,
+        params.entityType,
+        params.entitySlug,
+      ],
+    });
+  };
 
   const { mutate: addContributor, isLoading: addContributorLoading } =
     useMutation(
@@ -146,14 +164,7 @@ const Details = () => {
           toast('Contributor added successfully', {
             id: CONTRIBUTORS_ADD_SUCCESS_TOAST_ID,
           });
-          queryClient.invalidateQueries({
-            queryKey: [
-              `fetch_usecase`,
-              params.id,
-              params.entityType,
-              params.entitySlug,
-            ],
-          });
+          invalidateUseCaseQueries();
         },
         onError: (error: any) => {
           toast(
@@ -179,14 +190,7 @@ const Details = () => {
           toast('Contributor removed successfully', {
             id: CONTRIBUTORS_REMOVE_SUCCESS_TOAST_ID,
           });
-          queryClient.invalidateQueries({
-            queryKey: [
-              `fetch_usecase`,
-              params.id,
-              params.entityType,
-              params.entitySlug,
-            ],
-          });
+          invalidateUseCaseQueries();
         },
         onError: (error: any) => {
           toast(
@@ -211,14 +215,7 @@ const Details = () => {
         toast('Supporter added successfully', {
           id: SUPPORTER_ADD_SUCCESS_TOAST_ID,
         });
-        queryClient.invalidateQueries({
-          queryKey: [
-            `fetch_usecase`,
-            params.id,
-            params.entityType,
-            params.entitySlug,
-          ],
-        });
+        invalidateUseCaseQueries();
       },
       onError: (error: any) => {
         toast(
@@ -244,14 +241,7 @@ const Details = () => {
           toast('Supporter removed successfully', {
             id: SUPPORTER_REMOVE_SUCCESS_TOAST_ID,
           });
-          queryClient.invalidateQueries({
-            queryKey: [
-              `fetch_usecase`,
-              params.id,
-              params.entityType,
-              params.entitySlug,
-            ],
-          });
+          invalidateUseCaseQueries();
         },
         onError: (error: any) => {
           toast(
@@ -276,14 +266,7 @@ const Details = () => {
         toast('Partner added successfully', {
           id: PARTNER_ADD_SUCCESS_TOAST_ID,
         });
-        queryClient.invalidateQueries({
-          queryKey: [
-            `fetch_usecase`,
-            params.id,
-            params.entityType,
-            params.entitySlug,
-          ],
-        });
+        invalidateUseCaseQueries();
       },
       onError: (error: any) => {
         toast(
@@ -309,14 +292,7 @@ const Details = () => {
           toast('Partner removed successfully', {
             id: PARTNER_REMOVE_SUCCESS_TOAST_ID,
           });
-          queryClient.invalidateQueries({
-            queryKey: [
-              `fetch_usecase`,
-              params.id,
-              params.entityType,
-              params.entitySlug,
-            ],
-          });
+          invalidateUseCaseQueries();
         },
         onError: (error: any) => {
           toast(
@@ -329,7 +305,7 @@ const Details = () => {
 
   useEffect(() => {
     Users.refetch();
-  }, [searchValue]);
+  }, [searchValue, Users]);
 
   const selectedContributors = formData.contributors;
 
@@ -341,18 +317,28 @@ const Details = () => {
 
   const { setStatus } = useEditStatus();
 
-  const loadingStates = [
+  useEffect(() => {
+    setStatus(
+      [
+        addContributorLoading,
+        removeContributorLoading,
+        addSupporterLoading,
+        removeSupporterLoading,
+        addPartnerLoading,
+        removePartnerLoading,
+      ].some(Boolean)
+        ? 'loading'
+        : 'success'
+    );
+  }, [
     addContributorLoading,
     removeContributorLoading,
     addSupporterLoading,
     removeSupporterLoading,
     addPartnerLoading,
     removePartnerLoading,
-  ];
-
-  useEffect(() => {
-    setStatus(loadingStates.some(Boolean) ? 'loading' : 'success');
-  }, loadingStates);
+    setStatus,
+  ]);
 
   return (
     <div>

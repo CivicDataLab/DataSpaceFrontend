@@ -38,6 +38,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
         yAxisColumn: [{ fieldName: '', label: '', color: '#000000' }],
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initialize yAxisColumn once when empty
   }, [chartData.options.yAxisColumn]);
 
   console.log(chartData);
@@ -49,6 +50,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
         filters: [{ column: '', operator: '==', value: '' }],
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initialize filters once when empty
   }, [chartData.filters]);
 
   const handleYAxisColumnChange = (

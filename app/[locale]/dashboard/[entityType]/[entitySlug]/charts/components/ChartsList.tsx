@@ -1,6 +1,5 @@
 import { UUID } from 'crypto';
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -103,11 +102,7 @@ const deleteResourceChartImage: any = graphql(`
 //   }
 // `);
 
-const ChartsList: React.FC<ChartsListProps> = ({
-  setType,
-  setChartId,
-  setImageId,
-}) => {
+const ChartsList: React.FC<ChartsListProps> = () => {
   const params = useParams<{
     entityType: string;
     entitySlug: string;
@@ -141,7 +136,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
     if (chartListRes.data?.getChartData) {
       setFilteredRows(chartListRes.data.getChartData);
     }
-  }, [chartListRes.data]);
+  }, [chartListRes.data, chartListRes]);
 
   const deleteResourceChartmutation: { mutate: any; isLoading: any } =
     useMutation(
@@ -366,7 +361,7 @@ const ChartsList: React.FC<ChartsListProps> = ({
               onChange={(e) => handleSearchChange(e)}
             />
             <div className="flex justify-end gap-3">
-              <Button onClick={(e) => setEditorView(true)}>Add Chart</Button>
+              <Button onClick={() => setEditorView(true)}>Add Chart</Button>
             </div>
           </div>
           {filteredRows.length > 0 ? (

@@ -110,7 +110,6 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
 
   const {
     data: chartsList,
-    isLoading,
     refetch: chartsListRefetch,
   }: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`chartsList_${params.id}`],
@@ -209,7 +208,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       refetch();
       updateChartData(chartDetails.resourceChart);
     }
-  }, [chartId, chartDetails]);
+  }, [chartId, chartDetails, refetch]);
 
   const updateChartData = (resourceChart: any) => {
     if (

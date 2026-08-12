@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import { Button, ButtonGroup, Spinner, Text } from 'opub-ui';
+import { Button, ButtonGroup, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { cn, generateJsonLd } from '@/lib/utils';

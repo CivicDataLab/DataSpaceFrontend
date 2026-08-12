@@ -48,7 +48,7 @@ const SectorsListing = () => {
 
   useEffect(() => {
     refetch();
-  }, [searchText]);
+  }, [searchText, refetch]);
 
   const handleSortChange = (e: string) => {
     const [field, direction] = e.split('_');

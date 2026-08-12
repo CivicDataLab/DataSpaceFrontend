@@ -8,7 +8,6 @@ import { fetchData } from '@/fetch';
 import { useTourTrigger } from '@/hooks/use-tour-trigger';
 import {
   Button,
-  ButtonGroup,
   Card,
   Icon,
   Pill,
@@ -237,7 +236,7 @@ const ListingComponent: React.FC<ListingProps> = ({
   const [variables, setVariables] = useState('');
   const [open, setOpen] = useState(false);
   const [queryParams, setQueryParams] = useReducer(queryReducer, initialState);
-  const [view, setView] = useState<'collapsed' | 'expanded'>('collapsed');
+  const [view] = useState<'collapsed' | 'expanded'>('collapsed');
 
   const count = facets?.total ?? 0;
   const datasetDetails = facets?.results ?? [];

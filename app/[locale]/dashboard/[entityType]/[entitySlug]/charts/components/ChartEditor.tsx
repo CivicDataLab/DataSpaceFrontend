@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
@@ -10,7 +9,6 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Button,
   Combobox,
-  Dialog,
   DropZone,
   Form,
   Icon,
@@ -20,7 +18,6 @@ import {
   Tag,
   Text,
   toast,
-  Tooltip,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -289,214 +286,6 @@ const ChartImageUpload = ({
           </div>
         </div>
       </Form>
-    </div>
-  );
-};
-
-const ChartTypeDialog = () => {
-  const [open, setOpen] = useState(false);
-  const [selectedChartCategory, setSelectedChartCategory] = useState('');
-  const [selectedChart, setSelectedChart] = useState('');
-
-  const chartTypes = [
-    {
-      label: 'BAR HORIZONTAL',
-      value: 'BAR_HORIZONTAL',
-      image: '',
-      category: 'BAR',
-      categoryIcon: 'chartBar',
-    },
-    {
-      label: 'BAR VERTICAL',
-      value: 'BAR_VERTICAL',
-      image: '',
-      category: 'BAR',
-      categoryIcon: 'chartBar',
-    },
-    {
-      label: 'LINE',
-      value: 'LINE',
-      image: '',
-      category: 'LINE',
-      categoryIcon: 'chartLine',
-    },
-    {
-      label: 'TREEMAP',
-      value: 'TREEMAP',
-      image: '',
-      category: 'TREEMAP',
-      categoryIcon: 'chartTreeMap',
-    },
-    {
-      label: 'BIG NUMBER',
-      value: 'BIG_NUMBER',
-      image: '',
-      category: 'BIG_NUMBER',
-      categoryIcon: 'chartBigNumber',
-    },
-    {
-      label: 'MAP',
-      value: 'MAP',
-      image: '',
-      category: 'MAP',
-      categoryIcon: 'chartMap',
-    },
-    {
-      label: 'MAP POLYGON',
-      value: 'MAP_POLYGON',
-      image: '',
-      category: 'MAP_POLYGON',
-      categoryIcon: 'chartMapPolygon',
-    },
-  ];
-
-  const categoriesArray = Array.from(
-    new Map(
-      chartTypes.map((item) => [
-        item.category,
-        { value: item.category, icon: item.categoryIcon },
-      ])
-    ).values()
-  );
-
-  return (
-    <div>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <Dialog.Trigger>
-          <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
-            {categoriesArray.map((category, index) => (
-              <div
-                key={index}
-                className="border rounded-lg hover:bg-gray-50 flex cursor-pointer flex-row items-center gap-2 p-4"
-                onClick={() => {
-                  setSelectedChartCategory(category.value);
-                }}
-              >
-                <Icon
-                  source={Icons[category.icon]}
-                  size={48}
-                  className="var(--blue-primary-color)"
-                />
-                <Text variant="headingSm" className="text-center">
-                  {category.value}
-                </Text>
-              </div>
-            ))}
-          </div>
-        </Dialog.Trigger>
-        <Dialog.Content title={'Chart Type'} large headerHidden>
-          <div className="flex flex-col gap-4 p-14">
-            <div className="flex flex-row gap-4">
-              <div className="flex flex-col">
-                <aside className="min-w-[240px]h-100 mb-10 overflow-hidden rounded-2 border-2 border-solid border-baseGraySlateSolid6 bg-surfaceDefault pb-10 pt-4 shadow-insetBasic md:block">
-                  {categoriesArray.map((category, index) => (
-                    <div
-                      key={`${index}_${category.value}`}
-                      onClick={() => {
-                        setSelectedChartCategory(category.value);
-                      }}
-                      className="mb-5 cursor-pointer"
-                    >
-                      <div className={cn('relative flex justify-between')}>
-                        <span
-                          className={cn(
-                            'absolute left-0 top-0 h-full w-[3px] rounded-r-1 bg-transparent',
-                            selectedChartCategory == category.value &&
-                              'bg-borderWarningDefault'
-                          )}
-                        />
-                        <div
-                          className={cn(
-                            'ml-2 flex  w-full items-center overflow-hidden rounded-1',
-                            // styles.Item,
-                            selectedChartCategory == category.value &&
-                              'svg:text-primaryDefault bg-surfaceSelected'
-                          )}
-                        >
-                          <Tooltip side="right" content={category.value}>
-                            <div className="basis-5 px-3 py-2">
-                              <Icon
-                                source={Icons[category.icon]}
-                                color={
-                                  selectedChartCategory == category.value
-                                    ? 'warning'
-                                    : 'default'
-                                }
-                              />
-                            </div>
-                          </Tooltip>
-                          <div
-                            className={cn(
-                              'py-2 pr-3',
-                              'whitespace-nowrap opacity-100 transition-opacity duration-300'
-                            )}
-                          >
-                            <Text fontWeight="medium">
-                              {category.value
-                                .replaceAll('_', ' ')
-                                .toUpperCase()}
-                            </Text>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </aside>
-              </div>
-              <div className="flex flex-grow flex-col">
-                <div className="flex flex-row items-center justify-between">
-                  <Text
-                    variant="headingLg"
-                    fontWeight="semibold"
-                    className="text-center"
-                  >
-                    Select Chart Type
-                  </Text>
-                  <Button
-                    kind="tertiary"
-                    icon={
-                      <Icon source={Icons.cross} size={24} color="warning" />
-                    }
-                    onClick={() => {}}
-                  />
-                </div>
-                <div className="mt-10 grid grid-cols-3 gap-4">
-                  {chartTypes
-                    .filter((item) => item.category === selectedChartCategory)
-                    .map((item) => (
-                      <div
-                        key={item.value}
-                        className="flex cursor-pointer flex-col items-center gap-2"
-                        onClick={() => {
-                          setSelectedChart(item.value);
-                        }}
-                      >
-                        <Image
-                          src={item.image}
-                          alt={item.label}
-                          width={160}
-                          height={160}
-                          className="border border-gray-200 rounded-2 border-2"
-                        />
-                        <Text>{item.label}</Text>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-row items-center justify-center gap-4">
-              <Button
-                onClick={() => {
-                  setOpen(false);
-                }}
-              >
-                Save and Close
-              </Button>
-            </div>
-          </div>
-        </Dialog.Content>
-      </Dialog>
     </div>
   );
 };

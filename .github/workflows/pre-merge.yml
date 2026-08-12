@@ -47,5 +47,9 @@ jobs:
         run: npm run generate
         env:
           BACKEND_GRAPHQL_URL: ${{vars.BACKEND_GRAPHQL_URL}}
+
+      - name: Lint
+        run: npm run lint
+
       - name: Build application
         run: npm run build --if-present

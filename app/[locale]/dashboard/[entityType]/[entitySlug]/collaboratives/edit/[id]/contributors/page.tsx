@@ -1,16 +1,16 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Icon, Text, toast } from 'opub-ui';
-import { useEffect, useState } from 'react';
 
+import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
-import { GraphQL } from '@/lib/api';
-import { useEditStatus } from '../../context';
 import CustomCombobox from '../../../../usecases/edit/[id]/contributors/CustomCombobox';
+import { useEditStatus } from '../../context';
 import EntitySection from './EntitySelection';
 import {
   AddContributors,
@@ -25,7 +25,11 @@ import {
 } from './query';
 
 const Details = () => {
-  const params = useParams<{ entityType: string; entitySlug: string; id: string }>();
+  const params = useParams<{
+    entityType: string;
+    entitySlug: string;
+    id: string;
+  }>();
   const queryClient = useQueryClient();
   const [searchValue, setSearchValue] = useState('');
   const [formData, setFormData] = useState({
@@ -56,30 +60,36 @@ const Details = () => {
   );
 
   const Organizations: { data: any; isLoading: boolean; refetch: any } =
-    useQuery([`fetch_orgs`], () => GraphQL(OrgList, {
-      [params.entityType]: params.entitySlug,
-    }, []));
-
-
-  const CollaborativeData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_collaborative_${params.id}`],
-    () =>
+    useQuery([`fetch_orgs`], () =>
       GraphQL(
-        FetchCollaborativeInfo,
+        OrgList,
         {
           [params.entityType]: params.entitySlug,
         },
-        {
-          filters: {
-            id: params.id,
+        []
+      )
+    );
+
+  const CollaborativeData: { data: any; isLoading: boolean; refetch: any } =
+    useQuery(
+      [`fetch_collaborative_${params.id}`],
+      () =>
+        GraphQL(
+          FetchCollaborativeInfo,
+          {
+            [params.entityType]: params.entitySlug,
           },
-        }
-      ),
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-    }
-  );
+          {
+            filters: {
+              id: params.id,
+            },
+          }
+        ),
+      {
+        refetchOnMount: true,
+        refetchOnReconnect: true,
+      }
+    );
 
   useEffect(() => {
     setFormData((prev) => ({
@@ -99,22 +109,30 @@ const Details = () => {
           })
         ) || [],
       contributors:
-        CollaborativeData?.data?.collaboratives?.[0]?.contributors?.map((user: any) => ({
-          label: user.fullName,
-          value: user.id,
-        })) || [],
+        CollaborativeData?.data?.collaboratives?.[0]?.contributors?.map(
+          (user: any) => ({
+            label: user.fullName,
+            value: user.id,
+          })
+        ) || [],
     }));
   }, [CollaborativeData?.data]);
 
   const { mutate: addContributor, isLoading: addContributorLoading } =
     useMutation(
       (input: { collaborativeId: string; userId: string }) =>
-        GraphQL(AddContributors, {
-          [params.entityType]: params.entitySlug,
-        }, input),
+        GraphQL(
+          AddContributors,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          input
+        ),
       {
         onSuccess: () => {
-          toast('Contributor added successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
+          toast('Contributor added successfully', {
+            id: COLLAB_CONTRIBUTORS_TOAST_ID,
+          });
           queryClient.invalidateQueries({
             queryKey: [`fetch_collaborative_${params.id}`],
           });
@@ -128,7 +146,9 @@ const Details = () => {
           });
         },
         onError: (error: any) => {
-          toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
+          toast(`Error: ${error.message}`, {
+            id: COLLAB_CONTRIBUTORS_TOAST_ID,
+          });
         },
       }
     );
@@ -136,12 +156,18 @@ const Details = () => {
   const { mutate: removeContributor, isLoading: removeContributorLoading } =
     useMutation(
       (input: { collaborativeId: string; userId: string }) =>
-        GraphQL(RemoveContributor, {
-          [params.entityType]: params.entitySlug,
-        }, input),
+        GraphQL(
+          RemoveContributor,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          input
+        ),
       {
         onSuccess: () => {
-          toast('Contributor removed successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
+          toast('Contributor removed successfully', {
+            id: COLLAB_CONTRIBUTORS_TOAST_ID,
+          });
           queryClient.invalidateQueries({
             queryKey: [`fetch_collaborative_${params.id}`],
           });
@@ -155,19 +181,27 @@ const Details = () => {
           });
         },
         onError: (error: any) => {
-          toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
+          toast(`Error: ${error.message}`, {
+            id: COLLAB_CONTRIBUTORS_TOAST_ID,
+          });
         },
       }
     );
 
   const { mutate: addSupporter, isLoading: addSupporterLoading } = useMutation(
     (input: { collaborativeId: string; organizationId: string }) =>
-      GraphQL(AddSupporters, {
-        [params.entityType]: params.entitySlug,
-      }, input),
+      GraphQL(
+        AddSupporters,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        input
+      ),
     {
       onSuccess: () => {
-        toast('Supporter added successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
+        toast('Supporter added successfully', {
+          id: COLLAB_CONTRIBUTORS_TOAST_ID,
+        });
         queryClient.invalidateQueries({
           queryKey: [`fetch_collaborative_${params.id}`],
         });
@@ -189,12 +223,18 @@ const Details = () => {
   const { mutate: removeSupporter, isLoading: removeSupporterLoading } =
     useMutation(
       (input: { collaborativeId: string; organizationId: string }) =>
-        GraphQL(RemoveSupporters, {
-          [params.entityType]: params.entitySlug,
-        }, input),
+        GraphQL(
+          RemoveSupporters,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          input
+        ),
       {
         onSuccess: () => {
-          toast('Supporter removed successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
+          toast('Supporter removed successfully', {
+            id: COLLAB_CONTRIBUTORS_TOAST_ID,
+          });
           queryClient.invalidateQueries({
             queryKey: [`fetch_collaborative_${params.id}`],
           });
@@ -208,19 +248,27 @@ const Details = () => {
           });
         },
         onError: (error: any) => {
-          toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
+          toast(`Error: ${error.message}`, {
+            id: COLLAB_CONTRIBUTORS_TOAST_ID,
+          });
         },
       }
     );
 
   const { mutate: addPartner, isLoading: addPartnerLoading } = useMutation(
     (input: { collaborativeId: string; organizationId: string }) =>
-      GraphQL(AddPartners, {
-        [params.entityType]: params.entitySlug,
-      }, input),
+      GraphQL(
+        AddPartners,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        input
+      ),
     {
       onSuccess: () => {
-        toast('Partner added successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
+        toast('Partner added successfully', {
+          id: COLLAB_CONTRIBUTORS_TOAST_ID,
+        });
         queryClient.invalidateQueries({
           queryKey: [`fetch_collaborative_${params.id}`],
         });
@@ -242,12 +290,18 @@ const Details = () => {
   const { mutate: removePartner, isLoading: removePartnerLoading } =
     useMutation(
       (input: { collaborativeId: string; organizationId: string }) =>
-        GraphQL(RemovePartners, {
-          [params.entityType]: params.entitySlug,
-        }, input),
+        GraphQL(
+          RemovePartners,
+          {
+            [params.entityType]: params.entitySlug,
+          },
+          input
+        ),
       {
         onSuccess: () => {
-        toast('Partner removed successfully', { id: COLLAB_CONTRIBUTORS_TOAST_ID });
+          toast('Partner removed successfully', {
+            id: COLLAB_CONTRIBUTORS_TOAST_ID,
+          });
           queryClient.invalidateQueries({
             queryKey: [`fetch_collaborative_${params.id}`],
           });
@@ -261,14 +315,16 @@ const Details = () => {
           });
         },
         onError: (error: any) => {
-        toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
+          toast(`Error: ${error.message}`, {
+            id: COLLAB_CONTRIBUTORS_TOAST_ID,
+          });
         },
       }
     );
 
   useEffect(() => {
     Users.refetch();
-  }, [searchValue]);
+  }, [searchValue, Users]);
 
   const selectedContributors = formData.contributors;
 
@@ -280,18 +336,28 @@ const Details = () => {
 
   const { setStatus } = useEditStatus();
 
-  const loadingStates = [
+  useEffect(() => {
+    setStatus(
+      [
+        addContributorLoading,
+        removeContributorLoading,
+        addSupporterLoading,
+        removeSupporterLoading,
+        addPartnerLoading,
+        removePartnerLoading,
+      ].some(Boolean)
+        ? 'loading'
+        : 'success'
+    );
+  }, [
     addContributorLoading,
     removeContributorLoading,
     addSupporterLoading,
     removeSupporterLoading,
     addPartnerLoading,
     removePartnerLoading,
-  ];
-
-  useEffect(() => {
-    setStatus(loadingStates.some(Boolean) ? 'loading' : 'success');
-  }, loadingStates);
+    setStatus,
+  ]);
 
   return (
     <div>
@@ -375,7 +441,7 @@ const Details = () => {
                         }}
                         kind="tertiary"
                       >
-                        <div className="flex items-center gap-2 max-w-40 rounded-2 bg-greyExtralight p-2 ">
+                        <div className="flex max-w-40 items-center gap-2 rounded-2 bg-greyExtralight p-2 ">
                           <Text>{item.label}</Text>
                           <Icon source={Icons.cross} size={18} />
                         </div>
@@ -391,7 +457,10 @@ const Details = () => {
             title="SUPPORTED BY"
             label="Add Supporters"
             placeholder="Add Supporters"
-            data={CollaborativeData?.data?.collaboratives[0]?.supportingOrganizations}
+            data={
+              CollaborativeData?.data?.collaboratives[0]
+                ?.supportingOrganizations
+            }
             options={(Organizations?.data?.allOrganizations || [])?.map(
               (org: any) => ({
                 label: org.name,
@@ -432,7 +501,9 @@ const Details = () => {
             title="PARTNERED BY"
             label="Add Partners"
             placeholder="Add Partners"
-            data={CollaborativeData?.data?.collaboratives[0]?.partnerOrganizations}
+            data={
+              CollaborativeData?.data?.collaboratives[0]?.partnerOrganizations
+            }
             options={(Organizations?.data?.allOrganizations || [])?.map(
               (org: any) => ({
                 label: org.name,

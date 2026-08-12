@@ -106,7 +106,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
 
   useEffect(() => {
     setList(false);
-  }, []);
+  }, [setList]);
 
   const params = useParams<{
     entityType: string;
@@ -127,7 +127,6 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
 
   const {
     data: accessModelList,
-    isLoading: accessModelListLoading,
     refetch: accessModelListRefetch,
   }: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`accessModelList_${params.id}`],
@@ -143,7 +142,6 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   const {
     data: accessModelDetails,
     refetch: accessModelDetailsRefetch,
-    isLoading: accessModelDetailsLoading,
   }: { data: any; isLoading: boolean; refetch: any } = useQuery(
     [`accessModelDetails${params.id}`],
     () =>
@@ -168,7 +166,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     useState(accessModelData);
 
   const [selectedResources, setSelectedResources] = useState<string[]>([]);
-  const [showSelectAll, setShowSelectAll] = useState(false);
+  const [, setShowSelectAll] = useState(false);
 
   const [availableResources, setAvailableResources] = useState<
     { label: string; value: string; schema: [] }[]
@@ -234,7 +232,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
       }));
       setSelectedFields(selectedFieldsIds);
     }
-  }, [accessModelDetails, accessModelId]);
+  }, [accessModelDetails, accessModelId, accessModelDetailsRefetch, params.id]);
 
   const handleAddResource = (resourceDetails: any) => {
     setSelectedResources(resourceDetails);
@@ -371,7 +369,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-6">
         <Button
-          onClick={(e) => {
+          onClick={() => {
             setList(true);
             setAccessModelId('');
           }}
@@ -397,7 +395,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                   <Button
                     className=" h-fit w-fit"
                     size="medium"
-                    onClick={(e) => {
+                    onClick={() => {
                       setAccessModelData({
                         dataset: params.id,
                         name: '',

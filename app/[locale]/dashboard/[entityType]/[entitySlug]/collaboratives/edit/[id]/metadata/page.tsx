@@ -183,7 +183,7 @@ const Metadata = () => {
     }
   );
 
-  const { data: metadataFields, isLoading: isMetadataFieldsLoading } = useQuery(
+  const { data: metadataFields } = useQuery(
     [`metadata_fields_COLLABORATIVE_${params.id}`],
     () =>
       GraphQL(
