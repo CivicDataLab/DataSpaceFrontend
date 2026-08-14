@@ -151,7 +151,12 @@ export default function PublishPage() {
   const { setStatus } = useEditStatus();
 
   const { data, isLoading, refetch } = useQuery(
-    [`fetch_AIModelForPublish_${params.id}`],
+    [
+      `fetch_AIModelForPublish`,
+      params.id,
+      params.entityType,
+      params.entitySlug,
+    ],
     () =>
       GraphQL(
         FetchAIModelForPublish,
@@ -165,7 +170,8 @@ export default function PublishPage() {
         }
       ),
     {
-      refetchOnMount: true,
+      refetchOnMount: 'always',
+      refetchOnReconnect: 'always',
     }
   );
 

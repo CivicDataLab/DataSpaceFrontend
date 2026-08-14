@@ -1,7 +1,7 @@
 'use client';
 
 import { graphql } from '@/gql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   useParams,
   usePathname,
@@ -47,6 +47,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     entitySlug: string;
     id: string;
   }>();
+  const queryClient = useQueryClient();
 
   const layoutList = ['details', 'versions', 'publish'];
 
@@ -55,7 +56,12 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
   });
 
   const AIModelData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_AIModelData_${params.id}`],
+    [
+      `fetch_AIModelData`,
+      params.id,
+      params.entityType,
+      params.entitySlug,
+    ],
     () =>
       GraphQL(
         FetchAIModelName,
@@ -94,6 +100,22 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       onSuccess: () => {
         toast('AI Model updated successfully',{id: AIMODEL_TITLE_SUCCESS_TOAST_ID});
         AIModelData.refetch();
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_AIModelForPublish`,
+            params.id,
+            params.entityType,
+            params.entitySlug,
+          ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_AIModelDetails`,
+            params.id,
+            params.entityType,
+            params.entitySlug,
+          ],
+        });
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`,{id: AIMODEL_TITLE_ERROR_TOAST_ID});

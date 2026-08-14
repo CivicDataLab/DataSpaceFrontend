@@ -214,7 +214,12 @@ export default function AIModelDetailsPage() {
     refetch: any;
     error: any;
   } = useQuery(
-    [`fetch_AIModelDetails_${params.id}`],
+    [
+      `fetch_AIModelDetails`,
+      params.id,
+      params.entityType,
+      params.entitySlug,
+    ],
     () =>
       GraphQL(
         FetchAIModelDetails,
@@ -229,7 +234,7 @@ export default function AIModelDetailsPage() {
       ),
     {
       refetchOnMount: true,
-      keepPreviousData: false,
+      refetchOnReconnect: true,
     }
   );
 
@@ -258,7 +263,22 @@ export default function AIModelDetailsPage() {
           setIsTagsListUpdated(false);
         }
         AIModelData.refetch();
-        queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_AIModelForPublish`,
+            params.id,
+            params.entityType,
+            params.entitySlug,
+          ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_AIModelData`,
+            params.id,
+            params.entityType,
+            params.entitySlug,
+          ],
+        });
       },
       onError: (error: any) => {
         const errorMessage =
@@ -531,7 +551,7 @@ export default function AIModelDetailsPage() {
         }
         key={`sectors-${getSectorsList.data?.sectors?.length || 0}-${formData.sectors.length}`}
         label="Sectors"
-        selectedValue={formData.sectors}
+        selectedValue={formData.sectors || []}
         onChange={(value) => {
           handleInputChange('sectors', value);
           handleSave({ ...formData, sectors: value });
@@ -553,7 +573,7 @@ export default function AIModelDetailsPage() {
         key={`tags-${getTagsList.data?.tags?.length || 0}-${formData.tags.length}`}
         label="Tags"
         creatable
-        selectedValue={formData.tags}
+        selectedValue={formData.tags || []}
         requiredIndicator
         onChange={(value) => {
           setIsTagsListUpdated(true);
@@ -583,7 +603,7 @@ export default function AIModelDetailsPage() {
             list={languageOptions}
             label="Languages"
             key={`languages-${formData.supportedLanguages.length}`}
-            selectedValue={formData.supportedLanguages}
+            selectedValue={formData.supportedLanguages || []}
             onChange={(value) => {
               handleInputChange('supportedLanguages', value);
               handleSave({ ...formData, supportedLanguages: value });
@@ -619,7 +639,7 @@ export default function AIModelDetailsPage() {
             key={`geographies-${getGeographiesList.data?.geographies?.length || 0}-${formData.geographies.length}`}
             label="Locations / Geography"
             requiredIndicator
-            selectedValue={formData.geographies}
+            selectedValue={formData.geographies || []}
             onChange={(value) => {
               handleInputChange('geographies', value);
               handleSave({ ...formData, geographies: value });
