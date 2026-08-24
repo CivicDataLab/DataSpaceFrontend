@@ -86,7 +86,7 @@ const ResourceHeader = ({
                     kind={'tertiary'}
                     className="flex w-full justify-start"
                     disabled={resourceId === item.value}
-                    onClick={(e) => {
+                    onClick={() => {
                       handleResourceChange(item.value);
                       setIsSheetOpen(false);
                     }}

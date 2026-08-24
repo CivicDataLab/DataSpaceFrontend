@@ -181,7 +181,7 @@ const ChartsImage: React.FC<ImageProps> = ({
     }
   }, [chartImageDetails]);
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
+  const { isLoading: editMutationLoading } = useMutation(
     (data: { data: ResourceChartImageInputPartial }) =>
       GraphQL(UpdateChartImageMutation, {
         [params.entityType]: params.entitySlug,
@@ -206,21 +206,10 @@ const ChartsImage: React.FC<ImageProps> = ({
     }));
   }, []);
 
-  const onDrop = React.useCallback(
-    (_dropFiles: File[], acceptedFiles: File[]) => {
-      // mutate({
-      //   data: {
-      //     id: imageId,
-      //     image: acceptedFiles[0],
-      //   },
-      // });
-      {
-        refetch();
-        listrefetch();
-      }
-    },
-    []
-  );
+  const onDrop = React.useCallback(() => {
+      refetch();
+      listrefetch();
+  }, [listrefetch, refetch]);
 
   const handleSave = (updatedData: any) => {
     if (JSON.stringify(formData) !== JSON.stringify(previousFormData)) {
@@ -244,7 +233,7 @@ const ChartsImage: React.FC<ImageProps> = ({
         <div className="rounded-2 border-2 border-solid border-baseGraySlateSolid6 px-6 py-8">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-6">
             <Button
-              onClick={(e) => {
+              onClick={() => {
                 setType('list');
                 setImageId('');
               }}
@@ -268,7 +257,7 @@ const ChartsImage: React.FC<ImageProps> = ({
                     <Text variant="bodyLg">Select Charts</Text>
                     <div className="flex items-center gap-3">
                       <Button
-                        onClick={(e) =>
+                        onClick={() =>
                           resourceChartImageMutation.mutate({
                             dataset: params.id,
                           })

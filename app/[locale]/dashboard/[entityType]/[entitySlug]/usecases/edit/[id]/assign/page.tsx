@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchDatasets } from '@/fetch';
 import { graphql } from '@/gql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, DataTable, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
@@ -54,6 +54,7 @@ const Assign = () => {
       ? error.message.trim()
       : fallback;
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [data, setData] = useState<any[]>([]); // Ensure `data` is an array
   const [selectedRow, setSelectedRows] = useState<any[]>([]);
@@ -136,6 +137,14 @@ const Assign = () => {
           id: USECASE_ASSIGN_SUCCESS_TOAST_ID,
         });
         UseCaseDetails.refetch();
+        queryClient.invalidateQueries({
+          queryKey: [
+            `fetch_UsecaseDetails`,
+            params.id,
+            params.entityType,
+            params.entitySlug,
+          ],
+        });
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/dashboards`
         );

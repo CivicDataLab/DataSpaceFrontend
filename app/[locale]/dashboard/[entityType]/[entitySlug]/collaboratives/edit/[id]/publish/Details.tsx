@@ -9,11 +9,12 @@ import { RichTextRenderer } from '@/components/RichTextRenderer';
 const Details = ({ data }: { data: any }) => {
   const [platformTitle, setPlatformTitle] = useState<string | null>(null);
   const collaborative = data?.collaboratives?.[0];
+  const platformUrl = collaborative?.platformUrl;
 
   useEffect(() => {
     const fetchTitle = async () => {
       try {
-        const urlItem = data.collaboratives[0].platformUrl;
+        const urlItem = collaborative?.platformUrl;
 
         if (urlItem && urlItem.value) {
           const title = await getWebsiteTitle(urlItem.value);
@@ -24,12 +25,14 @@ const Details = ({ data }: { data: any }) => {
       }
     };
 
-    if (data.collaboratives[0].platformUrl === null) {
+    if (!collaborative) return;
+
+    if (platformUrl === null) {
       setPlatformTitle('N/A');
     } else {
       fetchTitle();
     }
-  }, [data?.collaboratives[0]?.platformUrl]);
+  }, [collaborative, platformUrl]);
 
   const PrimaryDetails = [
     { label: 'Collaborative Name', value: collaborative?.title },

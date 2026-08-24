@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -145,11 +145,25 @@ export default function VersionsPage() {
     id: string;
   }>();
   const queryClient = useQueryClient();
-
-  // Invalidate cache on mount to force fresh fetch
-  useEffect(() => {
-    queryClient.invalidateQueries([`fetch_model_versions_${params.id}`]);
-  }, [params.id, queryClient]);
+  const versionsQueryKey = [
+    `fetch_model_versions`,
+    params.id,
+    params.entityType,
+    params.entitySlug,
+  ];
+  const invalidateVersionQueries = () => {
+    queryClient.invalidateQueries({
+      queryKey: versionsQueryKey,
+    });
+    queryClient.invalidateQueries({
+      queryKey: [
+        `fetch_AIModelForPublish`,
+        params.id,
+        params.entityType,
+        params.entitySlug,
+      ],
+    });
+  };
 
   const [isNewVersionModalOpen, setIsNewVersionModalOpen] = useState(false);
   const [isProviderModalOpen, setIsProviderModalOpen] = useState(false);
@@ -201,15 +215,15 @@ export default function VersionsPage() {
   const VERSIONS_VALIDATION_TOAST_ID = 'aimodel-versions-validation-toast';
   // Fetch model versions - override default refetchOnMount: false
   const { data, isLoading, refetch } = useQuery(
-    [`fetch_model_versions_${params.id}`],
+    versionsQueryKey,
     () =>
       GraphQL(fetchModelVersions, { [params.entityType]: params.entitySlug }, {
         filters: { id: parseInt(params.id) },
       } as any),
     {
       enabled: !!params.id,
-      staleTime: 0,
       refetchOnMount: true,
+      refetchOnReconnect: true,
     }
   );
 
@@ -230,7 +244,7 @@ export default function VersionsPage() {
         toast('New version created successfully!',{id: VERSIONS_ACTION_TOAST_ID});
         setIsNewVersionModalOpen(false);
         resetVersionForm();
-        queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
+        invalidateVersionQueries();
 
         // Force refetch and update selected version
         const result = await refetch();
@@ -266,9 +280,7 @@ export default function VersionsPage() {
           toast('Provider added successfully!',{id: VERSIONS_ACTION_TOAST_ID});
           setIsProviderModalOpen(false);
           resetProviderForm();
-          queryClient.invalidateQueries([
-            `fetch_AIModelForPublish_${params.id}`,
-          ]);
+          invalidateVersionQueries();
 
           // Force refetch and update selected version with new provider
           const result = await refetch();
@@ -302,9 +314,7 @@ export default function VersionsPage() {
           setIsProviderModalOpen(false);
           setEditingProvider(null);
           resetProviderForm();
-          queryClient.invalidateQueries([
-            `fetch_AIModelForPublish_${params.id}`,
-          ]);
+          invalidateVersionQueries();
 
           // Force refetch and update selected version with updated provider
           const result = await refetch();
@@ -335,7 +345,7 @@ export default function VersionsPage() {
     {
       onSuccess: async () => {
         toast('Provider deleted successfully!',{id: VERSIONS_ACTION_TOAST_ID});
-        queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
+        invalidateVersionQueries();
 
         // Force refetch and update selected version after provider deletion
         const result = await refetch();
@@ -617,7 +627,7 @@ export default function VersionsPage() {
       onSuccess: () => {
         toast('Version updated successfully!',{id: VERSIONS_ACTION_TOAST_ID});
         refetch();
-        queryClient.invalidateQueries([`fetch_AIModelForPublish_${params.id}`]);
+        invalidateVersionQueries();
       },
       onError: (error: any) => {
         toast(`Error: ${error.message}`,{id: VERSIONS_ACTION_TOAST_ID});

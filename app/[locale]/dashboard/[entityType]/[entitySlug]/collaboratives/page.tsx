@@ -100,7 +100,7 @@ export default function CollaborativePage() {
     if (isValidParams) {
       AllCollaboratives.refetch();
     }
-  }, [navigationTab, isValidParams]);
+  }, [navigationTab, isValidParams, AllCollaboratives, setNavigationTab]);
 
   const COLLAB_LIST_TOAST_ID = 'collaboratives-list-toast';
 

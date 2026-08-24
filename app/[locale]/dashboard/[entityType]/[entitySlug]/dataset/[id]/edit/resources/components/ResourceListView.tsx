@@ -57,7 +57,7 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
 
   useEffect(() => {
     refetch();
-  }, [resourceId]);
+  }, [resourceId, refetch]);
 
   const updateResourceMutation = useMutation(
     (data: { resourceId: string }) =>
@@ -239,7 +239,7 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
       });
       setFile((files) => [...files, ...acceptedFiles]);
     },
-    []
+    [createResourceMutation, params.id]
   );
 
   const uploadedFile = file.length > 0 && (

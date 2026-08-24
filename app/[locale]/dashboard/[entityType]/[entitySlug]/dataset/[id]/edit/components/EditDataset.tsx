@@ -1,5 +1,4 @@
 import React from 'react';
-import { PatchDataset } from '@/types';
 
 import { CreateDataset } from '../../../new/components/new-dataset';
 
@@ -9,7 +8,6 @@ export function EditDataset({
   mutate,
   isLoading,
 }: {
-  // defaultVal: PatchDataset;
   defaultVal: any;
   submitRef: React.RefObject<HTMLButtonElement>;
   mutate: any;

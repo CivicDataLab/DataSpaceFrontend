@@ -28,7 +28,7 @@ const TitleBar = ({
 
   useEffect(() => {
     setStatus(loading ? 'loading' : 'success');
-  }, [loading]);
+  }, [loading, setStatus]);
 
   return (
     <div className="flex flex-wrap justify-between gap-4 lg:flex-nowrap">

@@ -2,13 +2,13 @@
 
 import { ComponentType, useState } from 'react';
 import Image from 'next/image';
+import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import { graphql } from '@/gql';
 import { TypeCollaborative } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Card, Icon, SearchInput, Select, Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
-import { getCollaborativeDetailUrl } from '@/lib/collaborativesRouting';
 import { cn, formatDate, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
@@ -86,6 +86,8 @@ const PublishedCollaboratives = graphql(`
 const CollaborativesListingClient = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('title_asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9);
 
   const {
     data: collaborativesData,
@@ -141,6 +143,17 @@ const CollaborativesListingClient = () => {
       }
       return 0;
     });
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredAndSortedCollaboratives.length / pageSize)
+  );
+  const safePage = Math.min(currentPage, totalPages);
+  const start = (safePage - 1) * pageSize;
+  const paginatedCollaboratives = filteredAndSortedCollaboratives.slice(
+    start,
+    start + pageSize
+  );
 
   const jsonLd = generateJsonLd({
     '@context': 'https://schema.org',
@@ -225,9 +238,11 @@ const CollaborativesListingClient = () => {
                 className={cn('w-full', Styles.Search)}
                 onSubmit={(e) => {
                   setSearchTerm(e);
+                  setCurrentPage(1);
                 }}
                 onClear={() => {
                   setSearchTerm('');
+                  setCurrentPage(1);
                 }}
                 name={'Start typing to search for any collaborative'}
               />
@@ -271,6 +286,7 @@ const CollaborativesListingClient = () => {
                   ]}
                   onChange={(e: any) => {
                     setSortBy(e);
+                    setCurrentPage(1);
                   }}
                 />
               </div>
@@ -297,8 +313,18 @@ const CollaborativesListingClient = () => {
             <>
               {/* Collaboratives Grid */}
               {filteredAndSortedCollaboratives.length > 0 ? (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredAndSortedCollaboratives.map(
+                <GraphqlPagination
+                  totalRows={filteredAndSortedCollaboratives.length}
+                  pageSize={pageSize}
+                  currentPage={safePage}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={(newSize) => {
+                    setPageSize(newSize);
+                    setCurrentPage(1);
+                  }}
+                  view="collapsed"
+                >
+                  {paginatedCollaboratives.map(
                     (collaborative: TypeCollaborative) => (
                       <Card
                         key={collaborative.id}
@@ -362,7 +388,7 @@ const CollaborativesListingClient = () => {
                       />
                     )
                   )}
-                </div>
+                </GraphqlPagination>
               ) : (
                 <div className="flex flex-col items-center justify-center gap-4 py-20">
                   <Icon source={Icons.search} size={48} color="subdued" />
@@ -376,6 +402,7 @@ const CollaborativesListingClient = () => {
                     <Button
                       onClick={() => {
                         setSearchTerm('');
+                        setCurrentPage(1);
                       }}
                       kind="secondary"
                     >
