@@ -85,7 +85,7 @@ export const Page = () => {
         isLoading={isLoading}
       />
 
-      <Content />
+      <Content onAddNew={() => mutate()} />
     </>
   );
 };
