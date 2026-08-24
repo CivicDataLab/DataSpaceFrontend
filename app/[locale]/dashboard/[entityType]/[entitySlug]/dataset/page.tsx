@@ -299,7 +299,7 @@ export default function DatasetPage() {
         ) : AllDatasetsQuery.isLoading ? (
           <Loading />
         ) : (
-          <Content />
+          <Content onAddNew={() => setIsTypeModalOpen(true)} />
         )}
 
         {/* <Page /> */}
