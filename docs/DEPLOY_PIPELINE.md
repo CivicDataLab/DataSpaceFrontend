@@ -190,7 +190,34 @@ do.
 
 ---
 
-## 5. Verifying nothing leaked in the meantime
+## 5. Gotcha: stale shell `cwd` after enough deploys
+
+If you `cd` into `~/DataExchange/DataExFrontend` (or anywhere under it) in
+an interactive SSH session and leave that shell open, commands in it can
+start failing with something like:
+
+```
+Error: ENOENT: no such file or directory, uv_cwd
+```
+
+This isn't an app problem — `DataExFrontend` is a symlink, and the deploy
+workflow prunes old release directories (keeps the 5 most recent + the
+rollback target, see §2.5). If enough deploys happen while your shell is
+sitting inside a specific release directory, that directory can get
+deleted out from under it, so the shell's `cwd` handle goes invalid — any
+command that calls `getcwd()` internally (not just `pm2`, plain `node`
+does this too) throws that `ENOENT`.
+
+**Fix:** `cd ~` (or `cd` back into `DataExFrontend`) to land in a
+directory that still exists, then retry. The live app itself is
+unaffected — PM2 re-resolves the symlink fresh on every `pm2 restart`,
+which happens on every deploy, so the running process's `cwd` always
+matches whatever's currently live. This only bites long-lived *interactive*
+shells.
+
+---
+
+## 6. Verifying nothing leaked in the meantime
 
 Every run during this debugging pulled full logs and grepped for exposed
 secrets, private key material, and `.env`/`.env.local` dumps — none found.
