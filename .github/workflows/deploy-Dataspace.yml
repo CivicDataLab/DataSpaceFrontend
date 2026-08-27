@@ -119,8 +119,8 @@ jobs:
             tar xzf "$BASE/incoming/$RELEASE/release.tar.gz" -C "$RELEASE_DIR"
             rm -rf "$BASE/incoming/$RELEASE"
 
-            # Runtime secrets live only in shared/.env, never shipped by CI.
-            ln -sfn "$BASE/shared/.env" "$RELEASE_DIR/.env"
+            # Runtime secrets live only in shared/.env.local (NOT the docker-compose .env one level up), never shipped by CI.
+            ln -sfn "$BASE/shared/.env.local" "$RELEASE_DIR/.env.local"
 
             cd "$RELEASE_DIR"
             "$NPM" ci --omit=dev
