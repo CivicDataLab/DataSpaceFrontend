@@ -17,6 +17,12 @@
 
 set -euo pipefail
 
+# pm2 is a script with a `#!/usr/bin/env node` shebang, so invoking it by
+# absolute path below is not enough on its own - env still re-resolves
+# `node` via PATH. Meant to run interactively where nvm usually handles
+# this, but exporting it explicitly here removes that assumption.
+export PATH="/home/ubuntu/.nvm/versions/node/v24.13.0/bin:$PATH"
+
 BASE="/home/ubuntu/DataExchange"
 APP_DIR="$BASE/DataExFrontend"
 RELEASES_DIR="$BASE/releases"

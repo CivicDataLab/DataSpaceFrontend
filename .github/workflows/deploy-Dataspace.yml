@@ -114,6 +114,13 @@ jobs:
             RELEASE=${{ steps.meta.outputs.release }}
             RELEASE_DIR="$BASE/releases/$RELEASE"
             NODE_BIN=/home/ubuntu/.nvm/versions/node/v24.13.0/bin
+            # npm/pm2 are scripts with a `#!/usr/bin/env node` shebang, so
+            # invoking them by absolute path is not enough - env still
+            # re-resolves `node` via PATH, which appleboy/ssh-action's
+            # non-interactive shell leaves pointed at the ancient system
+            # node (v10) since it never sources nvm. Put NODE_BIN on PATH
+            # first so that shebang resolution finds the right node too.
+            export PATH="$NODE_BIN:$PATH"
             PM2="$NODE_BIN/pm2"
             NPM="$NODE_BIN/npm"
             NODE="$NODE_BIN/node"
@@ -215,7 +222,11 @@ jobs:
           script: |
             set -euo pipefail
             BASE=/home/ubuntu/DataExchange
-            PM2=/home/ubuntu/.nvm/versions/node/v24.13.0/bin/pm2
+            NODE_BIN=/home/ubuntu/.nvm/versions/node/v24.13.0/bin
+            # See the comment in build-and-deploy's activation step: pm2's
+            # shebang re-resolves node via PATH, so NODE_BIN must be on it.
+            export PATH="$NODE_BIN:$PATH"
+            PM2="$NODE_BIN/pm2"
             TARGET=$(cat "$BASE/releases/.rollback_target")
             echo "Smoke tests failed. Reverting DataExFrontend -> releases/$TARGET"
             ln -sfn "$BASE/releases/$TARGET" "$BASE/DataExFrontend"
