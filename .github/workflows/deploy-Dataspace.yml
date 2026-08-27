@@ -171,8 +171,13 @@ jobs:
             echo "Release $RELEASE is live and passed the boot health check."
 
             # Keep the 5 most recent releases plus whatever the rollback target is.
+            # `grep -v` exits 1 when there's nothing to prune (fewer than 6
+            # releases so far) - under `set -o pipefail` that would otherwise
+            # kill the script right after the success message above and report
+            # this whole deploy as failed despite it actually having succeeded
+            # (found via a live deploy: app was healthy, CI still said failure).
             cd "$BASE/releases"
-            ls -1dt */ 2>/dev/null | tail -n +6 | grep -v "^${PREVIOUS}/$" | xargs -r rm -rf
+            ls -1dt */ 2>/dev/null | tail -n +6 | grep -v "^${PREVIOUS}/$" | xargs -r rm -rf || true
 
       # Production has no smoke-test job today, so its only quality gate is the
       # boot health check above. Mark this release good immediately so a FUTURE
