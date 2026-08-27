@@ -85,8 +85,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      # next.config.mjs runs again on every `next start` boot (not just at
+      # build time) and does `jiti('./env')` synchronously - env.ts has to
+      # exist on disk in the release dir or the server crash-loops with
+      # "Cannot find module './env'" (found via a live failed deploy).
       - name: Package release artifact
-        run: tar czf release.tar.gz .next public package.json package-lock.json next.config.mjs
+        run: tar czf release.tar.gz .next public package.json package-lock.json next.config.mjs env.ts
 
       - name: Send release artifact to EC2
         uses: appleboy/scp-action@v0.1.7
