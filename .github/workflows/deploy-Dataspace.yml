@@ -6,10 +6,18 @@ on:
       - dev
       - main
 
+# Prevent two deploys to the same environment from racing each other and
+# corrupting the releases/ directory or the .last_good / .rollback_target markers.
+concurrency:
+  group: deploy-dataspace-${{ github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
+    outputs:
+      release: ${{ steps.meta.outputs.release }}
     env:
       KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
       KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
@@ -39,14 +47,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Compute release name
+        id: meta
+        run: echo "release=$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
+      # npm ci, not npm install: installs exactly what package-lock.json pins.
+      # npm install can silently resolve a different version than the lockfile
+      # (this is how a canary/newer `next` ended up in a previous build).
+      - name: Install dependencies (from lockfile only)
+        run: npm ci --legacy-peer-deps
+
+      - name: Guard - installed Next.js must match package.json
+        run: |
+          DECLARED=$(node -p "require('./package.json').dependencies.next")
+          INSTALLED=$(node -p "require('./node_modules/next/package.json').version")
+          echo "declared next: $DECLARED / installed next: $INSTALLED"
+          if [ "$DECLARED" != "$INSTALLED" ]; then
+            echo "::error::Installed next ($INSTALLED) does not match package.json ($DECLARED). Aborting before build."
+            exit 1
+          fi
 
       - name: Generate
         run: npm run generate:ci
@@ -60,41 +85,98 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Rename .next to .next2
-        run: mv .next .next2
+      - name: Package release artifact
+        run: tar czf release.tar.gz .next public package.json package-lock.json next.config.mjs
 
-      - name: Rename public to public2
-        run: mv public public2
-
-      - name: Send .next2 to EC2
+      - name: Send release artifact to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ vars.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          source: .next2
-          target: DataExchange/DataExFrontend
+          source: release.tar.gz
+          target: DataExchange/incoming/${{ steps.meta.outputs.release }}
 
-      - name: Send public2 to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ vars.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          source: public2
-          target: DataExchange/DataExFrontend
-
-      - name: Update with new Build
+      # Extract into a brand-new releases/<release>/ directory, install deps
+      # THERE (never touching the currently-live release), verify, and only
+      # then flip the DataExFrontend symlink. If anything up to and including
+      # the health check fails, the previous release is still on disk untouched
+      # and this step rolls the symlink back itself before exiting non-zero.
+      - name: Extract, install, verify, and activate release on EC2
         uses: appleboy/ssh-action@v1.0.3
-        continue-on-error: false
         with:
           host: ${{ vars.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          script: rm -rf DataExchange/DataExFrontend/.next; rm -rf DataExchange/DataExFrontend/public; mv DataExchange/DataExFrontend/.next2 DataExchange/DataExFrontend/.next; mv DataExchange/DataExFrontend/public2 DataExchange/DataExFrontend/public; /home/ubuntu/.nvm/versions/node/v20.11.1/bin/pm2 restart dataspace
+          script: |
+            set -euo pipefail
+            BASE=/home/ubuntu/DataExchange
+            RELEASE=${{ steps.meta.outputs.release }}
+            RELEASE_DIR="$BASE/releases/$RELEASE"
+            NODE_BIN=/home/ubuntu/.nvm/versions/node/v24.13.0/bin
+            PM2="$NODE_BIN/pm2"
+            NPM="$NODE_BIN/npm"
+            NODE="$NODE_BIN/node"
+
+            mkdir -p "$RELEASE_DIR" "$BASE/releases" "$BASE/shared"
+            tar xzf "$BASE/incoming/$RELEASE/release.tar.gz" -C "$RELEASE_DIR"
+            rm -rf "$BASE/incoming/$RELEASE"
+
+            # Runtime secrets live only in shared/.env.local (NOT the docker-compose .env one level up), never shipped by CI.
+            ln -sfn "$BASE/shared/.env.local" "$RELEASE_DIR/.env.local"
+
+            cd "$RELEASE_DIR"
+            "$NPM" ci --omit=dev
+
+            INSTALLED=$("$NODE" -p "require('./node_modules/next/package.json').version")
+            DECLARED=$("$NODE" -p "require('./package.json').dependencies.next")
+            if [ "$INSTALLED" != "$DECLARED" ]; then
+              echo "Next version mismatch on server ($INSTALLED vs $DECLARED). Not activating." >&2
+              exit 1
+            fi
+
+            if [ -f "$BASE/releases/.last_good" ]; then
+              PREVIOUS=$(cat "$BASE/releases/.last_good")
+            else
+              PREVIOUS=$(basename "$(readlink -f "$BASE/DataExFrontend")")
+            fi
+            echo "$PREVIOUS" > "$BASE/releases/.rollback_target"
+
+            ln -sfn "$RELEASE_DIR" "$BASE/DataExFrontend"
+            "$PM2" restart dataspace
+
+            ATTEMPTS=0
+            until curl -f -s -o /dev/null http://127.0.0.1:3000; do
+              ATTEMPTS=$((ATTEMPTS+1))
+              if [ "$ATTEMPTS" -ge 10 ]; then
+                echo "Health check failed after $ATTEMPTS attempts. Rolling back to $PREVIOUS." >&2
+                ln -sfn "$BASE/releases/$PREVIOUS" "$BASE/DataExFrontend"
+                "$PM2" restart dataspace
+                exit 1
+              fi
+              sleep 3
+            done
+
+            echo "Release $RELEASE is live and passed the boot health check."
+
+            # Keep the 5 most recent releases plus whatever the rollback target is.
+            cd "$BASE/releases"
+            ls -1dt */ 2>/dev/null | tail -n +6 | grep -v "^${PREVIOUS}/$" | xargs -r rm -rf
+
+      # Production has no smoke-test job today, so its only quality gate is the
+      # boot health check above. Mark this release good immediately so a FUTURE
+      # deploy knows what to roll back to if it fails.
+      - name: Mark release as last-known-good (prod only)
+        if: github.ref_name == 'main'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: echo "${{ steps.meta.outputs.release }}" > /home/ubuntu/DataExchange/releases/.last_good
 
   smoke-tests:
-    needs: deploy
+    needs: build-and-deploy
     if: github.ref_name == 'dev'
     uses: CivicDataLab/CivicDataSpace-test/.github/workflows/run-smoke.yml@CI
     secrets:
@@ -103,3 +185,40 @@ jobs:
       TEST_PASSWORD_1: ${{ secrets.TEST_PASSWORD_1 }}
       TEST_EMAIL_2: ${{ secrets.TEST_EMAIL_2 }}
       TEST_PASSWORD_2: ${{ secrets.TEST_PASSWORD_2 }}
+
+  # dev only: smoke tests are the real quality gate here. Only once they pass
+  # does this release become the thing a future rollback would target.
+  promote-dev:
+    needs: [build-and-deploy, smoke-tests]
+    if: github.ref_name == 'dev' && needs.smoke-tests.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark this release as last-known-good
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: echo "${{ needs.build-and-deploy.outputs.release }}" > /home/ubuntu/DataExchange/releases/.last_good
+
+  rollback-dev:
+    needs: [build-and-deploy, smoke-tests]
+    if: github.ref_name == 'dev' && needs.smoke-tests.result == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Revert to last known-good release
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ vars.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+            BASE=/home/ubuntu/DataExchange
+            PM2=/home/ubuntu/.nvm/versions/node/v24.13.0/bin/pm2
+            TARGET=$(cat "$BASE/releases/.rollback_target")
+            echo "Smoke tests failed. Reverting DataExFrontend -> releases/$TARGET"
+            ln -sfn "$BASE/releases/$TARGET" "$BASE/DataExFrontend"
+            "$PM2" restart dataspace
+            sleep 3
+            curl -f http://127.0.0.1:3000 -o /dev/null -s -w "post-rollback HTTP %{http_code}\n"
