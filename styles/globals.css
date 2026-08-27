@@ -1,5 +1,32 @@
 @import url('opub-ui/dist/assets/styles.css');
 @import url('./tokens/_variables.css');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Meetei+Mayek:wght@100..900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Bhashini v3 paints the language icon/button white; the navbar is primary blue. */
+.bhashini-plugin-container .bhashini-dropdown-btn {
+  color: #fff;
+}
+
+/* Plugin CSS loads later and uses z-index 1000; keep the menu above app chrome.
+   The widget sits on the far-right of the nav, so pin the popup to the icon's
+   right edge — the plugin's mobile `right: -100%` pushes it off-screen. */
+header:has(.bhashini-plugin-container) {
+  z-index: 99999;
+}
+
+.bhashini-plugin-container .bhashini-dropdown {
+  z-index: 99999 !important;
+}
+
+.bhashini-plugin-container .bhashini-dropdown-content {
+  left: auto !important;
+  right: 0 !important;
+  z-index: 100000 !important;
+}
+
+.bhashini-feedback-modal {
+  z-index: 100001 !important;
+}

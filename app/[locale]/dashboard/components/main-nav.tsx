@@ -20,6 +20,7 @@ import {
 
 import { useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
+import BhashiniTranslation from '@/components/BhashiniTranslation';
 import { Icons } from '@/components/icons';
 import { UserDetailsQryDoc } from '../[entityType]/[entitySlug]/schema';
 import { allOrganizationsListingDoc } from '../[entityType]/schema';
@@ -291,6 +292,7 @@ export function MainNav({ hideSearch = false }) {
               )}
             </div>
           )}
+          <BhashiniTranslation />
         </div>
       </div>
     </nav>

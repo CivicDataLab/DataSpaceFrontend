@@ -28,21 +28,18 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
     isLoading: boolean;
     error: any;
     refetch: any;
-  } = useQuery([`entity_details_${params.entityType}`], () =>
-    GraphQL(
-      params.entityType === 'organization' && getOrgDetailsQryDoc,
-      {
-        [params.entityType]: params.entitySlug,
-      },
-      { slug: params.entitySlug }
-    )
+  } = useQuery(
+    [`entity_details_${params.entityType}`, params.entitySlug],
+    () =>
+      GraphQL(
+        getOrgDetailsQryDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        { slug: params.entitySlug }
+      ),
+    { enabled: params.entityType === 'organization' }
   );
-
-
-  useEffect(() => {
-    EntityDetailsQryRes.refetch();
-  }, [EntityDetailsQryRes]);
-
 
   useEffect(() => {
     if (EntityDetailsQryRes.data) {
