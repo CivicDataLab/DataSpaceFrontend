@@ -269,7 +269,7 @@ export const EditResource = ({
         data
       ),
     {
-      onSuccess: (data, variables) => {
+      onSuccess: () => {
         toast('File changes saved', {
           action: {
             label: 'Dismiss',
@@ -458,7 +458,7 @@ export const EditResource = ({
 
   useEffect(() => {
     resourceDetailsQuery.refetch();
-  }, []);
+  }, [resourceDetailsQuery]);
 
   React.useEffect(() => {
     const ResourceData = resourceDetailsQuery.data?.resourceById;
@@ -508,7 +508,7 @@ export const EditResource = ({
       setFile((files) => [...files, ...acceptedFiles]);
       setIsSheetOpen(false);
     },
-    []
+    [createResourceMutation, params.id]
   );
 
   const uploadedFile = file.length > 0 && (
@@ -538,7 +538,7 @@ export const EditResource = ({
         }
       );
     },
-    [resourceId]
+    [resourceId, updateResourceMutation, resourceDetailsQuery]
   );
 
   const fileInput = (
@@ -554,24 +554,6 @@ export const EditResource = ({
 
   const listViewFunction = () => {
     setResourceId('');
-  };
-
-  const handlePreviewDetailsChange = (
-    field: string,
-    value: string | boolean
-  ) => {
-    if (field === 'isAllEntries' && value) {
-      setPreviewDetails({
-        startEntry: 0,
-        endEntry: 0,
-        isAllEntries: false,
-      });
-    } else {
-      setPreviewDetails((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-    }
   };
 
   const saveResource = () => {

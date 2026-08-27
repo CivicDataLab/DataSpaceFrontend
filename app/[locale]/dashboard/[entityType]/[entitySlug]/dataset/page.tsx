@@ -109,7 +109,7 @@ export default function DatasetPage() {
     if (isValidParams) {
       AllDatasetsQuery.refetch();
     }
-  }, [navigationTab, isValidParams]);
+  }, [navigationTab, isValidParams, AllDatasetsQuery, setNavigationTab]);
 
   const DeleteDatasetMutation: {
     mutate: any;
@@ -299,7 +299,7 @@ export default function DatasetPage() {
         ) : AllDatasetsQuery.isLoading ? (
           <Loading />
         ) : (
-          <Content />
+          <Content onAddNew={() => setIsTypeModalOpen(true)} />
         )}
 
         {/* <Page /> */}

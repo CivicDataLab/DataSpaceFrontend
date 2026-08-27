@@ -1,6 +1,6 @@
 #Creates a layer from node:alpine image.
 # FROM chub.cloud.gov.in/mit6c0-ogd/node-16:nic_server
-FROM node:alpine
+FROM node:24-alpine
 
 
 # RUN echo 'deb http://deb.debian.org/debian stretch main' >> apk update \

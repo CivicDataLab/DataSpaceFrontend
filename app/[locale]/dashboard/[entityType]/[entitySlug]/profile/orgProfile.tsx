@@ -61,7 +61,7 @@ const OrgProfile = () => {
         location: entityDetails?.organizations[0].location,
       });
     }
-  }, [entityDetails?.organizations]);
+  }, [entityDetails]);
 
   const initialFormData = {
     name: '',

@@ -41,3 +41,5 @@ next-env.d.ts
 /gql/generated/gql.ts
 /gql/generated/graphql.ts
 /gql/generated/
+# next-agents-md
+.next-docs/

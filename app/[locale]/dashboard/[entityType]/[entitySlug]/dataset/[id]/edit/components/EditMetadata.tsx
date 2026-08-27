@@ -666,24 +666,26 @@ export function EditMetadata({ id }: { id: string }) {
     updateMetadataMutation.mutate({ UpdateMetadataInput: updateInput });
   };
 
-  const handleSaveAsync = async (updatedData: any) => {
-    const updateInput = getUpdateInput(updatedData);
-    if (!updateInput) return;
-
-    await updateMetadataMutation.mutateAsync({
-      UpdateMetadataInput: updateInput,
-    });
-  };
-
   const { setStatus, registerBeforeNavigateHandler } = useDatasetEditStatus();
 
   useEffect(() => {
+    const handleSaveAsync = async (updatedData: any) => {
+      const updateInput = getUpdateInput(updatedData);
+      if (!updateInput) return;
+
+      await updateMetadataMutation.mutateAsync({
+        UpdateMetadataInput: updateInput,
+      });
+    };
+
     registerBeforeNavigateHandler(() => handleSaveAsync(formDataRef.current));
 
     return () => {
       registerBeforeNavigateHandler(null);
     };
-  }, [previousFormData, registerBeforeNavigateHandler]);
+    // getUpdateInput reads previousFormData; formDataRef is read at handler invocation time
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registerBeforeNavigateHandler, updateMetadataMutation]);
 
   function renderInputField(metadataFormItem: any) {
     if (metadataFormItem.dataType === 'STRING') {
@@ -810,7 +812,7 @@ export function EditMetadata({ id }: { id: string }) {
 
   useEffect(() => {
     setStatus(updateMetadataMutation.isLoading ? 'loading' : 'success'); // update based on mutation state
-  }, [updateMetadataMutation.isLoading]);
+  }, [updateMetadataMutation.isLoading, setStatus]);
 
   return (
     <>
@@ -1075,7 +1077,7 @@ export function EditMetadata({ id }: { id: string }) {
                   <Checkbox
                     name="accessType"
                     checked={formData?.isPublic}
-                    onChange={(e) => handleChange('accessType', 'PUBLIC')}
+                    onChange={() => handleChange('accessType', 'PUBLIC')}
                   >
                     <div className="flex flex-col gap-1">
                       <Text>Open Access</Text>

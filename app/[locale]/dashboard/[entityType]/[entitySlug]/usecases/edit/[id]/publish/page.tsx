@@ -128,7 +128,7 @@ const Publish = () => {
     id: string;
   }>();
   const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
-    [`fetch_UsecaseDetails`],
+    [`fetch_UsecaseDetails`, params.id, params.entityType, params.entitySlug],
     () =>
       GraphQL(
         UseCaseDetails,
@@ -142,8 +142,8 @@ const Publish = () => {
         }
       ),
     {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
+      refetchOnMount: 'always',
+      refetchOnReconnect: 'always',
     }
   );
   const router = useRouter();

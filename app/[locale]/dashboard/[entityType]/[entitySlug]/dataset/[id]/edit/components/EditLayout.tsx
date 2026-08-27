@@ -70,7 +70,7 @@ export function EditLayout({ children, params }: LayoutProps) {
     id: string;
   }>();
 
-  const [editMode, setEditMode] = useState(false);
+  const [, setEditMode] = useState(false);
 
   const getDatasetTitleRes: { data: any; isLoading: boolean; refetch: any } =
     useQuery([`dataset_title_${routerParams.id}`], () =>
@@ -97,7 +97,7 @@ export function EditLayout({ children, params }: LayoutProps) {
         data
       ),
     {
-      onSuccess: (data: any) => {
+      onSuccess: () => {
         // queryClient.invalidateQueries({
         //   queryKey: [`create_dataset_${'52'}`],
         // });

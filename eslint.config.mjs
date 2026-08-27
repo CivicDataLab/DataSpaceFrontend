@@ -1,43 +1,27 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { FlatCompat } from '@eslint/eslintrc';
-import js from '@eslint/js';
-import tsParser from '@typescript-eslint/parser';
+import { defineConfig, globalIgnores } from 'eslint/config';
+import nextVitals from 'eslint-config-next/core-web-vitals';
+import nextTs from 'eslint-config-next/typescript';
+import prettier from 'eslint-config-prettier';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
-
-const config = [
-  {
-    ignores: [
-      '**/generated/**/*.ts',
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/.next/**',
-      '**/next-env.d.ts',
-      '**/*.config.js',
-      '**/config/**/*.js',
-      '**/lib/style-dictionary/**/*.js',
-      '**/lib/eCharts.ts',
-    ],
-  },
-  ...compat.extends('next/core-web-vitals'),
-  ...compat.extends('plugin:@typescript-eslint/recommended'),
-  ...compat.extends('prettier'),
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  prettier,
+  globalIgnores([
+    '**/generated/**/*.ts',
+    '**/node_modules/**',
+    '**/dist/**',
+    '**/.next/**',
+    '**/out/**',
+    '**/build/**',
+    '**/next-env.d.ts',
+    '**/*.config.js',
+    '**/config/**/*.js',
+    '**/lib/style-dictionary/**/*.js',
+    '**/lib/eCharts.ts',
+  ]),
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
-    languageOptions: {
-      parser: tsParser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-      },
-    },
     rules: {
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': ['warn'],
@@ -51,8 +35,15 @@ const config = [
       '@typescript-eslint/triple-slash-reference': 'off',
       '@typescript-eslint/no-empty-object-type': 'warn',
       'import/no-anonymous-default-export': 'warn',
+      // eslint-plugin-react-hooks v7 (via eslint-config-next 16) adds these.
+      // Keep prior lint behavior rather than rewriting existing effects.
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/immutability': 'off',
+      'react-hooks/use-memo': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
     },
   },
-];
+]);
 
-export default config;
+export default eslintConfig;

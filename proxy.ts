@@ -117,7 +117,7 @@ const getCollaborativeSlugFromHostname = (hostname: string) => {
   return slug;
 };
 
-export default function middleware(req: NextRequest) {
+export default function proxy(req: NextRequest) {
   const hostname = getHostname(req.headers.get('host'));
   const localeRootRegex = RegExp(`^/(${locales.all.join('|')})/?$`, 'i');
   const localeRootMatch = req.nextUrl.pathname.match(localeRootRegex);

@@ -79,6 +79,9 @@ jobs:
           BACKEND_GRAPHQL_URL: ${{ vars.BACKEND_GRAPHQL_URL }}
           NODE_ENV: production
 
+      - name: Lint
+        run: npm run lint
+
       - name: Build
         run: npm run build
 
@@ -177,10 +180,10 @@ jobs:
     if: github.ref_name == 'dev'
     uses: CivicDataLab/CivicDataSpace-test/.github/workflows/run-smoke.yml@CI
     secrets:
-      HOME_URL_DEV:    ${{ secrets.HOME_URL_DEV }}
-      TEST_EMAIL_1:    ${{ secrets.TEST_EMAIL_1 }}
+      HOME_URL_DEV: ${{ secrets.HOME_URL_DEV }}
+      TEST_EMAIL_1: ${{ secrets.TEST_EMAIL_1 }}
       TEST_PASSWORD_1: ${{ secrets.TEST_PASSWORD_1 }}
-      TEST_EMAIL_2:    ${{ secrets.TEST_EMAIL_2 }}
+      TEST_EMAIL_2: ${{ secrets.TEST_EMAIL_2 }}
       TEST_PASSWORD_2: ${{ secrets.TEST_PASSWORD_2 }}
 
   # dev only: smoke tests are the real quality gate here. Only once they pass

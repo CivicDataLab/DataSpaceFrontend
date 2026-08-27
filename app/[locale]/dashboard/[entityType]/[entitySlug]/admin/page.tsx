@@ -176,7 +176,7 @@ const Admin = () => {
   useEffect(() => {
     usersList.refetch();
     setRefetch(false);
-  }, [refetch]);
+  }, [refetch, usersList]);
 
   return (
     <div>
