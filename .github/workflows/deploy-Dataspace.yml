@@ -208,6 +208,12 @@ jobs:
     needs: [build-and-deploy, smoke-tests]
     if: github.ref_name == 'dev' && needs.smoke-tests.result == 'success'
     runs-on: ubuntu-latest
+    # vars.EC2_HOST is an environment-scoped variable (Settings -> Environments
+    # -> development), only visible to jobs that declare `environment:`.
+    # Without this, appleboy/ssh-action fails with "missing server host"
+    # (found via a live run - build-and-deploy/smoke-tests both succeeded but
+    # this job still failed, which is why `if:` here is already gated to dev).
+    environment: development
     steps:
       - name: Mark this release as last-known-good
         uses: appleboy/ssh-action@v1.0.3
@@ -221,6 +227,9 @@ jobs:
     needs: [build-and-deploy, smoke-tests]
     if: github.ref_name == 'dev' && needs.smoke-tests.result == 'failure'
     runs-on: ubuntu-latest
+    # Same environment-scoped vars.EC2_HOST issue as promote-dev - see the
+    # comment there.
+    environment: development
     steps:
       - name: Revert to last known-good release
         uses: appleboy/ssh-action@v1.0.3
