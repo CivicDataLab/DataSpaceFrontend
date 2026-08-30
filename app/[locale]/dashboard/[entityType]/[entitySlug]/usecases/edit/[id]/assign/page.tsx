@@ -10,6 +10,7 @@ import { Button, DataTable, Text, toast } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Loading } from '@/components/loading';
+import { PublicationLinkPicker } from '@/components/publications/PublicationLinkPicker';
 
 const FetchUseCaseDetails: any = graphql(`
   query UseCaseDetails($filters: UseCaseFilter) {
@@ -187,6 +188,7 @@ const Assign = () => {
               setSelectedRows(Array.isArray(selected) ? selected : []); // Ensure selected is always an array
             }}
           />
+          <PublicationLinkPicker entityKind="usecase" />
         </>
       ) : (
         <Loading />

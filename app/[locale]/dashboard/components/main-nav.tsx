@@ -105,6 +105,10 @@ export function MainNav({ hideSearch = false }) {
       title: 'Prompts',
       href: '/datasets?dataset_type=PROMPT',
     },
+    {
+      title: 'Resources',
+      href: '/publications',
+    },
   ];
 
   const Navigation = [

@@ -14,8 +14,8 @@ import {
   Tray,
 } from 'opub-ui';
 
-import { cn, formatDate } from '@/lib/utils';
 import { getCollaborativeDetailUrl } from '@/lib/collaborativesRouting';
+import { cn, formatDate } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
@@ -107,7 +107,7 @@ interface QueryParams {
   types?: string; // New: comma-separated list of types to search
 }
 
-const ALL_LISTING_TYPES = 'dataset,usecase,aimodel,publisher';
+const ALL_LISTING_TYPES = 'dataset,usecase,aimodel,publication,publisher';
 
 type Action =
   | { type: 'SET_PAGE_SIZE'; payload: number }
@@ -496,6 +496,8 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
         return `/usecases/${item.id}`;
       case 'aimodel':
         return `/aimodels/${item.id}`;
+      case 'publication':
+        return `/publications/${item.id}`;
       case 'collaborative':
         return getCollaborativeDetailUrl(item.slug);
       case 'publisher':

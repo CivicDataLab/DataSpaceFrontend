@@ -38,11 +38,9 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
     )
   );
 
-
   useEffect(() => {
     EntityDetailsQryRes.refetch();
   }, [EntityDetailsQryRes]);
-
 
   useEffect(() => {
     if (EntityDetailsQryRes.data) {
@@ -81,6 +79,11 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
     {
       title: 'AI Models',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/aimodels`,
+      icon: 'light',
+    },
+    {
+      title: 'Resources',
+      href: `/dashboard/${params.entityType}/${params.entitySlug}/publications`,
       icon: 'light',
     },
     {
