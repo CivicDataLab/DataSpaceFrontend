@@ -1,4 +1,4 @@
-export const fetchDatasets = async (variables: any) => {
+export const fetchDatasets = async (variables: string) => {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/search/dataset/${variables}`
   );
@@ -7,7 +7,7 @@ export const fetchDatasets = async (variables: any) => {
 };
 
 
-export const fetchData = async (type: string, variables: any) => {
+export const fetchData = async (type: string, variables: string) => {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/search/${type}/${variables}`
   );

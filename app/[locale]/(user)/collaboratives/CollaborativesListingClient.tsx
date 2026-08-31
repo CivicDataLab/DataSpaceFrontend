@@ -1,10 +1,9 @@
 'use client';
 
-import { ComponentType, useState } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import { graphql } from '@/gql';
-import { TypeCollaborative } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Card, Icon, SearchInput, Select, Text } from 'opub-ui';
 
@@ -93,15 +92,13 @@ const CollaborativesListingClient = () => {
     data: collaborativesData,
     isLoading,
     error,
-  } = useQuery<{ publishedCollaboratives: TypeCollaborative[] }>(
+  } = useQuery(
     ['fetch_published_collaboratives'],
     async () => {
       console.log('Fetching collaboratives...');
       try {
-        // @ts-expect-error - Query has no variables
-        const result = await GraphQLPublic(PublishedCollaboratives as any, {});
-        // console.log('Collaboratives result:', result);
-        return result as { publishedCollaboratives: TypeCollaborative[] };
+        const result = await GraphQLPublic(PublishedCollaboratives, {});
+        return result;
       } catch (err) {
         console.error('Error fetching collaboratives:', err);
         throw err;
@@ -284,7 +281,7 @@ const CollaborativesListingClient = () => {
                       value: 'datasetCount_desc',
                     },
                   ]}
-                  onChange={(e: any) => {
+                  onChange={(e) => {
                     setSortBy(e);
                     setCurrentPage(1);
                   }}
@@ -325,7 +322,7 @@ const CollaborativesListingClient = () => {
                   view="collapsed"
                 >
                   {paginatedCollaboratives.map(
-                    (collaborative: TypeCollaborative) => (
+                    (collaborative) => (
                       <Card
                         key={collaborative.id}
                         title={collaborative.title || ''}
@@ -339,25 +336,25 @@ const CollaborativesListingClient = () => {
                         // imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.logo?.path.replace('/code/files/', '')}`}
                         metadataContent={[
                           {
-                            icon: Icons.calendarEvent as any,
+                            icon: Icons.calendarEvent,
                             label: 'Started',
                             value: formatDate(collaborative.startedOn) || '',
                             stroke: 1.2,
                           },
                           {
-                            icon: Icons.dataset as any,
+                            icon: Icons.dataset,
                             label: 'Datasets',
                             value:
                               collaborative.datasetCount?.toString() || '0',
                           },
                           {
-                            icon: Icons.worldPin as ComponentType<any>,
+                            icon: Icons.worldPin,
                             label: 'Geography',
                             value:
                               collaborative.geographies &&
                               collaborative.geographies.length > 0
                                 ? collaborative.geographies
-                                    .map((geo: any) => geo.name)
+                                    .map((geo) => geo.name)
                                     .join(', ')
                                 : 'N/A',
                             stroke: 1.2,

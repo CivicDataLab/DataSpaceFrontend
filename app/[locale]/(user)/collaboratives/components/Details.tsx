@@ -4,11 +4,17 @@ import Image from 'next/image';
 import { Button, Icon, Spinner, Tag, Text, Tray } from 'opub-ui';
 import { useState } from 'react';
 
+import { CollaborativeQueryQuery } from '@/gql/generated/graphql';
 import { Icons } from '@/components/icons';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 import Metadata from './Metadata';
 
-const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
+interface PrimaryDetailsProps {
+  data: CollaborativeQueryQuery;
+  isLoading: boolean;
+}
+
+const PrimaryDetails = ({ data, isLoading }: PrimaryDetailsProps) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -19,7 +25,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
         </Text>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        {data.collaborativeBySlug.tags.map((item: any, index: number) => (
+        {data.collaborativeBySlug.tags?.map((item, index: number) => (
           <div key={index}>
             <Tag
               fillColor="var(--accent-tertiary-color)"
@@ -67,7 +73,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
         <div className="mt-6 lg:mt-10">
           <Image
             src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.coverImage?.path.replace('/code/files/', '')}`}
-            alt={data.collaborativeBySlug.title}
+            alt={data.collaborativeBySlug.title ?? ''}
             width={1200}
             height={400}
             className="h-auto w-full rounded-2 object-cover"
@@ -125,7 +131,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
               </Text>
               <div className="mt-4 flex flex-wrap gap-2">
                 {data.collaborativeBySlug.geographies.map(
-                  (geo: any, index: number) => (
+                  (geo, index: number) => (
                     <Tag
                       key={index}
                       fillColor="var(--orange-secondary-color)"
@@ -141,7 +147,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
           )}
         <div className="mt-6 lg:mt-10">
           <RichTextRenderer 
-            content={data.collaborativeBySlug.summary} 
+            content={data.collaborativeBySlug.summary ?? ''} 
             className="text-white"
           />
         </div>

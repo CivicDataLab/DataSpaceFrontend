@@ -16,8 +16,8 @@ export function escapeXml(value: string): string {
 export async function getGraphqlEntityCount(
   entity: string,
   config: ENTITY_CONFIG_TYPE[string]
-): Promise<{ entityName: string; count: number; list: any[] }> {
-  try {
+): Promise<{ entityName: string; count: number; list: unknown[] }> {
+    try {
     const response = await fetch(
       `${process.env.FEATURE_SITEMAP_BACKEND_BASE_URL}/graphql`,
       {
@@ -47,12 +47,17 @@ export async function getGraphqlEntityCount(
       return { entityName: entity, count: 0, list: [] };
     }
 
-    let list = data?.data?.[config.queryResKey as string] || [];
+    let list: unknown[] = Array.isArray(data?.data?.[config.queryResKey as string])
+      ? data.data[config.queryResKey as string]
+      : [];
 
     if (config.filterTypename) {
       list = list.filter(
-        (item: { __typename?: string }) =>
-          item?.__typename === config.filterTypename
+        (item): item is { __typename?: string } =>
+          typeof item === 'object' &&
+          item !== null &&
+          (item as { __typename?: string }).__typename ===
+            config.filterTypename
       );
     }
 
@@ -71,7 +76,7 @@ export async function getSearchEntityCount(
   entity: string,
   size: number,
   page: number
-): Promise<{ entityName: string; count: number; list: any[] }> {
+): Promise<{ entityName: string; count: number; list: unknown[] }> {
   try {
     const config = ENTITY_CONFIG[entity];
     const response = await fetch(

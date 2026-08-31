@@ -11,7 +11,7 @@ import StepNavigation from '../../components/StepNavigation';
 import TitleBar from '../../components/title-bar';
 import { EditStatusProvider, useEditStatus } from './context';
 
-const UpdateCollaborativeTitleMutation: any = graphql(`
+const UpdateCollaborativeTitleMutation = graphql(`
   mutation updateCollaborativeTitle($data: CollaborativeInputPartial!) {
     updateCollaborative(data: $data) {
       __typename
@@ -21,7 +21,7 @@ const UpdateCollaborativeTitleMutation: any = graphql(`
   }
 `);
 
-const FetchCollaborativeTitle: any = graphql(`
+const FetchCollaborativeTitle = graphql(`
   query CollaborativeTitle($pk: ID!) {
     collaborative(pk: $pk) {
       id
@@ -52,12 +52,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     return pathName.indexOf(v) >= 0;
   });
 
-  const CollaborativeData: {
-    data: any;
-    isLoading: boolean;
-    error: any;
-    refetch: any;
-  } = useQuery(
+  const CollaborativeData = useQuery(
     [`fetch_CollaborativeData_${params.id}`],
     () =>
       GraphQL(
@@ -111,8 +106,8 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
           ],
         });
       },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`, { id: COLLAB_EDIT_TOAST_ID });
+      onError: (error: unknown) => {
+        toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`, { id: COLLAB_EDIT_TOAST_ID });
       },
     }
   );
@@ -174,7 +169,9 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       <div className="mt-8 flex h-full flex-col items-center justify-center gap-4">
         <div className="text-red-600">Error loading collaborative data</div>
         <div className="text-sm text-gray-600">
-          {CollaborativeData.error?.message || 'Unknown error'}
+          {CollaborativeData.error instanceof Error
+            ? CollaborativeData.error.message
+            : 'Unknown error'}
         </div>
         <div className="text-xs text-gray-500">
           Check console for details. ID: {params.id}

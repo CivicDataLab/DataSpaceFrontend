@@ -27,26 +27,35 @@ const defaultValBase: Props = {
   terms: false,
 };
 
+interface DatasetMutationPayload {
+  dataset_data: {
+    title: string;
+    description: string;
+    dataset_type?: string;
+    id?: string;
+  };
+}
+
+interface CreateDatasetProps {
+  defaultVal?: PatchDataset;
+  submitRef: React.RefObject<HTMLButtonElement | null>;
+  isLoading?: boolean;
+  mutate?: (res: DatasetMutationPayload) => void;
+  mutatePatch: (res: DatasetMutationPayload) => void;
+}
+
 export function CreateDataset({
   defaultVal,
   submitRef,
   isLoading,
   mutate,
   mutatePatch,
-}: {
-  defaultVal?: PatchDataset;
-  submitRef: React.RefObject<HTMLButtonElement>;
-  isLoading?: boolean;
-  // mutate?: (res: { dataset_data: CreateDatasetInput }) => void;
-  // mutatePatch?: (res: { dataset_data: PatchDatasetInput }) => void;
-  mutate?: any;
-  mutatePatch: any;
-}) {
+}: CreateDatasetProps) {
   const defaultValue = defaultVal || defaultValBase;
 
   return (
     <DatasetForm
-      onSubmit={(value: any) => {
+      onSubmit={(value) => {
         if (mutatePatch && defaultVal) {
           mutatePatch({
             dataset_data: {

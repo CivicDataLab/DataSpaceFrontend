@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Icon, Text } from 'opub-ui';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
@@ -28,20 +28,16 @@ const getPlatformPageUrl = (pagePath: string, locale?: string) => {
 };
 
 const MainFooter = () => {
-  const [isCollaborativeSubdomain, setIsCollaborativeSubdomain] =
-    useState(false);
+  const isCollaborativeSubdomain = useSyncExternalStore(
+    () => () => {},
+    () => isCollaborativeSubdomainHost(window.location.hostname),
+    () => false
+  );
 
   const currentLocale = useMemo(() => {
     if (typeof window === 'undefined') return undefined;
     const match = window.location.pathname.match(/^\/([a-z]{2})(\/|$)/i);
     return match?.[1]?.toLowerCase();
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    setIsCollaborativeSubdomain(
-      isCollaborativeSubdomainHost(window.location.hostname)
-    );
   }, []);
 
   const aboutUsHref = isCollaborativeSubdomain

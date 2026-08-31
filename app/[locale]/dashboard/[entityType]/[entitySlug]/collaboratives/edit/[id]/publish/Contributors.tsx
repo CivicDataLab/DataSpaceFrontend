@@ -1,51 +1,85 @@
 import Image from 'next/image';
 import { Text } from 'opub-ui';
 
-const Contributors = ({ data }: { data: any }) => {
-  const ContributorDetails = [
+interface Contributor {
+  fullName?: string | null;
+  profilePicture?: { url?: string | null } | null;
+}
+
+interface Organization {
+  name?: string | null;
+  logo?: { url?: string | null } | null;
+}
+
+interface CollaborativeContributorsData {
+  collaboratives: Array<{
+    contributors?: Contributor[] | null;
+    supportingOrganizations?: Organization[] | null;
+    partnerOrganizations?: Organization[] | null;
+  } | null> | null;
+}
+
+interface ContributorsProps {
+  data?: CollaborativeContributorsData | null;
+}
+
+interface ContributorSection {
+  label: string;
+  value: string;
+  image: Contributor[];
+}
+
+interface OrgSection {
+  label: string;
+  value: string;
+  image: Organization[];
+}
+
+const Contributors = ({ data }: ContributorsProps) => {
+  const ContributorDetails: ContributorSection[] = [
     {
       label: 'Contributors',
       value:
-        data?.collaboratives[0]?.contributors.length > 0
-          ? data?.collaboratives[0]?.contributors
-              .map((item: any) => item.fullName)
-              .join(', ')
+        (data?.collaboratives?.[0]?.contributors?.length ?? 0) > 0
+          ? data?.collaboratives?.[0]?.contributors
+              ?.map((item) => item.fullName)
+              .join(', ') || 'No Contributors'
           : 'No Contributors',
-      image: data?.collaboratives[0]?.contributors,
+      image: data?.collaboratives?.[0]?.contributors ?? [],
     },
   ];
 
-  const OrgDetails = [
+  const OrgDetails: OrgSection[] = [
     {
       label: 'Supporters',
       value:
-        data?.collaboratives[0]?.supportingOrganizations.length > 0
-          ? data?.collaboratives[0]?.supportingOrganizations
-              .map((item: any) => item.name)
-              .join(', ')
+        (data?.collaboratives?.[0]?.supportingOrganizations?.length ?? 0) > 0
+          ? data?.collaboratives?.[0]?.supportingOrganizations
+              ?.map((item) => item.name)
+              .join(', ') || 'No Supporting Organizations'
           : 'No Supporting Organizations',
-      image: data?.collaboratives[0]?.supportingOrganizations,
+      image: data?.collaboratives?.[0]?.supportingOrganizations ?? [],
     },
     {
       label: 'Partners',
       value:
-        data?.collaboratives[0]?.partnerOrganizations.length > 0
-          ? data?.collaboratives[0]?.partnerOrganizations
-              .map((item: any) => item.name)
-              .join(', ')
+        (data?.collaboratives?.[0]?.partnerOrganizations?.length ?? 0) > 0
+          ? data?.collaboratives?.[0]?.partnerOrganizations
+              ?.map((item) => item.name)
+              .join(', ') || 'No Partner Organizations'
           : 'No Partner Organizations',
-      image: data?.collaboratives[0]?.partnerOrganizations,
+      image: data?.collaboratives?.[0]?.partnerOrganizations ?? [],
     },
   ];
   return (
     <div className="flex flex-col gap-4 px-8 py-4">
-      {ContributorDetails.map((item: any, index: number) => (
+      {ContributorDetails.map((item, index) => (
         <div className="flex flex-col gap-3" key={index}>
           <div>
             <Text variant="bodyMd">{item.label}:</Text>
           </div>
           <div className="flex flex-wrap gap-2">
-            {item?.image.map((data: any, index: number) => (
+            {item?.image.map((data, index) => (
               <div key={index} className="flex flex-col items-center gap-4">
                 <Image
                   src={
@@ -70,13 +104,13 @@ const Contributors = ({ data }: { data: any }) => {
           </div>
         </div>
       ))}
-      {OrgDetails.map((item: any, index: number) => (
+      {OrgDetails.map((item, index) => (
         <div className="flex flex-col gap-3" key={index}>
           <div>
             <Text variant="bodyMd">{item.label}:</Text>
           </div>
           <div className="flex flex-wrap gap-6">
-            {item.image.map((data: any, index: number) => (
+            {item.image.map((data, index) => (
               <div key={index} className="flex flex-col items-center gap-4">
                 <div className="rounded-4 bg-surfaceDefault p-4 shadow-basicMd">
                   <Image

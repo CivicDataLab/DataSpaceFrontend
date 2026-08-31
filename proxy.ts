@@ -177,7 +177,9 @@ export default function proxy(req: NextRequest) {
   if (isPublicPage) {
     return intlMiddleware(req);
   } else {
-    return (authMiddleware as any)(req);
+    return (authMiddleware as (request: NextRequest) => ReturnType<typeof intlMiddleware>)(
+      req
+    );
   }
 }
 

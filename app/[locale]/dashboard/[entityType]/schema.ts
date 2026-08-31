@@ -1,6 +1,6 @@
 import { graphql } from '@/gql';
 
-export const allOrganizationsListingDoc: any = graphql(`
+export const allOrganizationsListingDoc = graphql(`
   query allOrganizationsListingDoc {
     organizations {
       id
@@ -22,7 +22,7 @@ export const allOrganizationsListingDoc: any = graphql(`
   }
 `);
 
-export const allDataSpacesListingDoc: any = graphql(`
+export const allDataSpacesListingDoc = graphql(`
   query AllDataSpacesListDoc {
     dataspaces {
       id
@@ -40,7 +40,7 @@ export const allDataSpacesListingDoc: any = graphql(`
   }
 `);
 
-export const organizationCreationMutation: any = graphql(`
+export const organizationCreationMutation = graphql(`
   mutation createOrganization($input: OrganizationInput!) {
     createOrganization(input: $input) {
       __typename

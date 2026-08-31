@@ -6,17 +6,57 @@ import { Text } from 'opub-ui';
 import { getWebsiteTitle } from '@/lib/utils';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 
-const Details = ({ data }: { data: any }) => {
-  const [platformTitle, setPlatformTitle] = useState<string | null>(null);
+interface NamedItem {
+  id?: string | null;
+  name?: string | null;
+  code?: string | null;
+  value?: string | null;
+}
+
+interface UseCasePublishDetails {
+  title?: string | null;
+  summary?: string | null;
+  runningStatus?: string | null;
+  startedOn?: string | null;
+  completedOn?: string | null;
+  platformUrl?: string | { value?: string } | null;
+  sectors?: Array<{ name?: string | null } | null> | null;
+  geographies?: NamedItem[] | null;
+  sdgs?: NamedItem[] | null;
+  tags?: Array<{ value?: string | null } | null> | null;
+  metadata?: Array<{
+    value?: string | null;
+    metadataItem?: { label?: string | null } | null;
+  }> | null;
+  logo?: { path?: string | null } | null;
+}
+
+interface DetailsProps {
+  data?: { useCases?: Array<UseCasePublishDetails | null> | null } | null;
+}
+
+const Details = ({ data }: DetailsProps) => {
   const useCase = data?.useCases?.[0];
   const platformUrl = useCase?.platformUrl;
+  const [platformTitle, setPlatformTitle] = useState<string | null>(
+    platformUrl === null ? 'N/A' : null
+  );
+  const [prevPlatformUrl, setPrevPlatformUrl] = useState(platformUrl);
+  if (platformUrl !== prevPlatformUrl) {
+    setPrevPlatformUrl(platformUrl);
+    if (platformUrl === null) {
+      setPlatformTitle('N/A');
+    }
+  }
 
   useEffect(() => {
+    if (!useCase || platformUrl === null) return;
+
     const fetchTitle = async () => {
       try {
         const urlItem = useCase?.platformUrl;
 
-        if (urlItem && urlItem.value) {
+        if (urlItem && typeof urlItem === 'object' && urlItem.value) {
           const title = await getWebsiteTitle(urlItem.value);
           setPlatformTitle(title);
         }
@@ -25,42 +65,43 @@ const Details = ({ data }: { data: any }) => {
       }
     };
 
-    if (!useCase) return;
-
-    if (platformUrl === null) {
-      setPlatformTitle('N/A');
-    } else {
-      fetchTitle();
-    }
+    fetchTitle();
   }, [useCase, platformUrl]);
 
+  const platformHref =
+    typeof platformUrl === 'string'
+      ? platformUrl
+      : platformUrl && typeof platformUrl === 'object'
+        ? platformUrl.value
+        : undefined;
+
   const PrimaryDetails = [
-    { label: 'Use Case Name', value: data?.useCases[0]?.title },
-    { label: 'Summary', value: data?.useCases[0]?.summary },
+    { label: 'Use Case Name', value: useCase?.title },
+    { label: 'Summary', value: useCase?.summary },
     {
       label: 'Running Status',
-      value: data?.useCases[0]?.runningStatus,
+      value: useCase?.runningStatus,
     },
-    { label: 'Started On', value: data?.useCases[0]?.startedOn },
+    { label: 'Started On', value: useCase?.startedOn },
     {
       label: 'Completed On',
-      value: data?.useCases[0]?.completedOn,
+      value: useCase?.completedOn,
     },
-    { label: 'Sector', value: data?.useCases[0]?.sectors[0]?.name },
+    { label: 'Sector', value: useCase?.sectors?.[0]?.name },
     {
       label: 'Geography',
-      value: data?.useCases[0]?.geographies
-        ?.map((geo: any) => geo.name)
+      value: useCase?.geographies
+        ?.map((geo) => geo?.name)
         .join(', '),
     },
     {
       label: 'SDG Goals',
-      value: data?.useCases[0]?.sdgs
-        ?.map((sdg: any) => `${sdg.code} - ${sdg.name}`)
+      value: useCase?.sdgs
+        ?.map((sdg) => `${sdg?.code} - ${sdg?.name}`)
         .join(', '),
     },
-    { label: 'Tags', value: data?.useCases[0]?.tags[0]?.value },
-    ...(data?.useCases[0]?.metadata?.map((meta: any) => ({
+    { label: 'Tags', value: useCase?.tags?.[0]?.value },
+    ...(useCase?.metadata?.map((meta) => ({
       label: meta.metadataItem?.label,
       value: meta.value,
     })) || []),
@@ -90,10 +131,10 @@ const Details = ({ data }: { data: any }) => {
               <Text variant="bodyMd">Platform URL:</Text>
             </div>
             <div>
-              {data.useCases[0].platformUrl ? (
+              {platformHref ? (
                 <Link
                   className="text-primaryBlue underline"
-                  href={data.useCases[0].platformUrl}
+                  href={platformHref}
                 >
                   <Text
                     className="underline"
@@ -109,7 +150,7 @@ const Details = ({ data }: { data: any }) => {
             </div>
           </div>
 
-          {data?.useCases[0]?.logo && (
+          {useCase?.logo && (
             <div className="flex flex-wrap items-center gap-2">
               <div className="md:w-1/6 lg:w-1/6">
                 <Text className="" variant="bodyMd">
@@ -117,8 +158,8 @@ const Details = ({ data }: { data: any }) => {
                 </Text>
               </div>
               <Image
-                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data?.useCases[0]?.logo?.path.replace('/code/files/', '')}`}
-                alt={data?.useCases[0]?.title}
+                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.logo.path?.replace('/code/files/', '') ?? ''}`}
+                alt={useCase.title ?? ''}
                 width={240}
                 className="object-contain"
                 height={240}

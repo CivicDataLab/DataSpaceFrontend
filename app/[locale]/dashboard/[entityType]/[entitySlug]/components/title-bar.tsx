@@ -8,7 +8,7 @@ interface TitleBarProps {
   label: string;
   title: string;
   goBackURL: string;
-  onSave: (data: any) => void;
+  onSave: (data: string) => void;
   loading: boolean;
   status: 'loading' | 'success';
   setStatus: (s: 'loading' | 'success') => void;

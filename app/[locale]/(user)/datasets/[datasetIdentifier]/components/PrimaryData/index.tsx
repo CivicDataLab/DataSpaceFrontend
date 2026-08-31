@@ -3,11 +3,12 @@
 import React, { useState } from 'react';
 import { Button, Icon, Spinner, Tag, Text, Tray } from 'opub-ui';
 
+import { GetDatasetQuery } from '@/gql/generated/graphql';
 import { Icons } from '@/components/icons';
 import Metadata from '../Metadata';
 
 interface PrimaryDataProps {
-  data: any;
+  data: GetDatasetQuery['getDataset'];
   isLoading?: boolean;
 }
 
@@ -19,7 +20,7 @@ const PrimaryData: React.FC<PrimaryDataProps> = ({ data, isLoading }) => {
       <div className="flex flex-col gap-4">
         <Text variant="heading2xl">{data?.title}</Text>
         <div className="flex flex-wrap gap-2">
-          {data?.tags.map((item: any, index: any) => (
+          {data?.tags.map((item, index) => (
             <Tag
               key={index}
               fillColor="var(--accent-tertiary-color)"

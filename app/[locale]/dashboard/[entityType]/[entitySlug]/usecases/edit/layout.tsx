@@ -11,7 +11,7 @@ import StepNavigation from '../../components/StepNavigation';
 import TitleBar from '../../components/title-bar';
 import { EditStatusProvider, useEditStatus } from './context';
 
-const UpdateUseCaseTitleMutation: any = graphql(`
+const UpdateUseCaseTitleMutation = graphql(`
   mutation updateUseCaseTitle($data: UseCaseInputPartial!) {
     updateUseCase(data: $data) {
       __typename
@@ -21,7 +21,7 @@ const UpdateUseCaseTitleMutation: any = graphql(`
   }
 `);
 
-const FetchUseCaseTitle: any = graphql(`
+const FetchUseCaseTitle = graphql(`
   query UseCaseTitle($filters: UseCaseFilter) {
     useCases(filters: $filters) {
       id
@@ -41,8 +41,12 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
   const USECASE_TITLE_SUCCESS_TOAST_ID = 'usecase-title-save-success';
   const USECASE_TITLE_ERROR_TOAST_ID = 'usecase-title-save-error';
   const queryClient = useQueryClient();
-  const getErrorMessage = (error: any, fallback: string) =>
-    typeof error?.message === 'string' && error.message.trim()
+  const getErrorMessage = (error: unknown, fallback: string) =>
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string' &&
+    error.message.trim()
       ? error.message.trim()
       : fallback;
 
@@ -58,7 +62,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     return pathName.indexOf(v) >= 0;
   });
 
-  const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  const UseCaseData = useQuery(
     [`fetch_UseCaseData`],
     () =>
       GraphQL(
@@ -99,7 +103,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
           ],
         });
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         toast(
           `Error: ${getErrorMessage(error, 'Unable to update use case title right now. Please try again.')}`,
           { id: USECASE_TITLE_ERROR_TOAST_ID }
@@ -149,7 +153,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     <div className="mt-8 flex h-full flex-col gap-6">
       <TitleBar
         label={'USE CASE NAME'}
-        title={UseCaseData?.data?.useCases[0]?.title}
+        title={UseCaseData?.data?.useCases?.[0]?.title ?? ''}
         goBackURL={`/dashboard/${params.entityType}/${params.entitySlug}/usecases`}
         onSave={(e) => mutate({ data: { title: e, id: params.id.toString() } })}
         loading={editMutationLoading}

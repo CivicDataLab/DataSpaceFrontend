@@ -12,8 +12,26 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 import { useEditStatus } from '../../context';
 import Metadata from '../metadata/page';
 
+interface UploadedImage {
+  name?: string | null;
+  path?: string | null;
+  url?: string | null;
+}
+
+interface CollaborativeFormData {
+  title: string;
+  summary: string;
+  logo: File | UploadedImage | null;
+  coverImage: File | UploadedImage | null;
+  slug: string;
+  status: string;
+  startedOn: string | null;
+  completedOn: string | null;
+  platformUrl: string;
+}
+
 // prettier-ignore
-const UpdateCollaborativeMutation: any = graphql(`
+const UpdateCollaborativeMutation = graphql(`
   mutation updateCollaborative($data: CollaborativeInputPartial!) {
     updateCollaborative(data: $data) {
       __typename
@@ -42,7 +60,7 @@ const UpdateCollaborativeMutation: any = graphql(`
 `);
 
 //prettier-ignore
-const FetchCollaborative: any = graphql(`
+const FetchCollaborative = graphql(`
   query CollaborativeData($filters: CollaborativeFilter) {
     collaboratives(filters: $filters) {
       id
@@ -77,7 +95,7 @@ const Details = () => {
   const queryClient = useQueryClient();
   const COLLAB_DETAILS_TOAST_ID = 'collaboratives-details-toast';
 
-  const CollaborativeData: { data: any; isLoading: boolean; refetch: any } =
+  const CollaborativeData =
     useQuery(
       [
         `fetch_CollaborativeData_details`,
@@ -113,17 +131,19 @@ const Details = () => {
   const initialFormData = {
     title: '',
     summary: '',
-    logo: null as File | null,
-    coverImage: null as File | null,
+    logo: null as File | UploadedImage | null,
+    coverImage: null as File | UploadedImage | null,
     slug: '',
     status: '',
-    startedOn: null,
-    completedOn: null,
+    startedOn: null as string | null,
+    completedOn: null as string | null,
     platformUrl: '',
   };
 
-  const [formData, setFormData] = useState(initialFormData);
-  const [previousFormData, setPreviousFormData] = useState(initialFormData);
+  const [formData, setFormData] =
+    useState<CollaborativeFormData>(initialFormData);
+  const [previousFormData, setPreviousFormData] =
+    useState<CollaborativeFormData>(initialFormData);
   const [slugError, setSlugError] = useState<string | null>(null);
 
   const validateSlug = (value: string) => {
@@ -138,7 +158,16 @@ const Details = () => {
     return null;
   };
 
-  useEffect(() => {
+  const [prevCollaborativesData, setPrevCollaborativesData] = useState<
+    typeof CollaborativesData | undefined
+  >(undefined);
+  const [prevDetailsId, setPrevDetailsId] = useState(params.id);
+  if (
+    params.id !== prevDetailsId ||
+    CollaborativesData !== prevCollaborativesData
+  ) {
+    setPrevDetailsId(params.id);
+    setPrevCollaborativesData(CollaborativesData);
     if (CollaborativesData) {
       const updatedData = {
         title: CollaborativesData.title || '',
@@ -154,7 +183,7 @@ const Details = () => {
       setFormData(updatedData);
       setPreviousFormData(updatedData);
     }
-  }, [params.id, CollaborativesData]);
+  }
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
     (data: { data: CollaborativeInputPartial }) =>
@@ -166,17 +195,33 @@ const Details = () => {
         data
       ),
     {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         toast('Collaborative updated successfully', {
           id: COLLAB_DETAILS_TOAST_ID,
         });
         setFormData((prev) => ({
           ...prev,
-          ...res.updateCollaborative,
+          title: res.updateCollaborative.title ?? prev.title,
+          summary: res.updateCollaborative.summary ?? prev.summary,
+          logo: res.updateCollaborative.logo ?? prev.logo,
+          coverImage: res.updateCollaborative.coverImage ?? prev.coverImage,
+          slug: res.updateCollaborative.slug ?? prev.slug,
+          status: res.updateCollaborative.status ?? prev.status,
+          startedOn: res.updateCollaborative.startedOn ?? prev.startedOn,
+          completedOn: res.updateCollaborative.completedOn ?? prev.completedOn,
+          platformUrl: res.updateCollaborative.platformUrl ?? prev.platformUrl,
         }));
         setPreviousFormData((prev) => ({
           ...prev,
-          ...res.updateCollaborative,
+          title: res.updateCollaborative.title ?? prev.title,
+          summary: res.updateCollaborative.summary ?? prev.summary,
+          logo: res.updateCollaborative.logo ?? prev.logo,
+          coverImage: res.updateCollaborative.coverImage ?? prev.coverImage,
+          slug: res.updateCollaborative.slug ?? prev.slug,
+          status: res.updateCollaborative.status ?? prev.status,
+          startedOn: res.updateCollaborative.startedOn ?? prev.startedOn,
+          completedOn: res.updateCollaborative.completedOn ?? prev.completedOn,
+          platformUrl: res.updateCollaborative.platformUrl ?? prev.platformUrl,
         }));
 
         queryClient.invalidateQueries({
@@ -188,22 +233,36 @@ const Details = () => {
           ],
         });
       },
-      onError: (error: any) => {
-        const msg =
-          error?.response?.errors?.[0]?.message ??
-          error?.message ??
-          'Something went wrong';
+      onError: (error: unknown) => {
+        let msg = 'Something went wrong';
+        if (typeof error === 'object' && error !== null) {
+          if (
+            'response' in error &&
+            typeof error.response === 'object' &&
+            error.response !== null &&
+            'errors' in error.response &&
+            Array.isArray(error.response.errors) &&
+            typeof error.response.errors[0]?.message === 'string'
+          ) {
+            msg = error.response.errors[0].message;
+          } else if ('message' in error && typeof error.message === 'string') {
+            msg = error.message;
+          }
+        }
         toast(`Error: ${msg}`, { id: COLLAB_DETAILS_TOAST_ID });
       },
     }
   );
 
-  const handleChange = useCallback((field: string, value: any) => {
+  const handleChange = useCallback(
+    (field: keyof CollaborativeFormData, value: CollaborativeFormData[keyof CollaborativeFormData]) => {
     setFormData((prevData) => ({
       ...prevData,
       [field]: value,
     }));
-  }, []);
+  },
+    []
+  );
 
   const onDrop = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
@@ -229,7 +288,7 @@ const Details = () => {
     [mutate, params.id]
   );
 
-  const handleSave = (updatedData: any) => {
+  const handleSave = (updatedData: CollaborativeFormData) => {
     const slugErr = validateSlug(updatedData?.slug || '');
     if (slugErr) {
       return;
@@ -243,8 +302,8 @@ const Details = () => {
           id: params.id.toString(),
           title: updatedData.title,
           summary: updatedData.summary,
-          startedOn: (updatedData.startedOn as Date) || null,
-          completedOn: (updatedData.completedOn as Date) || null,
+          startedOn: updatedData.startedOn || null,
+          completedOn: updatedData.completedOn || null,
           platformUrl: updatedData.platformUrl || '',
           slug: updatedData.slug || '',
         },
@@ -379,7 +438,7 @@ const Details = () => {
               formData.logo &&
               typeof formData.logo === 'object' &&
               'name' in formData.logo
-                ? (formData.logo as any).name?.split('/').pop() || 'Logo file'
+                ? formData.logo.name?.split('/').pop() || 'Logo file'
                 : 'Name of the logo'
             }
           />
@@ -401,7 +460,7 @@ const Details = () => {
               formData.coverImage &&
               typeof formData.coverImage === 'object' &&
               'name' in formData.coverImage
-                ? (formData.coverImage as any).name?.split('/').pop() ||
+                ? formData.coverImage.name?.split('/').pop() ||
                   'Cover image file'
                 : 'Name of the cover image'
             }

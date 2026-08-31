@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import PdfPreview from '@/app/[locale]/(user)/components/PdfPreview';
 import { graphql } from '@/gql';
+import { DatasetResourcesQuery } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
 import {
   Button,
@@ -18,7 +19,7 @@ import {
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import styles from './Resources.module.scss';
-const datasetResourceQuery: any = graphql(`
+const datasetResourceQuery = graphql(`
   query datasetResources($datasetId: UUID!) {
     datasetResources(datasetId: $datasetId) {
       id
@@ -47,10 +48,35 @@ const datasetResourceQuery: any = graphql(`
   }
 `);
 
+interface ResourceSchemaField {
+  fieldName: string;
+  format: string;
+  description?: string | null;
+}
+
+interface PreviewData {
+  columns: string[];
+  rows: unknown[][];
+}
+
+interface ResourceTableRow {
+  original: {
+    schema: ResourceSchemaField[];
+    rowsLength: number | string;
+    format: string;
+    preview?: PreviewData | null;
+    id: string;
+  };
+}
+
+interface PreviewCell {
+  getValue: () => unknown;
+}
+
 const Resources = () => {
   const params = useParams();
 
-  const getResourceDetails: { data: any; isLoading: boolean } = useQuery(
+  const getResourceDetails = useQuery(
     [`resources_${params.datasetIdentifier}`],
     () =>
       GraphQL(
@@ -67,7 +93,7 @@ const Resources = () => {
       {
         accessorKey: 'schema',
         header: 'Columns',
-        cell: ({ row }: any) => {
+        cell: ({ row }: { row: ResourceTableRow }) => {
           return (
             <Dialog>
               <Dialog.Trigger>
@@ -94,7 +120,7 @@ const Resources = () => {
                       header: 'Format',
                     },
                   ]}
-                  rows={row.original.schema.map((item: any) => ({
+                  rows={row.original.schema.map((item) => ({
                     name: item.fieldName,
                     format: item.format,
                     description: item.description,
@@ -108,7 +134,7 @@ const Resources = () => {
       {
         accessorKey: 'rowsLength',
         header: 'No.of Rows',
-        cell: ({ row }: any) => {
+        cell: ({ row }: { row: ResourceTableRow }) => {
           return (
             <p>
               {row.original.rowsLength === 0
@@ -129,7 +155,7 @@ const Resources = () => {
       {
         accessorKey: 'preview',
         header: 'Preview',
-        cell: ({ row }: any) => {
+        cell: ({ row }: { row: ResourceTableRow }) => {
           const previewData = row.original.preview;
 
           // Generate columns dynamically from previewData.columns
@@ -137,16 +163,18 @@ const Resources = () => {
             previewData?.columns?.map((column: string) => ({
               accessorKey: column,
               header: column,
-              cell: ({ cell }: any) => {
+              cell: ({ cell }: { cell: PreviewCell }) => {
                 const value = cell.getValue();
-                return <span>{value !== null ? value.toString() : 'N/A'}</span>;
+                return (
+                  <span>{value !== null ? String(value) : 'N/A'}</span>
+                );
               },
             })) || [];
 
           // Transform rows data to match column structure
           const previewRows =
-            previewData?.rows?.map((row: any[]) => {
-              const rowData: Record<string, any> = {};
+            previewData?.rows?.map((row) => {
+              const rowData: Record<string, unknown> = {};
               previewData.columns.forEach((column: string, index: number) => {
                 rowData[column] = row[index];
               });
@@ -186,13 +214,16 @@ const Resources = () => {
     ];
   };
 
-  const generateTableData = (data: any) => {
+  const generateTableData = (
+    data: DatasetResourcesQuery['datasetResources'][number]
+  ) => {
     return [
       {
         schema: data?.schema,
         rowsLength: data?.noOfEntries || 'Na',
         format: data?.fileDetails?.format || 'Na',
-        size: Math.round(data?.fileDetails?.size / 1024).toFixed(2) + 'KB',
+        size:
+          Math.round((data?.fileDetails?.size ?? 0) / 1024).toFixed(2) + 'KB',
         preview: data?.previewData,
         id: data?.id,
       },
@@ -215,7 +246,7 @@ const Resources = () => {
           </div>
           <div>
             {getResourceDetails.data?.datasetResources.map(
-              (item: any, index: number) => (
+              (item, index: number) => (
                 <div
                   key={index}
                   className="mt-5 flex flex-col gap-6 border-1 border-solid border-greyExtralight bg-surfaceDefault p-4 lg:mx-0 lg:p-6"

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
+import { DatasetsSummaryQuery } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Accordion,
@@ -25,7 +26,7 @@ import { formatDate, getWebsiteTitle, toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 
-const datasetSummaryQuery: any = graphql(`
+const datasetSummaryQuery = graphql(`
   query datasetsSummary($filters: DatasetFilter) {
     datasets(filters: $filters) {
       metadata {
@@ -68,7 +69,7 @@ const datasetSummaryQuery: any = graphql(`
   }
 `);
 
-const publishDatasetMutation: any = graphql(`
+const publishDatasetMutation = graphql(`
   mutation publishDataset($datasetId: UUID!) {
     publishDataset(datasetId: $datasetId) {
       ... on TypeDataset {
@@ -79,7 +80,60 @@ const publishDatasetMutation: any = graphql(`
   }
 `);
 
-const generateColumnData = (name: any) => {
+interface SchemaField {
+  fieldName: string;
+  description?: string | null;
+  format?: string | null;
+}
+
+interface AccessModelResource {
+  resource: {
+    name: string;
+    type?: string | null;
+  };
+}
+
+interface ResourceSummary {
+  name: string;
+  type: string;
+  schema?: SchemaField[] | null;
+  modelResources?: AccessModelResource[];
+}
+
+interface PromptMetadata {
+  task_type?: string;
+  domain?: string;
+  target_languages?: string[];
+  prompt_format?: string;
+  target_model_types?: string[];
+  has_system_prompt?: boolean;
+  has_example_responses?: boolean;
+}
+
+type DatasetSummaryResult = DatasetsSummaryQuery['datasets'][number];
+
+type AccessModelSummary = {
+  id?: string;
+  name: string;
+  type: string;
+  modelResources?: AccessModelResource[];
+};
+
+function hasAccessModels(
+  dataset: object
+): dataset is { accessModels: AccessModelSummary[] } {
+  return 'accessModels' in dataset && Array.isArray(dataset.accessModels);
+}
+
+function isPromptMetadata(value: unknown): value is PromptMetadata {
+  return typeof value === 'object' && value !== null;
+}
+
+interface DialogTableRow {
+  dialog: AccessModelResource[] | SchemaField[];
+}
+
+const generateColumnData = (name: string) => {
   return [
     {
       accessorKey: 'name',
@@ -92,7 +146,7 @@ const generateColumnData = (name: any) => {
     {
       accessorKey: 'dialog',
       header: `${name === 'Access Type' ? 'Resources' : 'Fields'}`,
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: { original: DialogTableRow } }) => {
         return (
           <>
             <Dialog>
@@ -120,10 +174,15 @@ const generateColumnData = (name: any) => {
                         header: 'Permissions',
                       },
                     ]}
-                    rows={row.original.dialog.map((item: any) => ({
-                      name: item.resource.name,
-                      type: item.resource.type,
-                    }))}
+                    rows={row.original.dialog.map((item) => {
+                      if ('resource' in item) {
+                        return {
+                          name: item.resource.name,
+                          type: item.resource.type,
+                        };
+                      }
+                      return { name: '', type: '' };
+                    })}
                     hideFooter
                   />
                 ) : (
@@ -142,11 +201,16 @@ const generateColumnData = (name: any) => {
                         header: 'Format',
                       },
                     ]}
-                    rows={row.original.dialog.map((item: any) => ({
-                      name: item.fieldName,
-                      description: item.description,
-                      format: item.format,
-                    }))}
+                    rows={row.original.dialog.map((item) => {
+                      if ('fieldName' in item) {
+                        return {
+                          name: item.fieldName,
+                          description: item.description,
+                          format: item.format,
+                        };
+                      }
+                      return { name: '', description: '', format: '' };
+                    })}
                     hideFooter
                   />
                 )}
@@ -159,15 +223,18 @@ const generateColumnData = (name: any) => {
   ];
 };
 
-const generateTableData = (name: any, data: any) => {
-  return data.map((item: any) => ({
-    name: item.name,
-    type:
-      name === 'Access Type'
-        ? toTitleCase(item.type.split('.').pop().toLowerCase())
-        : item.type,
-    dialog: name === 'Access Type' ? item.modelResources : item.schema,
-  }));
+const generateTableData = (name: string, data: ResourceSummary[]) => {
+  return data.map((item) => {
+    const permission = item.type.split('.').pop();
+    return {
+      name: item.name,
+      type:
+        name === 'Access Type'
+          ? toTitleCase((permission ?? item.type).toLowerCase())
+          : item.type,
+      dialog: (name === 'Access Type' ? item.modelResources : item.schema) ?? [],
+    };
+  });
 };
 
 const Page = () => {
@@ -177,8 +244,7 @@ const Page = () => {
     id: string;
   }>();
 
-  const getDatasetsSummary: { data: any; isLoading: any; refetch: any } =
-    useQuery([`summary_${params.id}`], () =>
+  const getDatasetsSummary = useQuery([`summary_${params.id}`], () =>
       GraphQL(
         datasetSummaryQuery,
         {
@@ -192,17 +258,21 @@ const Page = () => {
     getDatasetsSummary.refetch();
   });
 
-  const isPromptDataset =
-    getDatasetsSummary.data?.datasets[0]?.datasetType === 'PROMPT';
-  const promptMetadata = getDatasetsSummary.data?.datasets[0]?.promptMetadata;
+  const dataset = getDatasetsSummary.data?.datasets[0];
+  const isPromptDataset = dataset?.datasetType === 'PROMPT';
+  const promptMetadata = isPromptMetadata(dataset?.promptMetadata)
+    ? dataset.promptMetadata
+    : null;
+  const accessModels =
+    dataset && hasAccessModels(dataset) ? dataset.accessModels : undefined;
 
   const Summary = [
     {
+      kind: 'resources' as const,
       name: isPromptDataset ? 'Prompt Files' : 'Resource',
-      data: getDatasetsSummary.data?.datasets[0]?.resources,
+      data: dataset?.resources,
       error:
-        getDatasetsSummary.data &&
-        getDatasetsSummary.data?.datasets[0]?.resources.length === 0
+        getDatasetsSummary.data && (dataset?.resources.length ?? 0) === 0
           ? isPromptDataset
             ? 'No Prompt Files found. Please add to continue.'
             : 'No Resources found. Please add to continue.'
@@ -212,11 +282,11 @@ const Page = () => {
     ...(process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true'
       ? [
           {
+            kind: 'access' as const,
             name: 'Access Type',
-            data: getDatasetsSummary.data?.datasets[0]?.accessModels,
+            data: accessModels,
             error:
-              getDatasetsSummary.data &&
-              getDatasetsSummary.data?.datasets[0]?.accessModels.length === 0
+              getDatasetsSummary.data && (accessModels?.length ?? 0) === 0
                 ? 'No Access Type found. Please add to continue.'
                 : '',
             errorType: 'critical',
@@ -224,12 +294,13 @@ const Page = () => {
         ]
       : []),
     {
+      kind: 'metadata' as const,
       name: 'Metadata',
-      data: getDatasetsSummary.data?.datasets[0]?.metadata,
+      data: dataset?.metadata,
       error:
-        getDatasetsSummary.data?.datasets[0]?.sectors.length === 0 ||
-        getDatasetsSummary.data?.datasets[0]?.sectors.length === 0 ||
-        getDatasetsSummary.data?.datasets[0]?.description.length === 0
+        (dataset?.sectors.length ?? 0) === 0 ||
+        (dataset?.tags.length ?? 0) === 0 ||
+        (dataset?.description?.length ?? 0) === 0
           ? 'Tags or Description or Sectors is missing. Please add to continue.'
           : '',
       errorType: 'critical',
@@ -237,6 +308,7 @@ const Page = () => {
     ...(isPromptDataset
       ? [
           {
+            kind: 'prompt' as const,
             name: 'Prompt Metadata',
             data: promptMetadata,
             error: '',
@@ -249,19 +321,19 @@ const Page = () => {
   const PrimaryMetadata = [
     {
       label: 'Dataset Name',
-      value: getDatasetsSummary.data?.datasets[0].title,
+      value: dataset?.title,
     },
     {
       label: 'Description',
-      value: getDatasetsSummary.data?.datasets[0].description,
+      value: dataset?.description,
     },
     {
       label: 'Date of Creation',
-      value: formatDate(getDatasetsSummary.data?.datasets[0].created) || '',
+      value: formatDate(dataset?.created ?? null) || '',
     },
     {
       label: 'Date of Last Update',
-      value: formatDate(getDatasetsSummary.data?.datasets[0].modified) || '',
+      value: formatDate(dataset?.modified ?? null) || '',
     },
   ];
   const router = useRouter();
@@ -286,9 +358,13 @@ const Page = () => {
           `/dashboard/${params.entityType}/${params.entitySlug}/dataset`
         );
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         const errorMessage =
-          typeof err?.message === 'string' && err.message.trim()
+          typeof err === 'object' &&
+          err !== null &&
+          'message' in err &&
+          typeof err.message === 'string' &&
+          err.message.trim()
             ? err.message.trim()
             : 'Unable to publish dataset right now. Please try again.';
         toast(`Error: ${errorMessage}`, { id: PUBLISH_ERROR_TOAST_ID });
@@ -296,23 +372,24 @@ const Page = () => {
     }
   );
 
-  const isPublishDisabled = (dataset: any) => {
-    if (!dataset) return true;
+  const isPublishDisabled = (current?: DatasetSummaryResult | null) => {
+    if (!current) return true;
 
-    const hasResources = dataset.resources.length > 0;
-    const hasAccessModels = dataset.accessModels?.length > 0;
+    const hasResources = current.resources.length > 0;
+    const hasAccessModelsFlag =
+      hasAccessModels(current) && (current.accessModels?.length ?? 0) > 0;
     const isAccessModelEnabled =
       process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true';
     const hasRequiredMetadata =
-      dataset.sectors.length > 0 &&
-      dataset.description.length > 0 &&
-      dataset.tags.length > 0;
+      current.sectors.length > 0 &&
+      (current.description?.length ?? 0) > 0 &&
+      current.tags.length > 0;
 
     // No resources
     if (!hasResources) return true;
 
     // Access model check if enabled
-    if (isAccessModelEnabled && !hasAccessModels) return true;
+    if (isAccessModelEnabled && !hasAccessModelsFlag) return true;
 
     // Required metadata check
     return !hasRequiredMetadata;
@@ -323,8 +400,8 @@ const Page = () => {
   useEffect(() => {
     const fetchTitle = async () => {
       try {
-        const urlItem = getDatasetsSummary.data?.datasets[0]?.metadata.find(
-          (item: any) => item.metadataItem?.dataType === 'URL'
+        const urlItem = dataset?.metadata.find(
+          (item) => item.metadataItem?.dataType === 'URL'
         );
 
         if (urlItem && urlItem.value) {
@@ -337,7 +414,7 @@ const Page = () => {
     };
 
     fetchTitle();
-  }, [getDatasetsSummary.data?.datasets, getDatasetsSummary.isLoading]);
+  }, [dataset?.metadata, getDatasetsSummary.data?.datasets, getDatasetsSummary.isLoading]);
 
   return (
     <>
@@ -391,7 +468,7 @@ const Page = () => {
                       }}
                     >
                       <div className=" py-4">
-                        {item.name === 'Prompt Metadata' ? (
+                        {item.kind === 'prompt' ? (
                           <div className="flex flex-col gap-4 px-8 py-4">
                             {item.data?.task_type && (
                               <div className="flex flex-wrap gap-2">
@@ -417,13 +494,13 @@ const Page = () => {
                                 </Text>
                               </div>
                             )}
-                            {item.data?.target_languages?.length > 0 && (
+                            {(item.data?.target_languages?.length ?? 0) > 0 && (
                               <div className="flex flex-wrap gap-2">
                                 <Text className="lg:basis-1/6" variant="bodyMd">
                                   Target Languages:
                                 </Text>
                                 <div className="flex gap-2 lg:basis-4/5">
-                                  {item.data.target_languages.map(
+                                  {item.data?.target_languages?.map(
                                     (lang: string, idx: number) => (
                                       <Tag key={idx}>{lang}</Tag>
                                     )
@@ -441,13 +518,13 @@ const Page = () => {
                                 </Text>
                               </div>
                             )}
-                            {item.data?.target_model_types?.length > 0 && (
+                            {(item.data?.target_model_types?.length ?? 0) > 0 && (
                               <div className="flex flex-wrap gap-2">
                                 <Text className="lg:basis-1/6" variant="bodyMd">
                                   Target Model Types:
                                 </Text>
                                 <div className="flex gap-2 lg:basis-4/5">
-                                  {item.data.target_model_types.map(
+                                  {item.data?.target_model_types?.map(
                                     (model: string, idx: number) => (
                                       <Tag key={idx}>
                                         {model
@@ -480,9 +557,9 @@ const Page = () => {
                               </Text>
                             </div>
                           </div>
-                        ) : item.name !== 'Metadata' ? (
+                        ) : item.kind !== 'metadata' ? (
                           item.data &&
-                          item?.data.length > 0 && (
+                          item.data.length > 0 && (
                             <Table
                               columns={generateColumnData(item.name)}
                               rows={generateTableData(item.name, item.data)}
@@ -514,22 +591,27 @@ const Page = () => {
                                 )
                             )}
 
-                            {item?.data?.map((item: any, index: any) => (
+                            {item.data?.map((metadataItem, index) => (
                               <div className="flex flex-wrap gap-2" key={index}>
                                 <Text className="lg:basis-1/6" variant="bodyMd">
-                                  {toTitleCase(item.metadataItem.label)}:
+                                  {toTitleCase(metadataItem.metadataItem.label)}:
                                 </Text>
 
-                                {item.metadataItem.dataType !== 'URL' ? (
+                                {metadataItem.metadataItem.dataType !== 'URL' ? (
                                   <Text
                                     variant="bodyMd"
                                     className="lg:basis-4/5"
                                   >
                                     {' '}
-                                    {item.value === '' ? 'NA' : item.value}
+                                    {metadataItem.value === ''
+                                      ? 'NA'
+                                      : metadataItem.value}
                                   </Text>
                                 ) : (
-                                  <Link href={item.value} target="_blank">
+                                  <Link
+                                    href={metadataItem.value ?? ''}
+                                    target="_blank"
+                                  >
                                     <Text
                                       className="underline"
                                       color="highlight"
@@ -547,9 +629,8 @@ const Page = () => {
                                 Sectors:
                               </Text>
                               <div className="flex gap-2 lg:basis-4/5">
-                                {getDatasetsSummary.data?.datasets[0]?.sectors?.map(
-                                  (item: any, index: any) => (
-                                    <Tag key={index}>{item.name}</Tag>
+                                {dataset?.sectors?.map((sector, index) => (
+                                    <Tag key={index}>{sector.name}</Tag>
                                   )
                                 )}
                               </div>
@@ -559,9 +640,8 @@ const Page = () => {
                                 Tags:
                               </Text>
                               <div className="flex gap-2 lg:basis-4/5">
-                                {getDatasetsSummary.data?.datasets[0].tags.map(
-                                  (item: any, index: any) => (
-                                    <Tag key={index}>{item.value}</Tag>
+                                {dataset?.tags.map((tag, index) => (
+                                    <Tag key={index}>{tag.value}</Tag>
                                   )
                                 )}
                               </div>
@@ -575,9 +655,7 @@ const Page = () => {
               ))}
               <Button
                 className="m-auto w-fit"
-                disabled={isPublishDisabled(
-                  getDatasetsSummary.data?.datasets[0]
-                )}
+                disabled={isPublishDisabled(dataset)}
                 onClick={() => mutate()}
                 loading={mutationLoading}
               >

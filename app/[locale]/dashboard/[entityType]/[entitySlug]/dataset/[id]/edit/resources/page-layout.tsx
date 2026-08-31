@@ -14,8 +14,19 @@ export interface TListItem {
   label: string;
   value: string;
   description: string;
-  dataset: any;
-  fileDetails: any;
+  dataset?: string | number;
+  fileDetails?: {
+    id?: string;
+    file?: {
+      name?: string | null;
+      path?: string | null;
+      url?: string | null;
+    } | null;
+    format?: string | null;
+    size?: number | null;
+    created?: string | null;
+    modified?: string | null;
+  } | null;
 }
 
 export function DistibutionPage({
@@ -37,10 +48,10 @@ export function DistibutionPage({
 
   const ResourceList: TListItem[] =
     (data &&
-      data?.datasets[0]?.resources.map((item: any) => ({
+      data?.datasets[0]?.resources.map((item) => ({
         label: item.name,
-        value: item.id,
-        description: item.description,
+        value: String(item.id),
+        description: item.description ?? '',
         dataset: item.dataset?.pk,
         fileDetails: item.fileDetails,
        

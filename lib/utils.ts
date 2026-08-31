@@ -15,7 +15,7 @@ type MetadataOptions = {
     description: string;
     siteName?: string;
     image?: string;
-    other?: any;
+    other?: Metadata['other'];
   };
 };
 
@@ -47,7 +47,7 @@ export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
 export interface JsonLdSchema {
   '@context': 'https://schema.org';
   '@type': string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export function generateJsonLd(schema: JsonLdSchema): string {
@@ -82,33 +82,32 @@ export function buildSectorSlugParam(slug: string): string {
     .join('+');
 }
 
-const convertMap: any = {
-  border: (value: { width: any; style: any; color: any }) => {
+type TokenValue = Record<string, unknown> | string | number;
+
+const convertMap: Record<string, (value: TokenValue) => unknown> = {
+  border: (value) => {
+    if (typeof value !== 'object' || value === null) return value;
     return `${value.width} ${value.style} ${value.color}`;
   },
-  shadow: (value: {
-    offsetX: any;
-    offsetY: any;
-    blur: any;
-    spread: any;
-    color: any;
-  }) => {
+  shadow: (value) => {
+    if (typeof value !== 'object' || value === null) return value;
     return `${value.offsetX} ${value.offsetY} ${value.blur} ${value.spread} ${value.color}`;
   },
-  default: (value: any) => {
+  default: (value) => {
     return value;
   },
 };
 
-export function convertValue(value: any, category: any) {
+export function convertValue(value: TokenValue, category: string): unknown {
   return convertMap[category] ? convertMap[category](value) : value;
 }
 
 export const blobToBase64 = function (blob: Blob) {
-  let reader = new FileReader();
+  const reader = new FileReader();
   reader.onload = function () {
-    let dataUrl: any = reader.result;
-    let base64 = dataUrl?.split(',')[1];
+    const dataUrl = reader.result;
+    const base64 =
+      typeof dataUrl === 'string' ? dataUrl.split(',')[1] : undefined;
 
     return base64;
   };
@@ -124,14 +123,17 @@ export function bytesToSize(bytes: number) {
 }
 
 export const range = (len: number) => {
-  let arr: number[] = [];
+  const arr: number[] = [];
   for (let i = 0; i < len; i++) {
     arr.push(i);
   }
   return arr;
 };
 
-export function handleRedirect(event: any, link: any) {
+export function handleRedirect(
+  event: { preventDefault: () => void },
+  link: string
+): void {
   event.preventDefault();
   const confirmation = window.confirm(
     `You are being redirected to "${link}". `
@@ -142,7 +144,7 @@ export function handleRedirect(event: any, link: any) {
 }
 
 export function formatDateString(
-  input: string | number | any,
+  input: string | number | Date,
   isHyphenated = false
 ): string {
   const date = new Date(input);
@@ -295,10 +297,10 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     path: 'sectors',
   },
 };
-export const extractPublisherId = (publisherSlug: any) => {
+export const extractPublisherId = (publisherSlug: string): string => {
   // If the param contains an underscore, split and take the last part
   if (publisherSlug.includes('_')) {
-    return publisherSlug.split('_').pop();
+    return publisherSlug.split('_').pop() ?? publisherSlug;
   }
 
   // Otherwise, return the param as is (it's already just the ID)

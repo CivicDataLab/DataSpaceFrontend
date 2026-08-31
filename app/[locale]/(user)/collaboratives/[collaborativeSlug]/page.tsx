@@ -42,7 +42,7 @@ export async function generateMetadata({
       description:
         Collaborative?.summary ||
         `Explore open data and curated datasets in the ${Collaborative?.title} collaborative.`,
-      keywords: Collaborative?.tags?.map((tag: any) => tag.value) || [],
+      keywords: Collaborative?.tags?.map((tag) => tag.value) || [],
       openGraph: {
         type: 'article',
         locale: 'en_US',

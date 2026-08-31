@@ -43,8 +43,12 @@ const Details = () => {
   const PARTNER_ADD_ERROR_TOAST_ID = 'usecase-partner-add-error';
   const PARTNER_REMOVE_SUCCESS_TOAST_ID = 'usecase-partner-remove-success';
   const PARTNER_REMOVE_ERROR_TOAST_ID = 'usecase-partner-remove-error';
-  const getErrorMessage = (error: any, fallback: string) =>
-    typeof error?.message === 'string' && error.message.trim()
+  const getErrorMessage = (error: unknown, fallback: string) =>
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string' &&
+    error.message.trim()
       ? error.message.trim()
       : fallback;
   const [searchValue, setSearchValue] = useState('');
@@ -54,7 +58,7 @@ const Details = () => {
     partners: [] as { label: string; value: string }[],
   });
 
-  const Users: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  const Users = useQuery(
     [`fetch_users`],
     () =>
       GraphQL(
@@ -73,18 +77,16 @@ const Details = () => {
     }
   );
 
-  const Organizations: { data: any; isLoading: boolean; refetch: any } =
+  const Organizations =
     useQuery([`fetch_orgs`], () =>
       GraphQL(
         OrgList,
         {
           [params.entityType]: params.entitySlug,
-        },
-        []
-      )
+        })
     );
 
-  const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  const UseCaseData = useQuery(
     [`fetch_usecase`, params.id, params.entityType, params.entitySlug],
     () =>
       GraphQL(
@@ -101,33 +103,37 @@ const Details = () => {
     {
       refetchOnMount: true,
       refetchOnReconnect: true,
-    }
-  );
+      }
+    );
 
-  useEffect(() => {
+  const [prevUseCaseData, setPrevUseCaseData] = useState<
+    typeof UseCaseData.data | undefined
+  >(undefined);
+  if (UseCaseData.data !== prevUseCaseData) {
+    setPrevUseCaseData(UseCaseData.data);
     setFormData((prev) => ({
       ...prev,
       partners:
         UseCaseData?.data?.useCases?.[0]?.partnerOrganizations?.map(
-          (org: any) => ({
+          (org) => ({
             label: org.name,
             value: org.id,
           })
         ) || [],
       supporters:
         UseCaseData?.data?.useCases?.[0]?.supportingOrganizations?.map(
-          (org: any) => ({
+          (org) => ({
             label: org.name,
             value: org.id,
           })
         ) || [],
       contributors:
-        UseCaseData?.data?.useCases?.[0]?.contributors?.map((user: any) => ({
+        UseCaseData?.data?.useCases?.[0]?.contributors?.map((user) => ({
           label: user.fullName,
           value: user.id,
         })) || [],
     }));
-  }, [UseCaseData?.data]);
+  }
 
   const queryClient = useQueryClient();
   const invalidateUseCaseQueries = () => {
@@ -166,7 +172,7 @@ const Details = () => {
           });
           invalidateUseCaseQueries();
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
           toast(
             `Error: ${getErrorMessage(error, 'Unable to add contributor right now. Please try again.')}`,
             { id: CONTRIBUTORS_ADD_ERROR_TOAST_ID }
@@ -192,7 +198,7 @@ const Details = () => {
           });
           invalidateUseCaseQueries();
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
           toast(
             `Error: ${getErrorMessage(error, 'Unable to remove contributor right now. Please try again.')}`,
             { id: CONTRIBUTORS_REMOVE_ERROR_TOAST_ID }
@@ -217,7 +223,7 @@ const Details = () => {
         });
         invalidateUseCaseQueries();
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         toast(
           `Error: ${getErrorMessage(error, 'Unable to add supporter right now. Please try again.')}`,
           { id: SUPPORTER_ADD_ERROR_TOAST_ID }
@@ -243,7 +249,7 @@ const Details = () => {
           });
           invalidateUseCaseQueries();
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
           toast(
             `Error: ${getErrorMessage(error, 'Unable to remove supporter right now. Please try again.')}`,
             { id: SUPPORTER_REMOVE_ERROR_TOAST_ID }
@@ -268,7 +274,7 @@ const Details = () => {
         });
         invalidateUseCaseQueries();
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         toast(
           `Error: ${getErrorMessage(error, 'Unable to add partner right now. Please try again.')}`,
           { id: PARTNER_ADD_ERROR_TOAST_ID }
@@ -294,7 +300,7 @@ const Details = () => {
           });
           invalidateUseCaseQueries();
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
           toast(
             `Error: ${getErrorMessage(error, 'Unable to remove partner right now. Please try again.')}`,
             { id: PARTNER_REMOVE_ERROR_TOAST_ID }
@@ -310,7 +316,7 @@ const Details = () => {
   const selectedContributors = formData.contributors;
 
   const options =
-    Users?.data?.searchUsers?.map((user: any) => ({
+    Users?.data?.searchUsers?.map((user) => ({
       label: user.fullName,
       value: user.id,
     })) || [];
@@ -356,12 +362,12 @@ const Details = () => {
                   <CustomCombobox
                     options={options}
                     selectedValue={selectedContributors}
-                    onChange={(newValues: any) => {
+                    onChange={(newValues) => {
                       const prevValues = formData.contributors.map(
                         (item) => item.value
                       );
                       const newlyAdded = newValues.find(
-                        (item: any) => !prevValues.includes(item.value)
+                        (item) => !prevValues.includes(item.value)
                       );
 
                       setFormData((prev) => ({
@@ -378,7 +384,7 @@ const Details = () => {
                       setSearchValue(''); // clear input
                     }}
                     placeholder="Add Contributors"
-                    onInput={(value: any) => {
+                    onInput={(value: string) => {
                       setSearchValue(value);
                     }}
                   />
@@ -391,12 +397,12 @@ const Details = () => {
                     >
                       <Image
                         src={
-                          UseCaseData.data.useCases[0]?.contributors?.find(
-                            (contributor: any) => contributor.id === item.value
+                          UseCaseData.data?.useCases?.[0]?.contributors?.find(
+                            (contributor) => contributor.id === item.value
                           )?.profilePicture?.url
                             ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${
-                                UseCaseData.data.useCases[0]?.contributors?.find(
-                                  (contributor: any) =>
+                                UseCaseData.data?.useCases?.[0]?.contributors?.find(
+                                  (contributor) =>
                                     contributor.id === item.value
                                 )?.profilePicture?.url
                               }`
@@ -440,16 +446,16 @@ const Details = () => {
             placeholder="Add Supporters"
             data={UseCaseData?.data?.useCases[0]?.supportingOrganizations}
             options={(Organizations?.data?.allOrganizations || [])?.map(
-              (org: any) => ({
+              (org) => ({
                 label: org.name,
                 value: org.id,
               })
             )}
             selectedValues={formData.supporters}
-            onChange={(newValues: any) => {
+            onChange={(newValues) => {
               const prevValues = formData.supporters.map((item) => item.value);
               const newlyAdded = newValues.find(
-                (item: any) => !prevValues.includes(item.value)
+                (item) => !prevValues.includes(item.value)
               );
 
               setFormData((prev) => ({ ...prev, supporters: newValues }));
@@ -461,7 +467,7 @@ const Details = () => {
                 });
               }
             }}
-            onRemove={(item: any) => {
+            onRemove={(item) => {
               setFormData((prev) => ({
                 ...prev,
                 supporters: prev.supporters.filter(
@@ -481,16 +487,16 @@ const Details = () => {
             placeholder="Add Partners"
             data={UseCaseData?.data?.useCases[0]?.partnerOrganizations}
             options={(Organizations?.data?.allOrganizations || [])?.map(
-              (org: any) => ({
+              (org) => ({
                 label: org.name,
                 value: org.id,
               })
             )}
             selectedValues={formData.partners}
-            onChange={(newValues: any) => {
+            onChange={(newValues) => {
               const prevValues = formData.partners.map((item) => item.value);
               const newlyAdded = newValues.find(
-                (item: any) => !prevValues.includes(item.value)
+                (item) => !prevValues.includes(item.value)
               );
 
               setFormData((prev) => ({ ...prev, partners: newValues }));
@@ -502,7 +508,7 @@ const Details = () => {
                 });
               }
             }}
-            onRemove={(item: any) => {
+            onRemove={(item) => {
               setFormData((prev) => ({
                 ...prev,
                 partners: prev.partners.filter((s) => s.value !== item.value),
@@ -530,14 +536,14 @@ export default Details;
                   label="Add Contributors"
                   list={filteredOptions}
                   selectedValue={[]}
-                  onChange={(value: any) => {
+                  onChange={(value) => {
                     setFormData((prev) => ({
                       ...prev,
                       contributors: [...prev.contributors, ...value],
                     }));
                     setSearchValue(''); // clear input
                   }}
-                  onInput={(value: any) => {
+                  onInput={(value: string) => {
                     console.log(value);
                     setSearchValue(value);
                   }}
@@ -555,13 +561,13 @@ export default Details;
                   name="partners"
                   label="Add Partners"
                   list={
-                    allEntityDetails?.organizations?.map((org: any) => ({
+                    allEntityDetails?.organizations?.map((org) => ({
                       label: org.name,
                       value: org.name,
                     }))
                   }
                   selectedValue={formData.partners}
-                  onChange={(value: any) => {
+                  onChange={(value) => {
                     setFormData((prev) => ({
                       ...prev,
                       partners: value,

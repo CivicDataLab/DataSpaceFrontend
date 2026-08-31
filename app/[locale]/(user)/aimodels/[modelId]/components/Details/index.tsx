@@ -2,8 +2,25 @@
 
 import { Text } from 'opub-ui';
 
+interface ModelEndpoint {
+  id?: string | number;
+  url?: string;
+  isPrimary?: boolean;
+  httpMethod?: string;
+  authType?: string;
+  timeoutSeconds?: number;
+  isActive?: boolean;
+}
+
+interface DetailsData {
+  inputSchema?: Record<string, unknown> | null;
+  outputSchema?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
+  endpoints?: ModelEndpoint[] | null;
+}
+
 interface DetailsProps {
-  data: any;
+  data: DetailsData;
 }
 
 export default function Details({ data }: DetailsProps) {
@@ -71,7 +88,7 @@ export default function Details({ data }: DetailsProps) {
             API Endpoints
           </Text>
           <div className="flex flex-col gap-3">
-            {data.endpoints.map((endpoint: any, index: number) => (
+            {data.endpoints.map((endpoint, index) => (
               <div
                 key={endpoint.id || index}
                 className="rounded-lg border border-greyExtralight p-4"

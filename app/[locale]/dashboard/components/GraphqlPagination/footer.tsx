@@ -39,8 +39,8 @@ const Footer: React.FC<FooterProps> = ({
     }
   };
 
-  const handlePageSizeChange = (event: any) => {
-    const newSize = parseInt(event as string);
+  const handlePageSizeChange = (event: string) => {
+    const newSize = parseInt(event);
     if (!isNaN(newSize) && newSize > 0) {
       onPageSizeChange(newSize);
     }

@@ -12,7 +12,7 @@ import Metadata from './components/Metadata';
 import PrimaryData from './components/PrimaryData';
 import Versions from './components/Versions';
 
-const aiModelQuery: any = graphql(`
+const aiModelQuery = graphql(`
   query getAIModel($modelId: Int!) {
     getAiModel(modelId: $modelId) {
       id
@@ -102,7 +102,7 @@ export default function AIModelDetailsPage({
     }
   );
 
-  const modelData = (data as any)?.getAiModel;
+  const modelData = data?.getAiModel;
 
   const jsonLd = generateJsonLd({
     '@context': 'https://schema.org',

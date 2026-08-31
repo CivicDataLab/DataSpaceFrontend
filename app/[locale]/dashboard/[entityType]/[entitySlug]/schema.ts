@@ -1,6 +1,6 @@
 import { graphql } from '@/gql';
 
-export const getOrgDetailsQryDoc: any = graphql(`
+export const getOrgDetailsQryDoc = graphql(`
   query getOrgDetailsQry($slug: String) {
     organizations(slug: $slug) {
       id
@@ -26,7 +26,7 @@ export const getOrgDetailsQryDoc: any = graphql(`
   }
 `);
 
-export const UserDetailsQryDoc: any = graphql(`
+export const UserDetailsQryDoc = graphql(`
   query userDetails {
     me {
       bio

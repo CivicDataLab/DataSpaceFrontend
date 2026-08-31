@@ -1,9 +1,13 @@
 import { DataTable } from 'opub-ui';
 
+interface PreviewCell {
+  getValue: () => unknown;
+}
+
 interface EditProps {
   previewData: {
     columns: string[];
-    rows: any[];
+    rows: unknown[][];
   };
 }
 
@@ -12,16 +16,15 @@ const PreviewData = ({ previewData }: EditProps) => {
     previewData?.columns?.map((column: string) => ({
       accessorKey: column,
       header: column,
-      cell: ({ cell }: any) => {
+      cell: ({ cell }: { cell: PreviewCell }) => {
         const value = cell.getValue();
-        return <span>{value !== null ? value?.toString() : 'N/A'}</span>;
+        return <span>{value !== null ? String(value) : 'N/A'}</span>;
       },
     })) || [];
 
-  // Transform rows data to match column structure
   const previewRows =
-    previewData?.rows?.map((row: any[]) => {
-      const rowData: Record<string, any> = {};
+    previewData?.rows?.map((row: unknown[]) => {
+      const rowData: Record<string, unknown> = {};
       previewData.columns.forEach((column: string, index: number) => {
         rowData[column] = row[index];
       });

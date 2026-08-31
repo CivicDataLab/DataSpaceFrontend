@@ -3,15 +3,83 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { MetadataModels } from '@/gql/generated/graphql';
+import {
+  MetadataModels,
+  UpdateCollaborativeMetadataInput,
+} from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Combobox, Spinner, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { useEditStatus } from '../../context';
 
+interface SelectOption {
+  label: string;
+  value: string;
+}
+
+interface MetadataField {
+  id: string;
+  label: string;
+  dataType: string;
+  options?: string[] | null;
+}
+
+type MetadataFormValue = string | SelectOption[] | SelectOption | undefined;
+
+interface MetadataFormData {
+  [key: string]: MetadataFormValue;
+}
+
+interface MetadataSource {
+  metadata?: Array<{
+    value?: string | null;
+    metadataItem: { id: string; dataType: string };
+  }> | null;
+  sectors?: Array<{ id: string; name?: string | null }> | null;
+  sdgs?: Array<{
+    id: string;
+    name?: string | null;
+    code: string;
+    number?: number | null;
+  }> | null;
+  tags?: Array<{ id: string; value?: string | null }> | null;
+  geographies?: Array<{ id: string; name?: string | null }> | null;
+}
+
+function comboValues(value: MetadataFormValue, key: 'value' | 'label'): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (typeof item === 'object' && item !== null) {
+      return String(item[key] ?? '');
+    }
+    return String(item);
+  });
+}
+
+function asSelectOptions(value: MetadataFormValue): SelectOption[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function comboboxSelected(
+  value: MetadataFormValue
+): string | SelectOption[] | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value)) return value;
+  return [value];
+}
+
+function metadataValue(value: MetadataFormValue): string {
+  if (Array.isArray(value)) {
+    return value.map((item) => item.value || String(item)).join(', ');
+  }
+  if (typeof value === 'string') return value;
+  return value?.value ?? '';
+}
+
 // prettier-ignore
-const FetchCollaborativeMetadata: any = graphql(`
+const FetchCollaborativeMetadata = graphql(`
   query CollaborativeMetadata($filters: CollaborativeFilter) {
     collaboratives(filters: $filters) {
       id
@@ -64,7 +132,7 @@ const metadataQueryDoc = graphql(`
 `);
 
 // prettier-ignore
-const sectorsListQueryDoc: any = graphql(`
+const sectorsListQueryDoc = graphql(`
   query SectorList {
     sectors {
       id
@@ -74,7 +142,7 @@ const sectorsListQueryDoc: any = graphql(`
 `);
 
 // prettier-ignore
-const sdgsListQueryDoc: any = graphql(`
+const sdgsListQueryDoc = graphql(`
   query SDGList {
     sdgs {
       id
@@ -86,7 +154,7 @@ const sdgsListQueryDoc: any = graphql(`
 `);
 
 // prettier-ignore
-const tagsListQueryDoc: any = graphql(`
+const tagsListQueryDoc = graphql(`
   query TagsList {
     tags {
       id
@@ -96,7 +164,7 @@ const tagsListQueryDoc: any = graphql(`
 `);
 
 // prettier-ignore
-const geographiesListQueryDoc: any = graphql(`
+const geographiesListQueryDoc = graphql(`
   query GeographiesList {
     geographies {
       id
@@ -112,7 +180,7 @@ const geographiesListQueryDoc: any = graphql(`
 `);
 
 // prettier-ignore
-const UpdateCollaborativeMetadata: any = graphql(`
+const UpdateCollaborativeMetadata = graphql(`
   mutation addUpdateCollaborativeMetadata($updateMetadataInput: UpdateCollaborativeMetadataInput!) {
     addUpdateCollaborativeMetadata(updateMetadataInput: $updateMetadataInput) {
       __typename
@@ -162,7 +230,7 @@ const Metadata = () => {
   const { setStatus } = useEditStatus();
   const queryClient = useQueryClient();
 
-  const collaborativeData: { data: any; isLoading: boolean } = useQuery(
+  const collaborativeData = useQuery(
     [
       `fetch_CollaborativeData_Metadata`,
       params.entityType,
@@ -200,13 +268,11 @@ const Metadata = () => {
       )
   );
 
-  const defaultValuesPrepFn = (data: any) => {
-    let defaultVal: {
-      [key: string]: any;
-    } = {};
+  const defaultValuesPrepFn = (data: MetadataSource): MetadataFormData => {
+    const defaultVal: MetadataFormData = {};
 
-    data?.metadata?.map((field: any) => {
-      if (field.metadataItem.dataType === 'MULTISELECT' && field.value !== '') {
+    data?.metadata?.map((field) => {
+      if (field.metadataItem.dataType === 'MULTISELECT' && field.value) {
         defaultVal[field.metadataItem.id] = field.value
           .split(', ')
           .map((value: string) => ({
@@ -221,36 +287,36 @@ const Metadata = () => {
     });
 
     defaultVal['sectors'] =
-      data?.sectors?.map((sector: any) => {
+      data?.sectors?.map((sector) => {
         return {
-          label: sector.name,
+          label: sector.name ?? '',
           value: sector.id,
         };
       }) || [];
 
     defaultVal['sdgs'] =
-      data?.sdgs?.map((sdg: any) => {
+      data?.sdgs?.map((sdg) => {
         const num = sdg.number
           ? String(sdg.number).padStart(2, '0')
           : sdg.code.replace('SDG', '').padStart(2, '0');
         return {
-          label: `${num}. ${sdg.name}`,
+          label: `${num}. ${sdg.name ?? ''}`,
           value: sdg.id,
         };
       }) || [];
 
     defaultVal['tags'] =
-      data?.tags?.map((tag: any) => {
+      data?.tags?.map((tag) => {
         return {
-          label: tag.value,
+          label: tag.value ?? '',
           value: tag.id,
         };
       }) || [];
 
     defaultVal['geographies'] =
-      data?.geographies?.map((geo: any) => {
+      data?.geographies?.map((geo) => {
         return {
-          label: geo.name,
+          label: geo.name ?? '',
           value: geo.id,
         };
       }) || [];
@@ -262,8 +328,11 @@ const Metadata = () => {
     defaultValuesPrepFn(collaborativeData?.data?.collaboratives?.[0] || {})
   );
   const [previousFormData, setPreviousFormData] = useState(formData);
-
-  useEffect(() => {
+  const [prevCollaborativeData, setPrevCollaborativeData] = useState(
+    collaborativeData.data
+  );
+  if (collaborativeData.data !== prevCollaborativeData) {
+    setPrevCollaborativeData(collaborativeData.data);
     if (collaborativeData.data?.collaboratives?.[0]) {
       const updatedData = defaultValuesPrepFn(
         collaborativeData.data.collaboratives[0]
@@ -271,55 +340,42 @@ const Metadata = () => {
       setFormData(updatedData);
       setPreviousFormData(updatedData);
     }
-  }, [collaborativeData.data]);
+  }
 
-  const getSectorsList: { data: any; isLoading: boolean; error: any } =
+  const getSectorsList =
     useQuery([`sectors_list_query`], () =>
       GraphQL(
         sectorsListQueryDoc,
         {
           [params.entityType]: params.entitySlug,
-        },
-        []
-      )
+        })
     );
 
-  const getSDGsList: { data: any; isLoading: boolean; error: any } = useQuery(
+  const getSDGsList = useQuery(
     [`sdgs_list_query`],
     () =>
       GraphQL(
         sdgsListQueryDoc,
         {
           [params.entityType]: params.entitySlug,
-        },
-        []
-      )
+        })
   );
 
-  const getTagsList: {
-    data: any;
-    isLoading: boolean;
-    error: any;
-    refetch: any;
-  } = useQuery([`tags_list_query`], () =>
+  const getTagsList = useQuery([`tags_list_query`], () =>
     GraphQL(
       tagsListQueryDoc,
       {
         [params.entityType]: params.entitySlug,
-      },
-      []
-    )
+      })
   );
 
-  const getGeographiesList: { data: any; isLoading: boolean; error: any } =
+  const getGeographiesList =
     useQuery([`geographies_list_query`], () =>
       GraphQL(
         geographiesListQueryDoc,
         {
           [params.entityType]: params.entitySlug,
-        },
-        []
-      )
+        })
     );
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
 
@@ -327,7 +383,7 @@ const Metadata = () => {
 
   // Update mutation
   const updateCollaborative = useMutation(
-    (data: { updateMetadataInput: any }) =>
+    (data: { updateMetadataInput: UpdateCollaborativeMetadataInput }) =>
       GraphQL(
         UpdateCollaborativeMetadata,
         {
@@ -336,19 +392,20 @@ const Metadata = () => {
         data
       ),
     {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         toast('Collaborative updated successfully', {
           id: COLLAB_METADATA_TOAST_ID,
         });
-        const updatedData = defaultValuesPrepFn(
-          res.addUpdateCollaborativeMetadata
-        );
-        if (isTagsListUpdated) {
-          getTagsList.refetch();
-          setIsTagsListUpdated(false);
+        const result = res.addUpdateCollaborativeMetadata;
+        if (result.__typename === 'TypeCollaborative') {
+          const updatedData = defaultValuesPrepFn(result);
+          if (isTagsListUpdated) {
+            getTagsList.refetch();
+            setIsTagsListUpdated(false);
+          }
+          setFormData(updatedData);
+          setPreviousFormData(updatedData);
         }
-        setFormData(updatedData);
-        setPreviousFormData(updatedData);
 
         // Keep other edit tabs in sync (Details/Publish) without requiring a full reload.
         queryClient.invalidateQueries({
@@ -376,20 +433,20 @@ const Metadata = () => {
           ],
         });
       },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`, { id: COLLAB_METADATA_TOAST_ID });
+      onError: (error: unknown) => {
+        toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`, { id: COLLAB_METADATA_TOAST_ID });
       },
     }
   );
 
-  const handleChange = (field: string, value: any) => {
-    setFormData((prevData: any) => ({
+  const handleChange = (field: string, value: MetadataFormValue) => {
+    setFormData((prevData) => ({
       ...prevData,
       [field]: value,
     }));
   };
 
-  const handleSave = (updatedData: any) => {
+  const handleSave = (updatedData: MetadataFormData) => {
     if (JSON.stringify(updatedData) !== JSON.stringify(previousFormData)) {
       setPreviousFormData(updatedData);
 
@@ -400,23 +457,18 @@ const Metadata = () => {
             .filter(
               (key) =>
                 !['tags', 'sectors', 'sdgs'].includes(key) &&
-                metadataFields?.metadata?.find((item: any) => item.id === key)
+                metadataFields?.metadata?.find((item) => item.id === key)
             )
             .map((key) => ({
               id: key,
-              value: Array.isArray(updatedData[key])
-                ? updatedData[key]
-                    .map((item: any) => item.value || item)
-                    .join(', ')
-                : updatedData[key],
+              value: metadataValue(updatedData[key]),
             })),
-          sectors: updatedData.sectors?.map((item: any) => item.value) || [],
-          sdgs: updatedData.sdgs?.map((item: any) => item.value) || [],
-          tags: updatedData.tags?.map((item: any) => item.label) || [],
-          geographies:
-            updatedData.geographies?.map((item: any) =>
-              parseInt(item.value, 10)
-            ) || [],
+          sectors: comboValues(updatedData.sectors, 'value'),
+          sdgs: comboValues(updatedData.sdgs, 'value'),
+          tags: comboValues(updatedData.tags, 'label'),
+          geographies: comboValues(updatedData.geographies, 'value').map((value) =>
+              parseInt(value, 10)
+            ),
         },
       });
     }
@@ -440,18 +492,20 @@ const Metadata = () => {
     );
   }
 
-  function renderInputField(metadataFormItem: any) {
+  function renderInputField(metadataFormItem: MetadataField) {
     if (metadataFormItem.dataType === 'SELECT') {
       return (
         <div key={metadataFormItem.id} className="w-full py-4 pr-4 sm:w-1/2">
           <Combobox
             name={metadataFormItem.id}
-            list={metadataFormItem.options?.map((option: string) => ({
-              label: option,
-              value: option,
-            }))}
+            list={
+              metadataFormItem.options?.map((option: string) => ({
+                label: option,
+                value: option,
+              })) || []
+            }
             label={metadataFormItem.label}
-            selectedValue={formData[metadataFormItem.id]}
+            selectedValue={comboboxSelected(formData[metadataFormItem.id])}
             displaySelected
             onChange={(value) => {
               handleChange(metadataFormItem.id, value);
@@ -468,13 +522,13 @@ const Metadata = () => {
           <Combobox
             name={metadataFormItem.id}
             list={[
-              ...(metadataFormItem.options.map((option: string) => ({
+              ...(metadataFormItem.options?.map((option: string) => ({
                 label: option,
                 value: option,
               })) || []),
             ]}
             label={metadataFormItem.label + ' *'}
-            selectedValue={formData[metadataFormItem.id]}
+            selectedValue={comboboxSelected(formData[metadataFormItem.id])}
             displaySelected
             onChange={(value) => {
               handleChange(metadataFormItem.id, value);
@@ -496,7 +550,7 @@ const Metadata = () => {
               label="SDG Goals *"
               name="sdgs"
               list={
-                getSDGsList?.data?.sdgs?.map((item: any) => {
+                getSDGsList?.data?.sdgs?.map((item) => {
                   const num = item.number
                     ? String(item.number).padStart(2, '0')
                     : item.code.replace('SDG', '').padStart(2, '0');
@@ -506,7 +560,7 @@ const Metadata = () => {
                   };
                 }) || []
               }
-              selectedValue={formData.sdgs}
+              selectedValue={asSelectOptions(formData.sdgs)}
               onChange={(value) => {
                 handleChange('sdgs', value);
                 handleSave({ ...formData, sdgs: value });
@@ -520,13 +574,13 @@ const Metadata = () => {
               label="Tags"
               creatable
               list={
-                getTagsList?.data.tags?.map((item: any) => ({
-                  label: item.value,
+                getTagsList?.data?.tags?.map((item) => ({
+                  label: item.value ?? '',
                   value: item.id,
                 })) || []
               }
               key={`tags-${getTagsList.data?.tags?.length}`}
-              selectedValue={formData.tags}
+              selectedValue={asSelectOptions(formData.tags)}
               onChange={(value) => {
                 setIsTagsListUpdated(true);
                 handleChange('tags', value);
@@ -540,12 +594,12 @@ const Metadata = () => {
               label="Sectors *"
               name="sectors"
               list={
-                getSectorsList?.data.sectors?.map((item: any) => ({
+                getSectorsList?.data?.sectors?.map((item) => ({
                   label: item.name,
                   value: item.id,
                 })) || []
               }
-              selectedValue={formData.sectors}
+              selectedValue={asSelectOptions(formData.sectors)}
               onChange={(value) => {
                 handleChange('sectors', value);
                 handleSave({ ...formData, sectors: value });
@@ -558,12 +612,12 @@ const Metadata = () => {
               label="Geographies"
               name="geographies"
               list={
-                getGeographiesList?.data.geographies?.map((item: any) => ({
+                getGeographiesList?.data?.geographies?.map((item) => ({
                   label: `${item.name}${item.parentId ? ` (${item.parentId.name})` : ''}`,
                   value: item.id,
                 })) || []
               }
-              selectedValue={formData.geographies}
+              selectedValue={asSelectOptions(formData.geographies)}
               onChange={(value) => {
                 handleChange('geographies', value);
                 handleSave({ ...formData, geographies: value });
@@ -573,7 +627,7 @@ const Metadata = () => {
         </div>
 
         <div className="flex flex-wrap">
-          {metadataFields?.metadata?.map((item: any) => renderInputField(item))}
+          {metadataFields?.metadata?.map((item) => renderInputField(item))}
         </div>
       </div>
     </div>

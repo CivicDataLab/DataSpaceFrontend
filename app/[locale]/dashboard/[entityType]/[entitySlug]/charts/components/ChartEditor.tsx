@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
+  ChartTypes,
   ResourceChartImageInput,
   ResourceChartInput,
 } from '@/gql/generated/graphql';
@@ -24,7 +25,7 @@ import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
-const getAllDatasetsListwithResourcesDoc: any = graphql(`
+const getAllDatasetsListwithResourcesDoc = graphql(`
   query getAllDatasets {
     datasets {
       id
@@ -38,7 +39,7 @@ const getAllDatasetsListwithResourcesDoc: any = graphql(`
   }
 `);
 
-const createResourceChartImageDoc: any = graphql(`
+const createResourceChartImageDoc = graphql(`
   mutation createResourceChartImage($input: ResourceChartImageInput!) {
     createResourceChartImage(input: $input) {
       __typename
@@ -50,7 +51,7 @@ const createResourceChartImageDoc: any = graphql(`
   }
 `);
 
-const createResourceChartVizDoc: any = graphql(`
+const createResourceChartVizDoc = graphql(`
   mutation createResourceChart($chartInput: ResourceChartInput!) {
     createResourceChart(chartInput: $chartInput) {
       __typename
@@ -62,27 +63,52 @@ const createResourceChartVizDoc: any = graphql(`
   }
 `);
 
-const ChartsEditor = ({ setEditorView }: { setEditorView: any }) => {
+interface ChartEditorParams {
+  entityType: string;
+  entitySlug: string;
+}
+
+interface DatasetResource {
+  id: string;
+  name: string;
+}
+
+interface DatasetWithResources {
+  id: string;
+  title: string;
+  slug?: string;
+  resources: DatasetResource[];
+}
+
+interface AllDatasetsQueryResult {
+  data?: {
+    datasets?: DatasetWithResources[];
+  };
+  isLoading: boolean;
+}
+
+interface SelectOption {
+  label: string;
+  value: string;
+}
+
+const ChartsEditor = ({
+  setEditorView,
+}: {
+  setEditorView: (view: boolean) => void;
+}) => {
   /*
     Chart creation View in Listing Page to create either the image or the visualization
   */
 
   const params = useParams<{ entityType: string; entitySlug: string }>();
 
-  const allDatasetsRes: {
-    data: any;
-    isLoading: boolean;
-    refetch: any;
-    error: any;
-    isError: boolean;
-  } = useQuery([`allDatasetsListwithResourcesForCharts`], () =>
-    GraphQL(
-      getAllDatasetsListwithResourcesDoc,
-      {
+  const allDatasetsRes = useQuery(
+    [`allDatasetsListwithResourcesForCharts`],
+    () =>
+      GraphQL(getAllDatasetsListwithResourcesDoc, {
         [params.entityType]: params.entitySlug,
-      },
-      []
-    )
+      })
   );
 
   return (
@@ -127,20 +153,16 @@ const ChartImageUpload = ({
   allDatasetsRes,
   params,
 }: {
-  allDatasetsRes: any;
-  params: any;
+  allDatasetsRes: AllDatasetsQueryResult;
+  params: ChartEditorParams;
 }) => {
   const [files, setFiles] = useState<File | undefined>(undefined);
 
-  const [selectedDataset, setSelectedDataset] = useState<any>(null);
+  const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
 
   const router = useRouter();
 
-  const createResourceChartImageMutation: {
-    mutate: any;
-    isLoading: boolean;
-    error: any;
-  } = useMutation(
+  const createResourceChartImageMutation = useMutation(
     [`createResourceChartImage`],
     (input: ResourceChartImageInput) =>
       GraphQL(
@@ -151,15 +173,17 @@ const ChartImageUpload = ({
         { input: input }
       ),
     {
-      onSuccess: (resp: any) => {
+      onSuccess: (resp) => {
         toast(`Created chart image successfully`);
-        // Navigate to chart image preview page
+        const created = resp.createResourceChartImage;
+        const createdId = created && 'id' in created ? created.id : undefined;
         router.push(
-          `/dashboard/${params.entityType}/${params.entitySlug}/charts/${resp?.createResourceChartImage?.id}?type=TypeResourceChartImage`
+          `/dashboard/${params.entityType}/${params.entitySlug}/charts/${createdId}?type=TypeResourceChartImage`
         );
       },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
+      onError: (err: unknown) => {
+        const message = err instanceof Error ? err.message : String(err);
+        toast('Error:  ' + message.split(':')[0]);
       },
     }
   );
@@ -190,12 +214,15 @@ const ChartImageUpload = ({
             <Combobox
               label=""
               name="selectDataset"
-              list={allDatasetsRes?.data?.datasets?.map((item: any) => {
-                return {
-                  label: item.title,
-                  value: item.id,
-                };
-              })}
+              list={
+                allDatasetsRes?.data?.datasets?.map((item) => {
+                  const option: SelectOption = {
+                    label: item.title,
+                    value: item.id,
+                  };
+                  return option;
+                }) ?? []
+              }
               displaySelected
               // selectedValue={selectedDataset}
               onChange={(e) => {
@@ -294,20 +321,16 @@ const ChartCreateViz = ({
   allDatasetsRes,
   params,
 }: {
-  allDatasetsRes: any;
-  params: any;
+  allDatasetsRes: AllDatasetsQueryResult;
+  params: ChartEditorParams;
 }) => {
-  const [chartDataset, setChartDataset] = useState<any>('');
-  const [chartResource, setChartResource] = useState<any>('');
-  const [selectedChartType, setSelectedChartType] = useState<any>('');
+  const [chartDataset, setChartDataset] = useState('');
+  const [chartResource, setChartResource] = useState('');
+  const [selectedChartType, setSelectedChartType] = useState('');
 
   const router = useRouter();
 
-  const createResourceChartVizMutation: {
-    mutate: any;
-    isLoading: boolean;
-    error: any;
-  } = useMutation(
+  const createResourceChartVizMutation = useMutation(
     [`createResourceChart`],
     (chartInput: ResourceChartInput) =>
       GraphQL(
@@ -318,17 +341,18 @@ const ChartCreateViz = ({
         { chartInput: chartInput }
       ),
     {
-      onSuccess: (resp: any) => {
+      onSuccess: (resp) => {
         toast(`Created chart successfully. Redirecting . . .`);
-        // Navigate to chart preview page
+        const created = resp.createResourceChart;
+        const createdId = created && 'id' in created ? created.id : undefined;
         router.push(
-          `/dashboard/${params.entityType}/${params.entitySlug}/charts/${resp?.createResourceChart?.id}?type=TypeResourceChart`
+          `/dashboard/${params.entityType}/${params.entitySlug}/charts/${createdId}?type=TypeResourceChart`
         );
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         console.error(err);
-
-        toast('Error:  ' + err.message.split(':')[0]);
+        const message = err instanceof Error ? err.message : String(err);
+        toast('Error:  ' + message.split(':')[0]);
       },
     }
   );
@@ -376,7 +400,7 @@ const ChartCreateViz = ({
     if (chartResource !== '' && selectedChartType !== '') {
       createResourceChartVizMutation.mutate({
         resource: chartResource,
-        type: selectedChartType,
+        type: selectedChartType as ChartTypes,
       });
     } else {
       toast('Required fields missing. Please fill all required fields.');
@@ -397,12 +421,15 @@ const ChartCreateViz = ({
             <Select
               name={'chartCreateSelectDataset'}
               label=""
-              options={allDatasetsRes?.data?.datasets?.map((item: any) => {
-                return {
-                  label: item.title,
-                  value: item.id,
-                };
-              })}
+              options={
+                allDatasetsRes?.data?.datasets?.map((item) => {
+                  const option: SelectOption = {
+                    label: item.title,
+                    value: item.id,
+                  };
+                  return option;
+                }) ?? []
+              }
               required
               requiredIndicator={true}
               onChange={(e) => {
@@ -418,14 +445,17 @@ const ChartCreateViz = ({
               label=""
               required
               requiredIndicator={true}
-              options={allDatasetsRes?.data?.datasets
-                ?.find((item: any) => item.id === chartDataset)
-                ?.resources?.map((item: any) => {
-                  return {
-                    label: item.name,
-                    value: item.id,
-                  };
-                })}
+              options={
+                allDatasetsRes?.data?.datasets
+                  ?.find((item) => item.id === chartDataset)
+                  ?.resources?.map((item) => {
+                    const option: SelectOption = {
+                      label: item.name,
+                      value: item.id,
+                    };
+                    return option;
+                  }) ?? []
+              }
               onChange={(e) => {
                 setChartResource(e);
               }}
@@ -447,7 +477,11 @@ const ChartCreateViz = ({
                     )}
                     icon={
                       <Icon
-                        source={Icons[chartType.icon]}
+                        source={
+                          chartType.icon in Icons
+                            ? Icons[chartType.icon as keyof typeof Icons]
+                            : Icons.chartBar
+                        }
                         size={48}
                         className="svg:text-primaryDefault"
                       />

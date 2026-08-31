@@ -15,7 +15,7 @@ import StepNavigation from '../../components/StepNavigation';
 import TitleBar from '../../components/title-bar';
 import { EditStatusProvider, useEditStatus } from './context';
 
-const UpdateAIModelNameMutation: any = graphql(`
+const UpdateAIModelNameMutation = graphql(`
   mutation updateAIModelName($input: UpdateAIModelInput!) {
     updateAiModel(input: $input) {
       success
@@ -27,7 +27,7 @@ const UpdateAIModelNameMutation: any = graphql(`
   }
 `);
 
-const FetchAIModelName: any = graphql(`
+const FetchAIModelName = graphql(`
   query AIModelName($filters: AIModelFilter) {
     aiModels(filters: $filters) {
       id
@@ -55,7 +55,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     return pathName.indexOf(v) >= 0;
   });
 
-  const AIModelData: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  const AIModelData = useQuery(
     [
       `fetch_AIModelData`,
       params.id,
@@ -117,8 +117,8 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
           ],
         });
       },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`,{id: AIMODEL_TITLE_ERROR_TOAST_ID});
+      onError: (error: unknown) => {
+        toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`,{id: AIMODEL_TITLE_ERROR_TOAST_ID});
       },
     }
   );
@@ -169,7 +169,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     <div className="mt-8 flex h-full flex-col gap-6">
       <TitleBar
         label={'AI MODEL NAME'}
-        title={AIModelData?.data?.aiModels[0]?.displayName}
+        title={AIModelData?.data?.aiModels?.[0]?.displayName ?? ''}
         goBackURL={goBackURL}
         onSave={(e) => mutate({ displayName: e })}
         loading={editMutationLoading}

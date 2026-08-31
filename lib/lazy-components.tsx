@@ -20,12 +20,18 @@ export const ComponentLoader = () => (
 );
 
 // Higher-order component for lazy loading with consistent loading state
-export const withLazyLoading = (LazyComponent: React.LazyExoticComponent<React.ComponentType<any>>) => {
-  return (props: any) => (
-    <React.Suspense fallback={<ComponentLoader />}>
-      <LazyComponent {...props} />
-    </React.Suspense>
-  );
+export const withLazyLoading = <P extends object>(
+  LazyComponent: React.LazyExoticComponent<React.ComponentType<P>>
+) => {
+  function LazyWithSuspense(props: P) {
+    return (
+      <React.Suspense fallback={<ComponentLoader />}>
+        <LazyComponent {...props} />
+      </React.Suspense>
+    );
+  }
+
+  return LazyWithSuspense;
 };
 
 const lazyComponents = {

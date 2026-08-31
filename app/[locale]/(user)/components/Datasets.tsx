@@ -25,19 +25,42 @@ interface Bucket {
   doc_count: number;
 }
 interface Aggregation {
-  buckets: Bucket[];
+  buckets?: Bucket[];
+  [key: string]: unknown;
 }
 
 interface Aggregations {
   [key: string]: Aggregation;
 }
 
+interface DatasetPublisher {
+  profile_picture?: string;
+  logo?: string;
+}
+
+interface DatasetResult {
+  id: string | number;
+  title: string;
+  description?: string;
+  modified: string;
+  download_count?: number;
+  geographies?: Array<string | { name?: string }>;
+  tags?: string[];
+  formats?: string[];
+  sectors?: string[];
+  is_individual_dataset?: boolean;
+  user?: DatasetPublisher;
+  organization?: DatasetPublisher;
+}
+
+interface DatasetSearchResponse {
+  results: DatasetResult[];
+  total: number;
+  aggregations: Aggregations;
+}
+
 const Datasets = () => {
-  const [facets, setFacets] = useState<{
-    results: any[];
-    total: number;
-    aggregations: Aggregations;
-  } | null>(null);
+  const [facets, setFacets] = useState<DatasetSearchResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     fetchDatasets('?sort=recent&size=5&page=1&sort=recent')
@@ -88,11 +111,11 @@ const Datasets = () => {
             {isLoading ? (
               <DatasetListingSkeleton cardCount={4} cardsOnly={true} />
             ) : (
-              facets?.results?.map((item: any) => {
+              facets?.results?.map((item) => {
                 const geographies =
                   Array.isArray(item.geographies) && item.geographies.length > 0
                     ? item.geographies
-                        .map((geo: any) =>
+                        .map((geo) =>
                           typeof geo === 'string' ? geo : geo?.name
                         )
                         .filter(Boolean)
@@ -109,10 +132,10 @@ const Datasets = () => {
                     {' '}
                     <Card
                       title={item.title}
-                      description={stripMarkdown(item.description)}
+                      description={stripMarkdown(item.description || '')}
                       metadataContent={[
                         {
-                          icon: Icons.calendarEvent as any,
+                          icon: Icons.calendarEvent,
                           label: 'Date',
                           value: new Date(item.modified).toLocaleDateString(
                             'en-US',
@@ -125,7 +148,7 @@ const Datasets = () => {
                           stroke: 1.2,
                         },
                         {
-                          icon: Icons.fileDownload as any,
+                          icon: Icons.fileDownload,
                           label: 'Download',
                           value: item.download_count || 0,
                           stroke: 1.2,
@@ -144,7 +167,7 @@ const Datasets = () => {
                       formats={item.formats}
                       leftFooterChips={[
                         {
-                          icon: `/Sectors/${item.sectors[0]}.svg`,
+                          icon: `/Sectors/${item.sectors?.[0]}.svg`,
                           label: 'Sectors',
                         },
                       ]}

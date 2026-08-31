@@ -16,7 +16,7 @@ export function TourGuide() {
     const { status, type, action } = data;
 
     // Tour finished or skipped
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       stopTour();
       return;
     }

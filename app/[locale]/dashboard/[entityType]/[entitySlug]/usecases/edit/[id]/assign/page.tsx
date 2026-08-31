@@ -11,7 +11,21 @@ import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Loading } from '@/components/loading';
 
-const FetchUseCaseDetails: any = graphql(`
+interface SearchDataset {
+  id: string;
+  title: string;
+  modified?: string;
+  sectors?: Array<{ name?: string }>;
+}
+
+interface AssignTableRow {
+  id: string;
+  title: string;
+  category: string | { name?: string } | undefined;
+  modified: string;
+}
+
+const FetchUseCaseDetails = graphql(`
   query UseCaseDetails($filters: UseCaseFilter) {
     useCases(filters: $filters) {
       id
@@ -28,7 +42,7 @@ const FetchUseCaseDetails: any = graphql(`
   }
 `);
 
-const AssignUsecaseDatasets: any = graphql(`
+const AssignUsecaseDatasets = graphql(`
   mutation assignDatasets($useCaseId: String!, $datasetIds: [UUID!]!) {
     updateUsecaseDatasets(useCaseId: $useCaseId, datasetIds: $datasetIds) {
       ... on TypeUseCase {
@@ -49,17 +63,21 @@ const Assign = () => {
   }>();
   const USECASE_ASSIGN_SUCCESS_TOAST_ID = 'usecase-assign-datasets-success';
   const USECASE_ASSIGN_ERROR_TOAST_ID = 'usecase-assign-datasets-error';
-  const getErrorMessage = (error: any, fallback: string) =>
-    typeof error?.message === 'string' && error.message.trim()
+  const getErrorMessage = (error: unknown, fallback: string) =>
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string' &&
+    error.message.trim()
       ? error.message.trim()
       : fallback;
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [data, setData] = useState<any[]>([]); // Ensure `data` is an array
-  const [selectedRow, setSelectedRows] = useState<any[]>([]);
+  const [data, setData] = useState<SearchDataset[]>([]);
+  const [selectedRow, setSelectedRows] = useState<AssignTableRow[]>([]);
 
-  const UseCaseDetails: { data: any; isLoading: boolean; refetch: any } =
+  const UseCaseDetails =
     useQuery(
       [`UseCase_Details`, params.id],
       () =>
@@ -80,19 +98,26 @@ const Assign = () => {
       }
     );
 
-  const formattedData = (data: any) =>
-    data.map((item: any) => {
+  const formattedData = (
+    datasets: Array<{
+      id: string;
+      title?: string | null;
+      modified?: string | null;
+      sectors?: Array<{ name?: string | null } | null> | null;
+    }>
+  ) =>
+    datasets.map((item) => {
       return {
         title: item.title,
         id: item.id,
-        category: item.sectors[0]?.name || 'N/A', // Safeguard in case of missing category
-        modified: formatDate(item.modified) || '',
+        category: item.sectors?.[0]?.name || 'N/A', // Safeguard in case of missing category
+        modified: formatDate(item.modified ?? null) || '',
       };
     });
 
   useEffect(() => {
     fetchDatasets('?size=1000&page=1')
-      .then((res) => {
+      .then((res: { results: SearchDataset[] }) => {
         setData(res.results);
       })
       .catch((err) => {
@@ -106,13 +131,13 @@ const Assign = () => {
     { accessorKey: 'modified', header: 'Last Modified' },
   ];
 
-  const generateTableData = (list: Array<any>) => {
+  const generateTableData = (list: SearchDataset[]) => {
     return list.map((item) => {
       return {
         title: item.title,
         id: item.id,
-        category: item.sectors[0],
-        modified: formatDate(item.modified) || '',
+        category: item.sectors?.[0],
+        modified: formatDate(item.modified ?? null) || '',
       };
     });
   };
@@ -127,7 +152,7 @@ const Assign = () => {
         {
           useCaseId: params.id,
           datasetIds: Array.isArray(selectedRow)
-            ? selectedRow.map((row: any) => row.id)
+            ? selectedRow.map((row) => row.id)
             : [],
         }
       ),
@@ -149,7 +174,7 @@ const Assign = () => {
           `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}/dashboards`
         );
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast(
           `Error: ${getErrorMessage(err, 'Unable to assign datasets right now. Please try again.')}`,
           { id: USECASE_ASSIGN_ERROR_TOAST_ID }
@@ -160,7 +185,7 @@ const Assign = () => {
 
   return (
     <>
-      {UseCaseDetails?.data?.useCases[0]?.datasets?.length >= 0 &&
+      {((UseCaseDetails?.data?.useCases?.[0]?.datasets?.length ?? -1) >= 0) &&
       data.length > 0 &&
       !UseCaseDetails.isLoading ? (
         <>
@@ -181,7 +206,7 @@ const Assign = () => {
             columns={columns}
             rows={generateTableData(data)}
             defaultSelectedRows={formattedData(
-              UseCaseDetails?.data?.useCases[0]?.datasets
+              UseCaseDetails?.data?.useCases?.[0]?.datasets ?? []
             )}
             onRowSelectionChange={(selected) => {
               setSelectedRows(Array.isArray(selected) ? selected : []); // Ensure selected is always an array

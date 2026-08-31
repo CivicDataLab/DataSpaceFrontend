@@ -23,19 +23,16 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
   const params = useParams<{ entityType: string; entitySlug: string }>();
   const { setEntityDetails, entityDetails, userDetails } = useDashboardStore();
 
-  const EntityDetailsQryRes: {
-    data: any;
-    isLoading: boolean;
-    error: any;
-    refetch: any;
-  } = useQuery([`entity_details_${params.entityType}`], () =>
-    GraphQL(
-      params.entityType === 'organization' && getOrgDetailsQryDoc,
-      {
-        [params.entityType]: params.entitySlug,
-      },
-      { slug: params.entitySlug }
-    )
+  const EntityDetailsQryRes = useQuery(
+    [`entity_details_${params.entityType}`],
+    () =>
+      GraphQL(
+        getOrgDetailsQryDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        { slug: params.entitySlug }
+      )
   );
 
 
@@ -65,13 +62,13 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
     },
 
     ...(params.entityType === 'organization'
-      ? [
+      ? ([
           {
             title: 'Admin & Members',
             href: `/dashboard/${params.entityType}/${params.entitySlug}/admin`,
             icon: 'star',
           },
-        ]
+        ] satisfies SidebarNavItem[])
       : []),
     {
       title: 'UseCases',
@@ -145,7 +142,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           items={orgSidebarNav}
           entityDetails={
             params.entityType === 'organization'
-              ? entityDetails?.organizations[0]
+              ? entityDetails?.organizations?.[0]
               : userDetails?.me
           }
           type={params.entityType}

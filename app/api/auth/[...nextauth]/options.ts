@@ -6,11 +6,11 @@ import KeycloakProvider from 'next-auth/providers/keycloak';
 
 // this will refresh an expired access token, when needed
 async function refreshAccessToken(token: JWT) {
-  const urlObj: Record<string, any> = {
+  const urlObj: Record<string, string> = {
     client_id: env.KEYCLOAK_CLIENT_ID,
     client_secret: env.KEYCLOAK_CLIENT_SECRET,
     grant_type: 'refresh_token',
-    refresh_token: token.refresh_token,
+    refresh_token: String(token.refresh_token ?? ''),
   };
 
   const resp = await fetch(`${env.AUTH_ISSUER}/protocol/openid-connect/token`, {

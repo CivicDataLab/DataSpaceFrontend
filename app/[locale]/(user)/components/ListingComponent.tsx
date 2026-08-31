@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
 import { fetchData } from '@/fetch';
+import { useMounted } from '@/hooks/use-mounted';
 import { useTourTrigger } from '@/hooks/use-tour-trigger';
 import {
   Button,
@@ -36,11 +37,61 @@ interface Bucket {
 }
 
 interface Aggregation {
-  buckets: Bucket[];
+  buckets?: Bucket[];
+  [key: string]: unknown;
 }
 
 interface Aggregations {
   [key: string]: Aggregation;
+}
+
+interface ListingPublisher {
+  profile_picture?: string;
+  logo?: string;
+  name?: string;
+}
+
+interface ListingSdg {
+  code: string;
+  name: string;
+}
+
+interface ListingResult {
+  id: string | number;
+  title: string;
+  description?: string;
+  modified: string;
+  download_count?: number;
+  geographies?: string[];
+  sdgs?: ListingSdg[];
+  has_charts?: boolean;
+  sectors?: string[];
+  tags?: string[];
+  formats?: string[];
+  logo?: string;
+  is_individual_dataset?: boolean;
+  user?: ListingPublisher;
+  organization?: ListingPublisher;
+}
+
+interface CardMetadataItem {
+  icon: (typeof Icons)[keyof typeof Icons];
+  stroke?: number;
+  label: string;
+  value: string | number;
+  tooltip?: string;
+}
+
+type CardMetadataTuple =
+  | []
+  | [CardMetadataItem]
+  | [CardMetadataItem, CardMetadataItem]
+  | [CardMetadataItem, CardMetadataItem, CardMetadataItem];
+
+interface FooterChip {
+  icon: string;
+  label: string;
+  tooltip?: string;
 }
 
 interface FilterOptions {
@@ -229,7 +280,7 @@ const ListingComponent: React.FC<ListingProps> = ({
   useTourTrigger(true, 1500);
 
   const [facets, setFacets] = useState<{
-    results: any[];
+    results: ListingResult[];
     total: number;
     aggregations: Aggregations;
   } | null>(null);
@@ -241,11 +292,10 @@ const ListingComponent: React.FC<ListingProps> = ({
   const count = facets?.total ?? 0;
   const datasetDetails = facets?.results ?? [];
 
-  // Stabilize lockedFilters reference to prevent infinite loops
+  const lockedFiltersKey = JSON.stringify(lockedFilters);
   const stableLockedFilters = useMemo(
-    () => lockedFilters,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(lockedFilters)]
+    () => JSON.parse(lockedFiltersKey) as typeof lockedFilters,
+    [lockedFiltersKey]
   );
 
   useUrlParams(queryParams, setQueryParams, setVariables, stableLockedFilters);
@@ -268,11 +318,7 @@ const ListingComponent: React.FC<ListingProps> = ({
     }
   }, [variables, type]);
 
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
+  const hasMounted = useMounted();
   if (!hasMounted) {
     if (type === 'usecase') {
       return <UseCaseListingSkeleton cardCount={queryParams.pageSize} />;
@@ -528,7 +574,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                   onPageSizeChange={handlePageSizeChange}
                   view={view}
                 >
-                  {datasetDetails.map((item: any, index: number) => {
+                  {datasetDetails.map((item, index) => {
                     const image = item.is_individual_dataset
                       ? item?.user?.profile_picture
                         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
@@ -545,9 +591,9 @@ const ListingComponent: React.FC<ListingProps> = ({
                     const sdgs =
                       item.sdgs && item.sdgs.length > 0 ? item.sdgs : null;
 
-                    const MetadataContent = [
+                    const MetadataContent: CardMetadataItem[] = [
                       {
-                        icon: Icons.calendarEvent as any,
+                        icon: Icons.calendarEvent,
                         label: 'Date',
                         value: formatDate(item.modified) || '',
                         tooltip: 'Date',
@@ -555,9 +601,9 @@ const ListingComponent: React.FC<ListingProps> = ({
                       },
                     ];
 
-                    if (item.download_count > 0) {
+                    if ((item.download_count ?? 0) > 0) {
                       MetadataContent.push({
-                        icon: Icons.fileDownload as any,
+                        icon: Icons.fileDownload,
                         label: 'Download',
                         value: item.download_count || 0,
                         tooltip: 'Download',
@@ -570,7 +616,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                       const geoDisplay = geographies.join(', ');
 
                       MetadataContent.push({
-                        icon: Icons.worldPin as any,
+                        icon: Icons.worldPin,
                         label: 'Geography',
                         value: geoDisplay,
                         tooltip: geoDisplay,
@@ -581,11 +627,11 @@ const ListingComponent: React.FC<ListingProps> = ({
                     if (sdgs && sdgs.length > 0) {
                       // Format SDGs for display
                       const sdgDisplay = sdgs
-                        .map((sdg: any) => `${sdg.code} - ${sdg.name}`)
+                        .map((sdg) => `${sdg.code} - ${sdg.name}`)
                         .join(', ');
 
                       MetadataContent.push({
-                        icon: Icons.target as any,
+                        icon: Icons['target' as keyof typeof Icons],
                         label: 'SDG Goals',
                         value: sdgDisplay,
                         tooltip: sdgDisplay,
@@ -595,7 +641,7 @@ const ListingComponent: React.FC<ListingProps> = ({
 
                     if (item.has_charts && view === 'expanded') {
                       MetadataContent.push({
-                        icon: Icons.chart as any,
+                        icon: Icons.chart,
                         label: '',
                         value: 'With Charts',
                         tooltip: 'Charts',
@@ -603,16 +649,16 @@ const ListingComponent: React.FC<ListingProps> = ({
                       });
                     }
 
-                    const LeftFooterChips = [
+                    const LeftFooterChips: FooterChip[] = [
                       {
-                        icon: `/Sectors/${item.sectors?.[0]}.svg` as any,
+                        icon: `/Sectors/${item.sectors?.[0]}.svg`,
                         label: 'Sectors',
                         tooltip: `${item.sectors?.[0]}`,
                       },
                       ...(item.has_charts && view !== 'expanded'
                         ? [
                             {
-                              icon: `/chart-bar.svg` as any,
+                              icon: `/chart-bar.svg`,
                               label: 'Charts',
                               tooltip: 'Charts',
                             },
@@ -620,9 +666,9 @@ const ListingComponent: React.FC<ListingProps> = ({
                         : []),
                     ];
 
-                    const RightFooterChips = [
+                    const RightFooterChips: FooterChip[] = [
                       {
-                        icon: image as any,
+                        icon: image,
                         label: 'Published by',
                         tooltip: `${item.is_individual_dataset ? item.user?.name : item.organization?.name}`,
                       },
@@ -631,7 +677,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                     const commonProps = {
                       title: item.title,
                       description: stripMarkdown(item.description || ''),
-                      metadataContent: MetadataContent as any,
+                      metadataContent: MetadataContent as CardMetadataTuple,
                       tag: item.tags,
                       formats: item.formats,
                       leftFooterChips: LeftFooterChips,

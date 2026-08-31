@@ -1,6 +1,6 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { Button, Icon, Text } from 'opub-ui';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Icons } from '@/components/icons';
 
@@ -13,11 +13,11 @@ const StepNavigation = ({ steps, onBeforeNavigate }: StepNavigationProps) => {
   const pathname = usePathname(); // Get the current URL path
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
-
-  useEffect(() => {
-    // Route has changed (or initial mount), re-enable navigation controls.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setIsNavigating(false);
-  }, [pathname]);
+  }
 
   const navigateWithBlur = async (newPath: string) => {
     setIsNavigating(true);

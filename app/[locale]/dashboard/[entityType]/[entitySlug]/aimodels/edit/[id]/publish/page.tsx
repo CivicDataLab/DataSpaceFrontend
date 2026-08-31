@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
+import { AiModelStatus, UpdateAiModelInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Accordion,
@@ -22,7 +23,7 @@ import { Icons } from '@/components/icons';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 import { useEditStatus } from '../../context';
 
-const FetchAIModelForPublish: any = graphql(`
+const FetchAIModelForPublish = graphql(`
   query AIModelForPublish($filters: AIModelFilter) {
     aiModels(filters: $filters) {
       id
@@ -65,7 +66,7 @@ const FetchAIModelForPublish: any = graphql(`
   }
 `);
 
-const UpdateAIModelStatusMutation: any = graphql(`
+const UpdateAIModelStatusMutation = graphql(`
   mutation updateAIModelStatus($input: UpdateAIModelInput!) {
     updateAiModel(input: $input) {
       success
@@ -175,15 +176,15 @@ export default function PublishPage() {
     }
   );
 
-  const model = (data as any)?.aiModels?.[0];
+  const model = data?.aiModels?.[0];
   const versions = model?.versions || [];
-  const primaryVersion = versions.find((v: any) => v.isLatest) || versions[0];
-  const hasProviders = versions.some((v: any) => v.providers?.length > 0);
+  const primaryVersion = versions.find((v) => v.isLatest) || versions[0];
+  const hasProviders = versions.some((v) => v.providers?.length > 0);
   const PUBLISH_SUCCESS_TOAST_ID = 'publish-ai-model-success';
   const PUBLISH_ERROR_TOAST_ID = 'publish-ai-model-error';
 
   const { mutate, isLoading: updateLoading } = useMutation(
-    (mutationData: any) =>
+    (mutationData: Pick<UpdateAiModelInput, 'status' | 'isPublic' | 'isActive'>) =>
       GraphQL(
         UpdateAIModelStatusMutation,
         {
@@ -203,7 +204,7 @@ export default function PublishPage() {
     setStatus('saving');
     mutate(
       {
-        status: isPublished ? 'REGISTERED' : 'ACTIVE',
+        status: isPublished ? AiModelStatus.Registered : AiModelStatus.Active,
         isPublic: isPublished ? false : true,
         isActive: isPublished ? false : true,
       },
@@ -223,9 +224,9 @@ export default function PublishPage() {
             `/dashboard/${params.entityType}/${params.entitySlug}/aimodels?tab=${isPublished ? 'draft' : 'published'}`
           );
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
           const errorMessage =
-            typeof error?.message === 'string' && error.message.trim()
+            typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' && error.message.trim()
               ? error.message.trim()
               : isPublished
                 ? 'Unable to unpublish model right now. Please try again.'
@@ -290,12 +291,12 @@ export default function PublishPage() {
     { accessorKey: 'primary', header: 'Primary' },
   ];
 
-  const versionRows = versions.map((v: any) => ({
+  const versionRows = versions.map((v) => ({
     version: v.version,
     lifecycleStage: lifecycleLabels[v.lifecycleStage] || v.lifecycleStage,
     providers: v.providers?.length
       ? v.providers
-          .map((p: any) => providerLabels[p.provider] || p.provider)
+          .map((p) => providerLabels[p.provider] || p.provider)
           .join(', ')
       : 'None',
     primary: v.isLatest ? 'Yes' : 'No',
@@ -309,7 +310,10 @@ export default function PublishPage() {
     },
     {
       label: 'Model Type',
-      value: modelTypeLabels[model?.modelType] || model?.modelType || '',
+      value:
+        (model?.modelType && modelTypeLabels[model.modelType]) ||
+        model?.modelType ||
+        '',
     },
     {
       label: 'Domain',
@@ -437,8 +441,8 @@ export default function PublishPage() {
                                 Sectors:
                               </Text>
                               <div className="flex gap-2 lg:basis-4/5">
-                                {model?.sectors?.length > 0 ? (
-                                  model.sectors.map((s: any, idx: number) => (
+                                {(model?.sectors?.length ?? 0) > 0 ? (
+                                  model?.sectors?.map((s, idx: number) => (
                                     <Tag key={idx}>{s.name}</Tag>
                                   ))
                                 ) : (
@@ -454,8 +458,8 @@ export default function PublishPage() {
                                 Tags:
                               </Text>
                               <div className="flex gap-2 lg:basis-4/5">
-                                {model?.tags?.length > 0 ? (
-                                  model.tags.map((t: any, idx: number) => (
+                                {(model?.tags?.length ?? 0) > 0 ? (
+                                  model?.tags?.map((t, idx: number) => (
                                     <Tag key={idx}>{t.value}</Tag>
                                   ))
                                 ) : (
@@ -471,9 +475,9 @@ export default function PublishPage() {
                                 Geographies:
                               </Text>
                               <div className="flex gap-2 lg:basis-4/5">
-                                {model?.geographies?.length > 0 ? (
-                                  model.geographies.map(
-                                    (g: any, idx: number) => (
+                                {(model?.geographies?.length ?? 0) > 0 ? (
+                                  model?.geographies?.map(
+                                    (g, idx: number) => (
                                       <Tag key={idx}>{g.name}</Tag>
                                     )
                                   )

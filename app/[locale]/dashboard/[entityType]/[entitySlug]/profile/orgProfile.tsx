@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
@@ -9,10 +9,10 @@ import { useOrganizationTypes } from '@/hooks/useOrganizationTypes';
 import { useMutation } from '@tanstack/react-query';
 import { Button, DropZone, Select, Text, TextField, toast } from 'opub-ui';
 
-import { useDashboardStore } from '@/config/store';
+import { DashboardLogo, useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
 
-const organizationUpdateMutation: any = graphql(`
+const organizationUpdateMutation = graphql(`
   mutation updateOrganization($input: OrganizationInputPartial!) {
     updateOrganization(input: $input) {
       __typename
@@ -45,31 +45,13 @@ const OrgProfile = () => {
 
   const { organizationTypes } = useOrganizationTypes();
 
-  useEffect(() => {
-    if (entityDetails && entityDetails.organizations) {
-      setFormData({
-        name: entityDetails?.organizations[0].name,
-        contactEmail: entityDetails?.organizations[0].contactEmail,
-        organizationTypes: entityDetails?.organizations[0].organizationTypes,
-        homepage: entityDetails?.organizations[0].homepage,
-        description: entityDetails?.organizations[0].description,
-        logo: entityDetails?.organizations[0].logo,
-        id: entityDetails?.organizations[0].id,
-        linkedinProfile: entityDetails?.organizations[0].linkedinProfile,
-        githubProfile: entityDetails?.organizations[0].githubProfile,
-        twitterProfile: entityDetails?.organizations[0].twitterProfile,
-        location: entityDetails?.organizations[0].location,
-      });
-    }
-  }, [entityDetails]);
-
   const initialFormData = {
     name: '',
     contactEmail: '',
     organizationTypes: ApiOrganizationOrganizationTypesEnum.StateGovernment, // or whichever is most appropriate
     homepage: '',
     description: '',
-    logo: null as File | null,
+    logo: null as File | DashboardLogo | null,
     id: '',
     linkedinProfile: '',
     githubProfile: '',
@@ -78,6 +60,33 @@ const OrgProfile = () => {
   };
 
   const [formData, setFormData] = React.useState(initialFormData);
+  const [prevEntityDetails, setPrevEntityDetails] = React.useState<
+    typeof entityDetails | undefined
+  >(undefined);
+  if (entityDetails !== prevEntityDetails) {
+    setPrevEntityDetails(entityDetails);
+    if (entityDetails && entityDetails.organizations) {
+      const org = entityDetails.organizations[0];
+      if (org) {
+        setFormData({
+          name: org.name,
+          contactEmail: org.contactEmail ?? '',
+          organizationTypes:
+            typeof org.organizationTypes === 'string'
+              ? (org.organizationTypes as ApiOrganizationOrganizationTypesEnum)
+              : ApiOrganizationOrganizationTypesEnum.StateGovernment,
+          homepage: org.homepage ?? '',
+          description: org.description ?? '',
+          logo: org.logo ?? null,
+          id: org.id,
+          linkedinProfile: org.linkedinProfile ?? '',
+          githubProfile: org.githubProfile ?? '',
+          twitterProfile: org.twitterProfile ?? '',
+          location: org.location ?? '',
+        });
+      }
+    }
+  }
 
   const { mutate } = useMutation(
     (input: { input: OrganizationInputPartial }) =>
@@ -85,34 +94,51 @@ const OrgProfile = () => {
         [params.entityType]: params.entitySlug,
       }, input),
     {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         toast('Organization updated successfully');
+        if (res.updateOrganization.__typename !== 'TypeOrganization') {
+          return;
+        }
+        const org = res.updateOrganization;
         setFormData({
-          name: res?.updateOrganization?.name,
-          contactEmail: res?.updateOrganization?.contactEmail,
-          organizationTypes: res?.updateOrganization?.organizationTypes,
-          homepage: res?.updateOrganization?.homepage,
-          description: res?.updateOrganization?.description,
-          logo: res?.updateOrganization?.logo,
-          id: res?.updateOrganization?.id,
-          linkedinProfile: res?.updateOrganization?.linkedinProfile,
-          githubProfile: res?.updateOrganization?.githubProfile,
-          twitterProfile: res?.updateOrganization?.twitterProfile,
-          location: res?.updateOrganization?.location,
+          name: org.name,
+          contactEmail: org.contactEmail ?? '',
+          organizationTypes: org.organizationTypes,
+          homepage: org.homepage,
+          description: org.description,
+          logo: org.logo ?? null,
+          id: org.id,
+          linkedinProfile: org.linkedinProfile ?? '',
+          githubProfile: org.githubProfile ?? '',
+          twitterProfile: org.twitterProfile ?? '',
+          location: org.location ?? '',
         });
         setEntityDetails({
-          organizations: [formData],
+          organizations: [
+            {
+              id: formData.id,
+              name: formData.name,
+              contactEmail: formData.contactEmail,
+              organizationTypes: formData.organizationTypes,
+              homepage: formData.homepage,
+              description: formData.description,
+              logo: formData.logo,
+              linkedinProfile: formData.linkedinProfile,
+              githubProfile: formData.githubProfile,
+              twitterProfile: formData.twitterProfile,
+              location: formData.location,
+            },
+          ],
         });
-        if (
-          res?.updateOrganization?.slug &&
-          res.updateOrganization.slug !== params.entitySlug
-        ) {
-          const newPath = `/dashboard/${params.entityType}/${res.updateOrganization.slug}/profile`;
+        if (org.slug && org.slug !== params.entitySlug) {
+          const newPath = `/dashboard/${params.entityType}/${org.slug}/profile`;
           router.replace(newPath);
         }
       },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+      onError: (error: unknown) => {
+        toast(
+          `Error: ${error instanceof Error ? error.message : String(error)}`
+        );
       },
     }
   );
@@ -262,9 +288,7 @@ const OrgProfile = () => {
             >
               <DropZone.FileUpload
                 actionTitle={
-                  formData.logo
-                    ? formData.logo.name.split('/').pop()
-                    : 'Name of the logo'
+                  formData.logo?.name?.split('/').pop() || 'Name of the logo'
                 }
               />
             </DropZone>
