@@ -35,9 +35,12 @@ const updateUserMutation: any = graphql(`
   }
 `);
 
-const githubRegex = /^https:\/\/github\.com\/[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
-const linkedinRegex = /^https:\/\/(?:www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
-const twitterRegex = /^https:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/[a-zA-Z0-9_]+\/?$/;
+const githubRegex =
+  /^https:\/\/github\.com\/[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
+const linkedinRegex =
+  /^https:\/\/(?:www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
+const twitterRegex =
+  /^https:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/[a-zA-Z0-9_]+\/?$/;
 
 const prettyField = (f: string) => {
   switch (f) {
@@ -160,16 +163,22 @@ const UserProfile = () => {
       toast('Please fill all the required fields');
       return;
     }
-   if (formData.githubProfile && !githubRegex.test(formData.githubProfile)) {
+    if (formData.githubProfile && !githubRegex.test(formData.githubProfile)) {
       toast.error('GitHub URL: Enter a valid URL.');
       return;
     }
-    if (formData.linkedinProfile && !linkedinRegex.test(formData.linkedinProfile)) {
-       toast.error('LinkedIn URL: Enter a valid URL.');
+    if (
+      formData.linkedinProfile &&
+      !linkedinRegex.test(formData.linkedinProfile)
+    ) {
+      toast.error('LinkedIn URL: Enter a valid URL.');
       return;
     }
-    if (formData.twitterProfile && !twitterRegex.test(formData.twitterProfile)) {
-       toast.error('Twitter URL: Enter a valid URL.');
+    if (
+      formData.twitterProfile &&
+      !twitterRegex.test(formData.twitterProfile)
+    ) {
+      toast.error('Twitter URL: Enter a valid URL.');
       return;
     }
 
@@ -208,7 +217,7 @@ const UserProfile = () => {
                   onChange={(e) => setFormData({ ...formData, firstName: e })}
                 />
               </div>
-              <div className="w-full">
+              <div className=" w-full">
                 <TextField
                   label="Last Name *"
                   name="lastName"
@@ -218,7 +227,7 @@ const UserProfile = () => {
               </div>
             </div>
 
-            <div className="w-full">
+            <div className=" w-full">
               <TextField
                 label="Email *"
                 disabled
@@ -227,7 +236,7 @@ const UserProfile = () => {
                 onChange={(e) => setFormData({ ...formData, email: e })}
               />
             </div>
-            <div className="w-full">
+            <div className=" w-full">
               <TextField
                 label="Location"
                 name="location"
@@ -264,7 +273,7 @@ const UserProfile = () => {
           </div>
         </div>
         <div className="flex w-full flex-col gap-4 lg:flex-row">
-          <div className="w-full">
+          <div className=" w-full">
             <TextField
               label="Bio *"
               name="bio"

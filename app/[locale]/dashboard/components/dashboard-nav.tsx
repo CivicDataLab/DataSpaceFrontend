@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
 import { Divider, Icon, IconButton, Text, Tooltip } from 'opub-ui';
 
-import { SidebarNavItem } from 'types';
+import { SidebarNavItem } from '@/types';
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import styles from '../dashboard.module.scss';

@@ -5,6 +5,21 @@ import { request } from 'graphql-request';
 import { getSession } from 'next-auth/react';
 import { getServerSession } from 'next-auth';
 
+function assertGraphqlDocument(document: unknown) {
+  if (typeof document === 'string' && document.trim()) return;
+  if (
+    document &&
+    typeof document === 'object' &&
+    Array.isArray((document as { definitions?: unknown }).definitions)
+  ) {
+    return;
+  }
+
+  throw new Error(
+    'Invalid GraphQL document. The query is missing from gql/generated — run `npm run generate`.'
+  );
+}
+
 // create a wrapper function for graphql-request
 // that will be used by react-query
 
@@ -13,6 +28,8 @@ export async function GraphQL<TResult, TVariables>(
   entityHeaders: Record<string, string> = {},
   ...[variables]: TVariables extends Record<string, never> ? [] : [TVariables]
 ) {
+  assertGraphqlDocument(document);
+
   // Try to get session - this works for server-side calls
   let session;
   try {
@@ -44,6 +61,8 @@ export async function GraphQLClient<TResult, TVariables>(
   entityHeaders: Record<string, string> = {},
   ...[variables]: TVariables extends Record<string, never> ? [] : [TVariables]
 ) {
+  assertGraphqlDocument(document);
+
   const session = await getSession();
 
   const headers = {
@@ -68,6 +87,8 @@ export async function GraphQLPublic<TResult, TVariables>(
   entityHeaders: Record<string, string> = {},
   ...[variables]: TVariables extends Record<string, never> ? [] : [TVariables]
 ) {
+  assertGraphqlDocument(document);
+
   const data = await request(
     `${process.env.NEXT_PUBLIC_BACKEND_GRAPHQL_URL}`,
     document,

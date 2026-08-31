@@ -5,19 +5,12 @@ import { useParams } from 'next/navigation';
 import PdfPreview from '@/app/[locale]/(user)/components/PdfPreview';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Button,
-  Dialog,
-  Format,
-  Icon,
-  Spinner,
-  Table,
-  Text,
-} from 'opub-ui';
+import { Button, Dialog, Format, Icon, Spinner, Table, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import styles from './Resources.module.scss';
+
 const datasetResourceQuery: any = graphql(`
   query datasetResources($datasetId: UUID!) {
     datasetResources(datasetId: $datasetId) {
@@ -78,7 +71,11 @@ const Resources = () => {
                   View All Columns
                 </Button>
               </Dialog.Trigger>
-              <Dialog.Content title={'All Columns'} limitHeight className={styles.dialogTableWrapper}>
+              <Dialog.Content
+                title={'All Columns'}
+                limitHeight
+                className={styles.dialogTableWrapper}
+              >
                 <Table
                   columns={[
                     {
@@ -139,7 +136,9 @@ const Resources = () => {
               header: column,
               cell: ({ cell }: any) => {
                 const value = cell.getValue();
-                return <span>{value !== null ? value.toString() : 'N/A'}</span>;
+                return (
+                  <span>{value !== null ? value?.toString() : 'N/A'}</span>
+                );
               },
             })) || [];
 
@@ -164,7 +163,12 @@ const Resources = () => {
                   Preview
                 </Button>
               </Dialog.Trigger>
-              <Dialog.Content title={'Preview'} limitHeight large className={styles.dialogTableWrapper}>
+              <Dialog.Content
+                title={'Preview'}
+                limitHeight
+                large
+                className={styles.dialogTableWrapper}
+              >
                 {row.original.format === 'PDF' ? (
                   <PdfPreview
                     url={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${row.original.id}`}
@@ -210,7 +214,8 @@ const Resources = () => {
           <div className="flex flex-col gap-1">
             <Text variant="headingXl">Files in this Dataset </Text>
             <Text variant="bodyLg">
-              All files associated with this Dataset which can be downloaded{' '}
+              All files associated with this Dataset which can be
+              downloaded{' '}
             </Text>
           </div>
           <div>
@@ -221,8 +226,8 @@ const Resources = () => {
                   className="mt-5 flex flex-col gap-6 border-1 border-solid border-greyExtralight bg-surfaceDefault p-4 lg:mx-0 lg:p-6"
                 >
                   <div>
-                    <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
-                      <div className="flex flex-wrap md:flex-nowrap items-center gap-2 ">
+                    <div className="flex flex-wrap items-center justify-between gap-4 md:flex-nowrap">
+                      <div className="flex flex-wrap items-center gap-2 md:flex-nowrap ">
                         {item.fileDetails?.format && (
                           <Format fileType={item.fileDetails?.format} />
                         )}
