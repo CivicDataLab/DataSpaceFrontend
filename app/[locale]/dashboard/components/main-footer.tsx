@@ -106,14 +106,24 @@ const MainFooter = () => {
           ))}
         </div>
         <div className="text-white text-xs lg:text-base order-3 lg:order-none">
-          <Text color="onBgDefault">Made in India. A DataSpace product by </Text>
+          <Text color="onBgDefault">
+            Made in India. A{' '}
+            <span className="bhashini-skip-translation">DataSpace</span> product
+            by{' '}
+          </Text>
           <Link
             href={'https://www.civicdatalab.in'}
             target="_blank"
-            className="inline-flex items-center gap-1"
+            className="inline-flex items-center gap-1 bhashini-skip-translation"
           >
-             <Text color="onBgDefault">CivicDataLab</Text>
-            <Image src={'/cdl.svg'} width={32} height={32} className="lg:w-10 lg:h-10" alt="CDL logo" />
+            <Text color="onBgDefault">CivicDataLab</Text>
+            <Image
+              src={'/cdl.svg'}
+              width={32}
+              height={32}
+              className="lg:w-10 lg:h-10"
+              alt="CDL logo"
+            />
           </Link>
         </div>
       </div>

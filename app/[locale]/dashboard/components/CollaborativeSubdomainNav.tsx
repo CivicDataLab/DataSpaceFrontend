@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Text } from 'opub-ui';
 
+import BhashiniTranslation from '@/components/BhashiniTranslation';
+
 type Props = {
   useCasesTargetId?: string;
   datasetsTargetId?: string;
@@ -83,6 +85,7 @@ export function CollaborativeSubdomainNav({
               Datasets
             </Text>
           </button>
+          <BhashiniTranslation />
         </div>
       </div>
     </nav>

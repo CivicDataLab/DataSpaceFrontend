@@ -24,7 +24,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
   const { setEntityDetails, entityDetails, userDetails } = useDashboardStore();
 
   const EntityDetailsQryRes = useQuery(
-    [`entity_details_${params.entityType}`],
+    [`entity_details_${params.entityType}`, params.entitySlug],
     () =>
       GraphQL(
         getOrgDetailsQryDoc,
@@ -32,14 +32,9 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
           [params.entityType]: params.entitySlug,
         },
         { slug: params.entitySlug }
-      )
+      ),
+    { enabled: params.entityType === 'organization' }
   );
-
-
-  useEffect(() => {
-    EntityDetailsQryRes.refetch();
-  }, [EntityDetailsQryRes]);
-
 
   useEffect(() => {
     if (EntityDetailsQryRes.data) {
