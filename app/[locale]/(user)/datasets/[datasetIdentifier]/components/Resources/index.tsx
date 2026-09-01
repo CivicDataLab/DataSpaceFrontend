@@ -162,7 +162,9 @@ const Resources = () => {
               header: column,
               cell: ({ cell }: { cell: PreviewCell }) => {
                 const value = cell.getValue();
-                return <span>{value !== null ? String(value) : 'N/A'}</span>;
+                return (
+                  <span>{value !== null ? value?.toString() : 'N/A'}</span>
+                );
               },
             })) || [];
 
