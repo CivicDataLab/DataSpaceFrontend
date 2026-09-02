@@ -48,6 +48,10 @@ const MainFooter = () => {
     ? getPlatformPageUrl('/about-us', currentLocale)
     : '/about-us';
 
+  const privacyHref = isCollaborativeSubdomain
+    ? getPlatformPageUrl('/privacy', currentLocale)
+    : '/privacy';
+
   const socialMedia = [
     {
       icon: Icons.github,
@@ -75,6 +79,9 @@ const MainFooter = () => {
           </Link>
           <Link href={'mailto:info@civicdatalab.in'}>
             <Text color="onBgDefault">Contact Us</Text>
+          </Link>
+          <Link href={privacyHref}>
+            <Text color="onBgDefault">Privacy</Text>
           </Link>
         </div>
         <div className="flex lg:hidden gap-2 order-2">
