@@ -55,6 +55,21 @@ export const authOptions: AuthOptions = {
         token.expires_at = account.expires_at;
         token.refresh_token = account.refresh_token;
         return token;
+      } else if (token.error === 'RefreshAccessTokenError') {
+        // A previous refresh already failed. Return the token as-is instead of
+        // retrying.
+        //
+        // This callback runs on every session fetch, and a failed refresh used to
+        // leave `expires_at` in the past - so every subsequent fetch attempted the
+        // same refresh, and failed the same way. Combined with SessionGuard reacting
+        // to the error by signing out (which triggers another session fetch), that
+        // produced an unbounded loop: 35,685 signout calls and 107,612 session
+        // fetches from a single client in one day, peaking at 6,230 requests/minute.
+        //
+        // The session is unrecoverable at this point. The user has to sign in again,
+        // which SessionGuard handles; hammering Keycloak in the meantime helps
+        // nobody.
+        return token;
       } else if (nowTimeStamp < (token.expires_at as number)) {
         // token has not expired yet, return it
         return token;
