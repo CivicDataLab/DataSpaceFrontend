@@ -1,7 +1,7 @@
 'use client';
 
 import { notFound, usePathname } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useSyncExternalStore } from 'react';
 
 import MainFooter from '../dashboard/components/main-footer';
 import { MainNav } from '../dashboard/components/main-nav';
@@ -16,21 +16,12 @@ export default function Layout({ children }: UserLayoutProps) {
   const user = true; // await getCurrentUser()
   const routerPath = usePathname();
   const hideSearch = routerPath === '/' || routerPath === '/datasets';
-  const [isCollaborativeSubdomain, setIsCollaborativeSubdomain] = useState<
-    boolean | null
-  >(null);
+  const isCollaborativeSubdomain = useSyncExternalStore(
+    () => () => {},
+    () => isCollaborativeSubdomainHost(window.location.hostname),
+    () => null
+  );
   const shouldHideMainNav = isCollaborativeSubdomain === true;
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      setIsCollaborativeSubdomain(false);
-      return;
-    }
-
-    setIsCollaborativeSubdomain(
-      isCollaborativeSubdomainHost(window.location.hostname)
-    );
-  }, [routerPath]);
 
   if (!user) {
     return notFound();

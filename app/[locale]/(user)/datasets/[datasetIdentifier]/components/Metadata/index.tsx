@@ -3,25 +3,54 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Divider, Icon, Tag, Text, Tooltip } from 'opub-ui';
 
+import { GetDatasetQuery } from '@/gql/generated/graphql';
 import { cn, formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 import Styles from '../../../dataset.module.scss';
 
 interface MetadataProps {
-  data: any;
+  data: NonNullable<GetDatasetQuery['getDataset']> | null | undefined;
   setOpen?: (isOpen: boolean) => void;
 }
 
+interface MetadataItem {
+  label: string;
+  value: string;
+  type: string;
+}
+
 const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
-  const Metadata = (data.metadata || []).map((item: any) => ({
+  const [sourceTitle, setSourceTitle] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTitle = async () => {
+      try {
+        const urlItem = (data?.metadata || []).find(
+          (item) => item.metadataItem?.dataType === 'URL'
+        );
+
+        if (urlItem && urlItem.value) {
+          const title = await getWebsiteTitle(urlItem.value);
+          setSourceTitle(title);
+        }
+      } catch (error) {
+        console.error('Error fetching website title:', error);
+      }
+    };
+
+    fetchTitle();
+  }, [data?.metadata]);
+
+  if (!data) {
+    return null;
+  }
+
+  const Metadata = (data.metadata || []).map((item) => ({
     label: item.metadataItem.label,
     value: item.value,
     type: item.metadataItem.dataType,
   }));
-
-  // const [isexpanded, setIsexpanded] = useState(false);
-  // const toggleDescription = () => setIsexpanded(!isexpanded);
 
   const licenseOptions = [
     {
@@ -48,29 +77,8 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
 
   const getLicenseLabel = (value: string): string => {
     const option = licenseOptions.find((option) => option.value === value);
-    return option ? option.label : value; // fallback to value if no match
+    return option ? option.label : value;
   };
-
-  const [sourceTitle, setSourceTitle] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchTitle = async () => {
-      try {
-        const urlItem = (data.metadata || []).find(
-          (item: any) => item.metadataItem?.dataType === 'URL'
-        );
-
-        if (urlItem && urlItem.value) {
-          const title = await getWebsiteTitle(urlItem.value);
-          setSourceTitle(title);
-        }
-      } catch (error) {
-        console.error('Error fetching website title:', error);
-      }
-    };
-
-    fetchTitle();
-  }, [data.metadata]);
 
   const image = data.isIndividualDataset
     ? data?.user?.profilePicture
@@ -79,15 +87,17 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
     : data?.organization?.logo
       ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.organization.logo.url}`
       : '/org.png';
-  const getPublisherURL = (data: any) => {
-    if (!data) return '/publishers';
+  const getPublisherURL = (
+    dataset: NonNullable<GetDatasetQuery['getDataset']>
+  ) => {
+    if (!dataset) return '/publishers';
 
-    if (data.isIndividualDataset && data.user) {
-      return `/publishers/${data.user.fullName}_${data.user.id}`;
+    if (dataset.isIndividualDataset && dataset.user) {
+      return `/publishers/${dataset.user.fullName}_${dataset.user.id}`;
     }
 
-    if (data.organization) {
-      return `/publishers/organization/${data.organization.slug}_${data.organization.id}`;
+    if (dataset.organization) {
+      return `/publishers/organization/${dataset.organization.slug}_${dataset.organization.id}`;
     }
 
     return '/publishers';
@@ -138,8 +148,8 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
           <Tooltip
             content={
               data.isIndividualDataset
-                ? data.user.fullName
-                : data.organization.name
+                ? data.user?.fullName
+                : data.organization?.name
             }
           >
             <Link href={getPublisherURL(data)}>
@@ -149,8 +159,8 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
                 fontWeight="medium"
               >
                 {data.isIndividualDataset
-                  ? data.user.fullName
-                  : data.organization.name}
+                  ? data.user?.fullName
+                  : data.organization?.name}
               </Text>
             </Link>
           </Tooltip>
@@ -161,7 +171,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
           </Text>
           <div className="flex flex-wrap gap-2">
             {data.sectors.length > 0 ? (
-              data.sectors.map((sector: any, index: number) => (
+              data.sectors.map((sector, index: number) => (
                 <Tooltip content={sector.name} key={index}>
                   <Image
                     key={index}
@@ -187,7 +197,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
               Geography
             </Text>
             <div className="flex flex-wrap gap-2">
-              {data.geographies.map((geo: any, index: number) => (
+              {data.geographies.map((geo, index: number) => (
                 <Tag
                   key={index}
                   fillColor="var(--orange-secondary-color)"
@@ -200,7 +210,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             </div>
           </div>
         )}
-        {Metadata.map((item: any, index: any) => (
+        {Metadata.map((item: MetadataItem, index: number) => (
           <div className="flex  gap-2 " key={index}>
             <Text
               className="min-w-[120px]  basis-1/4 uppercase"
@@ -220,7 +230,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
               </Text>
             ) : item.type === 'MULTISELECT' ? (
               <div className={cn('flex flex-wrap gap-2', Styles.Tag)}>
-                {item.value.split(',').map((val: any, index: any) => (
+                {item.value.split(',').map((val, index) => (
                   <Tag
                     key={index}
                     fillColor="var(--orange-secondary-color)"
@@ -243,7 +253,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             License
           </Text>
           <Text className="" variant="bodyLg" fontWeight="medium">
-            {getLicenseLabel(data.license)}
+            {getLicenseLabel(String(data.license))}
           </Text>
         </div>
         {data.downloadCount > 0 && (
@@ -263,7 +273,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
           <Text variant="bodyMd" className="uppercase">
             Description
           </Text>
-          <RichTextRenderer content={data.description} />
+          <RichTextRenderer content={data.description ?? ''} />
         </div>
       </div>
     </div>

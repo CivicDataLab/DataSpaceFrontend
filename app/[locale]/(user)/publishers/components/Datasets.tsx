@@ -1,5 +1,9 @@
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
+import {
+  OrganizationPublishedDatasetsListQuery,
+  UserPublishedDatasetsListQuery,
+} from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Icon, Spinner, Text } from 'opub-ui';
 
@@ -8,7 +12,7 @@ import { cn, extractPublisherId } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 
-const userPublishedDatasetsDoc: any = graphql(`
+const userPublishedDatasetsDoc = graphql(`
   query userPublishedDatasetsList($userId: ID!) {
     userPublishedDatasets(userId: $userId) {
       id
@@ -55,7 +59,7 @@ const userPublishedDatasetsDoc: any = graphql(`
   }
 `);
 
-const organizationPublishedDatasetsDoc: any = graphql(`
+const organizationPublishedDatasetsDoc = graphql(`
   query organizationPublishedDatasetsList($organizationId: ID!) {
     organizationPublishedDatasets(organizationId: $organizationId) {
       id
@@ -108,9 +112,17 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
     String(type === 'organization' ? params.organizationSlug : params.publisherSlug)
   );
 
-  const PublishedDatasetsList: any = useQuery(
+  type PublishedDatasetsData =
+    | OrganizationPublishedDatasetsListQuery
+    | UserPublishedDatasetsListQuery;
+
+  type PublishedDataset =
+    | OrganizationPublishedDatasetsListQuery['organizationPublishedDatasets'][number]
+    | UserPublishedDatasetsListQuery['userPublishedDatasets'][number];
+
+  const PublishedDatasetsList = useQuery(
     ['publishedDatasets', type, id],
-    () =>
+    (): Promise<PublishedDatasetsData> =>
       type === 'organization'
         ? GraphQL(
             organizationPublishedDatasetsDoc,
@@ -128,10 +140,11 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
           )
   );
 
-  const DatasetData =
-    type === 'organization'
-      ? PublishedDatasetsList.data?.organizationPublishedDatasets
-      : PublishedDatasetsList.data?.userPublishedDatasets;
+  const DatasetData = PublishedDatasetsList.data
+    ? 'organizationPublishedDatasets' in PublishedDatasetsList.data
+      ? PublishedDatasetsList.data.organizationPublishedDatasets
+      : PublishedDatasetsList.data.userPublishedDatasets
+    : undefined;
 
   return (
     <div>
@@ -144,8 +157,8 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
           <div className=" flex w-fit justify-center rounded-2 bg-surfaceDefault p-4">
             <Spinner />
           </div>
-        ) : DatasetData?.length > 0 ? (
-          DatasetData?.map((item: any, index: any) => (
+        ) : (DatasetData?.length ?? 0) > 0 ? (
+          DatasetData?.map((item: PublishedDataset, index: number) => (
             <Card
               // type={[
               //   {
@@ -159,25 +172,25 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
               description={stripMarkdown(item.description || '')}
               metadataContent={[
                 {
-                  icon: Icons.calendarEvent as any,
+                  icon: Icons.calendarEvent,
                   label: 'Date',
                   value: '19 July 2024',
                   stroke: 1.2,
                 },
                 {
-                  icon: Icons.fileDownload as any,
+                  icon: Icons.fileDownload,
                   label: 'Download',
                   value: item.downloadCount.toString(),
                   stroke: 1.2,
                 },
                 {
-                  icon: Icons.worldPin as any,
+                  icon: Icons.worldPin,
                   label: 'Geography',
                   value: 'India',
                   stroke: 1.2,
                 },
               ]}
-              tag={item.tags}
+              tag={item.tags.map((t) => t.value)}
               formats={item.formats}
               leftFooterChips={[
                 {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
@@ -14,7 +14,7 @@ import { GraphQL } from '@/lib/api';
 import { toTitleCase } from '@/lib/utils';
 import { FetchUsers } from '../usecases/edit/[id]/contributors/query';
 
-const addUserDoc: any = graphql(`
+const addUserDoc = graphql(`
   mutation addUserToOrganization($input: AddRemoveUserToOrganizationInput!) {
     addUserToOrganization(input: $input) {
       success
@@ -33,7 +33,7 @@ const addUserDoc: any = graphql(`
     }
   }
 `);
-const allRolesDoc: any = graphql(`
+const allRolesDoc = graphql(`
   query AllRolesDoc {
     roles {
       id
@@ -43,7 +43,7 @@ const allRolesDoc: any = graphql(`
   }
 `);
 
-const updateUser: any = graphql(`
+const updateUser = graphql(`
   mutation assignOrganizationRole($input: AssignOrganizationRoleInput!) {
     assignOrganizationRole(input: $input) {
       success
@@ -52,27 +52,61 @@ const updateUser: any = graphql(`
   }
 `);
 
+export interface SelectedUser {
+  id?: string;
+  name?: string;
+  role?: {
+    id?: string;
+    name?: string;
+  };
+}
+
+interface SearchUserOption {
+  id: string;
+  fullName: string;
+}
+
+interface AddUserProps {
+  setIsOpen: (isOpen: boolean) => void;
+  selectedUser: SelectedUser;
+  isOpen: boolean;
+  isEdit: boolean;
+  setRefetch: (refetch: boolean) => void;
+}
+
 const AddUser = ({
   setIsOpen,
   selectedUser,
   isOpen,
   isEdit,
   setRefetch,
-}: {
-  setIsOpen: (isOpen: boolean) => void;
-  selectedUser: any;
-  isOpen: boolean;
-  isEdit: boolean;
-  setRefetch: (refetch: boolean) => void;
-}) => {
-  const [searchValue, setSearchValue] = useState('');
+}: AddUserProps) => {
+  const [searchValue, setSearchValue] = useState(selectedUser?.name || '');
+  const [formData, setFormData] = useState({
+    userId: selectedUser?.id || '',
+    roleId: selectedUser?.role?.id || '',
+  });
+  const [prevSelectedUser, setPrevSelectedUser] = useState(selectedUser);
+  if (selectedUser !== prevSelectedUser) {
+    setPrevSelectedUser(selectedUser);
+    if (selectedUser) {
+      setSearchValue(selectedUser.name || '');
+      setFormData({
+        userId: selectedUser.id || '',
+        roleId: selectedUser.role?.id || '',
+      });
+    } else {
+      setFormData({ userId: '', roleId: '' });
+      setSearchValue('');
+    }
+  }
   const params = useParams<{
     entityType: string;
     entitySlug: string;
     id: string;
   }>();
 
-  const Users: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  const Users = useQuery(
     [`fetch_users_list`],
     () =>
       GraphQL(
@@ -91,30 +125,13 @@ const AddUser = ({
     }
   );
 
-  const RolesList: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  const RolesList = useQuery(
     [`fetch_UseCaseData`],
     () =>
-      GraphQL(
-        allRolesDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        []
-      )
+      GraphQL(allRolesDoc, {
+        [params.entityType]: params.entitySlug,
+      })
   );
-
-  useEffect(() => {
-    if (selectedUser) {
-      setSearchValue(selectedUser.name || '');
-      setFormData({
-        userId: selectedUser.id || '',
-        roleId: selectedUser.role?.id || '',
-      });
-    } else {
-      setFormData({ userId: '', roleId: '' });
-      setSearchValue('');
-    }
-  }, [selectedUser]);
 
   const { mutate } = useMutation(
     (input: { input: AddRemoveUserToOrganizationInput }) =>
@@ -126,7 +143,7 @@ const AddUser = ({
         input
       ),
     {
-      onSuccess: (data: any) => {
+      onSuccess: (data) => {
         if (data.addUserToOrganization.success) {
           toast('User added successfully');
           setIsOpen(false);
@@ -141,7 +158,7 @@ const AddUser = ({
               (data.addUserToOrganization?.errors?.fieldErrors
                 ? data.addUserToOrganization?.errors?.fieldErrors[0]
                     ?.messages[0]
-                : data.addUserToOrganization?.errors?.nonFieldErrors[0])
+                : data.addUserToOrganization?.errors?.nonFieldErrors?.[0])
           );
         }
       },
@@ -173,11 +190,7 @@ const AddUser = ({
     }
   );
 
-  const [formData, setFormData] = useState({
-    userId: '',
-    roleId: '',
-  });
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: 'userId' | 'roleId', value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -200,7 +213,7 @@ const AddUser = ({
     Users.refetch(); // Refetch when search term changes
   };
 
-  const handleSelectOption = (option: any) => {
+  const handleSelectOption = (option: SearchUserOption) => {
     handleChange('userId', option.id);
     setSearchValue(option.fullName);
     setIsDropdownOpen(false); // Close dropdown
@@ -227,9 +240,9 @@ const AddUser = ({
                   className="border border-gray-100 placeholder:text-sm mt-1 block w-full px-3 py-1"
                   placeholder={'Select user'}
                 />
-                {isDropdownOpen && filteredOptions?.length > 0 && (
+                {isDropdownOpen && (filteredOptions?.length ?? 0) > 0 && (
                   <div className="border border-gray-300 rounded-md shadow-lg  absolute left-0 right-0 z-1 mt-2 max-h-60 overflow-y-auto rounded-2 bg-white px-1 py-2 shadow-basicXl">
-                    {filteredOptions.map((option: any) => (
+                    {filteredOptions?.map((option: SearchUserOption) => (
                       <div
                         key={option.id}
                         className="cursor-pointer rounded-2 px-4 py-2 hover:bg-baseGraySlateSolid3"
@@ -246,16 +259,18 @@ const AddUser = ({
                 value={formData.roleId}
                 placeholder="Select a role"
                 onChange={(e) => handleChange('roleId', e)}
-                options={RolesList.data?.roles
-                  .filter((role: any) => role.name !== 'owner')
-                  .map((role: any) => ({
-                    label: toTitleCase(role.name),
-                    value: role.id,
-                  }))}
+                options={
+                  RolesList.data?.roles
+                    ?.filter((role) => role.name !== 'owner')
+                    .map((role) => ({
+                      label: toTitleCase(role.name),
+                      value: role.id,
+                    })) ?? []
+                }
                 label="Select a role *"
                 helpText={RolesList.data?.roles
-                  .filter((role: any) => role.id === formData.roleId)
-                  .map((role: any) => role.description)}
+                  ?.filter((role) => role.id === formData.roleId)
+                  .map((role) => role.description)}
               />
             </div>
             <div className="flex justify-center">

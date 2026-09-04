@@ -7,7 +7,7 @@ import { Text } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { Loading } from '@/components/loading';
 
-const DashboardsList: any = graphql(`
+const DashboardsList = graphql(`
   query usecaseDashboards($usecaseId: Int!) {
     usecaseDashboards(usecaseId: $usecaseId) {
       id
@@ -26,7 +26,7 @@ const Dashboards = () => {
 
   const isValidId = !Number.isNaN(usecaseId);
 
-  const { data, isLoading } = useQuery<{ usecaseDashboards: any }>(
+  const { data, isLoading } = useQuery(
     ['fetch_dashboardData', usecaseId],
     () => GraphQL(DashboardsList, {}, { usecaseId }),
     {
@@ -45,7 +45,7 @@ const Dashboards = () => {
       {isLoading ? (
         <Loading />
       ) : (
-        data?.usecaseDashboards?.length > 0 && (
+        (data?.usecaseDashboards?.length ?? 0) > 0 && (
           <div className="container py-10">
             <div className=" flex flex-col gap-1 ">
               <Text variant="headingXl">
@@ -56,7 +56,7 @@ const Dashboards = () => {
               </Text>
             </div>
             <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {data?.usecaseDashboards?.map((dashboard: any) => (
+              {data?.usecaseDashboards?.map((dashboard) => (
                 <Link
                   key={dashboard.id}
                   href={dashboard.link}

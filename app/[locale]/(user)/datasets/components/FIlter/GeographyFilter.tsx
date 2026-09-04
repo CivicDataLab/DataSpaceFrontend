@@ -5,7 +5,7 @@ import {
     AccordionTrigger,
     Text,
 } from 'opub-ui';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { TreeView } from '@/components/ui/tree-view';
 import { toTitleCase } from '@/lib/utils';
@@ -26,6 +26,31 @@ interface GeographyNode extends Geography {
   children: GeographyNode[];
 }
 
+function buildHierarchy(flatList: Geography[]): GeographyNode[] {
+  const map = new Map<number, GeographyNode>();
+  const roots: GeographyNode[] = [];
+
+  flatList.forEach((geo) => {
+    map.set(geo.id, { ...geo, children: [] });
+  });
+
+  flatList.forEach((geo) => {
+    const node = map.get(geo.id)!;
+    if (geo.parentId && geo.parentId.id) {
+      const parent = map.get(geo.parentId.id);
+      if (parent) {
+        parent.children.push(node);
+      } else {
+        roots.push(node);
+      }
+    } else {
+      roots.push(node);
+    }
+  });
+
+  return roots;
+}
+
 interface GeographyFilterProps {
   selectedGeographies: string[];
   onGeographyChange: (geographies: string[]) => void;
@@ -40,12 +65,22 @@ const GeographyFilter: React.FC<GeographyFilterProps> = ({
   const [geographies, setGeographies] = useState<GeographyNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const geographyOptionsRef = useRef(geographyOptions);
-  geographyOptionsRef.current = geographyOptions;
 
   useEffect(() => {
+    const fallbackFromOptions = () => {
+      if (geographyOptions.length === 0) return;
+      const flatGeographies: GeographyNode[] = geographyOptions.map((opt, idx) => ({
+        id: idx,
+        name: opt.label,
+        code: '',
+        type: '',
+        parentId: null,
+        children: [],
+      }));
+      setGeographies(flatGeographies);
+    };
+
     const fetchGeographies = async () => {
-      setLoading(true);
       try {
         // Always try to fetch from GraphQL for full hierarchy
         const response = await fetch(
@@ -88,69 +123,23 @@ const GeographyFilter: React.FC<GeographyFilterProps> = ({
         if (data && data.geographies && data.geographies.length > 0) {
           const hierarchicalData = buildHierarchy(data.geographies);
           setGeographies(hierarchicalData);
-        } else if (geographyOptionsRef.current && geographyOptionsRef.current.length > 0) {
-          // Fallback to aggregations if GraphQL fails
-          const flatGeographies: GeographyNode[] = geographyOptionsRef.current.map((opt, idx) => ({
-            id: idx,
-            name: opt.label,
-            code: '',
-            type: '',
-            parentId: null,
-            children: [],
-          }));
-          setGeographies(flatGeographies);
+        } else {
+          fallbackFromOptions();
         }
       } catch (error) {
         console.error('Error fetching geographies:', error);
-        // Use aggregations as fallback on error
-        if (geographyOptionsRef.current && geographyOptionsRef.current.length > 0) {
-          const flatGeographies: GeographyNode[] = geographyOptionsRef.current.map((opt, idx) => ({
-            id: idx,
-            name: opt.label,
-            code: '',
-            type: '',
-            parentId: null,
-            children: [],
-          }));
-          setGeographies(flatGeographies);
-        }
+        fallbackFromOptions();
       } finally {
         setLoading(false);
       }
     };
 
-    fetchGeographies();
-  }, []);
+    void fetchGeographies();
+  }, [geographyOptions]);
 
-  const buildHierarchy = (flatList: Geography[]): GeographyNode[] => {
-    const map = new Map<number, GeographyNode>();
-    const roots: GeographyNode[] = [];
+  type TreeDataItem = React.ComponentProps<typeof TreeView>['data'][number];
 
-    // Initialize all nodes
-    flatList.forEach((geo) => {
-      map.set(geo.id, { ...geo, children: [] });
-    });
-
-    // Build hierarchy
-    flatList.forEach((geo) => {
-      const node = map.get(geo.id)!;
-      if (geo.parentId && geo.parentId.id) {
-        const parent = map.get(geo.parentId.id);
-        if (parent) {
-          parent.children.push(node);
-        } else {
-          roots.push(node);
-        }
-      } else {
-        roots.push(node);
-      }
-    });
-
-    return roots;
-  };
-
-  // Convert GeographyNode to TreeView format
-  const convertToTreeData = (nodes: GeographyNode[]): any[] => {
+  const convertToTreeData = (nodes: GeographyNode[]): TreeDataItem[] => {
     return nodes.map((node) => ({
       id: node.name,
       name: node.name,

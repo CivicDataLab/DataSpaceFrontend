@@ -20,6 +20,15 @@ interface EntityItem {
   __typename?: 'TypeUser' | 'TypeOrganization';
 }
 
+function isEntityItem(item: unknown): item is EntityItem {
+  return (
+    typeof item === 'object' &&
+    item !== null &&
+    'id' in item &&
+    typeof (item as { id: unknown }).id === 'string'
+  );
+}
+
 async function fetchEntityData(
   entity: string,
   page: number
@@ -33,7 +42,7 @@ async function fetchEntityData(
   if (config.source === 'search') {
     const response = await getSearchEntityCount(entity, itemsPerPage, page);
     if (!response || !response.list) return [];
-    return response.list;
+    return response.list.filter(isEntityItem);
   }
 
   if (config.source === 'graphql') {
@@ -42,7 +51,7 @@ async function fetchEntityData(
 
     // GraphQL endpoints return the full list; slice for the requested page.
     const start = (page - 1) * itemsPerPage;
-    return response.list.slice(start, start + itemsPerPage);
+    return response.list.slice(start, start + itemsPerPage).filter(isEntityItem);
   }
 
   return [];

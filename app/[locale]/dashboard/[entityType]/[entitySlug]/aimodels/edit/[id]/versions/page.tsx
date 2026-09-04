@@ -3,6 +3,16 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
+import {
+  AiModelLifecycleStage,
+  AiModelProvider,
+  CreateAiModelVersionInput,
+  CreateVersionProviderInput,
+  EndpointAuthType,
+  EndpointHttpMethod,
+  UpdateAiModelVersionInput,
+  UpdateVersionProviderInput,
+} from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Button,
@@ -24,7 +34,7 @@ import {
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 
-const fetchModelVersions: any = graphql(`
+const fetchModelVersions = graphql(`
   query FetchModelVersions($filters: AIModelFilter) {
     aiModels(filters: $filters) {
       id
@@ -76,7 +86,7 @@ const fetchModelVersions: any = graphql(`
   }
 `);
 
-const createVersionMutation: any = graphql(`
+const createVersionMutation = graphql(`
   mutation CreateNewModelVersion($input: CreateAIModelVersionInput!) {
     createAiModelVersion(input: $input) {
       success
@@ -89,7 +99,7 @@ const createVersionMutation: any = graphql(`
   }
 `);
 
-const updateVersionMutation: any = graphql(`
+const updateVersionMutation = graphql(`
   mutation UpdateModelVersion($input: UpdateAIModelVersionInput!) {
     updateAiModelVersion(input: $input) {
       success
@@ -102,7 +112,7 @@ const updateVersionMutation: any = graphql(`
   }
 `);
 
-const createProviderMutation: any = graphql(`
+const createProviderMutation = graphql(`
   mutation CreateModelVersionProvider($input: CreateVersionProviderInput!) {
     createVersionProvider(input: $input) {
       success
@@ -116,7 +126,7 @@ const createProviderMutation: any = graphql(`
   }
 `);
 
-const updateProviderMutation: any = graphql(`
+const updateProviderMutation = graphql(`
   mutation UpdateModelVersionProvider($input: UpdateVersionProviderInput!) {
     updateVersionProvider(input: $input) {
       success
@@ -130,13 +140,55 @@ const updateProviderMutation: any = graphql(`
   }
 `);
 
-const deleteProviderMutation: any = graphql(`
+const deleteProviderMutation = graphql(`
   mutation DeleteModelVersionProvider($providerId: Int!) {
     deleteVersionProvider(providerId: $providerId) {
       success
     }
   }
 `);
+
+interface VersionProviderRow {
+  id: number;
+  provider: string;
+  providerModelId?: string | null;
+  isPrimary: boolean;
+  isActive?: boolean;
+  apiEndpointUrl?: string | null;
+  apiHttpMethod?: string | null;
+  apiTimeoutSeconds?: number | null;
+  apiAuthType?: string | null;
+  apiAuthHeaderName?: string | null;
+  apiKey?: string | null;
+  apiKeyPrefix?: string | null;
+  apiHeaders?: Record<string, string> | null;
+  apiRequestTemplate?: unknown;
+  apiResponsePath?: string | null;
+  hfUsePipeline?: boolean | null;
+  hfAuthToken?: string | null;
+  hfModelClass?: string | null;
+  hfAttnImplementation?: string | null;
+  hfTrustRemoteCode?: boolean | null;
+  hfTorchDtype?: string | null;
+  hfDeviceMap?: string | null;
+  framework?: string | null;
+}
+
+interface ModelVersionRow {
+  id: number;
+  version: string;
+  versionNotes?: string | null;
+  status?: string | null;
+  lifecycleStage?: AiModelLifecycleStage | null;
+  isLatest: boolean;
+  supportsStreaming?: boolean;
+  maxTokens?: number | null;
+  supportedLanguages?: unknown;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  publishedAt?: string | null;
+  providers: VersionProviderRow[];
+}
 
 export default function VersionsPage() {
   const params = useParams<{
@@ -170,29 +222,32 @@ export default function VersionsPage() {
   const [isWhatsThisModalOpen, setIsWhatsThisModalOpen] = useState(false);
   const [isPrimaryConfirmModalOpen, setIsPrimaryConfirmModalOpen] =
     useState(false);
-  const [selectedVersion, setSelectedVersion] = useState<any>(null);
-  const [editingProvider, setEditingProvider] = useState<any>(null);
+  const [selectedVersion, setSelectedVersion] = useState<ModelVersionRow | null>(
+    null
+  );
+  const [editingProvider, setEditingProvider] =
+    useState<VersionProviderRow | null>(null);
   const [pendingPrimaryVersionId, setPendingPrimaryVersionId] = useState<
     number | null
   >(null);
 
   const [newVersionData, setNewVersionData] = useState({
     version: '',
-    lifecycleStage: 'DEVELOPMENT',
+    lifecycleStage: AiModelLifecycleStage.Development,
     copyFromVersionId: null as number | null,
     isLatest: false,
   });
 
   const [providerFormData, setProviderFormData] = useState({
-    provider: 'CUSTOM',
+    provider: AiModelProvider.Custom,
     providerModelId: '',
     isPrimary: false,
     // API Endpoint Configuration
     apiEndpointUrl: '',
-    apiHttpMethod: 'POST',
+    apiHttpMethod: EndpointHttpMethod.Post,
     apiTimeoutSeconds: 60,
     // Authentication Configuration
-    apiAuthType: 'BEARER',
+    apiAuthType: EndpointAuthType.Bearer,
     apiAuthHeaderName: 'Authorization',
     apiKey: '',
     apiKeyPrefix: 'Bearer',
@@ -219,7 +274,7 @@ export default function VersionsPage() {
     () =>
       GraphQL(fetchModelVersions, { [params.entityType]: params.entitySlug }, {
         filters: { id: parseInt(params.id) },
-      } as any),
+      }),
     {
       enabled: !!params.id,
       refetchOnMount: true,
@@ -227,20 +282,20 @@ export default function VersionsPage() {
     }
   );
 
-  const model = (data as any)?.aiModels?.[0];
+  const model = data?.aiModels?.[0];
   const versions = model?.versions || [];
-  const latestVersion = versions.find((v: any) => v.isLatest) || versions[0];
+  const latestVersion = versions.find((v) => v.isLatest) || versions[0];
 
   // Mutations
   const { mutate: createVersion, isLoading: createLoading } = useMutation(
-    (input: any) =>
+    (input: CreateAiModelVersionInput) =>
       GraphQL(
         createVersionMutation,
         { [params.entityType]: params.entitySlug },
         { input }
       ),
     {
-      onSuccess: async (response: any) => {
+      onSuccess: async (response) => {
         toast('New version created successfully!',{id: VERSIONS_ACTION_TOAST_ID});
         setIsNewVersionModalOpen(false);
         resetVersionForm();
@@ -252,24 +307,24 @@ export default function VersionsPage() {
 
         if (newVersionId && result.data) {
           const refetchedVersions =
-            (result.data as any)?.aiModels?.[0]?.versions || [];
+            result.data?.aiModels?.[0]?.versions || [];
           const newVersion = refetchedVersions.find(
-            (v: any) => v.id === newVersionId
+            (v) => v.id === newVersionId
           );
           if (newVersion) {
             setSelectedVersion(newVersion);
           }
         }
       },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`,{id: VERSIONS_ACTION_TOAST_ID});
+      onError: (error: unknown) => {
+        toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`,{id: VERSIONS_ACTION_TOAST_ID});
       },
     }
   );
 
   const { mutate: createProvider, isLoading: createProviderLoading } =
     useMutation(
-      (input: any) =>
+      (input: CreateVersionProviderInput) =>
         GraphQL(
           createProviderMutation,
           { [params.entityType]: params.entitySlug },
@@ -286,23 +341,23 @@ export default function VersionsPage() {
           const result = await refetch();
           if (result.data && selectedVersion) {
             const refetchedVersions =
-              (result.data as any)?.aiModels?.[0]?.versions || [];
+              result.data?.aiModels?.[0]?.versions || [];
             const updatedVersion = refetchedVersions.find(
-              (v: any) => v.id === selectedVersion.id
+              (v) => v.id === selectedVersion.id
             );
             if (updatedVersion) {
               setSelectedVersion(updatedVersion);
             }
           }
         },
-        onError: (error: any) => {
-          toast(`Error: ${error.message}`,{id: VERSIONS_ACTION_TOAST_ID});
+        onError: (error: unknown) => {
+          toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`,{id: VERSIONS_ACTION_TOAST_ID});
         },
       }
     );
   const { mutate: updateProvider, isLoading: updateProviderLoading } =
     useMutation(
-      (input: any) =>
+      (input: UpdateVersionProviderInput) =>
         GraphQL(
           updateProviderMutation,
           { [params.entityType]: params.entitySlug },
@@ -320,17 +375,17 @@ export default function VersionsPage() {
           const result = await refetch();
           if (result.data && selectedVersion) {
             const refetchedVersions =
-              (result.data as any)?.aiModels?.[0]?.versions || [];
+              result.data?.aiModels?.[0]?.versions || [];
             const updatedVersion = refetchedVersions.find(
-              (v: any) => v.id === selectedVersion.id
+              (v) => v.id === selectedVersion.id
             );
             if (updatedVersion) {
               setSelectedVersion(updatedVersion);
             }
           }
         },
-        onError: (error: any) => {
-          toast(`Error: ${error.message}`,{id: VERSIONS_ACTION_TOAST_ID});
+        onError: (error: unknown) => {
+          toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`,{id: VERSIONS_ACTION_TOAST_ID});
         },
       }
     );
@@ -340,7 +395,7 @@ export default function VersionsPage() {
       GraphQL(
         deleteProviderMutation,
         { [params.entityType]: params.entitySlug },
-        { providerId } as any
+        { providerId }
       ),
     {
       onSuccess: async () => {
@@ -351,17 +406,17 @@ export default function VersionsPage() {
         const result = await refetch();
         if (result.data && selectedVersion) {
           const refetchedVersions =
-            (result.data as any)?.aiModels?.[0]?.versions || [];
+            result.data?.aiModels?.[0]?.versions || [];
           const updatedVersion = refetchedVersions.find(
-            (v: any) => v.id === selectedVersion.id
+            (v) => v.id === selectedVersion.id
           );
           if (updatedVersion) {
             setSelectedVersion(updatedVersion);
           }
         }
       },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`,{id: VERSIONS_ACTION_TOAST_ID});
+      onError: (error: unknown) => {
+        toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`,{id: VERSIONS_ACTION_TOAST_ID});
       },
     }
   );
@@ -369,7 +424,7 @@ export default function VersionsPage() {
   const resetVersionForm = () => {
     setNewVersionData({
       version: '',
-      lifecycleStage: 'DEVELOPMENT',
+      lifecycleStage: AiModelLifecycleStage.Development,
       copyFromVersionId: null,
       isLatest: false,
     });
@@ -377,15 +432,15 @@ export default function VersionsPage() {
 
   const resetProviderForm = () => {
     setProviderFormData({
-      provider: 'CUSTOM',
+      provider: AiModelProvider.Custom,
       providerModelId: '',
       isPrimary: false,
       // API Endpoint Configuration
       apiEndpointUrl: '',
-      apiHttpMethod: 'POST',
+      apiHttpMethod: EndpointHttpMethod.Post,
       apiTimeoutSeconds: 60,
       // Authentication Configuration
-      apiAuthType: 'BEARER',
+      apiAuthType: EndpointAuthType.Bearer,
       apiAuthHeaderName: 'Authorization',
       apiKey: '',
       apiKeyPrefix: 'Bearer',
@@ -418,7 +473,7 @@ export default function VersionsPage() {
 
     setNewVersionData({
       version: suggestedVersion,
-      lifecycleStage: 'DEVELOPMENT',
+      lifecycleStage: AiModelLifecycleStage.Development,
       copyFromVersionId: latestVersion?.id || null,
       isLatest: false,
     });
@@ -438,26 +493,41 @@ export default function VersionsPage() {
     createVersion({
       modelId: parseInt(params.id),
       version: newVersionData.version,
-      lifecycleStage: newVersionData.lifecycleStage,
+      lifecycleStage: newVersionData.lifecycleStage || AiModelLifecycleStage.Development,
       copyFromVersionId: newVersionData.copyFromVersionId,
       isLatest: newVersionData.isLatest,
     });
   };
 
-  const handleOpenProviderModal = (version: any, provider?: any) => {
+  const handleOpenProviderModal = (
+    version: ModelVersionRow,
+    provider?: VersionProviderRow
+  ) => {
     setSelectedVersion(version);
     if (provider) {
       setEditingProvider(provider);
       setProviderFormData({
-        provider: provider.provider,
+        provider: (Object.values(AiModelProvider) as string[]).includes(
+          provider.provider
+        )
+          ? (provider.provider as AiModelProvider)
+          : AiModelProvider.Custom,
         providerModelId: provider.providerModelId || '',
         isPrimary: provider.isPrimary,
         // API Endpoint Configuration
         apiEndpointUrl: provider.apiEndpointUrl || '',
-        apiHttpMethod: provider.apiHttpMethod || 'POST',
+        apiHttpMethod: (Object.values(EndpointHttpMethod) as string[]).includes(
+          provider.apiHttpMethod ?? ''
+        )
+          ? (provider.apiHttpMethod as EndpointHttpMethod)
+          : EndpointHttpMethod.Post,
         apiTimeoutSeconds: provider.apiTimeoutSeconds || 60,
         // Authentication Configuration
-        apiAuthType: provider.apiAuthType || 'BEARER',
+        apiAuthType: (Object.values(EndpointAuthType) as string[]).includes(
+          provider.apiAuthType ?? ''
+        )
+          ? (provider.apiAuthType as EndpointAuthType)
+          : EndpointAuthType.Bearer,
         apiAuthHeaderName: provider.apiAuthHeaderName || 'Authorization',
         apiKey: provider.apiKey || '',
         apiKeyPrefix: provider.apiKeyPrefix || 'Bearer',
@@ -539,10 +609,10 @@ export default function VersionsPage() {
       isPrimary: providerFormData.isPrimary,
       // API Endpoint Configuration
       apiEndpointUrl: providerFormData.apiEndpointUrl || null,
-      apiHttpMethod: providerFormData.apiHttpMethod || 'POST',
+      apiHttpMethod: providerFormData.apiHttpMethod || EndpointHttpMethod.Post,
       apiTimeoutSeconds: providerFormData.apiTimeoutSeconds,
       // Authentication Configuration
-      apiAuthType: providerFormData.apiAuthType || 'BEARER',
+      apiAuthType: providerFormData.apiAuthType || EndpointAuthType.Bearer,
       apiAuthHeaderName: providerFormData.apiAuthHeaderName || 'Authorization',
       apiKey: providerFormData.apiKey || null,
       apiKeyPrefix: providerFormData.apiKeyPrefix || 'Bearer',
@@ -617,7 +687,7 @@ export default function VersionsPage() {
   ];
 
   const { mutate: updateVersion } = useMutation(
-    (input: any) =>
+    (input: UpdateAiModelVersionInput) =>
       GraphQL(
         updateVersionMutation,
         { [params.entityType]: params.entitySlug },
@@ -629,18 +699,27 @@ export default function VersionsPage() {
         refetch();
         invalidateVersionQueries();
       },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`,{id: VERSIONS_ACTION_TOAST_ID});
+      onError: (error: unknown) => {
+        toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`,{id: VERSIONS_ACTION_TOAST_ID});
       },
     }
   );
 
-  const handleLifecycleChange = (versionId: number, lifecycleStage: string) => {
+  const handleLifecycleChange = (
+    versionId: number,
+    lifecycleStage: string
+  ) => {
+    const stage = (
+      Object.values(AiModelLifecycleStage) as string[]
+    ).includes(lifecycleStage)
+      ? (lifecycleStage as AiModelLifecycleStage)
+      : undefined;
+    if (!stage) return;
     const currentVersion = selectedVersion || latestVersion;
     if (currentVersion?.id === versionId) {
-      setSelectedVersion({ ...currentVersion, lifecycleStage });
+      setSelectedVersion({ ...currentVersion, lifecycleStage: stage });
     }
-    updateVersion({ id: versionId, lifecycleStage });
+    updateVersion({ id: versionId, lifecycleStage: stage });
   };
 
   const handleSetPrimaryVersion = (versionId: number, isLatest: boolean) => {
@@ -681,7 +760,7 @@ export default function VersionsPage() {
     return names[provider] || provider;
   };
 
-  const getEndpointUrl = (provider: any) => {
+  const getEndpointUrl = (provider: VersionProviderRow) => {
     if (provider.apiEndpointUrl) {
       return provider.apiEndpointUrl;
     }
@@ -694,7 +773,7 @@ export default function VersionsPage() {
     return provider.providerModelId || '-';
   };
 
-  const getAccessPriority = (provider: any) => {
+  const getAccessPriority = (provider: { isPrimary?: boolean }) => {
     return provider.isPrimary ? 'Primary Source' : 'Alternate Source';
   };
 
@@ -714,7 +793,7 @@ export default function VersionsPage() {
             <Select
               name="versionSelector"
               label=""
-              options={versions.map((v: any) => ({
+              options={versions.map((v) => ({
                 label: `Version ${v.version}`,
                 value: v.id.toString(),
               }))}
@@ -725,9 +804,27 @@ export default function VersionsPage() {
               }
               onChange={(value) => {
                 const version = versions.find(
-                  (v: any) => v.id.toString() === value
+                  (v) => v.id.toString() === value
                 );
-                setSelectedVersion(version);
+                if (!version) {
+                  setSelectedVersion(null);
+                  return;
+                }
+                setSelectedVersion({
+                  id: version.id,
+                  version: version.version,
+                  versionNotes: version.versionNotes,
+                  status: version.status,
+                  lifecycleStage: version.lifecycleStage,
+                  isLatest: version.isLatest,
+                  supportsStreaming: version.supportsStreaming,
+                  maxTokens: version.maxTokens,
+                  supportedLanguages: version.supportedLanguages,
+                  createdAt: version.createdAt,
+                  updatedAt: version.updatedAt,
+                  publishedAt: version.publishedAt,
+                  providers: version.providers,
+                });
               }}
             />
           )}
@@ -788,14 +885,14 @@ export default function VersionsPage() {
                       {
                         accessorKey: 'priority',
                         header: 'Access Priority',
-                        cell: ({ row }: any) => (
+                        cell: ({ row }: { row: { original: VersionProviderRow } }) => (
                           <Tag>{getAccessPriority(row.original)}</Tag>
                         ),
                       },
                       {
                         accessorKey: 'actions',
                         header: 'Actions',
-                        cell: ({ row }: any) => (
+                        cell: ({ row }: { row: { original: VersionProviderRow } }) => (
                           <div className="flex items-center gap-2">
                             <IconButton
                               size="medium"
@@ -824,7 +921,7 @@ export default function VersionsPage() {
                         ),
                       },
                     ]}
-                    rows={currentVersion.providers.map((provider: any) => ({
+                    rows={currentVersion.providers.map((provider) => ({
                       id: provider.id,
                       provider: getProviderDisplayName(provider.provider),
                       endpoint: getEndpointUrl(provider),
@@ -897,7 +994,11 @@ export default function VersionsPage() {
                 onChange={(value) =>
                   setNewVersionData((prev) => ({
                     ...prev,
-                    lifecycleStage: value,
+                    lifecycleStage: (
+                      Object.values(AiModelLifecycleStage) as string[]
+                    ).includes(value)
+                      ? (value as AiModelLifecycleStage)
+                      : prev.lifecycleStage,
                   }))
                 }
                 required
@@ -913,7 +1014,7 @@ export default function VersionsPage() {
                 label="Duplicate Endpoints From"
                 options={[
                   { label: 'Create without duplicating', value: '' },
-                  ...versions.map((v: any) => ({
+                  ...versions.map((v) => ({
                     label: `Version ${v.version}`,
                     value: v.id.toString(),
                   })),
@@ -979,7 +1080,11 @@ export default function VersionsPage() {
                   onChange={(value) =>
                     setProviderFormData((prev) => ({
                       ...prev,
-                      provider: value,
+                      provider: (
+                        Object.values(AiModelProvider) as string[]
+                      ).includes(value)
+                        ? (value as AiModelProvider)
+                        : prev.provider,
                     }))
                   }
                   disabled={!!editingProvider}
@@ -1141,7 +1246,11 @@ export default function VersionsPage() {
                       onChange={(value) =>
                         setProviderFormData((prev) => ({
                           ...prev,
-                          apiAuthType: value,
+                          apiAuthType: (
+                            Object.values(EndpointAuthType) as string[]
+                          ).includes(value)
+                            ? (value as EndpointAuthType)
+                            : prev.apiAuthType,
                         }))
                       }
                     />
@@ -1348,9 +1457,9 @@ export default function VersionsPage() {
           <Dialog.Content title="Select as Primary Version?">
             <div className="space-y-4">
               {(() => {
-                const currentPrimary = versions.find((v: any) => v.isLatest);
+                const currentPrimary = versions.find((v) => v.isLatest);
                 const pendingVersion = versions.find(
-                  (v: any) => v.id === pendingPrimaryVersionId
+                  (v) => v.id === pendingPrimaryVersionId
                 );
                 return (
                   <>

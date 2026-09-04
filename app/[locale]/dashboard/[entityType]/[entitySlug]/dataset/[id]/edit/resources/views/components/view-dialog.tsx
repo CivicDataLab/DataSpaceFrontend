@@ -3,7 +3,9 @@ import { Button, Dialog, Form, FormLayout, Input, Select } from 'opub-ui';
 
 import { DISTRIBUTION_VIEW_OPTIONS, viewOptions } from '../constants';
 import { Bar } from './bar';
-import { Item } from './list';
+import { ChartConfig, Item } from './list';
+
+type ChartRow = Record<string, string | number>;
 
 export const ViewDialog = ({
   data,
@@ -14,20 +16,27 @@ export const ViewDialog = ({
   viewData,
   setViewEdit,
 }: {
-  data: any;
+  data: ChartRow[];
   open: boolean;
   name: string;
   setOpen: (arg: boolean) => void;
-  setAddedItems: (arg: any) => void;
+  setAddedItems: React.Dispatch<React.SetStateAction<Item[]>>;
   viewData: Item | null;
   setViewEdit: (arg: Item | null) => void;
 }) => {
   const [viewName, setViewName] = React.useState('');
   const [viewChart, setViewChart] = React.useState<viewOptions>('bar-vertical');
-  const [chartData, setChartData] = React.useState<any>(null);
-  const [options, setOptions] = React.useState<any>(null);
-
-  React.useEffect(() => {
+  const [chartData, setChartData] = React.useState<ChartConfig | null>(null);
+  const [options, setOptions] = React.useState<Record<string, unknown> | null>(
+    null
+  );
+  const [prevOpen, setPrevOpen] = React.useState(open);
+  const [prevViewData, setPrevViewData] = React.useState(viewData);
+  const [prevName, setPrevName] = React.useState(name);
+  if (open !== prevOpen || viewData !== prevViewData || name !== prevName) {
+    setPrevOpen(open);
+    setPrevViewData(viewData);
+    setPrevName(name);
     if (open === true) {
       if (viewData) {
         setViewName(viewData.name);
@@ -39,7 +48,7 @@ export const ViewDialog = ({
         setChartData(null);
       }
     }
-  }, [viewData, open, name]);
+  }
 
   return (
     <div>
@@ -90,13 +99,13 @@ export const ViewDialog = ({
               setViewEdit(null);
 
               if (viewData) {
-                setAddedItems((prev: any) =>
-                  prev.map((item: any) =>
+                setAddedItems((prev) =>
+                  prev.map((item) =>
                     item.id === viewData.id ? newItem : item
                   )
                 );
               } else {
-                setAddedItems((prev: any) => [...prev, newItem]);
+                setAddedItems((prev) => [...prev, newItem]);
               }
               setViewName('');
               setOpen(false);
@@ -157,11 +166,33 @@ export const ViewDialog = ({
   );
 };
 
-function getViewOptions(view: viewOptions, ...props: any) {
+function getViewOptions(
+  view: viewOptions,
+  data: ChartRow[],
+  chartData: ChartConfig | null,
+  setChartData: React.Dispatch<React.SetStateAction<ChartConfig | null>>,
+  setOptions: React.Dispatch<React.SetStateAction<Record<string, unknown> | null>>
+) {
   switch (view) {
     case 'bar-vertical':
-      return <Bar {...props} type="vertical" />;
+      return (
+        <Bar
+          type="vertical"
+          data={data}
+          chartData={chartData}
+          setChartData={setChartData}
+          setOptions={setOptions}
+        />
+      );
     case 'bar-horizontal':
-      return <Bar {...props} type="horizontal" />;
+      return (
+        <Bar
+          type="horizontal"
+          data={data}
+          chartData={chartData}
+          setChartData={setChartData}
+          setOptions={setOptions}
+        />
+      );
   }
 }

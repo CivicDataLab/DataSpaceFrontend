@@ -132,7 +132,7 @@ export const createChart = graphql(`
   }
 `);
 
-export const CreateResourceChart: any = graphql(`
+export const CreateResourceChart = graphql(`
   mutation GenerateResourceChart($resource: UUID!) {
     addResourceChart(resource: $resource) {
       __typename

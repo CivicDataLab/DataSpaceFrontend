@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import React from 'react';
 import { Button, Dialog, Table } from 'opub-ui';
 
@@ -11,7 +12,7 @@ interface ColumnData {
 }
 
 interface RowData {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface ResourceTableProps {
@@ -20,7 +21,9 @@ interface ResourceTableProps {
 }
 
 interface CellProps {
-  row: RowData;
+  row: {
+    original: RowData;
+  };
 }
 
 const ResourceTable: React.FC<ResourceTableProps> = ({
@@ -32,23 +35,22 @@ const ResourceTable: React.FC<ResourceTableProps> = ({
       return {
         ...column,
         cell: ({ row }: CellProps) => {
-          const rowData = row.original as unknown as RowData;
-          const accessorKey = column.accessorKey as keyof RowData;
-          const cellValue = rowData[accessorKey];
+          const rowData = row.original;
+          const cellValue = rowData[column.accessorKey];
           return (
             <Dialog>
               <Dialog.Trigger>
                 <Button kind="tertiary">{column.label}</Button>
               </Dialog.Trigger>
               <Dialog.Content title={column.modalHeader}>
-                {column?.table ? (
+                {column?.table && Array.isArray(cellValue) ? (
                   <Table
-                    columns={cellValue[0]}
-                    rows={cellValue[1]}
+                    columns={Array.isArray(cellValue[0]) ? cellValue[0] : []}
+                    rows={Array.isArray(cellValue[1]) ? cellValue[1] : []}
                     hideFooter={true}
                   />
                 ) : (
-                  cellValue
+                  (cellValue as ReactNode)
                 )}
               </Dialog.Content>
             </Dialog>

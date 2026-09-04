@@ -62,11 +62,17 @@ const Sectors = () => {
         <SectorListingSkeleton cardCount={9} />
       ) : (
         <div className="mt-6 grid w-full grid-cols-1 gap-10 px-4 md:grid-cols-2 md:px-12 lg:mt-12 lg:grid-cols-3 lg:px-12">
-          {data?.activeSectors.map((sector: any) => (
+          {data?.activeSectors.map((sector) => (
             <SectorCard
               key={sector.id}
-              sector={sector}
-              href={`/sectors/${sector.slug}?size=9&page=1&sort=recent&sectors=${buildSectorSlugParam(sector.slug)}`}
+              sector={{
+                id: String(sector.id),
+                name: sector.name,
+                description: sector.description,
+                slug: sector.slug ?? '',
+                datasetCount: sector.datasetCount,
+              }}
+              href={`/sectors/${sector.slug}?size=9&page=1&sort=recent&sectors=${buildSectorSlugParam(sector.slug ?? '')}`}
               className="min-w-[280px] flex-1"
             />
           ))}

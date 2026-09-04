@@ -1,7 +1,7 @@
 import { graphql } from '@/gql';
 
 
-export const FetchUsers: any = graphql(`
+export const FetchUsers = graphql(`
     query searchUsers($limit: Int!, $searchTerm: String!) {
       searchUsers(limit: $limit, searchTerm: $searchTerm) {
         id
@@ -11,7 +11,7 @@ export const FetchUsers: any = graphql(`
     }
   `);
 
-export const FetchUsecaseInfo: any = graphql(`
+export const FetchUsecaseInfo = graphql(`
     query useCaseinfo($filters: UseCaseFilter) {
       useCases(filters: $filters) {
         id
@@ -44,7 +44,7 @@ export const FetchUsecaseInfo: any = graphql(`
     }
   `);
 
-export const AddContributors: any = graphql(`
+export const AddContributors = graphql(`
     mutation addContributorToUseCase($useCaseId: String!, $userId: ID!) {
       addContributorToUseCase(useCaseId: $useCaseId, userId: $userId) {
         __typename
@@ -61,7 +61,7 @@ export const AddContributors: any = graphql(`
     }
   `);
 
-export const RemoveContributor: any = graphql(`
+export const RemoveContributor = graphql(`
     mutation removeContributorFromUseCase($useCaseId: String!, $userId: ID!) {
       removeContributorFromUseCase(useCaseId: $useCaseId, userId: $userId) {
         __typename
@@ -78,7 +78,7 @@ export const RemoveContributor: any = graphql(`
     }
   `);
 
-export const AddSupporters: any = graphql(`
+export const AddSupporters = graphql(`
     mutation addSupportingOrganizationToUseCase(
       $useCaseId: String!
       $organizationId: ID!
@@ -102,7 +102,7 @@ export const AddSupporters: any = graphql(`
     }
   `);
 
-export const RemoveSupporters: any = graphql(`
+export const RemoveSupporters = graphql(`
     mutation removeSupportingOrganizationFromUseCase(
       $useCaseId: String!
       $organizationId: ID!
@@ -126,7 +126,7 @@ export const RemoveSupporters: any = graphql(`
     }
   `);
 
-export const AddPartners: any = graphql(`
+export const AddPartners = graphql(`
     mutation addPartnerOrganizationToUseCase(
       $useCaseId: String!
       $organizationId: ID!
@@ -150,7 +150,7 @@ export const AddPartners: any = graphql(`
     }
   `);
 
-export const RemovePartners: any = graphql(`
+export const RemovePartners = graphql(`
     mutation removePartnerOrganizationFromUseCase(
       $useCaseId: String!
       $organizationId: ID!
@@ -175,7 +175,7 @@ export const RemovePartners: any = graphql(`
   `);
 
 
-export const OrgList: any = graphql(`
+export const OrgList = graphql(`
   query allOrgs {
     allOrganizations {
       id

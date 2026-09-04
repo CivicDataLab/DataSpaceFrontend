@@ -1,6 +1,11 @@
 'use client';
 
 import { graphql } from '@/gql';
+import {
+  DatasetStatus,
+  DatasetType as GqlDatasetType,
+  Ordering,
+} from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { parseAsString, useQueryState } from 'nuqs';
@@ -18,7 +23,7 @@ import { Content } from './components/content';
 import { DatasetType, DatasetTypeModal } from './components/dataset-type-modal';
 import { Navigation } from './components/navigate-org-datasets';
 
-const allDatasetsQueryDoc: any = graphql(`
+const allDatasetsQueryDoc = graphql(`
   query allDatasetsQuery($filters: DatasetFilter, $order: DatasetOrder) {
     datasets(filters: $filters, order: $order) {
       title
@@ -30,7 +35,7 @@ const allDatasetsQueryDoc: any = graphql(`
   }
 `);
 
-const createDatasetMutationDoc: any = graphql(`
+const createDatasetMutationDoc = graphql(`
   mutation GenerateDatasetName($createInput: CreateDatasetInput) {
     addDataset(createInput: $createInput) {
       success
@@ -49,13 +54,13 @@ const createDatasetMutationDoc: any = graphql(`
   }
 `);
 
-const deleteDatasetMutationDoc: any = graphql(`
+const deleteDatasetMutationDoc = graphql(`
   mutation deleteDatasetMutation($datasetId: UUID!) {
     deleteDataset(datasetId: $datasetId)
   }
 `);
 
-const unPublishDataset: any = graphql(`
+const unPublishDataset = graphql(`
   mutation unPublishDatasetMutation($datasetId: UUID!) {
     unPublishDataset(datasetId: $datasetId) {
       __typename
@@ -85,8 +90,7 @@ export default function DatasetPage() {
   const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
 
-  const AllDatasetsQuery: { data: any; isLoading: boolean; refetch: any } =
-    useQuery(
+  const AllDatasetsQuery = useQuery(
       [
         `fetch_datasets_org_dashboard`,
         entityType,
@@ -96,9 +100,12 @@ export default function DatasetPage() {
       () =>
         GraphQL(allDatasetsQueryDoc, ownerArgs || {}, {
           filters: {
-            status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
+            status:
+              navigationTab === 'published'
+                ? DatasetStatus.Published
+                : DatasetStatus.Draft,
           },
-          order: { modified: 'DESC' },
+          order: { modified: Ordering.Desc },
         }),
       { enabled: isValidParams }
     );
@@ -111,11 +118,7 @@ export default function DatasetPage() {
     }
   }, [navigationTab, isValidParams, AllDatasetsQuery, setNavigationTab]);
 
-  const DeleteDatasetMutation: {
-    mutate: any;
-    isLoading: boolean;
-    error: any;
-  } = useMutation(
+  const DeleteDatasetMutation = useMutation(
     [`delete_dataset`],
     (data: { datasetId: string }) =>
       GraphQL(deleteDatasetMutationDoc, ownerArgs || {}, {
@@ -128,19 +131,25 @@ export default function DatasetPage() {
           AllDatasetsQuery.refetch();
         }
       },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
+      onError: (err: unknown) => {
+        const message =
+          typeof err === 'object' &&
+          err !== null &&
+          'message' in err &&
+          typeof err.message === 'string'
+            ? err.message.split(':')[0]
+            : 'Unknown error';
+        toast('Error:  ' + message);
       },
     }
   );
-  const CreateDatasetMutation: { mutate: any; isLoading: boolean; error: any } =
-    useMutation(
-      (datasetType: DatasetType) =>
+  const CreateDatasetMutation = useMutation(
+      (datasetType: GqlDatasetType) =>
         GraphQL(createDatasetMutationDoc, ownerArgs || {}, {
           createInput: { datasetType },
         }),
       {
-        onSuccess: (data: any) => {
+        onSuccess: (data) => {
           setIsTypeModalOpen(false);
           if (data.addDataset.success) {
             toast('Dataset created successfully!');
@@ -152,16 +161,15 @@ export default function DatasetPage() {
               );
             }
           } else {
-            toast('Error: ' + data.addDataset.errors.fieldErrors[0].messages[0]);
+            const errorMessage =
+              data.addDataset.errors?.fieldErrors?.[0]?.messages[0] ??
+              'Unable to create dataset';
+            toast('Error: ' + errorMessage);
           }
         },
       }
     );
-  const UnpublishDatasetMutation: {
-    mutate: any;
-    isLoading: boolean;
-    error: any;
-  } = useMutation(
+  const UnpublishDatasetMutation = useMutation(
     [`unpublish_dataset`],
     (data: { datasetId: string }) =>
       GraphQL(unPublishDataset, ownerArgs || {}, { datasetId: data.datasetId }),
@@ -172,8 +180,15 @@ export default function DatasetPage() {
           AllDatasetsQuery.refetch();
         }
       },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
+      onError: (err: unknown) => {
+        const message =
+          typeof err === 'object' &&
+          err !== null &&
+          'message' in err &&
+          typeof err.message === 'string'
+            ? err.message.split(':')[0]
+            : 'Unknown error';
+        toast('Error:  ' + message);
       },
     }
   );
@@ -182,7 +197,7 @@ export default function DatasetPage() {
     return null;
   }
 
-  let navigationOptions = [
+  const navigationOptions = [
     {
       label: 'Drafts',
       url: `drafts`,
@@ -195,11 +210,23 @@ export default function DatasetPage() {
     },
   ];
 
+  interface DatasetTableRow {
+    title: string;
+    id: string;
+    datasetType?: string | null;
+    created: string;
+    modified: string;
+  }
+
+  interface DatasetTableCell {
+    row: { original: DatasetTableRow };
+  }
+
   const datasetsListColumns = [
     {
       accessorKey: 'title',
       header: 'Title',
-      cell: ({ row }: any) =>
+      cell: ({ row }: DatasetTableCell) =>
         navigationTab === 'published' ? (
           <Text title={row.original.title}>{row.original.title}</Text>
         ) : (
@@ -215,7 +242,7 @@ export default function DatasetPage() {
     {
       accessorKey: 'datasetType',
       header: 'Type',
-      cell: ({ row }: any) => (
+      cell: ({ row }: DatasetTableCell) => (
         <Text>{row.original.datasetType === 'PROMPT' ? 'Prompt' : 'Data'}</Text>
       ),
     },
@@ -224,7 +251,7 @@ export default function DatasetPage() {
     {
       accessorKey: 'delete',
       header: 'Delete',
-      cell: ({ row }: any) =>
+      cell: ({ row }: DatasetTableCell) =>
         navigationTab === 'published' ? (
           <Button
             size="medium"
@@ -254,14 +281,22 @@ export default function DatasetPage() {
     },
   ];
 
-  const generateTableData = (list: Array<any>) => {
+  const generateTableData = (
+    list: {
+      title: string;
+      id: string;
+      datasetType?: string | null;
+      created?: string | null;
+      modified?: string | null;
+    }[]
+  ) => {
     return list.map((item) => {
       return {
         title: item.title,
         id: item.id,
         datasetType: item.datasetType,
-        created: formatDate(item.created) || '',
-        modified: formatDate(item.modified) || '',
+        created: formatDate(item.created ?? null) || '',
+        modified: formatDate(item.modified ?? null) || '',
       };
     });
   };
@@ -275,7 +310,7 @@ export default function DatasetPage() {
           data-tour="sidebar"
         />
 
-        {AllDatasetsQuery.data?.datasets.length > 0 ? (
+        { (AllDatasetsQuery.data?.datasets.length ?? 0) > 0 ? (
           <div className="mt-6">
             <ActionBar
               title={
@@ -290,7 +325,7 @@ export default function DatasetPage() {
 
             <DataTable
               columns={datasetsListColumns}
-              rows={generateTableData(AllDatasetsQuery.data.datasets)}
+              rows={generateTableData(AllDatasetsQuery.data?.datasets ?? [])}
               hideSelection
               hideViewSelector
               data-tour="my-datasets"
@@ -309,7 +344,11 @@ export default function DatasetPage() {
       <DatasetTypeModal
         open={isTypeModalOpen}
         onClose={() => setIsTypeModalOpen(false)}
-        onSelect={(type: DatasetType) => CreateDatasetMutation.mutate(type)}
+        onSelect={(type: DatasetType) =>
+          CreateDatasetMutation.mutate(
+            type === 'PROMPT' ? GqlDatasetType.Prompt : GqlDatasetType.Data
+          )
+        }
         isLoading={CreateDatasetMutation.isLoading}
       />
     </>

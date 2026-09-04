@@ -5,6 +5,7 @@ import {
   CreateFileResourceInput,
   SchemaUpdateInput,
   UpdateFileResourceInput,
+  UpdatePromptResourceInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'nuqs';
@@ -39,19 +40,7 @@ interface EditProps {
   isPromptDataset?: boolean;
 }
 
-// Type for GraphQL introspection query response
-interface IntrospectionEnumValue {
-  name: string;
-  description?: string;
-}
-
-interface IntrospectionTypeResponse {
-  __type: {
-    enumValues: IntrospectionEnumValue[];
-  } | null;
-}
-
-const resourceDetails: any = graphql(`
+const resourceDetails = graphql(`
   query resourceById($resourceId: UUID!) {
     resourceById(resourceId: $resourceId) {
       id
@@ -105,7 +94,7 @@ const resourceDetails: any = graphql(`
 `);
 
 // Introspection query to get PromptFormat enum values from schema
-const promptFormatEnumQuery: any = graphql(`
+const promptFormatEnumQuery = graphql(`
   query PromptFormatEnumResource {
     __type(name: "PromptFormat") {
       enumValues {
@@ -117,7 +106,7 @@ const promptFormatEnumQuery: any = graphql(`
 `);
 
 // Mutation to update prompt resource metadata
-const updatePromptResourceMutationDoc: any = graphql(`
+const updatePromptResourceMutationDoc = graphql(`
   mutation UpdatePromptResource($updateInput: UpdatePromptResourceInput!) {
     updatePromptResource(updateInput: $updateInput) {
       success
@@ -212,11 +201,12 @@ export const EditResource = ({
   const UPDATE_SCHEMA_ERROR_TOAST_ID = 'dataset-schema-update-error';
   const CREATE_RESOURCE_ERROR_TOAST_ID = 'dataset-resource-create-error';
   const PROMPT_RESOURCE_ERROR_TOAST_ID = 'dataset-prompt-resource-error';
-  const getErrorMessage = (
-    err: any,
-    fallback: string
-  ) =>
-    typeof err?.message === 'string' && err.message.trim()
+  const getErrorMessage = (err: unknown, fallback: string) =>
+    typeof err === 'object' &&
+    err !== null &&
+    'message' in err &&
+    typeof err.message === 'string' &&
+    err.message.trim()
       ? err.message.trim()
       : fallback;
 
@@ -226,10 +216,17 @@ export const EditResource = ({
     id: string;
   }>();
 
-  const [resourceId, setResourceId] = useQueryState<any>('id', parseAsString);
-  const [schema, setSchema] = React.useState<any>([]);
+  const [resourceId, setResourceId] = useQueryState('id', parseAsString);
+  const [schema, setSchema] = React.useState<
+    {
+      id?: string;
+      fieldName?: string | null;
+      format?: string | null;
+      description?: string | null;
+    }[]
+  >([]);
 
-  const resourceDetailsQuery = useQuery<any>(
+  const resourceDetailsQuery = useQuery(
     // Use a stable key when resourceId is empty/invalid
     resourceId && resourceId.trim()
       ? [`fetch_resource_details_${resourceId}`]
@@ -279,7 +276,7 @@ export const EditResource = ({
 
         resourceDetailsQuery.refetch();
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast(getErrorMessage(err, 'Unable to save file changes right now.'), {
           id: UPDATE_RESOURCE_ERROR_TOAST_ID,
         });
@@ -289,7 +286,7 @@ export const EditResource = ({
   );
 
   const updateSchemaMutation = useMutation(
-    (data: { input: SchemaUpdateInput }) =>
+    (data: { schemaUpdateInput: SchemaUpdateInput }) =>
       GraphQL(
         updateSchema,
         {
@@ -306,7 +303,7 @@ export const EditResource = ({
           },
         });
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast(`Error: ${getErrorMessage(err, 'Unable to update schema right now.')}`, {
           id: UPDATE_SCHEMA_ERROR_TOAST_ID,
         });
@@ -324,8 +321,11 @@ export const EditResource = ({
         data
       ),
     {
-      onSuccess: (data: any) => {
-        setResourceId(data.createFileResources[0].id);
+      onSuccess: (data) => {
+        const createdId = data.createFileResources[0]?.id;
+        if (typeof createdId === 'string') {
+          setResourceId(createdId);
+        }
         toast('Resource Added Successfully', {
           action: {
             label: 'Dismiss',
@@ -335,7 +335,7 @@ export const EditResource = ({
         //
         resourceDetailsQuery.refetch();
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast(getErrorMessage(err, 'Unable to add resource right now.'), {
           id: CREATE_RESOURCE_ERROR_TOAST_ID,
           action: {
@@ -350,7 +350,7 @@ export const EditResource = ({
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const [resourceName, setResourceName] = React.useState(
-    resourceDetailsQuery.data?.resourceById.name
+    resourceDetailsQuery.data?.resourceById.name ?? ''
   );
 
   const [showPreview, setShowPreview] = useState(false);
@@ -361,7 +361,10 @@ export const EditResource = ({
     endEntry: 0,
     isAllEntries: false,
   });
-  const [previewData, setPreviewData] = useState({
+  const [previewData, setPreviewData] = useState<{
+    rows: unknown[][];
+    columns: string[];
+  }>({
     rows: [],
     columns: [],
   });
@@ -372,11 +375,42 @@ export const EditResource = ({
   );
   const [hasSystemPrompt, setHasSystemPrompt] = useState(false);
   const [hasExampleResponses, setHasExampleResponses] = useState(false);
+  const [prevResourceById, setPrevResourceById] = useState(
+    resourceDetailsQuery.data?.resourceById
+  );
+  if (resourceDetailsQuery.data?.resourceById !== prevResourceById) {
+    const ResourceData = resourceDetailsQuery.data?.resourceById;
+    setPrevResourceById(ResourceData);
+    setResourceName(ResourceData?.name ?? '');
+    setPreviewEnable(ResourceData?.previewEnabled ?? false);
+    setPreviewDetails({
+      startEntry: ResourceData?.previewDetails?.startEntry ?? 0,
+      endEntry: ResourceData?.previewDetails?.endEntry ?? 0,
+      isAllEntries: ResourceData?.previewDetails?.isAllEntries ?? false,
+    });
+    setPreviewData({
+      rows: (ResourceData?.previewData?.rows ?? []).map((row: unknown) =>
+        Array.isArray(row) ? row.map((cell: unknown) => cell) : []
+      ),
+      columns: ResourceData?.previewData?.columns ?? [],
+    });
+    if (isPromptDataset && ResourceData?.promptDetails) {
+      setPromptFormat(ResourceData.promptDetails.promptFormat || undefined);
+      setHasSystemPrompt(ResourceData.promptDetails.hasSystemPrompt || false);
+      setHasExampleResponses(
+        ResourceData.promptDetails.hasExampleResponses || false
+      );
+    }
+    const schemaData = ResourceData?.schema;
+    if (schemaData && Array.isArray(schemaData)) {
+      setSchema(schemaData);
+    }
+  }
 
   // Fetch PromptFormat enum values from GraphQL schema
-  const getPromptFormatEnum = useQuery<IntrospectionTypeResponse>(
+  const getPromptFormatEnum = useQuery(
     ['prompt_format_enum_resource'],
-    () => GraphQL(promptFormatEnumQuery, {}, []),
+    () => GraphQL(promptFormatEnumQuery),
     { staleTime: Infinity, enabled: isPromptDataset }
   );
 
@@ -392,7 +426,7 @@ export const EditResource = ({
 
   // Mutation for updating prompt resource metadata
   const updatePromptResourceMutation = useMutation(
-    (data: { updateInput: any }) =>
+    (data: { updateInput: UpdatePromptResourceInput }) =>
       GraphQL(
         updatePromptResourceMutationDoc,
         {
@@ -401,7 +435,7 @@ export const EditResource = ({
         data
       ),
     {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         if (res.updatePromptResource?.success) {
           toast('Prompt file metadata updated!');
           resourceDetailsQuery.refetch();
@@ -413,7 +447,7 @@ export const EditResource = ({
           );
         }
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast(
           `Error: ${getErrorMessage(err, 'Unable to update prompt metadata right now.')}`,
           { id: PROMPT_RESOURCE_ERROR_TOAST_ID }
@@ -446,10 +480,12 @@ export const EditResource = ({
     if (updates.hasExampleResponses !== undefined)
       setHasExampleResponses(updates.hasExampleResponses);
 
+    if (!resourceId) return;
+
     updatePromptResourceMutation.mutate({
       updateInput: {
-        resource: resourceId,
-        promptFormat: newPromptFormat,
+        resource: resourceId as `${string}-${string}-${string}-${string}-${string}`,
+        promptFormat: newPromptFormat ?? null,
         hasSystemPrompt: newHasSystemPrompt,
         hasExampleResponses: newHasExampleResponses,
       },
@@ -460,38 +496,8 @@ export const EditResource = ({
     resourceDetailsQuery.refetch();
   }, [resourceDetailsQuery]);
 
-  React.useEffect(() => {
-    const ResourceData = resourceDetailsQuery.data?.resourceById;
-    setResourceName(ResourceData?.name);
-    setPreviewEnable(ResourceData?.previewEnabled);
-    setPreviewDetails({
-      startEntry: ResourceData?.previewDetails?.startEntry ?? 0,
-      endEntry: ResourceData?.previewDetails?.endEntry ?? 0,
-      isAllEntries: ResourceData?.previewDetails?.isAllEntries ?? false,
-    });
-    setPreviewData({
-      rows: ResourceData?.previewData?.rows,
-      columns: ResourceData?.previewData?.columns,
-    });
-    // Initialize prompt-specific state from resource data
-    if (isPromptDataset && ResourceData?.promptDetails) {
-      setPromptFormat(ResourceData.promptDetails.promptFormat || undefined);
-      setHasSystemPrompt(ResourceData.promptDetails.hasSystemPrompt || false);
-      setHasExampleResponses(
-        ResourceData.promptDetails.hasExampleResponses || false
-      );
-    }
-  }, [resourceDetailsQuery.data, isPromptDataset]);
-
-  useEffect(() => {
-    const schemaData = resourceDetailsQuery.data?.resourceById?.schema;
-    if (schemaData && Array.isArray(schemaData)) {
-      setSchema(schemaData);
-    }
-  }, [resourceDetailsQuery.data]);
-
-  const handleResourceChange = (e: any) => {
-    setResourceId(e, { shallow: false });
+  const handleResourceChange = (nextResourceId: string) => {
+    setResourceId(nextResourceId, { shallow: false });
     refetch();
   };
 
@@ -544,10 +550,9 @@ export const EditResource = ({
   const fileInput = (
     <div className="flex">
       <Text className="break-all">
-        {resourceDetailsQuery.data?.resourceById.fileDetails?.file.name.replace(
-          'resources/',
-          ''
-        )}{' '}
+        {(
+          resourceDetailsQuery.data?.resourceById.fileDetails?.file.name ?? ''
+        ).replace('resources/', '')}{' '}
       </Text>
     </div>
   );
@@ -587,7 +592,7 @@ export const EditResource = ({
   ]);
 
   const resourceFormat =
-    resourceDetailsQuery.data?.resourceById.fileDetails.format?.toLowerCase();
+    resourceDetailsQuery.data?.resourceById.fileDetails?.format?.toLowerCase();
   const pdfUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${resourceId}`;
   return (
     <div>
@@ -601,7 +606,7 @@ export const EditResource = ({
             uploadedFile={uploadedFile}
             file={file}
             list={allResources}
-            resourceId={resourceId}
+            resourceId={resourceId ?? ''}
             handleResourceChange={handleResourceChange}
           />
 
@@ -632,10 +637,7 @@ export const EditResource = ({
                     displaySelected
                     list={
                       getPromptFormatEnum.data?.__type?.enumValues?.map(
-                        (enumValue: {
-                          name: string;
-                          description?: string;
-                        }) => ({
+                        (enumValue) => ({
                           label: enumValue.name
                             .replace(/_/g, ' ')
                             .replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -644,7 +646,7 @@ export const EditResource = ({
                       ) || []
                     }
                     selectedValue={promptFormat ? promptFormat : ''}
-                    onChange={(value: any) => {
+                    onChange={(value) => {
                       // Handle both array and string values
                       let selectedValue: string | undefined;
                       if (Array.isArray(value)) {

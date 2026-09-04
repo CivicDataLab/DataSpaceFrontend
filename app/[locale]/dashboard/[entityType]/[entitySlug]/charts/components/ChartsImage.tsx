@@ -1,5 +1,4 @@
-import { UUID } from 'crypto';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { ResourceChartImageInputPartial } from '@/gql/generated/graphql';
@@ -21,12 +20,24 @@ import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
 
 interface ImageProps {
-  setType: any;
-  setImageId: any;
-  imageId: any;
+  setType: (type: string) => void;
+  setImageId: (id: string) => void;
+  imageId: string | null;
 }
 
-const getResourceChartImageDetails: any = graphql(`
+interface ChartImageListItem {
+  id: string;
+  name: string;
+}
+
+interface ChartImageFormData {
+  id: string;
+  name: string;
+  description: string;
+  image: { name: string; path: string } | null;
+}
+
+const getResourceChartImageDetails = graphql(`
   query resourceChartImage($filters: ResourceChartImageFilter) {
     resourceChartImages(filters: $filters) {
       id
@@ -40,7 +51,7 @@ const getResourceChartImageDetails: any = graphql(`
   }
 `);
 
-const getDatasetResourceChartImageDetails: any = graphql(`
+const getDatasetResourceChartImageDetails = graphql(`
   query resourceChartImages($datasetId: UUID!) {
     datasetResourceCharts(datasetId: $datasetId) {
       id
@@ -54,7 +65,7 @@ const getDatasetResourceChartImageDetails: any = graphql(`
   }
 `);
 
-const AddResourceChartimage: any = graphql(`
+const AddResourceChartimage = graphql(`
   mutation GenerateResourceChartimage($dataset: UUID!) {
     addResourceChartImage(dataset: $dataset) {
       __typename
@@ -66,19 +77,19 @@ const AddResourceChartimage: any = graphql(`
   }
 `);
 
-const UpdateChartImageMutation: any = graphql(`
+const UpdateChartImageMutation = graphql(`
   mutation updateChartImage($input: ResourceChartImageInputPartial!) {
     updateResourceChartImage(input: $input) {
       __typename
-        ... on TypeResourceChartImage {{}
-      id
-      name
-      description
-      image {
+      ... on TypeResourceChartImage {
+        id
         name
-        path
+        description
+        image {
+          name
+          path
+        }
       }
-}
     }
   }
 `);
@@ -94,8 +105,7 @@ const ChartsImage: React.FC<ImageProps> = ({
     id: string;
   }>();
 
-  const { data: chartImageDetails, refetch }: { data: any; refetch: any } =
-    useQuery(
+  const { data: chartImageDetails, refetch } = useQuery(
       [`chartsdata_${params.id}`, imageId],
       () =>
         GraphQL(
@@ -112,10 +122,7 @@ const ChartsImage: React.FC<ImageProps> = ({
       {}
     );
 
-  const {
-    data: chartImagesList,
-    refetch: listrefetch,
-  }: { data: any; refetch: any } = useQuery(
+  const { data: chartImagesList, refetch: listrefetch } = useQuery(
     [`chartslist_${params.id}`, imageId],
     () =>
       GraphQL(
@@ -130,11 +137,8 @@ const ChartsImage: React.FC<ImageProps> = ({
     {}
   );
 
-  const resourceChartImageMutation: {
-    mutate: any;
-    isLoading: any;
-  } = useMutation(
-    (data: { dataset: UUID }) =>
+  const resourceChartImageMutation = useMutation(
+    (data: { dataset: string }) =>
       GraphQL(
         AddResourceChartimage,
         {
@@ -143,19 +147,22 @@ const ChartsImage: React.FC<ImageProps> = ({
         data
       ),
     {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         toast('Resource ChartImage Created Successfully');
         setType('img');
-        setImageId(res.addResourceChartImage.id);
+        const created = res?.addResourceChartImage;
+        if (created?.__typename === 'TypeResourceChartImage' && created.id) {
+          setImageId(created.id);
+        }
         setIsSheetOpen(false);
       },
-      onError: (err: any) => {
-        toast(`Received ${err} while deleting chart `);
+      onError: (err: unknown) => {
+        toast(`Received ${String(err)} while deleting chart `);
       },
     }
   );
 
-  const initialFormData = {
+  const initialFormData: ChartImageFormData = {
     id: '',
     name: '',
     description: '',
@@ -164,64 +171,70 @@ const ChartsImage: React.FC<ImageProps> = ({
 
   const [formData, setFormData] = useState(initialFormData);
   const [previousFormData, setPreviousFormData] = useState(initialFormData);
-
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-
-  useEffect(() => {
-    if (chartImageDetails?.resourceChartImages[0]) {
-      const updatedData = {
-        name: chartImageDetails?.resourceChartImages[0].name || '',
-        description:
-          chartImageDetails?.resourceChartImages[0].description || '',
-        image: chartImageDetails?.resourceChartImages[0].image || null,
-        id: chartImageDetails?.resourceChartImages[0].id,
+  const [prevChartImageDetails, setPrevChartImageDetails] =
+    useState(chartImageDetails);
+  if (chartImageDetails !== prevChartImageDetails) {
+    setPrevChartImageDetails(chartImageDetails);
+    if (chartImageDetails?.resourceChartImages?.[0]) {
+      const imageDetails = chartImageDetails.resourceChartImages[0];
+      const updatedData: ChartImageFormData = {
+        name: imageDetails.name || '',
+        description: imageDetails.description || '',
+        image: imageDetails.image
+          ? {
+              name: imageDetails.image.name ?? '',
+              path: imageDetails.image.path ?? '',
+            }
+          : null,
+        id: imageDetails.id ?? '',
       };
       setFormData(updatedData);
       setPreviousFormData(updatedData);
     }
-  }, [chartImageDetails]);
+  }
+
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const { isLoading: editMutationLoading } = useMutation(
-    (data: { data: ResourceChartImageInputPartial }) =>
-      GraphQL(UpdateChartImageMutation, {
-        [params.entityType]: params.entitySlug,
-      }, data),
+    (data: { input: ResourceChartImageInputPartial }) =>
+      GraphQL(
+        UpdateChartImageMutation,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        data
+      ),
     {
       onSuccess: () => {
         toast('ChartImage updated successfully');
-        // Optionally, reset form or perform other actions
         refetch();
         listrefetch();
       },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+      onError: (error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        toast(`Error: ${message}`);
       },
     }
   );
 
-  const handleChange = useCallback((field: string, value: any) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      [field]: value,
-    }));
-  }, []);
+  const handleChange = useCallback(
+    (field: keyof ChartImageFormData, value: ChartImageFormData[keyof ChartImageFormData]) => {
+      setFormData((prevData) => ({
+        ...prevData,
+        [field]: value,
+      }));
+    },
+    [setFormData]
+  );
 
-  const onDrop = React.useCallback(() => {
-      refetch();
-      listrefetch();
+  const onDrop = useCallback(() => {
+    refetch();
+    listrefetch();
   }, [listrefetch, refetch]);
 
-  const handleSave = (updatedData: any) => {
+  const handleSave = (updatedData: ChartImageFormData) => {
     if (JSON.stringify(formData) !== JSON.stringify(previousFormData)) {
       setPreviousFormData(updatedData);
-
-      // mutate({
-      //   data: {
-      //     id: imageId,
-      //     name: updatedData.name,
-      //     description: updatedData.description,
-      //   },
-      // });
     }
   };
 
@@ -273,8 +286,8 @@ const ChartsImage: React.FC<ImageProps> = ({
                       </Button>
                     </div>
                   </div>
-                  {chartImagesList?.datasetResourceCharts.map(
-                    (item: any, index: any) => (
+                  {chartImagesList?.datasetResourceCharts?.map(
+                    (item: ChartImageListItem, index: number) => (
                       <div
                         key={index}
                         className={`rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6 py-3 ${imageId === item.id ? ' bg-baseGraySlateSolid5' : ''}`}
@@ -325,7 +338,7 @@ const ChartsImage: React.FC<ImageProps> = ({
               />
               <DropZone
                 label={
-                  !chartImageDetails?.resourceChartImages[0]?.image
+                  !chartImageDetails?.resourceChartImages?.[0]?.image
                     ? 'Logo'
                     : 'Change Logo'
                 }
@@ -336,8 +349,8 @@ const ChartsImage: React.FC<ImageProps> = ({
                   actionHint="Accepts .gif, .jpg, and .png"
                   actionTitle={
                     chartImageDetails &&
-                    chartImageDetails?.resourceChartImages[0]?.image?.name
-                      .split('/')
+                    chartImageDetails.resourceChartImages?.[0]?.image?.name
+                      ?.split('/')
                       .pop()
                   }
                 />

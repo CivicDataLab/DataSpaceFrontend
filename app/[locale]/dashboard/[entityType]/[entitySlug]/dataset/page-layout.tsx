@@ -9,7 +9,7 @@ import { GraphQL } from '@/lib/api';
 import { ActionBar } from './components/action-bar';
 import { Content } from './components/content';
 
-const createDatasetMutationDoc: any = graphql(`
+const createDatasetMutationDoc = graphql(`
   mutation GenerateDatasetname {
     addDataset {
       success
@@ -43,9 +43,9 @@ export const Page = () => {
   const queryClient = useQueryClient();
 
   const { mutate, isLoading } = useMutation(
-    () => GraphQL(createDatasetMutationDoc, ownerArgs || {}, []),
+    () => GraphQL(createDatasetMutationDoc, ownerArgs || {}),
     {
-      onSuccess: (data: any) => {
+      onSuccess: (data) => {
         if (data.addDataset.success) {
           toast('Dataset created successfully!');
           if (isValidParams && entityType) {
@@ -58,7 +58,10 @@ export const Page = () => {
             );
           }
         } else {
-          toast('Error: ' + data.addDataset.errors.fieldErrors[0].messages[0]);
+          const errorMessage =
+            data.addDataset.errors?.fieldErrors?.[0]?.messages[0] ??
+            'Unable to create dataset';
+          toast('Error: ' + errorMessage);
         }
       },
     }

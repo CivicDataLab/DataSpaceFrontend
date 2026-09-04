@@ -38,7 +38,7 @@ export async function generateMetadata({
       description:
         UseCase?.summary ||
         `Explore open data and curated datasets in the ${UseCase?.title} sector.`,
-      keywords: UseCase?.tags?.map((tag: any) => tag.value) || [],
+      keywords: UseCase?.tags?.map((tag) => tag.value) || [],
       openGraph: {
         type: 'article',
         locale: 'en_US',

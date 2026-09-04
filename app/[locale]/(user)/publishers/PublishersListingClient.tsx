@@ -13,7 +13,7 @@ import JsonLd from '@/components/JsonLd';
 import PublisherCard from './PublisherCard';
 import { PublisherListingSkeleton } from '@/components/loading';
 
-const getAllPublishers: any = graphql(`
+const getAllPublishers = graphql(`
   query PublishersList {
     getPublishers {
       __typename
@@ -44,13 +44,8 @@ const getAllPublishers: any = graphql(`
 
 const PublishersListingPage = () => {
   const [type, setType] = useState<'all' | 'org' | 'pub'>('all');
-  const Details: {
-    data: any;
-    isLoading: boolean;
-    isError: boolean;
-    refetch: any;
-  } = useQuery(['publishers_list_page'], () =>
-    GraphQL(getAllPublishers, {}, [])
+  const Details = useQuery(['publishers_list_page'], () =>
+    GraphQL(getAllPublishers, {})
   );
 
   type PublisherType = 'all' | 'org' | 'pub';
@@ -61,7 +56,7 @@ const PublishersListingPage = () => {
   ];
 
   const filteredPublishers = Details?.data?.getPublishers?.filter(
-    (publisher: any) => {
+    (publisher) => {
       if (type === 'all') return true;
       if (type === 'pub') return publisher.__typename === 'TypeUser';
       if (type === 'org') return publisher.__typename === 'TypeOrganization';
@@ -72,9 +67,10 @@ const PublishersListingPage = () => {
   const jsonLd = generateJsonLd({
     '@context': 'https://schema.org',
     '@type': 'Dataset',
-    name: Details?.data?.getPublishers?.title,
+    name: 'Our Publishers',
     url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/publishers`,
-    description: Details?.data?.getPublishers?.description,
+    description:
+      'Meet the data providers powering CivicDataSpace — explore individual and organizational publishers across domains who are opening up data for impact and transparency.',
     publisher: {
       '@type': 'Organization',
       name: 'CivicDataSpace',
@@ -176,7 +172,7 @@ const PublishersListingPage = () => {
                 ) : (
                   Details.data &&
                   Details.data.getPublishers.length > 0 && (
-                    <PublisherCard data={filteredPublishers} />
+                    <PublisherCard data={filteredPublishers ?? []} />
                   )
                 )}
               </div>

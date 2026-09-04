@@ -25,15 +25,19 @@ export interface ChartOptions {
   yAxisLabel: string;
 }
 
+export interface ChartPreview {
+  options?: Record<string, unknown>;
+}
+
 export interface ChartData {
   chartId: string;
   description: string;
-  filters: any[];
+  filters: ChartFilters[];
   name: string;
   options: ChartOptions;
   resource: string;
   type: ChartTypes;
-  chart: any;
+  chart: ChartPreview;
 }
 
 export interface ResourceChartInput {

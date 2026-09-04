@@ -12,7 +12,7 @@ import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import Styles from '../page.module.scss';
 
-const statsInfo: any = graphql(`
+const statsInfo = graphql(`
   query StatsList {
     stats {
       totalUsers
@@ -30,9 +30,7 @@ export const Content = () => {
   // Enable tour for first-time users
   useTourTrigger(true, 1500);
 
-  const Stats: { data: any; isLoading: any } = useQuery([`statsDetails`], () =>
-    GraphQL(statsInfo, {}, [])
-  );
+  const Stats = useQuery([`statsDetails`], () => GraphQL(statsInfo));
 
   const handleSearch = (value: string) => {
     if (value) {

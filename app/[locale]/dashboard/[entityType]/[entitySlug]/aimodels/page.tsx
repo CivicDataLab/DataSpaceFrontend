@@ -3,6 +3,12 @@
 import { use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
+import {
+  AiModelProvider,
+  AiModelStatus,
+  AiModelType,
+  Ordering,
+} from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { parseAsString, useQueryState } from 'nuqs';
 import { Button, DataTable, Icon, IconButton, Text, toast } from 'opub-ui';
@@ -16,7 +22,29 @@ import { Loading } from '@/components/loading';
 import { ActionBar } from '../dataset/components/action-bar';
 import { Navigation } from '../dataset/components/navigate-org-datasets';
 
-const allAIModels: any = graphql(`
+interface AIModelListItem {
+  id: number;
+  displayName: string;
+  name: string;
+  modelType: string;
+  provider: string;
+  status: string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+interface AIModelTableRow {
+  id: number;
+  displayName: string;
+  name: string;
+  modelType: string;
+  provider: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const allAIModels = graphql(`
   query AIModelsData($filters: AIModelFilter, $order: AIModelOrder) {
     aiModels(filters: $filters, order: $order) {
       id
@@ -31,7 +59,7 @@ const allAIModels: any = graphql(`
   }
 `);
 
-const deleteAIModel: any = graphql(`
+const deleteAIModel = graphql(`
   mutation deleteAIModel($modelId: Int!) {
     deleteAiModel(modelId: $modelId) {
       success
@@ -39,7 +67,7 @@ const deleteAIModel: any = graphql(`
   }
 `);
 
-const createAIModel: any = graphql(`
+const createAIModel = graphql(`
   mutation CreateAIModel($input: CreateAIModelInput!) {
     createAiModel(input: $input) {
       success
@@ -68,7 +96,7 @@ export default function AIModelsPage({
 
   const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
 
-  let navigationOptions = [
+  const navigationOptions = [
     {
       label: 'Draft',
       url: `draft`,
@@ -86,7 +114,7 @@ export default function AIModelsPage({
     // },
   ];
 
-  const AllAIModels: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  const AllAIModels = useQuery(
     [`fetch_AIModels`, navigationTab],
     () =>
       GraphQL(
@@ -98,12 +126,12 @@ export default function AIModelsPage({
           filters: {
             status:
               navigationTab === 'published'
-                ? 'ACTIVE'
+                ? AiModelStatus.Active
                 : navigationTab === 'draft'
-                  ? 'REGISTERED'
-                  : 'APPROVED',
+                  ? AiModelStatus.Registered
+                  : AiModelStatus.Approved,
           },
-          order: { updatedAt: 'DESC' },
+          order: { updatedAt: Ordering.Desc },
         }
       )
   );
@@ -114,11 +142,7 @@ export default function AIModelsPage({
     AllAIModels.refetch();
   }, [AllAIModels, navigationTab, setNavigationTab]);
 
-  const DeleteAIModelMutation: {
-    mutate: any;
-    isLoading: boolean;
-    error: any;
-  } = useMutation(
+  const DeleteAIModelMutation = useMutation(
     [`delete_AIModel`],
     (data: { id: number }) =>
       GraphQL(
@@ -135,19 +159,15 @@ export default function AIModelsPage({
         });
         AllAIModels.refetch();
       },
-      onError: (err: any) => {
-        toast('Error: ' + err.message.split(':')[0], {
+      onError: (err: unknown) => {
+        toast('Error: ' + (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : String(err)).split(':')[0], {
           id: AIMODELS_ACTION_TOAST_ID,
         });
       },
     }
   );
 
-  const CreateAIModelMutation: {
-    mutate: any;
-    isLoading: boolean;
-    error: any;
-  } = useMutation(
+  const CreateAIModelMutation = useMutation(
     [`create_AIModel`],
     () =>
       GraphQL(
@@ -159,14 +179,14 @@ export default function AIModelsPage({
           input: {
             name: `new-model-${Date.now()}`,
             displayName: 'New AI Model',
-            modelType: 'TEXT_GENERATION',
-            provider: 'CUSTOM',
+            modelType: AiModelType.TextGeneration,
+            provider: AiModelProvider.Custom,
           },
         }
       ),
     {
-      onSuccess: (data: any) => {
-        const newModelId = data.createAiModel.data.id;
+      onSuccess: (data) => {
+        const newModelId = data.createAiModel.data?.id;
         toast(`Created AI Model successfully`, {
           id: AIMODELS_ACTION_TOAST_ID,
         });
@@ -174,8 +194,8 @@ export default function AIModelsPage({
           `/dashboard/${entityType}/${entitySlug}/aimodels/edit/${newModelId}/details`
         );
       },
-      onError: (err: any) => {
-        toast('Error: ' + err.message.split(':')[0], {
+      onError: (err: unknown) => {
+        toast('Error: ' + (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : String(err)).split(':')[0], {
           id: AIMODELS_ACTION_TOAST_ID,
         });
       },
@@ -190,7 +210,7 @@ export default function AIModelsPage({
     {
       accessorKey: 'displayName',
       header: 'Display Name',
-      cell: ({ row }: any) => (
+      cell: ({ row }: { row: { original: AIModelTableRow } }) => (
         <LinkButton
           kind="tertiary"
           size="medium"
@@ -205,7 +225,7 @@ export default function AIModelsPage({
     // {
     //   accessorKey: 'name',
     //   header: 'Model Name',
-    //   cell: ({ row }: any) => (
+    //   cell: ({ row }: { row: { original: AIModelTableRow } }) => (
     //     <Text className="line-clamp-1 max-w-[200px]" title={row.original.name}>
     //       {row.original.name}
     //     </Text>
@@ -214,14 +234,14 @@ export default function AIModelsPage({
     {
       accessorKey: 'modelType',
       header: 'Type',
-      cell: ({ row }: any) => (
+      cell: ({ row }: { row: { original: AIModelTableRow } }) => (
         <Text className="text-xs">{row.original.modelType}</Text>
       ),
     },
     {
       accessorKey: 'provider',
       header: 'Provider',
-      cell: ({ row }: any) => (
+      cell: ({ row }: { row: { original: AIModelTableRow } }) => (
         <Text className="text-xs">{row.original.provider}</Text>
       ),
     },
@@ -230,7 +250,7 @@ export default function AIModelsPage({
     {
       accessorKey: 'delete',
       header: 'Delete',
-      cell: ({ row }: any) => (
+      cell: ({ row }: { row: { original: AIModelTableRow } }) => (
         <IconButton
           size="medium"
           icon={Icons.delete}
@@ -247,8 +267,8 @@ export default function AIModelsPage({
     },
   ];
 
-  const generateTableData = (list: Array<any>) => {
-    return list.map((item: any) => {
+  const generateTableData = (list: AIModelListItem[]) => {
+    return list.map((item) => {
       return {
         id: item.id,
         displayName: item.displayName,
@@ -256,8 +276,8 @@ export default function AIModelsPage({
         modelType: item.modelType,
         provider: item.provider,
         status: item.status,
-        createdAt: formatDate(item.createdAt) || '',
-        updatedAt: formatDate(item.updatedAt) || '',
+        createdAt: formatDate(item.createdAt ?? null) || '',
+        updatedAt: formatDate(item.updatedAt ?? null) || '',
       };
     });
   };
@@ -271,7 +291,7 @@ export default function AIModelsPage({
           currentValue={navigationTab ?? 'draft'}
         />
 
-        {AllAIModels.data?.aiModels.length > 0 ? (
+        {AllAIModels.data?.aiModels && AllAIModels.data.aiModels.length > 0 ? (
           <div className="mt-6">
             <ActionBar
               title={
@@ -285,7 +305,7 @@ export default function AIModelsPage({
 
             <DataTable
               columns={modelsListColumns}
-              rows={generateTableData(AllAIModels.data.aiModels)}
+              rows={generateTableData(AllAIModels.data?.aiModels ?? [])}
               hideSelection
               hideViewSelector
             />

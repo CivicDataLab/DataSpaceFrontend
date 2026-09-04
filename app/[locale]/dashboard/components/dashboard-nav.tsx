@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -8,6 +8,7 @@ import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
 import { Divider, Icon, IconButton, Text, Tooltip } from 'opub-ui';
 
 import { SidebarNavItem } from '@/types';
+import { DashboardOrganization, DashboardUser } from '@/config/store';
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import styles from '../dashboard.module.scss';
@@ -15,37 +16,29 @@ import styles from '../dashboard.module.scss';
 interface DashboardNavProps {
   items: SidebarNavItem[];
   type?: string;
+  entityDetails?: (Partial<DashboardOrganization> & Partial<DashboardUser>) | null;
 }
 export function DashboardNav({
   items,
   entityDetails,
   type,
-}: DashboardNavProps & { entityDetails?: any }) {
+}: DashboardNavProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const [isImageValid, setIsImageValid] = useState(() => {
-    if (type === 'organization') {
-      return !!entityDetails?.logo?.url;
-    } else if (type === 'self') {
-      return !!entityDetails?.profilePicture?.url;
-    }
-    return false;
-  });
+  const imageUrl =
+    type === 'organization'
+      ? entityDetails?.logo?.url
+      : type === 'self'
+        ? entityDetails?.profilePicture?.url
+        : undefined;
+  const [isImageValid, setIsImageValid] = useState(!!imageUrl);
+  const [prevImageUrl, setPrevImageUrl] = useState(imageUrl);
+  if (imageUrl !== prevImageUrl) {
+    setPrevImageUrl(imageUrl);
+    setIsImageValid(!!imageUrl);
+  }
 
   const path = usePathname();
-
-  useEffect(() => {
-    if (!entityDetails) {
-      setIsImageValid(false);
-      return;
-    }
-
-    if (type === 'organization') {
-      setIsImageValid(!!entityDetails.logo?.url);
-    } else if (type === 'self') {
-      setIsImageValid(!!entityDetails.profilePicture?.url);
-    }
-  }, [entityDetails, type]);
 
   useMetaKeyPress('b', () => setIsCollapsed((e) => !e));
 

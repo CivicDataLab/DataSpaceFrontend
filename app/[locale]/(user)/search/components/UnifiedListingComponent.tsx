@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
+import { useMounted } from '@/hooks/use-mounted';
 import {
   Button,
   Card,
@@ -26,7 +28,7 @@ import Styles from '../../datasets/dataset.module.scss';
 export const stripMarkdown = (markdown: string): string => {
   if (!markdown) return '';
 
-  let cleaned = markdown
+  const cleaned = markdown
     // Remove code blocks first (before other replacements)
     .replace(/```[\s\S]*?```/g, '')
     // Remove inline code
@@ -86,11 +88,87 @@ interface Bucket {
 
 interface Aggregation {
   buckets?: Bucket[];
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface Aggregations {
   [key: string]: Aggregation;
+}
+
+interface SearchPublisher {
+  name?: string;
+  logo?: string;
+  profile_picture?: string;
+}
+
+interface SearchSdg {
+  code: string;
+  name: string;
+}
+
+interface SearchSector {
+  name?: string;
+}
+
+interface SearchResult {
+  type?: string;
+  id: string | number;
+  slug?: string;
+  publisher_type?: string;
+  is_individual_dataset?: boolean;
+  is_individual_usecase?: boolean;
+  is_individual_model?: boolean;
+  is_individual_collaborative?: boolean;
+  logo?: string;
+  profile_picture?: string;
+  user?: SearchPublisher;
+  organization?: SearchPublisher;
+  geographies?: string[];
+  sdgs?: SearchSdg[];
+  created?: string;
+  published_datasets_count?: number;
+  published_usecases_count?: number;
+  members_count?: number;
+  started_on?: string;
+  dataset_count?: number;
+  modified?: string;
+  updated_at?: string;
+  download_count?: number;
+  has_charts?: boolean;
+  sectors?: Array<string | SearchSector>;
+  title?: string;
+  name?: string;
+  description?: string;
+  bio?: string;
+  tags?: string[];
+  formats?: string[];
+}
+
+interface UnifiedSearchResponse {
+  results: SearchResult[];
+  total: number;
+  aggregations: Aggregations;
+  types_searched: string[];
+}
+
+interface CardMetadataItem {
+  icon: (typeof Icons)[keyof typeof Icons];
+  stroke?: number;
+  label: string;
+  value: string | number;
+  tooltip?: string;
+}
+
+type CardMetadataTuple =
+  | []
+  | [CardMetadataItem]
+  | [CardMetadataItem, CardMetadataItem]
+  | [CardMetadataItem, CardMetadataItem, CardMetadataItem];
+
+interface FooterChip {
+  icon: string;
+  label: string;
+  tooltip?: string;
 }
 
 interface FilterOptions {
@@ -280,7 +358,7 @@ const fetchUnifiedData = async (variables: string) => {
 
   const text = await response.text();
   try {
-    return JSON.parse(text);
+    return JSON.parse(text) as UnifiedSearchResponse;
   } catch (e) {
     console.error(
       'JSON Parse Error. Response text:',
@@ -304,12 +382,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   placeholder,
   redirectionURL,
 }) => {
-  const [facets, setFacets] = useState<{
-    results: any[];
-    total: number;
-    aggregations: Aggregations;
-    types_searched: string[];
-  } | null>(null);
+  const [facets, setFacets] = useState<UnifiedSearchResponse | null>(null);
   const [variables, setVariables] = useState('');
   const [open, setOpen] = useState(false);
   const [queryParams, setQueryParams] = useReducer(queryReducer, initialState);
@@ -330,8 +403,6 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   useEffect(() => {
     if (variables) {
       const currentFetchId = ++latestFetchId.current;
-      setIsLoading(true);
-      setError(null);
 
       fetchUnifiedData(variables)
         .then((res) => {
@@ -350,11 +421,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
     }
   }, [variables]);
 
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
+  const hasMounted = useMounted();
 
   const handlePageChange = (newPage: number) => {
     setQueryParams({ type: 'SET_CURRENT_PAGE', payload: newPage });
@@ -453,7 +520,9 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   );
   const displayTypeCounts = { ...persistedTypeCounts, ...liveTypeCounts };
 
-  useEffect(() => {
+  const [prevTypeCounts, setPrevTypeCounts] = useState(typeCounts);
+  if (typeCounts !== prevTypeCounts) {
+    setPrevTypeCounts(typeCounts);
     const counts = Object.entries(typeCounts).reduce(
       (acc, [key, value]) => {
         if (typeof value === 'number') {
@@ -464,22 +533,22 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       {} as Record<string, number>
     );
 
-    if (Object.keys(counts).length === 0) return;
+    if (Object.keys(counts).length > 0) {
+      setPersistedTypeCounts((prev) => {
+        const next = { ...prev };
+        let changed = false;
 
-    setPersistedTypeCounts((prev) => {
-      const next = { ...prev };
-      let changed = false;
+        Object.entries(counts).forEach(([key, value]) => {
+          if (next[key] !== value) {
+            next[key] = value;
+            changed = true;
+          }
+        });
 
-      Object.entries(counts).forEach(([key, value]) => {
-        if (next[key] !== value) {
-          next[key] = value;
-          changed = true;
-        }
+        return changed ? next : prev;
       });
-
-      return changed ? next : prev;
-    });
-  }, [typeCounts]);
+    }
+  }
 
   const getTypeButtonClass = (type: string) => {
     return `font-normal rounded-full border-1 border-solid border-[#C9cccf] ${queryParams.types === type ? 'font-semibold bg-[#E5EFFD] text-primaryBlue border-[#E5EFFD]' : 'bg-[#F2F7FE]'} hover:bg-[#EDF4FE]`;
@@ -488,7 +557,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   if (!hasMounted) return <Loading />;
 
   // Helper function to get redirect URL based on type
-  const getRedirectUrl = (item: any) => {
+  const getRedirectUrl = (item: SearchResult) => {
     switch (item.type) {
       case 'dataset':
         return `/datasets/${item.id}`;
@@ -518,7 +587,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   const singleSelectedType =
     !isSectionedLanding && selectedTypes.length === 1 ? selectedTypes[0] : null;
   const tabResults = singleSelectedType
-    ? results.filter((item: any) => item.type === singleSelectedType)
+    ? results.filter((item) => item.type === singleSelectedType)
     : results;
   const tabTotalCount =
     singleSelectedType &&
@@ -526,7 +595,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       ? displayTypeCounts[singleSelectedType]
       : count;
 
-  const renderResultCard = (item: any) => {
+  const renderResultCard = (item: SearchResult) => {
     const isIndividual =
       item.is_individual_dataset ||
       item.is_individual_usecase ||
@@ -553,31 +622,31 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       item.geographies && item.geographies.length > 0 ? item.geographies : null;
     const sdgs = item.sdgs && item.sdgs.length > 0 ? item.sdgs : null;
 
-    const MetadataContent = [];
+    const MetadataContent: CardMetadataItem[] = [];
 
     if (item.type === 'publisher') {
       MetadataContent.push({
-        icon: Icons.calendarEvent as any,
+        icon: Icons.calendarEvent,
         label: 'Joined',
-        value: formatDate(item.created) || '',
+        value: formatDate(item.created ?? null) || '',
         tooltip: 'Date joined',
         stroke: 1.2,
       });
       MetadataContent.push({
-        icon: Icons.dataset as any,
+        icon: Icons.dataset,
         label: 'Datasets',
         value: item.published_datasets_count?.toString() || '0',
         tooltip: 'Published datasets',
       });
       MetadataContent.push({
-        icon: Icons.usecase as any,
+        icon: Icons['usecase' as keyof typeof Icons],
         label: 'Use Cases',
         value: item.published_usecases_count?.toString() || '0',
         tooltip: 'Published use cases',
       });
-      if (item.publisher_type === 'organization' && item.members_count > 0) {
+      if (item.publisher_type === 'organization' && (item.members_count ?? 0) > 0) {
         MetadataContent.push({
-          icon: Icons.users as any,
+          icon: Icons['users' as keyof typeof Icons],
           label: 'Members',
           value: item.members_count?.toString() || '0',
           tooltip: 'Organization members',
@@ -585,27 +654,27 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       }
     } else if (item.type === 'collaborative') {
       MetadataContent.push({
-        icon: Icons.calendarEvent as any,
+        icon: Icons.calendarEvent,
         label: 'Started',
-        value: formatDate(item.started_on || item.created) || '',
+        value: formatDate(item.started_on || item.created || null) || '',
         stroke: 1.2,
       });
       MetadataContent.push({
-        icon: Icons.dataset as any,
+        icon: Icons.dataset,
         label: 'Datasets',
         value: item.dataset_count?.toString() || '0',
       });
       if (geographies && geographies.length > 0) {
         const geoDisplay = geographies.join(', ');
         MetadataContent.push({
-          icon: Icons.worldPin as any,
+          icon: Icons.worldPin,
           label: 'Geography',
           value: geoDisplay,
           stroke: 1.2,
         });
       } else {
         MetadataContent.push({
-          icon: Icons.worldPin as any,
+          icon: Icons.worldPin,
           label: 'Geography',
           value: 'N/A',
           stroke: 1.2,
@@ -613,9 +682,9 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       }
     } else {
       MetadataContent.push({
-        icon: Icons.calendarEvent as any,
+        icon: Icons.calendarEvent,
         label: 'Date',
-        value: formatDate(item.modified || item.updated_at) || '',
+        value: formatDate(item.modified || item.updated_at || null) || '',
         tooltip: 'Date',
         stroke: 1.2,
       });
@@ -623,7 +692,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       if (geographies && geographies.length > 0) {
         const geoDisplay = geographies.join(', ');
         MetadataContent.push({
-          icon: Icons.worldPin as any,
+          icon: Icons.worldPin,
           label: 'Geography',
           value: geoDisplay,
           tooltip: geoDisplay,
@@ -632,9 +701,9 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       }
     }
 
-    if (item.type === 'dataset' && item.download_count > 0) {
+    if (item.type === 'dataset' && (item.download_count ?? 0) > 0) {
       MetadataContent.push({
-        icon: Icons.fileDownload as any,
+        icon: Icons.fileDownload,
         label: 'Download',
         value: item.download_count || 0,
         tooltip: 'Download',
@@ -644,10 +713,10 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
 
     if (item.type === 'dataset' && sdgs && sdgs.length > 0) {
       const sdgDisplay = sdgs
-        .map((sdg: any) => `${sdg.code} - ${sdg.name}`)
+        .map((sdg) => `${sdg.code} - ${sdg.name}`)
         .join(', ');
       MetadataContent.push({
-        icon: Icons.star as any,
+        icon: Icons.star,
         label: 'SDG Goals',
         value: sdgDisplay,
         tooltip: sdgDisplay,
@@ -663,8 +732,8 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       });
     }
 
-    const LeftFooterChips = [];
-    const RightFooterChips = [];
+    const LeftFooterChips: FooterChip[] = [];
+    const RightFooterChips: FooterChip[] = [];
 
     if (item.type === 'publisher') {
       LeftFooterChips.push({
@@ -699,7 +768,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       }
     } else if (item.sectors && item.sectors.length > 0) {
       LeftFooterChips.push({
-        icon: `/Sectors/${item.sectors?.[0]}.svg` as any,
+        icon: `/Sectors/${item.sectors?.[0]}.svg`,
         label: 'Sectors',
         tooltip: `${item.sectors?.[0]}`,
       });
@@ -707,7 +776,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
 
     if (item.type === 'dataset' && item.has_charts && view !== 'expanded') {
       LeftFooterChips.push({
-        icon: `/chart-bar.svg` as any,
+        icon: `/chart-bar.svg`,
         label: 'Charts',
         tooltip: 'Charts',
       });
@@ -715,7 +784,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
 
     if (item.type !== 'publisher') {
       RightFooterChips.push({
-        icon: image as any,
+        icon: image,
         label: 'Published by',
         tooltip: `${isIndividual ? item.user?.name : item.organization?.name}`,
       });
@@ -727,7 +796,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       // ...((item.type === 'usecase' || item.type === 'dataset') && {
       //   description: stripMarkdown(item.description || item.bio || ''),
       // }),
-      metadataContent: MetadataContent as any,
+      metadataContent: MetadataContent as CardMetadataTuple,
       tag: item.tags || [],
       formats: item.type === 'dataset' ? item.formats || [] : [],
       leftFooterChips: LeftFooterChips,
@@ -771,7 +840,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
           className="flex flex-col gap-4 rounded-4 p-6 shadow-card"
         >
           <div className="flex items-center gap-4">
-            <img
+            <Image
               height={80}
               width={80}
               src={
@@ -814,8 +883,8 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
           {(item.bio || item.description) && (
             <div>
               <Text className="line-clamp-2">
-                {(item.bio || item.description)?.length > 220
-                  ? (item.bio || item.description).slice(0, 220) + '...'
+                {(item.bio || item.description || '').length > 220
+                  ? (item.bio || item.description || '').slice(0, 220) + '...'
                   : item.bio || item.description}
               </Text>
             </div>
@@ -1106,8 +1175,8 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                       const sectionResults = Array.from(
                         new Map(
                           results
-                            .filter((item: any) => item.type === section.key)
-                            .map((item: any) => [
+                            .filter((item) => item.type === section.key)
+                            .map((item) => [
                               `${item.type}-${item.publisher_type || ''}-${item.id}`,
                               item,
                             ])
@@ -1143,7 +1212,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                             </Button>
                           </div>
                           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                            {sectionResults.map((item: any) =>
+                            {sectionResults.map((item) =>
                               renderResultCard(item)
                             )}
                           </div>
@@ -1160,7 +1229,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     onPageSizeChange={handlePageSizeChange}
                     view={view}
                   >
-                    {tabResults.map((item: any) => renderResultCard(item))}
+                    {tabResults.map((item) => renderResultCard(item))}
                   </GraphqlPagination>
                 )
               ) : (

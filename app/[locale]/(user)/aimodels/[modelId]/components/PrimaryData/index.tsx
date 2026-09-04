@@ -3,8 +3,18 @@
 import RichTextRenderer from '@/components/RichTextRenderer/RichTextRenderer';
 import { Tag, Text } from 'opub-ui';
 
+interface PrimaryDataModel {
+  displayName?: string | null;
+  name: string;
+  description?: string | null;
+  tags?: Array<{ id: string; value: string }> | null;
+  metadata?: {
+    keyFeatures?: string[];
+  } | null;
+}
+
 interface PrimaryDataProps {
-  data: any;
+  data: PrimaryDataModel;
   isLoading: boolean;
 }
 
@@ -17,7 +27,7 @@ export default function PrimaryData({ data, isLoading }: PrimaryDataProps) {
 
       {data.tags && data.tags.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {data.tags.map((tag: any) => (
+          {data.tags.map((tag) => (
             <Tag
               key={tag.id}
               fillColor="var(--accent-tertiary-color)"

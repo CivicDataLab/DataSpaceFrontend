@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { renderGeoJSON } from '@/geo_json/render_geojson';
 import { graphql } from '@/gql';
+import { ChartDetailsQueryQuery } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts/core';
@@ -23,7 +24,7 @@ import { GraphQL } from '@/lib/api';
 import { useAnalytics } from '@/hooks/use-analytics';
 import { Icons } from '@/components/icons';
 
-const DetailsQuery: any = graphql(`
+const DetailsQuery = graphql(`
   query ChartDetailsQuery($datasetId: UUID!) {
     getChartData(datasetId: $datasetId) {
       __typename
@@ -55,7 +56,7 @@ const Details: React.FC = () => {
   const chartRef = useRef<ReactECharts>(null);
   const { trackDataset } = useAnalytics();
 
-  const { data, isLoading }: { data: any; isLoading: any } = useQuery(
+  const { data, isLoading } = useQuery(
     [`chartDetails_${params.id}`],
     () => GraphQL(DetailsQuery, {}, { datasetId: params.datasetIdentifier })
   );
@@ -67,13 +68,18 @@ const Details: React.FC = () => {
     }
   }, [params.datasetIdentifier, trackDataset]);
 
-  const renderChart = (item: any) => {
+  type ChartItem = ChartDetailsQueryQuery['getChartData'][number];
+  type ResourceChart = Extract<ChartItem, { __typename: 'TypeResourceChart' }>;
+
+  const renderChart = (item: ResourceChart) => {
     if (item.chartType === 'ASSAM_DISTRICT' || item.chartType === 'ASSAM_RC') {
-      // Register the map
-      echarts.registerMap(
-        item.chartType.toLowerCase(),
-        renderGeoJSON(item.chartType.toLowerCase())
-      );
+      const geoJson = renderGeoJSON(item.chartType.toLowerCase());
+      if (geoJson && geoJson.type === 'FeatureCollection') {
+        echarts.registerMap(
+          item.chartType.toLowerCase(),
+          geoJson as Parameters<typeof echarts.registerMap>[1]
+        );
+      }
     }
 
     return <ReactECharts option={item?.chart?.options} ref={chartRef} />;
@@ -88,23 +94,24 @@ const Details: React.FC = () => {
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
-      ) : data?.getChartData?.length > 0 ? (
+      ) : (data?.getChartData?.length ?? 0) > 0 ? (
         <div className=" flex w-full flex-col gap-4 py-10">
           <div className="relative w-full ">
             <Carousel className="w-full">
               <div className=" px-12">
                 <CarouselContent className="flex-grow">
-                  {data?.getChartData.map((item: any, index: any) => (
+                  {data?.getChartData.map((item, index) => (
                     <CarouselItem key={index} className="m-auto">
                       <div className="w-full border-2 border-solid border-baseGraySlateSolid4 bg-surfaceDefault p-6 text-center shadow-basicLg max-sm:p-2">
                         <div className="flex items-center justify-between gap-2 max-sm:flex-wrap">
                           <div className="flex flex-col gap-1 py-2 text-start">
                             <Text className="font-semi-bold">{item.name}</Text>
                             <Text className=" hidden lg:block">
-                              {item.description.length > 260 && !isexpanded
-                                ? `${item.description.slice(0, 260)}...`
+                              {(item.description ?? '').length > 260 &&
+                              !isexpanded
+                                ? `${(item.description ?? '').slice(0, 260)}...`
                                 : item.description}
-                              {item.description.length > 260 && (
+                              {(item.description ?? '').length > 260 && (
                                 <Button
                                   kind="tertiary"
                                   size="slim"

@@ -1,6 +1,13 @@
+import React from 'react';
 import { Button, Text } from 'opub-ui';
 
 import { viewOptions } from '../constants';
+
+export type ChartConfig = {
+  xAxis?: string;
+  yAxis?: string;
+  average?: boolean;
+};
 
 export type Item = {
   id: number;
@@ -8,7 +15,7 @@ export type Item = {
   chart: {
     label: string;
     value: viewOptions;
-    data: object;
+    data: ChartConfig;
   };
 };
 
@@ -18,7 +25,7 @@ export const ListItem = ({
   handleEditClick,
 }: {
   item: Item;
-  setAddedItems: (arg: any) => void;
+  setAddedItems: React.Dispatch<React.SetStateAction<Item[]>>;
   handleEditClick: (arg: Item) => void;
 }) => {
   return (
@@ -41,8 +48,8 @@ export const ListItem = ({
           size="slim"
           kind="secondary"
           onClick={() => {
-            setAddedItems((prev: any) =>
-              prev.filter((prevItem: any) => prevItem.id !== item.id)
+            setAddedItems((prev) =>
+              prev.filter((prevItem) => prevItem.id !== item.id)
             );
           }}
         >

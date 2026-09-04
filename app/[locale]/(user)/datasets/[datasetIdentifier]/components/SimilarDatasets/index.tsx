@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import Styles from './similarDatasets.module.scss';
 
-const similarDatasetQuery: any = graphql(`
+const similarDatasetQuery = graphql(`
   query getSimilarDataset($datasetId: UUID!) {
     getDataset(datasetId: $datasetId) {
       id
@@ -81,7 +81,7 @@ const similarDatasetQuery: any = graphql(`
 const SimilarDatasets: React.FC = () => {
   const params = useParams();
 
-  const SimilatDatasetdetails: { data: any; isLoading: any } = useQuery(
+  const SimilatDatasetdetails = useQuery(
     [`similar_datasets_${params.datasetIdentifier}`],
     () =>
       GraphQL(
@@ -112,40 +112,42 @@ const SimilarDatasets: React.FC = () => {
               <CarouselContent className="p-4">
                 {SimilatDatasetdetails?.data?.getDataset &&
                   SimilatDatasetdetails?.data?.getDataset.similarDatasets.map(
-                    (item: any) => {
+                    (item) => {
                       const geographies =
                         Array.isArray(item.geographies) &&
                         item.geographies.length > 0
                           ? item.geographies
-                              .map((geo: any) =>
+                              .map((geo) =>
                                 typeof geo === 'string' ? geo : geo?.name
                               )
                               .filter(Boolean)
                           : null;
 
-                      const metadataContent: any[] = [
-                        {
-                          icon: Icons.calendarEvent as any,
-                          label: 'Date',
-                          value: '19 July 2024',
-                          stroke: 1.2,
-                        },
-                        {
-                          icon: Icons.fileDownload as any,
-                          label: 'Download',
-                          value: item.downloadCount.toString(),
-                          stroke: 1.2,
-                        },
-                      ];
-
-                      if (geographies && geographies.length > 0) {
-                        metadataContent.push({
-                          icon: Icons.worldPin as any,
-                          label: 'Geography',
-                          value: geographies.join(', '),
-                          stroke: 1.2,
-                        });
-                      }
+                      const dateMeta = {
+                        icon: Icons.calendarEvent,
+                        label: 'Date',
+                        value: '19 July 2024',
+                        stroke: 1.2,
+                      };
+                      const downloadMeta = {
+                        icon: Icons.fileDownload,
+                        label: 'Download',
+                        value: item.downloadCount.toString(),
+                        stroke: 1.2,
+                      };
+                      const metadataContent =
+                        geographies && geographies.length > 0
+                          ? ([
+                              dateMeta,
+                              downloadMeta,
+                              {
+                                icon: Icons.worldPin,
+                                label: 'Geography',
+                                value: geographies.join(', '),
+                                stroke: 1.2,
+                              },
+                            ] as const)
+                          : ([dateMeta, downloadMeta] as const);
 
                       return (
                         <CarouselItem
@@ -159,24 +161,24 @@ const SimilarDatasets: React.FC = () => {
                           <Card
                             title={item.title}
                             // description={stripMarkdown(item.description || '')}
-                            metadataContent={metadataContent as any}
-                            tag={item.tags}
+                            metadataContent={metadataContent}
+                            tag={item.tags.map((t) => t.value)}
                             formats={item.formats}
                             leftFooterChips={[
                               {
-                                icon: `/Sectors/${item.sectors[0]?.name}.svg` as any,
+                                icon: `/Sectors/${item.sectors[0]?.name}.svg`,
                                 label: 'Sectors',
                               },
                             ]}
                             rightFooterChips={[
                               {
                                 icon: item.isIndividualDataset
-                                  ? (item?.user?.profilePicture as any)
+                                  ? item?.user?.profilePicture
                                     ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
-                                    : ('/profile.png' as any)
-                                  : (item?.organization?.logo as any)
+                                    : '/profile.png'
+                                  : item?.organization?.logo
                                     ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
-                                    : ('/org.png' as any),
+                                    : '/org.png',
                                 label: 'Published by',
                               },
                             ]}

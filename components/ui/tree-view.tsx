@@ -6,7 +6,6 @@ interface TreeDataItem {
   id: string
   name: string
   children?: TreeDataItem[]
-  [key: string]: any
 }
 
 interface TreeViewProps {

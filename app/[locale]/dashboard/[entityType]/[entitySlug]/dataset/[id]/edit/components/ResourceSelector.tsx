@@ -1,16 +1,72 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Button, Checkbox, Combobox, Icon, Text, TextField } from 'opub-ui';
 
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import styles from '../edit.module.scss';
 
+interface SchemaField {
+  id: string | number;
+  fieldName: string;
+}
+
+interface SelectedResource {
+  id: string;
+  name: string;
+  schema: SchemaField[];
+}
+
+interface AccessModelResource {
+  resource: string;
+  fields: number[];
+}
+
+interface AccessModelData {
+  dataset: string;
+  name: string;
+  description: string;
+  type: string;
+  resources: AccessModelResource[];
+  accessModelId: string;
+}
+
+interface OptionItem {
+  label: string;
+  value: string;
+}
+
 interface ResourceSelectorProps {
-  selectedResource: any;
+  selectedResource: SelectedResource;
   handleRemoveResource: (resourceId: string) => void;
-  accessModelData: any;
-  setAccessModelData: (data: any) => void;
-  handleSave: (updatedData: any) => void;
+  accessModelData: AccessModelData;
+  setAccessModelData: (data: AccessModelData) => void;
+  handleSave: (updatedData: AccessModelData) => void;
+}
+
+function schemaToOptions(schema: SchemaField[]): OptionItem[] {
+  return schema.map((field) => ({
+    label: field.fieldName,
+    value: field.id.toString(),
+  }));
+}
+
+function fieldsToOptions(
+  fieldIds: number[],
+  schema: SchemaField[]
+): OptionItem[] {
+  return fieldIds.flatMap((fieldId) => {
+    const field = schema.find(
+      (schemaField) => schemaField.id.toString() === fieldId.toString()
+    );
+    return field
+      ? [
+          {
+            label: field.fieldName,
+            value: field.id.toString(),
+          },
+        ]
+      : [];
+  });
 }
 
 const ResourceSelector: React.FC<ResourceSelectorProps> = ({
@@ -21,71 +77,43 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
   handleSave,
 }) => {
   const [selectAllFields, setSelectAllFields] = useState(true);
-  const [options, setOptions] = useState<{ label: string; value: string }[]>(
-    []
+  const [options, setOptions] = useState<OptionItem[]>([]);
+  const [selectedFields, setSelectedFields] = useState<OptionItem[]>([]);
+  const [prevSelectedResource, setPrevSelectedResource] =
+    useState(selectedResource);
+  const [prevAccessModelResources, setPrevAccessModelResources] = useState(
+    accessModelData.resources
   );
-  const [selectedFields, setSelectedFields] = useState<
-    { label: string; value: string }[]
-  >([]);
+  if (
+    selectedResource !== prevSelectedResource ||
+    accessModelData.resources !== prevAccessModelResources
+  ) {
+    setPrevSelectedResource(selectedResource);
+    setPrevAccessModelResources(accessModelData.resources);
 
-  useEffect(() => {
-    const initialOptions = selectedResource.schema.map((field: any) => ({
-      label: field.fieldName,
-      value: field.id.toString(), // Ensure ID is a string for Combobox
-    }));
+    const initialOptions = schemaToOptions(selectedResource.schema);
     setOptions(initialOptions);
 
     const selectedResourceData = accessModelData.resources.find(
-      (resource: any) => resource.resource === selectedResource.id
+      (resource) => resource.resource === selectedResource.id
     );
 
     if (selectedResourceData) {
-      const initialSelectedFields = selectedResourceData.fields
-        .map((fieldId: any) => {
-          const field = selectedResource.schema.find(
-            (f: any) => f.id.toString() === fieldId.toString()
-          );
-          return field
-            ? {
-                label: field.fieldName,
-                value: field.id.toString(), // Ensure ID is a string for Combobox
-              }
-            : null;
-        })
-        .filter((field: any) => field !== null); // Filter out null values
+      const initialSelectedFields = fieldsToOptions(
+        selectedResourceData.fields,
+        selectedResource.schema
+      );
       setSelectedFields(initialSelectedFields);
       setSelectAllFields(
         initialSelectedFields.length === initialOptions.length
       );
     } else if (selectAllFields) {
       setSelectedFields(initialOptions);
-      const updatedData = {
-        ...accessModelData,
-        resources: [
-          ...accessModelData.resources.filter(
-            (resource: any) => resource.resource !== selectedResource.id
-          ),
-          {
-            resource: selectedResource.id,
-            fields: initialOptions.map((option: any) =>
-              parseInt(option.value, 10)
-            ), // Convert to integer
-          },
-        ],
-      };
-      setAccessModelData(updatedData);
-      handleSave(updatedData);
     }
-  }, [
-    selectedResource,
-    accessModelData,
-    selectAllFields,
-    setAccessModelData,
-    handleSave,
-  ]);
+  }
 
-  const handleFieldSelection = (selectedOptions: any) => {
-    const updatedFields = selectedOptions.map((option: any) => ({
+  const handleFieldSelection = (selectedOptions: OptionItem[]) => {
+    const updatedFields = selectedOptions.map((option) => ({
       label: option.label,
       value: option.value,
     }));
@@ -96,11 +124,11 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
       ...accessModelData,
       resources: [
         ...accessModelData.resources.filter(
-          (resource: any) => resource.resource !== selectedResource.id
+          (resource) => resource.resource !== selectedResource.id
         ),
         {
           resource: selectedResource.id,
-          fields: updatedFields.map((field: any) => parseInt(field.value, 10)), // Convert to integer
+          fields: updatedFields.map((field) => parseInt(field.value, 10)),
         },
       ],
     };
@@ -120,11 +148,11 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
       ...accessModelData,
       resources: [
         ...accessModelData.resources.filter(
-          (resource: any) => resource.resource !== selectedResource.id
+          (resource) => resource.resource !== selectedResource.id
         ),
         {
           resource: selectedResource.id,
-          fields: updatedFields.map((field: any) => parseInt(field.value, 10)), // Convert to integer
+          fields: updatedFields.map((field) => parseInt(field.value, 10)),
         },
       ],
     };
@@ -158,7 +186,11 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
                 selectedValue={selectedFields}
                 name=""
                 helpText="Use the dropdown to add specific fields"
-                onChange={(e: any) => handleFieldSelection(e)}
+                onChange={(value) => {
+                  if (Array.isArray(value)) {
+                    handleFieldSelection(value);
+                  }
+                }}
               />
             </div>
             <div className="right-0 lg:absolute" style={{ top: '1px' }}>
@@ -180,7 +212,7 @@ const ResourceSelector: React.FC<ResourceSelectorProps> = ({
               <Checkbox
                 name="Select All Rows"
                 defaultChecked={false}
-                onChange={(e) => console.log(e)}
+                onChange={(checked) => console.log(checked)}
               >
                 Select All
               </Checkbox>

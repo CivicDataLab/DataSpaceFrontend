@@ -4,9 +4,17 @@ import { Button, Icon, Text } from 'opub-ui';
 import { Icons } from '@/components/icons';
 import CustomCombobox from '../../../../usecases/edit/[id]/contributors/CustomCombobox';
 
-type Option = { label: string; value: string };
+interface Option {
+  label: string;
+  value: string;
+}
 
-type EntitySectionProps = {
+interface EntityWithLogo {
+  id: string;
+  logo?: { url?: string | null } | null;
+}
+
+interface EntitySectionProps {
   title: string;
   label: string;
   placeholder: string;
@@ -14,8 +22,8 @@ type EntitySectionProps = {
   selectedValues: Option[];
   onChange: (values: Option[]) => void;
   onRemove: (value: Option) => void;
-  data: any;
-};
+  data?: EntityWithLogo[] | null;
+}
 
 const EntitySection = ({
   title,
@@ -54,9 +62,9 @@ const EntitySection = ({
               <div className="rounded-4 bg-surfaceDefault p-4 shadow-basicMd">
                 <Image
                   src={
-                    data?.find((org: any) => org.id === item.value)?.logo?.url
+                    data?.find((org) => org.id === item.value)?.logo?.url
                       ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${
-                          data?.find((org: any) => org.id === item.value)?.logo
+                          data?.find((org) => org.id === item.value)?.logo
                             ?.url
                         }`
                       : '/org.png'

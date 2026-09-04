@@ -20,7 +20,7 @@ import { SectorListingSkeleton } from '@/components/loading';
 import { SectorCard } from '@/components/SectorCard';
 import Styles from '../datasets/dataset.module.scss';
 
-const sectorsListQueryDoc: any = graphql(`
+const sectorsListQueryDoc = graphql(`
   query SectorsLists($order: SectorOrder, $filters: SectorFilter) {
     activeSectors(order: $order, filters: $filters) {
       id
@@ -43,7 +43,7 @@ const SectorsListing = () => {
         sectorsListQueryDoc,
         {},
         { filters: searchText ? { search: searchText } : {}, order: sort }
-      ) as Promise<SectorsListsQuery>
+      )
   );
 
   useEffect(() => {
@@ -176,9 +176,7 @@ const SectorsListing = () => {
                             value: 'datasetCount_desc',
                           },
                         ]}
-                        onChange={(e: any) => {
-                          handleSortChange(e);
-                        }}
+                        onChange={handleSortChange}
                       />
                     </div>
                   </div>
@@ -189,11 +187,17 @@ const SectorsListing = () => {
               ) : data && data?.activeSectors?.length > 0 ? (
                 <>
                   <div className="grid w-full grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
-                    {data?.activeSectors.map((sector: any) => (
+                    {data?.activeSectors.map((sector) => (
                       <SectorCard
                         key={sector.id}
-                        sector={sector}
-                        href={`/sectors/${sector.slug}?sectors=${buildSectorSlugParam(sector.slug)}`}
+                        sector={{
+                          id: String(sector.id),
+                          name: sector.name,
+                          description: sector.description,
+                          slug: sector.slug ?? '',
+                          datasetCount: sector.datasetCount,
+                        }}
+                        href={`/sectors/${sector.slug}?sectors=${buildSectorSlugParam(sector.slug ?? '')}`}
                         showNameTooltip
                         className="h-full"
                       />

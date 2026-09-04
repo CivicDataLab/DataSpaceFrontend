@@ -11,8 +11,46 @@ import {
   Text,
 } from 'opub-ui';
 
+interface VersionProvider {
+  id: number;
+  provider: string;
+  providerModelId?: string | null;
+  isPrimary: boolean;
+  isActive: boolean;
+  apiEndpointUrl?: string | null;
+  hfModelClass?: string | null;
+  framework?: string | null;
+}
+
+interface ModelVersion {
+  id: number;
+  version: string;
+  versionNotes?: string | null;
+  lifecycleStage: string;
+  isLatest: boolean;
+  maxTokens?: number | null;
+  supportedLanguages?: string[] | null;
+  createdAt: string;
+  updatedAt: string;
+  providers: VersionProvider[];
+}
+
+interface VersionTableRow {
+  lifecycleStage: string;
+  providers: VersionProvider[];
+  maxTokens?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+
+interface VersionCellProps {
+  row: { original: VersionTableRow };
+}
+
 interface VersionsProps {
-  data: any;
+  data: {
+    versions?: ModelVersion[] | null;
+  };
 }
 
 export default function Versions({ data }: VersionsProps) {
@@ -35,7 +73,7 @@ export default function Versions({ data }: VersionsProps) {
       {
         accessorKey: 'lifecycleStage',
         header: 'Lifecycle Stage',
-        cell: ({ row }: any) => (
+        cell: ({ row }: VersionCellProps) => (
           <Text variant="bodyMd">
             {row.original.lifecycleStage?.replace(/_/g, ' ') || 'Development'}
           </Text>
@@ -44,12 +82,12 @@ export default function Versions({ data }: VersionsProps) {
       {
         accessorKey: 'providers',
         header: 'Access Methods',
-        cell: ({ row }: any) => {
+        cell: ({ row }: VersionCellProps) => {
           const providers = row.original.providers || [];
           if (providers.length === 0) return <Text variant="bodyMd">N/A</Text>;
           return (
             <div className="flex flex-wrap gap-1">
-              {providers.map((p: any) => (
+              {providers.map((p) => (
                 <Badge key={p.id}>
                   {providerLabels[p.provider] || p.provider}
                 </Badge>
@@ -61,7 +99,7 @@ export default function Versions({ data }: VersionsProps) {
       {
         accessorKey: 'maxTokens',
         header: 'Max Tokens',
-        cell: ({ row }: any) => (
+        cell: ({ row }: VersionCellProps) => (
           <Text variant="bodyMd">
             {row.original.maxTokens?.toLocaleString() || 'N/A'}
           </Text>
@@ -70,7 +108,7 @@ export default function Versions({ data }: VersionsProps) {
       {
         accessorKey: 'updatedAt',
         header: 'Last Updated',
-        cell: ({ row }: any) => (
+        cell: ({ row }: VersionCellProps) => (
           <Text variant="bodyMd">
             {formatDate(row.original.updatedAt || row.original.createdAt) || ''}
           </Text>
@@ -79,7 +117,7 @@ export default function Versions({ data }: VersionsProps) {
     ];
   };
 
-  const generateTableData = (version: any) => {
+  const generateTableData = (version: ModelVersion) => {
     return [
       {
         lifecycleStage: version.lifecycleStage,
@@ -100,7 +138,7 @@ export default function Versions({ data }: VersionsProps) {
         </Text>
       </div>
       <div>
-        {data.versions.map((version: any) => (
+        {data.versions.map((version) => (
           <div
             key={version.id}
             className="mt-5 flex flex-col gap-6 border-1 border-solid border-greyExtralight bg-surfaceDefault p-4 lg:mx-0 lg:p-6"
@@ -180,7 +218,7 @@ export default function Versions({ data }: VersionsProps) {
                         Provider Configuration
                       </Text>
                       <div className="flex flex-col gap-3">
-                        {version.providers.map((provider: any) => (
+                        {version.providers.map((provider) => (
                           <div
                             key={provider.id}
                             className="rounded-1 border border-greyExtralight bg-surfaceSubdued p-3"
