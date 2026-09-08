@@ -7,7 +7,7 @@ interface ResourceHeaderProps {
   listViewFunction: () => void;
   isSheetOpen: boolean;
   setIsSheetOpen: (open: boolean) => void;
-  dropZone: any;
+  dropZone: (files: File[], acceptedFiles: File[], rejectedFiles: File[]) => void;
   uploadedFile: React.ReactNode;
   file: File[];
   list: { value: string; label: string }[];
@@ -63,7 +63,7 @@ const ResourceHeader = ({
                         allowMultiple={true}
                         onDrop={dropZone}
                       >
-                        {uploadedFile as any}
+                        {uploadedFile}
                         {file.length === 0 && (
                           <DropZone.FileUpload
                             actionHint={'CSV, JSON, PDF, XLS, XLSX, XML, ZIP'}

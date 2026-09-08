@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { TypeDataset, TypeUseCase } from '@/gql/generated/graphql';
 import { useAnalytics } from '@/hooks/use-analytics';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Text } from 'opub-ui';
@@ -172,16 +171,13 @@ const UseCaseDetailClient = () => {
     data: UseCaseDetails,
     isLoading,
     error,
-  } = useQuery<{ useCase: TypeUseCase }>(
+  } = useQuery(
     [`fetch_UsecaseDetails_${params.useCaseSlug}`],
     async () => {
-      const result = (await GraphQLPublic(
-        UseCasedetails as any,
-        {},
-        {
-          pk: params.useCaseSlug,
-        }
-      )) as { useCase: TypeUseCase };
+      const result = await GraphQLPublic(UseCasedetails, {}, {
+        pk:
+          typeof params.useCaseSlug === 'string' ? params.useCaseSlug : '',
+      });
       return result;
     },
     {
@@ -245,8 +241,9 @@ const UseCaseDetailClient = () => {
                 Error Loading Use Case
               </Text>
               <Text variant="bodyLg">
-                {(error as any)?.message?.includes('401') ||
-                (error as any)?.message?.includes('403')
+                {error instanceof Error &&
+                (error.message.includes('401') ||
+                  error.message.includes('403'))
                   ? 'You do not have permission to view this use case. Please log in or contact the administrator.'
                   : 'Failed to load use case details. Please try again later.'}
               </Text>
@@ -289,7 +286,7 @@ const UseCaseDetailClient = () => {
                 <div className="grid  grid-cols-1 gap-6 pt-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ">
                   {/* <div className="grid grid-cols-1 p-4 gap-6 overflow-y-auto  md:grid-cols-2 lg:grid-cols-3 max-h-[calc(100vh-250px)]"> */}
                   {datasets.length > 0 &&
-                    datasets.map((dataset: TypeDataset) => (
+                    datasets.map((dataset) => (
                       <Card
                         key={dataset.id}
                         title={dataset.title}
@@ -297,25 +294,25 @@ const UseCaseDetailClient = () => {
                         iconColor={'warning'}
                         metadataContent={[
                           {
-                            icon: Icons.calendarEvent as any,
+                            icon: Icons.calendarEvent,
                             label: 'Date',
                             value: formatDate(dataset.modified) || '',
                             stroke: 1.2,
                           },
                           {
-                            icon: Icons.fileDownload as any,
+                            icon: Icons.fileDownload,
                             label: 'Download',
                             value: dataset.downloadCount.toString(),
                             stroke: 1.2,
                           },
                           {
-                            icon: Icons.worldPin as any,
+                            icon: Icons.worldPin,
                             label: 'Geography',
                             value:
                               dataset.geographies &&
                               dataset.geographies.length > 0
                                 ? dataset.geographies
-                                    .map((geo: any) => geo.name)
+                                    .map((geo) => geo.name)
                                     .join(', ')
                                 : '',
                             stroke: 1.2,
@@ -324,7 +321,7 @@ const UseCaseDetailClient = () => {
                         href={`/datasets/${dataset.id}`}
                         leftFooterChips={[
                           {
-                            icon: `/Sectors/${dataset.sectors[0]?.name}.svg` as any,
+                            icon: `/Sectors/${dataset.sectors[0]?.name}.svg`,
                             label: 'Sectors',
                           },
                         ]}
@@ -360,7 +357,7 @@ const UseCaseDetailClient = () => {
                       </Text>
                       <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
                         {UseCaseDetails?.useCase?.supportingOrganizations?.map(
-                          (org: any) => (
+                          (org) => (
                             <Link
                               href={`/publishers/organization/${org.slug || org.name}_${org.id}`}
                               key={org.id}
@@ -387,7 +384,7 @@ const UseCaseDetailClient = () => {
                       </Text>
                       <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
                         {UseCaseDetails?.useCase?.partnerOrganizations?.map(
-                          (org: any) => (
+                          (org) => (
                             <Link
                               href={`/publishers/organization/${org.slug || org.name}_${org.id}`}
                               key={org.id}
@@ -421,7 +418,7 @@ const UseCaseDetailClient = () => {
                     </div>
                     <div className="mt-8 flex flex-wrap items-center justify-start gap-8">
                       {UseCaseDetails?.useCase?.contributors?.map(
-                        (contributor: any) => (
+                        (contributor) => (
                           <Link
                             href={`/publishers/${contributor.fullName}_${contributor.id}`}
                             key={contributor.id}

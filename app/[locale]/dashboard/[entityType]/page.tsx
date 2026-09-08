@@ -21,7 +21,7 @@ import {
   toast,
 } from 'opub-ui';
 
-import { useDashboardStore } from '@/config/store';
+import { DashboardOrganization, useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
@@ -59,11 +59,14 @@ const Page = () => {
     (input: { input: OrganizationInput }) =>
       GraphQL(organizationCreationMutation, {}, input),
     {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         toast('Organization created successfully');
         // Optionally, reset form or perform other actions
         setIsOpen(false);
         setFormData(initialFormData);
+        if (res.createOrganization.__typename !== 'TypeOrganization') {
+          return;
+        }
         setAllEntityDetails({
           ...allEntityDetails,
           organizations: [
@@ -81,8 +84,8 @@ const Page = () => {
           ],
         });
       },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`);
+      onError: (error: unknown) => {
+        toast(`Error: ${error instanceof Error ? error.message : String(error)}`);
       },
     }
   );
@@ -122,7 +125,7 @@ const Page = () => {
         ]}
       />
       <div className="m-auto flex w-11/12  flex-col">
-        {allEntityDetails?.organizations.length < 0 ||
+        {(allEntityDetails?.organizations?.length ?? 0) < 0 ||
         allEntityDetails === null ? (
           <Loading />
         ) : (
@@ -133,7 +136,7 @@ const Page = () => {
 
             <div className={cn(styles.Main)}>
               <div className="flex flex-wrap gap-6 md:gap-10 lg:gap-20">
-                {allEntityDetails?.organizations?.map((entityItem: any) => {
+                {allEntityDetails?.organizations?.map((entityItem) => {
                   return (
                     <div key={entityItem.name}>
                       <EntityCard entityItem={entityItem} params={params} />
@@ -289,7 +292,12 @@ const Page = () => {
 
 export default Page;
 
-const EntityCard = ({ entityItem, params }: any) => {
+interface EntityCardProps {
+  entityItem: DashboardOrganization;
+  params: { entityType: string };
+}
+
+const EntityCard = ({ entityItem, params }: EntityCardProps) => {
   const [isImageValid, setIsImageValid] = useState(() => {
     return entityItem?.logo ? true : false;
   });
@@ -302,14 +310,14 @@ const EntityCard = ({ entityItem, params }: any) => {
       <div className="flex h-full w-full items-center justify-center rounded-2">
         <Link
           href={`/dashboard/${params.entityType}/${entityItem?.slug}/dataset`}
-          id={entityItem.slug}
+          id={entityItem.slug ?? undefined}
         >
           <div className="border-var(--border-radius-5) rounded-2">
             {isImageValid ? (
               <Image
                 height={160}
                 width={160}
-                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityItem?.logo.url}`}
+                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityItem?.logo?.url}`}
                 alt={`${entityItem.name} logo`}
                 onError={() => {
                   setIsImageValid(false);

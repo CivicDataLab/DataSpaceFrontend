@@ -4,11 +4,12 @@ import { barOptions, lineOptions, stackedOptions } from './chart';
 import { Content } from './Content';
 
 export default async function Home() {
+  const mapCenter: [number, number] = [26.193, 92.3];
   const mapOptions = {
     mapProperty: 'dt_code',
     mapZoom: 7.9,
     fillOpacity: 1,
-    mapCenter: [26.193, 92.3],
+    mapCenter,
     features: json.features,
   };
 

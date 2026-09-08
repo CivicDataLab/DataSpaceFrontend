@@ -4,11 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
-  TypeDataset,
-  TypeMetadata,
-  TypeSector,
-  TypeTag,
+  MetadataModels,
   UpdateMetadataInput,
+  UpdatePromptMetadataInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -27,7 +25,7 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 import DatasetLoading from '../../../components/loading-dataset';
 import { useDatasetEditStatus } from '../context';
 
-const sectorsListQueryDoc: any = graphql(`
+const sectorsListQueryDoc = graphql(`
   query SectorList {
     sectors {
       id
@@ -36,7 +34,7 @@ const sectorsListQueryDoc: any = graphql(`
   }
 `);
 
-const tagsListQueryDoc: any = graphql(`
+const tagsListQueryDoc = graphql(`
   query TagsList {
     tags {
       id
@@ -45,7 +43,7 @@ const tagsListQueryDoc: any = graphql(`
   }
 `);
 
-const geographiesListQueryDoc: any = graphql(`
+const geographiesListQueryDoc = graphql(`
   query GeographiesList {
     geographies {
       id
@@ -60,7 +58,7 @@ const geographiesListQueryDoc: any = graphql(`
   }
 `);
 
-const datasetMetadataQueryDoc: any = graphql(`
+const datasetMetadataQueryDoc = graphql(`
   query MetadataValues($filters: DatasetFilter) {
     datasets(filters: $filters) {
       title
@@ -97,7 +95,7 @@ const datasetMetadataQueryDoc: any = graphql(`
   }
 `);
 
-const metadataQueryDoc: any = graphql(`
+const metadataQueryDoc = graphql(`
   query MetaDataList($filters: MetadataFilter) {
     metadata(filters: $filters) {
       id
@@ -116,7 +114,7 @@ const metadataQueryDoc: any = graphql(`
 `);
 
 // Introspection query to get PromptTaskType enum values from schema
-const promptTaskTypeEnumQuery: any = graphql(`
+const promptTaskTypeEnumQuery = graphql(`
   query PromptTaskTypeEnum {
     __type(name: "PromptTaskType") {
       enumValues {
@@ -128,7 +126,7 @@ const promptTaskTypeEnumQuery: any = graphql(`
 `);
 
 // Introspection query to get PromptDomain enum values from schema
-const promptDomainEnumQuery: any = graphql(`
+const promptDomainEnumQuery = graphql(`
   query PromptDomainEnum {
     __type(name: "PromptDomain") {
       enumValues {
@@ -140,7 +138,7 @@ const promptDomainEnumQuery: any = graphql(`
 `);
 
 // Introspection query to get TargetLanguage enum values from schema
-const targetLanguageEnumQuery: any = graphql(`
+const targetLanguageEnumQuery = graphql(`
   query TargetLanguageEnum {
     __type(name: "TargetLanguage") {
       enumValues {
@@ -152,7 +150,7 @@ const targetLanguageEnumQuery: any = graphql(`
 `);
 
 // Introspection query to get TargetModelType enum values from schema
-const targetModelTypeEnumQuery: any = graphql(`
+const targetModelTypeEnumQuery = graphql(`
   query TargetModelTypeEnum {
     __type(name: "TargetModelType") {
       enumValues {
@@ -164,7 +162,7 @@ const targetModelTypeEnumQuery: any = graphql(`
 `);
 
 // Mutation to update prompt-specific metadata
-const updatePromptMetadataMutationDoc: any = graphql(`
+const updatePromptMetadataMutationDoc = graphql(`
   mutation UpdatePromptMetadata($updateInput: UpdatePromptMetadataInput!) {
     updatePromptMetadata(updateInput: $updateInput) {
       success
@@ -185,7 +183,7 @@ const updatePromptMetadataMutationDoc: any = graphql(`
   }
 `);
 
-const updateMetadataMutationDoc: any = graphql(`
+const updateMetadataMutationDoc = graphql(`
   mutation SaveMetadata($UpdateMetadataInput: UpdateMetadataInput!) {
     addUpdateDatasetMetadata(updateMetadataInput: $UpdateMetadataInput) {
       success
@@ -230,6 +228,70 @@ const updateMetadataMutationDoc: any = graphql(`
   }
 `);
 
+interface DatasetMetadataSource {
+  description?: string | null;
+  license?: string | null;
+  metadata?: Array<{
+    value?: string | null;
+    metadataItem: { id: string; dataType: string };
+  }> | null;
+  sectors?: Array<{ id: string; name?: string | null }> | null;
+  tags?: Array<{ id: string; value?: string | null }> | null;
+  geographies?: Array<{ id: string; name?: string | null }> | null;
+}
+
+interface MetadataFormItem {
+  id: string;
+  label: string;
+  dataType: string;
+  options?: string[] | null;
+  enabled?: boolean | null;
+  value?: string | null;
+}
+
+interface OptionItem {
+  label: string;
+  value: string;
+}
+
+type FormFieldValue =
+  | string
+  | number
+  | boolean
+  | null
+  | OptionItem
+  | OptionItem[];
+
+interface MetadataFormData {
+  [key: string]: FormFieldValue;
+  description: string;
+  sectors: OptionItem[];
+  license: string | null;
+  tags: OptionItem[];
+  geographies: OptionItem[];
+  isPublic: boolean;
+}
+
+function optionValue(item: unknown): unknown {
+  if (typeof item === 'object' && item !== null && 'value' in item) {
+    return item.value;
+  }
+  return item;
+}
+
+function asOptionItems(value: FormFieldValue | undefined): OptionItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter(
+    (item): item is OptionItem =>
+      typeof item === 'object' &&
+      item !== null &&
+      'label' in item &&
+      'value' in item
+  );
+}
+
 export function EditMetadata({ id }: { id: string }) {
   const params = useParams<{
     entityType: string;
@@ -242,17 +304,16 @@ export function EditMetadata({ id }: { id: string }) {
   const PROMPT_METADATA_ERROR_TOAST_ID = 'dataset-prompt-metadata-error';
   const DATASET_METADATA_SUCCESS_TOAST_ID = 'dataset-metadata-save-success';
   const DATASET_METADATA_ERROR_TOAST_ID = 'dataset-metadata-save-error';
-  const getErrorMessage = (err: any, fallback: string) =>
-    typeof err?.message === 'string' && err.message.trim()
+  const getErrorMessage = (err: unknown, fallback: string) =>
+    typeof err === 'object' &&
+    err !== null &&
+    'message' in err &&
+    typeof err.message === 'string' &&
+    err.message.trim()
       ? err.message.trim()
       : fallback;
 
-  const getDatasetMetadata: {
-    data: any;
-    isLoading: boolean;
-    refetch: any;
-    error: any;
-  } = useQuery(
+  const getDatasetMetadata = useQuery(
     [`metadata_values_query_${params.id}`],
     () =>
       GraphQL(
@@ -268,48 +329,25 @@ export function EditMetadata({ id }: { id: string }) {
     }
   );
 
-  const getSectorsList: { data: any; isLoading: boolean; error: any } =
-    useQuery([`sectors_list_query`], () =>
-      GraphQL(
-        sectorsListQueryDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        []
-      )
-    );
-
-  const getTagsList: {
-    data: any;
-    isLoading: boolean;
-    error: any;
-    refetch: any;
-  } = useQuery([`tags_list_query`], () =>
-    GraphQL(
-      tagsListQueryDoc,
-      {
-        [params.entityType]: params.entitySlug,
-      },
-      []
-    )
+  const getSectorsList = useQuery([`sectors_list_query`], () =>
+    GraphQL(sectorsListQueryDoc, {
+      [params.entityType]: params.entitySlug,
+    })
   );
 
-  const getGeographiesList: { data: any; isLoading: boolean; error: any } =
-    useQuery([`geographies_list_query`], () =>
-      GraphQL(
-        geographiesListQueryDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        []
-      )
-    );
+  const getTagsList = useQuery([`tags_list_query`], () =>
+    GraphQL(tagsListQueryDoc, {
+      [params.entityType]: params.entitySlug,
+    })
+  );
 
-  const getMetaDataListQuery: {
-    data: any;
-    isLoading: boolean;
-    refetch: any;
-  } = useQuery([`metadata_fields_list_${id}`], () =>
+  const getGeographiesList = useQuery([`geographies_list_query`], () =>
+    GraphQL(geographiesListQueryDoc, {
+      [params.entityType]: params.entitySlug,
+    })
+  );
+
+  const getMetaDataListQuery = useQuery([`metadata_fields_list_${id}`], () =>
     GraphQL(
       metadataQueryDoc,
       {
@@ -317,7 +355,7 @@ export function EditMetadata({ id }: { id: string }) {
       },
       {
         filters: {
-          model: 'DATASET',
+          model: 'DATASET' as MetadataModels,
           enabled: true,
         },
       }
@@ -325,30 +363,27 @@ export function EditMetadata({ id }: { id: string }) {
   );
 
   // Fetch PromptTaskType enum values from GraphQL schema
-  const getPromptTaskTypeEnum: { data: any; isLoading: boolean } = useQuery(
+  const getPromptTaskTypeEnum = useQuery(
     ['prompt_task_type_enum'],
-    () => GraphQL(promptTaskTypeEnumQuery, {}, []),
-    { staleTime: Infinity } // Enum values don't change, cache indefinitely
+    () => GraphQL(promptTaskTypeEnumQuery),
+    { staleTime: Infinity }
   );
 
-  // Fetch PromptDomain enum values from GraphQL schema
-  const getPromptDomainEnum: { data: any; isLoading: boolean } = useQuery(
+  const getPromptDomainEnum = useQuery(
     ['prompt_domain_enum'],
-    () => GraphQL(promptDomainEnumQuery, {}, []),
+    () => GraphQL(promptDomainEnumQuery),
     { staleTime: Infinity }
   );
 
-  // Fetch TargetLanguage enum values from GraphQL schema
-  const getTargetLanguageEnum: { data: any; isLoading: boolean } = useQuery(
+  const getTargetLanguageEnum = useQuery(
     ['target_language_enum'],
-    () => GraphQL(targetLanguageEnumQuery, {}, []),
+    () => GraphQL(targetLanguageEnumQuery),
     { staleTime: Infinity }
   );
 
-  // Fetch TargetModelType enum values from GraphQL schema
-  const getTargetModelTypeEnum: { data: any; isLoading: boolean } = useQuery(
+  const getTargetModelTypeEnum = useQuery(
     ['target_model_type_enum'],
-    () => GraphQL(targetModelTypeEnumQuery, {}, []),
+    () => GraphQL(targetModelTypeEnumQuery),
     { staleTime: Infinity }
   );
 
@@ -362,22 +397,9 @@ export function EditMetadata({ id }: { id: string }) {
     targetModelTypes?: string[];
   }>({});
 
-  // Initialize prompt metadata state when data loads
-  useEffect(() => {
-    const promptMeta = getDatasetMetadata.data?.datasets?.[0]?.promptMetadata;
-    if (promptMeta) {
-      setPromptMetadataState({
-        taskType: promptMeta.task_type || undefined,
-        domain: promptMeta.domain || undefined,
-        targetLanguages: promptMeta.target_languages || [],
-        targetModelTypes: promptMeta.target_model_types || [],
-      });
-    }
-  }, [getDatasetMetadata.data?.datasets]);
-
   // Mutation for updating prompt metadata
   const updatePromptMetadataMutation = useMutation(
-    (data: { updateInput: any }) =>
+    (data: { updateInput: UpdatePromptMetadataInput }) =>
       GraphQL(
         updatePromptMetadataMutationDoc,
         {
@@ -386,7 +408,7 @@ export function EditMetadata({ id }: { id: string }) {
         data
       ),
     {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         if (res.updatePromptMetadata.success) {
           toast('Prompt metadata updated successfully!', {
             id: PROMPT_METADATA_SUCCESS_TOAST_ID,
@@ -404,7 +426,7 @@ export function EditMetadata({ id }: { id: string }) {
           });
         }
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast(
           `Error: ${getErrorMessage(err, 'Unable to update prompt metadata right now. Please try again.')}`,
           { id: PROMPT_METADATA_ERROR_TOAST_ID }
@@ -421,8 +443,8 @@ export function EditMetadata({ id }: { id: string }) {
     updatePromptMetadataMutation.mutate({
       updateInput: {
         dataset: params.id,
-        taskType: newState.taskType,
-        domain: newState.domain,
+        taskType: newState.taskType as UpdatePromptMetadataInput['taskType'],
+        domain: newState.domain as UpdatePromptMetadataInput['domain'],
         targetLanguages: newState.targetLanguages,
         targetModelTypes: newState.targetModelTypes,
       },
@@ -439,7 +461,7 @@ export function EditMetadata({ id }: { id: string }) {
         data
       ),
     {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         if (res.addUpdateDatasetMetadata.success) {
           toast('Details updated successfully!', {
             id: DATASET_METADATA_SUCCESS_TOAST_ID,
@@ -451,7 +473,7 @@ export function EditMetadata({ id }: { id: string }) {
             queryKey: [`metadata_fields_list_${id}`],
           });
           const updatedData = defaultValuesPrepFn(
-            res.addUpdateDatasetMetadata.data
+            res.addUpdateDatasetMetadata.data ?? undefined
           );
           if (isTagsListUpdated) {
             getTagsList.refetch();
@@ -470,7 +492,7 @@ export function EditMetadata({ id }: { id: string }) {
           });
         }
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast(
           `Error: ${getErrorMessage(err, 'Unable to update details right now. Please try again.')}`,
           { id: DATASET_METADATA_ERROR_TOAST_ID }
@@ -479,27 +501,27 @@ export function EditMetadata({ id }: { id: string }) {
     }
   );
 
-  const defaultValuesPrepFn = (dataset?: TypeDataset) => {
-    let defaultVal: {
-      [key: string]: any;
-    } = {};
+  const defaultValuesPrepFn = (
+    dataset?: DatasetMetadataSource
+  ): MetadataFormData => {
+    const defaultVal: MetadataFormData = {
+      description: '',
+      sectors: [],
+      license: null,
+      tags: [],
+      geographies: [],
+      isPublic: true,
+    };
 
     if (!dataset) {
-      return {
-        description: '',
-        sectors: [],
-        license: null,
-        tags: [],
-        geographies: [],
-        isPublic: true,
-      };
+      return defaultVal;
     }
 
     if ((dataset?.metadata || []).length > 0) {
       (dataset?.metadata || []).map((field) => {
         if (
           field.metadataItem.dataType === 'MULTISELECT' &&
-          field.value !== ''
+          field.value
         ) {
           defaultVal[field.metadataItem.id] = field.value
             .split(', ')
@@ -518,9 +540,9 @@ export function EditMetadata({ id }: { id: string }) {
     defaultVal['description'] = dataset?.description || '';
 
     defaultVal['sectors'] =
-      dataset?.sectors?.map((sector: TypeSector) => {
+      dataset?.sectors?.map((sector) => {
         return {
-          label: sector.name,
+          label: sector.name || '',
           value: sector.id,
         };
       }) || [];
@@ -528,17 +550,17 @@ export function EditMetadata({ id }: { id: string }) {
     defaultVal['license'] = dataset?.license || null;
 
     defaultVal['tags'] =
-      dataset?.tags?.map((tag: TypeTag) => {
+      dataset?.tags?.map((tag) => {
         return {
-          label: tag.value,
+          label: tag.value || '',
           value: tag.id,
         };
       }) || [];
 
     defaultVal['geographies'] =
-      dataset?.geographies?.map((geo: any) => {
+      dataset?.geographies?.map((geo) => {
         return {
-          label: geo.name,
+          label: geo.name || '',
           value: geo.id,
         };
       }) || [];
@@ -549,25 +571,37 @@ export function EditMetadata({ id }: { id: string }) {
   };
 
   const [formData, setFormData] = useState(
-    defaultValuesPrepFn(
-      getDatasetMetadata?.data?.datasets?.[0] || ({} as TypeDataset)
-    )
+    defaultValuesPrepFn(getDatasetMetadata?.data?.datasets?.[0])
   );
   const [previousFormData, setPreviousFormData] = useState(formData);
   const formDataRef = useRef(formData);
-
-  useEffect(() => {
-    if (getDatasetMetadata.data?.datasets[0]) {
-      const updatedData = defaultValuesPrepFn(
-        getDatasetMetadata.data.datasets[0]
-      );
+  const [prevMetadataData, setPrevMetadataData] = useState(
+    getDatasetMetadata.data
+  );
+  if (getDatasetMetadata.data !== prevMetadataData) {
+    setPrevMetadataData(getDatasetMetadata.data);
+    const dataset = getDatasetMetadata.data?.datasets?.[0];
+    if (dataset) {
+      const updatedData = defaultValuesPrepFn(dataset);
       setFormData(updatedData);
-      formDataRef.current = updatedData;
       setPreviousFormData(updatedData);
     }
-  }, [getDatasetMetadata.data]);
+    const promptMeta = dataset?.promptMetadata;
+    if (promptMeta) {
+      setPromptMetadataState({
+        taskType: promptMeta.task_type || undefined,
+        domain: promptMeta.domain || undefined,
+        targetLanguages: promptMeta.target_languages || [],
+        targetModelTypes: promptMeta.target_model_types || [],
+      });
+    }
+  }
 
-  const handleChange = (field: string, value: any) => {
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
+  const handleChange = (field: string, value: FormFieldValue) => {
     formDataRef.current = {
       ...formDataRef.current,
       [field]: value,
@@ -582,8 +616,10 @@ export function EditMetadata({ id }: { id: string }) {
     });
   };
 
-  const getUpdateInput = (updatedData: any): UpdateMetadataInput | null => {
-    const changedFields: any = {};
+  const getUpdateInput = (
+    updatedData: MetadataFormData
+  ): UpdateMetadataInput | null => {
+    const changedFields: Record<string, FormFieldValue> = {};
 
     for (const key in updatedData) {
       const newValue = updatedData[key];
@@ -591,8 +627,8 @@ export function EditMetadata({ id }: { id: string }) {
 
       const isArray = Array.isArray(newValue);
 
-      const normalize = (val: any) =>
-        isArray ? val?.map((item: any) => item?.value || item) : val;
+      const normalize = (val: FormFieldValue) =>
+        isArray && Array.isArray(val) ? val.map(optionValue) : val;
 
       const newNormalized = normalize(newValue);
       const prevNormalized = normalize(prevValue);
@@ -608,17 +644,15 @@ export function EditMetadata({ id }: { id: string }) {
 
     if (Object.keys(changedFields).length === 0) return null;
 
-    const transformedValues = Object.keys(changedFields).reduce(
-      (acc: any, key) => {
-        acc[key] = Array.isArray(changedFields[key])
-          ? changedFields[key]
-              .map((item: any) => item?.value || item)
-              .join(', ')
-          : changedFields[key];
-        return acc;
-      },
-      {}
-    );
+    const transformedValues = Object.keys(changedFields).reduce<
+      Record<string, string>
+    >((acc, key) => {
+      const field = changedFields[key];
+      acc[key] = Array.isArray(field)
+        ? field.map(optionValue).join(', ')
+        : String(field ?? '');
+      return acc;
+    }, {});
 
     return {
       dataset: id,
@@ -638,28 +672,31 @@ export function EditMetadata({ id }: { id: string }) {
           id: key,
           value: transformedValues[key],
         })),
-      ...(changedFields.license && { license: changedFields.license }),
-      ...(changedFields.accessType && {
-        accessType: changedFields.accessType,
+      ...(typeof changedFields.license === 'string' && {
+        license: changedFields.license as UpdateMetadataInput['license'],
+      }),
+      ...(typeof changedFields.accessType === 'string' && {
+        accessType:
+          changedFields.accessType as UpdateMetadataInput['accessType'],
       }),
       ...(changedFields.description !== undefined && {
-        description: changedFields.description,
+        description: String(changedFields.description),
       }),
       ...(changedFields.tags && {
-        tags: changedFields.tags.map((item: any) => item.label),
+        tags: asOptionItems(changedFields.tags).map((item) => item.label),
       }),
       ...(changedFields.sectors && {
-        sectors: changedFields.sectors.map((item: any) => item.value),
+        sectors: asOptionItems(changedFields.sectors).map((item) => item.value),
       }),
       ...(changedFields.geographies && {
-        geographies: changedFields.geographies.map((item: any) =>
+        geographies: asOptionItems(changedFields.geographies).map((item) =>
           parseInt(item.value, 10)
         ),
       }),
     };
   };
 
-  const handleSave = (updatedData: any) => {
+  const handleSave = (updatedData: MetadataFormData) => {
     const updateInput = getUpdateInput(updatedData);
     if (!updateInput) return;
 
@@ -669,7 +706,7 @@ export function EditMetadata({ id }: { id: string }) {
   const { setStatus, registerBeforeNavigateHandler } = useDatasetEditStatus();
 
   useEffect(() => {
-    const handleSaveAsync = async (updatedData: any) => {
+    const handleSaveAsync = async (updatedData: MetadataFormData) => {
       const updateInput = getUpdateInput(updatedData);
       if (!updateInput) return;
 
@@ -687,14 +724,18 @@ export function EditMetadata({ id }: { id: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [registerBeforeNavigateHandler, updateMetadataMutation]);
 
-  function renderInputField(metadataFormItem: any) {
+  function formValueAsString(value: FormFieldValue): string {
+    return typeof value === 'string' ? value : '';
+  }
+
+  function renderInputField(metadataFormItem: MetadataFormItem) {
     if (metadataFormItem.dataType === 'STRING') {
       return (
         <div key={metadataFormItem.id} className="w-full ">
           <Input
             name={metadataFormItem.id}
             label={metadataFormItem.label}
-            value={formData[metadataFormItem.id] || ''}
+            value={formValueAsString(formData[metadataFormItem.id])}
             onChange={(e) => handleChange(metadataFormItem.id, e)}
             onBlur={() => handleSave(formData)} // Save on blur
           />
@@ -707,7 +748,7 @@ export function EditMetadata({ id }: { id: string }) {
         <div key={metadataFormItem.id} className="w-full ">
           <Combobox
             name={metadataFormItem.id}
-            list={metadataFormItem.options.map((option: string) => ({
+            list={(metadataFormItem.options || []).map((option) => ({
               label: option,
               value: option,
             }))}
@@ -715,7 +756,10 @@ export function EditMetadata({ id }: { id: string }) {
             displaySelected
             onChange={(value) => {
               handleChange(metadataFormItem.id, value);
-              handleSave({ ...formData, [metadataFormItem.id]: value }); // Save on change
+              handleSave({
+                ...formData,
+                [metadataFormItem.id]: value,
+              });
             }}
           />
         </div>
@@ -730,7 +774,7 @@ export function EditMetadata({ id }: { id: string }) {
           <Combobox
             name={metadataFormItem.id}
             list={[
-              ...(metadataFormItem.options.map((option: string) => ({
+              ...((metadataFormItem.options || []).map((option) => ({
                 label: option,
                 value: option,
               })) || []),
@@ -740,7 +784,10 @@ export function EditMetadata({ id }: { id: string }) {
             selectedValue={prefillData}
             onChange={(value) => {
               handleChange(metadataFormItem.id, value);
-              handleSave({ ...formData, [metadataFormItem.id]: value }); // Save on change
+              handleSave({
+                ...formData,
+                [metadataFormItem.id]: value,
+              });
             }}
           />
         </div>
@@ -752,7 +799,7 @@ export function EditMetadata({ id }: { id: string }) {
           <Input
             name={metadataFormItem.id}
             type="url"
-            value={formData[metadataFormItem.id] || ''}
+            value={formValueAsString(formData[metadataFormItem.id])}
             label={metadataFormItem.label}
             disabled={
               getMetaDataListQuery.isLoading || !metadataFormItem.enabled
@@ -771,7 +818,7 @@ export function EditMetadata({ id }: { id: string }) {
             type="date"
             name={metadataFormItem.id}
             max={new Date().toISOString().split('T')[0]}
-            value={formData[metadataFormItem.id] || ''}
+            value={formValueAsString(formData[metadataFormItem.id])}
             label={metadataFormItem.label}
             disabled={
               getMetaDataListQuery.isLoading || !metadataFormItem.enabled
@@ -848,32 +895,36 @@ export function EditMetadata({ id }: { id: string }) {
                 <Combobox
                   displaySelected
                   label="Sectors *"
-                  list={getSectorsList.data?.sectors?.map(
-                    (item: TypeSector) => {
+                  list={
+                    getSectorsList.data?.sectors?.map((item) => {
                       return { label: item.name, value: item.id };
-                    }
-                  )}
+                    }) || []
+                  }
                   name="sectors"
                   onChange={(value) => {
-                    handleChange('sectors', value);
-                    handleSave({ ...formData, sectors: value }); // Save on change
+                    const next = Array.isArray(value) ? value : [];
+                    handleChange('sectors', next);
+                    handleSave({ ...formData, sectors: next });
                   }}
                 />
                 <Combobox
                   displaySelected
                   name="tags"
-                  list={getTagsList.data?.tags?.map((item: TypeTag) => ({
-                    label: item.value,
-                    value: item.id,
-                  }))}
+                  list={
+                    getTagsList.data?.tags?.map((item) => ({
+                      label: item.value,
+                      value: item.id,
+                    })) || []
+                  }
                   key={`tags-${getTagsList.data?.tags?.length}`} // forces remount on change
                   label="Tags"
                   requiredIndicator
                   creatable
                   onChange={(value) => {
                     setIsTagsListUpdated(true);
-                    handleChange('tags', value);
-                    handleSave({ ...formData, tags: value });
+                    const next = Array.isArray(value) ? value : [];
+                    handleChange('tags', next);
+                    handleSave({ ...formData, tags: next });
                   }}
                 />
                 <Combobox
@@ -881,32 +932,29 @@ export function EditMetadata({ id }: { id: string }) {
                   label="Geographies"
                   name="geographies"
                   list={
-                    getGeographiesList?.data?.geographies?.map((item: any) => ({
+                    getGeographiesList?.data?.geographies?.map((item) => ({
                       label: `${item.name}${item.parentId ? ` (${item.parentId.name})` : ''}`,
                       value: item.id,
                     })) || []
                   }
                   selectedValue={formData.geographies}
                   onChange={(value) => {
-                    handleChange('geographies', value);
-                    handleSave({ ...formData, geographies: value });
+                    const next = Array.isArray(value) ? value : [];
+                    handleChange('geographies', next);
+                    handleSave({ ...formData, geographies: next });
                   }}
                 />
               </div>
               <div className="mb-8 flex flex-col gap-8">
                 {getMetaDataListQuery?.data?.metadata
-                  ?.filter(
-                    (item: TypeMetadata) => item.dataType === 'MULTISELECT'
-                  )
-                  .map((item: TypeMetadata) => (
+                  ?.filter((item) => item.dataType === 'MULTISELECT')
+                  .map((item) => (
                     <div key={item.id}>{renderInputField(item)}</div>
                   ))}
                 <div className="grid gap-4 lg:grid-cols-2">
                   {getMetaDataListQuery?.data?.metadata
-                    ?.filter(
-                      (item: TypeMetadata) => item.dataType !== 'MULTISELECT'
-                    )
-                    .map((item: TypeMetadata) => renderInputField(item))}
+                    ?.filter((item) => item.dataType !== 'MULTISELECT')
+                    .map((item) => renderInputField(item))}
                 </div>
               </div>
 
@@ -928,10 +976,7 @@ export function EditMetadata({ id }: { id: string }) {
                       displaySelected
                       list={
                         getPromptTaskTypeEnum.data?.__type?.enumValues?.map(
-                          (enumValue: {
-                            name: string;
-                            description?: string;
-                          }) => ({
+                          (enumValue) => ({
                             label: enumValue.name
                               .replace(/_/g, ' ')
                               .replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -966,10 +1011,7 @@ export function EditMetadata({ id }: { id: string }) {
                       displaySelected
                       list={
                         getPromptDomainEnum.data?.__type?.enumValues?.map(
-                          (enumValue: {
-                            name: string;
-                            description?: string;
-                          }) => ({
+                          (enumValue) => ({
                             label: enumValue.name
                               .replace(/_/g, ' ')
                               .replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -1005,10 +1047,7 @@ export function EditMetadata({ id }: { id: string }) {
                       creatable
                       list={
                         getTargetLanguageEnum.data?.__type?.enumValues?.map(
-                          (enumValue: {
-                            name: string;
-                            description?: string;
-                          }) => ({
+                          (enumValue) => ({
                             label: enumValue.name
                               .replace(/_/g, ' ')
                               .replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -1028,7 +1067,7 @@ export function EditMetadata({ id }: { id: string }) {
                       }
                       onChange={(value) => {
                         const languages = Array.isArray(value)
-                          ? value.map((v: any) => v.value)
+                          ? value.map((v) => v.value)
                           : [];
                         savePromptMetadata({ targetLanguages: languages });
                       }}
@@ -1040,10 +1079,7 @@ export function EditMetadata({ id }: { id: string }) {
                       creatable
                       list={
                         getTargetModelTypeEnum.data?.__type?.enumValues?.map(
-                          (enumValue: {
-                            name: string;
-                            description?: string;
-                          }) => ({
+                          (enumValue) => ({
                             label: enumValue.name
                               .replace(/_/g, ' ')
                               .replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -1063,7 +1099,7 @@ export function EditMetadata({ id }: { id: string }) {
                       }
                       onChange={(value) => {
                         const models = Array.isArray(value)
-                          ? value.map((v: any) => v.value)
+                          ? value.map((v) => v.value)
                           : [];
                         savePromptMetadata({ targetModelTypes: models });
                       }}

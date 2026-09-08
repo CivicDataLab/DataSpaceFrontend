@@ -1,15 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import {
-  TypeCollaborative,
-  TypeDataset,
-  TypeUseCase,
-} from '@/gql/generated/graphql';
 import { useAnalytics } from '@/hooks/use-analytics';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Text } from 'opub-ui';
@@ -240,38 +235,31 @@ const getPlatformEntityUrl = (
 const CollaborativeDetailClient = () => {
   const params = useParams();
   const { trackCollaborative } = useAnalytics();
-  const locale =
-    typeof (params as any)?.locale === 'string'
-      ? (params as any).locale
-      : undefined;
-  const [isCollaborativeSubdomainHost, setIsCollaborativeSubdomainHost] =
-    useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    setIsCollaborativeSubdomainHost(
-      isCollaborativeSubdomainHostname(window.location.hostname)
-    );
-  }, []);
+  const locale = typeof params.locale === 'string' ? params.locale : undefined;
+  const collaborativeSlug =
+    typeof params.collaborativeSlug === 'string'
+      ? params.collaborativeSlug
+      : '';
+  const isCollaborativeSubdomainHost = useSyncExternalStore(
+    () => () => {},
+    () => isCollaborativeSubdomainHostname(window.location.hostname),
+    () => false
+  );
 
   const {
     data: CollaborativeDetailsData,
     isLoading,
     error,
-  } = useQuery<{ collaborativeBySlug: TypeCollaborative }>(
+  } = useQuery(
     [`fetch_CollaborativeDetails_${params.collaborativeSlug}`],
     async () => {
       console.log(
         'Fetching collaborative details for:',
         params.collaborativeSlug
       );
-      const result = (await GraphQLPublic(
-        CollaborativeDetails as any,
-        {},
-        {
-          slug: params.collaborativeSlug,
-        }
-      )) as { collaborativeBySlug: TypeCollaborative };
+      const result = await GraphQLPublic(CollaborativeDetails, {}, {
+        slug: collaborativeSlug,
+      });
       return result;
     },
     {
@@ -322,7 +310,11 @@ const CollaborativeDetailClient = () => {
     },
   });
 
-  const organizationPublisherHref = (org: any) => {
+  const organizationPublisherHref = (org: {
+    id: string;
+    name: string;
+    slug?: string | null;
+  }) => {
     const path = `/publishers/organization/${org.slug || org.name}_${org.id}`;
     // Original: `/publishers/organization/${org.slug + '_' + org.id}`;
     // Match getPlatformEntityUrl() behavior (absolute to platform host + locale)
@@ -348,8 +340,9 @@ const CollaborativeDetailClient = () => {
                 Error Loading Collaborative
               </Text>
               <Text variant="bodyLg">
-                {(error as any)?.message?.includes('401') ||
-                (error as any)?.message?.includes('403')
+                {error instanceof Error &&
+                (error.message.includes('401') ||
+                  error.message.includes('403'))
                   ? 'You do not have permission to view this collaborative. Please log in or contact the administrator.'
                   : 'Failed to load collaborative details. Please try again later.'}
               </Text>
@@ -402,7 +395,7 @@ const CollaborativeDetailClient = () => {
                         </Text>
                         <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
                           {CollaborativeDetailsData?.collaborativeBySlug?.supportingOrganizations?.map(
-                            (org: any) => (
+                            (org) => (
                               <Link
                                 href={organizationPublisherHref(org)}
                                 key={org.id}
@@ -429,7 +422,7 @@ const CollaborativeDetailClient = () => {
                         </Text>
                         <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
                           {CollaborativeDetailsData?.collaborativeBySlug?.partnerOrganizations?.map(
-                            (org: any) => (
+                            (org) => (
                               <Link
                                 href={organizationPublisherHref(org)}
                                 key={org.id}
@@ -467,7 +460,7 @@ const CollaborativeDetailClient = () => {
                     </Text>
                   </div>
                   <div className="grid  grid-cols-1 gap-6 pt-10 md:grid-cols-2 lg:grid-cols-3 ">
-                    {useCases.map((useCase: TypeUseCase) => {
+                    {useCases.map((useCase) => {
                       const image = useCase.isIndividualUsecase
                         ? useCase?.user?.profilePicture
                           ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.user.profilePicture.url}`
@@ -479,29 +472,29 @@ const CollaborativeDetailClient = () => {
                       const Geography =
                         useCase.geographies && useCase.geographies.length > 0
                           ? useCase.geographies
-                              .map((geo: any) => geo.name)
+                              .map((geo) => geo.name)
                               .join(', ')
                           : null;
 
-                      const MetadataContent = [
-                        {
-                          icon: Icons.calendarEvent as any,
-                          label: 'Date',
-                          value: formatDate(useCase.modified) || '',
-                          tooltip: 'Date',
-                          stroke: 1.2,
-                        },
-                      ];
-
-                      if (Geography) {
-                        MetadataContent.push({
-                          icon: Icons.worldPin as any,
-                          label: 'Geography',
-                          value: Geography,
-                          tooltip: 'Geography',
-                          stroke: 1.2,
-                        });
-                      }
+                      const dateMeta = {
+                        icon: Icons.calendarEvent,
+                        label: 'Date',
+                        value: formatDate(useCase.modified) || '',
+                        tooltip: 'Date',
+                        stroke: 1.2,
+                      };
+                      const MetadataContent = Geography
+                        ? ([
+                            dateMeta,
+                            {
+                              icon: Icons.worldPin,
+                              label: 'Geography',
+                              value: Geography,
+                              tooltip: 'Geography',
+                              stroke: 1.2,
+                            },
+                          ] as const)
+                        : ([dateMeta] as const);
 
                       const LeftFooterChips = [
                         {
@@ -526,8 +519,8 @@ const CollaborativeDetailClient = () => {
                       const commonProps = {
                         title: useCase.title || '',
                         description: stripMarkdown(useCase.summary || ''),
-                        metadataContent: MetadataContent as any,
-                        tag: useCase.tags?.map((t: any) => t.value) || [],
+                        metadataContent: MetadataContent,
+                        tag: useCase.tags?.map((t) => t.value) || [],
                         leftFooterChips: LeftFooterChips,
                         rightFooterChips: RightFooterChips,
                         imageUrl: '',
@@ -569,7 +562,7 @@ const CollaborativeDetailClient = () => {
                 </div>
                 <div className="grid  grid-cols-1 gap-6 pt-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ">
                   {datasets.length > 0 &&
-                    datasets.map((dataset: TypeDataset) => (
+                    datasets.map((dataset) => (
                       <Card
                         key={dataset.id}
                         title={dataset.title}
@@ -577,25 +570,25 @@ const CollaborativeDetailClient = () => {
                         iconColor={'warning'}
                         metadataContent={[
                           {
-                            icon: Icons.calendarEvent as any,
+                            icon: Icons.calendarEvent,
                             label: 'Date',
                             value: formatDate(dataset.modified) || '',
                             stroke: 1.2,
                           },
                           {
-                            icon: Icons.fileDownload as any,
+                            icon: Icons.fileDownload,
                             label: 'Download',
                             value: dataset.downloadCount.toString(),
                             stroke: 1.2,
                           },
                           {
-                            icon: Icons.worldPin as any,
+                            icon: Icons.worldPin,
                             label: 'Geography',
                             value:
                               dataset.geographies &&
                               dataset.geographies.length > 0
                                 ? dataset.geographies
-                                    .map((geo: any) => geo.name)
+                                    .map((geo) => geo.name)
                                     .join(', ')
                                 : '',
                             stroke: 1.2,

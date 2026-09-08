@@ -1,6 +1,7 @@
 'use client';
 
 import { graphql } from '@/gql';
+import { Ordering, UseCaseStatus } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { parseAsString, useQueryState } from 'nuqs';
@@ -16,7 +17,21 @@ import { formatDate } from '@/lib/utils';
 import { ActionBar } from '../dataset/components/action-bar';
 import { Navigation } from '../dataset/components/navigate-org-datasets';
 
-const allUseCases: any = graphql(`
+interface UseCaseListItem {
+  id: string;
+  title?: string | null;
+  created?: string | null;
+  modified?: string | null;
+}
+
+interface UseCaseTableRow {
+  id: string;
+  title?: string | null;
+  created: string;
+  modified: string;
+}
+
+const allUseCases = graphql(`
   query UseCasesData($filters: UseCaseFilter, $order: UseCaseOrder) {
     useCases(filters: $filters, order: $order) {
       title
@@ -27,13 +42,13 @@ const allUseCases: any = graphql(`
   }
 `);
 
-const deleteUseCase: any = graphql(`
+const deleteUseCase = graphql(`
   mutation deleteUseCase($useCaseId: String!) {
     deleteUseCase(useCaseId: $useCaseId)
   }
 `);
 
-const AddUseCase: any = graphql(`
+const AddUseCase = graphql(`
   mutation Addusecase {
     addUseCase {
       __typename
@@ -45,7 +60,7 @@ const AddUseCase: any = graphql(`
   }
 `);
 
-const unPublishUseCase: any = graphql(`
+const unPublishUseCase = graphql(`
   mutation unPublishUseCaseMutation($useCaseId: String!) {
     unpublishUseCase(useCaseId: $useCaseId) {
       __typename
@@ -73,7 +88,7 @@ export default function DatasetPage() {
 
   const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
 
-  const AllUseCases: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  const AllUseCases = useQuery(
     [`fetch_UseCases`, entityType, entitySlug, navigationTab ?? 'drafts'],
     () =>
       GraphQL(
@@ -81,9 +96,9 @@ export default function DatasetPage() {
         ownerArgs || {},
         {
           filters: {
-            status: navigationTab === 'published' ? 'PUBLISHED' : 'DRAFT',
+            status: navigationTab === 'published' ? UseCaseStatus.Published : UseCaseStatus.Draft,
           },
-          order: { modified: 'DESC' },
+          order: { modified: Ordering.Desc },
         }
       ),
     { enabled: isValidParams }
@@ -97,11 +112,7 @@ export default function DatasetPage() {
     }
   }, [navigationTab, isValidParams, setNavigationTab, AllUseCases]);
 
-  const DeleteUseCaseMutation: {
-    mutate: any;
-    isLoading: boolean;
-    error: any;
-  } = useMutation(
+  const DeleteUseCaseMutation = useMutation(
     [`delete_Usecase`],
     (data: { id: string }) =>
       GraphQL(
@@ -116,39 +127,33 @@ export default function DatasetPage() {
           AllUseCases.refetch();
         }
       },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
+      onError: (err: unknown) => {
+        toast('Error:  ' + (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : String(err)).split(':')[0]);
       },
     }
   );
 
-  const CreateUseCase: {
-    mutate: any;
-    isLoading: boolean;
-    error: any;
-  } = useMutation(
+  const CreateUseCase = useMutation(
     [`delete_Usecase`],
-    () => GraphQL(AddUseCase, ownerArgs || {}, []),
+    () => GraphQL(AddUseCase, ownerArgs || {}),
     {
-      onSuccess: (response: any) => {
+      onSuccess: (response) => {
         toast(`UseCase created successfully`);
         if (isValidParams && entityType && entitySlug) {
+          const created = response.addUseCase;
+          const createdId = 'id' in created ? created.id : undefined;
           router.push(
-            `/dashboard/${entityType}/${entitySlug}/usecases/edit/${response.addUseCase.id}/details`
+            `/dashboard/${entityType}/${entitySlug}/usecases/edit/${createdId}/details`
           );
           AllUseCases.refetch();
         }
       },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
+      onError: (err: unknown) => {
+        toast('Error:  ' + (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : String(err)).split(':')[0]);
       },
     }
   );
-  const UnpublishDatasetMutation: {
-    mutate: any;
-    isLoading: boolean;
-    error: any;
-  } = useMutation(
+  const UnpublishDatasetMutation = useMutation(
     [`unpublish_usecase`],
     (data: { id: string }) =>
       GraphQL(
@@ -163,8 +168,8 @@ export default function DatasetPage() {
           AllUseCases.refetch();
         }
       },
-      onError: (err: any) => {
-        toast('Error:  ' + err.message.split(':')[0]);
+      onError: (err: unknown) => {
+        toast('Error:  ' + (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : String(err)).split(':')[0]);
       },
     }
   );
@@ -173,7 +178,7 @@ export default function DatasetPage() {
     return null;
   }
 
-  let navigationOptions = [
+  const navigationOptions = [
     {
       label: 'Drafts',
       url: `drafts`,
@@ -189,11 +194,11 @@ export default function DatasetPage() {
     {
       accessorKey: 'title',
       header: 'Title',
-      cell: ({ row }: any) =>
+      cell: ({ row }: { row: { original: UseCaseTableRow } }) =>
         navigationTab === 'published' ? (
           <Text
             className="line-clamp-1 max-w-[280px]"
-            title={row.original.title}
+            title={row.original.title ?? undefined}
           >
             {row.original.title}
           </Text>
@@ -214,7 +219,7 @@ export default function DatasetPage() {
     {
       accessorKey: 'delete',
       header: 'Delete',
-      cell: ({ row }: any) =>
+      cell: ({ row }: { row: { original: UseCaseTableRow } }) =>
         navigationTab === 'published' ? (
           <Button
             size="medium"
@@ -244,13 +249,13 @@ export default function DatasetPage() {
     },
   ];
 
-  const generateTableData = (list: Array<any>) => {
+  const generateTableData = (list: UseCaseListItem[]) => {
     return list.map((item) => {
       return {
         title: item.title,
         id: item.id,
-        created: formatDate(item.created) || '',
-        modified: formatDate(item.modified) || '',
+        created: formatDate(item.created ?? null) || '',
+        modified: formatDate(item.modified ?? null) || '',
       };
     });
   };
@@ -263,7 +268,7 @@ export default function DatasetPage() {
           options={navigationOptions}
         />
 
-        {AllUseCases.data?.useCases.length > 0 ? (
+        {AllUseCases.data?.useCases && AllUseCases.data.useCases.length > 0 ? (
           <div className="mt-6">
             <ActionBar
               title={
@@ -277,7 +282,7 @@ export default function DatasetPage() {
 
             <DataTable
               columns={datasetsListColumns}
-              rows={generateTableData(AllUseCases.data.useCases)}
+              rows={generateTableData(AllUseCases.data?.useCases ?? [])}
               hideSelection
               hideViewSelector
             />

@@ -4,11 +4,17 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { Button, Icon, Spinner, Tag, Text, Tray } from 'opub-ui';
 
+import { UseCasedetailsQuery } from '@/gql/generated/graphql';
 import { Icons } from '@/components/icons';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 import Metadata from './Metadata';
 
-const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
+interface PrimaryDetailsProps {
+  data: UseCasedetailsQuery;
+  isLoading: boolean;
+}
+
+const PrimaryDetails = ({ data, isLoading }: PrimaryDetailsProps) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -17,7 +23,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
         <Text variant="heading2xl">{data.useCase.title}</Text>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        {data.useCase.tags.map((item: any, index: number) => (
+        {data.useCase.tags?.map((item, index: number) => (
           <div key={index}>
             <Tag
               fillColor="var(--accent-tertiary-color)"
@@ -64,7 +70,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
       <div className="mt-6 lg:mt-10">
         <Image
           src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.useCase.logo?.path.replace('/code/files/', '')}`}
-          alt={data.useCase.title}
+          alt={data.useCase.title ?? ''}
           width={100}
           height={100}
           className="h-full w-full"
@@ -76,7 +82,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
           <div className="mt-6 lg:mt-10">
             <Text variant="headingXl">Geographies</Text>
             <div className="mt-4 flex flex-wrap gap-2">
-              {data.useCase.geographies.map((geo: any, index: number) => (
+              {data.useCase.geographies.map((geo, index: number) => (
                 <Tag
                   key={index}
                   fillColor="var(--orange-secondary-color)"
@@ -90,7 +96,7 @@ const PrimaryDetails = ({ data, isLoading }: { data: any; isLoading: any }) => {
           </div>
         )}
         <div className="mt-6 lg:mt-10">
-          <RichTextRenderer content={data.useCase.summary} />
+          <RichTextRenderer content={data.useCase.summary ?? ''} />
         </div>
       </div>
     </div>

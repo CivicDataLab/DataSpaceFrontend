@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
+import { AiModelType, PromptDomain, UpdateAiModelInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Checkbox,
@@ -20,7 +21,123 @@ import { GraphQL } from '@/lib/api';
 import RichTextEditor from '@/components/RichTextEditor/RichTextEditor';
 import { useEditStatus } from '../../context';
 
-const tagsListQueryDoc: any = graphql(`
+interface SelectOption {
+  label: string;
+  value: string;
+}
+
+interface ModelMetadataFields {
+  targetUsers?: string;
+  intendedUse?: string;
+  modelWebsite?: string;
+  usageLicense?: string;
+}
+
+interface AIModelFormData {
+  name: string;
+  modelType: string;
+  domain: string;
+  description: string;
+  targetUsers: string;
+  intendedUse: string;
+  sectors: SelectOption[];
+  tags: SelectOption[];
+  maxTokens: string;
+  supportedLanguages: SelectOption[];
+  modelWebsite: string;
+  geographies: SelectOption[];
+  usageLicense: string;
+  accessType: 'open' | 'restricted';
+}
+
+function asModelMetadata(value: unknown): ModelMetadataFields {
+  if (typeof value === 'object' && value !== null) {
+    const record = value as Record<string, unknown>;
+    return {
+      targetUsers:
+        typeof record.targetUsers === 'string' ? record.targetUsers : '',
+      intendedUse:
+        typeof record.intendedUse === 'string' ? record.intendedUse : '',
+      modelWebsite:
+        typeof record.modelWebsite === 'string' ? record.modelWebsite : '',
+      usageLicense:
+        typeof record.usageLicense === 'string' ? record.usageLicense : '',
+    };
+  }
+  return {};
+}
+
+function emptyAIModelForm(): AIModelFormData {
+  return {
+    name: '',
+    modelType: 'TEXT_GENERATION',
+    domain: '',
+    description: '',
+    targetUsers: '',
+    intendedUse: '',
+    sectors: [],
+    tags: [],
+    maxTokens: '',
+    supportedLanguages: [],
+    modelWebsite: '',
+    geographies: [],
+    usageLicense: '',
+    accessType: 'open',
+  };
+}
+
+function formDataFromModel(model: {
+  displayName?: string | null;
+  name?: string | null;
+  modelType?: string | null;
+  domain?: string | null;
+  description?: string | null;
+  metadata?: unknown;
+  sectors?: Array<{ id: string; name: string }> | null;
+  tags?: Array<{ id: string; value: string }> | null;
+  maxTokens?: number | null;
+  supportedLanguages?: unknown;
+  geographies?: Array<{ id: string; name: string }> | null;
+  isPublic?: boolean | null;
+}): AIModelFormData {
+  const metadata = asModelMetadata(model.metadata);
+  return {
+    name: model.displayName || model.name || '',
+    modelType: model.modelType || 'TEXT_GENERATION',
+    domain: model.domain || '',
+    description: model.description || '',
+    targetUsers: metadata.targetUsers || '',
+    intendedUse: metadata.intendedUse || '',
+    sectors:
+      model.sectors?.map((s) => ({ label: s.name, value: s.id })) || [],
+    tags: model.tags?.map((t) => ({ label: t.value, value: t.id })) || [],
+    maxTokens: model.maxTokens?.toString() || '',
+    supportedLanguages: Array.isArray(model.supportedLanguages)
+      ? model.supportedLanguages
+          .filter((l): l is string => typeof l === 'string')
+          .map((l) => ({
+            label:
+              LANGUAGE_OPTIONS.find((option) => option.value === l)?.label ||
+              l,
+            value: l,
+          }))
+      : [],
+    modelWebsite: metadata.modelWebsite || '',
+    geographies:
+      model.geographies?.map((g) => ({
+        label: g.name,
+        value: g.id,
+      })) || [],
+    usageLicense: metadata.usageLicense || '',
+    accessType: model.isPublic ? 'open' : 'restricted',
+  };
+}
+
+function toSelectOptions(value: string | SelectOption[]): SelectOption[] {
+  return Array.isArray(value) ? value : [];
+}
+
+const tagsListQueryDoc = graphql(`
   query TagsList {
     tags {
       id
@@ -29,7 +146,7 @@ const tagsListQueryDoc: any = graphql(`
   }
 `);
 
-const sectorsListQueryDoc: any = graphql(`
+const sectorsListQueryDoc = graphql(`
   query AIModelSectorsList {
     sectors {
       id
@@ -38,7 +155,7 @@ const sectorsListQueryDoc: any = graphql(`
   }
 `);
 
-const geographiesListQueryDoc: any = graphql(`
+const geographiesListQueryDoc = graphql(`
   query AIModelGeographiesList {
     geographies {
       id
@@ -53,7 +170,7 @@ const geographiesListQueryDoc: any = graphql(`
   }
 `);
 
-const promptDomainEnumValuesQueryDoc: any = graphql(`
+const promptDomainEnumValuesQueryDoc = graphql(`
   query PromptDomainEnum {
     __type(name: "PromptDomain") {
       enumValues {
@@ -64,7 +181,7 @@ const promptDomainEnumValuesQueryDoc: any = graphql(`
   }
 `);
 
-const FetchAIModelDetails: any = graphql(`
+const FetchAIModelDetails = graphql(`
   query AIModelDetails($filters: AIModelFilter) {
     aiModels(filters: $filters) {
       id
@@ -93,7 +210,7 @@ const FetchAIModelDetails: any = graphql(`
   }
 `);
 
-const UpdateAIModelMutation: any = graphql(`
+const UpdateAIModelMutation = graphql(`
   mutation updateAIModelDetails($input: UpdateAIModelInput!) {
     updateAiModel(input: $input) {
       success
@@ -135,22 +252,7 @@ export default function AIModelDetailsPage() {
   const { setStatus } = useEditStatus();
   const queryClient = useQueryClient();
 
-  const [formData, setFormData] = useState({
-    name: '',
-    modelType: 'TEXT_GENERATION',
-    domain: '',
-    description: '',
-    targetUsers: '',
-    intendedUse: '',
-    sectors: [] as Array<{ label: string; value: string }>,
-    tags: [] as Array<{ label: string; value: string }>,
-    maxTokens: '',
-    supportedLanguages: [] as Array<{ label: string; value: string }>,
-    modelWebsite: '',
-    geographies: [] as Array<{ label: string; value: string }>,
-    usageLicense: '',
-    accessType: 'open' as 'open' | 'restricted',
-  });
+  const [formData, setFormData] = useState(emptyAIModelForm());
 
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
   const SAVE_SUCCESS_TOAST_ID = 'ai-model-details-save-success';
@@ -166,54 +268,41 @@ export default function AIModelDetailsPage() {
     }
   };
 
-  const getTagsList: {
-    data: any;
-    isLoading: boolean;
-    error: any;
-    refetch: any;
-  } = useQuery([`tags_list_query`], () =>
+  const getTagsList = useQuery([`tags_list_query`], () =>
     GraphQL(
       tagsListQueryDoc,
       {
         [params.entityType]: params.entitySlug,
-      },
-      {} as any
+      }
     )
   );
 
-  const getSectorsList: { data: any; isLoading: boolean; error: any } =
+  const getSectorsList =
     useQuery([`sectors_list_query`], () =>
       GraphQL(
         sectorsListQueryDoc,
         {
           [params.entityType]: params.entitySlug,
-        },
-        {} as any
+        }
       )
     );
 
-  const getGeographiesList: { data: any; isLoading: boolean; error: any } =
+  const getGeographiesList =
     useQuery([`geographies_list_query`], () =>
       GraphQL(
         geographiesListQueryDoc,
         {
           [params.entityType]: params.entitySlug,
-        },
-        {} as any
+        }
       )
     );
 
-  const getPromptDomainEnumValues: { data: any; isLoading: boolean; error: any } =
+  const getPromptDomainEnumValues =
     useQuery([`prompt_domain_enum_values_query`], () =>
-      GraphQL(promptDomainEnumValuesQueryDoc, {}, [] as any)
+      GraphQL(promptDomainEnumValuesQueryDoc, {})
     );
 
-  const AIModelData: {
-    data: any;
-    isLoading: boolean;
-    refetch: any;
-    error: any;
-  } = useQuery(
+  const AIModelData = useQuery(
     [
       `fetch_AIModelDetails`,
       params.id,
@@ -241,7 +330,7 @@ export default function AIModelDetailsPage() {
   const model = AIModelData.data?.aiModels?.[0];
 
   const { mutate } = useMutation(
-    (data: any) =>
+    (data: Omit<UpdateAiModelInput, 'id'>) =>
       GraphQL(
         UpdateAIModelMutation,
         {
@@ -280,9 +369,9 @@ export default function AIModelDetailsPage() {
           ],
         });
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         const errorMessage =
-          typeof error?.message === 'string' && error.message.trim()
+          typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' && error.message.trim()
             ? error.message.trim()
             : 'Unable to update AI Model right now. Please try again.';
         toast(`Error: ${errorMessage}`, { id: SAVE_ERROR_TOAST_ID });
@@ -291,60 +380,26 @@ export default function AIModelDetailsPage() {
     }
   );
 
-  useEffect(() => {
-    setFormData({
-      name: '',
-      modelType: 'TEXT_GENERATION',
-      domain: '',
-      description: '',
-      targetUsers: '',
-      intendedUse: '',
-      sectors: [],
-      tags: [],
-      maxTokens: '',
-      supportedLanguages: [],
-      modelWebsite: '',
-      geographies: [],
-      usageLicense: '',
-      accessType: 'open',
-    });
-  }, [params.id]);
+  const [prevId, setPrevId] = useState(params.id);
+  if (params.id !== prevId) {
+    setPrevId(params.id);
+    setFormData(emptyAIModelForm());
+  }
 
-  useEffect(() => {
+  const [prevModel, setPrevModel] = useState<typeof model | undefined>(
+    undefined
+  );
+  if (model !== prevModel) {
+    setPrevModel(model);
     if (model) {
-      const metadata = model.metadata || {};
-      setFormData({
-        name: model.displayName || model.name || '',
-        modelType: model.modelType || 'TEXT_GENERATION',
-        domain: model.domain || '',
-        description: model.description || '',
-        targetUsers: metadata.targetUsers || '',
-        intendedUse: metadata.intendedUse || '',
-        sectors:
-          model.sectors?.map((s: any) => ({ label: s.name, value: s.id })) ||
-          [],
-        tags:
-          model.tags?.map((t: any) => ({ label: t.value, value: t.id })) || [],
-        maxTokens: model.maxTokens?.toString() || '',
-        supportedLanguages:
-          model.supportedLanguages?.map((l: string) => ({
-            label:
-              LANGUAGE_OPTIONS.find((option) => option.value === l)?.label || l,
-            value: l,
-          })) || [],
-        modelWebsite: metadata.modelWebsite || '',
-        geographies:
-          model.geographies?.map((g: any) => ({
-            label: g.name,
-            value: g.id,
-          })) || [],
-        usageLicense: metadata.usageLicense || '',
-        accessType: model.isPublic ? 'open' : 'restricted',
-      });
+      setFormData(formDataFromModel(model));
     }
-  }, [model]);
+  }
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (
+    field: keyof AIModelFormData,
+    value: AIModelFormData[keyof AIModelFormData]
+  ) => {
     console.log('handleInputChange', field, value);
     setFormData((prev) => ({ ...prev, [field]: value }));
     setStatus('unsaved');
@@ -375,7 +430,7 @@ export default function AIModelDetailsPage() {
     handleSave({ ...formData, modelWebsite: trimmedWebsite });
   };
 
-  const handleSave = (overrideData?: any) => {
+  const handleSave = (overrideData?: AIModelFormData) => {
     setStatus('saving');
     const dataToUse = overrideData || formData;
 
@@ -388,17 +443,25 @@ export default function AIModelDetailsPage() {
       return;
     }
 
-    const updateData: any = {
+    const updateData: Omit<UpdateAiModelInput, 'id'> = {
       description: dataToUse.description,
-      modelType: dataToUse.modelType,
-      domain: dataToUse.domain || null,
-      tags: dataToUse.tags.map((item: any) => item.label),
-      sectors: dataToUse.sectors.map((item: any) => item.label),
-      geographies: dataToUse.geographies.map((item: any) =>
+      modelType: (Object.values(AiModelType) as string[]).includes(
+        dataToUse.modelType
+      )
+        ? (dataToUse.modelType as AiModelType)
+        : AiModelType.TextGeneration,
+      domain:
+        dataToUse.domain &&
+        (Object.values(PromptDomain) as string[]).includes(dataToUse.domain)
+          ? (dataToUse.domain as PromptDomain)
+          : null,
+      tags: dataToUse.tags.map((item) => item.label),
+      sectors: dataToUse.sectors.map((item) => item.label),
+      geographies: dataToUse.geographies.map((item) =>
         parseInt(item.value, 10)
       ),
       supportedLanguages: dataToUse.supportedLanguages.map(
-        (item: any) => item.value
+        (item) => item.value
       ),
       maxTokens: parseInt(dataToUse.maxTokens) || null,
       isPublic: dataToUse.accessType === 'open',
@@ -544,7 +607,7 @@ export default function AIModelDetailsPage() {
         displaySelected
         name="sectors"
         list={
-          getSectorsList.data?.sectors?.map((item: any) => ({
+          getSectorsList.data?.sectors?.map((item) => ({
             label: item.name,
             value: item.id,
           })) || []
@@ -553,8 +616,9 @@ export default function AIModelDetailsPage() {
         label="Sectors"
         selectedValue={formData.sectors || []}
         onChange={(value) => {
-          handleInputChange('sectors', value);
-          handleSave({ ...formData, sectors: value });
+          const next = toSelectOptions(value);
+          handleInputChange('sectors', next);
+          handleSave({ ...formData, sectors: next });
         }}
         required
         requiredIndicator={true}
@@ -565,7 +629,7 @@ export default function AIModelDetailsPage() {
         displaySelected
         name="tags"
         list={
-          getTagsList.data?.tags?.map((item: any) => ({
+          getTagsList.data?.tags?.map((item) => ({
             label: item.value,
             value: item.id,
           })) || []
@@ -576,9 +640,10 @@ export default function AIModelDetailsPage() {
         selectedValue={formData.tags || []}
         requiredIndicator
         onChange={(value) => {
+          const next = toSelectOptions(value);
           setIsTagsListUpdated(true);
-          handleInputChange('tags', value);
-          handleSave({ ...formData, tags: value });
+          handleInputChange('tags', next);
+          handleSave({ ...formData, tags: next });
         }}
       />
 
@@ -605,8 +670,9 @@ export default function AIModelDetailsPage() {
             key={`languages-${formData.supportedLanguages.length}`}
             selectedValue={formData.supportedLanguages || []}
             onChange={(value) => {
-              handleInputChange('supportedLanguages', value);
-              handleSave({ ...formData, supportedLanguages: value });
+              const next = toSelectOptions(value);
+              handleInputChange('supportedLanguages', next);
+              handleSave({ ...formData, supportedLanguages: next });
             }}
             required
             requiredIndicator={true}
@@ -631,7 +697,7 @@ export default function AIModelDetailsPage() {
             displaySelected
             name="geographies"
             list={
-              getGeographiesList.data?.geographies?.map((item: any) => ({
+              getGeographiesList.data?.geographies?.map((item) => ({
                 label: `${item.name}${item.parentId ? ` (${item.parentId.name})` : ''}`,
                 value: item.id,
               })) || []
@@ -641,8 +707,9 @@ export default function AIModelDetailsPage() {
             requiredIndicator
             selectedValue={formData.geographies || []}
             onChange={(value) => {
-              handleInputChange('geographies', value);
-              handleSave({ ...formData, geographies: value });
+              const next = toSelectOptions(value);
+              handleInputChange('geographies', next);
+              handleSave({ ...formData, geographies: next });
             }}
           />
         </FormLayout.Group>

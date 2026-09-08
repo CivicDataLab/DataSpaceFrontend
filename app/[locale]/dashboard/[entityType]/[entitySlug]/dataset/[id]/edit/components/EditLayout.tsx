@@ -5,14 +5,14 @@ import { UpdateDatasetInput } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { Tab, TabList, Tabs, toast } from 'opub-ui';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useState } from 'react';
 
 import { GraphQL } from '@/lib/api';
 import StepNavigation from '../../../../components/StepNavigation';
 import TitleBar from '../../../../components/title-bar';
 import { useDatasetEditStatus } from '../context';
 
-const datasetQueryDoc: any = graphql(`
+const datasetQueryDoc = graphql(`
   query datasetTitleQuery($filters: DatasetFilter) {
     datasets(filters: $filters) {
       id
@@ -23,7 +23,7 @@ const datasetQueryDoc: any = graphql(`
   }
 `);
 
-const updateDatasetTitleMutationDoc: any = graphql(`
+const updateDatasetTitleMutationDoc = graphql(`
   mutation SaveTitle($updateDatasetInput: UpdateDatasetInput!) {
     updateDataset(updateDatasetInput: $updateDatasetInput) {
       __typename
@@ -51,11 +51,12 @@ const layoutList = ['metadata', 'resources', 'publish'];
 
 export function EditLayout({ children, params }: LayoutProps) {
   const DATASET_TITLE_SAVE_ERROR_TOAST_ID = 'dataset-title-save-error';
-  const getErrorMessage = (
-    err: any,
-    fallback: string
-  ) =>
-    typeof err?.message === 'string' && err.message.trim()
+  const getErrorMessage = (err: unknown, fallback: string) =>
+    typeof err === 'object' &&
+    err !== null &&
+    'message' in err &&
+    typeof err.message === 'string' &&
+    err.message.trim()
       ? err.message.trim()
       : fallback;
 
@@ -72,8 +73,7 @@ export function EditLayout({ children, params }: LayoutProps) {
 
   const [, setEditMode] = useState(false);
 
-  const getDatasetTitleRes: { data: any; isLoading: boolean; refetch: any } =
-    useQuery([`dataset_title_${routerParams.id}`], () =>
+  const getDatasetTitleRes = useQuery([`dataset_title_${routerParams.id}`], () =>
       GraphQL(
         datasetQueryDoc,
         {
@@ -106,7 +106,7 @@ export function EditLayout({ children, params }: LayoutProps) {
 
         getDatasetTitleRes.refetch();
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast(getErrorMessage(err, 'Unable to update dataset title right now.'), {
           id: DATASET_TITLE_SAVE_ERROR_TOAST_ID,
         });
@@ -132,7 +132,7 @@ export function EditLayout({ children, params }: LayoutProps) {
       ) : (
         <TitleBar
           label={'DATASET NAME'}
-          title={getDatasetTitleRes?.data?.datasets[0]?.title}
+          title={getDatasetTitleRes?.data?.datasets[0]?.title ?? ''}
           goBackURL={`/dashboard/${routerParams.entityType}/${routerParams.entitySlug}/dataset`}
           onSave={(val) =>
             updateDatasetTitleMutation.mutate({
@@ -186,7 +186,7 @@ const Navigation = ({
 }) => {
   const router = useRouter();
 
-  let links = [
+  const links = [
     {
       label: 'Metadata',
       id: 'metadata',
@@ -225,6 +225,11 @@ const Navigation = ({
   ];
 
   const [selectedTab, setSelectedTab] = useState(pathItem || 'distributions');
+  const [prevPathItem, setPrevPathItem] = useState(pathItem);
+  if (pathItem !== prevPathItem) {
+    setPrevPathItem(pathItem);
+    setSelectedTab(pathItem);
+  }
 
   const handleTabClick = (item: {
     label: string;
@@ -237,10 +242,6 @@ const Navigation = ({
       router.replace(item.url);
     }
   };
-
-  useEffect(() => {
-    setSelectedTab(pathItem); // Update selected tab on path change
-  }, [pathItem]);
 
   return (
     <div>

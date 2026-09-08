@@ -3,33 +3,45 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Icon, Text, Tooltip } from 'opub-ui';
 
+import { CollaborativeQueryQuery } from '@/gql/generated/graphql';
 import { getPlatformRootUrl } from '@/lib/collaborativesRouting';
 import { formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
-const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
-  const [platformTitle, setPlatformTitle] = useState<string | null>(null);
+interface MetadataProps {
+  data: CollaborativeQueryQuery;
+  setOpen?: (isOpen: boolean) => void;
+}
+
+const Metadata = ({ data, setOpen }: MetadataProps) => {
+  const platformUrl = data.collaborativeBySlug.platformUrl;
+  const [platformTitle, setPlatformTitle] = useState<string | null>(
+    platformUrl === null ? 'N/A' : null
+  );
+  const [prevPlatformUrl, setPrevPlatformUrl] = useState(platformUrl);
+  if (platformUrl !== prevPlatformUrl) {
+    setPrevPlatformUrl(platformUrl);
+    setPlatformTitle(platformUrl === null ? 'N/A' : null);
+  }
 
   useEffect(() => {
-    const fetchTitle = async () => {
-      try {
-        const urlItem = data.collaborativeBySlug.platformUrl;
-
-        if (urlItem && urlItem.value) {
-          const title = await getWebsiteTitle(urlItem.value);
-          setPlatformTitle(title);
-        }
-      } catch (error) {
-        console.error('Error fetching website title:', error);
-      }
-    };
-
-    if (data.collaborativeBySlug.platformUrl === null) {
-      setPlatformTitle('N/A');
-    } else {
-      fetchTitle();
+    if (!platformUrl) {
+      return;
     }
-  }, [data.collaborativeBySlug.platformUrl]);
+
+    let cancelled = false;
+    getWebsiteTitle(platformUrl)
+      .then((title) => {
+        if (!cancelled) setPlatformTitle(title);
+      })
+      .catch((error) => {
+        console.error('Error fetching website title:', error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [platformUrl]);
 
   const metadata = [
     {
@@ -40,7 +52,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
         ) : (
           <Link
             className="text-primaryBlue underline lg:text-white"
-            href={data.collaborativeBySlug.platformUrl}
+            href={data.collaborativeBySlug.platformUrl ?? ''}
           >
             <Text
               className="text-primaryBlue underline lg:text-white"
@@ -62,9 +74,10 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       label: 'Sectors',
       value: (
         <div className="flex flex-wrap  gap-2">
-          {data.collaborativeBySlug.sectors.length > 0 ? (
+          {data.collaborativeBySlug.sectors &&
+          data.collaborativeBySlug.sectors.length > 0 ? (
             data.collaborativeBySlug.sectors.map(
-              (sector: any, index: number) => (
+              (sector, index: number) => (
                 <Tooltip content={sector.name} key={index}>
                   <Image
                     src={`/Sectors/${sector.name}.svg`}
@@ -88,7 +101,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
         <div className="flex flex-wrap gap-2">
           {data.collaborativeBySlug.sdgs &&
           data.collaborativeBySlug.sdgs.length > 0 ? (
-            data.collaborativeBySlug.sdgs.map((sdg: any, index: number) => (
+            data.collaborativeBySlug.sdgs.map((sdg, index: number) => (
               <Tooltip content={`${sdg.code} - ${sdg.name}`} key={index}>
                 <Image
                   src={`/SDG/${sdg.code}.svg`}
@@ -118,7 +131,10 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
     const match = window.location.pathname.match(/^\/([a-z]{2})(\/|$)/i);
     return match ? `/${match[1].toLowerCase()}` : '';
   };
-  const contributorHref = (contributor: any) => {
+  const contributorHref = (contributor: {
+    id: string;
+    fullName: string;
+  }) => {
     const path = `/publishers/${contributor.fullName}_${contributor.id}`;
     // Original: `/publishers/${contributor.fullName + '_' + contributor.id}`;
     // Match getPlatformEntityUrl() behavior (absolute to NEXT_PUBLIC_PLATFORM_URL + locale)
@@ -197,7 +213,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
                 </Text>
                 <div className="flex flex-wrap gap-2">
                   {data.collaborativeBySlug.contributors.map(
-                    (contributor: any) => (
+                    (contributor) => (
                       <Link
                         href={contributorHref(contributor)}
                         key={contributor.id}

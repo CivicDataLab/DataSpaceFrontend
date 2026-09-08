@@ -11,8 +11,22 @@ import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Loading } from '@/components/loading';
 
+interface SearchUseCase {
+  id: string | number;
+  title: string;
+  modified?: string;
+  sectors?: Array<{ name?: string } | string>;
+}
+
+interface AssignTableRow {
+  id: string;
+  title: string;
+  category: string;
+  modified: string;
+}
+
 // prettier-ignore
-const FetchCollaborativeDetails: any = graphql(`
+const FetchCollaborativeDetails = graphql(`
   query CollaborativeUseCaseDetails($filters: CollaborativeFilter) {
     collaboratives(filters: $filters) {
       id
@@ -31,7 +45,7 @@ const FetchCollaborativeDetails: any = graphql(`
 `);
 
 // prettier-ignore
-const AssignCollaborativeUseCases: any = graphql(`
+const AssignCollaborativeUseCases = graphql(`
   mutation assignCollaborativeUseCases($collaborativeId: String!, $useCaseIds: [String!]!) {
     updateCollaborativeUseCases(collaborativeId: $collaborativeId, useCaseIds: $useCaseIds) {
       ... on TypeCollaborative {
@@ -55,10 +69,10 @@ const UseCases = () => {
   const queryClient = useQueryClient();
   const COLLAB_USECASES_TOAST_ID = 'collaboratives-usecases-toast';
 
-  const [data, setData] = useState<any[]>([]); // Ensure `data` is an array
-  const [selectedRow, setSelectedRows] = useState<any[]>([]);
+  const [data, setData] = useState<SearchUseCase[]>([]);
+  const [selectedRow, setSelectedRows] = useState<AssignTableRow[]>([]);
 
-  const CollaborativeDetails: { data: any; isLoading: boolean; refetch: any } =
+  const CollaborativeDetails =
     useQuery(
       [`Collaborative_UseCase_Details`, params.id],
       () =>
@@ -81,7 +95,7 @@ const UseCases = () => {
 
   useEffect(() => {
     fetchData('usecase', '?size=1000&page=1')
-      .then((res) => {
+      .then((res: { results: SearchUseCase[] }) => {
         setData(res.results);
       })
       .catch((err) => {
@@ -95,22 +109,22 @@ const UseCases = () => {
     { accessorKey: 'modified', header: 'Last Modified' },
   ];
 
-  const generateTableData = (list: Array<any>) => {
+  const generateTableData = (list: SearchUseCase[]) => {
     return list.map((item) => {
       const sector = item.sectors?.[0];
       return {
         title: item.title,
         id: String(item.id),
         category: typeof sector === 'string' ? sector : sector?.name || 'N/A',
-        modified: formatDate(item.modified) || '',
+        modified: formatDate(item.modified ?? null) || '',
       };
     });
   };
 
   const rows = generateTableData(data);
   const assignedUseCaseIds = new Set(
-    (CollaborativeDetails?.data?.collaboratives[0]?.useCases ?? []).map(
-      (item: any) => String(item.id)
+    (CollaborativeDetails?.data?.collaboratives?.[0]?.useCases ?? []).map(
+      (item) => String(item.id)
     )
   );
   const defaultSelectedRows = rows.filter((row) =>
@@ -127,7 +141,7 @@ const UseCases = () => {
         {
           collaborativeId: params.id,
           useCaseIds: Array.isArray(selectedRow)
-            ? selectedRow.map((row: any) => String(row.id))
+            ? selectedRow.map((row) => String(row.id))
             : [],
         }
       ),
@@ -151,7 +165,7 @@ const UseCases = () => {
           `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives/edit/${params.id}/contributors`
         );
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast(`Received ${err} on use case assignment`, {
           id: COLLAB_USECASES_TOAST_ID,
         });
@@ -161,7 +175,7 @@ const UseCases = () => {
 
   return (
     <>
-      {CollaborativeDetails?.data?.collaboratives[0]?.useCases?.length >= 0 &&
+      {((CollaborativeDetails?.data?.collaboratives?.[0]?.useCases?.length ?? -1) >= 0) &&
       data.length > 0 &&
       !CollaborativeDetails.isLoading ? (
         <>

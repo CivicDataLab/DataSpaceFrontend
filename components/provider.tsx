@@ -21,12 +21,18 @@ export default function Provider({ children }: { children: React.ReactNode }) {
           refetchOnReconnect: false,
           staleTime: 5 * 60 * 1000, // 5 minutes
           cacheTime: 10 * 60 * 1000, // 10 minutes
-          retry: (failureCount, error: any) => {
-            // Don't retry on 4xx errors
-            if (
-              error?.response?.status >= 400 &&
-              error?.response?.status < 500
-            ) {
+          retry: (failureCount, error: unknown) => {
+            const status =
+              typeof error === 'object' &&
+              error !== null &&
+              'response' in error &&
+              typeof error.response === 'object' &&
+              error.response !== null &&
+              'status' in error.response &&
+              typeof error.response.status === 'number'
+                ? error.response.status
+                : undefined;
+            if (status !== undefined && status >= 400 && status < 500) {
               return false;
             }
             return failureCount < 2;

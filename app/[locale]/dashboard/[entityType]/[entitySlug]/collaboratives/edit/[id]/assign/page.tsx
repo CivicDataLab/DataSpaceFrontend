@@ -11,8 +11,22 @@ import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Loading } from '@/components/loading';
 
+interface SearchDataset {
+  id: string;
+  title: string;
+  modified?: string;
+  sectors?: Array<{ name?: string }>;
+}
+
+interface AssignTableRow {
+  id: string;
+  title: string;
+  category: string | { name?: string } | undefined;
+  modified: string;
+}
+
 // prettier-ignore
-const FetchCollaborativeDetails: any = graphql(`
+const FetchCollaborativeDetails = graphql(`
   query CollaborativeDetails($filters: CollaborativeFilter) {
     collaboratives(filters: $filters) {
       id
@@ -30,7 +44,7 @@ const FetchCollaborativeDetails: any = graphql(`
 `);
 
 // prettier-ignore
-const AssignCollaborativeDatasets: any = graphql(`
+const AssignCollaborativeDatasets = graphql(`
   mutation assignCollaborativeDatasets($collaborativeId: String!, $datasetIds: [UUID!]!) {
     updateCollaborativeDatasets(collaborativeId: $collaborativeId, datasetIds: $datasetIds) {
       ... on TypeCollaborative {
@@ -53,10 +67,10 @@ const Assign = () => {
   const queryClient = useQueryClient();
   const COLLAB_ASSIGN_TOAST_ID = 'collaboratives-assign-toast';
 
-  const [data, setData] = useState<any[]>([]); // Ensure `data` is an array
-  const [selectedRow, setSelectedRows] = useState<any[]>([]);
+  const [data, setData] = useState<SearchDataset[]>([]);
+  const [selectedRow, setSelectedRows] = useState<AssignTableRow[]>([]);
 
-  const CollaborativeDetails: { data: any; isLoading: boolean; refetch: any } =
+  const CollaborativeDetails =
     useQuery(
       [`Collaborative_Details`, params.id],
       () =>
@@ -77,19 +91,26 @@ const Assign = () => {
       }
     );
 
-  const formattedData = (data: any) =>
-    data.map((item: any) => {
+  const formattedData = (
+    datasets: Array<{
+      id: string;
+      title?: string | null;
+      modified?: string | null;
+      sectors?: Array<{ name?: string | null } | null> | null;
+    }>
+  ) =>
+    datasets.map((item) => {
       return {
         title: item.title,
         id: item.id,
-        category: item.sectors[0]?.name || 'N/A', // Safeguard in case of missing category
-        modified: formatDate(item.modified) || '',
+        category: item.sectors?.[0]?.name || 'N/A', // Safeguard in case of missing category
+        modified: formatDate(item.modified ?? null) || '',
       };
     });
 
   useEffect(() => {
     fetchDatasets('?size=1000&page=1')
-      .then((res) => {
+      .then((res: { results: SearchDataset[] }) => {
         setData(res.results);
       })
       .catch((err) => {
@@ -103,13 +124,13 @@ const Assign = () => {
     { accessorKey: 'modified', header: 'Last Modified' },
   ];
 
-  const generateTableData = (list: Array<any>) => {
+  const generateTableData = (list: SearchDataset[]) => {
     return list.map((item) => {
       return {
         title: item.title,
         id: item.id,
-        category: item.sectors[0],
-        modified: formatDate(item.modified) || '',
+        category: item.sectors?.[0],
+        modified: formatDate(item.modified ?? null) || '',
       };
     });
   };
@@ -124,7 +145,7 @@ const Assign = () => {
         {
           collaborativeId: params.id,
           datasetIds: Array.isArray(selectedRow)
-            ? selectedRow.map((row: any) => row.id)
+            ? selectedRow.map((row) => row.id)
             : [],
         }
       ),
@@ -146,7 +167,7 @@ const Assign = () => {
           `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives/edit/${params.id}/usecases`
         );
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast(`Received ${err} on dataset publish `, {
           id: COLLAB_ASSIGN_TOAST_ID,
         });
@@ -156,7 +177,7 @@ const Assign = () => {
 
   return (
     <>
-      {CollaborativeDetails?.data?.collaboratives[0]?.datasets?.length >= 0 &&
+      {((CollaborativeDetails?.data?.collaboratives?.[0]?.datasets?.length ?? -1) >= 0) &&
       data.length > 0 &&
       !CollaborativeDetails.isLoading ? (
         <>
@@ -177,7 +198,7 @@ const Assign = () => {
             columns={columns}
             rows={generateTableData(data)}
             defaultSelectedRows={formattedData(
-              CollaborativeDetails?.data?.collaboratives[0]?.datasets
+              CollaborativeDetails?.data?.collaboratives?.[0]?.datasets ?? []
             )}
             onRowSelectionChange={(selected) => {
               setSelectedRows(Array.isArray(selected) ? selected : []); // Ensure selected is always an array

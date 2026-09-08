@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UpdateUserInput } from '@/gql/generated/graphql';
 import { useMutation } from '@tanstack/react-query';
 import { Button, DropZone, Text, TextField, toast } from 'opub-ui';
 
-import { useDashboardStore } from '@/config/store';
+import { DashboardLogo, useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
 
-const updateUserMutation: any = graphql(`
+const updateUserMutation = graphql(`
   mutation updateUser($input: UpdateUserInput!) {
     updateUser(input: $input) {
       __typename
@@ -60,33 +60,38 @@ const UserProfile = () => {
 
   const { setUserDetails, userDetails } = useDashboardStore();
 
-  useEffect(() => {
-    if (userDetails && userDetails?.me) {
-      setFormData({
-        firstName: userDetails?.me?.firstName,
-        lastName: userDetails?.me?.lastName,
-        email: userDetails?.me?.email,
-        bio: userDetails?.me?.bio,
-        profilePicture: userDetails?.me?.profilePicture,
-        githubProfile: userDetails?.me?.githubProfile,
-        linkedinProfile: userDetails?.me?.linkedinProfile,
-        twitterProfile: userDetails?.me?.twitterProfile,
-        location: userDetails?.me?.location,
-      });
-    }
-  }, [userDetails]);
-
   const initialFormData = {
     firstName: '',
     lastName: '',
     email: '',
     bio: '',
-    profilePicture: null as File | null,
+    profilePicture: null as File | DashboardLogo | null,
     githubProfile: '',
     linkedinProfile: '',
     twitterProfile: '',
     location: '',
   };
+
+  const [formData, setFormData] = React.useState(initialFormData);
+  const [prevUserDetails, setPrevUserDetails] = React.useState<
+    typeof userDetails | undefined
+  >(undefined);
+  if (userDetails !== prevUserDetails) {
+    setPrevUserDetails(userDetails);
+    if (userDetails && userDetails?.me) {
+      setFormData({
+        firstName: userDetails?.me?.firstName ?? '',
+        lastName: userDetails?.me?.lastName ?? '',
+        email: userDetails?.me?.email ?? '',
+        bio: userDetails?.me?.bio ?? '',
+        profilePicture: userDetails?.me?.profilePicture ?? null,
+        githubProfile: userDetails?.me?.githubProfile ?? '',
+        linkedinProfile: userDetails?.me?.linkedinProfile ?? '',
+        twitterProfile: userDetails?.me?.twitterProfile ?? '',
+        location: userDetails?.me?.location ?? '',
+      });
+    }
+  }
 
   const { mutate } = useMutation(
     (input: { input: UpdateUserInput }) =>
@@ -96,18 +101,18 @@ const UserProfile = () => {
         input
       ),
     {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         toast('User details updated successfully');
         setFormData({
-          firstName: res?.updateUser?.firstName,
-          lastName: res?.updateUser?.lastName,
-          email: res?.updateUser?.email,
-          bio: res?.updateUser?.bio,
-          profilePicture: res?.updateUser?.profilePicture,
-          githubProfile: res?.updateUser?.githubProfile,
-          linkedinProfile: res?.updateUser?.linkedinProfile,
-          twitterProfile: res?.updateUser?.twitterProfile,
-          location: res?.updateUser?.location,
+          firstName: res.updateUser.firstName,
+          lastName: res.updateUser.lastName,
+          email: res.updateUser.email,
+          bio: res.updateUser.bio ?? '',
+          profilePicture: res.updateUser.profilePicture ?? null,
+          githubProfile: res.updateUser.githubProfile ?? '',
+          linkedinProfile: res.updateUser.linkedinProfile ?? '',
+          twitterProfile: res.updateUser.twitterProfile ?? '',
+          location: res.updateUser.location ?? '',
         });
         setUserDetails({
           ...userDetails,
@@ -115,9 +120,9 @@ const UserProfile = () => {
         });
       },
 
-      onError: (error: any) => {
-        if (typeof error?.message === 'string') {
-          const message: string = error.message;
+      onError: (error: unknown) => {
+        const message = error instanceof Error ? error.message : undefined;
+        if (typeof message === 'string') {
 
           // Try to extract field errors
           const tryField = (field: string) => {
@@ -147,8 +152,6 @@ const UserProfile = () => {
       },
     }
   );
-
-  const [formData, setFormData] = React.useState(initialFormData);
 
   const handleSave = () => {
     // Create mutation input with only changed fields
@@ -290,9 +293,8 @@ const UserProfile = () => {
             >
               <DropZone.FileUpload
                 actionTitle={
-                  formData.profilePicture
-                    ? formData.profilePicture.name.split('/').pop()
-                    : 'Name of the profile picture'
+                  formData.profilePicture?.name?.split('/').pop() ||
+                  'Name of the profile picture'
                 }
               />
             </DropZone>

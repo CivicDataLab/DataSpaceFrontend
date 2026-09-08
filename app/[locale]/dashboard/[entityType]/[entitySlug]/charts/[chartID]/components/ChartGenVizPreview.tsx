@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import LoadingPage from '@/app/[locale]/dashboard/loading';
 import { graphql } from '@/gql';
 import { ChartTypes } from '@/gql/generated/graphql';
@@ -28,6 +28,7 @@ interface YAxisColumnItem {
   label: string;
   color: string;
 }
+
 interface ChartFilters {
   column: string;
   operator: string;
@@ -65,29 +66,86 @@ interface Resource {
   schema: ResourceSchema[];
 }
 
+interface ChartPreview {
+  options?: Record<string, unknown>;
+  height?: string;
+  width?: string;
+  renderer?: string;
+}
+
 interface ChartData {
   chartId: string;
   description?: string;
-  filters: any[];
+  filters: ChartFilters[];
   name: string;
   options: ChartOptions;
   resource: Resource;
   type: ChartTypes;
-  chart: any;
+  chart: ChartPreview;
   dataset: Dataset;
 }
 
 interface ResourceChartInput {
   chartId: string;
-  description: string;
+  description?: string;
   filters: ChartFilters[];
-  name: string;
+  name?: string;
   options: ChartOptions;
   resource: string;
   type: ChartTypes;
 }
 
-const getAllDatasetsListwithResourcesDoc: any = graphql(`
+type HandleSaveValue =
+  | string
+  | boolean
+  | ChartTypes
+  | YAxisColumnItem
+  | (YAxisColumnItem & { index: number });
+
+function isChartType(value: HandleSaveValue): value is ChartTypes {
+  return (
+    typeof value === 'string' &&
+    (Object.values(ChartTypes) as string[]).includes(value)
+  );
+}
+
+function isYAxisColumnItem(value: HandleSaveValue): value is YAxisColumnItem {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'fieldName' in value &&
+    'label' in value &&
+    'color' in value &&
+    !('index' in value)
+  );
+}
+
+function isYAxisColumnEdit(
+  value: HandleSaveValue
+): value is YAxisColumnItem & { index: number } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'fieldName' in value &&
+    'label' in value &&
+    'color' in value &&
+    'index' in value &&
+    typeof value.index === 'number'
+  );
+}
+
+interface SelectOption {
+  label: string;
+  value: string;
+}
+
+interface DatasetWithResources {
+  id: string;
+  title: string;
+  resources?: Array<{ id: string; name: string }>;
+}
+
+const getAllDatasetsListwithResourcesDoc = graphql(`
   query getAllDatasetsForDropdown {
     datasets {
       id
@@ -101,7 +159,7 @@ const getAllDatasetsListwithResourcesDoc: any = graphql(`
   }
 `);
 
-const getResourceChartForViz: any = graphql(`
+const getResourceChartForViz = graphql(`
   query getResourceChartForViz($chartDetailsId: UUID!) {
     resourceChart(chartDetailsId: $chartDetailsId) {
       name
@@ -178,7 +236,7 @@ const getResourceChartForViz: any = graphql(`
   }
 `);
 
-const saveEditResourceChartDoc: any = graphql(`
+const saveEditResourceChartDoc = graphql(`
   mutation saveEditResourceChart($chartInput: ResourceChartInput!) {
     editResourceChart(chartInput: $chartInput) {
       __typename
@@ -189,17 +247,117 @@ const saveEditResourceChartDoc: any = graphql(`
   }
 `);
 
-const publishResourceChartDoc: any = graphql(`
+const publishResourceChartDoc = graphql(`
   mutation publishResourceChart($chartId: UUID!) {
     publishResourceChart(chartId: $chartId)
   }
 `);
 
-const ChartGenVizPreview = ({ params }: { params: any }) => {
+interface ResourceChartSource {
+  name?: string | null;
+  chartFilters?: Array<{
+    column?: { id?: string | null } | null;
+    operator: string;
+    value: string;
+  }> | null;
+  chartOptions?: {
+    aggregateType?: string | null;
+    showLegend?: boolean | null;
+    xAxisColumn?: { id?: string | null } | null;
+    xAxisLabel?: string | null;
+    yAxisColumn?: Array<{
+      field?: { id?: string | null } | null;
+      label?: string | null;
+      color?: string | null;
+    }> | null;
+    yAxisLabel?: string | null;
+    regionColumn?: { id?: string | null } | object | null;
+    timeColumn?: { id?: string | null } | null;
+    valueColumn?: { id?: string | null } | null;
+    stacked?: boolean | null;
+    orientation?: string | null;
+  } | null;
+  resource?: {
+    id?: string | null;
+    name?: string | null;
+    schema?: Array<{
+      fieldName: string;
+      id: string;
+      format: string;
+    }> | null;
+  } | null;
+  dataset?: {
+    id?: string | null;
+    title?: string | null;
+  } | null;
+  chartType?: ChartTypes | null;
+  chart?: ChartPreview | null;
+}
+
+function mapResourceChartToFormData(
+  chartRes: ResourceChartSource,
+  chartId: string
+): ChartData {
+  return {
+    chartId,
+    name: chartRes.name ?? '',
+    filters:
+      chartRes.chartFilters && chartRes.chartFilters.length > 0
+        ? chartRes.chartFilters.map((filter) => ({
+            column: filter.column?.id ?? '',
+            operator: filter.operator,
+            value: filter.value,
+          }))
+        : [{ column: '', operator: '==', value: '' }],
+    options: {
+      aggregateType: chartRes.chartOptions?.aggregateType ?? undefined,
+      showLegend: chartRes.chartOptions?.showLegend ?? true,
+      xAxisColumn: chartRes.chartOptions?.xAxisColumn?.id ?? undefined,
+      xAxisLabel: chartRes.chartOptions?.xAxisLabel ?? undefined,
+      yAxisColumn: chartRes.chartOptions?.yAxisColumn?.map((col) => ({
+        fieldName: col.field?.id ?? '',
+        label: col.label ?? '',
+        color: col.color ?? '',
+      })),
+      yAxisLabel: chartRes.chartOptions?.yAxisLabel ?? undefined,
+      regionColumn:
+        chartRes.chartOptions?.regionColumn &&
+        'id' in chartRes.chartOptions.regionColumn
+          ? String(chartRes.chartOptions.regionColumn.id)
+          : undefined,
+      timeColumn: chartRes.chartOptions?.timeColumn?.id ?? undefined,
+      valueColumn: chartRes.chartOptions?.valueColumn?.id ?? undefined,
+      stacked: chartRes.chartOptions?.stacked ?? undefined,
+      orientation: chartRes.chartOptions?.orientation ?? undefined,
+    },
+    resource: {
+      id: chartRes.resource?.id ?? '',
+      name: chartRes.resource?.name ?? '',
+      schema:
+        chartRes.resource?.schema?.map((schema) => ({
+          fieldName: schema.fieldName,
+          id: schema.id,
+          format: schema.format,
+        })) ?? [],
+    },
+    dataset: {
+      id: chartRes.dataset?.id ?? '',
+      title: chartRes.dataset?.title ?? '',
+    },
+    type: chartRes.chartType ?? ChartTypes.Bar,
+    chart: chartRes.chart ?? {},
+  };
+}
+
+const ChartGenVizPreview = ({
+  params,
+}: {
+  params: { entityType: string; entitySlug: string; chartID: string };
+}) => {
   type TabValue = 'DATA' | 'CUSTOMIZE';
   const [selectedTab, setSelectedTab] = useState<TabValue>('DATA');
 
-  const [selectedDataset, setSelectedDataset] = useState<any>('');
+  const [selectedDataset, setSelectedDataset] = useState('');
 
   const [editYaxisPopOverOpen, setEditYaxisPopOverOpen] = useState(false);
   const [addYaxisPopOverOpen, setAddYaxisPopOverOpen] = useState(false);
@@ -242,7 +400,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
     chart: {},
   });
 
-  const chartTypesOptions: any = [
+  const chartTypesOptions = [
     {
       label: 'BAR',
       value: 'BAR',
@@ -279,107 +437,54 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
     setSelectedTab(item.id);
   };
 
-  const getAllDatasetsWithResourcesRes: {
-    data: any;
-    isLoading: boolean;
-    refetch: any;
-    error: any;
-    isError: boolean;
-  } = useQuery([`allDatasetsListwithResourcesForCharts`], () =>
-    GraphQL(
-      getAllDatasetsListwithResourcesDoc,
-      {
+  const getAllDatasetsWithResourcesRes = useQuery(
+    [`allDatasetsListwithResourcesForCharts`],
+    () =>
+      GraphQL(getAllDatasetsListwithResourcesDoc, {
         [params.entityType]: params.entitySlug,
-      },
-      []
-    )
+      })
   );
 
-  const chartDetailsRes: {
-    data: any;
-    isLoading: boolean;
-    refetch: any;
-    error: any;
-    isError: boolean;
-  } = useQuery([`chartDetailsForViz-${JSON.stringify(chartData)}`], () =>
-    GraphQL(
-      getResourceChartForViz,
-      {
-        [params.entityType]: params.entitySlug,
-      },
-      {
-        chartDetailsId: params.chartID,
-      }
-    )
+  const chartDetailsRes = useQuery(
+    [`chartDetailsForViz-${JSON.stringify(chartData)}`],
+    () =>
+      GraphQL(
+        getResourceChartForViz,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        {
+          chartDetailsId: params.chartID,
+        }
+      )
   );
 
-  useEffect(() => {
-    if (chartDetailsRes?.data?.resourceChart) {
-      const chartRes = chartDetailsRes?.data?.resourceChart;
-
-      setChartData({
-        chartId: params.chartID,
-        name: chartRes?.name,
-        // description: chartDetailsRes?.data?.resourceChart?.description,
-        filters:
-          chartRes?.chartFilters?.length > 0
-            ? chartRes?.chartFilters.map((filter: any) => ({
-                column: filter.column,
-                operator: filter.operator,
-                value: filter.value,
-              }))
-            : [{ column: '', operator: '==', value: '' }],
-        options: {
-          aggregateType: chartRes?.chartOptions?.aggregateType,
-          showLegend: chartRes?.chartOptions?.showLegend ?? true,
-          xAxisColumn: chartRes?.chartOptions?.xAxisColumn?.id,
-          xAxisLabel: chartRes?.chartOptions?.xAxisLabel,
-          yAxisColumn: chartRes?.chartOptions?.yAxisColumn?.map((col: any) => ({
-            fieldName: col.field.id,
-            label: col.label,
-            color: col.color,
-          })),
-          yAxisLabel: chartRes?.chartOptions?.yAxisLabel,
-          regionColumn: chartRes?.chartOptions?.regionColumn?.id,
-          timeColumn: chartRes?.chartOptions?.timeColumn,
-          valueColumn: chartRes?.chartOptions?.valueColumn?.id,
-          stacked: chartRes?.chartOptions?.stacked,
-          orientation: chartRes?.chartOptions?.orientation,
-        },
-        resource: {
-          id: chartRes?.resource?.id,
-          name: chartRes?.resource?.name,
-          schema: chartRes?.resource?.schema.map((schema: any) => ({
-            fieldName: schema.fieldName,
-            id: schema.id,
-            format: schema.format,
-          })),
-        },
-        dataset: {
-          id: chartRes?.dataset?.id,
-          title: chartRes?.dataset?.title,
-        },
-        type: chartRes?.chartType as ChartTypes,
-        chart: chartRes?.chart,
-      });
+  const [prevChartDetailsData, setPrevChartDetailsData] = useState(
+    chartDetailsRes.data
+  );
+  const [prevDatasetsData, setPrevDatasetsData] = useState(
+    getAllDatasetsWithResourcesRes.data
+  );
+  if (
+    chartDetailsRes.data !== prevChartDetailsData ||
+    getAllDatasetsWithResourcesRes.data !== prevDatasetsData
+  ) {
+    setPrevChartDetailsData(chartDetailsRes.data);
+    setPrevDatasetsData(getAllDatasetsWithResourcesRes.data);
+    const chartRes = chartDetailsRes.data?.resourceChart;
+    if (chartRes) {
+      setChartData(mapResourceChartToFormData(chartRes, params.chartID));
     }
-  }, [chartDetailsRes.data, params.chartID]);
-
-  useEffect(() => {
-    if (chartDetailsRes?.data?.resourceChart?.resource) {
+    if (chartRes?.resource) {
       setSelectedDataset(
-        getAllDatasetsWithResourcesRes?.data?.datasets?.find(
-          (ds: any) =>
-            ds.id === chartDetailsRes?.data?.resourceChart?.dataset?.id
-        ).id || {}
+        getAllDatasetsWithResourcesRes.data?.datasets?.find(
+          (ds) => ds.id === chartRes.dataset?.id
+        )?.id ?? ''
       );
     }
-  }, [chartDetailsRes.data, getAllDatasetsWithResourcesRes.data]);
+  }
 
-  const editResourceChartMutation: {
-    mutate: any;
-    isLoading: any;
-  } = useMutation(
+  const editResourceChartMutation = useMutation(
     (data: { chartInput: ResourceChartInput }) =>
       GraphQL(
         saveEditResourceChartDoc,
@@ -391,18 +496,15 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
         chartDetailsRes.refetch();
         toast('Resource Chart Updated Successfully');
       },
-      onError: (err: any) => {
-        toast(`Received ${err} while updating resource chart`);
+      onError: (err: unknown) => {
+        toast(`Received ${String(err)} while updating resource chart`);
       },
     }
   );
 
   const chartRef = useRef<ReactECharts>(null);
 
-  const publishResourceChartMutation: {
-    mutate: any;
-    isLoading: any;
-  } = useMutation(
+  const publishResourceChartMutation = useMutation(
     (data: { chartId: string }) =>
       GraphQL(
         publishResourceChartDoc,
@@ -413,17 +515,18 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
       onSuccess: () => {
         toast('Resource Chart Published Successfully');
       },
-      onError: (err: any) => {
-        toast(`Received ${err} while publishing resource chart`);
+      onError: (err: unknown) => {
+        toast(`Received ${String(err)} while publishing resource chart`);
       },
     }
   );
 
-  const handleSave = (field: string, value: any) => {
+  const handleSave = (field: string, value: HandleSaveValue) => {
     console.log('Saving chart data :::::::::::::', field, value);
 
     switch (field) {
       case 'chartName':
+        if (typeof value !== 'string') break;
         editResourceChartMutation.mutate({
           chartInput: {
             chartId: params.chartID,
@@ -437,6 +540,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
         break;
 
       case 'resource':
+        if (typeof value !== 'string') break;
         editResourceChartMutation.mutate({
           chartInput: {
             chartId: params.chartID,
@@ -454,6 +558,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
         break;
 
       case 'chartType':
+        if (!isChartType(value)) break;
         editResourceChartMutation.mutate({
           chartInput: {
             chartId: params.chartID,
@@ -461,12 +566,14 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
             type: value,
             options: chartData.options,
             filters: chartData.filters,
+            name: chartData.name,
           },
         });
         toast('Chart Type Updated Successfully');
         break;
 
       case 'xAxisColumn':
+        if (typeof value !== 'string') break;
         editResourceChartMutation.mutate({
           chartInput: {
             chartId: params.chartID,
@@ -477,11 +584,13 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
             },
             type: chartData.type,
             filters: chartData.filters,
+            name: chartData.name,
           },
         });
         break;
 
       case 'addYAxisColumn':
+        if (!isYAxisColumnItem(value)) break;
         editResourceChartMutation.mutate({
           chartInput: {
             chartId: params.chartID,
@@ -495,20 +604,23 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
             },
             type: chartData.type,
             filters: chartData.filters,
+            name: chartData.name,
           },
         });
         break;
 
       case 'removeYAxisColumn':
+        if (typeof value !== 'string') break;
         editResourceChartMutation.mutate({
           chartInput: {
             chartId: params.chartID,
             resource: chartData.resource.id,
+            name: chartData.name,
             options: {
               ...chartData.options,
               yAxisColumn:
                 chartData.options.yAxisColumn?.filter(
-                  (col: any) => col.fieldName !== value
+                  (col) => col.fieldName !== value
                 ) ?? [],
             },
             type: chartData.type,
@@ -518,17 +630,22 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
         break;
 
       case 'editYAxisColumn':
+        if (!isYAxisColumnEdit(value)) break;
         editResourceChartMutation.mutate({
           chartInput: {
             chartId: params.chartID,
             resource: chartData.resource.id,
+            name: chartData.name,
             options: {
               ...chartData.options,
               yAxisColumn:
-                chartData.options.yAxisColumn?.map((col: any, indx: number) => {
+                chartData.options.yAxisColumn?.map((col, indx: number) => {
                   if (indx === value.index) {
-                    delete value.index;
-                    return value;
+                    return {
+                      fieldName: value.fieldName,
+                      label: value.label,
+                      color: value.color,
+                    };
                   }
                   return col;
                 }) ?? [],
@@ -540,6 +657,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
         break;
 
       case 'aggregateType':
+        if (typeof value !== 'string') break;
         editResourceChartMutation.mutate({
           chartInput: {
             chartId: params.chartID,
@@ -550,11 +668,13 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
             },
             type: chartData.type,
             filters: chartData.filters,
+            name: chartData.name,
           },
         });
         break;
 
       case 'xAxisLabel':
+        if (typeof value !== 'string') break;
         editResourceChartMutation.mutate({
           chartInput: {
             chartId: params.chartID,
@@ -565,11 +685,13 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
             },
             type: chartData.type,
             filters: chartData.filters,
+            name: chartData.name,
           },
         });
         break;
 
       case 'yAxisLabel':
+        if (typeof value !== 'string') break;
         editResourceChartMutation.mutate({
           chartInput: {
             chartId: params.chartID,
@@ -580,11 +702,13 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
             },
             type: chartData.type,
             filters: chartData.filters,
+            name: chartData.name,
           },
         });
         break;
 
       case 'stacked':
+        if (typeof value !== 'boolean') break;
         editResourceChartMutation.mutate({
           chartInput: {
             chartId: params.chartID,
@@ -595,11 +719,13 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
             },
             type: chartData.type,
             filters: chartData.filters,
+            name: chartData.name,
           },
         });
         break;
 
       case 'orientation':
+        if (typeof value !== 'string') break;
         editResourceChartMutation.mutate({
           chartInput: {
             chartId: params.chartID,
@@ -610,11 +736,13 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
             },
             type: chartData.type,
             filters: chartData.filters,
+            name: chartData.name,
           },
         });
         break;
 
       case 'showLegend':
+        if (typeof value !== 'boolean') break;
         editResourceChartMutation.mutate({
           chartInput: {
             chartId: params.chartID,
@@ -625,6 +753,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
             },
             type: chartData.type,
             filters: chartData.filters,
+            name: chartData.name,
           },
         });
 
@@ -668,7 +797,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
             label={'CHART NAME'}
             title={chartDetailsRes?.data?.resourceChart?.name}
             goBackURL={`/dashboard/${params.entityType}/${params.entitySlug}/charts`}
-            onSave={(val: any) => {
+            onSave={(val) => {
               handleSave('chartName', val);
             }}
             loading={editResourceChartMutation.isLoading}
@@ -726,30 +855,32 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                     <Select
                       name="selectDataset"
                       label="Select Dataset"
-                      options={getAllDatasetsWithResourcesRes?.data?.datasets?.map(
-                        (item: any) => {
-                          return {
-                            label: item.title,
-                            value: item.id,
-                          };
-                        }
-                      )}
+                      options={
+                        getAllDatasetsWithResourcesRes?.data?.datasets?.map(
+                          (item) => {
+                            const option: SelectOption = {
+                              label: item.title,
+                              value: String(item.id),
+                            };
+                            return option;
+                          }
+                        ) ?? []
+                      }
                       required
                       requiredIndicator={true}
                       defaultValue={chartData?.dataset?.id}
                       onChange={(e) => {
-                        if (
+                        const dataset =
                           getAllDatasetsWithResourcesRes?.data?.datasets?.find(
-                            (ds: any) => ds.id === e
-                          )?.resources?.length > 0
+                            (ds) => ds.id === e
+                          );
+                        const firstResourceId = dataset?.resources?.[0]?.id;
+                        if (
+                          (dataset?.resources?.length ?? 0) > 0 &&
+                          firstResourceId
                         ) {
                           setSelectedDataset(e);
-                          handleSave(
-                            'resource',
-                            getAllDatasetsWithResourcesRes?.data?.datasets?.find(
-                              (ds: any) => ds.id === e
-                            )?.resources[0].id
-                          );
+                          handleSave('resource', String(firstResourceId));
                         } else {
                           toast.error('No Resources found for this dataset');
                         }
@@ -760,14 +891,20 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                     <Select
                       name="selectResource"
                       label="Select Resource"
-                      options={getAllDatasetsWithResourcesRes?.data?.datasets
-                        ?.find((ds: any) => ds.id === selectedDataset)
-                        ?.resources?.map((item: any) => {
-                          return {
-                            label: item.name,
-                            value: item.id,
-                          };
-                        })}
+                      options={
+                        getAllDatasetsWithResourcesRes?.data?.datasets
+                          ?.find(
+                            (ds: DatasetWithResources) =>
+                              ds.id === selectedDataset
+                          )
+                          ?.resources?.map((item) => {
+                            const option: SelectOption = {
+                              label: item.name,
+                              value: String(item.id),
+                            };
+                            return option;
+                          }) ?? []
+                      }
                       defaultValue={chartData?.resource?.id || ''}
                       onChange={(e) => {
                         console.log('selectResource :::::::::', e);
@@ -795,12 +932,15 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                     <Select
                       name="selectXAxisColumn"
                       label="X-axis column"
-                      options={chartData?.resource?.schema?.map((item: any) => {
-                        return {
-                          label: item.fieldName,
-                          value: item.id,
-                        };
-                      })}
+                      options={
+                        chartData?.resource?.schema?.map((item) => {
+                          const option: SelectOption = {
+                            label: item.fieldName,
+                            value: item.id,
+                          };
+                          return option;
+                        }) ?? []
+                      }
                       value={chartData.options?.xAxisColumn}
                       onChange={(e) => {
                         handleSave('xAxisColumn', e);
@@ -815,7 +955,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
 
                       <div className="mt-1 flex flex-col gap-2">
                         {chartData.options?.yAxisColumn?.map(
-                          (columnItem: any, colIndex: number) => (
+                          (columnItem, colIndex: number) => (
                             <div key={columnItem.fieldName}>
                               <div className="flex flex-row items-center gap-1 rounded-2 border-2 border-solid border-greyExtralight p-2">
                                 <Button
@@ -843,7 +983,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                                     >
                                       {
                                         chartDetailsRes?.data?.resourceChart?.resource?.schema?.find(
-                                          (item: any) =>
+                                          (item: ResourceSchema) =>
                                             item.id === columnItem.fieldName
                                         )?.fieldName
                                       }
@@ -851,14 +991,17 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                                   </Popover.Trigger>
                                   <Popover.Content>
                                     <YaxisColumnForm
-                                      yAxisOptions={chartDetailsRes?.data?.resourceChart?.resource?.schema?.map(
-                                        (item: any) => {
-                                          return {
-                                            label: item.fieldName,
-                                            value: item.id,
-                                          };
-                                        }
-                                      )}
+                                      yAxisOptions={
+                                        chartDetailsRes?.data?.resourceChart?.resource?.schema?.map(
+                                          (item: ResourceSchema) => {
+                                            const option: SelectOption = {
+                                              label: item.fieldName,
+                                              value: item.id,
+                                            };
+                                            return option;
+                                          }
+                                        ) ?? []
+                                      }
                                       column={columnItem.fieldName}
                                       columnLabel={columnItem.label}
                                       columnColor={columnItem.color}
@@ -896,14 +1039,17 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                           </Popover.Trigger>
                           <Popover.Content>
                             <YaxisColumnForm
-                              yAxisOptions={chartDetailsRes?.data?.resourceChart?.resource?.schema?.map(
-                                (item: any) => {
-                                  return {
-                                    label: item.fieldName,
-                                    value: item.id,
-                                  };
-                                }
-                              )}
+                              yAxisOptions={
+                                chartDetailsRes?.data?.resourceChart?.resource?.schema?.map(
+                                  (item: ResourceSchema) => {
+                                    const option: SelectOption = {
+                                      label: item.fieldName,
+                                      value: item.id,
+                                    };
+                                    return option;
+                                  }
+                                ) ?? []
+                              }
                               column={''}
                               columnLabel={''}
                               columnColor={''}
@@ -911,7 +1057,7 @@ const ChartGenVizPreview = ({ params }: { params: any }) => {
                                 if (
                                   chartData.options.yAxisColumn === undefined ||
                                   chartData.options.yAxisColumn?.findIndex(
-                                    (item: any) =>
+                                    (item) =>
                                       item.fieldName === e.fieldName
                                   ) === -1
                                 ) {
@@ -1043,11 +1189,11 @@ const YaxisColumnForm = ({
   onSubmit,
   onCancel,
 }: {
-  yAxisOptions: Array<any>;
-  column: any;
-  columnLabel: any;
-  columnColor: any;
-  onSubmit: (e: any) => void;
+  yAxisOptions: Array<SelectOption>;
+  column: string;
+  columnLabel: string;
+  columnColor: string;
+  onSubmit: (e: YAxisColumnItem) => void;
   onCancel: () => void;
 }) => {
   const [yAxisColumn, setYAxisColumn] = useState(column);

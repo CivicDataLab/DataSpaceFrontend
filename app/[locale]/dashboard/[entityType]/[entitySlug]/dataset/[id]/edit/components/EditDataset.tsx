@@ -1,18 +1,27 @@
 import React from 'react';
+import { PatchDataset } from '@/types';
 
 import { CreateDataset } from '../../../new/components/new-dataset';
+
+interface EditDatasetProps {
+  defaultVal: PatchDataset;
+  submitRef: React.RefObject<HTMLButtonElement | null>;
+  mutate: (res: {
+    dataset_data: {
+      title: string;
+      description: string;
+      id?: string;
+    };
+  }) => void;
+  isLoading: boolean;
+}
 
 export function EditDataset({
   defaultVal,
   submitRef,
   mutate,
   isLoading,
-}: {
-  defaultVal: any;
-  submitRef: React.RefObject<HTMLButtonElement>;
-  mutate: any;
-  isLoading: boolean;
-}) {
+}: EditDatasetProps) {
   return (
     <CreateDataset
       mutatePatch={mutate}

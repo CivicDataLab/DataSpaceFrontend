@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { UseCaseInputPartial } from '@/gql/generated/graphql';
+import { UseCaseInputPartial, UseCaseRunningStatus } from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DropZone, Select, TextField, toast } from 'opub-ui';
 
@@ -14,7 +14,27 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 import { useEditStatus } from '../../context';
 import Metadata from '../metadata/page';
 
-const UpdateUseCaseMutation: any = graphql(`
+interface UploadedImage {
+  name?: string | null;
+  path?: string | null;
+  url?: string | null;
+}
+
+interface UseCaseFormData {
+  title: string;
+  summary: string;
+  logo: File | UploadedImage | null;
+  website: string;
+  contactEmail: string;
+  slug: string;
+  status: string;
+  runningStatus: string | null;
+  startedOn: string | null;
+  completedOn: string | null;
+  platformUrl: string;
+}
+
+const UpdateUseCaseMutation = graphql(`
   mutation updateUseCase($data: UseCaseInputPartial!) {
     updateUseCase(data: $data) {
       __typename
@@ -39,7 +59,7 @@ const UpdateUseCaseMutation: any = graphql(`
   }
 `);
 
-const FetchUseCase: any = graphql(`
+const FetchUseCase = graphql(`
   query UseCaseData($filters: UseCaseFilter) {
     useCases(filters: $filters) {
       id
@@ -70,12 +90,16 @@ const Details = () => {
   }>();
   const USECASE_EDIT_SUCCESS_TOAST_ID = 'usecase-edit-save-success';
   const USECASE_DETAILS_ERROR_TOAST_ID = 'usecase-details-save-error';
-  const getErrorMessage = (error: any, fallback: string) =>
-    typeof error?.message === 'string' && error.message.trim()
+  const getErrorMessage = (error: unknown, fallback: string) =>
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string' &&
+    error.message.trim()
       ? error.message.trim()
       : fallback;
 
-  const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  const UseCaseData = useQuery(
     [
       `fetch_UseCaseData_details`,
       params.id,
@@ -101,19 +125,19 @@ const Details = () => {
   );
 
   const UsecasesData =
-    UseCaseData?.data?.useCases.length > 0 && UseCaseData?.data?.useCases[0];
+    (UseCaseData?.data?.useCases?.length ?? 0) > 0 && UseCaseData?.data?.useCases?.[0];
 
   const initialFormData = {
     title: '',
     summary: '',
-    logo: null as File | null,
+    logo: null as File | UploadedImage | null,
     website: '',
     contactEmail: '',
     slug: '',
     status: '',
-    runningStatus: null,
-    startedOn: null,
-    completedOn: null,
+    runningStatus: null as string | null,
+    startedOn: null as string | null,
+    completedOn: null as string | null,
     platformUrl: '',
   };
 
@@ -140,11 +164,16 @@ const Details = () => {
 
   const [, setPreviousFormData] = useState(initialFormData);
 
-  useEffect(() => {
+  const [prevUsecasesData, setPrevUsecasesData] = useState<
+    typeof UsecasesData | undefined
+  >(undefined);
+  const [prevDetailsId, setPrevDetailsId] = useState(params.id);
+  if (params.id !== prevDetailsId || UsecasesData !== prevUsecasesData) {
+    setPrevDetailsId(params.id);
+    setPrevUsecasesData(UsecasesData);
     if (UsecasesData) {
-      // Ensure UsecasesData is available
       const updatedData = {
-        title: UsecasesData.title || '', // Fallback to empty string if undefined
+        title: UsecasesData.title || '',
         summary: UsecasesData.summary || '',
         logo: UsecasesData.logo || null,
         website: UsecasesData.website || '',
@@ -159,7 +188,7 @@ const Details = () => {
       setFormData(updatedData);
       setPreviousFormData(updatedData);
     }
-  }, [params.id, UsecasesData]);
+  }
 
   const queryClient = useQueryClient();
 
@@ -173,17 +202,35 @@ const Details = () => {
         data
       ),
     {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         toast('Use case updated successfully', {
           id: USECASE_EDIT_SUCCESS_TOAST_ID,
         });
         setFormData((prev) => ({
           ...prev,
-          ...res.updateUseCase,
+          title: res.updateUseCase.title ?? prev.title,
+          summary: res.updateUseCase.summary ?? prev.summary,
+          logo: res.updateUseCase.logo ?? prev.logo,
+          website: res.updateUseCase.website ?? prev.website,
+          slug: res.updateUseCase.slug ?? prev.slug,
+          status: res.updateUseCase.status ?? prev.status,
+          runningStatus: res.updateUseCase.runningStatus ?? prev.runningStatus,
+          startedOn: res.updateUseCase.startedOn ?? prev.startedOn,
+          completedOn: res.updateUseCase.completedOn ?? prev.completedOn,
+          platformUrl: res.updateUseCase.platformUrl ?? prev.platformUrl,
         }));
         setPreviousFormData((prev) => ({
           ...prev,
-          ...res.updateUseCase,
+          title: res.updateUseCase.title ?? prev.title,
+          summary: res.updateUseCase.summary ?? prev.summary,
+          logo: res.updateUseCase.logo ?? prev.logo,
+          website: res.updateUseCase.website ?? prev.website,
+          slug: res.updateUseCase.slug ?? prev.slug,
+          status: res.updateUseCase.status ?? prev.status,
+          runningStatus: res.updateUseCase.runningStatus ?? prev.runningStatus,
+          startedOn: res.updateUseCase.startedOn ?? prev.startedOn,
+          completedOn: res.updateUseCase.completedOn ?? prev.completedOn,
+          platformUrl: res.updateUseCase.platformUrl ?? prev.platformUrl,
         }));
         queryClient.invalidateQueries({
           queryKey: [
@@ -202,7 +249,7 @@ const Details = () => {
           ],
         });
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         toast(
           `Error: ${getErrorMessage(error, 'Unable to update use case right now. Please try again.')}`,
           { id: USECASE_DETAILS_ERROR_TOAST_ID }
@@ -211,12 +258,15 @@ const Details = () => {
     }
   );
 
-  const handleChange = useCallback((field: string, value: any) => {
+  const handleChange = useCallback(
+    (field: keyof UseCaseFormData, value: UseCaseFormData[keyof UseCaseFormData]) => {
     setFormData((prevData) => ({
       ...prevData,
       [field]: value,
     }));
-  }, []);
+  },
+    []
+  );
 
   const onDrop = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
@@ -230,7 +280,7 @@ const Details = () => {
     [mutate, params.id]
   );
 
-  const handleSave = (updatedData: any) => {
+  const handleSave = (updatedData: UseCaseFormData) => {
     const updatedSnapshot = JSON.stringify(updatedData);
     setPreviousFormData((prevData) => {
       if (JSON.stringify(prevData) === updatedSnapshot) {
@@ -244,9 +294,15 @@ const Details = () => {
           summary: updatedData.summary,
           website: updatedData.website,
           contactEmail: updatedData.contactEmail,
-          runningStatus: updatedData.runningStatus,
-          startedOn: (updatedData.startedOn as Date) || null,
-          completedOn: (updatedData.completedOn as Date) || null,
+          runningStatus:
+            updatedData.runningStatus &&
+            (Object.values(UseCaseRunningStatus) as string[]).includes(
+              updatedData.runningStatus
+            )
+              ? (updatedData.runningStatus as UseCaseRunningStatus)
+              : null,
+          startedOn: updatedData.startedOn || null,
+          completedOn: updatedData.completedOn || null,
           platformUrl: updatedData.platformUrl || '',
         },
       });
@@ -292,7 +348,7 @@ const Details = () => {
             }))}
             label="Running Status"
             value={formData?.runningStatus ? formData.runningStatus : ''}
-            onChange={(value: any) => {
+            onChange={(value) => {
               handleChange('runningStatus', value);
               handleSave({ ...formData, runningStatus: value });
             }}
@@ -346,7 +402,9 @@ const Details = () => {
             actionHint="Only one image can be added. Recommended resolution of 16:9 - (1280x720), (1920x1080) - Supported File Types: PNG/JPG/SVG "
             actionTitle={
               formData.logo
-                ? formData.logo.name.split('/').pop()
+                ? (typeof formData.logo.name === 'string'
+                    ? formData.logo.name.split('/').pop()
+                    : 'Name of the logo')
                 : 'Name of the logo'
             }
           />

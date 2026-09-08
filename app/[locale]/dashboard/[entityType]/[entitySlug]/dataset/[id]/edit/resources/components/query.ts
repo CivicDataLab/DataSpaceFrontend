@@ -1,6 +1,6 @@
 import { graphql } from '@/gql';
 
-export const createResourceFilesDoc: any = graphql(`
+export const createResourceFilesDoc = graphql(`
   mutation readFiles($fileResourceInput: CreateFileResourceInput!) {
     createFileResources(fileResourceInput: $fileResourceInput) {
       id
@@ -11,7 +11,7 @@ export const createResourceFilesDoc: any = graphql(`
   }
 `);
 
-export const updateSchema: any = graphql(`
+export const updateSchema = graphql(`
   mutation updateSchema($schemaUpdateInput: SchemaUpdateInput!) {
     updateFileResourceSchema(schemaUpdateInput: $schemaUpdateInput) {
       __typename
@@ -22,7 +22,7 @@ export const updateSchema: any = graphql(`
   }
 `);
 
-export const updateResourceDoc: any = graphql(`
+export const updateResourceDoc = graphql(`
   mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {
     updateFileResource(fileResourceInput: $fileResourceInput) {
       __typename
@@ -35,8 +35,7 @@ export const updateResourceDoc: any = graphql(`
   }
 `);
 
-
-export const fetchSchema: any = graphql(`
+export const fetchSchema = graphql(`
   query datasetSchema($datasetId: UUID!) {
     datasetResources(datasetId: $datasetId) {
       schema {
@@ -50,7 +49,7 @@ export const fetchSchema: any = graphql(`
   }
 `);
 
-export const updateResourceList: any = graphql(`
+export const updateResourceList = graphql(`
   mutation deleteFileResource($resourceId: UUID!) {
     deleteFileResource(resourceId: $resourceId)
   }

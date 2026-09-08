@@ -65,9 +65,7 @@ import {
   // TablerIconsProps,
 } from '@tabler/icons-react';
 
-export const Icons: {
-  [key: string]: React.FC<any>;
-} = {
+export const Icons = {
   access: IconShieldCheck,
   addDataset: IconDatabasePlus,
   alert: IconAlertCircleFilled,

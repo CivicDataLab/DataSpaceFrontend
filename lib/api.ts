@@ -2,8 +2,8 @@ import React from 'react';
 import { type TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { QueryClient } from '@tanstack/react-query';
 import { request } from 'graphql-request';
+import { getServerSession, type Session } from 'next-auth';
 import { getSession } from 'next-auth/react';
-import { getServerSession } from 'next-auth';
 
 function assertGraphqlDocument(document: unknown) {
   if (typeof document === 'string' && document.trim()) return;
@@ -20,8 +20,16 @@ function assertGraphqlDocument(document: unknown) {
   );
 }
 
-// create a wrapper function for graphql-request
-// that will be used by react-query
+async function getGraphqlSession(): Promise<Session | null> {
+  if (typeof window === 'undefined') {
+    const { authOptions } = await import(
+      '@/app/api/auth/[...nextauth]/options'
+    );
+    return getServerSession(authOptions);
+  }
+
+  return getSession();
+}
 
 export async function GraphQL<TResult, TVariables>(
   document: TypedDocumentNode<TResult, TVariables>,
@@ -29,18 +37,12 @@ export async function GraphQL<TResult, TVariables>(
   ...[variables]: TVariables extends Record<string, never> ? [] : [TVariables]
 ) {
   assertGraphqlDocument(document);
-
-  // Try to get session - this works for server-side calls
-  let session;
-  try {
-    session = await getServerSession();
-  } catch {
-    // Fallback for client-side calls
-    session = await getSession();
-  }
+  const session = await getGraphqlSession();
 
   const headers = {
-    ...(session ? { Authorization: `Bearer ${session?.access_token}` } : {}),
+    ...(session?.access_token
+      ? { Authorization: `Bearer ${session.access_token}` }
+      : {}),
     ...entityHeaders,
   };
 

@@ -2,13 +2,27 @@ import React, { useEffect } from 'react';
 import { ChartTypes } from '@/gql/generated/graphql';
 import { Button, Checkbox, Select, Text, TextField } from 'opub-ui';
 
-import { ChartData, ResourceData, ResourceSchema } from '../types';
+import {
+  ChartData,
+  ChartFilters,
+  ChartOptions,
+  ResourceData,
+  ResourceSchema,
+} from '../types';
+
+type ChartFormValue =
+  | string
+  | boolean
+  | ChartTypes
+  | ChartOptions
+  | ChartFilters[]
+  | ChartData;
 
 interface ChartFormProps {
   chartData: ChartData;
-  resourceData: ResourceData;
+  resourceData?: ResourceData;
   resourceSchema: ResourceSchema[];
-  handleChange: (field: string, value: any) => void;
+  handleChange: (field: string, value: ChartFormValue) => void;
   handleResourceChange: (value: string) => void;
   handleSave: (data: ChartData) => void;
 }
@@ -56,7 +70,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
   const handleYAxisColumnChange = (
     index: number,
     field: string,
-    value: any
+    value: string
   ) => {
     const newYAxisColumns = [...chartData.options.yAxisColumn];
     newYAxisColumns[index] = {
@@ -94,7 +108,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
   const handlefilterColumnChange = (
     index: number,
     field: string,
-    value: any
+    value: string
   ) => {
     const currentFilters = Array.isArray(chartData.filters)
       ? chartData.filters
@@ -125,11 +139,15 @@ const ChartForm: React.FC<ChartFormProps> = ({
     handleChange('filters', newFiltersColumns);
     handleSave(chartData);
   };
-  const updateChartData = (field: string, value: any) => {
+  const updateChartData = (field: string, value: string) => {
+    const isChartType = (chartType: string): chartType is ChartTypes =>
+      (Object.values(ChartTypes) as string[]).includes(chartType);
+
     if (field === 'type') {
-      const newData = {
+      const chartType = isChartType(value) ? value : chartData.type;
+      const newData: ChartData = {
         ...chartData,
-        type: value,
+        type: chartType,
         options: {
           ...chartData.options,
           yAxisColumn:
@@ -138,7 +156,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
               : [{ fieldName: '', label: '', color: '#000000' }],
         },
       };
-      handleChange(field, value);
+      handleChange(field, chartType);
       handleSave(newData); // Pass the new data directly
     } else {
       const newData = {
@@ -184,10 +202,12 @@ const ChartForm: React.FC<ChartFormProps> = ({
       />
       <Select
         name="resource"
-        options={resourceData?.datasetResources?.map((resource) => ({
-          label: resource.name,
-          value: resource.id,
-        }))}
+        options={
+          resourceData?.datasetResources?.map((resource) => ({
+            label: resource.name,
+            value: resource.id,
+          })) ?? []
+        }
         label="Resource"
         value={chartData.resource}
         onBlur={() => handleSave(chartData)}
@@ -220,7 +240,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
             onChange={(e) =>
               handleChange('options', {
                 ...chartData.options,
-                showLegend: e,
+                showLegend: e === true || e === 'true',
               })
             }
           >
@@ -322,7 +342,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
                         type="Color"
                         className=" h-9"
                         value={column.color || '#000000'}
-                        onChange={(e: any) => {
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                           handleYAxisColumnChange(
                             index,
                             'color',
@@ -436,7 +456,7 @@ const ChartForm: React.FC<ChartFormProps> = ({
                   name={`Value-${index}`}
                   value={column.value}
                   label="Value"
-                  onChange={(e: any) => {
+                  onChange={(e) => {
                     handlefilterColumnChange(index, 'value', e);
                   }}
                   onBlur={() => handleSave(chartData)}

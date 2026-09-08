@@ -1,5 +1,7 @@
 
-const assam_geojson:any = {
+import type { GeoJsonData } from './types';
+
+const assam_geojson: GeoJsonData = {
     'type': "FeatureCollection",
     'features':[{
         "type": "Feature", "geometry": {

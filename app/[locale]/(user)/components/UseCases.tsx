@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
+import { UseCaseStatus } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
 import {
   Button,
@@ -21,7 +22,7 @@ import { UseCaseListingSkeleton } from '@/components/loading';
 import { stripMarkdown } from '../search/components/UnifiedListingComponent';
 import Styles from './datasets.module.scss';
 
-const useCasesListDoc: any = graphql(`
+const useCasesListDoc = graphql(`
   query TopUseCases(
     $filters: UseCaseFilter
     $pagination: OffsetPaginationInput
@@ -81,17 +82,12 @@ const useCasesListDoc: any = graphql(`
 `);
 
 const UseCasesListingPage = () => {
-  const getUseCasesList: {
-    data: any;
-    isLoading: boolean;
-    error: any;
-    isError: boolean;
-  } = useQuery([`useCases_list`], () =>
+  const getUseCasesList = useQuery([`useCases_list`], () =>
     GraphQL(
       useCasesListDoc,
       {},
       {
-        filters: { status: 'PUBLISHED' },
+        filters: { status: UseCaseStatus.Published },
         pagination: { limit: 6 },
       }
     )
@@ -134,9 +130,9 @@ const UseCasesListingPage = () => {
           ) : (
             <CarouselContent className="items-stretch  p-4">
               {getUseCasesList &&
-                getUseCasesList?.data?.publishedUseCases.length > 0 &&
-                getUseCasesList?.data?.publishedUseCases.map(
-                  (item: any, index: any) => (
+                (getUseCasesList.data?.publishedUseCases?.length ?? 0) > 0 &&
+                getUseCasesList.data?.publishedUseCases.map(
+                  (item, index) => (
                     <CarouselItem
                       key={item.id}
                       className={cn(
@@ -145,23 +141,23 @@ const UseCasesListingPage = () => {
                       )}
                     >
                       <Card
-                        title={item.title}
+                        title={item.title || ''}
                         key={index}
                         href={`/usecases/${item.id}`}
                         metadataContent={[
                           {
-                            icon: Icons.calendarEvent as any,
+                            icon: Icons.calendarEvent,
                             label: 'Date',
                             value: formatDate(item.modified) || '',
                             stroke: 1.2,
                           },
                           {
-                            icon: Icons.worldPin as any,
+                            icon: Icons.worldPin,
                             label: 'Geography',
                             value:
-                              item.geographies?.length > 0
+                              item.geographies && item.geographies.length > 0
                                 ? item.geographies
-                                    .map((geo: any) => geo.name)
+                                    .map((geo) => geo.name)
                                     .join(', ')
                                 : '',
                             stroke: 1.2,
@@ -169,24 +165,24 @@ const UseCasesListingPage = () => {
                         ]}
                         leftFooterChips={[
                           {
-                            icon: `/Sectors/${item?.sectors[0]?.name}.svg` as any,
+                            icon: `/Sectors/${item?.sectors?.[0]?.name}.svg`,
                             label: 'Sectors',
                           },
                         ]}
                         rightFooterChips={[
                           {
                             icon: item.isIndividualUsecase
-                              ? (item?.user?.profilePicture as any)
+                              ? item?.user?.profilePicture
                                 ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
                                 : '/profile.png'
                               : item?.organization?.logo
                                 ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
-                                : ('/org.png' as any),
+                                : '/org.png',
                             label: 'Published by',
                           },
                         ]}
                         imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo?.path.replace('/code/files/', '')}`}
-                        description={stripMarkdown(item.summary)}
+                        description={stripMarkdown(item.summary || '')}
                         iconColor="metadata"
                         variation={'collapsed'}
                         // type={[

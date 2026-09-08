@@ -39,7 +39,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   );
 
   // Custom image handler to use URLs instead of base64
-  const imageHandler = function (this: any) {
+  const imageHandler = function (this: {
+    quill: {
+      getSelection: () => { index: number } | null;
+      insertEmbed: (index: number, type: string, url: string) => void;
+    };
+  }) {
     const url = prompt('Enter image URL:');
     if (url) {
       const quill = this.quill;
@@ -145,7 +150,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               const stripped = content.replace(/<(.|\n)*?>/g, '').trim();
               onChange(stripped === '' ? '' : content);
             }}
-            onBlur={(_range: any, _source: any, editor: any) => {
+            onBlur={(_range, _source, editor) => {
               const html = editor?.getHTML?.() || value || '';
               const stripped = html.replace(/<(.|\n)*?>/g, '').trim();
               onBlur?.(stripped === '' ? '' : html);

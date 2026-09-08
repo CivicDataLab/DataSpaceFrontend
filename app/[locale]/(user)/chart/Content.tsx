@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { EChartsOption } from 'echarts-for-react';
 import { ShareDialog, useScreenshot } from 'opub-ui';
 import { BarChart } from 'opub-ui/viz';
@@ -13,6 +14,19 @@ import MapChart from '@/components/MapChart';
 type Props = {
   options: EChartsOption;
 };
+
+interface MapChartOptions {
+  mapProperty: string;
+  mapZoom: number;
+  fillOpacity: number;
+  mapCenter: [number, number];
+  features: unknown;
+}
+
+interface MapInstance {
+  getSize: () => { x: number; y: number };
+}
+
 export function Content({
   bar,
   line,
@@ -22,7 +36,7 @@ export function Content({
   bar: Props;
   line: Props;
   stacked: Props;
-  mapOptions: any;
+  mapOptions: MapChartOptions;
 }) {
   const mapDataFn = (value: number) => {
     return value >= 330
@@ -124,7 +138,7 @@ const ChartMap = ({
   options,
   props,
 }: {
-  options: any;
+  options: MapChartOptions & { mapDataFn: (value: number) => string };
   props: {
     title: string;
   };
@@ -132,12 +146,16 @@ const ChartMap = ({
   const [svgURL, setSvgURL] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const ref = React.useRef<HTMLDivElement>(null);
-  const [map, setMap] = React.useState<any>(null);
+  const [map, setMap] = React.useState<MapInstance | null>(null);
 
   const isDesktop = useMediaQuery('(min-width: 768px)');
   const { createSvg, svgToPngURL, downloadFile, domToUrl } = useScreenshot();
 
   async function generateImage() {
+    if (!map) {
+      return;
+    }
+
     setIsLoading(true);
 
     const targetElm = ref.current?.querySelector('.leaflet-map-pane');
@@ -218,7 +236,14 @@ const Template = ({
         {title}
       </p>
       {data ? (
-        <img src={data} {...props} className="w-full" alt="SVG" />
+        <Image
+          src={data}
+          alt="SVG"
+          width={props?.width ?? 1200}
+          height={props?.height ?? 600}
+          className="h-auto w-full"
+          unoptimized
+        />
       ) : (
         'Loading...'
       )}

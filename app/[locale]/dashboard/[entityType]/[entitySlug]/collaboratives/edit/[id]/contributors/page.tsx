@@ -40,7 +40,7 @@ const Details = () => {
 
   const COLLAB_CONTRIBUTORS_TOAST_ID = 'collaboratives-contributors-toast';
 
-  const Users: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  const Users = useQuery(
     [`fetch_users`],
     () =>
       GraphQL(
@@ -59,18 +59,16 @@ const Details = () => {
     }
   );
 
-  const Organizations: { data: any; isLoading: boolean; refetch: any } =
+  const Organizations =
     useQuery([`fetch_orgs`], () =>
       GraphQL(
         OrgList,
         {
           [params.entityType]: params.entitySlug,
-        },
-        []
-      )
+        })
     );
 
-  const CollaborativeData: { data: any; isLoading: boolean; refetch: any } =
+  const CollaborativeData =
     useQuery(
       [`fetch_collaborative_${params.id}`],
       () =>
@@ -91,32 +89,36 @@ const Details = () => {
       }
     );
 
-  useEffect(() => {
+  const [prevCollabData, setPrevCollabData] = useState<
+    typeof CollaborativeData.data | undefined
+  >(undefined);
+  if (CollaborativeData.data !== prevCollabData) {
+    setPrevCollabData(CollaborativeData.data);
     setFormData((prev) => ({
       ...prev,
       partners:
         CollaborativeData?.data?.collaboratives?.[0]?.partnerOrganizations?.map(
-          (org: any) => ({
+          (org) => ({
             label: org.name,
             value: org.id,
           })
         ) || [],
       supporters:
         CollaborativeData?.data?.collaboratives?.[0]?.supportingOrganizations?.map(
-          (org: any) => ({
+          (org) => ({
             label: org.name,
             value: org.id,
           })
         ) || [],
       contributors:
         CollaborativeData?.data?.collaboratives?.[0]?.contributors?.map(
-          (user: any) => ({
+          (user) => ({
             label: user.fullName,
             value: user.id,
           })
         ) || [],
     }));
-  }, [CollaborativeData?.data]);
+  }
 
   const { mutate: addContributor, isLoading: addContributorLoading } =
     useMutation(
@@ -145,8 +147,8 @@ const Details = () => {
             ],
           });
         },
-        onError: (error: any) => {
-          toast(`Error: ${error.message}`, {
+        onError: (error: unknown) => {
+          toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`, {
             id: COLLAB_CONTRIBUTORS_TOAST_ID,
           });
         },
@@ -180,8 +182,8 @@ const Details = () => {
             ],
           });
         },
-        onError: (error: any) => {
-          toast(`Error: ${error.message}`, {
+        onError: (error: unknown) => {
+          toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`, {
             id: COLLAB_CONTRIBUTORS_TOAST_ID,
           });
         },
@@ -214,8 +216,8 @@ const Details = () => {
           ],
         });
       },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
+      onError: (error: unknown) => {
+        toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
       },
     }
   );
@@ -247,8 +249,8 @@ const Details = () => {
             ],
           });
         },
-        onError: (error: any) => {
-          toast(`Error: ${error.message}`, {
+        onError: (error: unknown) => {
+          toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`, {
             id: COLLAB_CONTRIBUTORS_TOAST_ID,
           });
         },
@@ -281,8 +283,8 @@ const Details = () => {
           ],
         });
       },
-      onError: (error: any) => {
-        toast(`Error: ${error.message}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
+      onError: (error: unknown) => {
+        toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`, { id: COLLAB_CONTRIBUTORS_TOAST_ID });
       },
     }
   );
@@ -314,8 +316,8 @@ const Details = () => {
             ],
           });
         },
-        onError: (error: any) => {
-          toast(`Error: ${error.message}`, {
+        onError: (error: unknown) => {
+          toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`, {
             id: COLLAB_CONTRIBUTORS_TOAST_ID,
           });
         },
@@ -329,7 +331,7 @@ const Details = () => {
   const selectedContributors = formData.contributors;
 
   const options =
-    Users?.data?.searchUsers?.map((user: any) => ({
+    Users?.data?.searchUsers?.map((user) => ({
       label: user.fullName,
       value: user.id,
     })) || [];
@@ -375,12 +377,12 @@ const Details = () => {
                   <CustomCombobox
                     options={options}
                     selectedValue={selectedContributors}
-                    onChange={(newValues: any) => {
+                    onChange={(newValues) => {
                       const prevValues = formData.contributors.map(
                         (item) => item.value
                       );
                       const newlyAdded = newValues.find(
-                        (item: any) => !prevValues.includes(item.value)
+                        (item) => !prevValues.includes(item.value)
                       );
 
                       setFormData((prev) => ({
@@ -397,7 +399,7 @@ const Details = () => {
                       setSearchValue(''); // clear input
                     }}
                     placeholder="Add Contributors"
-                    onInput={(value: any) => {
+                    onInput={(value: string) => {
                       setSearchValue(value);
                     }}
                   />
@@ -410,12 +412,12 @@ const Details = () => {
                     >
                       <Image
                         src={
-                          CollaborativeData.data.collaboratives[0]?.contributors?.find(
-                            (contributor: any) => contributor.id === item.value
+                          CollaborativeData.data?.collaboratives?.[0]?.contributors?.find(
+                            (contributor) => contributor.id === item.value
                           )?.profilePicture?.url
                             ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${
-                                CollaborativeData.data.collaboratives[0]?.contributors?.find(
-                                  (contributor: any) =>
+                                CollaborativeData.data?.collaboratives?.[0]?.contributors?.find(
+                                  (contributor) =>
                                     contributor.id === item.value
                                 )?.profilePicture?.url
                               }`
@@ -462,16 +464,16 @@ const Details = () => {
                 ?.supportingOrganizations
             }
             options={(Organizations?.data?.allOrganizations || [])?.map(
-              (org: any) => ({
+              (org) => ({
                 label: org.name,
                 value: org.id,
               })
             )}
             selectedValues={formData.supporters}
-            onChange={(newValues: any) => {
+            onChange={(newValues) => {
               const prevValues = formData.supporters.map((item) => item.value);
               const newlyAdded = newValues.find(
-                (item: any) => !prevValues.includes(item.value)
+                (item) => !prevValues.includes(item.value)
               );
 
               setFormData((prev) => ({ ...prev, supporters: newValues }));
@@ -483,7 +485,7 @@ const Details = () => {
                 });
               }
             }}
-            onRemove={(item: any) => {
+            onRemove={(item) => {
               setFormData((prev) => ({
                 ...prev,
                 supporters: prev.supporters.filter(
@@ -505,16 +507,16 @@ const Details = () => {
               CollaborativeData?.data?.collaboratives[0]?.partnerOrganizations
             }
             options={(Organizations?.data?.allOrganizations || [])?.map(
-              (org: any) => ({
+              (org) => ({
                 label: org.name,
                 value: org.id,
               })
             )}
             selectedValues={formData.partners}
-            onChange={(newValues: any) => {
+            onChange={(newValues) => {
               const prevValues = formData.partners.map((item) => item.value);
               const newlyAdded = newValues.find(
-                (item: any) => !prevValues.includes(item.value)
+                (item) => !prevValues.includes(item.value)
               );
 
               setFormData((prev) => ({ ...prev, partners: newValues }));
@@ -526,7 +528,7 @@ const Details = () => {
                 });
               }
             }}
-            onRemove={(item: any) => {
+            onRemove={(item) => {
               setFormData((prev) => ({
                 ...prev,
                 partners: prev.partners.filter((s) => s.value !== item.value),

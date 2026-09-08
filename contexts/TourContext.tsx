@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useSyncExternalStore } from 'react';
 import { TourConfig } from '@/config/tours';
 
 interface TourContextType {
@@ -39,32 +39,23 @@ export function TourProvider({ children }: TourProviderProps) {
   const [activeTour, setActiveTour] = useState<TourConfig | null>(null);
   const [isTourRunning, setIsTourRunning] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
-  const [seenTours, setSeenTours] = useState<Set<string>>(new Set());
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Load seen tours from localStorage on mount
-  useEffect(() => {
+  const [seenTours, setSeenTours] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setSeenTours(new Set(JSON.parse(stored)));
-      }
-    } catch (error) {
-      console.error('Failed to load tour history:', error);
+      return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
+    } catch {
+      return new Set();
     }
-  }, []);
-
-  // Detect mobile devices
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  });
+  const isMobile = useSyncExternalStore(
+    (onStoreChange) => {
+      window.addEventListener('resize', onStoreChange);
+      return () => window.removeEventListener('resize', onStoreChange);
+    },
+    () => window.innerWidth < 768,
+    () => false
+  );
 
   // Save seen tours to localStorage
   const saveSeenTours = useCallback((tours: Set<string>) => {

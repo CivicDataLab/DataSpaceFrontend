@@ -33,7 +33,11 @@ const profileLinks = [
   },
 ];
 
-export function MainNav({ hideSearch = false }) {
+interface MainNavProps {
+  hideSearch?: boolean;
+}
+
+export function MainNav({ hideSearch = false }: MainNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -59,11 +63,12 @@ export function MainNav({ hideSearch = false }) {
   };
 
   const [hasFetched, setHasFetched] = useState(false);
+  if ((status !== 'authenticated' || !session?.user) && hasFetched) {
+    setHasFetched(false);
+  }
 
   useEffect(() => {
     if (status !== 'authenticated' || !session?.user) {
-      // Reset when user is not authenticated to allow a clean fetch after login.
-      if (hasFetched) setHasFetched(false);
       return;
     }
 
@@ -72,15 +77,16 @@ export function MainNav({ hideSearch = false }) {
 
       try {
         const [userDetailsRes, entityDetailsRes] = await Promise.all([
-          GraphQL(UserDetailsQryDoc, {}, []),
-          GraphQL(allOrganizationsListingDoc, {}, []),
+          GraphQL(UserDetailsQryDoc),
+          GraphQL(allOrganizationsListingDoc),
         ]);
 
         setUserDetails(userDetailsRes);
         setAllEntityDetails(entityDetailsRes);
         setHasFetched(true);
-      } catch (err: any) {
-        const errorMessage = String(err?.message || err || '');
+      } catch (err: unknown) {
+        const errorMessage =
+          err instanceof Error ? err.message : String(err ?? '');
         const isUnauthenticated = errorMessage.includes(
           'User is not authenticated'
         );
