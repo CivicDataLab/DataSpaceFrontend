@@ -1,10 +1,11 @@
 import { graphql } from '@/gql';
+import { ClientError } from 'graphql-request';
 
 import { GraphQL } from '@/lib/api';
 import { generatePageMetadata } from '@/lib/utils';
 import DatasetDetailsPage from './DatasetDetailsPage';
 
-const datasetMetaQuery: any = graphql(`
+const datasetMetaQuery = graphql(`
   query getDatasetInfo($datasetId: UUID!) {
     getDataset(datasetId: $datasetId) {
       title
@@ -18,6 +19,19 @@ const datasetMetaQuery: any = graphql(`
   }
 `);
 
+function isUnpublishedDatasetError(error: unknown): boolean {
+  const message =
+    error instanceof ClientError
+      ? (error.response.errors?.[0]?.message ?? error.message)
+      : error instanceof Error
+        ? error.message
+        : '';
+
+  return message.includes(
+    'You need to be authenticated to access non-published datasets'
+  );
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -25,7 +39,7 @@ export async function generateMetadata({
 }) {
   const { datasetIdentifier } = await params;
   try {
-    const res: any = await GraphQL(
+    const res = await GraphQL(
       datasetMetaQuery,
       {},
       { datasetId: datasetIdentifier }
@@ -33,21 +47,23 @@ export async function generateMetadata({
 
     const dataset = res?.getDataset;
     return generatePageMetadata({
-      title: `${dataset?.title} | Dataset | CivicDataSpace`,
-      description: dataset?.description,
-      keywords: dataset?.tags?.map((tag: any) => tag.value) || [],
+      title: `${dataset?.title ?? ''} | Dataset | CivicDataSpace`,
+      description: dataset?.description ?? undefined,
+      keywords: dataset?.tags?.map((tag) => tag.value) || [],
       openGraph: {
         type: 'dataset',
         locale: 'en_US',
         url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/datasets/${datasetIdentifier}`,
-        title: dataset?.title,
-        description: dataset?.description,
+        title: dataset?.title ?? '',
+        description: dataset?.description ?? '',
         siteName: 'CivicDataSpace',
         image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
       },
     });
   } catch (e) {
-    console.error('Metadata fetch error', e);
+    if (!isUnpublishedDatasetError(e)) {
+      console.error('Metadata fetch error', e);
+    }
     return generatePageMetadata({ title: 'Dataset Details' });
   }
 }

@@ -23,12 +23,174 @@ import styles from '../edit.module.scss';
 import ResourceSelector from './ResourceSelector';
 
 interface AccessModelProps {
-  setList: any;
-  setAccessModelId: any;
-  accessModelId: any;
+  setList: (list: boolean) => void;
+  setAccessModelId: (id: string | null) => void;
+  accessModelId: string | null;
 }
 
-const datasetResourcesQuery: any = graphql(`
+interface SchemaField {
+  id?: string | number;
+  fieldName?: string;
+  label?: string;
+  value?: string;
+}
+
+interface ComboResource {
+  label: string;
+  value: string;
+  schema?: SchemaField[];
+}
+
+interface AccessModelResource {
+  resource: string;
+  fields: number[];
+}
+
+interface AccessModelFormData {
+  dataset: string;
+  name: string;
+  description: string;
+  type: string;
+  resources: AccessModelResource[];
+  accessModelId: string;
+}
+
+interface ModelResourceField {
+  id: string | number;
+  fieldName: string;
+}
+
+interface ModelResource {
+  resource: { id: string; name: string };
+  fields: ModelResourceField[];
+}
+
+function mapDatasetResourcesToCombo(
+  resources: Array<{
+    name: string;
+    id: string;
+    schema?: SchemaField[] | null;
+  }>
+): ComboResource[] {
+  return resources.map((field) => ({
+    label: field.name,
+    value: field.id,
+    schema: field.schema ?? undefined,
+  }));
+}
+
+function mapAccessModelToFormState(
+  accessModel: object,
+  accessModelId: string,
+  datasetId: string
+): {
+  formData: AccessModelFormData;
+  selectedResources: ComboResource[];
+  selectedFields: ComboResource[];
+} {
+  const name =
+    'name' in accessModel && typeof accessModel.name === 'string'
+      ? accessModel.name
+      : '';
+  const description =
+    'description' in accessModel && typeof accessModel.description === 'string'
+      ? accessModel.description
+      : '';
+  const type =
+    'type' in accessModel && typeof accessModel.type === 'string'
+      ? accessModel.type
+      : 'PUBLIC';
+  const modelResources = getModelResources(accessModel);
+
+  const selectedResources = modelResources.map((resource) => ({
+    label: resource.resource.name,
+    value: resource.resource.id,
+    schema: resource.fields.map((field) => ({
+      label: field.fieldName,
+      value: String(field.id),
+    })),
+  }));
+
+  return {
+    formData: {
+      dataset: datasetId,
+      name: name ?? '',
+      description: description ?? '',
+      type: type ?? 'PUBLIC',
+      accessModelId,
+      resources: modelResources.map((resource) => ({
+        resource: resource.resource.id,
+        fields: resource.fields.map((field) => +field.id),
+      })),
+    },
+    selectedResources,
+    selectedFields: selectedResources.map((resource) => ({
+      label: resource.label,
+      value: resource.value,
+      schema: (resource.schema ?? []).map((field) => ({
+        id: field.value,
+        fieldName: field.label,
+      })),
+    })),
+  };
+}
+
+function getModelResources(accessModel: object): ModelResource[] {
+  if (
+    !('modelResources' in accessModel) ||
+    !Array.isArray(accessModel.modelResources)
+  ) {
+    return [];
+  }
+
+  return accessModel.modelResources.flatMap((resource) => {
+    if (typeof resource !== 'object' || resource === null) {
+      return [];
+    }
+    if (!('resource' in resource) || !('fields' in resource)) {
+      return [];
+    }
+    const nested = resource.resource;
+    if (
+      typeof nested !== 'object' ||
+      nested === null ||
+      !('id' in nested) ||
+      !('name' in nested) ||
+      !Array.isArray(resource.fields)
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        resource: {
+          id: String(nested.id),
+          name: String(nested.name),
+        },
+        fields: resource.fields.flatMap((field: unknown) => {
+          if (typeof field !== 'object' || field === null) {
+            return [];
+          }
+          if (!('id' in field) || !('fieldName' in field)) {
+            return [];
+          }
+          const fieldId = field.id;
+          return [
+            {
+              id:
+                typeof fieldId === 'string' || typeof fieldId === 'number'
+                  ? fieldId
+                  : String(fieldId),
+              fieldName: String(field.fieldName),
+            },
+          ];
+        }),
+      },
+    ];
+  });
+}
+
+const datasetResourcesQuery = graphql(`
   query resources($datasetId: UUID!) {
     datasetResources(datasetId: $datasetId) {
       id
@@ -43,7 +205,7 @@ const datasetResourcesQuery: any = graphql(`
   }
 `);
 
-const accessModelListQuery: any = graphql(`
+const accessModelListQuery = graphql(`
   query accessModelResources($datasetId: UUID!) {
     accessModelResources(datasetId: $datasetId) {
       id
@@ -56,7 +218,7 @@ const accessModelListQuery: any = graphql(`
   }
 `);
 
-const editaccessModel: any = graphql(`
+const editaccessModel = graphql(`
   mutation editAccessModel($accessModelInput: EditAccessModelInput!) {
     editAccessModel(accessModelInput: $accessModelInput) {
       __typename
@@ -70,7 +232,7 @@ const editaccessModel: any = graphql(`
   }
 `);
 
-const getAccessModelDetails: any = graphql(`
+const getAccessModelDetails = graphql(`
   query accessModel($accessModelId: UUID!) {
     accessModel(accessModelId: $accessModelId) {
       resourceFields {
@@ -96,11 +258,12 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   accessModelId,
 }) => {
   const ACCESS_MODEL_SAVE_ERROR_TOAST_ID = 'dataset-access-model-save-error';
-  const getErrorMessage = (
-    err: any,
-    fallback: string
-  ) =>
-    typeof err?.message === 'string' && err.message.trim()
+  const getErrorMessage = (err: unknown, fallback: string) =>
+    typeof err === 'object' &&
+    err !== null &&
+    'message' in err &&
+    typeof err.message === 'string' &&
+    err.message.trim()
       ? err.message.trim()
       : fallback;
 
@@ -113,7 +276,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     entitySlug: string;
     id: string;
   }>();
-  const { data, isLoading }: { data: any; isLoading: boolean } = useQuery(
+  const { data, isLoading } = useQuery(
     [`resourcesList_${params.id}`],
     () =>
       GraphQL(
@@ -128,7 +291,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   const {
     data: accessModelList,
     refetch: accessModelListRefetch,
-  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  } = useQuery(
     [`accessModelList_${params.id}`],
     () =>
       GraphQL(
@@ -142,7 +305,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   const {
     data: accessModelDetails,
     refetch: accessModelDetailsRefetch,
-  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  } = useQuery(
     [`accessModelDetails${params.id}`],
     () =>
       GraphQL(
@@ -154,7 +317,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
       )
   );
 
-  const [accessModelData, setAccessModelData] = useState({
+  const [accessModelData, setAccessModelData] = useState<AccessModelFormData>({
     dataset: params.id,
     name: '',
     description: '',
@@ -165,96 +328,75 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   const [previousAccessModelData, setPreviousAccessModelData] =
     useState(accessModelData);
 
-  const [selectedResources, setSelectedResources] = useState<string[]>([]);
+  const [selectedResources, setSelectedResources] = useState<ComboResource[]>(
+    []
+  );
   const [, setShowSelectAll] = useState(false);
 
-  const [availableResources, setAvailableResources] = useState<
-    { label: string; value: string; schema: [] }[]
-  >([]);
+  const [availableResources, setAvailableResources] = useState<ComboResource[]>(
+    []
+  );
 
-  const [selectedFields, setSelectedFields] = useState<
-    { label: string; value: string }[]
-  >([]);
-
-  useEffect(() => {
+  const [selectedFields, setSelectedFields] = useState<ComboResource[]>([]);
+  const [prevDatasetResources, setPrevDatasetResources] = useState(data);
+  if (data !== prevDatasetResources) {
+    setPrevDatasetResources(data);
     if (data) {
       setAvailableResources(
-        data.datasetResources.map((field: any) => ({
-          label: field.name,
-          value: field.id,
-          schema: field.schema,
-        }))
+        mapDatasetResourcesToCombo(data.datasetResources)
       );
     }
-  }, [data, selectedResources]);
+  }
+
+  const [prevAccessModelDetails, setPrevAccessModelDetails] =
+    useState(accessModelDetails);
+  const [prevAccessModelId, setPrevAccessModelId] = useState(accessModelId);
+  if (
+    accessModelDetails !== prevAccessModelDetails ||
+    accessModelId !== prevAccessModelId
+  ) {
+    setPrevAccessModelDetails(accessModelDetails);
+    setPrevAccessModelId(accessModelId);
+    if (accessModelDetails?.accessModel && accessModelId) {
+      const mapped = mapAccessModelToFormState(
+        accessModelDetails.accessModel,
+        accessModelId,
+        params.id
+      );
+      setAccessModelData(mapped.formData);
+      setPreviousAccessModelData(mapped.formData);
+      setSelectedResources(mapped.selectedResources);
+      setSelectedFields(mapped.selectedFields);
+    }
+  }
 
   useEffect(() => {
     if (accessModelDetails && accessModelDetails.accessModel && accessModelId) {
-      const { name, description, type, modelResources } =
-        accessModelDetails.accessModel;
-
       accessModelDetailsRefetch();
-      // Update accessModelData with the received data
-      const newData = {
-        dataset: params.id,
-        name: name,
-        description: description,
-        type: type,
-        accessModelId: accessModelId,
-        resources: modelResources.map((resource: any) => ({
-          resource: resource.resource.id,
-          fields: resource.fields.map((field: any) => +field.id),
-        })),
-      };
-
-      setAccessModelData(newData);
-      setPreviousAccessModelData(newData);
-
-      // Update selectedResources and selectedFields based on modelResources
-      const selectedResourcesIds = modelResources.map((resource: any) => ({
-        label: resource.resource.name,
-        value: resource.resource.id,
-        schema: resource.fields.map((field: any) => ({
-          label: field.fieldName,
-          value: field.id,
-        })),
-      }));
-
-      setSelectedResources(selectedResourcesIds);
-
-      const selectedFieldsIds = selectedResourcesIds.map((resource: any) => ({
-        label: resource.label,
-        value: resource.value,
-        schema: resource.schema.map((field: any) => ({
-          id: field.id,
-          fieldName: field.fieldName,
-        })),
-      }));
-      setSelectedFields(selectedFieldsIds);
     }
-  }, [accessModelDetails, accessModelId, accessModelDetailsRefetch, params.id]);
+  }, [accessModelDetails, accessModelId, accessModelDetailsRefetch]);
 
-  const handleAddResource = (resourceDetails: any) => {
+  const handleAddResource = (resourceDetails: ComboResource[]) => {
     setSelectedResources(resourceDetails);
-    setAvailableResources(resourceDetails); // Filter out the selected resource
+    setAvailableResources(resourceDetails);
     setSelectedFields(resourceDetails);
-    const newResources = resourceDetails.map((resource: any) => ({
+    const newResources = resourceDetails.map((resource) => ({
       resource: resource.value,
-      fields: resource.schema.map((field: any) => +field.id),
+      fields: (resource.schema ?? []).map((field) => +String(field.id ?? 0)),
     }));
 
-    setAccessModelData((prevData: any) => ({
+    setAccessModelData((prevData) => ({
       ...prevData,
       resources: newResources,
     }));
 
     if (resourceDetails.length === 0) {
-      setAccessModelData((prevData: any) => ({
+      setAccessModelData((prevData) => ({
         ...prevData,
         resources: [],
       }));
     } else {
-      setAccessModelData((prevData: any) => ({
+      setAccessModelData((prevData) => ({
         ...prevData,
         resources: [...prevData.resources],
       }));
@@ -263,23 +405,20 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     handleSave({ ...accessModelData, resources: newResources });
   };
 
-  const handleRemoveResource = (resourceId: any) => {
-    // Filter out the selected resource from selectedResources
+  const handleRemoveResource = (resourceId: string) => {
     setSelectedResources((prevResources) =>
-      prevResources.filter((resource: any) => resource.value !== resourceId)
+      prevResources.filter((resource) => resource.value !== resourceId)
     );
 
-    // Filter out the selected fields associated with the removed resource
     setSelectedFields((prevFields) =>
       prevFields.filter((field) => field.value.split('.')[0] !== resourceId)
     );
 
-    // Remove the corresponding resource from accessModelData.resources
     const updatedResources = accessModelData.resources.filter(
-      (resource: any) => resource.resource !== resourceId
+      (resource) => resource.resource !== resourceId
     );
 
-    setAccessModelData((prevData: any) => ({
+    setAccessModelData((prevData) => ({
       ...prevData,
       resources: updatedResources,
     }));
@@ -288,12 +427,12 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   };
   const handleSelectAll = () => {
     const allResources =
-      data?.datasetResources.map((resource: any) => ({
+      data?.datasetResources.map((resource) => ({
         label: resource.name,
         value: resource.id,
-        schema: resource.schema.map((field: any) => ({
+        schema: resource.schema.map((field) => ({
           label: field.fieldName,
-          value: field.id.toString(), // Ensure ID is a string for Combobox
+          value: field.id.toString(),
         })),
       })) || [];
 
@@ -301,9 +440,9 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     setSelectedResources(allResources);
     setShowSelectAll(false);
 
-    const updatedResources = allResources.map((resource: any) => ({
+    const updatedResources = allResources.map((resource) => ({
       resource: resource.value,
-      fields: resource.schema.map((option: any) => parseInt(option.value, 10)), // Convert to integer
+      fields: resource.schema.map((option) => parseInt(option.value, 10)),
     }));
 
     const updatedData = {
@@ -316,23 +455,25 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
   };
 
   const { mutate, isLoading: editMutationLoading } = useMutation(
-    (data: { accessModelInput: EditAccessModelInput }) =>
+    (variables: { accessModelInput: EditAccessModelInput }) =>
       GraphQL(
         editaccessModel,
         {
           [params.entityType]: params.entitySlug,
         },
-        data
+        variables
       ),
     {
-      onSuccess: (res: any) => {
-        // toast('Access Model Saved');
+      onSuccess: (res) => {
         accessModelDetailsRefetch();
         accessModelListRefetch();
-        setAccessModelId(res?.editAccessModel?.id);
+        const edited = res?.editAccessModel;
+        if (edited && 'id' in edited) {
+          setAccessModelId(edited.id);
+        }
         setPreviousAccessModelData(accessModelData);
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast(
           `Error: ${getErrorMessage(err, 'Unable to save access model right now.')}`,
           { id: ACCESS_MODEL_SAVE_ERROR_TOAST_ID }
@@ -343,7 +484,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const handleSave = (updatedData: any) => {
+  const handleSave = (updatedData: AccessModelFormData) => {
     if (
       JSON.stringify(updatedData) !== JSON.stringify(previousAccessModelData)
     ) {
@@ -360,7 +501,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
     }
   };
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: string) => {
     const updatedData = { ...accessModelData, [field]: value };
     setAccessModelData(updatedData);
   };
@@ -421,7 +562,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                 </div>
               </div>
               {accessModelList?.accessModelResources.map(
-                (item: any, index: any) => (
+                (item, index) => (
                   <div
                     key={index}
                     className={`rounded-1 border-1 border-solid border-baseGraySlateSolid6 px-6 py-3 ${accessModelId === item.id ? ' bg-baseGraySlateSolid5' : ''}`}
@@ -510,7 +651,11 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
                 helpText={
                   'Only Resources added will be part of this Access Type. After adding select the Fields and Rows to be included'
                 }
-                onChange={(e: any) => handleAddResource(e)}
+                onChange={(value) => {
+                  if (Array.isArray(value)) {
+                    handleAddResource(value);
+                  }
+                }}
               />
             </div>
 
@@ -527,9 +672,9 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
               </Button>
             </div>
           </div>
-          {selectedResources?.map((resourceId: any, index) => {
+          {selectedResources?.map((resourceId, index) => {
             const selectedResource = data?.datasetResources.find(
-              (resource: any) => resource.id === resourceId.value
+              (resource) => resource.id === resourceId.value
             );
 
             if (!selectedResource || !selectedResource.schema) {

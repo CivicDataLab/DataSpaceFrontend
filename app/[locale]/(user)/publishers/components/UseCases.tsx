@@ -1,6 +1,10 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
+import {
+  OrgPublishedUseCasesListQuery,
+  UserPublishedUseCasesListQuery,
+} from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Icon, Spinner, Text } from 'opub-ui';
 
@@ -9,7 +13,7 @@ import { cn, extractPublisherId, formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 
-const userPublishedUseCasesDoc: any = graphql(`
+const userPublishedUseCasesDoc = graphql(`
   query userPublishedUseCasesList($userId: ID!) {
     userPublishedUseCases(userId: $userId) {
       id
@@ -54,7 +58,7 @@ const userPublishedUseCasesDoc: any = graphql(`
   }
 `);
 
-const orgPublishedUseCasesDoc: any = graphql(`
+const orgPublishedUseCasesDoc = graphql(`
   query orgPublishedUseCasesList($organizationId: ID!) {
     organizationPublishedUseCases(organizationId: $organizationId) {
       id
@@ -105,9 +109,22 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
     String(type === 'organization' ? params.organizationSlug : params.publisherSlug)
   );
 
-  const PublishedUseCasesList: any = useQuery(
+  type PublishedUseCasesData =
+    | OrgPublishedUseCasesListQuery
+    | UserPublishedUseCasesListQuery;
+
+  type PublishedUseCase =
+    | OrgPublishedUseCasesListQuery['organizationPublishedUseCases'][number]
+    | UserPublishedUseCasesListQuery['userPublishedUseCases'][number];
+
+  interface UseCaseMetadataItem {
+    metadataItem?: { label?: string | null };
+    value?: unknown;
+  }
+
+  const PublishedUseCasesList = useQuery(
     ['publishedUseCases', type, id],
-    () =>
+    (): Promise<PublishedUseCasesData> =>
       type === 'organization'
         ? GraphQL(
             orgPublishedUseCasesDoc,
@@ -125,10 +142,11 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
           )
   );
 
-  const UseCaseData =
-    type === 'organization'
-      ? PublishedUseCasesList.data?.organizationPublishedUseCases
-      : PublishedUseCasesList.data?.userPublishedUseCases;
+  const UseCaseData = PublishedUseCasesList.data
+    ? 'organizationPublishedUseCases' in PublishedUseCasesList.data
+      ? PublishedUseCasesList.data.organizationPublishedUseCases
+      : PublishedUseCasesList.data.userPublishedUseCases
+    : undefined;
 
   return (
     <div>
@@ -141,8 +159,8 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
           <div className=" flex w-fit justify-center rounded-2 bg-surfaceDefault p-4">
             <Spinner />
           </div>
-        ) : UseCaseData?.length > 0 ? (
-          UseCaseData?.map((item: any, index: any) => (
+        ) : (UseCaseData?.length ?? 0) > 0 ? (
+          UseCaseData?.map((item: PublishedUseCase, index: number) => (
             <Card
               // type={[
               //   {
@@ -151,28 +169,31 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
               //     borderColor: '#F9C74F',
               //   },
               // ]}
-              title={item.title}
+              title={item.title ?? ''}
               key={index}
               href={`/usecases/${item.id}`}
               metadataContent={[
                 {
-                  icon: Icons.calendarEvent as any,
+                  icon: Icons.calendarEvent,
                   label: 'Date',
                   value: formatDate(item.modified) || '',
                   stroke: 1.2,
                 },
                 {
-                  icon: Icons.worldPin as any,
+                  icon: Icons.worldPin,
                   label: 'Geography',
-                  value: item.metadata?.find(
-                    (meta: any) => meta.metadataItem?.label === 'Geography'
-                  )?.value,
+                  value: String(
+                    item.metadata?.find(
+                      (meta: UseCaseMetadataItem) =>
+                        meta.metadataItem?.label === 'Geography'
+                    )?.value ?? ''
+                  ),
                   stroke: 1.2,
                 },
               ]}
               leftFooterChips={[
                 {
-                  icon: `/Sectors/${item?.sectors[0]?.name}.svg` as any,
+                  icon: `/Sectors/${item?.sectors?.[0]?.name}.svg`,
                   label: 'Sectors',
                 },
               ]}

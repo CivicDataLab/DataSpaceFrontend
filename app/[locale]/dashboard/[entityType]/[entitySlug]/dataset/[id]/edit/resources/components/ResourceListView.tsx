@@ -3,14 +3,14 @@ import { useMutation } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { parseAsString, useQueryState } from 'nuqs';
 import {
-    Button,
-    DataTable,
-    Dialog,
-    DropZone,
-    IconButton,
-    SearchInput,
-    Text,
-    toast,
+  Button,
+  DataTable,
+  Dialog,
+  DropZone,
+  IconButton,
+  SearchInput,
+  Text,
+  toast,
 } from 'opub-ui';
 import React, { useEffect } from 'react';
 
@@ -27,8 +27,19 @@ type FilteredRow = {
   id: string;
 };
 
+interface ResourceListItem {
+  name: string;
+  type: string;
+  created?: string | null;
+  id: string;
+}
+
+interface ResourceTableCell {
+  row: { original: FilteredRow };
+}
+
 type ResourceListProps = {
-  data: any[];
+  data: ResourceListItem[];
   refetch: () => void;
   isPromptDataset?: boolean;
 };
@@ -38,11 +49,12 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
   const fileButtonLabel = isPromptDataset ? 'ADD NEW PROMPT FILE' : 'ADD NEW DATA FILE';
   const RESOURCE_DELETE_ERROR_TOAST_ID = 'dataset-resource-delete-error';
   const RESOURCE_ADD_ERROR_TOAST_ID = 'dataset-resource-add-error';
-  const getErrorMessage = (
-    err: any,
-    fallback: string
-  ) =>
-    typeof err?.message === 'string' && err.message.trim()
+  const getErrorMessage = (err: unknown, fallback: string) =>
+    typeof err === 'object' &&
+    err !== null &&
+    'message' in err &&
+    typeof err.message === 'string' &&
+    err.message.trim()
       ? err.message.trim()
       : fallback;
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
@@ -60,18 +72,18 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
   }, [resourceId, refetch]);
 
   const updateResourceMutation = useMutation(
-    (data: { resourceId: string }) =>
+    (variables: { resourceId: string }) =>
       GraphQL(
         updateResourceList,
         {
           [params.entityType]: params.entitySlug,
         },
-        data
+        variables
       ),
     {
-      onSuccess: (data, variables) => {
+      onSuccess: (_data, variables) => {
         const updatedFilteredRows = filteredRows.filter(
-          (row: any) => row.id !== variables.resourceId
+          (row) => row.id !== variables.resourceId
         );
         setFilteredRows(updatedFilteredRows);
         refetch();
@@ -82,7 +94,7 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
           },
         });
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast(getErrorMessage(err, 'Unable to delete resource right now.'), {
           id: RESOURCE_DELETE_ERROR_TOAST_ID,
         });
@@ -91,20 +103,20 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
   );
 
   const createResourceMutation = useMutation(
-    (data: { fileResourceInput: CreateFileResourceInput }) =>
+    (variables: { fileResourceInput: CreateFileResourceInput }) =>
       GraphQL(
         createResourceFilesDoc,
         {
           [params.entityType]: params.entitySlug,
         },
-        data
+        variables
       ),
     {
-      onSuccess: (data: any) => {
-        const updatedRows = data.createFileResources.map((item: any) => ({
+      onSuccess: (result) => {
+        const updatedRows = result.createFileResources.map((item) => ({
           name_of_resource: item.name,
           type: item.type,
-          date_added: formatDate(item.created) || '',
+        date_added: formatDate(item.created ?? null) || '',
           id: item.id,
         }));
 
@@ -123,10 +135,10 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
         });
 
         router.push(
-          `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${params.id}/edit/resources?id=${data.createFileResources[0]?.id}`
+          `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${params.id}/edit/resources?id=${result.createFileResources[0]?.id}`
         );
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         toast(getErrorMessage(err, 'Unable to add resource right now.'), {
           id: RESOURCE_ADD_ERROR_TOAST_ID,
           action: {
@@ -139,13 +151,13 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
     }
   );
 
-  const deleteRow = (row: any) => {
+  const deleteRow = (row: FilteredRow) => {
     updateResourceMutation.mutate({
       resourceId: row.id,
     });
   };
 
-  const handleResourceID = (info: any) => {
+  const handleResourceID = (info: ResourceTableCell) => {
     setResourceId(info.row.original.id);
   };
 
@@ -154,7 +166,7 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
       {
         accessorKey: 'name_of_resource',
         header: 'NAME OF RESOURCE',
-        cell: (info: any) => {
+        cell: (info: ResourceTableCell) => {
           return (
             <div
               style={{ cursor: 'pointer', textDecoration: 'underline' }}
@@ -179,7 +191,7 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
       },
       {
         header: 'DELETE',
-        cell: ({ row }: any) => (
+        cell: ({ row }: ResourceTableCell) => (
           <IconButton
             size="medium"
             icon={Icons.delete}
@@ -193,10 +205,10 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
     ],
 
     rows:
-      data.map((item: any) => ({
+      data.map((item) => ({
         name_of_resource: item.name,
         type: item.type,
-        date_added: formatDate(item.created) || '',
+        date_added: formatDate(item.created ?? null) || '',
         id: item.id,
       })) || [],
   };
@@ -207,19 +219,19 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
 
   useEffect(() => {
     const updatedRows =
-      data.map((item: any) => ({
+      data.map((item) => ({
         name_of_resource: item.name,
         type: item.type,
-        date_added: formatDate(item.created) || '',
+        date_added: formatDate(item.created ?? null) || '',
         id: item.id,
       })) || [];
 
     setFilteredRows(updatedRows);
   }, [data]);
 
-  const handleSearchChange = (e: string) => {
-    const searchTerm = e.toLowerCase();
-    const filtered = table.rows.filter((row: any) =>
+  const handleSearchChange = (search: string) => {
+    const searchTerm = search.toLowerCase();
+    const filtered = table.rows.filter((row) =>
       row.name_of_resource.toLowerCase().includes(searchTerm)
     );
     setFilteredRows(filtered);
@@ -244,8 +256,8 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
 
   const uploadedFile = file.length > 0 && (
     <div className="flex flex-col gap-2 p-4">
-      {file.map((file, index) => {
-        return <div key={index}>{file.name}</div>;
+      {file.map((uploaded, index) => {
+        return <div key={index}>{uploaded.name}</div>;
       })}
     </div>
   );
@@ -261,7 +273,7 @@ export const ResourceListView = ({ data, refetch, isPromptDataset = false }: Res
             placeholder={`Search in ${fileLabel}`}
             label="Search"
             name="Search"
-            onChange={(e) => handleSearchChange(e)}
+            onChange={(search) => handleSearchChange(search)}
             onClear={() => handleSearchChange('')}
           />
         </div>

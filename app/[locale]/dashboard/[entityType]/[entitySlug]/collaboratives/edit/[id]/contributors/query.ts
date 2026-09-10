@@ -1,7 +1,7 @@
 import { graphql } from '@/gql';
 
 
-export const FetchUsers: any = graphql(`
+export const FetchUsers = graphql(`
     query searchUsers($limit: Int!, $searchTerm: String!) {
       searchUsers(limit: $limit, searchTerm: $searchTerm) {
         id
@@ -11,7 +11,7 @@ export const FetchUsers: any = graphql(`
     }
   `);
 
-export const FetchCollaborativeInfo: any = graphql(`
+export const FetchCollaborativeInfo = graphql(`
     query collaborativeinfo($filters: CollaborativeFilter) {
       collaboratives(filters: $filters) {
         id
@@ -44,7 +44,7 @@ export const FetchCollaborativeInfo: any = graphql(`
     }
   `);
 
-export const AddContributors: any = graphql(`
+export const AddContributors = graphql(`
     mutation addContributorToCollaborative($collaborativeId: String!, $userId: ID!) {
       addContributorToCollaborative(collaborativeId: $collaborativeId, userId: $userId) {
         __typename
@@ -61,7 +61,7 @@ export const AddContributors: any = graphql(`
     }
   `);
 
-export const RemoveContributor: any = graphql(`
+export const RemoveContributor = graphql(`
     mutation removeContributorFromCollaborative($collaborativeId: String!, $userId: ID!) {
       removeContributorFromCollaborative(collaborativeId: $collaborativeId, userId: $userId) {
         __typename
@@ -78,7 +78,7 @@ export const RemoveContributor: any = graphql(`
     }
   `);
 
-export const AddSupporters: any = graphql(`
+export const AddSupporters = graphql(`
     mutation addSupportingOrganizationToCollaborative(
       $collaborativeId: String!
       $organizationId: ID!
@@ -102,7 +102,7 @@ export const AddSupporters: any = graphql(`
     }
   `);
 
-export const RemoveSupporters: any = graphql(`
+export const RemoveSupporters = graphql(`
     mutation removeSupportingOrganizationFromCollaborative(
       $collaborativeId: String!
       $organizationId: ID!
@@ -126,7 +126,7 @@ export const RemoveSupporters: any = graphql(`
     }
   `);
 
-export const AddPartners: any = graphql(`
+export const AddPartners = graphql(`
     mutation addPartnerOrganizationToCollaborative(
       $collaborativeId: String!
       $organizationId: ID!
@@ -150,7 +150,7 @@ export const AddPartners: any = graphql(`
     }
   `);
 
-export const RemovePartners: any = graphql(`
+export const RemovePartners = graphql(`
     mutation removePartnerOrganizationFromCollaborative(
       $collaborativeId: String!
       $organizationId: ID!
@@ -175,7 +175,7 @@ export const RemovePartners: any = graphql(`
   `);
 
 
-export const OrgList: any = graphql(`
+export const OrgList = graphql(`
   query allOrgs {
     allOrganizations {
       id

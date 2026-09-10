@@ -7,11 +7,25 @@ import { Icon, Text } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 
+interface SidebarCardData {
+  id?: string;
+  fullName?: string;
+  name?: string;
+  logo?: { url: string } | null;
+  profilePicture?: { url: string } | null;
+  publishedUseCasesCount?: number;
+  publishedDatasetsCount?: number;
+  contributedSectorsCount?: number;
+  location?: string | null;
+  linkedinProfile?: string | null;
+  githubProfile?: string | null;
+}
+
 interface SidebarCardProps {
-  data: any;
+  data: SidebarCardData | null | undefined;
   type: 'organization' | 'Publisher';
 }
-const sectorsDoc: any = graphql(`
+const sectorsDoc = graphql(`
   query sectorInfo($userId: ID!) {
     userContributedSectors(userId: $userId) {
       id
@@ -21,7 +35,7 @@ const sectorsDoc: any = graphql(`
   }
 `);
 
-const organizationDoc: any = graphql(`
+const organizationDoc = graphql(`
   query organizationInfo($organizationId: ID!) {
     organizationContributedSectors(organizationId: $organizationId) {
       id
@@ -32,30 +46,30 @@ const organizationDoc: any = graphql(`
 `);
 
 const SidebarCard: React.FC<SidebarCardProps> = ({ data, type }) => {
-  const sectorInfo: any = useQuery(
-    [`${data.id}_sector`],
+  const sectorInfo = useQuery(
+    [`${data?.id}_sector`],
     () =>
       GraphQL(
         sectorsDoc,
         {
           // Entity Headers if present
         },
-        { userId: data.id }
+        { userId: data?.id ?? '' }
       ),
     {
       enabled: type === 'Publisher' && !!data?.id,
     }
   );
 
-  const organizationInfo: any = useQuery(
-    [`${data.id}_organization`],
+  const organizationInfo = useQuery(
+    [`${data?.id}_organization`],
     () =>
       GraphQL(
         organizationDoc,
         {
           // Entity Headers if present
         },
-        { organizationId: data.id }
+        { organizationId: data?.id ?? '' }
       ),
     {
       enabled: type === 'organization' && !!data?.id, // runs only if type is 'organization' and data.id exists
@@ -68,7 +82,7 @@ const SidebarCard: React.FC<SidebarCardProps> = ({ data, type }) => {
         {type === 'organization' ? (
           <Image
             src={`${data?.logo?.url ? process.env.NEXT_PUBLIC_BACKEND_URL + data?.logo?.url : '/org.png'}`}
-            alt={data.fullName}
+            alt={data?.fullName ?? data?.name ?? ''}
             width={168}
             height={168}
             className="m-auto rounded-4 bg-surfaceDefault object-contain p-4"
@@ -76,7 +90,7 @@ const SidebarCard: React.FC<SidebarCardProps> = ({ data, type }) => {
         ) : (
           <Image
             src={`${data?.profilePicture?.url ? process.env.NEXT_PUBLIC_BACKEND_URL + data?.profilePicture?.url : '/profile.png'}`}
-            alt={data.fullName}
+            alt={data?.fullName ?? data?.name ?? ''}
             width={240}
             height={240}
             className="m-auto rounded-full object-cover"
@@ -132,7 +146,7 @@ const SidebarCard: React.FC<SidebarCardProps> = ({ data, type }) => {
           {type === 'Publisher' &&
             sectorInfo?.data &&
             sectorInfo?.data.userContributedSectors.map(
-              (item: any, index: any) => (
+              (item, index) => (
                 <div className="flex items-center gap-2" key={index}>
                   <Image
                     src={`/Sectors/${item?.name}.svg`}
@@ -148,7 +162,7 @@ const SidebarCard: React.FC<SidebarCardProps> = ({ data, type }) => {
           {type === 'organization' &&
             organizationInfo?.data &&
             organizationInfo?.data.organizationContributedSectors.map(
-              (item: any, index: any) => (
+              (item, index) => (
                 <div className="flex items-center gap-2" key={index}>
                   <Image
                     src={`/Sectors/${item?.name}.svg`}

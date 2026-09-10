@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { Session } from 'next-auth';
 import { Button, Icon, Sheet, Spinner, Text } from 'opub-ui';
 import React, { useState } from 'react';
 
@@ -7,9 +8,9 @@ import { ProfileContent } from './main-nav';
 
 interface SidebarProps {
   data: { href: string; title: string }[];
-  session: any;
-  signIn: any;
-  status: any;
+  session: Session | null;
+  signIn: (provider?: string) => unknown;
+  status: 'authenticated' | 'unauthenticated' | 'loading';
 }
 
 const Sidebar: React.FC<SidebarProps> = ({

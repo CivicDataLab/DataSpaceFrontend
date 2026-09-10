@@ -2,8 +2,13 @@ import React from 'react';
 import { Button, Text } from 'opub-ui';
 import { BarChart } from 'opub-ui/viz';
 
+interface VisualizationItem {
+  title: string;
+  description: string;
+}
+
 interface VisualizationProps {
-  data: any;
+  data: VisualizationItem[];
 }
 
 const Visualization: React.FC<VisualizationProps> = ({ data }) => {
@@ -77,7 +82,7 @@ const Visualization: React.FC<VisualizationProps> = ({ data }) => {
   };
   return (
     <div className="">
-      {data.map((item: any, index: any) => (
+      {data.map((item, index) => (
         <div
           className="my-4 flex flex-col gap-4 rounded-2 p-6 shadow-basicDeep"
           key={index}

@@ -1,4 +1,6 @@
-const assam_revenue_circles: any = {
+import type { GeoJsonData } from './types';
+
+const assam_revenue_circles: GeoJsonData = {
   type: 'FeatureCollection',
   features: [
     {

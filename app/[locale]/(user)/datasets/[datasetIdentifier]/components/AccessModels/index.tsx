@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
+import { AccessModelResourceQuery } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';
 import {
   Accordion,
@@ -19,6 +20,31 @@ import { GraphQL } from '@/lib/api';
 import CustomTags from '@/components/CustomTags';
 import { Icons } from '@/components/icons';
 
+interface SchemaField {
+  fieldName: string;
+  format: string;
+}
+
+interface AccessModelTableRow {
+  original: {
+    schema: SchemaField[];
+    download: string;
+  };
+}
+
+interface ModelResource {
+  resource: {
+    name: string;
+    description?: string | null;
+    id: string;
+  };
+  fields: SchemaField[];
+}
+
+type AccessModelItem = AccessModelResourceQuery['accessModelResources'][number] & {
+  modelResources?: ModelResource[];
+};
+
 const generateColumnData = () => {
   return [
     {
@@ -32,7 +58,7 @@ const generateColumnData = () => {
     {
       accessorKey: 'schema',
       header: 'Fields',
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: AccessModelTableRow }) => {
         return (
           <Dialog>
             <Dialog.Trigger>
@@ -55,7 +81,7 @@ const generateColumnData = () => {
                     header: 'Format',
                   },
                 ]}
-                rows={row.original.schema.map((field: any) => ({
+                rows={row.original.schema.map((field) => ({
                   name: field.fieldName,
                   format: field.format,
                 }))}
@@ -69,7 +95,7 @@ const generateColumnData = () => {
     {
       accessorKey: 'download',
       header: 'Download',
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: AccessModelTableRow }) => {
         return (
           <Link
             href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${row.original.download}`}
@@ -84,8 +110,8 @@ const generateColumnData = () => {
   ];
 };
 
-const generateTableData = (resources: any[]) => {
-  return resources.map((item: any) => ({
+const generateTableData = (resources: ModelResource[]) => {
+  return resources.map((item) => ({
     resourceName: item.resource.name,
     description: item.resource.description,
     download: item.resource.id,
@@ -93,7 +119,7 @@ const generateTableData = (resources: any[]) => {
   }));
 };
 
-const accessModelResourcesQuery: any = graphql(`
+const accessModelResourcesQuery = graphql(`
   query accessModelResource($datasetId: UUID!) {
     accessModelResources(datasetId: $datasetId) {
       resourceFields {
@@ -117,20 +143,18 @@ const accessModelResourcesQuery: any = graphql(`
 const AccessModels = () => {
   const params = useParams();
 
-  const getAccessModeldetails: {
-    data: any;
-    isError: boolean;
-    isLoading: boolean;
-  } = useQuery([`accessmodel_${params.datasetIdentifier}`], () =>
-    GraphQL(
-      accessModelResourcesQuery,
-      {
-        // Entity Headers if present
-      },
-      {
-        datasetId: params.datasetIdentifier,
-      }
-    )
+  const getAccessModeldetails = useQuery(
+    [`accessmodel_${params.datasetIdentifier}`],
+    () =>
+      GraphQL(
+        accessModelResourcesQuery,
+        {
+          // Entity Headers if present
+        },
+        {
+          datasetId: params.datasetIdentifier,
+        }
+      )
   );
 
   return (
@@ -141,7 +165,7 @@ const AccessModels = () => {
         </div>
       ) : (
         getAccessModeldetails.data?.accessModelResources.map(
-          (item: any, index: any) => (
+          (item: AccessModelItem, index: number) => (
             <div
               key={index}
               className="my-4 flex flex-col gap-4 rounded-2 p-6 shadow-basicDeep"
@@ -155,9 +179,11 @@ const AccessModels = () => {
                 </div>
               </div>
               <div className="align-center  flex flex-col justify-between gap-4 sm:flex-row lg:items-center">
-                <CustomTags type={item.type.split('.').pop().toLowerCase()} />
+                <CustomTags
+                  type={item.type.split('.').pop()?.toLowerCase() ?? ''}
+                />
               </div>
-              {item?.modelResources?.length > 0 && (
+              {(item.modelResources?.length ?? 0) > 0 && (
                 <div className="flex">
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="item-1" className=" border-none">
@@ -171,7 +197,7 @@ const AccessModels = () => {
                           className="h-fit w-fit"
                           kind="secondary"
                           onClick={() => {
-                            item.modelResources.forEach((resource: any) => {
+                            item.modelResources?.forEach((resource) => {
                               // Construct the download URL for each resource
                               const downloadUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/resource/${resource.resource.id}`;
                               // Open the URL in a new tab
@@ -191,7 +217,7 @@ const AccessModels = () => {
                       >
                         <Table
                           columns={generateColumnData()}
-                          rows={generateTableData(item.modelResources)}
+                          rows={generateTableData(item.modelResources ?? [])}
                           hideFooter
                         />
                       </AccordionContent>

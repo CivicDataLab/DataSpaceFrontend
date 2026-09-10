@@ -12,7 +12,7 @@ import JsonLd from '@/components/JsonLd';
 import ProfileDetails from '../components/ProfileDetails';
 import SidebarCard from '../components/SidebarCard';
 
-const userInfoQuery: any = graphql(`
+const userInfoQuery = graphql(`
   query UserData($userId: ID!) {
     userById(userId: $userId) {
       id
@@ -34,7 +34,7 @@ const userInfoQuery: any = graphql(`
 `);
 
 const PublisherPageClient = ({ publisherSlug }: { publisherSlug: string }) => {
-  const userInfo: any = useQuery([`${publisherSlug}`], () =>
+  const userInfo = useQuery([`${publisherSlug}`], () =>
     GraphQL(
       userInfoQuery,
       {

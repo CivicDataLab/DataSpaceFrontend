@@ -11,7 +11,7 @@ import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 import { useEditStatus } from '../../context';
 
-const dashboardList: any = graphql(`
+const dashboardList = graphql(`
   query dashboardList($usecaseId: Int!) {
     usecaseDashboards(usecaseId: $usecaseId) {
       id
@@ -22,7 +22,7 @@ const dashboardList: any = graphql(`
   }
 `);
 
-const AddDashboard: any = graphql(`
+const AddDashboard = graphql(`
   mutation addDashboard($usecaseId: Int!, $name: String, $link: String) {
     addUsecaseDashboard(usecaseId: $usecaseId, name: $name, link: $link) {
       success
@@ -41,7 +41,7 @@ const AddDashboard: any = graphql(`
   }
 `);
 
-const updateDashboard: any = graphql(`
+const updateDashboard = graphql(`
   mutation updateDashboard($id: String!, $name: String, $link: String) {
     updateUsecaseDashboard(id: $id, name: $name, link: $link) {
       success
@@ -60,7 +60,7 @@ const updateDashboard: any = graphql(`
   }
 `);
 
-const deleteDashboard: any = graphql(`
+const deleteDashboard = graphql(`
   mutation deleteUsecaseDashboard($id: Int!) {
     deleteUsecaseDashboard(id: $id) {
       success
@@ -85,8 +85,12 @@ const Dashboard = () => {
   const DASHBOARD_DELETE_SUCCESS_TOAST_ID = 'usecase-dashboard-delete-success';
   const DASHBOARD_SAVE_ERROR_TOAST_ID = 'usecase-dashboard-save-error';
   const DASHBOARD_DELETE_ERROR_TOAST_ID = 'usecase-dashboard-delete-error';
-  const getErrorMessage = (error: any, fallback: string) =>
-    typeof error?.message === 'string' && error.message.trim()
+  const getErrorMessage = (error: unknown, fallback: string) =>
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string' &&
+    error.message.trim()
       ? error.message.trim()
       : fallback;
   const entityType = params?.entityType;
@@ -110,7 +114,9 @@ const Dashboard = () => {
   const [dashboards, setDashboards] = useState<
     Array<{ id: string; name: string; link: string }>
   >([]);
-  const [previousState, setPreviousState] = useState<any>({});
+  const [previousState, setPreviousState] = useState<
+    Record<string, { id: string; name: string; link: string }>
+  >({});
 
   const queryKey = [
     'fetch_dashboardData',
@@ -119,7 +125,7 @@ const Dashboard = () => {
     usecaseId,
   ];
 
-  const { data: dashboardData, isLoading }: { data: any; isLoading: boolean } =
+  const { data: dashboardData, isLoading } =
     useQuery(
     queryKey,
     () => GraphQL(dashboardList, ownerArgs || {}, { usecaseId }),
@@ -130,16 +136,20 @@ const Dashboard = () => {
     }
   );
 
-  useEffect(() => {
+  const [prevDashboardData, setPrevDashboardData] = useState<
+    typeof dashboardData | undefined
+  >(undefined);
+  if (dashboardData !== prevDashboardData) {
+    setPrevDashboardData(dashboardData);
     if (dashboardData?.usecaseDashboards) {
       setDashboards(dashboardData.usecaseDashboards);
       setPreviousState(
         Object.fromEntries(
-          dashboardData.usecaseDashboards.map((item: any) => [item.id, { ...item }])
+          dashboardData.usecaseDashboards.map((item) => [item.id, { ...item }])
         )
       );
     }
-  }, [dashboardData]);
+  }
 
   const queryClient = useQueryClient();
   const invalidateDashboardQueries = () => {
@@ -170,15 +180,21 @@ const Dashboard = () => {
     ({ id, name, link }: { id: string; name: string; link: string }) =>
       GraphQL(updateDashboard, ownerArgs || {}, { id, name, link }),
     {
-      onSuccess: ({ updateUsecaseDashboard }: any) => {
+      onSuccess: ({ updateUsecaseDashboard }) => {
         invalidateDashboardQueries();
         toast.success('Changes saved', { id: DASHBOARD_SAVE_SUCCESS_TOAST_ID });
-        setPreviousState((prev: any) => ({
+        const dashboard = updateUsecaseDashboard.data;
+        if (!dashboard?.id) return;
+        setPreviousState((prev) => ({
           ...prev,
-          [updateUsecaseDashboard.data.id]: { ...updateUsecaseDashboard.data },
+          [dashboard.id]: {
+            id: dashboard.id,
+            name: dashboard.name ?? '',
+            link: dashboard.link ?? '',
+          },
         }));
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         toast(
           `Error: ${getErrorMessage(error, 'Unable to save dashboard changes right now. Please try again.')}`,
           { id: DASHBOARD_SAVE_ERROR_TOAST_ID }
@@ -196,7 +212,7 @@ const Dashboard = () => {
         });
         invalidateDashboardQueries();
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         toast(
           `Error: ${getErrorMessage(error, 'Unable to delete dashboard right now. Please try again.')}`,
           { id: DASHBOARD_DELETE_ERROR_TOAST_ID }

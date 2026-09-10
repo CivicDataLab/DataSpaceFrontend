@@ -11,7 +11,7 @@ interface ListingHeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onActionClick?: () => void;
-  count: any;
+  count: number;
   label: string;
 }
 

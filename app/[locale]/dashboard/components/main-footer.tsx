@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Icon, Text } from 'opub-ui';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
@@ -28,8 +28,11 @@ const getPlatformPageUrl = (pagePath: string, locale?: string) => {
 };
 
 const MainFooter = () => {
-  const [isCollaborativeSubdomain, setIsCollaborativeSubdomain] =
-    useState(false);
+  const isCollaborativeSubdomain = useSyncExternalStore(
+    () => () => {},
+    () => isCollaborativeSubdomainHost(window.location.hostname),
+    () => false
+  );
 
   const currentLocale = useMemo(() => {
     if (typeof window === 'undefined') return undefined;
@@ -37,16 +40,13 @@ const MainFooter = () => {
     return match?.[1]?.toLowerCase();
   }, []);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    setIsCollaborativeSubdomain(
-      isCollaborativeSubdomainHost(window.location.hostname)
-    );
-  }, []);
-
   const aboutUsHref = isCollaborativeSubdomain
     ? getPlatformPageUrl('/about-us', currentLocale)
     : '/about-us';
+
+  const privacyHref = isCollaborativeSubdomain
+    ? getPlatformPageUrl('/privacy', currentLocale)
+    : '/privacy';
 
   const socialMedia = [
     {
@@ -75,6 +75,9 @@ const MainFooter = () => {
           </Link>
           <Link href={'mailto:info@civicdatalab.in'}>
             <Text color="onBgDefault">Contact Us</Text>
+          </Link>
+          <Link href={privacyHref}>
+            <Text color="onBgDefault">Privacy</Text>
           </Link>
         </div>
         <div className="flex lg:hidden gap-2 order-2">
@@ -110,14 +113,24 @@ const MainFooter = () => {
           ))}
         </div>
         <div className="text-white text-xs lg:text-base order-3 lg:order-none">
-          <Text color="onBgDefault">Made in India. A DataSpace product by </Text>
+          <Text color="onBgDefault">
+            Made in India. A{' '}
+            <span className="bhashini-skip-translation">DataSpace</span> product
+            by{' '}
+          </Text>
           <Link
             href={'https://www.civicdatalab.in'}
             target="_blank"
-            className="inline-flex items-center gap-1"
+            className="inline-flex items-center gap-1 bhashini-skip-translation"
           >
-             <Text color="onBgDefault">CivicDataLab</Text>
-            <Image src={'/cdl.svg'} width={32} height={32} className="lg:w-10 lg:h-10" alt="CDL logo" />
+            <Text color="onBgDefault">CivicDataLab</Text>
+            <Image
+              src={'/cdl.svg'}
+              width={32}
+              height={32}
+              className="lg:w-10 lg:h-10"
+              alt="CDL logo"
+            />
           </Link>
         </div>
       </div>

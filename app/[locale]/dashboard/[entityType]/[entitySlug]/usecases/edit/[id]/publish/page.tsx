@@ -22,7 +22,7 @@ import Contributors from './Contributors';
 import Dashboards from './Dashboards';
 import Details from './Details';
 
-const UseCaseDetails: any = graphql(`
+const UseCaseDetails = graphql(`
   query UseCasedata($filters: UseCaseFilter) {
     useCases(filters: $filters) {
       id
@@ -110,7 +110,7 @@ const UseCaseDetails: any = graphql(`
   }
 `);
 
-const publishUseCaseMutation: any = graphql(`
+const publishUseCaseMutation = graphql(`
   mutation publishUseCase($useCaseId: String!) {
     publishUseCase(useCaseId: $useCaseId) {
       ... on TypeUseCase {
@@ -127,7 +127,7 @@ const Publish = () => {
     entitySlug: string;
     id: string;
   }>();
-  const UseCaseData: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  const UseCaseData = useQuery(
     [`fetch_UsecaseDetails`, params.id, params.entityType, params.entitySlug],
     () =>
       GraphQL(
@@ -168,9 +168,9 @@ const Publish = () => {
           `/dashboard/${params.entityType}/${params.entitySlug}/usecases`
         );
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         const errorMessage =
-          typeof err?.message === 'string' && err.message.trim()
+          typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' && err.message.trim()
             ? err.message.trim()
             : 'Unable to publish use case right now. Please try again.';
         toast(`Error: ${errorMessage}`, { id: PUBLISH_ERROR_TOAST_ID });
@@ -183,45 +183,58 @@ const Publish = () => {
       name: 'Details',
       data: UseCaseData.data?.useCases,
       error:
-        UseCaseData.data?.useCases[0]?.sectors.length === 0 ||
-        UseCaseData.data?.useCases[0]?.summary.length === 0 ||
-        UseCaseData.data?.useCases[0]?.sdgs.length === 0 ||
-        UseCaseData.data?.useCases[0]?.logo === null ||
-        !UseCaseData.data?.useCases[0]?.startedOn
+        UseCaseData.data?.useCases?.[0]?.sectors?.length === 0 ||
+        UseCaseData.data?.useCases?.[0]?.summary?.length === 0 ||
+        UseCaseData.data?.useCases?.[0]?.sdgs?.length === 0 ||
+        UseCaseData.data?.useCases?.[0]?.logo === null ||
+        !UseCaseData.data?.useCases?.[0]?.startedOn
           ? 'Summary, SDG, Sectors, Logo, or Started On is missing. Please add to continue.'
           : '',
       errorType: 'critical',
     },
     {
       name: 'Assign',
-      data: UseCaseData?.data?.useCases[0]?.datasets,
+      data: UseCaseData?.data?.useCases?.[0]?.datasets,
       error:
-        UseCaseData.data && UseCaseData.data?.useCases[0]?.datasets.length === 0
+        UseCaseData.data && UseCaseData.data?.useCases?.[0]?.datasets?.length === 0
           ? 'No datasets assigned. Please assign to continue.'
           : '',
     },
     {
       name: 'Dashboards',
-      data: UseCaseData?.data?.useCases[0]?.length > 0,
+      data: UseCaseData?.data?.useCases?.[0] != null &&
+        'length' in UseCaseData.data.useCases[0] &&
+        typeof UseCaseData.data.useCases[0].length === 'number' &&
+        UseCaseData.data.useCases[0].length > 0,
       error: '',
     },
     {
       name: 'Contributors',
-      data: UseCaseData?.data?.useCases[0]?.length > 0,
+      data: UseCaseData?.data?.useCases?.[0] != null &&
+        'length' in UseCaseData.data.useCases[0] &&
+        typeof UseCaseData.data.useCases[0].length === 'number' &&
+        UseCaseData.data.useCases[0].length > 0,
       error: '',
     },
   ];
 
-  const isPublishDisabled = (useCase: any) => {
+  const isPublishDisabled = (useCase: {
+    datasets?: unknown[] | null;
+    sectors?: unknown[] | null;
+    summary?: string | null;
+    sdgs?: unknown[] | null;
+    logo?: unknown;
+    startedOn?: string | null;
+  } | null | undefined) => {
     if (!useCase) return true;
 
-    const hasDatasets = useCase?.datasets.length > 0;
+    const hasDatasets = (useCase.datasets?.length ?? 0) > 0;
     const hasRequiredMetadata =
-      useCase.sectors.length > 0 &&
-      useCase?.summary.length > 0 &&
-      useCase?.sdgs.length > 0 &&
-      useCase?.logo !== null &&
-      !!useCase?.startedOn;
+      (useCase.sectors?.length ?? 0) > 0 &&
+      (useCase.summary?.length ?? 0) > 0 &&
+      (useCase.sdgs?.length ?? 0) > 0 &&
+      useCase.logo !== null &&
+      !!useCase.startedOn;
 
     // No datasets assigned
     if (!hasDatasets) return true;

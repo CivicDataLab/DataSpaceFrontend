@@ -6,17 +6,57 @@ import { Tag, Text } from 'opub-ui';
 import { getWebsiteTitle } from '@/lib/utils';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 
-const Details = ({ data }: { data: any }) => {
-  const [platformTitle, setPlatformTitle] = useState<string | null>(null);
+interface NamedItem {
+  id?: string | null;
+  name?: string | null;
+  code?: string | null;
+  value?: string | null;
+}
+
+interface CollaborativePublishDetails {
+  title?: string | null;
+  summary?: string | null;
+  runningStatus?: string | null;
+  startedOn?: string | null;
+  completedOn?: string | null;
+  platformUrl?: string | { value?: string } | null;
+  sectors?: NamedItem[] | null;
+  sdgs?: NamedItem[] | null;
+  tags?: NamedItem[] | null;
+  metadata?: Array<{
+    value?: string | null;
+    metadataItem?: { label?: string | null } | null;
+  }> | null;
+  logo?: { path?: string | null } | null;
+  coverImage?: { path?: string | null } | null;
+}
+
+interface DetailsProps {
+  data?: { collaboratives?: Array<CollaborativePublishDetails | null> | null } | null;
+}
+
+const Details = ({ data }: DetailsProps) => {
   const collaborative = data?.collaboratives?.[0];
   const platformUrl = collaborative?.platformUrl;
+  const [platformTitle, setPlatformTitle] = useState<string | null>(
+    platformUrl === null ? 'N/A' : null
+  );
+  const [prevPlatformUrl, setPrevPlatformUrl] = useState(platformUrl);
+  if (platformUrl !== prevPlatformUrl) {
+    setPrevPlatformUrl(platformUrl);
+    if (platformUrl === null) {
+      setPlatformTitle('N/A');
+    }
+  }
 
   useEffect(() => {
+    if (!collaborative || platformUrl === null) return;
+
     const fetchTitle = async () => {
       try {
         const urlItem = collaborative?.platformUrl;
 
-        if (urlItem && urlItem.value) {
+        if (urlItem && typeof urlItem === 'object' && urlItem.value) {
           const title = await getWebsiteTitle(urlItem.value);
           setPlatformTitle(title);
         }
@@ -25,14 +65,15 @@ const Details = ({ data }: { data: any }) => {
       }
     };
 
-    if (!collaborative) return;
-
-    if (platformUrl === null) {
-      setPlatformTitle('N/A');
-    } else {
-      fetchTitle();
-    }
+    fetchTitle();
   }, [collaborative, platformUrl]);
+
+  const platformHref =
+    typeof platformUrl === 'string'
+      ? platformUrl
+      : platformUrl && typeof platformUrl === 'object'
+        ? platformUrl.value
+        : undefined;
 
   const PrimaryDetails = [
     { label: 'Collaborative Name', value: collaborative?.title },
@@ -50,7 +91,7 @@ const Details = ({ data }: { data: any }) => {
       label: 'Sectors',
       value: collaborative?.sectors?.length ? (
         <div className="flex flex-wrap gap-2">
-          {collaborative.sectors.map((s: any, idx: number) => (
+          {collaborative.sectors.map((s, idx) => (
             <Tag key={s?.id ?? `${s?.name}-${idx}`}>{s?.name}</Tag>
           ))}
         </div>
@@ -60,7 +101,7 @@ const Details = ({ data }: { data: any }) => {
       label: 'SDG Goals',
       value: collaborative?.sdgs?.length ? (
         <div className="flex flex-wrap gap-2">
-          {collaborative.sdgs.map((s: any, idx: number) => (
+          {collaborative.sdgs.map((s, idx) => (
             <Tag key={s?.id ?? `${s?.code}-${idx}`}>{s?.name || s?.code}</Tag>
           ))}
         </div>
@@ -70,13 +111,13 @@ const Details = ({ data }: { data: any }) => {
       label: 'Tags',
       value: collaborative?.tags?.length ? (
         <div className="flex flex-wrap gap-2">
-          {collaborative.tags.map((t: any, idx: number) => (
+          {collaborative.tags.map((t, idx) => (
             <Tag key={t?.id ?? `${t?.value}-${idx}`}>{t?.value}</Tag>
           ))}
         </div>
       ) : null,
     },
-    ...(collaborative?.metadata?.map((meta: any) => ({
+    ...(collaborative?.metadata?.map((meta) => ({
       label: meta.metadataItem?.label,
       value: meta.value,
     })) || []),
@@ -94,7 +135,7 @@ const Details = ({ data }: { data: any }) => {
                 <div>
                   {item.label === 'Summary' ? (
                     <RichTextRenderer
-                      content={item.value as any}
+                      content={typeof item.value === 'string' ? item.value : ''}
                       className="text-black"
                     />
                   ) : (
@@ -112,7 +153,7 @@ const Details = ({ data }: { data: any }) => {
             ) : null
           )}
 
-          {data.collaboratives[0].platformUrl && (
+          {platformHref && (
             <div className="flex flex-wrap gap-2">
               <div className="md:w-1/6 lg:w-1/6">
                 <Text variant="bodyMd">External Link:</Text>
@@ -120,7 +161,7 @@ const Details = ({ data }: { data: any }) => {
               <div>
                 <Link
                   className="text-primaryBlue underline"
-                  href={data.collaboratives[0].platformUrl}
+                  href={platformHref}
                 >
                   <Text
                     className="underline"
@@ -134,7 +175,7 @@ const Details = ({ data }: { data: any }) => {
             </div>
           )}
 
-          {data?.collaboratives[0]?.logo && (
+          {collaborative?.logo && (
             <div className="flex flex-wrap items-center gap-2">
               <div className="md:w-1/6 lg:w-1/6">
                 <Text className="" variant="bodyMd">
@@ -142,15 +183,15 @@ const Details = ({ data }: { data: any }) => {
                 </Text>
               </div>
               <Image
-                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data?.collaboratives[0]?.logo?.path.replace('/code/files/', '')}`}
-                alt={data?.collaboratives[0]?.title}
+                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.logo.path?.replace('/code/files/', '') ?? ''}`}
+                alt={collaborative.title ?? ''}
                 width={240}
                 className="object-contain"
                 height={240}
               />
             </div>
           )}
-          {data?.collaboratives[0]?.coverImage && (
+          {collaborative?.coverImage && (
             <div className="flex flex-wrap items-center gap-2">
               <div className="md:w-1/6 lg:w-1/6">
                 <Text className="" variant="bodyMd">
@@ -158,8 +199,8 @@ const Details = ({ data }: { data: any }) => {
                 </Text>
               </div>
               <Image
-                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data?.collaboratives[0]?.coverImage?.path.replace('/code/files/', '')}`}
-                alt={data?.collaboratives[0]?.title}
+                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.coverImage.path?.replace('/code/files/', '') ?? ''}`}
+                alt={collaborative.title ?? ''}
                 width={240}
                 className="object-contain"
                 height={240}

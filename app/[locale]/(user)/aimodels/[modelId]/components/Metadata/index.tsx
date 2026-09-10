@@ -4,8 +4,40 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Divider, Tag, Text, Tooltip } from 'opub-ui';
 
+interface MetadataProvider {
+  provider: string;
+  isPrimary?: boolean;
+}
+
+interface MetadataVersion {
+  isLatest?: boolean;
+  providers?: MetadataProvider[] | null;
+}
+
+interface MetadataData {
+  organization?: {
+    id: string;
+    name: string;
+    slug?: string | null;
+    logo?: { url: string } | null;
+  } | null;
+  user?: {
+    id: string;
+    fullName: string;
+    profilePicture?: { url: string } | null;
+  } | null;
+  modelType: string;
+  domain?: string | null;
+  versions?: MetadataVersion[] | null;
+  metadata?: {
+    usageLicense?: string;
+  } | null;
+  sectors?: Array<{ name: string }> | null;
+  geographies?: Array<{ name: string }> | null;
+}
+
 interface MetadataProps {
-  data: any;
+  data: MetadataData;
 }
 
 export default function Metadata({ data }: MetadataProps) {
@@ -67,9 +99,9 @@ export default function Metadata({ data }: MetadataProps) {
 
   // Get primary version info
   const primaryVersion =
-    data.versions?.find((v: any) => v.isLatest) || data.versions?.[0];
+    data.versions?.find((v) => v.isLatest) || data.versions?.[0];
   const primaryProvider =
-    primaryVersion?.providers?.find((p: any) => p.isPrimary) ||
+    primaryVersion?.providers?.find((p) => p.isPrimary) ||
     primaryVersion?.providers?.[0];
 
   const providerLabels: Record<string, string> = {
@@ -212,7 +244,7 @@ export default function Metadata({ data }: MetadataProps) {
               Sector
             </Text>
             <div className="flex flex-wrap gap-2">
-              {data.sectors.map((sector: any, index: number) => (
+              {data.sectors.map((sector, index) => (
                 <Tooltip content={sector.name} key={index}>
                   <Image
                     src={`/Sectors/${sector.name}.svg`}
@@ -237,7 +269,7 @@ export default function Metadata({ data }: MetadataProps) {
               Geography
             </Text>
             <div className="flex flex-wrap gap-2">
-              {data.geographies.map((geo: any, index: number) => (
+              {data.geographies.map((geo, index) => (
                 <Tag
                   key={index}
                   fillColor="var(--orange-secondary-color)"

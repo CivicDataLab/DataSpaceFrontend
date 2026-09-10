@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Text } from 'opub-ui';
 
+import BhashiniTranslation from '@/components/BhashiniTranslation';
+
 type Props = {
   useCasesTargetId?: string;
   datasetsTargetId?: string;
@@ -22,11 +24,8 @@ export function CollaborativeSubdomainNav({
   useCasesTargetId = 'collaborative-use-cases',
   datasetsTargetId = 'collaborative-datasets',
 }: Props) {
-  const params = useParams();
-  const locale =
-    typeof (params as any)?.locale === 'string'
-      ? (params as any).locale
-      : undefined;
+  const params = useParams<{ locale?: string | string[] }>();
+  const locale = typeof params?.locale === 'string' ? params.locale : undefined;
 
   const platformBaseUrl = (process.env.NEXT_PUBLIC_PLATFORM_URL || '').replace(
     /\/$/,
@@ -86,6 +85,7 @@ export function CollaborativeSubdomainNav({
               Datasets
             </Text>
           </button>
+          <BhashiniTranslation />
         </div>
       </div>
     </nav>

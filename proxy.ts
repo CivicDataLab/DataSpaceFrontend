@@ -17,6 +17,7 @@ const publicPages = [
   '/collaboratives',
   '/collaboratives/(.*)',
   '/about-us',
+  '/privacy',
   '/publishers',
   '/publishers/(.*)',
   '/search',
@@ -117,7 +118,7 @@ const getCollaborativeSlugFromHostname = (hostname: string) => {
   return slug;
 };
 
-export default function middleware(req: NextRequest) {
+export default function proxy(req: NextRequest) {
   const hostname = getHostname(req.headers.get('host'));
   const localeRootRegex = RegExp(`^/(${locales.all.join('|')})/?$`, 'i');
   const localeRootMatch = req.nextUrl.pathname.match(localeRootRegex);
@@ -177,7 +178,9 @@ export default function middleware(req: NextRequest) {
   if (isPublicPage) {
     return intlMiddleware(req);
   } else {
-    return (authMiddleware as any)(req);
+    return (authMiddleware as (request: NextRequest) => ReturnType<typeof intlMiddleware>)(
+      req
+    );
   }
 }
 

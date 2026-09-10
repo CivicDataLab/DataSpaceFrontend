@@ -22,7 +22,7 @@ import Contributors from './Contributors';
 import Details from './Details';
 
 // prettier-ignore
-const CollaborativeDetails: any = graphql(`
+const CollaborativeDetails = graphql(`
   query CollabDetails($filters: CollaborativeFilter) {
     collaboratives(filters: $filters) {
       id
@@ -112,7 +112,7 @@ const CollaborativeDetails: any = graphql(`
   }
 `);
 
-const publishCollaborativeMutation: any = graphql(`
+const publishCollaborativeMutation = graphql(`
   mutation publishCollaborative($collaborativeId: String!) {
     publishCollaborative(collaborativeId: $collaborativeId) {
       ... on TypeCollaborative {
@@ -129,7 +129,7 @@ const Publish = () => {
     entitySlug: string;
     id: string;
   }>();
-  const CollaborativeData: { data: any; isLoading: boolean; refetch: any } =
+  const CollaborativeData =
     useQuery(
       [
         `fetch_CollaborativeDetails`,
@@ -177,9 +177,9 @@ const Publish = () => {
           `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives`
         );
       },
-      onError: (err: any) => {
+      onError: (err: unknown) => {
         const errorMessage =
-          typeof err?.message === 'string' && err.message.trim()
+          typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' && err.message.trim()
             ? err.message.trim()
             : 'Unable to publish collaborative right now. Please try again.';
         toast(`Error: ${errorMessage}`, { id: PUBLISH_ERROR_TOAST_ID });
@@ -192,27 +192,27 @@ const Publish = () => {
       name: 'Details',
       data: CollaborativeData.data?.collaboratives,
       error:
-        CollaborativeData.data?.collaboratives[0]?.sectors.length === 0 ||
-        CollaborativeData.data?.collaboratives[0]?.summary.length === 0 ||
-        CollaborativeData.data?.collaboratives[0]?.sdgs.length === 0 ||
-        CollaborativeData.data?.collaboratives[0]?.logo === null ||
-        CollaborativeData.data?.collaboratives[0]?.coverImage === null
+        CollaborativeData.data?.collaboratives?.[0]?.sectors?.length === 0 ||
+        CollaborativeData.data?.collaboratives?.[0]?.summary?.length === 0 ||
+        CollaborativeData.data?.collaboratives?.[0]?.sdgs?.length === 0 ||
+        CollaborativeData.data?.collaboratives?.[0]?.logo === null ||
+        CollaborativeData.data?.collaboratives?.[0]?.coverImage === null
           ? 'Summary, SDG, Sectors, Logo, or Cover Image is missing. Please add to continue.'
           : '',
       errorType: 'critical',
     },
     {
       name: 'Datasets',
-      data: CollaborativeData?.data?.collaboratives[0]?.datasets,
+      data: CollaborativeData?.data?.collaboratives?.[0]?.datasets,
       error:
         CollaborativeData.data &&
-        CollaborativeData.data?.collaboratives[0]?.datasets.length === 0
+        CollaborativeData.data?.collaboratives?.[0]?.datasets?.length === 0
           ? 'No datasets assigned. Please assign to continue.'
           : '',
     },
     {
       name: 'Use Cases',
-      data: CollaborativeData?.data?.collaboratives[0]?.useCases,
+      data: CollaborativeData?.data?.collaboratives?.[0]?.useCases,
       error: '',
     },
     // {
@@ -222,21 +222,31 @@ const Publish = () => {
     // },
     {
       name: 'Contributors',
-      data: CollaborativeData?.data?.collaboratives[0]?.length > 0,
+      data: CollaborativeData?.data?.collaboratives?.[0] != null &&
+        'length' in CollaborativeData.data.collaboratives[0] &&
+        typeof CollaborativeData.data.collaboratives[0].length === 'number' &&
+        CollaborativeData.data.collaboratives[0].length > 0,
       error: '',
     },
   ];
 
-  const isPublishDisabled = (collaborative: any) => {
+  const isPublishDisabled = (collaborative: {
+    datasets?: unknown[] | null;
+    sectors?: unknown[] | null;
+    summary?: string | null;
+    sdgs?: unknown[] | null;
+    logo?: unknown;
+    coverImage?: unknown;
+  } | null | undefined) => {
     if (!collaborative) return true;
 
-    const hasDatasets = collaborative?.datasets.length > 0;
+    const hasDatasets = (collaborative.datasets?.length ?? 0) > 0;
     const hasRequiredMetadata =
-      collaborative.sectors.length > 0 &&
-      collaborative?.summary.length > 0 &&
-      collaborative?.sdgs.length > 0 &&
-      collaborative?.logo !== null &&
-      collaborative?.coverImage !== null;
+      (collaborative.sectors?.length ?? 0) > 0 &&
+      (collaborative.summary?.length ?? 0) > 0 &&
+      (collaborative.sdgs?.length ?? 0) > 0 &&
+      collaborative.logo !== null &&
+      collaborative.coverImage !== null;
 
     // No datasets assigned
     if (!hasDatasets) return true;

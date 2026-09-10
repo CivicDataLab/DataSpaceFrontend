@@ -14,7 +14,7 @@ import {
 } from '@/lib/gtag';
 
 export const useAnalytics = () => {
-  const track = useCallback((eventName: string, parameters?: Record<string, any>) => {
+  const track = useCallback((eventName: string, parameters?: Record<string, unknown>) => {
     trackEvent(eventName, parameters);
   }, []);
 

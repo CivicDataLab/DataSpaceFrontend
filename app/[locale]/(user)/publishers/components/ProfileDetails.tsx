@@ -7,8 +7,18 @@ import { Icons } from '@/components/icons';
 import Datasets from './Datasets';
 import UseCases from './UseCases';
 
+interface ProfileDetailsData {
+  twitterProfile?: string | null;
+  linkedinProfile?: string | null;
+  githubProfile?: string | null;
+  created?: string | number | null;
+  dateJoined?: string | number | null;
+  description?: string | null;
+  bio?: string | null;
+}
+
 interface ProfileDetailsProps {
-  data: any;
+  data: ProfileDetailsData | null | undefined;
   type: 'organization' | 'Publisher';
 }
 
@@ -44,8 +54,8 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ data, type }) => {
           <Text variant="bodySm">
             Joined on:{' '}
             {type === 'organization'
-              ? formatDate(data?.created) || ''
-              : formatDate(data?.dateJoined) || ''}
+              ? formatDate(data?.created ?? null) || ''
+              : formatDate(data?.dateJoined ?? null) || ''}
           </Text>
         </div>
         <div>
@@ -54,10 +64,10 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ data, type }) => {
           </Text>
         </div>
         <div className=" flex items-center gap-3">
-          {socialMedia?.map((item: any, index: any) => (
+          {socialMedia?.map((item, index) => (
             <Link
               key={index}
-              href={item?.link}
+              href={item?.link ?? ''}
               target="_blank"
               className=" h-9 w-9 rounded-5 bg-secondaryText p-2"
             >

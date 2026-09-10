@@ -1,6 +1,6 @@
 'use server';
 
-export const postAction = async ({ req }: any) => {
+export const postAction = async ({ req }: { req: Request }) => {
   try {
     const envelopeBytes = await req.arrayBuffer();
     const envelope = new TextDecoder().decode(envelopeBytes);

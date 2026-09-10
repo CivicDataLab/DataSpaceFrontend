@@ -2,40 +2,56 @@ import React from 'react';
 import { Combobox, Label, Switch, Text } from 'opub-ui';
 import { BarChart } from 'opub-ui/viz';
 
-export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
-  const data = props[0];
-  const chartData = props[1];
-  const setChartData = props[2];
-  const setOptions = props[3];
+import { ChartConfig } from './list';
 
-  const [xAxis, setXAxis] = React.useState('');
-  const [yAxis, setYAxis] = React.useState('');
-  const [average, setAverage] = React.useState(false);
+type ChartRow = Record<string, string | number>;
 
-  React.useEffect(() => {
-    setXAxis(chartData?.xAxis);
-    setYAxis(chartData?.yAxis);
-    setAverage(chartData?.average);
-  }, [chartData]);
+interface BarProps {
+  type: string;
+  data: ChartRow[];
+  chartData: ChartConfig | null;
+  setChartData: React.Dispatch<React.SetStateAction<ChartConfig | null>>;
+  setOptions: React.Dispatch<React.SetStateAction<Record<string, unknown> | null>>;
+}
+
+export const Bar = ({
+  type,
+  data,
+  chartData,
+  setChartData,
+  setOptions,
+}: BarProps) => {
+  const [xAxis, setXAxis] = React.useState(chartData?.xAxis ?? '');
+  const [yAxis, setYAxis] = React.useState(chartData?.yAxis ?? '');
+  const [average, setAverage] = React.useState(chartData?.average ?? false);
+  const [prevChartData, setPrevChartData] = React.useState(chartData);
+  if (chartData !== prevChartData) {
+    setPrevChartData(chartData);
+    setXAxis(chartData?.xAxis ?? '');
+    setYAxis(chartData?.yAxis ?? '');
+    setAverage(chartData?.average ?? false);
+  }
 
   const options = React.useMemo(() => {
-    const labels = data.map((item: { [x: string]: any }) => item[xAxis]);
-    const values = data.map((item: { [x: string]: any }) => item[yAxis]);
+    const labels = data.map((item) => item[xAxis]);
+    const values = data.map((item) => item[yAxis]);
 
     const averageObj: {
       [x: string]: number;
     } = {};
 
-    new Set(labels).forEach((label: any) => {
+    new Set(labels).forEach((label) => {
+      const key = String(label);
       const filteredValues = data
-        .filter((item: { [x: string]: any }) => item[xAxis] === label)
-        .map((item: { [x: string]: any }) => item[yAxis]);
+        .filter((item) => item[xAxis] === label)
+        .map((item) => item[yAxis]);
 
       let sum = 0;
       for (let i = 0; i < filteredValues.length; i++) {
-        sum += filteredValues[i];
+        const numericValue = Number(filteredValues[i]);
+        sum += Number.isNaN(numericValue) ? 0 : numericValue;
       }
-      averageObj[label] = Math.floor(sum / filteredValues.length);
+      averageObj[key] = Math.floor(sum / filteredValues.length);
     });
 
     const nameTextStyle = {
@@ -69,12 +85,19 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
       },
     };
 
-    queueMicrotask(() => {
-      setOptions(newOption);
-    });
-
     return newOption;
-  }, [xAxis, yAxis, data, type, average, setOptions]);
+  }, [xAxis, yAxis, data, type, average]);
+
+  const [prevOptions, setPrevOptions] = React.useState<typeof options | null>(
+    null
+  );
+  if (options !== prevOptions) {
+    setPrevOptions(options);
+    setOptions(options);
+  }
+
+  const comboboxString = (value: { value: string }[] | string) =>
+    typeof value === 'string' ? value : value[0]?.value ?? '';
 
   return (
     <div>
@@ -87,8 +110,9 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
           requiredIndicator={true}
           error="X Axis is required"
           onChange={(e) => {
-            setXAxis(e);
-            setChartData((prev: any) => ({ ...prev, xAxis: e }));
+            const next = comboboxString(e);
+            setXAxis(next);
+            setChartData((prev) => ({ ...prev, xAxis: next }));
           }}
           list={Object.keys(data[0]).map((key) => ({ label: key, value: key }))}
         />
@@ -100,8 +124,9 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
           requiredIndicator={true}
           error="Y Axis is required"
           onChange={(e) => {
-            setYAxis(e);
-            setChartData((prev: any) => ({ ...prev, yAxis: e }));
+            const next = comboboxString(e);
+            setYAxis(next);
+            setChartData((prev) => ({ ...prev, yAxis: next }));
           }}
           list={Object.keys(data[0]).map((key) => ({ label: key, value: key }))}
         />
@@ -113,7 +138,7 @@ export const Bar = ({ type, ...props }: { type: string; [x: string]: any }) => {
               checked={average}
               onCheckedChange={(checked) => {
                 setAverage(checked);
-                setChartData((prev: any) => ({ ...prev, average: checked }));
+                setChartData((prev) => ({ ...prev, average: checked }));
               }}
             />
           </div>

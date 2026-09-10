@@ -1,4 +1,3 @@
-import { UUID } from 'crypto';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { renderGeoJSON } from '@/geo_json/render_geojson';
@@ -17,41 +16,62 @@ import {
   datasetResource,
   getResourceChartDetails,
 } from '../queries';
+import {
+  ChartFilters,
+  ChartOptions,
+  ChartPreview,
+  ResourceData,
+  ResourceSchema,
+} from '../types';
 import ChartForm from './ChartForm';
 import ChartHeader from './ChartHeader';
-
-interface YAxisColumnItem {
-  fieldName: string;
-  label: string;
-  color: string;
-}
-interface ChartFilters {
-  column: string;
-  operator: string;
-  value: string;
-}
-
-interface ChartOptions {
-  aggregateType: string;
-  regionColumn?: string;
-  showLegend: boolean;
-  timeColumn?: string;
-  valueColumn?: string;
-  xAxisColumn: string;
-  xAxisLabel: string;
-  yAxisColumn: YAxisColumnItem[];
-  yAxisLabel: string;
-}
 
 interface ChartData {
   chartId: string;
   description: string;
-  filters: any[];
+  filters: ChartFilters[];
   name: string;
   options: ChartOptions;
   resource: string;
   type: ChartTypes;
-  chart: any;
+  chart: ChartPreview;
+}
+
+type ChartChangeValue =
+  | string
+  | boolean
+  | ChartTypes
+  | ChartOptions
+  | ChartFilters[]
+  | ChartData;
+
+interface ResourceChartDetails {
+  id: string;
+  description?: string | null;
+  name?: string | null;
+  chartType: string;
+  chartFilters?: Array<{
+    column?: { id: string } | null;
+    operator: string;
+    value: string;
+  }>;
+  chartOptions?: {
+    aggregateType?: string | null;
+    regionColumn?: { id: string } | null;
+    showLegend?: boolean | null;
+    timeColumn?: string | { id?: string } | null;
+    valueColumn?: { id: string } | null;
+    xAxisColumn?: { id: string } | null;
+    xAxisLabel?: string | null;
+    yAxisColumn?: Array<{
+      field?: { id: string } | null;
+      label?: string | null;
+      color?: string | null;
+    }> | null;
+    yAxisLabel?: string | null;
+  } | null;
+  resource?: { id: string } | null;
+  chart?: ChartPreview | null;
 }
 
 interface ResourceChartInput {
@@ -65,9 +85,62 @@ interface ResourceChartInput {
 }
 
 interface VisualizationProps {
-  setType: any;
-  setChartId: any;
-  chartId: any;
+  setType: (type: string) => void;
+  setChartId: (id: string) => void;
+  chartId: string | null;
+}
+
+function registerChartGeoJson(chartType: string): void {
+  if (chartType === 'ASSAM_DISTRICT' || chartType === 'ASSAM_RC') {
+    const geoJson = renderGeoJSON(chartType.toLowerCase());
+    if (geoJson) {
+      echarts.registerMap(
+        chartType.toLowerCase(),
+        geoJson as Parameters<typeof echarts.registerMap>[1]
+      );
+    }
+  }
+}
+
+function mapResourceChartToChartData(
+  resourceChartDetails: ResourceChartDetails
+): ChartData {
+  const chartFilters = resourceChartDetails.chartFilters ?? [];
+  return {
+    chartId: resourceChartDetails.id,
+    description: resourceChartDetails.description || '',
+    filters:
+      chartFilters.length > 0
+        ? chartFilters.map((filter) => ({
+            column: filter.column?.id ?? '',
+            operator: filter.operator,
+            value: filter.value,
+          }))
+        : [{ column: '', operator: '==', value: '' }],
+    name: resourceChartDetails.name || '',
+    options: {
+      aggregateType: resourceChartDetails.chartOptions?.aggregateType ?? '',
+      regionColumn: resourceChartDetails.chartOptions?.regionColumn?.id,
+      showLegend: resourceChartDetails.chartOptions?.showLegend ?? true,
+      timeColumn:
+        typeof resourceChartDetails.chartOptions?.timeColumn === 'string'
+          ? resourceChartDetails.chartOptions.timeColumn
+          : resourceChartDetails.chartOptions?.timeColumn?.id,
+      valueColumn: resourceChartDetails.chartOptions?.valueColumn?.id,
+      xAxisColumn: resourceChartDetails.chartOptions?.xAxisColumn?.id ?? '',
+      xAxisLabel: resourceChartDetails.chartOptions?.xAxisLabel ?? '',
+      yAxisColumn:
+        resourceChartDetails.chartOptions?.yAxisColumn?.map((col) => ({
+          fieldName: col.field?.id ?? '',
+          label: col.label ?? '',
+          color: col.color ?? '',
+        })) ?? [],
+      yAxisLabel: resourceChartDetails.chartOptions?.yAxisLabel ?? '',
+    },
+    resource: resourceChartDetails.resource?.id ?? '',
+    type: resourceChartDetails.chartType as ChartTypes,
+    chart: resourceChartDetails.chart ?? {},
+  };
 }
 
 const ChartsVisualize: React.FC<VisualizationProps> = ({
@@ -81,19 +154,17 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     id: string;
   }>();
 
-  const { data: resourceData }: { data: any } = useQuery(
-    [`res_charts_${params.id}`],
-    () =>
-      GraphQL(
-        datasetResource,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        { datasetId: params.id }
-      )
+  const { data: resourceData } = useQuery([`res_charts_${params.id}`], () =>
+    GraphQL(
+      datasetResource,
+      {
+        [params.entityType]: params.entitySlug,
+      },
+      { datasetId: params.id }
+    )
   );
 
-  const { data: chartDetails, refetch }: { data: any; refetch: any } = useQuery(
+  const { data: chartDetails, refetch } = useQuery(
     [`chartdata_${params.id}`],
     () =>
       GraphQL(
@@ -108,10 +179,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     {}
   );
 
-  const {
-    data: chartsList,
-    refetch: chartsListRefetch,
-  }: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  const { data: chartsList, refetch: chartsListRefetch } = useQuery(
     [`chartsList_${params.id}`],
     () =>
       GraphQL(
@@ -125,11 +193,8 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
       )
   );
 
-  const resourceChart: {
-    mutate: any;
-    isLoading: any;
-  } = useMutation(
-    (data: { resource: UUID }) =>
+  const resourceChart = useMutation(
+    (data: { resource: string }) =>
       GraphQL(
         CreateResourceChart,
         {
@@ -138,16 +203,19 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         data
       ),
     {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         toast('Resource Chart Created Successfully');
         refetch();
         setIsSheetOpen(false);
         setType('visualize');
-        setChartId(res.addResourceChart.id);
+        const created = res.addResourceChart;
+        if (created && 'id' in created) {
+          setChartId(created.id);
+        }
         chartsListRefetch();
       },
-      onError: (err: any) => {
-        toast(`Received ${err} while deleting chart `, {
+      onError: (err: unknown) => {
+        toast(`Received ${String(err)} while deleting chart `, {
           action: {
             label: 'undo',
             onClick: () => {},
@@ -189,71 +257,37 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     null
   );
 
-  const [resourceSchema, setResourceSchema] = useState<any[]>([]);
-
-  useEffect(() => {
+  const [resourceSchema, setResourceSchema] = useState<ResourceSchema[]>([]);
+  const [prevChartDetails, setPrevChartDetails] = useState(chartDetails);
+  const [prevResourceData, setPrevResourceData] = useState(resourceData);
+  if (chartDetails !== prevChartDetails || resourceData !== prevResourceData) {
+    setPrevChartDetails(chartDetails);
+    setPrevResourceData(resourceData);
     if (chartId && chartDetails?.resourceChart) {
-      const resource = resourceData?.datasetResources?.find(
-        (r: any) => r.id === chartDetails.resourceChart.resource?.id
+      const updatedData = mapResourceChartToChartData(
+        chartDetails.resourceChart
       );
-
+      setChartData(updatedData);
+      setPreviousChartData(updatedData);
+      const resource = resourceData?.datasetResources?.find(
+        (r) => r.id === chartDetails.resourceChart.resource?.id
+      );
       if (resource) {
         setResourceSchema(resource.schema || []);
       }
     }
-  }, [chartId, chartDetails, resourceData]);
+  }
 
   useEffect(() => {
     if (chartId && chartDetails?.resourceChart) {
       refetch();
-      updateChartData(chartDetails.resourceChart);
+      registerChartGeoJson(chartDetails.resourceChart.chartType);
     }
   }, [chartId, chartDetails, refetch]);
 
-  const updateChartData = (resourceChart: any) => {
-    if (
-      resourceChart.chartType === 'ASSAM_DISTRICT' ||
-      resourceChart.chartType === 'ASSAM_RC'
-    ) {
-      echarts.registerMap(
-        resourceChart.chartType.toLowerCase(),
-        renderGeoJSON(resourceChart.chartType.toLowerCase())
-      );
-    }
-
-    const updatedData: ChartData = {
-      chartId: resourceChart.id,
-      description: resourceChart.description || '',
-      filters:
-        resourceChart.chartFilters?.length > 0
-          ? resourceChart.chartFilters.map((filter: any) => ({
-              column: filter.column?.id,
-              operator: filter.operator,
-              value: filter.value,
-            }))
-          : [{ column: '', operator: '==', value: '' }],
-      name: resourceChart.name || '',
-      options: {
-        aggregateType: resourceChart?.chartOptions?.aggregateType,
-        regionColumn: resourceChart?.chartOptions?.regionColumn?.id,
-        showLegend: resourceChart?.chartOptions?.showLegend ?? true,
-        timeColumn: resourceChart?.chartOptions?.timeColumn,
-        valueColumn: resourceChart?.chartOptions?.valueColumn?.id,
-        xAxisColumn: resourceChart?.chartOptions?.xAxisColumn?.id,
-        xAxisLabel: resourceChart?.chartOptions?.xAxisLabel,
-        yAxisColumn: resourceChart?.chartOptions?.yAxisColumn?.map(
-          (col: any) => ({
-            fieldName: col.field.id,
-            label: col.label,
-            color: col.color,
-          })
-        ),
-        yAxisLabel: resourceChart?.chartOptions?.yAxisLabel,
-      },
-      resource: resourceChart.resource?.id,
-      type: resourceChart.chartType as ChartTypes,
-      chart: resourceChart.chart,
-    };
+  const updateChartData = (resourceChartDetails: ResourceChartDetails) => {
+    registerChartGeoJson(resourceChartDetails.chartType);
+    const updatedData = mapResourceChartToChartData(resourceChartDetails);
     setChartData(updatedData);
     setPreviousChartData(updatedData);
   };
@@ -291,9 +325,9 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
     }
   };
 
-  const handleChange = useCallback((field: string, value: any) => {
+  const handleChange = useCallback((field: string, value: ChartChangeValue) => {
     setChartData((prevData) => {
-      if (field === 'type') {
+      if (field === 'type' && typeof value === 'string') {
         const newType = value as ChartTypes;
         return {
           ...prevData,
@@ -301,7 +335,13 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           options: getDefaultOptions(newType),
         };
       }
-      if (field === 'options') {
+      if (
+        field === 'options' &&
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value) &&
+        'showLegend' in value
+      ) {
         return {
           ...prevData,
           options: {
@@ -327,16 +367,22 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
         chartInput
       ),
     {
-      onSuccess: (res: any) => {
+      onSuccess: (res) => {
         toast('Resource chart saved');
-        const newChartId = res?.editResourceChart?.id;
-        updateChartData(res.editResourceChart);
-        setChartId(newChartId);
+        if (
+          res?.editResourceChart &&
+          'id' in res.editResourceChart
+        ) {
+          const savedChart = res.editResourceChart;
+          const newChartId = savedChart.id;
+          updateChartData(savedChart);
+          setChartId(newChartId);
+        }
         chartsListRefetch();
         refetch();
       },
-      onError: (err: any) => {
-        toast(`Received ${err} during resource chart saving`, {
+      onError: (err: unknown) => {
+        toast(`Received ${String(err)} during resource chart saving`, {
           action: {
             label: 'undo',
             onClick: () => {},
@@ -376,7 +422,10 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
             onSuccess: (data) => {
               setChartData((prev) => ({
                 ...prev,
-                chart: data.chart,
+                chart:
+                  'chart' in data
+                    ? ((data as { chart?: ChartPreview }).chart ?? {})
+                    : {},
                 type: currentType, // Preserve the type from before mutation
                 options: {
                   ...prev.options,
@@ -403,7 +452,7 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
   const handleResourceChange = useCallback(
     (value: string) => {
       const resource = resourceData?.datasetResources.find(
-        (r: any) => r.id === value
+        (r) => r.id === value
       );
       if (resource) {
         handleChange('resource', resource.id);
@@ -423,9 +472,9 @@ const ChartsVisualize: React.FC<VisualizationProps> = ({
           isSheetOpen={isSheetOpen}
           setIsSheetOpen={setIsSheetOpen}
           resourceChart={resourceChart}
-          resourceData={resourceData}
-          chartsList={chartsList}
-          chartId={chartId}
+          resourceData={resourceData as ResourceData}
+          chartsList={chartsList ?? null}
+          chartId={chartId ?? ''}
         />
         <Divider />
         <div className="mt-8 flex flex-col gap-8">

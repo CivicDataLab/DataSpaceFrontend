@@ -1,21 +1,22 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { PublishersListQuery } from '@/gql/generated/graphql';
 import { Text, Tooltip } from 'opub-ui';
 
 interface CardProps {
-  data: any;
+  data: PublishersListQuery['getPublishers'];
 }
 
 const PublisherCard: React.FC<CardProps> = ({ data }) => {
   return (
     <div className="my-10">
       <div className=" grid w-full grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3 lg:gap-16">
-        {data.map((item: any, index: any) => (
+        {data.map((item, index) => (
           <Link
             href={
               item.__typename === 'TypeOrganization'
-                ? `/publishers/organization/${item.slug || item.name}_${item.id}`
+                ? `/publishers/organization/${item.name}_${item.id}`
                 : `/publishers/${item.fullName}_${item.id}`
             }
             key={index}
@@ -67,21 +68,23 @@ const PublisherCard: React.FC<CardProps> = ({ data }) => {
                 </Text>
               </div> */}
             </div>
-            {(item?.bio || item?.description) && (
+            {(item.__typename === 'TypeUser'
+              ? item.bio
+              : item.description) && (
               <div>
                 <Tooltip
                   content={
                     item.__typename === 'TypeUser'
-                      ? item?.bio
-                      : item?.description
+                      ? item.bio
+                      : item.description
                   }
                 >
                   <Text className=" line-clamp-2">
                     {item.__typename === 'TypeUser'
-                      ? item?.bio?.length > 220
+                      ? item.bio && item.bio.length > 220
                         ? item.bio.slice(0, 220) + '...'
                         : item.bio
-                      : item?.description?.length > 220
+                      : item.description.length > 220
                         ? item.description.slice(0, 220) + '...'
                         : item.description}
                   </Text>

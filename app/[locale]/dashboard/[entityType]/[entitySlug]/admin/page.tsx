@@ -11,9 +11,9 @@ import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
-import AddUser from './addUser';
+import AddUser, { SelectedUser } from './addUser';
 
-const usersListDoc: any = graphql(`
+const usersListDoc = graphql(`
   query userByOrg {
     userByOrganization {
       id
@@ -30,7 +30,7 @@ const usersListDoc: any = graphql(`
   }
 `);
 
-const removeUserDoc: any = graphql(`
+const removeUserDoc = graphql(`
   mutation removeUserFromOrganization(
     $input: AddRemoveUserToOrganizationInput!
   ) {
@@ -41,22 +41,32 @@ const removeUserDoc: any = graphql(`
   }
 `);
 
+interface AdminTableRow {
+  name: string;
+  role: string;
+  roleId: string;
+  modified: string;
+  id: string;
+}
+
+interface AdminTableCellProps {
+  row: {
+    original: AdminTableRow;
+  };
+}
+
 const Admin = () => {
   const params = useParams<{ entityType: string; entitySlug: string }>();
-  const usersList: { data: any; isLoading: boolean; refetch: any } = useQuery(
+  const usersList = useQuery(
     [`fetch_users_list_admin_members`],
     () =>
-      GraphQL(
-        usersListDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        []
-      )
+      GraphQL(usersListDoc, {
+        [params.entityType]: params.entitySlug,
+      })
   );
   const [isOpen, setIsOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [selectedUser, setSelectedUser] = useState({});
+  const [selectedUser, setSelectedUser] = useState<SelectedUser>({});
   const [refetch, setRefetch] = useState(false);
 
   const { mutate } = useMutation(
@@ -90,7 +100,7 @@ const Admin = () => {
       {
         accessorKey: 'edit',
         header: 'Edit',
-        cell: ({ row }: any) => (
+        cell: ({ row }: AdminTableCellProps) => (
           <div className="">
             <Button
               onClick={() => {
@@ -115,7 +125,7 @@ const Admin = () => {
       {
         accessorKey: 'delete',
         header: 'Delete',
-        cell: ({ row }: any) => (
+        cell: ({ row }: AdminTableCellProps) => (
           <div className="">
             <Button
               onClick={() => {
@@ -136,7 +146,7 @@ const Admin = () => {
     ],
 
     rows:
-      usersList.data?.userByOrganization.map((item: any) => ({
+      usersList.data?.userByOrganization.map((item) => ({
         name: item.fullName,
         role: item.organizationMemberships[0]?.role?.name || 'N/A',
         roleId: item.organizationMemberships[0]?.role?.id || '',
@@ -146,9 +156,14 @@ const Admin = () => {
       })) || [],
   };
 
-  useEffect(() => {
+  const [filteredRows, setFilteredRows] = React.useState<AdminTableRow[]>(
+    table.rows
+  );
+  const [prevUsersData, setPrevUsersData] = React.useState(usersList.data);
+  if (usersList.data !== prevUsersData) {
+    setPrevUsersData(usersList.data);
     const updatedRows =
-      usersList.data?.userByOrganization.map((item: any) => ({
+      usersList.data?.userByOrganization.map((item) => ({
         name: item.fullName,
         role: item.organizationMemberships[0]?.role?.name || 'N/A',
         roleId: item.organizationMemberships[0]?.role?.id || '',
@@ -158,12 +173,10 @@ const Admin = () => {
       })) || [];
 
     setFilteredRows(updatedRows);
-  }, [usersList.data]);
-
-  const [filteredRows, setFilteredRows] = React.useState<any[]>(table.rows);
+  }
   const handleSearchChange = (e: string) => {
     const searchTerm = e.toLowerCase();
-    const filtered = table.rows.filter((row: any) =>
+    const filtered = table.rows.filter((row) =>
       row.name.toLowerCase().includes(searchTerm)
     );
     setFilteredRows(filtered);
@@ -173,9 +186,12 @@ const Admin = () => {
     (column) => column.accessorKey !== 'id'
   );
 
+  if (refetch) {
+    setRefetch(false);
+  }
+
   useEffect(() => {
     usersList.refetch();
-    setRefetch(false);
   }, [refetch, usersList]);
 
   return (
@@ -221,7 +237,8 @@ const Admin = () => {
         )}
       </div>
       <div>
-        {usersList.data?.userByOrganization?.length > 0 ? (
+        {usersList.data?.userByOrganization &&
+        usersList.data.userByOrganization.length > 0 ? (
           <DataTable
             columns={filteredColumns}
             rows={filteredRows}

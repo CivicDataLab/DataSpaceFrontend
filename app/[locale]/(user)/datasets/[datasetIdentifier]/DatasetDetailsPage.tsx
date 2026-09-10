@@ -15,7 +15,7 @@ import Resources from './components/Resources';
 import SimilarDatasets from './components/SimilarDatasets';
 import { useTourTrigger } from '@/hooks/use-tour-trigger';
 
-const datasetQuery: any = graphql(`
+const datasetQuery = graphql(`
   query getDataset($datasetId: UUID!) {
     getDataset(datasetId: $datasetId) {
       tags {
@@ -88,7 +88,7 @@ export default function DatasetDetailsPage({
   // Enable tour for first-time users
   useTourTrigger(true, 1500);
   
-  const Datasetdetails: { data: any; isLoading: any } = useQuery(
+  const Datasetdetails = useQuery(
     [`details_${datasetId}`],
     () => GraphQL(datasetQuery, {}, { datasetId: datasetId })
   );

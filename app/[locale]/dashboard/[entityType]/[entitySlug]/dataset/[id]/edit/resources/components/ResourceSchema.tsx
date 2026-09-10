@@ -1,5 +1,24 @@
 import React from 'react';
+import { FieldType, SchemaUpdate, SchemaUpdateInput } from '@/gql/generated/graphql';
 import { DataTable, TextField } from 'opub-ui';
+
+interface SchemaRow {
+  id?: string;
+  fieldName?: string | null;
+  format?: string | null;
+  description?: string | null;
+}
+
+interface SchemaCellInfo {
+  row: { index: number };
+}
+
+interface ResourceSchemaProps {
+  setSchema: (schema: SchemaRow[]) => void;
+  data: SchemaRow[];
+  mutate: (data: { schemaUpdateInput: SchemaUpdateInput }) => void;
+  resourceId: string | null;
+}
 
 const DescriptionCell = ({
   value,
@@ -7,14 +26,19 @@ const DescriptionCell = ({
   handleFieldChange,
 }: {
   value: string;
-  rowIndex: any;
-  handleFieldChange: any;
+  rowIndex: number;
+  handleFieldChange: (field: string, newValue: string, rowIndex: number) => void;
 }) => {
   const [description, setDescription] = React.useState(value || '');
 
-  const handleChange = (e: any) => {
-    setDescription(e?.target?.value);
-    handleFieldChange('description', e?.target?.value, rowIndex);
+  const handleChange = (e?: React.FocusEvent) => {
+    const target = e?.target;
+    const nextValue =
+      target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
+        ? target.value
+        : '';
+    setDescription(nextValue);
+    handleFieldChange('description', nextValue, rowIndex);
   };
 
   return (
@@ -24,7 +48,7 @@ const DescriptionCell = ({
       name="description"
       type="text"
       defaultValue={description}
-      onBlur={(e: any) => handleChange(e)}
+      onBlur={handleChange}
     />
   );
 };
@@ -34,19 +58,20 @@ export const ResourceSchema = ({
   data,
   mutate,
   resourceId,
-}: any) => {
-  const [updatedData, setUpdatedData] = React.useState<any>(data);
-
-  React.useEffect(() => {
+}: ResourceSchemaProps) => {
+  const [updatedData, setUpdatedData] = React.useState<SchemaRow[]>(data);
+  const [prevData, setPrevData] = React.useState(data);
+  if (data !== prevData) {
+    setPrevData(data);
     if (data) {
       setUpdatedData(data);
     }
-  }, [data]);
+  }
 
   const handleFieldChange = (
     field: string,
     newValue: string,
-    rowIndex: any
+    rowIndex: number
   ) => {
     const newData = [...updatedData];
     newData[rowIndex] = {
@@ -59,20 +84,47 @@ export const ResourceSchema = ({
     handleSave(newData);
   };
 
-  const handleSave = (newdata: any) => {
-    const isSchemaChanged = JSON.stringify(newdata) !== JSON.stringify(data);
-    if (isSchemaChanged) {
-      mutate({
-        schemaUpdateInput: {
-          resource: resourceId,
-          updates: newdata?.map((item: any) => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { fieldName, ...rest } = item;
-            return rest;
-          }),
-        },
-      });
+  const toFieldType = (format: string | null | undefined): FieldType | null => {
+    switch (format) {
+      case FieldType.Date:
+      case FieldType.Integer:
+      case FieldType.Number:
+      case FieldType.String:
+        return format;
+      default:
+        return null;
     }
+  };
+
+  const handleSave = (newdata: SchemaRow[]) => {
+    const isSchemaChanged = JSON.stringify(newdata) !== JSON.stringify(data);
+    if (!isSchemaChanged || !resourceId) {
+      return;
+    }
+
+    const updates: SchemaUpdate[] = newdata.flatMap((item) => {
+      if (!item.id) {
+        return [];
+      }
+      const format = toFieldType(item.format);
+      if (!format) {
+        return [];
+      }
+      return [
+        {
+          id: item.id,
+          description: item.description ?? '',
+          format,
+        },
+      ];
+    });
+
+    mutate({
+      schemaUpdateInput: {
+        resource: resourceId as `${string}-${string}-${string}-${string}-${string}`,
+        updates,
+      },
+    });
   };
 
   const generateColumnData = () => {
@@ -84,7 +136,7 @@ export const ResourceSchema = ({
       {
         accessorKey: 'description',
         header: 'DESCRIPTION',
-        cell: (info: any) => {
+        cell: (info: SchemaCellInfo) => {
           const rowIndex = info.row.index;
           const description = updatedData[rowIndex]?.description || '';
           return (
@@ -103,8 +155,8 @@ export const ResourceSchema = ({
     ];
   };
 
-  const generateTableData = (updatedData: any[]) => {
-    return updatedData?.map((item: any) => ({
+  const generateTableData = (rows: SchemaRow[]) => {
+    return rows?.map((item) => ({
       fieldName: item?.fieldName,
       description: item?.description,
       format: item?.format,

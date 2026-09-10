@@ -3,32 +3,44 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Divider, Icon, Text, Tooltip } from 'opub-ui';
 
+import { UseCasedetailsQuery } from '@/gql/generated/graphql';
 import { formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 
-const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
-  const [platformTitle, setPlatformTitle] = useState<string | null>(null);
+interface MetadataProps {
+  data: UseCasedetailsQuery;
+  setOpen?: (isOpen: boolean) => void;
+}
+
+const Metadata = ({ data, setOpen }: MetadataProps) => {
+  const platformUrl = data.useCase.platformUrl;
+  const [platformTitle, setPlatformTitle] = useState<string | null>(
+    platformUrl === null ? 'N/A' : null
+  );
+  const [prevPlatformUrl, setPrevPlatformUrl] = useState(platformUrl);
+  if (platformUrl !== prevPlatformUrl) {
+    setPrevPlatformUrl(platformUrl);
+    setPlatformTitle(platformUrl === null ? 'N/A' : null);
+  }
 
   useEffect(() => {
-    const fetchTitle = async () => {
-      try {
-        const urlItem = data.useCase.platformUrl;
-
-        if (urlItem && urlItem.value) {
-          const title = await getWebsiteTitle(urlItem.value);
-          setPlatformTitle(title);
-        }
-      } catch (error) {
-        console.error('Error fetching website title:', error);
-      }
-    };
-
-    if (data.useCase.platformUrl === null) {
-      setPlatformTitle('N/A');
-    } else {
-      fetchTitle();
+    if (!platformUrl) {
+      return;
     }
-  }, [data.useCase.platformUrl]);
+
+    let cancelled = false;
+    getWebsiteTitle(platformUrl)
+      .then((title) => {
+        if (!cancelled) setPlatformTitle(title);
+      })
+      .catch((error) => {
+        console.error('Error fetching website title:', error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [platformUrl]);
 
   const getOrganizationLink = () => {
     if (!data) return '/publishers';
@@ -52,7 +64,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
           content={
             data.useCase.isIndividualUsecase
               ? data.useCase.user.fullName
-              : data.useCase.organization.name
+              : data.useCase.organization?.name
           }
         >
           <Link href={getOrganizationLink()}>
@@ -68,7 +80,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       value: (
         <Link
           className="text-primaryBlue underline"
-          href={`${data.useCase.isIndividualUsecase ? `mailto:${data.useCase.user.email}` : `mailto:${data.useCase.organization.contactEmail}`}`}
+          href={`${data.useCase.isIndividualUsecase ? `mailto:${data.useCase.user.email}` : `mailto:${data.useCase.organization?.contactEmail ?? ''}`}`}
         >
           Contact{' '}
           {data.useCase.isIndividualUsecase ? 'Publisher' : 'Organization'}
@@ -83,7 +95,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
         ) : (
           <Link
             className="text-primaryBlue underline"
-            href={data.useCase.platformUrl}
+            href={data.useCase.platformUrl ?? ''}
           >
             <Text className="underline" color="highlight" variant="bodyLg">
               {platformTitle?.trim() ? platformTitle : 'Visit Platform'}
@@ -103,8 +115,9 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       : []),
     {
       label: 'Status',
-      value: data.useCase.runningStatus.split('_').join('') || 'N/A',
-      tooltipContent: data.useCase.runningStatus.split('_').join('') || 'N/A',
+      value: String(data.useCase.runningStatus).split('_').join('') || 'N/A',
+      tooltipContent:
+        String(data.useCase.runningStatus).split('_').join('') || 'N/A',
     },
     {
       label: 'Last Updated',
@@ -115,8 +128,8 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       label: 'Sectors',
       value: (
         <div className="flex flex-wrap  gap-2">
-          {data.useCase.sectors.length > 0 ? (
-            data.useCase.sectors.map((sector: any, index: number) => (
+          {data.useCase.sectors && data.useCase.sectors.length > 0 ? (
+            data.useCase.sectors.map((sector, index: number) => (
               <Tooltip content={sector.name} key={index}>
                 <Image
                   src={`/Sectors/${sector.name}.svg`}
@@ -138,7 +151,7 @@ const Metadata = ({ data, setOpen }: { data: any; setOpen?: any }) => {
       value: (
         <div className="flex flex-wrap gap-2">
           {data.useCase.sdgs && data.useCase.sdgs.length > 0 ? (
-            data.useCase.sdgs.map((sdg: any, index: number) => (
+            data.useCase.sdgs.map((sdg, index: number) => (
               <Tooltip content={`${sdg.code} - ${sdg.name}`} key={index}>
                 <Image
                   src={`/SDG/${sdg.code}.svg`}

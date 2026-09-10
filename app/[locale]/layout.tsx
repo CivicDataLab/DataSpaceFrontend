@@ -1,5 +1,5 @@
 import { NextIntlClientProvider } from 'next-intl';
-import { unstable_setRequestLocale as setRequestLocale } from 'next-intl/server';
+import { setRequestLocale } from 'next-intl/server';
 import { Inter as FontSans } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import React from 'react';
