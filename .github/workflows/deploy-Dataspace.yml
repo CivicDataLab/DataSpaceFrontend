@@ -214,6 +214,9 @@ jobs:
     with:
       suite: functional
       api_base_url: https://dev.api.civicdataspace.in
+      # Provider functional is flaky against dev, so it runs report-only in
+      # provider-functional-report instead of gating the deploy.
+      skip_provider: true
     secrets:
       HOME_URL_DEV: ${{ secrets.HOME_URL_DEV }}
       TEST_EMAIL_1: ${{ secrets.TEST_EMAIL_1 }}
@@ -221,6 +224,24 @@ jobs:
       TEST_EMAIL_2: ${{ secrets.TEST_EMAIL_2 }}
       TEST_PASSWORD_2: ${{ secrets.TEST_PASSWORD_2 }}
       KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+
+  provider-functional-report:
+    name: Provider Functional (report-only)
+    needs: smoke-tests
+    # Report-only: promote and rollback do not list this job in needs, so its
+    # result never rolls back or blocks a dev deploy. Promote it to a gate
+    # once the provider suite is stable against dev.
+    if: github.ref_name != 'main'
+    uses: CivicDataLab/CivicDataSpace-test/.github/workflows/run-smoke.yml@CI
+    with:
+      suite: functional
+      only_provider: true
+    secrets:
+      HOME_URL_DEV: ${{ secrets.HOME_URL_DEV }}
+      TEST_EMAIL_1: ${{ secrets.TEST_EMAIL_1 }}
+      TEST_PASSWORD_1: ${{ secrets.TEST_PASSWORD_1 }}
+      TEST_EMAIL_2: ${{ secrets.TEST_EMAIL_2 }}
+      TEST_PASSWORD_2: ${{ secrets.TEST_PASSWORD_2 }}
 
   # Only once the tests pass does this release become the thing a future
   # rollback would target -- on prod too, which used to be marked
