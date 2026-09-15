@@ -247,10 +247,15 @@ jobs:
   # rollback would target -- on prod too, which used to be marked
   # last-known-good straight after deploy with no tests at all.
   promote:
-    needs: [build-and-deploy, smoke-tests, functional-tests]
-    # Not success(): on main functional-tests is skipped by design, and a
-    # skipped need would skip this job too. Nothing failed + smoke passed.
-    if: ${{ !failure() && !cancelled() && needs.smoke-tests.result == 'success' }}
+    # provider-functional-report is listed so this waits for every test to
+    # finish, but its result is deliberately not checked (report-only).
+    needs: [build-and-deploy, smoke-tests, functional-tests, provider-functional-report]
+    # Explicit gating results, not success()/!failure(): on main the functional
+    # jobs are skipped by design, and the provider job must not block.
+    if: >-
+      ${{ !cancelled() && needs.build-and-deploy.result == 'success' &&
+      needs.smoke-tests.result == 'success' &&
+      (needs.functional-tests.result == 'success' || needs.functional-tests.result == 'skipped') }}
     runs-on: ubuntu-latest
     # vars.EC2_HOST is an environment-scoped variable, only visible to jobs
     # that declare `environment:` -- without it appleboy/ssh-action fails
@@ -266,8 +271,13 @@ jobs:
           script: echo "${{ needs.build-and-deploy.outputs.release }}" > /home/ubuntu/DataExchange/releases/.last_good
 
   rollback:
-    needs: [build-and-deploy, smoke-tests, functional-tests]
-    if: failure() && needs.build-and-deploy.result == 'success'
+    # Waits for the report-only provider job too, without checking its result.
+    needs: [build-and-deploy, smoke-tests, functional-tests, provider-functional-report]
+    # Explicit gating results, not failure(): failure() would also count the
+    # report-only provider job.
+    if: >-
+      ${{ !cancelled() && needs.build-and-deploy.result == 'success' &&
+      (needs.smoke-tests.result == 'failure' || needs.functional-tests.result == 'failure') }}
     runs-on: ubuntu-latest
     # Same environment-scoped vars.EC2_HOST issue as promote - see the
     # comment there.
