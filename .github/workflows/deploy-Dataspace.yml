@@ -260,7 +260,9 @@ jobs:
     # vars.EC2_HOST is an environment-scoped variable, only visible to jobs
     # that declare `environment:` -- without it appleboy/ssh-action fails
     # with "missing server host".
-    environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
+    # production-ops: same prod host/SSH secrets, no required reviewer, main-only.
+    # The human approval is on the deploy job; finalize/rollback must not wait.
+    environment: ${{ github.ref_name == 'main' && 'production-ops' || 'development' }}
     steps:
       - name: Mark this release as last-known-good
         uses: appleboy/ssh-action@v1.0.3
@@ -281,7 +283,9 @@ jobs:
     runs-on: ubuntu-latest
     # Same environment-scoped vars.EC2_HOST issue as promote - see the
     # comment there.
-    environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
+    # production-ops: same prod host/SSH secrets, no required reviewer, main-only.
+    # The human approval is on the deploy job; finalize/rollback must not wait.
+    environment: ${{ github.ref_name == 'main' && 'production-ops' || 'development' }}
     steps:
       - name: Revert to last known-good release
         uses: appleboy/ssh-action@v1.0.3
