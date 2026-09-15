@@ -182,21 +182,20 @@ jobs:
       # Production has no smoke-test job today, so its only quality gate is the
       # boot health check above. Mark this release good immediately so a FUTURE
       # deploy knows what to roll back to if it fails.
-      - name: Mark release as last-known-good (prod only)
-        if: github.ref_name == 'main'
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ vars.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          script: echo "${{ steps.meta.outputs.release }}" > /home/ubuntu/DataExchange/releases/.last_good
-
   smoke-tests:
     needs: build-and-deploy
-    if: github.ref_name == 'dev'
     uses: CivicDataLab/CivicDataSpace-test/.github/workflows/run-smoke.yml@CI
+    with:
+      # main: only the readonly allowlist ever runs against prod.
+      # dev: stage 1 of 2 -- functional-tests runs only if this passes.
+      suite: ${{ github.ref_name == 'main' && 'readonly' || 'smoke' }}
+      # Explicit: run-smoke's api job falls back to the dev API when this is
+      # unset, which would test dev's backend while gating a prod deploy.
+      api_base_url: ${{ github.ref_name == 'main' && 'https://api.datakeep.civicdays.in' || 'https://dev.api.civicdataspace.in' }}
     secrets:
-      HOME_URL_DEV: ${{ secrets.HOME_URL_DEV }}
+      # Literal, not a secret, so a missing value can't silently fall back to
+      # the dev site through the `&& ||` idiom.
+      HOME_URL_DEV: ${{ github.ref_name == 'main' && 'https://civicdataspace.in' || secrets.HOME_URL_DEV }}
       TEST_EMAIL_1: ${{ secrets.TEST_EMAIL_1 }}
       TEST_PASSWORD_1: ${{ secrets.TEST_PASSWORD_1 }}
       TEST_EMAIL_2: ${{ secrets.TEST_EMAIL_2 }}
@@ -206,18 +205,66 @@ jobs:
       # and the job fails its preflight.
       KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
 
-  # dev only: smoke tests are the real quality gate here. Only once they pass
-  # does this release become the thing a future rollback would target.
-  promote-dev:
-    needs: [build-and-deploy, smoke-tests]
-    if: github.ref_name == 'dev' && needs.smoke-tests.result == 'success'
+  functional-tests:
+    needs: smoke-tests
+    # dev only, stage 2: runs only once smoke has passed. Functional tests
+    # write (datasets, use cases), so they never run against prod.
+    if: github.ref_name != 'main'
+    uses: CivicDataLab/CivicDataSpace-test/.github/workflows/run-smoke.yml@CI
+    with:
+      suite: functional
+      api_base_url: https://dev.api.civicdataspace.in
+      # Provider functional is flaky against dev, so it runs report-only in
+      # provider-functional-report instead of gating the deploy.
+      skip_provider: true
+    secrets:
+      HOME_URL_DEV: ${{ secrets.HOME_URL_DEV }}
+      TEST_EMAIL_1: ${{ secrets.TEST_EMAIL_1 }}
+      TEST_PASSWORD_1: ${{ secrets.TEST_PASSWORD_1 }}
+      TEST_EMAIL_2: ${{ secrets.TEST_EMAIL_2 }}
+      TEST_PASSWORD_2: ${{ secrets.TEST_PASSWORD_2 }}
+      KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+
+  provider-functional-report:
+    name: Provider Functional (report-only)
+    needs: smoke-tests
+    # Report-only: promote and rollback do not list this job in needs, so its
+    # result never rolls back or blocks a dev deploy. Promote it to a gate
+    # once the provider suite is stable against dev.
+    if: github.ref_name != 'main'
+    uses: CivicDataLab/CivicDataSpace-test/.github/workflows/run-smoke.yml@CI
+    with:
+      suite: functional
+      only_provider: true
+      api_base_url: https://dev.api.civicdataspace.in
+    secrets:
+      HOME_URL_DEV: ${{ secrets.HOME_URL_DEV }}
+      TEST_EMAIL_1: ${{ secrets.TEST_EMAIL_1 }}
+      TEST_PASSWORD_1: ${{ secrets.TEST_PASSWORD_1 }}
+      TEST_EMAIL_2: ${{ secrets.TEST_EMAIL_2 }}
+      TEST_PASSWORD_2: ${{ secrets.TEST_PASSWORD_2 }}
+      # org_add_permission needs a token to check canAdd; without this every
+      # org-create test skips on both workers and the report is hollow.
+      KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+
+  # Only once the tests pass does this release become the thing a future
+  # rollback would target -- on prod too, which used to be marked
+  # last-known-good straight after deploy with no tests at all.
+  promote:
+    # provider-functional-report is listed so this waits for every test to
+    # finish, but its result is deliberately not checked (report-only).
+    needs: [build-and-deploy, smoke-tests, functional-tests, provider-functional-report]
+    # Explicit gating results, not success()/!failure(): on main the functional
+    # jobs are skipped by design, and the provider job must not block.
+    if: >-
+      ${{ !cancelled() && needs.build-and-deploy.result == 'success' &&
+      needs.smoke-tests.result == 'success' &&
+      (needs.functional-tests.result == 'success' || needs.functional-tests.result == 'skipped') }}
     runs-on: ubuntu-latest
-    # vars.EC2_HOST is an environment-scoped variable (Settings -> Environments
-    # -> development), only visible to jobs that declare `environment:`.
-    # Without this, appleboy/ssh-action fails with "missing server host"
-    # (found via a live run - build-and-deploy/smoke-tests both succeeded but
-    # this job still failed, which is why `if:` here is already gated to dev).
-    environment: development
+    # vars.EC2_HOST is an environment-scoped variable, only visible to jobs
+    # that declare `environment:` -- without it appleboy/ssh-action fails
+    # with "missing server host".
+    environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
     steps:
       - name: Mark this release as last-known-good
         uses: appleboy/ssh-action@v1.0.3
@@ -227,13 +274,18 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: echo "${{ needs.build-and-deploy.outputs.release }}" > /home/ubuntu/DataExchange/releases/.last_good
 
-  rollback-dev:
-    needs: [build-and-deploy, smoke-tests]
-    if: github.ref_name == 'dev' && needs.smoke-tests.result == 'failure'
+  rollback:
+    # Waits for the report-only provider job too, without checking its result.
+    needs: [build-and-deploy, smoke-tests, functional-tests, provider-functional-report]
+    # Explicit gating results, not failure(): failure() would also count the
+    # report-only provider job.
+    if: >-
+      ${{ !cancelled() && needs.build-and-deploy.result == 'success' &&
+      (needs.smoke-tests.result == 'failure' || needs.functional-tests.result == 'failure') }}
     runs-on: ubuntu-latest
-    # Same environment-scoped vars.EC2_HOST issue as promote-dev - see the
+    # Same environment-scoped vars.EC2_HOST issue as promote - see the
     # comment there.
-    environment: development
+    environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
     steps:
       - name: Revert to last known-good release
         uses: appleboy/ssh-action@v1.0.3
