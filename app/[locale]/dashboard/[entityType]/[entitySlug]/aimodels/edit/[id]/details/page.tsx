@@ -18,6 +18,7 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { enumValues } from '@/lib/enumValues';
 import RichTextEditor from '@/components/RichTextEditor/RichTextEditor';
 import { useEditStatus } from '../../context';
 
@@ -170,17 +171,6 @@ const geographiesListQueryDoc = graphql(`
   }
 `);
 
-const promptDomainEnumValuesQueryDoc = graphql(`
-  query PromptDomainEnum {
-    __type(name: "PromptDomain") {
-      enumValues {
-        name
-        description
-      }
-    }
-  }
-`);
-
 const FetchAIModelDetails = graphql(`
   query AIModelDetails($filters: AIModelFilter) {
     aiModels(filters: $filters) {
@@ -295,11 +285,6 @@ export default function AIModelDetailsPage() {
           [params.entityType]: params.entitySlug,
         }
       )
-    );
-
-  const getPromptDomainEnumValues =
-    useQuery([`prompt_domain_enum_values_query`], () =>
-      GraphQL(promptDomainEnumValuesQueryDoc, {})
     );
 
   const AIModelData = useQuery(
@@ -477,16 +462,14 @@ export default function AIModelDetailsPage() {
 
   const domainOptions = [
     { label: 'Click to select from dropdown', value: '' },
-    ...(
-      getPromptDomainEnumValues.data?.__type?.enumValues?.map((item: { name: string }) => ({
-        label: item.name
-          .toLowerCase()
-          .split('_')
-          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' '),
-        value: item.name,
-      })) || []
-    ),
+    ...enumValues(PromptDomain).map((name) => ({
+      label: name
+        .toLowerCase()
+        .split('_')
+        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' '),
+      value: name,
+    })),
   ];
 
   const modelTypeOptions = [
