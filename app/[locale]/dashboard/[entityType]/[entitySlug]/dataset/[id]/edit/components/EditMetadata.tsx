@@ -5,6 +5,10 @@ import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   MetadataModels,
+  PromptDomain,
+  PromptTaskType,
+  TargetLanguage,
+  TargetModelType,
   UpdateMetadataInput,
   UpdatePromptMetadataInput,
 } from '@/gql/generated/graphql';
@@ -21,6 +25,7 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { enumValues } from '@/lib/enumValues';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import DatasetLoading from '../../../components/loading-dataset';
 import { useDatasetEditStatus } from '../context';
@@ -109,54 +114,6 @@ const metadataQueryDoc = graphql(`
       model
       enabled
       filterable
-    }
-  }
-`);
-
-// Introspection query to get PromptTaskType enum values from schema
-const promptTaskTypeEnumQuery = graphql(`
-  query PromptTaskTypeEnum {
-    __type(name: "PromptTaskType") {
-      enumValues {
-        name
-        description
-      }
-    }
-  }
-`);
-
-// Introspection query to get PromptDomain enum values from schema
-const promptDomainEnumQuery = graphql(`
-  query PromptDomainEnum {
-    __type(name: "PromptDomain") {
-      enumValues {
-        name
-        description
-      }
-    }
-  }
-`);
-
-// Introspection query to get TargetLanguage enum values from schema
-const targetLanguageEnumQuery = graphql(`
-  query TargetLanguageEnum {
-    __type(name: "TargetLanguage") {
-      enumValues {
-        name
-        description
-      }
-    }
-  }
-`);
-
-// Introspection query to get TargetModelType enum values from schema
-const targetModelTypeEnumQuery = graphql(`
-  query TargetModelTypeEnum {
-    __type(name: "TargetModelType") {
-      enumValues {
-        name
-        description
-      }
     }
   }
 `);
@@ -360,31 +317,6 @@ export function EditMetadata({ id }: { id: string }) {
         },
       }
     )
-  );
-
-  // Fetch PromptTaskType enum values from GraphQL schema
-  const getPromptTaskTypeEnum = useQuery(
-    ['prompt_task_type_enum'],
-    () => GraphQL(promptTaskTypeEnumQuery),
-    { staleTime: Infinity }
-  );
-
-  const getPromptDomainEnum = useQuery(
-    ['prompt_domain_enum'],
-    () => GraphQL(promptDomainEnumQuery),
-    { staleTime: Infinity }
-  );
-
-  const getTargetLanguageEnum = useQuery(
-    ['target_language_enum'],
-    () => GraphQL(targetLanguageEnumQuery),
-    { staleTime: Infinity }
-  );
-
-  const getTargetModelTypeEnum = useQuery(
-    ['target_model_type_enum'],
-    () => GraphQL(targetModelTypeEnumQuery),
-    { staleTime: Infinity }
   );
 
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
@@ -975,14 +907,12 @@ export function EditMetadata({ id }: { id: string }) {
                       label="Task Type"
                       displaySelected
                       list={
-                        getPromptTaskTypeEnum.data?.__type?.enumValues?.map(
-                          (enumValue) => ({
-                            label: enumValue.name
-                              .replace(/_/g, ' ')
-                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                            value: enumValue.name,
-                          })
-                        ) || []
+                        enumValues(PromptTaskType).map((name) => ({
+                          label: name
+                            .replace(/_/g, ' ')
+                            .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                          value: name,
+                        }))
                       }
                       selectedValue={
                         promptMetadataState.taskType
@@ -1010,14 +940,12 @@ export function EditMetadata({ id }: { id: string }) {
                       label="Domain"
                       displaySelected
                       list={
-                        getPromptDomainEnum.data?.__type?.enumValues?.map(
-                          (enumValue) => ({
-                            label: enumValue.name
-                              .replace(/_/g, ' ')
-                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                            value: enumValue.name,
-                          })
-                        ) || []
+                        enumValues(PromptDomain).map((name) => ({
+                          label: name
+                            .replace(/_/g, ' ')
+                            .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                          value: name,
+                        }))
                       }
                       selectedValue={
                         promptMetadataState.domain
@@ -1046,14 +974,12 @@ export function EditMetadata({ id }: { id: string }) {
                       displaySelected
                       creatable
                       list={
-                        getTargetLanguageEnum.data?.__type?.enumValues?.map(
-                          (enumValue) => ({
-                            label: enumValue.name
-                              .replace(/_/g, ' ')
-                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                            value: enumValue.name,
-                          })
-                        ) || []
+                        enumValues(TargetLanguage).map((name) => ({
+                          label: name
+                            .replace(/_/g, ' ')
+                            .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                          value: name,
+                        }))
                       }
                       selectedValue={
                         promptMetadataState.targetLanguages?.map(
@@ -1078,14 +1004,12 @@ export function EditMetadata({ id }: { id: string }) {
                       displaySelected
                       creatable
                       list={
-                        getTargetModelTypeEnum.data?.__type?.enumValues?.map(
-                          (enumValue) => ({
-                            label: enumValue.name
-                              .replace(/_/g, ' ')
-                              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                            value: enumValue.name,
-                          })
-                        ) || []
+                        enumValues(TargetModelType).map((name) => ({
+                          label: name
+                            .replace(/_/g, ' ')
+                            .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                          value: name,
+                        }))
                       }
                       selectedValue={
                         promptMetadataState.targetModelTypes?.map(
