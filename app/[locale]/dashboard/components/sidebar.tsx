@@ -35,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               {data.map((item, index) => (
                 <div key={index} className="mb-1 px-1 py-2 ">
                   <Link href={item.href} onClick={() => setOpen(false)}>
-                    <Text variant="headingSm" as="h1" color={'highlight'}>
+                    <Text variant="headingSm" as="span" color={'highlight'}>
                       {item.title}
                     </Text>
                   </Link>

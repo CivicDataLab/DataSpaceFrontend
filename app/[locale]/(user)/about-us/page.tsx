@@ -56,7 +56,7 @@ const About = () => {
   });
 
   return (
-    <main>
+    <div>
       <JsonLd json={jsonLd} />
       <BreadCrumbs
         data={[
@@ -65,7 +65,9 @@ const About = () => {
         ]}
       />
       <div className="container mb-5 py-5 lg:py-10">
-        <Text variant="heading2xl">About CivicDataSpace</Text>
+        <Text variant="heading2xl" as="h1">
+          About CivicDataSpace
+        </Text>
         <div className=" flex flex-col gap-4 pt-4 lg:gap-6 lg:pt-6">
           <Text variant="headingLg" fontWeight="regular" className=" leading-5">
             CivicDataSpace is a collaborative, open-source platform that goes
@@ -118,7 +120,7 @@ const About = () => {
           <Team />
         </div> */}
       </div>
-    </main>
+    </div>
   );
 };
 

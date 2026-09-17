@@ -44,7 +44,7 @@ const Sectors = () => {
         <div className="mr-8 lg:mr-12">
           <Button
             kind="tertiary"
-            className="bg-transparent border-none shadow-none text-primaryText px-0 hover:underline"
+            className="bg-transparent border-none shadow-none text-primaryText px-0 hover:underline outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-interactive-focused)]"
             onClick={() => {
               router.push('/sectors');
             }}

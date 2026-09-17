@@ -3,13 +3,46 @@
 import React from 'react';
 import { TourProvider } from '@/contexts/TourContext';
 import { ErrorBoundary } from '@sentry/nextjs';
+import { Provider as TooltipProvider } from '@radix-ui/react-tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import HolyLoader from 'holy-loader';
 import { SessionProvider } from 'next-auth/react';
-import { Toaster, Tooltip } from 'opub-ui';
+import { Toaster } from 'opub-ui';
 
 import { RouterEvents } from '@/lib/navigation';
 import SessionGuard from './SessionGuard';
+
+/**
+ * The top loading bar comes from holy-loader, not our code.
+ * It adds a node with an invalid role="bar", then deletes and recreates
+ * it on every page change. Screen readers should ignore it (it is only
+ * visual). aria-hidden on the wrapper hides the whole bar from them.
+ * Delete this wrapper if holy-loader stops using role="bar":
+ * https://github.com/tomcru/holy-loader
+ */
+function HolyLoaderWithValidAria() {
+  React.useEffect(() => {
+    // Hide the bar if it is already on the page.
+    document.getElementById('holy-progress')?.setAttribute('aria-hidden', 'true');
+
+    // Hide it again whenever holy-loader inserts a new one.
+    const observer = new MutationObserver((mutations) => {
+      for (const { addedNodes } of mutations) {
+        for (const node of addedNodes) {
+          if (node instanceof HTMLElement && node.id === 'holy-progress') {
+            node.setAttribute('aria-hidden', 'true');
+          }
+        }
+      }
+    });
+
+    // Only watch new children of body — that is where the bar is added.
+    observer.observe(document.body, { childList: true });
+    return () => observer.disconnect();
+  }, []);
+
+  return <HolyLoader color="var(--action-primary-success-default)" />;
+}
 
 export default function Provider({ children }: { children: React.ReactNode }) {
   const [client] = React.useState(
@@ -52,11 +85,11 @@ export default function Provider({ children }: { children: React.ReactNode }) {
           <QueryClientProvider client={client}>
             <TourProvider>
               <RouterEvents />
-              <HolyLoader color="var(--action-primary-success-default)" />
-              <Tooltip.Provider>
+              <HolyLoaderWithValidAria />
+              <TooltipProvider skipDelayDuration={200}>
                 {children}
                 <Toaster />
-              </Tooltip.Provider>
+              </TooltipProvider>
               {/* For now, tour guide is disabled as it is not working as expected */}
               {/* <TourGuide /> */}
             </TourProvider>

@@ -52,18 +52,22 @@ const MainFooter = () => {
     {
       icon: Icons.github,
       link: 'https://github.com/civicdatalab',
+      label: 'CivicDataLab on GitHub',
     },
     {
       icon: Icons.linkedin,
       link: 'https://www.linkedin.com/company/civicdatalab',
+      label: 'CivicDataLab on LinkedIn',
     },
     {
       icon: Icons.twitter,
       link: 'https://twitter.com/civicdatalab',
+      label: 'CivicDataLab on Twitter',
     },
     {
       icon: Icons.facebook,
       link: 'https://facebook.com/civicdatalab',
+      label: 'CivicDataLab on Facebook',
     },
   ];
   return (
@@ -86,6 +90,7 @@ const MainFooter = () => {
               key={index}
               href={item.link}
               target="_blank"
+              aria-label={item.label}
               className="h-8 w-8 rounded-5 bg-tertiaryAccent p-1.5"
             >
               <Icon
@@ -102,6 +107,7 @@ const MainFooter = () => {
               key={index}
               href={item.link}
               target="_blank"
+              aria-label={item.label}
               className="h-8 w-8 lg:h-10 lg:w-10 rounded-5 bg-tertiaryAccent p-1.5 lg:p-2"
             >
               <Icon
