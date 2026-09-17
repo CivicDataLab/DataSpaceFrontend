@@ -3,13 +3,20 @@ import { setRequestLocale } from 'next-intl/server';
 import { Inter as FontSans } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import React from 'react';
+import type { Metadata } from 'next';
 
+import { siteConfig } from '@/config/site';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import Provider from '@/components/provider';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import locales from '../../config/locales';
 
 const fontSans = FontSans({ subsets: ['latin'], display: 'swap' });
+
+export const metadata: Metadata = {
+  title: siteConfig.name,
+  description: siteConfig.description,
+};
 
 export function generateStaticParams() {
   return locales.all.map((locale) => ({ locale }));

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Text } from 'opub-ui';
 
 import { generateJsonLd, generatePageMetadata } from '@/lib/utils';
 import JsonLd from '@/components/JsonLd';
@@ -52,6 +53,9 @@ const DatasetsListing = () => {
   return (
     <>
       <JsonLd json={jsonLd} />
+      <Text as="h1" visuallyHidden>
+        Datasets
+      </Text>
       <ListingComponent
         type="dataset"
         breadcrumbData={breadcrumbData}

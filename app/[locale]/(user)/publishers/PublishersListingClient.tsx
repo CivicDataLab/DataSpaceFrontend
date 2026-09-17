@@ -81,7 +81,7 @@ const PublishersListingPage = () => {
   return (
     <>
       <JsonLd json={jsonLd} />
-      <main>
+      <div>
         <BreadCrumbs
           data={[
             { href: '/', label: 'Home' },
@@ -96,6 +96,7 @@ const PublishersListingPage = () => {
                   <div className="flex flex-col gap-5 ">
                     <Text
                       variant="heading2xl"
+                      as="h1"
                       fontWeight="bold"
                       color="onBgDefault"
                     >
@@ -179,7 +180,7 @@ const PublishersListingPage = () => {
             </div>
           </>
         </>
-      </main>
+      </div>
     </>
   );
 };

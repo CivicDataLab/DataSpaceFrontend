@@ -17,4 +17,9 @@
     background-color: #EBF9FC;  /* same as surface-stats */
     border-radius: 8px;
   }
+  input:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--border-interactive-focused);
+    outline-offset: 2px;
+  }
 }

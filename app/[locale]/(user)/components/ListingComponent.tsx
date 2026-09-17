@@ -499,8 +499,8 @@ const ListingComponent: React.FC<ListingProps> = ({
                   </div>
                   <div className="flex items-center gap-2" data-tour="sort">
                     <Select
-                      label=""
-                      labelInline
+                      label="Sort"
+                      labelHidden
                       name="select"
                       onChange={handleSortChange}
                       options={[

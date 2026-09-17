@@ -13,12 +13,12 @@ const breadcrumbData = [
 
 const UseCasesListingClient = () => {
   return (
-    <main>
+    <div>
       <BreadCrumbs data={breadcrumbData} />
       <div className="bg-primaryBlue">
         <div className="container flex flex-col-reverse justify-center gap-8 p-10 lg:flex-row">
           <div className="flex flex-col justify-center gap-6">
-            <Text variant="heading2xl" className="text-surfaceDefault">
+            <Text variant="heading2xl" as="h1" className="text-surfaceDefault">
               Use Cases
             </Text>
             <Text
@@ -54,7 +54,7 @@ const UseCasesListingClient = () => {
           redirectionURL={`/usecases`}
         />
       </div>
-    </main>
+    </div>
   );
 };
 
