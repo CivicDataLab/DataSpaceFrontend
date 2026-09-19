@@ -157,7 +157,7 @@ export default function DatasetPage() {
               const datasetId = data?.addDataset?.data?.id;
               // Route to edit page - prompt datasets will show additional fields there
               router.push(
-                `/dashboard/${entityType}/${entitySlug}/dataset/${datasetId}/edit/metadata`
+                `/dashboard/${entityType}/${entitySlug}/dataset/${datasetId}/edit/resources`
               );
             }
           } else {
@@ -233,7 +233,7 @@ export default function DatasetPage() {
           <LinkButton
             kind="tertiary"
             size="medium"
-            href={`/dashboard/${entityType}/${entitySlug}/dataset/${row.original.id}/edit/metadata`}
+            href={`/dashboard/${entityType}/${entitySlug}/dataset/${row.original.id}/edit`}
           >
             {row.original.title}
           </LinkButton>

@@ -54,7 +54,7 @@ export const Page = () => {
             });
 
             router.push(
-              `/dashboard/${entityType}/${entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/metadata`
+              `/dashboard/${entityType}/${entitySlug}/dataset/${data?.addDataset?.data?.id}/edit/resources`
             );
           }
         } else {
