@@ -1,13 +1,28 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'next/navigation';
-import { Spinner, Text } from 'opub-ui';
+import { parseAsString, useQueryState } from 'nuqs';
+import {
+  IconFileSpreadsheet,
+  IconWorld,
+} from '@tabler/icons-react';
+import {
+  SectionCard,
+  Spinner,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
+  Text,
+} from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { EditResource } from './components/EditResource';
+import { useDatasetEditStatus } from '../context';
+import { PublicPlatformImport } from './components/PublicPlatformImport';
 import { ResourceDropzone } from './components/ResourceDropzone';
 import { ResourceListView } from './components/ResourceListView';
+import { ResourceViewSheet } from './components/ResourceViewSheet';
 import { getResourceDoc } from './query';
 
 export interface TListItem {
@@ -34,6 +49,10 @@ export function DistibutionPage({
 }: {
   params: { entityType: string; entitySlug: string; id: string };
 }) {
+  const { setFilesCompleted, stepShowErrors } = useDatasetEditStatus();
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [sourceTab, setSourceTab] = useState('upload');
+
   const { data, isLoading, refetch } = useQuery(
     [`fetch_resources_${params.id}`],
     () =>
@@ -43,61 +62,112 @@ export function DistibutionPage({
           [params.entityType]: params.entitySlug,
         },
         { filters: { id: params.id } }
-      ),
+      )
   );
 
-  const ResourceList: TListItem[] =
-    (data &&
-      data?.datasets[0]?.resources.map((item) => ({
-        label: item.name,
-        value: String(item.id),
-        description: item.description ?? '',
-        dataset: item.dataset?.pk,
-        fileDetails: item.fileDetails,
-       
-      }))) ||
-    [];
+  const resources = data?.datasets[0]?.resources ?? [];
+  const isPromptDataset = data?.datasets[0]?.datasetType === 'PROMPT';
+  const fileLabel = isPromptDataset ? 'Prompt Files' : 'Dataset File';
 
-  const searchParams = useSearchParams();
-  const resourceId = searchParams.get('id');
+  const [resourceId, setResourceId] = useQueryState('id', parseAsString);
+
+  useEffect(() => {
+    setFilesCompleted(resources.length > 0);
+  }, [resources.length, setFilesCompleted]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[240px] w-full items-center justify-center">
+        <Spinner size={40} />
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex h-[40vh] w-full items-center justify-center">
+        <Text variant="headingLg">Please refresh this page</Text>
+      </div>
+    );
+  }
+
+  const readyCount = resources.length;
+  const emptyFileError =
+    stepShowErrors && readyCount === 0
+      ? isPromptDataset
+        ? 'Add at least one prompt file to continue.'
+        : 'Add at least one dataset file to continue.'
+      : undefined;
 
   return (
-    <>
-      <div>
-        {isLoading ? (
-          <div className="flex min-h-full w-full items-center justify-center">
-            <Spinner size={40} />
+    <div className="flex flex-col gap-4">
+      <Tabs value={sourceTab} onValueChange={setSourceTab}>
+        <TabList boxed>
+          <Tab value="upload" icon={IconFileSpreadsheet}>
+            File Upload
+          </Tab>
+          <Tab value="platform" icon={IconWorld}>
+            Public Platform
+          </Tab>
+        </TabList>
+        <TabPanel value="upload">
+          <div className="flex flex-col gap-4 pt-4">
+            <SectionCard title={`Upload ${fileLabel}`}>
+              <ResourceDropzone
+                reload={refetch}
+                onPendingChange={setPendingFiles}
+                error={emptyFileError}
+              />
+            </SectionCard>
+            {readyCount > 0 || pendingFiles.length > 0 ? (
+              <SectionCard
+                title={`Uploaded Files (${readyCount})`}
+                successText={
+                  readyCount > 0
+                    ? `${readyCount} File${readyCount === 1 ? '' : 's'} Ready`
+                    : undefined
+                }
+              >
+                <ResourceListView
+                  refetch={refetch}
+                  data={resources}
+                  pendingFiles={pendingFiles}
+                />
+              </SectionCard>
+            ) : null}
           </div>
-        ) : (
-          <>
-            {data && ResourceList.length > 0 ? (
-              <>
-                {resourceId ? (
-                  <EditResource 
-                    refetch={refetch} 
-                    allResources={ResourceList}
-                    isPromptDataset={data.datasets[0].datasetType === 'PROMPT'}
-                  />
-                ) : (
-                  <ResourceListView
-                    refetch={refetch}
-                    data={data.datasets[0].resources}
-                    isPromptDataset={data.datasets[0].datasetType === 'PROMPT'}
-                  />
-                )}
-              </>
-            ) : data && ResourceList.length === 0 ? (
-              <div className="py-4">
-                <ResourceDropzone reload={refetch} />
-              </div>
-            ) : (
-              <div className="flex h-[70vh] w-full items-center justify-center">
-                <Text variant="headingLg">Please refresh this page</Text>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </>
+        </TabPanel>
+        <TabPanel value="platform">
+          <div className="flex flex-col gap-4 pt-4">
+            <PublicPlatformImport />
+            {readyCount > 0 || pendingFiles.length > 0 ? (
+              <SectionCard
+                title={`Uploaded Files (${readyCount})`}
+                successText={
+                  readyCount > 0
+                    ? `${readyCount} File${readyCount === 1 ? '' : 's'} Ready`
+                    : undefined
+                }
+              >
+                <ResourceListView
+                  refetch={refetch}
+                  data={resources}
+                  pendingFiles={pendingFiles}
+                />
+              </SectionCard>
+            ) : null}
+          </div>
+        </TabPanel>
+      </Tabs>
+      <ResourceViewSheet
+        resourceId={resourceId}
+        onClose={() => {
+          void setResourceId(null);
+        }}
+        onSaved={() => {
+          void refetch();
+        }}
+      />
+    </div>
   );
 }

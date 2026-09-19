@@ -166,16 +166,15 @@ export function formatDateString(
 
 export async function getWebsiteTitle(url: string): Promise<string | null> {
   try {
-    const response = await fetch(url);
-    const html = await response.text();
+    const response = await fetch(
+      `/api/website-title?url=${encodeURIComponent(url)}`
+    );
+    if (!response.ok) return null;
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-
-    const title = doc.querySelector('title');
-    return title?.innerText || null;
-  } catch (error) {
-    console.error('Failed to fetch website title:', error);
+    const data: unknown = await response.json();
+    if (!data || typeof data !== 'object' || !('title' in data)) return null;
+    return typeof data.title === 'string' ? data.title : null;
+  } catch {
     return null;
   }
 }

@@ -9,20 +9,22 @@ import {
   PromptTaskType,
   TargetLanguage,
   TargetModelType,
+  UpdateDatasetInput,
   UpdateMetadataInput,
   UpdatePromptMetadataInput,
 } from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Checkbox,
   Combobox,
   Form,
-  FormLayout,
-  Input,
+  RadioGroup,
+  RadioItem,
+  SectionCard,
   Select,
-  Text,
+  TextField,
   toast,
 } from 'opub-ui';
+import { useFormContext } from 'react-hook-form';
 
 import { GraphQL } from '@/lib/api';
 import { enumValues } from '@/lib/enumValues';
@@ -140,6 +142,25 @@ const updatePromptMetadataMutationDoc = graphql(`
   }
 `);
 
+const updateDatasetTitleMutationDoc = graphql(`
+  mutation SaveTitle($updateDatasetInput: UpdateDatasetInput!) {
+    updateDataset(updateDatasetInput: $updateDatasetInput) {
+      __typename
+      ... on TypeDataset {
+        id
+        title
+        created
+      }
+      ... on OperationInfo {
+        messages {
+          kind
+          message
+        }
+      }
+    }
+  }
+`);
+
 const updateMetadataMutationDoc = graphql(`
   mutation SaveMetadata($UpdateMetadataInput: UpdateMetadataInput!) {
     addUpdateDatasetMetadata(updateMetadataInput: $UpdateMetadataInput) {
@@ -186,6 +207,7 @@ const updateMetadataMutationDoc = graphql(`
 `);
 
 interface DatasetMetadataSource {
+  title?: string | null;
   description?: string | null;
   license?: string | null;
   metadata?: Array<{
@@ -212,21 +234,22 @@ interface OptionItem {
 }
 
 type FormFieldValue =
-  | string
-  | number
-  | boolean
-  | null
-  | OptionItem
-  | OptionItem[];
+  string | number | boolean | null | OptionItem | OptionItem[];
 
 interface MetadataFormData {
   [key: string]: FormFieldValue;
+  title: string;
   description: string;
   sectors: OptionItem[];
   license: string | null;
   tags: OptionItem[];
   geographies: OptionItem[];
   isPublic: boolean;
+}
+
+function isRichTextEmpty(html?: string | null): boolean {
+  if (!html) return true;
+  return html.replace(/<(.|\n)*?>/g, '').trim().length === 0;
 }
 
 function optionValue(item: unknown): unknown {
@@ -248,6 +271,52 @@ function asOptionItems(value: FormFieldValue | undefined): OptionItem[] {
       'value' in item
   );
 }
+
+function SyncStepErrors({
+  license,
+  errors,
+}: {
+  license: string;
+  errors: { sectors?: string; tags?: string; license?: string };
+}) {
+  const { setError, clearErrors, setValue } = useFormContext();
+
+  useEffect(() => {
+    setValue('license', license);
+  }, [license, setValue]);
+
+  useEffect(() => {
+    if (errors.sectors) {
+      setError('sectors', { type: 'manual', message: errors.sectors });
+    } else {
+      clearErrors('sectors');
+    }
+  }, [errors.sectors, setError, clearErrors]);
+
+  useEffect(() => {
+    if (errors.tags) {
+      setError('tags', { type: 'manual', message: errors.tags });
+    } else {
+      clearErrors('tags');
+    }
+  }, [errors.tags, setError, clearErrors]);
+
+  useEffect(() => {
+    if (errors.license) {
+      setError('license', { type: 'manual', message: errors.license });
+    } else {
+      clearErrors('license');
+    }
+  }, [errors.license, setError, clearErrors]);
+
+  return null;
+}
+
+const metadataFormOptions = {
+  defaultValues: {
+    license: '',
+  },
+};
 
 export function EditMetadata({ id }: { id: string }) {
   const params = useParams<{
@@ -404,6 +473,9 @@ export function EditMetadata({ id }: { id: string }) {
           queryClient.invalidateQueries({
             queryKey: [`metadata_fields_list_${id}`],
           });
+          void queryClient.invalidateQueries({
+            queryKey: [`dataset_title_${params.id}`],
+          });
           const updatedData = defaultValuesPrepFn(
             res.addUpdateDatasetMetadata.data ?? undefined
           );
@@ -433,10 +505,41 @@ export function EditMetadata({ id }: { id: string }) {
     }
   );
 
+  const DATASET_TITLE_SAVE_ERROR_TOAST_ID = 'dataset-title-save-error';
+  const updateDatasetTitleMutation = useMutation(
+    (data: { updateDatasetInput: UpdateDatasetInput }) =>
+      GraphQL(
+        updateDatasetTitleMutationDoc,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        data
+      ),
+    {
+      onSuccess: () => {
+        void queryClient.invalidateQueries({
+          queryKey: [`dataset_title_${params.id}`],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: [`metadata_values_query_${params.id}`],
+        });
+      },
+      onError: (err: unknown) => {
+        toast(
+          getErrorMessage(err, 'Unable to update dataset title right now.'),
+          {
+            id: DATASET_TITLE_SAVE_ERROR_TOAST_ID,
+          }
+        );
+      },
+    }
+  );
+
   const defaultValuesPrepFn = (
     dataset?: DatasetMetadataSource
   ): MetadataFormData => {
     const defaultVal: MetadataFormData = {
+      title: '',
       description: '',
       sectors: [],
       license: null,
@@ -451,10 +554,7 @@ export function EditMetadata({ id }: { id: string }) {
 
     if ((dataset?.metadata || []).length > 0) {
       (dataset?.metadata || []).map((field) => {
-        if (
-          field.metadataItem.dataType === 'MULTISELECT' &&
-          field.value
-        ) {
+        if (field.metadataItem.dataType === 'MULTISELECT' && field.value) {
           defaultVal[field.metadataItem.id] = field.value
             .split(', ')
             .map((value: string) => ({
@@ -469,6 +569,7 @@ export function EditMetadata({ id }: { id: string }) {
       });
     }
 
+    defaultVal['title'] = dataset?.title || '';
     defaultVal['description'] = dataset?.description || '';
 
     defaultVal['sectors'] =
@@ -592,6 +693,7 @@ export function EditMetadata({ id }: { id: string }) {
         .filter(
           (key) =>
             ![
+              'title',
               'sectors',
               'description',
               'tags',
@@ -635,10 +737,26 @@ export function EditMetadata({ id }: { id: string }) {
     updateMetadataMutation.mutate({ UpdateMetadataInput: updateInput });
   };
 
-  const { setStatus, registerBeforeNavigateHandler } = useDatasetEditStatus();
+  const {
+    stepShowErrors,
+    setStatus,
+    registerBeforeNavigateHandler,
+    setMetadataCompleted,
+  } = useDatasetEditStatus();
 
   useEffect(() => {
     const handleSaveAsync = async (updatedData: MetadataFormData) => {
+      const trimmedTitle = String(updatedData.title ?? '').trim();
+      const currentTitle = getDatasetMetadata.data?.datasets?.[0]?.title;
+      if (trimmedTitle && trimmedTitle !== currentTitle) {
+        await updateDatasetTitleMutation.mutateAsync({
+          updateDatasetInput: {
+            dataset: params.id,
+            title: trimmedTitle,
+          },
+        });
+      }
+
       const updateInput = getUpdateInput(updatedData);
       if (!updateInput) return;
 
@@ -654,7 +772,13 @@ export function EditMetadata({ id }: { id: string }) {
     };
     // getUpdateInput reads previousFormData; formDataRef is read at handler invocation time
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registerBeforeNavigateHandler, updateMetadataMutation]);
+  }, [
+    registerBeforeNavigateHandler,
+    updateMetadataMutation,
+    updateDatasetTitleMutation,
+    params.id,
+    getDatasetMetadata.data,
+  ]);
 
   function formValueAsString(value: FormFieldValue): string {
     return typeof value === 'string' ? value : '';
@@ -664,12 +788,12 @@ export function EditMetadata({ id }: { id: string }) {
     if (metadataFormItem.dataType === 'STRING') {
       return (
         <div key={metadataFormItem.id} className="w-full ">
-          <Input
+          <TextField
             name={metadataFormItem.id}
             label={metadataFormItem.label}
             value={formValueAsString(formData[metadataFormItem.id])}
             onChange={(e) => handleChange(metadataFormItem.id, e)}
-            onBlur={() => handleSave(formData)} // Save on blur
+            onBlur={() => handleSave(formData)}
           />
         </div>
       );
@@ -728,7 +852,7 @@ export function EditMetadata({ id }: { id: string }) {
     if (metadataFormItem.dataType === 'URL') {
       return (
         <div key={metadataFormItem.id} className="w-full">
-          <Input
+          <TextField
             name={metadataFormItem.id}
             type="url"
             value={formValueAsString(formData[metadataFormItem.id])}
@@ -737,7 +861,7 @@ export function EditMetadata({ id }: { id: string }) {
               getMetaDataListQuery.isLoading || !metadataFormItem.enabled
             }
             onChange={(e) => handleChange(metadataFormItem.id, e)}
-            onBlur={() => handleSave(formData)} // Save on blur
+            onBlur={() => handleSave(formData)}
           />
         </div>
       );
@@ -746,7 +870,7 @@ export function EditMetadata({ id }: { id: string }) {
     if (metadataFormItem.dataType === 'DATE') {
       return (
         <div key={metadataFormItem.id} className="w-full">
-          <Input
+          <TextField
             type="date"
             name={metadataFormItem.id}
             max={new Date().toISOString().split('T')[0]}
@@ -756,7 +880,7 @@ export function EditMetadata({ id }: { id: string }) {
               getMetaDataListQuery.isLoading || !metadataFormItem.enabled
             }
             onChange={(e) => handleChange(metadataFormItem.id, e)}
-            onBlur={() => handleSave(formData)} // Save on blur
+            onBlur={() => handleSave(formData)}
           />
         </div>
       );
@@ -790,28 +914,114 @@ export function EditMetadata({ id }: { id: string }) {
   ];
 
   useEffect(() => {
-    setStatus(updateMetadataMutation.isLoading ? 'loading' : 'success'); // update based on mutation state
-  }, [updateMetadataMutation.isLoading, setStatus]);
+    setStatus(
+      updateMetadataMutation.isLoading || updateDatasetTitleMutation.isLoading
+        ? 'loading'
+        : 'success'
+    );
+  }, [
+    updateMetadataMutation.isLoading,
+    updateDatasetTitleMutation.isLoading,
+    setStatus,
+  ]);
+
+  useEffect(() => {
+    setMetadataCompleted(
+      Boolean(formData.title?.trim()) &&
+        !isRichTextEmpty(formData.description) &&
+        asOptionItems(formData.sectors).length > 0 &&
+        asOptionItems(formData.tags).length > 0 &&
+        Boolean(formData.license)
+    );
+  }, [
+    formData.title,
+    formData.description,
+    formData.sectors,
+    formData.tags,
+    formData.license,
+    setMetadataCompleted,
+  ]);
+
+  const saveTitle = (title: string) => {
+    const trimmed = title.trim();
+    if (!trimmed || trimmed === getDatasetMetadata.data?.datasets?.[0]?.title) {
+      return;
+    }
+    updateDatasetTitleMutation.mutate({
+      updateDatasetInput: {
+        dataset: params.id,
+        title: trimmed,
+      },
+    });
+  };
+
+  const metadataFields = getMetaDataListQuery?.data?.metadata ?? [];
+  const sourceUrlFields = metadataFields.filter(
+    (item) => item.dataType === 'URL'
+  );
+  const sourceDateFields = metadataFields.filter(
+    (item) => item.dataType === 'DATE'
+  );
+  const additionalMetadataFields = metadataFields.filter(
+    (item) => item.dataType !== 'URL' && item.dataType !== 'DATE'
+  );
+
+  const metadataReady =
+    !getTagsList?.isLoading &&
+    !getSectorsList?.isLoading &&
+    !getGeographiesList?.isLoading &&
+    !getDatasetMetadata.isLoading;
+
+  useEffect(() => {
+    if (!metadataReady) return;
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    document.getElementById(hash)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }, [metadataReady]);
+
+  const sectorsError =
+    stepShowErrors && asOptionItems(formData.sectors).length === 0
+      ? 'Sector is required'
+      : undefined;
+  const tagsError =
+    stepShowErrors && asOptionItems(formData.tags).length === 0
+      ? 'Tags are required'
+      : undefined;
+  const licenseError =
+    stepShowErrors && !formData.license ? 'License is required' : undefined;
 
   return (
     <>
-      {!getTagsList?.isLoading &&
-      !getSectorsList?.isLoading &&
-      !getGeographiesList?.isLoading &&
-      !getDatasetMetadata.isLoading ? (
-        <Form
-          formOptions={{
-            resetOptions: {
-              keepValues: true,
-              keepDirtyValues: true,
-            },
-            defaultValues: formData,
-          }}
-        >
-          <>
-            <FormLayout>
-              <div className="mb-8 flex flex-col gap-8">
-                <div className="w-full">
+      {metadataReady ? (
+        <Form formOptions={metadataFormOptions}>
+          <SyncStepErrors
+            license={formData.license ?? ''}
+            errors={{
+              sectors: sectorsError,
+              tags: tagsError,
+              license: licenseError,
+            }}
+          />
+          <div className="flex flex-col gap-4">
+            <div id="basic-information">
+              <SectionCard title="Basic Information">
+                <div className="flex flex-col gap-4">
+                  <TextField
+                    name="title"
+                    label="Dataset name"
+                    requiredIndicator
+                    value={formData.title}
+                    error={
+                      stepShowErrors && !formData.title.trim()
+                        ? 'Dataset name is required'
+                        : undefined
+                    }
+                    onChange={(value) => handleChange('title', value)}
+                    onBlur={() => saveTitle(formData.title)}
+                  />
                   <RichTextEditor
                     label="Description *"
                     value={formData.description}
@@ -821,18 +1031,30 @@ export function EditMetadata({ id }: { id: string }) {
                     }
                     placeholder="Enter dataset description..."
                     helpText={`Character limit: ${formData?.description?.length || 0}/1000`}
+                    error={
+                      stepShowErrors && isRichTextEmpty(formData.description)
+                        ? 'Description is required'
+                        : undefined
+                    }
                   />
                 </div>
+              </SectionCard>
+            </div>
 
+            <SectionCard title="Classification">
+              <div className="flex flex-col gap-4">
                 <Combobox
                   displaySelected
-                  label="Sectors *"
+                  label="Sector"
+                  requiredIndicator
                   list={
                     getSectorsList.data?.sectors?.map((item) => {
                       return { label: item.name, value: item.id };
                     }) || []
                   }
                   name="sectors"
+                  selectedValue={formData.sectors}
+                  error={sectorsError}
                   onChange={(value) => {
                     const next = Array.isArray(value) ? value : [];
                     handleChange('sectors', next);
@@ -841,27 +1063,7 @@ export function EditMetadata({ id }: { id: string }) {
                 />
                 <Combobox
                   displaySelected
-                  name="tags"
-                  list={
-                    getTagsList.data?.tags?.map((item) => ({
-                      label: item.value,
-                      value: item.id,
-                    })) || []
-                  }
-                  key={`tags-${getTagsList.data?.tags?.length}`} // forces remount on change
-                  label="Tags"
-                  requiredIndicator
-                  creatable
-                  onChange={(value) => {
-                    setIsTagsListUpdated(true);
-                    const next = Array.isArray(value) ? value : [];
-                    handleChange('tags', next);
-                    handleSave({ ...formData, tags: next });
-                  }}
-                />
-                <Combobox
-                  displaySelected
-                  label="Geographies"
+                  label="Geography"
                   name="geographies"
                   list={
                     getGeographiesList?.data?.geographies?.map((item) => ({
@@ -876,44 +1078,125 @@ export function EditMetadata({ id }: { id: string }) {
                     handleSave({ ...formData, geographies: next });
                   }}
                 />
+                <Combobox
+                  displaySelected
+                  name="tags"
+                  list={
+                    getTagsList.data?.tags?.map((item) => ({
+                      label: item.value,
+                      value: item.id,
+                    })) || []
+                  }
+                  key={`tags-${getTagsList.data?.tags?.length}`}
+                  label="Tags"
+                  requiredIndicator
+                  creatable
+                  selectedValue={formData.tags}
+                  error={tagsError}
+                  onChange={(value) => {
+                    setIsTagsListUpdated(true);
+                    const next = Array.isArray(value) ? value : [];
+                    handleChange('tags', next);
+                    handleSave({ ...formData, tags: next });
+                  }}
+                />
               </div>
-              <div className="mb-8 flex flex-col gap-8">
-                {getMetaDataListQuery?.data?.metadata
-                  ?.filter((item) => item.dataType === 'MULTISELECT')
-                  .map((item) => (
-                    <div key={item.id}>{renderInputField(item)}</div>
-                  ))}
-                <div className="grid gap-4 lg:grid-cols-2">
-                  {getMetaDataListQuery?.data?.metadata
-                    ?.filter((item) => item.dataType !== 'MULTISELECT')
-                    .map((item) => renderInputField(item))}
-                </div>
-              </div>
+            </SectionCard>
 
-              {/* Prompt-specific metadata fields - only shown for PROMPT type datasets */}
-              {getDatasetMetadata.data?.datasets?.[0]?.datasetType ===
-                'PROMPT' && (
-                <div className="rounded-lg border bg-surfaceNeutralSubdued mb-8 border-borderSubdued p-6">
-                  <Text variant="headingMd" as="h3" className="mb-4">
-                    Prompt Dataset Metadata
-                  </Text>
-                  <Text variant="bodySm" color="subdued" className="mb-6">
-                    Additional metadata specific to prompt datasets for AI/ML
-                    use cases.
-                  </Text>
+            {sourceUrlFields.length > 0 || sourceDateFields.length > 0 ? (
+              <SectionCard title="Source Information">
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {sourceUrlFields.map((item) => renderInputField(item))}
+                  {sourceDateFields.map((item) => renderInputField(item))}
+                </div>
+              </SectionCard>
+            ) : null}
+
+            {additionalMetadataFields.length > 0 ? (
+              <SectionCard title="Additional Information">
+                <div className="flex flex-col gap-4">
+                  {additionalMetadataFields
+                    .filter((item) => item.dataType === 'MULTISELECT')
+                    .map((item) => (
+                      <div key={item.id}>{renderInputField(item)}</div>
+                    ))}
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {additionalMetadataFields
+                      .filter((item) => item.dataType !== 'MULTISELECT')
+                      .map((item) => renderInputField(item))}
+                  </div>
+                </div>
+              </SectionCard>
+            ) : null}
+
+            <div id="publishing-settings">
+              <SectionCard title="Publishing Settings">
+                <div className="flex flex-col gap-4">
+                  <RadioGroup
+                    name="accessType"
+                    title="Access type"
+                    requiredIndicator
+                    variant="card"
+                    value={formData.isPublic ? 'PUBLIC' : 'RESTRICTED'}
+                    onChange={(selected) => {
+                      handleChange('accessType', selected);
+                      handleChange('isPublic', selected === 'PUBLIC');
+                    }}
+                  >
+                    <RadioItem
+                      value="PUBLIC"
+                      helpText="Anyone can browse and download"
+                    >
+                      Open Access
+                    </RadioItem>
+                    <RadioItem
+                      value="RESTRICTED"
+                      disabled
+                      helpText="Requires approval to access"
+                      title="Coming Soon"
+                    >
+                      Restricted Access
+                    </RadioItem>
+                  </RadioGroup>
+                  <Select
+                    name="license"
+                    requiredIndicator
+                    options={licenseOptions.map((item) => ({
+                      label: item.label,
+                      value: item.value,
+                    }))}
+                    label="License"
+                    placeholder="Select a license"
+                    value={formData.license ? formData.license : ''}
+                    helpText="CC BY 4.0 is recommended for open government data."
+                    error={licenseError}
+                    onChange={(value) => {
+                      handleChange('license', value);
+                      handleSave({ ...formData, license: value });
+                    }}
+                  />
+                </div>
+              </SectionCard>
+            </div>
+
+            {getDatasetMetadata.data?.datasets?.[0]?.datasetType ===
+            'PROMPT' ? (
+              <div id="prompt-metadata">
+                <SectionCard
+                  title="Prompt Dataset Metadata"
+                  description="Additional metadata specific to prompt datasets for AI/ML use cases."
+                >
                   <div className="flex flex-col gap-6">
                     <Combobox
                       name="taskType"
                       label="Task Type"
                       displaySelected
-                      list={
-                        enumValues(PromptTaskType).map((name) => ({
-                          label: name
-                            .replace(/_/g, ' ')
-                            .replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                          value: name,
-                        }))
-                      }
+                      list={enumValues(PromptTaskType).map((name) => ({
+                        label: name
+                          .replace(/_/g, ' ')
+                          .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                        value: name,
+                      }))}
                       selectedValue={
                         promptMetadataState.taskType
                           ? [
@@ -939,14 +1222,12 @@ export function EditMetadata({ id }: { id: string }) {
                       name="domain"
                       label="Domain"
                       displaySelected
-                      list={
-                        enumValues(PromptDomain).map((name) => ({
-                          label: name
-                            .replace(/_/g, ' ')
-                            .replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                          value: name,
-                        }))
-                      }
+                      list={enumValues(PromptDomain).map((name) => ({
+                        label: name
+                          .replace(/_/g, ' ')
+                          .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                        value: name,
+                      }))}
                       selectedValue={
                         promptMetadataState.domain
                           ? [
@@ -973,14 +1254,12 @@ export function EditMetadata({ id }: { id: string }) {
                       label="Target Languages"
                       displaySelected
                       creatable
-                      list={
-                        enumValues(TargetLanguage).map((name) => ({
-                          label: name
-                            .replace(/_/g, ' ')
-                            .replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                          value: name,
-                        }))
-                      }
+                      list={enumValues(TargetLanguage).map((name) => ({
+                        label: name
+                          .replace(/_/g, ' ')
+                          .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                        value: name,
+                      }))}
                       selectedValue={
                         promptMetadataState.targetLanguages?.map(
                           (lang: string) => ({
@@ -1003,14 +1282,12 @@ export function EditMetadata({ id }: { id: string }) {
                       label="Target Model Types"
                       displaySelected
                       creatable
-                      list={
-                        enumValues(TargetModelType).map((name) => ({
-                          label: name
-                            .replace(/_/g, ' ')
-                            .replace(/\b\w/g, (c: string) => c.toUpperCase()),
-                          value: name,
-                        }))
-                      }
+                      list={enumValues(TargetModelType).map((name) => ({
+                        label: name
+                          .replace(/_/g, ' ')
+                          .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+                        value: name,
+                      }))}
                       selectedValue={
                         promptMetadataState.targetModelTypes?.map(
                           (model: string) => ({
@@ -1029,57 +1306,10 @@ export function EditMetadata({ id }: { id: string }) {
                       }}
                     />
                   </div>
-                </div>
-              )}
-
-              <div className="flex flex-col items-center gap-8 lg:flex-row">
-                <div className="flex w-full flex-wrap gap-2 md:flex-nowrap lg:w-2/4 lg:flex-nowrap">
-                  <Checkbox
-                    name="accessType"
-                    checked={formData?.isPublic}
-                    onChange={() => handleChange('accessType', 'PUBLIC')}
-                  >
-                    <div className="flex flex-col gap-1">
-                      <Text>Open Access</Text>
-                      <Text>
-                        Dataset can be viewed and downloaded by everyone
-                      </Text>
-                    </div>
-                  </Checkbox>
-                  <Checkbox
-                    name="isRestricted"
-                    checked={false}
-                    defaultChecked={false}
-                    disabled
-                  >
-                    <div className="flex flex-col gap-1 " title="Coming Soon">
-                      <Text className=" text-textDisabled">
-                        Restricted Access
-                      </Text>
-                      <Text className=" text-iconDisabled">
-                        Users would require to request access to the dataset to
-                        view and download it. Recommended for sensitive data.
-                      </Text>
-                    </div>
-                  </Checkbox>
-                </div>
-                <Select
-                  name="license"
-                  options={licenseOptions?.map((item) => ({
-                    label: item.label,
-                    value: item.value,
-                  }))}
-                  className="w-full lg:w-2/4"
-                  label="License"
-                  value={formData?.license ? formData?.license : ''}
-                  onChange={(value) => {
-                    handleChange('license', value);
-                    handleSave({ ...formData, license: value }); // Save on change
-                  }}
-                />
+                </SectionCard>
               </div>
-            </FormLayout>
-          </>
+            ) : null}
+          </div>
         </Form>
       ) : (
         <DatasetLoading />

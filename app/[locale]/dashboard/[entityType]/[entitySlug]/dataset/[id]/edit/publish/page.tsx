@@ -1,29 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
-import { DatasetsSummaryQuery } from '@/gql/generated/graphql';
+import {
+  IconArrowRight,
+  IconInfoCircle,
+  IconPencil,
+  IconSend,
+} from '@tabler/icons-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
   Button,
-  Dialog,
-  Icon,
+  FileCard,
+  SectionCard,
   Spinner,
-  Table,
   Tag,
   Text,
   toast,
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { formatDate, getWebsiteTitle, toTitleCase } from '@/lib/utils';
-import { Icons } from '@/components/icons';
+import { formatDate, getWebsiteTitle } from '@/lib/utils';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 
 const datasetSummaryQuery = graphql(`
@@ -42,12 +41,14 @@ const datasetSummaryQuery = graphql(`
         id
         type
         name
-        description
-        schema {
-          fieldName
-          id
+        created
+        fileDetails {
           format
-          description
+          size
+          created
+          file {
+            name
+          }
         }
       }
       tags {
@@ -58,12 +59,18 @@ const datasetSummaryQuery = graphql(`
         id
         name
       }
+      geographies {
+        id
+        name
+      }
       id
       title
       description
       created
       modified
       datasetType
+      license
+      accessType
       promptMetadata
     }
   }
@@ -80,25 +87,13 @@ const publishDatasetMutation = graphql(`
   }
 `);
 
-interface SchemaField {
-  fieldName: string;
-  description?: string | null;
-  format?: string | null;
-}
-
-interface AccessModelResource {
-  resource: {
-    name: string;
-    type?: string | null;
-  };
-}
-
-interface ResourceSummary {
-  name: string;
-  type: string;
-  schema?: SchemaField[] | null;
-  modelResources?: AccessModelResource[];
-}
+const LICENSE_LABELS: Record<string, string> = {
+  GOVERNMENT_OPEN_DATA_LICENSE: 'Government Open Data License',
+  CC_BY_4_0_ATTRIBUTION: 'CC BY 4.0',
+  CC_BY_SA_4_0_ATTRIBUTION_SHARE_ALIKE: 'CC BY-SA 4.0',
+  OPEN_DATA_COMMONS_BY_ATTRIBUTION: 'Open Data Commons By Attribution',
+  OPEN_DATABASE_LICENSE: 'Open Database License',
+};
 
 interface PromptMetadata {
   task_type?: string;
@@ -110,132 +105,70 @@ interface PromptMetadata {
   has_example_responses?: boolean;
 }
 
-type DatasetSummaryResult = DatasetsSummaryQuery['datasets'][number];
-
-type AccessModelSummary = {
-  id?: string;
-  name: string;
-  type: string;
-  modelResources?: AccessModelResource[];
-};
-
-function hasAccessModels(
-  dataset: object
-): dataset is { accessModels: AccessModelSummary[] } {
-  return 'accessModels' in dataset && Array.isArray(dataset.accessModels);
-}
-
 function isPromptMetadata(value: unknown): value is PromptMetadata {
   return typeof value === 'object' && value !== null;
 }
 
-interface DialogTableRow {
-  dialog: AccessModelResource[] | SchemaField[];
+function formatFileSize(bytes?: number | null): string {
+  if (bytes == null || Number.isNaN(bytes)) return '—';
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 }
 
-const generateColumnData = (name: string) => {
-  return [
-    {
-      accessorKey: 'name',
-      header: `Name of the ${name}`,
-    },
-    {
-      accessorKey: 'type',
-      header: 'Type',
-    },
-    {
-      accessorKey: 'dialog',
-      header: `${name === 'Access Type' ? 'Resources' : 'Fields'}`,
-      cell: ({ row }: { row: { original: DialogTableRow } }) => {
-        return (
-          <>
-            <Dialog>
-              <Dialog.Trigger>
-                <Button
-                  kind="tertiary"
-                  disabled={row.original.dialog.length === 0}
-                >
-                  {name === 'Access Type' ? 'Resources' : 'Fields'}
-                </Button>
-              </Dialog.Trigger>
-              <Dialog.Content
-                title={name === 'Access Type' ? 'Resources' : 'Fields'}
-                limitHeight
-              >
-                {name === 'Access Type' ? (
-                  <Table
-                    columns={[
-                      {
-                        accessorKey: 'name',
-                        header: 'Name of the Resource',
-                      },
-                      {
-                        accessorKey: 'type',
-                        header: 'Permissions',
-                      },
-                    ]}
-                    rows={row.original.dialog.map((item) => {
-                      if ('resource' in item) {
-                        return {
-                          name: item.resource.name,
-                          type: item.resource.type,
-                        };
-                      }
-                      return { name: '', type: '' };
-                    })}
-                    hideFooter
-                  />
-                ) : (
-                  <Table
-                    columns={[
-                      {
-                        accessorKey: 'name',
-                        header: 'Name of the Field',
-                      },
-                      {
-                        accessorKey: 'description',
-                        header: 'Description',
-                      },
-                      {
-                        accessorKey: 'format',
-                        header: 'Format',
-                      },
-                    ]}
-                    rows={row.original.dialog.map((item) => {
-                      if ('fieldName' in item) {
-                        return {
-                          name: item.fieldName,
-                          description: item.description,
-                          format: item.format,
-                        };
-                      }
-                      return { name: '', description: '', format: '' };
-                    })}
-                    hideFooter
-                  />
-                )}
-              </Dialog.Content>
-            </Dialog>
-          </>
-        );
-      },
-    },
-  ];
-};
+function formatUploadedAt(value?: string | null): string {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  const pad = (n: number): string => String(n).padStart(2, '0');
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
 
-const generateTableData = (name: string, data: ResourceSummary[]) => {
-  return data.map((item) => {
-    const permission = item.type.split('.').pop();
-    return {
-      name: item.name,
-      type:
-        name === 'Access Type'
-          ? toTitleCase((permission ?? item.type).toLowerCase())
-          : item.type,
-      dialog: (name === 'Access Type' ? item.modelResources : item.schema) ?? [],
-    };
-  });
-};
+function resourceFormat(item: {
+  name: string;
+  type: string;
+  fileDetails?: {
+    format?: string | null;
+    file?: { name?: string | null } | null;
+  } | null;
+}): string {
+  const fromDetails = item.fileDetails?.format?.replace('.', '').toUpperCase();
+  if (fromDetails) return fromDetails;
+  const fromType = item.type?.split('.').pop()?.toUpperCase();
+  if (fromType && fromType !== 'FILE') return fromType;
+  const original = item.fileDetails?.file?.name || item.name;
+  const ext = original.split('.').pop();
+  return ext ? ext.toUpperCase() : 'FILE';
+}
+
+function originalName(item: {
+  fileDetails?: { file?: { name?: string | null } | null } | null;
+}): string | undefined {
+  const name = item.fileDetails?.file?.name;
+  if (!name) return undefined;
+  return name.replace(/^resources\//, '');
+}
+
+function ReviewField({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <Text variant="bodySm" color="subdued">
+        {label.toUpperCase()}
+      </Text>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+function dash(value?: string | null): string {
+  return value?.trim() ? value : '—';
+}
 
 const Page = () => {
   const params = useParams<{
@@ -243,100 +176,28 @@ const Page = () => {
     entitySlug: string;
     id: string;
   }>();
+  const router = useRouter();
 
   const getDatasetsSummary = useQuery([`summary_${params.id}`], () =>
-      GraphQL(
-        datasetSummaryQuery,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        { filters: { id: params.id } }
-      )
-    );
-
-  useEffect(() => {
-    getDatasetsSummary.refetch();
-  });
+    GraphQL(
+      datasetSummaryQuery,
+      {
+        [params.entityType]: params.entitySlug,
+      },
+      { filters: { id: params.id } }
+    )
+  );
 
   const dataset = getDatasetsSummary.data?.datasets[0];
   const isPromptDataset = dataset?.datasetType === 'PROMPT';
   const promptMetadata = isPromptMetadata(dataset?.promptMetadata)
     ? dataset.promptMetadata
     : null;
-  const accessModels =
-    dataset && hasAccessModels(dataset) ? dataset.accessModels : undefined;
 
-  const Summary = [
-    {
-      kind: 'resources' as const,
-      name: isPromptDataset ? 'Prompt Files' : 'Resource',
-      data: dataset?.resources,
-      error:
-        getDatasetsSummary.data && (dataset?.resources.length ?? 0) === 0
-          ? isPromptDataset
-            ? 'No Prompt Files found. Please add to continue.'
-            : 'No Resources found. Please add to continue.'
-          : '',
-      errorType: 'critical',
-    },
-    ...(process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true'
-      ? [
-          {
-            kind: 'access' as const,
-            name: 'Access Type',
-            data: accessModels,
-            error:
-              getDatasetsSummary.data && (accessModels?.length ?? 0) === 0
-                ? 'No Access Type found. Please add to continue.'
-                : '',
-            errorType: 'critical',
-          },
-        ]
-      : []),
-    {
-      kind: 'metadata' as const,
-      name: 'Metadata',
-      data: dataset?.metadata,
-      error:
-        (dataset?.sectors.length ?? 0) === 0 ||
-        (dataset?.tags.length ?? 0) === 0 ||
-        (dataset?.description?.length ?? 0) === 0
-          ? 'Tags or Description or Sectors is missing. Please add to continue.'
-          : '',
-      errorType: 'critical',
-    },
-    ...(isPromptDataset
-      ? [
-          {
-            kind: 'prompt' as const,
-            name: 'Prompt Metadata',
-            data: promptMetadata,
-            error: '',
-            errorType: 'info',
-          },
-        ]
-      : []),
-  ];
+  const editBase = `/dashboard/${params.entityType}/${params.entitySlug}/dataset/${params.id}/edit`;
+  const filesStep = `${editBase}/resources`;
+  const metadataStep = `${editBase}/metadata`;
 
-  const PrimaryMetadata = [
-    {
-      label: 'Dataset Name',
-      value: dataset?.title,
-    },
-    {
-      label: 'Description',
-      value: dataset?.description,
-    },
-    {
-      label: 'Date of Creation',
-      value: formatDate(dataset?.created ?? null) || '',
-    },
-    {
-      label: 'Date of Last Update',
-      value: formatDate(dataset?.modified ?? null) || '',
-    },
-  ];
-  const router = useRouter();
   const PUBLISH_SUCCESS_TOAST_ID = 'dataset-publish-success';
   const PUBLISH_ERROR_TOAST_ID = 'dataset-publish-error';
 
@@ -372,300 +233,308 @@ const Page = () => {
     }
   );
 
-  const isPublishDisabled = (current?: DatasetSummaryResult | null) => {
-    if (!current) return true;
-
-    const hasResources = current.resources.length > 0;
-    const hasAccessModelsFlag =
-      hasAccessModels(current) && (current.accessModels?.length ?? 0) > 0;
-    const isAccessModelEnabled =
-      process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true';
-    const hasRequiredMetadata =
-      current.sectors.length > 0 &&
-      (current.description?.length ?? 0) > 0 &&
-      current.tags.length > 0;
-
-    // No resources
-    if (!hasResources) return true;
-
-    // Access model check if enabled
-    if (isAccessModelEnabled && !hasAccessModelsFlag) return true;
-
-    // Required metadata check
-    return !hasRequiredMetadata;
-  };
+  const hasResources = (dataset?.resources.length ?? 0) > 0;
+  const hasRequiredMetadata =
+    (dataset?.sectors.length ?? 0) > 0 &&
+    (dataset?.description?.length ?? 0) > 0 &&
+    (dataset?.tags.length ?? 0) > 0 &&
+    Boolean(dataset?.license);
+  const isPublishDisabled = !dataset || !hasResources || !hasRequiredMetadata;
 
   const [sourceTitle, setSourceTitle] = useState<string | null>(null);
+  const sourceUrl = dataset?.metadata.find(
+    (item) => item.metadataItem?.dataType === 'URL'
+  )?.value;
 
   useEffect(() => {
     const fetchTitle = async () => {
+      if (!sourceUrl) {
+        setSourceTitle(null);
+        return;
+      }
       try {
-        const urlItem = dataset?.metadata.find(
-          (item) => item.metadataItem?.dataType === 'URL'
-        );
-
-        if (urlItem && urlItem.value) {
-          const title = await getWebsiteTitle(urlItem.value);
-          setSourceTitle(title);
-        }
+        const title = await getWebsiteTitle(sourceUrl);
+        setSourceTitle(title);
       } catch (error) {
         console.error('Error fetching website title:', error);
       }
     };
 
-    fetchTitle();
-  }, [dataset?.metadata, getDatasetsSummary.data?.datasets, getDatasetsSummary.isLoading]);
+    void fetchTitle();
+  }, [sourceUrl]);
+
+  const extraMetadata =
+    dataset?.metadata.filter((item) => item.metadataItem?.dataType !== 'URL') ??
+    [];
+  const totalBytes = dataset?.resources.reduce(
+    (sum, item) => sum + (item.fileDetails?.size ?? 0),
+    0
+  );
+  const filesLabel = isPromptDataset ? 'Prompt Files' : 'Uploaded Files';
+
+  const editAction = (label: string, href: string) => [
+    {
+      icon: IconPencil,
+      content: label,
+      onAction: () => router.push(href),
+    },
+  ];
 
   return (
-    <>
-      <div className=" w-full py-6">
-        <div className="flex items-center justify-center gap-2 p-4">
-          <Text variant="bodyMd" className=" font-semi-bold">
-            REVIEW DATASET DETAILS
-          </Text>
-          :
-          <Text>
-            Please check all the dataset details below before publishing
-          </Text>
-        </div>
-        <div className=" flex flex-col gap-10 pt-6">
-          {getDatasetsSummary.isLoading || mutationLoading ? (
-            <div className=" mt-8 flex justify-center">
-              <Spinner />
-            </div>
-          ) : (
-            <>
-              {Summary.map((item, index) => (
-                <Accordion type="single" collapsible key={index}>
-                  <AccordionItem
-                    value={`item-${index}`}
-                    className=" border-none"
-                  >
-                    <AccordionTrigger className="flex w-full items-center gap-2 rounded-1 bg-baseBlueSolid3  p-4 hover:no-underline ">
-                      <div className="flex flex-wrap items-center justify-start gap-2">
-                        <Text className=" w-32 text-justify font-semi-bold">
-                          {item.name}
+    <div className="w-full py-2">
+      <div className="flex flex-col gap-6">
+        {getDatasetsSummary.isLoading || mutationLoading ? (
+          <div className="mt-8 flex justify-center">
+            <Spinner />
+          </div>
+        ) : (
+          <>
+            <SectionCard
+              title="Metadata"
+              expandable
+              defaultExpanded
+              actions={editAction(
+                'Edit metadata',
+                `${metadataStep}#basic-information`
+              )}
+            >
+              <div className="flex flex-col gap-4">
+                <ReviewField label="Dataset name">
+                  <Text variant="bodyMd" fontWeight="medium">
+                    {dash(dataset?.title)}
+                  </Text>
+                </ReviewField>
+                <ReviewField label="Description">
+                  {dataset?.description ? (
+                    <RichTextRenderer content={dataset.description} />
+                  ) : (
+                    <Text variant="bodyMd">—</Text>
+                  )}
+                </ReviewField>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <ReviewField label="Sector">
+                    {dataset?.sectors?.length ? (
+                      <Text variant="bodyMd" fontWeight="medium">
+                        {dataset.sectors
+                          .map((sector) => sector.name)
+                          .join(', ')}
+                      </Text>
+                    ) : (
+                      <Text variant="bodyMd">—</Text>
+                    )}
+                  </ReviewField>
+                  <ReviewField label="Geography">
+                    {dataset?.geographies?.length ? (
+                      <Text variant="bodyMd" fontWeight="medium">
+                        {dataset.geographies.map((geo) => geo.name).join(', ')}
+                      </Text>
+                    ) : (
+                      <Text variant="bodyMd">—</Text>
+                    )}
+                  </ReviewField>
+                </div>
+                <ReviewField label="Tags">
+                  {dataset?.tags?.length ? (
+                    <div className="flex flex-wrap gap-2">
+                      {dataset.tags.map((tag) => (
+                        <Tag key={tag.id}>{tag.value}</Tag>
+                      ))}
+                    </div>
+                  ) : (
+                    <Text variant="bodyMd">—</Text>
+                  )}
+                </ReviewField>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <ReviewField label="Source website">
+                    {sourceUrl ? (
+                      <Link href={sourceUrl} target="_blank">
+                        <Text className="underline" color="highlight">
+                          {sourceTitle?.trim() || sourceUrl}
                         </Text>
-                        {item.error !== '' && (
-                          <div className="flex items-center gap-2">
-                            <Icon
-                              source={Icons.alert}
-                              color="critical"
-                              size={24}
-                            />
-                            <Text variant="bodyMd" className="text-justify">
-                              {item.error}
-                            </Text>
-                          </div>
-                        )}
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent
-                      className="flex w-full flex-col "
-                      style={{
-                        backgroundColor: 'var( --base-pure-white)',
-                        outline: '1px solid var( --base-pure-white)',
-                      }}
-                    >
-                      <div className=" py-4">
-                        {item.kind === 'prompt' ? (
-                          <div className="flex flex-col gap-4 px-8 py-4">
-                            {item.data?.task_type && (
-                              <div className="flex flex-wrap gap-2">
-                                <Text className="lg:basis-1/6" variant="bodyMd">
-                                  Task Type:
-                                </Text>
-                                <Text variant="bodyMd" className="lg:basis-4/5">
-                                  {item.data.task_type
-                                    .replace(/_/g, ' ')
-                                    .replace(/\b\w/g, (c: string) =>
-                                      c.toUpperCase()
-                                    )}
-                                </Text>
-                              </div>
-                            )}
-                            {item.data?.domain && (
-                              <div className="flex flex-wrap gap-2">
-                                <Text className="lg:basis-1/6" variant="bodyMd">
-                                  Domain:
-                                </Text>
-                                <Text variant="bodyMd" className="lg:basis-4/5">
-                                  {item.data.domain}
-                                </Text>
-                              </div>
-                            )}
-                            {(item.data?.target_languages?.length ?? 0) > 0 && (
-                              <div className="flex flex-wrap gap-2">
-                                <Text className="lg:basis-1/6" variant="bodyMd">
-                                  Target Languages:
-                                </Text>
-                                <div className="flex gap-2 lg:basis-4/5">
-                                  {item.data?.target_languages?.map(
-                                    (lang: string, idx: number) => (
-                                      <Tag key={idx}>{lang}</Tag>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                            {item.data?.prompt_format && (
-                              <div className="flex flex-wrap gap-2">
-                                <Text className="lg:basis-1/6" variant="bodyMd">
-                                  Prompt Format:
-                                </Text>
-                                <Text variant="bodyMd" className="lg:basis-4/5">
-                                  {item.data.prompt_format}
-                                </Text>
-                              </div>
-                            )}
-                            {(item.data?.target_model_types?.length ?? 0) > 0 && (
-                              <div className="flex flex-wrap gap-2">
-                                <Text className="lg:basis-1/6" variant="bodyMd">
-                                  Target Model Types:
-                                </Text>
-                                <div className="flex gap-2 lg:basis-4/5">
-                                  {item.data?.target_model_types?.map(
-                                    (model: string, idx: number) => (
-                                      <Tag key={idx}>
-                                        {model
-                                          .replace(/_/g, ' ')
-                                          .replace(/\b\w/g, (c: string) =>
-                                            c.toUpperCase()
-                                          )}
-                                      </Tag>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                            <div className="flex flex-wrap gap-2">
-                              <Text className="lg:basis-1/6" variant="bodyMd">
-                                Has System Prompt:
-                              </Text>
-                              <Text variant="bodyMd" className="lg:basis-4/5">
-                                {item.data?.has_system_prompt ? 'Yes' : 'No'}
-                              </Text>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              <Text className="lg:basis-1/6" variant="bodyMd">
-                                Has Example Responses:
-                              </Text>
-                              <Text variant="bodyMd" className="lg:basis-4/5">
-                                {item.data?.has_example_responses
-                                  ? 'Yes'
-                                  : 'No'}
-                              </Text>
-                            </div>
-                          </div>
-                        ) : item.kind !== 'metadata' ? (
-                          item.data &&
-                          item.data.length > 0 && (
-                            <Table
-                              columns={generateColumnData(item.name)}
-                              rows={generateTableData(item.name, item.data)}
-                              hideFooter
-                            />
-                          )
-                        ) : (
-                          <div className="flex flex-col gap-4 px-8 py-4">
-                            {PrimaryMetadata.map(
-                              (item, index) =>
-                                item.value && (
-                                  <div
-                                    className="flex flex-wrap gap-2"
-                                    key={index}
-                                  >
-                                    <Text
-                                      className="lg:basis-1/6"
-                                      variant="bodyMd"
-                                    >
-                                      {item.label}:
-                                    </Text>
-                                    <Text
-                                      variant="bodyMd"
-                                      className="lg:basis-4/5"
-                                    >
-                                      <RichTextRenderer content={item.value} />
-                                    </Text>
-                                  </div>
-                                )
-                            )}
+                      </Link>
+                    ) : (
+                      <Text variant="bodyMd">—</Text>
+                    )}
+                  </ReviewField>
+                  <ReviewField label="Create date">
+                    <Text variant="bodyMd">
+                      {formatDate(dataset?.created ?? null) || '—'}
+                    </Text>
+                  </ReviewField>
+                </div>
+                {extraMetadata.map((item) => (
+                  <ReviewField key={item.id} label={item.metadataItem.label}>
+                    <Text variant="bodyMd">{dash(item.value)}</Text>
+                  </ReviewField>
+                ))}
+              </div>
+            </SectionCard>
 
-                            {item.data?.map((metadataItem, index) => (
-                              <div className="flex flex-wrap gap-2" key={index}>
-                                <Text className="lg:basis-1/6" variant="bodyMd">
-                                  {toTitleCase(metadataItem.metadataItem.label)}:
-                                </Text>
+            <SectionCard
+              title="Publishing Settings"
+              expandable
+              defaultExpanded
+              actions={editAction(
+                'Edit publishing settings',
+                `${metadataStep}#publishing-settings`
+              )}
+            >
+              <div className="grid gap-4 md:grid-cols-2">
+                <ReviewField label="Access type">
+                  <Text variant="bodyMd" fontWeight="medium">
+                    {dataset?.accessType && dataset.accessType !== 'PUBLIC'
+                      ? 'Restricted Access'
+                      : 'Open Access'}
+                  </Text>
+                </ReviewField>
+                <ReviewField label="License">
+                  <Text variant="bodyMd" fontWeight="medium">
+                    {dataset?.license
+                      ? LICENSE_LABELS[dataset.license] || dataset.license
+                      : '—'}
+                  </Text>
+                </ReviewField>
+              </div>
+            </SectionCard>
 
-                                {metadataItem.metadataItem.dataType !== 'URL' ? (
-                                  <Text
-                                    variant="bodyMd"
-                                    className="lg:basis-4/5"
-                                  >
-                                    {' '}
-                                    {metadataItem.value === ''
-                                      ? 'NA'
-                                      : metadataItem.value}
-                                  </Text>
-                                ) : (
-                                  <Link
-                                    href={metadataItem.value ?? ''}
-                                    target="_blank"
-                                  >
-                                    <Text
-                                      className="underline"
-                                      color="highlight"
-                                    >
-                                      {sourceTitle?.trim()
-                                        ? sourceTitle
-                                        : 'Visit Website'}
-                                    </Text>
-                                  </Link>
-                                )}
-                              </div>
-                            ))}
-                            <div className="flex flex-wrap gap-2">
-                              <Text className="lg:basis-1/6" variant="bodyMd">
-                                Sectors:
-                              </Text>
-                              <div className="flex gap-2 lg:basis-4/5">
-                                {dataset?.sectors?.map((sector, index) => (
-                                    <Tag key={index}>{sector.name}</Tag>
-                                  )
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              <Text className="lg:basis-1/6" variant="bodyMd">
-                                Tags:
-                              </Text>
-                              <div className="flex gap-2 lg:basis-4/5">
-                                {dataset?.tags.map((tag, index) => (
-                                    <Tag key={index}>{tag.value}</Tag>
-                                  )
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )}
+            {isPromptDataset ? (
+              <SectionCard
+                title="Prompt Dataset Metadata"
+                expandable
+                defaultExpanded
+                actions={editAction(
+                  'Edit prompt metadata',
+                  `${metadataStep}#prompt-metadata`
+                )}
+              >
+                <div className="grid gap-4 md:grid-cols-2">
+                  <ReviewField label="Task type">
+                    <Text variant="bodyMd">
+                      {dash(
+                        promptMetadata?.task_type
+                          ?.replace(/_/g, ' ')
+                          .replace(/\b\w/g, (c: string) => c.toUpperCase())
+                      )}
+                    </Text>
+                  </ReviewField>
+                  <ReviewField label="Domain">
+                    <Text variant="bodyMd">{dash(promptMetadata?.domain)}</Text>
+                  </ReviewField>
+                  <ReviewField label="Target languages">
+                    {promptMetadata?.target_languages?.length ? (
+                      <div className="flex flex-wrap gap-2">
+                        {promptMetadata.target_languages.map((lang) => (
+                          <Tag key={lang}>{lang}</Tag>
+                        ))}
                       </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              ))}
+                    ) : (
+                      <Text variant="bodyMd">—</Text>
+                    )}
+                  </ReviewField>
+                  <ReviewField label="Target model types">
+                    {promptMetadata?.target_model_types?.length ? (
+                      <div className="flex flex-wrap gap-2">
+                        {promptMetadata.target_model_types.map((model) => (
+                          <Tag key={model}>
+                            {model
+                              .replace(/_/g, ' ')
+                              .replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                          </Tag>
+                        ))}
+                      </div>
+                    ) : (
+                      <Text variant="bodyMd">—</Text>
+                    )}
+                  </ReviewField>
+                </div>
+              </SectionCard>
+            ) : null}
+
+            <SectionCard
+              title={filesLabel}
+              expandable
+              defaultExpanded
+              actions={editAction(
+                `Edit ${filesLabel.toLowerCase()}`,
+                filesStep
+              )}
+            >
+              {hasResources ? (
+                <div className="flex flex-col gap-3">
+                  {dataset?.resources.map((item) => (
+                    <FileCard
+                      key={item.id}
+                      name={item.name}
+                      format={resourceFormat(item)}
+                      size={formatFileSize(item.fileDetails?.size)}
+                      uploadedAt={formatUploadedAt(
+                        item.fileDetails?.created || item.created
+                      )}
+                      originalName={originalName(item)}
+                      status="ready"
+                      onView={() => router.push(`${filesStep}?id=${item.id}`)}
+                    />
+                  ))}
+                  <Text
+                    variant="bodySm"
+                    fontWeight="medium"
+                    className="self-end"
+                  >
+                    Total file size: {formatFileSize(totalBytes)}
+                  </Text>
+                </div>
+              ) : (
+                <Text variant="bodyMd" color="critical">
+                  {isPromptDataset
+                    ? 'Add at least one prompt file to continue.'
+                    : 'Add at least one dataset file to continue.'}
+                </Text>
+              )}
+            </SectionCard>
+
+            <div className="flex items-start gap-3 rounded-2 bg-surfaceSubdued p-4">
+              <IconInfoCircle size={20} className="mt-0.5 shrink-0" />
+              <div className="flex flex-col gap-1">
+                <Text variant="bodyMd" fontWeight="medium">
+                  Public dataset
+                </Text>
+                <Text variant="bodySm" color="subdued">
+                  Once published, this dataset will be publicly available on
+                  CivicDataSpace. Anyone can discover and access its published
+                  resources. Before publishing, make sure you have permission to
+                  share all included information and that it does not contain
+                  private or restricted content.
+                </Text>
+              </div>
+            </div>
+
+            <div className="border flex flex-col items-center gap-3 rounded-2 border-1 border-solid border-borderSubdued p-4 pt-2">
+              <Text variant="bodySm" color="subdued">
+                Your dataset will be publicly available immediately after
+                publishing.
+              </Text>
               <Button
-                className="m-auto w-fit"
-                disabled={isPublishDisabled(dataset)}
+                className="w-1/3 rounded-2 bg-[var(--primary)] py-2 hover:bg-[#0b2540]"
+                disabled={isPublishDisabled}
                 onClick={() => mutate()}
                 loading={mutationLoading}
               >
-                Publish
+                <span className="flex items-center justify-center gap-2 font-bold">
+                  Publish Dataset
+                  <IconSend size={24} strokeWidth={1.5} className="pb-1" />
+                </span>
               </Button>
-            </>
-          )}
-        </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-start gap-3 pt-1">
+              <Button kind="tertiary" onClick={() => router.push(metadataStep)}>
+                Previous
+              </Button>
+            </div>
+          </>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 

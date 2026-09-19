@@ -53,7 +53,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
     {
       title: 'Datasets',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/dataset`,
-      icon: 'datasetEdit',
+      icon: 'dataset',
     },
 
     ...(params.entityType === 'organization'
@@ -66,9 +66,9 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
         ] satisfies SidebarNavItem[])
       : []),
     {
-      title: 'UseCases',
+      title: 'Use Cases',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/usecases`,
-      icon: 'light',
+      icon: 'grid',
     },
     {
       title: 'AI Models',
@@ -81,14 +81,14 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       icon: 'userGroup',
     },
     {
-      title: 'Add & Manage Charts',
+      title: 'Charts',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/charts`,
       icon: 'chartBar',
     },
     {
       title: 'Profile',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/profile`,
-      icon: 'setting',
+      icon: 'user',
     },
   ];
 
@@ -130,7 +130,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       <div
         className={cn(
           'relative flex flex-col md:flex-row',
-          ' bg-surfaceDefault p-4 md:flex'
+          'bg-[var(--page-background)] p-4 md:flex'
         )}
       >
         <DashboardNav
