@@ -89,7 +89,7 @@ const Datasets = () => {
         <div>
           <Button
             kind="tertiary"
-            className="shadow-none border-none bg-transparent px-0 text-primaryText hover:underline"
+            className="shadow-none border-none bg-transparent px-0 text-primaryText hover:underline outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-interactive-focused)]"
             onClick={() => {
               router.push('/datasets');
             }}

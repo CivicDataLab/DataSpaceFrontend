@@ -205,9 +205,9 @@ export function MainNav({ hideSearch = false }: MainNavProps) {
                   <div className="p-3">
                     <SearchInput
                       onSubmit={handleSearch}
-                      label={''}
+                      label="Search"
                       placeholder="Search for any data"
-                      name={''}
+                      name="search"
                     />
                   </div>
                 </Dialog.Content>
@@ -266,7 +266,7 @@ export function MainNav({ hideSearch = false }: MainNavProps) {
                 <Link href={item.href}>
                   <Text
                     variant="headingMd"
-                    as="h1"
+                    as="span"
                     className={`uppercase ${
                       pathname === item.href
                         ? 'text-[#84DCCF]'
@@ -309,20 +309,20 @@ export const ProfileContent = ({ session }: { session: Session }) => {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <Popover.Trigger>
-        {session.user.image ? (
-          <IconButton icon={session.user.image} size="slim">
-            {session.user.name}
-          </IconButton>
-        ) : (
-          <div
-            style={
-              {
-                '--border-highlight-subdued': 'var(--accent-tertiary-color)',
-              } as React.CSSProperties
-            }
-          >
+    <div
+      style={
+        {
+          '--border-highlight-subdued': 'var(--accent-tertiary-color)',
+        } as React.CSSProperties
+      }
+    >
+      <Popover open={open} onOpenChange={setOpen}>
+        <Popover.Trigger>
+          {session.user.image ? (
+            <IconButton icon={session.user.image} size="slim">
+              {session.user.name}
+            </IconButton>
+          ) : (
             <Button
               kind="tertiary"
               size="slim"
@@ -334,55 +334,55 @@ export const ProfileContent = ({ session }: { session: Session }) => {
                 size="small"
               />
             </Button>
-          </div>
-        )}
-      </Popover.Trigger>
-      <Popover.Content align="end">
-        <div className="rounded-3 py-2 shadow-basicDeep">
-          <div className="flex flex-col px-5 py-2">
-            <Text variant="bodyMd" fontWeight="medium">
-              {session.user.name}
-            </Text>
-            <Text variant="bodyMd">{session.user.email}</Text>
-          </div>
-          <div className="flex w-full flex-col">
-            {profileLinks.map((link) => (
-              <Text variant="bodyMd" key={link.href}>
-                <Link
-                  onClick={() => setOpen(false)}
-                  href={link.href}
-                  className="block w-full px-5 py-2 text-textSubdued transition-colors duration-100 ease-ease hover:bg-actionSecondaryNeutralHovered hover:text-textDefault"
-                >
-                  {link.label}
-                </Link>
+          )}
+        </Popover.Trigger>
+        <Popover.Content align="end">
+          <div className="rounded-3 py-2 shadow-basicDeep">
+            <div className="flex flex-col px-5 py-2">
+              <Text variant="bodyMd" fontWeight="medium">
+                {session.user.name}
               </Text>
-            ))}
-          </div>
-          <Divider className="mx-3 my-3 w-auto" />
-          <div className="px-3">
-            <Button
-              onClick={async () => {
-                setOpen(false);
-                const response = await fetch(`/api/auth/logout`, {
-                  method: 'GET',
-                });
-                const data = await response.json();
+              <Text variant="bodyMd">{session.user.email}</Text>
+            </div>
+            <div className="flex w-full flex-col">
+              {profileLinks.map((link) => (
+                <Text variant="bodyMd" key={link.href}>
+                  <Link
+                    onClick={() => setOpen(false)}
+                    href={link.href}
+                    className="block w-full px-5 py-2 text-textSubdued transition-colors duration-100 ease-ease hover:bg-actionSecondaryNeutralHovered hover:text-textDefault"
+                  >
+                    {link.label}
+                  </Link>
+                </Text>
+              ))}
+            </div>
+            <Divider className="mx-3 my-3 w-auto" />
+            <div className="px-3">
+              <Button
+                onClick={async () => {
+                  setOpen(false);
+                  const response = await fetch(`/api/auth/logout`, {
+                    method: 'GET',
+                  });
+                  const data = await response.json();
 
-                await signOut({ redirect: false });
+                  await signOut({ redirect: false });
 
-                if (data.url) {
-                  window.location.href = data.url;
-                }
-              }}
-              kind="secondary"
-              size="slim"
-              fullWidth
-            >
-              Log Out
-            </Button>
+                  if (data.url) {
+                    window.location.href = data.url;
+                  }
+                }}
+                kind="secondary"
+                size="slim"
+                fullWidth
+              >
+                Log Out
+              </Button>
+            </div>
           </div>
-        </div>
-      </Popover.Content>
-    </Popover>
+        </Popover.Content>
+      </Popover>
+    </div>
   );
 };

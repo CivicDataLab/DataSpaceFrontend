@@ -62,12 +62,13 @@ export const Content = () => {
   ];
 
   return (
-    <main className="container py-10 md:px-8 lg:py-20">
+    <div className="container py-10 md:px-8 lg:py-20">
       <div className="flex justify-around gap-8 px-4 md:px-12 lg:px-12">
         <div className="flex flex-col gap-11 lg:w-[60%]">
           <div className="flex flex-col gap-2">
             <Text
               variant="heading3xl"
+              as="h1"
               color="onBgDefault"
               className="text-textOnBGDefault1"
             >
@@ -86,9 +87,9 @@ export const Content = () => {
             <SearchInput
               className={cn(Styles.Search)}
               onSubmit={handleSearch}
-              label={''}
+              label="Search"
               placeholder="Search for any data"
-              name={''}
+              name="search"
               withButton
             />
           </div>
@@ -102,7 +103,7 @@ export const Content = () => {
                 <Link
                   key={`${item.label}_${index}`}
                   href={item.link}
-                  className="w-[177px] md:basis-[177px]"
+                  className="w-[177px] rounded-[8px] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-interactive-focused)] md:basis-[177px]"
                   data-tour={
                     index === 0
                       ? 'datasets-link'
@@ -157,6 +158,6 @@ export const Content = () => {
           />
         </div>
       </div>
-    </main>
+    </div>
   );
 };

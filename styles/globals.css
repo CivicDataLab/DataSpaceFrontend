@@ -5,6 +5,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Keep <h1> on the Text variant size; Tailwind preflight is off. */
+h1 {
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
 /* Bhashini v3 paints the language icon/button white; the navbar is primary blue. */
 .bhashini-plugin-container .bhashini-dropdown-btn {
   color: #fff;
