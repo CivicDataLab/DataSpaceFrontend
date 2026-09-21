@@ -162,7 +162,7 @@ const CollaborativesListingClient = () => {
   });
 
   return (
-    <main>
+    <div>
       <JsonLd json={jsonLd} />
       <BreadCrumbs
         data={[
@@ -178,6 +178,7 @@ const CollaborativesListingClient = () => {
                 <div className="flex flex-col gap-5 lg:w-3/5">
                   <Text
                     variant="heading2xl"
+                    as="h1"
                     fontWeight="bold"
                     color="onBgDefault"
                   >
@@ -231,7 +232,7 @@ const CollaborativesListingClient = () => {
             {/* Search and Filter Section */}
             <div className="flex flex-wrap gap-6 pt-4 lg:flex-nowrap">
               <SearchInput
-                label={''}
+                label="Search"
                 className={cn('w-full', Styles.Search)}
                 onSubmit={(e) => {
                   setSearchTerm(e);
@@ -252,8 +253,8 @@ const CollaborativesListingClient = () => {
                   Sort :
                 </Text>
                 <Select
-                  label=""
-                  labelInline
+                  label="Sort"
+                  labelHidden
                   name="sort-select"
                   options={[
                     {
@@ -412,7 +413,7 @@ const CollaborativesListingClient = () => {
           )}
         </div>
       </div>
-    </main>
+    </div>
   );
 };
 

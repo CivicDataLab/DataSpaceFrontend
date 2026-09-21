@@ -68,7 +68,7 @@ const SectorsListing = () => {
   });
 
   return (
-    <main>
+    <div>
       <JsonLd json={jsonLd} />
       <BreadCrumbs
         data={[
@@ -84,6 +84,7 @@ const SectorsListing = () => {
                 <div className="flex flex-col gap-5 ">
                   <Text
                     variant="heading2xl"
+                    as="h1"
                     fontWeight="bold"
                     color="onBgDefault"
                   >
@@ -136,7 +137,7 @@ const SectorsListing = () => {
                 <div className="mt-6 flex w-full flex-col justify-center gap-6">
                   <div className="flex flex-wrap gap-6 lg:flex-nowrap">
                     <SearchInput
-                      label={''}
+                      label="Search"
                       className={cn('w-full', Styles.Search)}
                       onSubmit={(e) => {
                         setSearchText(e);
@@ -155,8 +156,8 @@ const SectorsListing = () => {
                         Sort :
                       </Text>
                       <Select
-                        label=""
-                        labelInline
+                        label="Sort"
+                        labelHidden
                         name="sort-select"
                         options={[
                           {
@@ -213,7 +214,7 @@ const SectorsListing = () => {
           </div>
         </>
       </>
-    </main>
+    </div>
   );
 };
 
