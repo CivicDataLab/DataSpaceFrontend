@@ -17,7 +17,7 @@ const publicPages = [
   '/collaboratives',
   '/collaboratives/(.*)',
   '/about-us',
-  '/privacy-policy',
+  '/privacy',
   '/publishers',
   '/publishers/(.*)',
   '/search',
