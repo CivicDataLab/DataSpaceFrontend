@@ -45,8 +45,8 @@ const MainFooter = () => {
     : '/about-us';
 
   const privacyHref = isCollaborativeSubdomain
-    ? getPlatformPageUrl('/privacy', currentLocale)
-    : '/privacy';
+    ? getPlatformPageUrl('/privacy-policy', currentLocale)
+    : '/privacy-policy';
 
   const socialMedia = [
     {
