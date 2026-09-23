@@ -89,7 +89,10 @@ export default function CollaborativePage() {
     ? { [entityType]: entitySlug }
     : null;
 
-  const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
+  const [navigationTab, setNavigationTab] = useQueryState(
+    'tab',
+    parseAsString.withDefault('drafts')
+  );
 
   const AllCollaboratives =
     useQuery(
@@ -110,12 +113,10 @@ export default function CollaborativePage() {
     );
 
   useEffect(() => {
-    if (navigationTab === null || navigationTab === undefined)
-      setNavigationTab('drafts');
     if (isValidParams) {
       AllCollaboratives.refetch();
     }
-  }, [navigationTab, isValidParams, AllCollaboratives, setNavigationTab]);
+  }, [navigationTab, isValidParams, AllCollaboratives]);
 
   const COLLAB_LIST_TOAST_ID = 'collaboratives-list-toast';
 
