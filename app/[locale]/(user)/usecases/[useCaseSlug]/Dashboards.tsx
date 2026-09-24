@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
@@ -6,6 +5,23 @@ import { Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { Loading } from '@/components/loading';
+
+const getSafeEmbedUrl = (link: string | null | undefined) => {
+  if (!link) return null;
+
+  try {
+    const url = new URL(link);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+
+    if (url.pathname.includes('/superset/')) {
+      url.searchParams.set('standalone', '1');
+    }
+
+    return url.toString();
+  } catch {
+    return null;
+  }
+};
 
 const DashboardsList = graphql(`
   query usecaseDashboards($usecaseId: Int!) {
@@ -36,7 +52,14 @@ const Dashboards = () => {
     }
   );
 
-  if (!isValidId) {
+  const dashboards = (data?.usecaseDashboards ?? [])
+    .map((dashboard) => ({
+      ...dashboard,
+      embedUrl: getSafeEmbedUrl(dashboard.link),
+    }))
+    .filter((dashboard) => dashboard.embedUrl);
+
+  if (!isValidId || (!isLoading && dashboards.length === 0)) {
     return null;
   }
 
@@ -45,36 +68,41 @@ const Dashboards = () => {
       {isLoading ? (
         <Loading />
       ) : (
-        (data?.usecaseDashboards?.length ?? 0) > 0 && (
-          <div className="container py-10">
-            <div className=" flex flex-col gap-1 ">
-              <Text variant="headingXl">
-                Dashboards Linked to this Use Case
-              </Text>
-              <Text variant="bodyLg" fontWeight="regular">
-                Analytical dashboards to explore the data further{' '}
-              </Text>
-            </div>
-            <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {data?.usecaseDashboards?.map((dashboard) => (
-                <Link
-                  key={dashboard.id}
-                  href={dashboard.link}
-                  className="flex h-[100px] w-full items-center rounded-4 bg-surfaceDefault p-5 shadow-card"
-                  target="_blank"
-                >
-                  <Text
-                    variant="bodyLg"
-                    className="line-clamp-2 text-primaryText"
-                    title={dashboard.name}
-                  >
-                    {dashboard.name}
-                  </Text>
-                </Link>
-              ))}
-            </div>
+        <div className="container py-10">
+          <div className=" flex flex-col gap-1 ">
+            <Text variant="headingXl">Dashboards Linked to this Use Case</Text>
+            <Text variant="bodyLg" fontWeight="regular">
+              Analytical dashboards to explore the data further{' '}
+            </Text>
           </div>
-        )
+          <div className="mt-8 flex flex-col gap-10">
+            {dashboards.map((dashboard) => (
+              <div key={dashboard.id}>
+                <Text variant="headingLg" className="text-primaryText">
+                  {dashboard.name}
+                </Text>
+                <div className="mt-4 overflow-hidden rounded-2 border border-baseGraySlateSolid9 bg-surfaceDefault">
+                  <iframe
+                    title={dashboard.name || 'Dashboard'}
+                    src={dashboard.embedUrl || undefined}
+                    className="min-h-[640px] w-full border-0"
+                    loading="lazy"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                </div>
+                <a
+                  href={dashboard.embedUrl || undefined}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 inline-block text-primaryBlue underline"
+                >
+                  Open dashboard in a new tab
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
