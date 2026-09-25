@@ -9,7 +9,7 @@ import { Button, DropZone, Icon, Labelled, Tag, Text, toast } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
-import { createResourceFilesDoc } from './query';
+import { createResourceFilesDoc, updateResourceList } from './query';
 
 export const RESOURCE_FILE_TYPES = [
   'CSV',
@@ -28,12 +28,15 @@ interface ResourceDropzoneProps {
   reload: () => void | Promise<unknown>;
   onPendingChange?: (files: File[]) => void;
   error?: string;
+  /** When set, an in-flight upload is deleted instead of kept. */
+  discardUploadRef?: React.MutableRefObject<boolean>;
 }
 
 export const ResourceDropzone = ({
   reload,
   onPendingChange,
   error,
+  discardUploadRef,
 }: ResourceDropzoneProps) => {
   const RESOURCE_UPLOAD_ERROR_TOAST_ID = 'dataset-resource-upload-error';
   const getErrorMessage = (err: unknown, fallback: string) =>
@@ -61,7 +64,29 @@ export const ResourceDropzone = ({
         data
       ),
     {
-      onSuccess: async () => {
+      onSuccess: async (result) => {
+        if (discardUploadRef?.current) {
+          const created = result.createFileResources ?? [];
+          await Promise.all(
+            created.map((item) => {
+              const resourceId = item?.id;
+              if (!resourceId) return Promise.resolve();
+              return GraphQL(
+                updateResourceList,
+                {
+                  [params.entityType]: params.entitySlug,
+                },
+                { resourceId }
+              );
+            })
+          );
+          onPendingChange?.([]);
+          await reload();
+          void queryClient.invalidateQueries({
+            queryKey: [`dataset_title_${params.id}`],
+          });
+          return;
+        }
         await reload();
         onPendingChange?.([]);
         void queryClient.invalidateQueries({
@@ -80,6 +105,7 @@ export const ResourceDropzone = ({
   const handleDropZoneDrop = React.useCallback(
     (_dropFiles: File[], acceptedFiles: File[]) => {
       if (acceptedFiles.length === 0) return;
+      if (discardUploadRef) discardUploadRef.current = false;
       onPendingChange?.(acceptedFiles);
       mutate({
         fileResourceInput: {
@@ -88,7 +114,7 @@ export const ResourceDropzone = ({
         },
       });
     },
-    [mutate, onPendingChange, params.id]
+    [discardUploadRef, mutate, onPendingChange, params.id]
   );
 
   return (

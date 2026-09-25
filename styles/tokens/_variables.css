@@ -165,7 +165,7 @@
   --action-secondary-interactive-hovered: var(--base-blue-solid-4);
   --action-secondary-interactive-depressed: var(--base-blue-solid-6);
   --action-primary-success-depressed: var(--base-green-solid-12);
-  --action-secondary-neutral-default: var(--base-gray-slate-solid-1);
+  --action-secondary-neutral-default: var(--base-pure-white);
   --action-secondary-success-default: var(--base-green-solid-3);
   --action-secondary-interactive-default: var(--base-blue-solid-3);
   --action-secondary-neutral-hovered: var(--base-gray-slate-solid-2);

@@ -1,18 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { AiModelType, PromptDomain, UpdateAiModelInput } from '@/gql/generated/graphql';
+import {
+  AiModelType,
+  PromptDomain,
+  UpdateAiModelInput,
+} from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Checkbox,
   Combobox,
-  FormLayout,
-  Labelled,
+  SectionCard,
   Select,
   Spinner,
-  Text,
   TextField,
   toast,
 } from 'opub-ui';
@@ -20,6 +21,7 @@ import {
 import { GraphQL } from '@/lib/api';
 import { enumValues } from '@/lib/enumValues';
 import RichTextEditor from '@/components/RichTextEditor/RichTextEditor';
+import { plainText } from '../../aimodel-summary';
 import { useEditStatus } from '../../context';
 
 interface SelectOption {
@@ -109,8 +111,7 @@ function formDataFromModel(model: {
     description: model.description || '',
     targetUsers: metadata.targetUsers || '',
     intendedUse: metadata.intendedUse || '',
-    sectors:
-      model.sectors?.map((s) => ({ label: s.name, value: s.id })) || [],
+    sectors: model.sectors?.map((s) => ({ label: s.name, value: s.id })) || [],
     tags: model.tags?.map((t) => ({ label: t.value, value: t.id })) || [],
     maxTokens: model.maxTokens?.toString() || '',
     supportedLanguages: Array.isArray(model.supportedLanguages)
@@ -118,8 +119,7 @@ function formDataFromModel(model: {
           .filter((l): l is string => typeof l === 'string')
           .map((l) => ({
             label:
-              LANGUAGE_OPTIONS.find((option) => option.value === l)?.label ||
-              l,
+              LANGUAGE_OPTIONS.find((option) => option.value === l)?.label || l,
             value: l,
           }))
       : [],
@@ -137,6 +137,20 @@ function formDataFromModel(model: {
 function toSelectOptions(value: string | SelectOption[]): SelectOption[] {
   return Array.isArray(value) ? value : [];
 }
+
+function comboboxSingle(value: string | Array<{ value: string }>): string {
+  if (typeof value === 'string') return value;
+  return value[0]?.value ?? '';
+}
+
+const TARGET_USER_OPTIONS = [
+  { label: 'General public', value: 'General public' },
+  { label: 'Researchers', value: 'Researchers' },
+  { label: 'Policymakers', value: 'Policymakers' },
+  { label: 'Developers', value: 'Developers' },
+  { label: 'Government agencies', value: 'Government agencies' },
+  { label: 'Civil society', value: 'Civil society' },
+];
 
 const tagsListQueryDoc = graphql(`
   query TagsList {
@@ -239,7 +253,8 @@ export default function AIModelDetailsPage() {
     id: string;
   }>();
 
-  const { setStatus } = useEditStatus();
+  const { setStatus, setInfoCompleted, stepShowErrors, setStepShowErrors } =
+    useEditStatus();
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState(emptyAIModelForm());
@@ -248,7 +263,6 @@ export default function AIModelDetailsPage() {
   const SAVE_SUCCESS_TOAST_ID = 'ai-model-details-save-success';
   const SAVE_ERROR_TOAST_ID = 'ai-model-details-save-error';
   const AI_MODEL_VALIDATION_TOAST_ID = 'ai-model-details-validation-toast';
-  const OPEN_ACCESS_REQUIRED_TOAST_ID = SAVE_SUCCESS_TOAST_ID;
   const isValidHttpUrl = (value: string) => {
     try {
       const parsed = new URL(value);
@@ -259,41 +273,25 @@ export default function AIModelDetailsPage() {
   };
 
   const getTagsList = useQuery([`tags_list_query`], () =>
-    GraphQL(
-      tagsListQueryDoc,
-      {
-        [params.entityType]: params.entitySlug,
-      }
-    )
+    GraphQL(tagsListQueryDoc, {
+      [params.entityType]: params.entitySlug,
+    })
   );
 
-  const getSectorsList =
-    useQuery([`sectors_list_query`], () =>
-      GraphQL(
-        sectorsListQueryDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        }
-      )
-    );
+  const getSectorsList = useQuery([`sectors_list_query`], () =>
+    GraphQL(sectorsListQueryDoc, {
+      [params.entityType]: params.entitySlug,
+    })
+  );
 
-  const getGeographiesList =
-    useQuery([`geographies_list_query`], () =>
-      GraphQL(
-        geographiesListQueryDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        }
-      )
-    );
+  const getGeographiesList = useQuery([`geographies_list_query`], () =>
+    GraphQL(geographiesListQueryDoc, {
+      [params.entityType]: params.entitySlug,
+    })
+  );
 
   const AIModelData = useQuery(
-    [
-      `fetch_AIModelDetails`,
-      params.id,
-      params.entityType,
-      params.entitySlug,
-    ],
+    [`fetch_AIModelDetails`, params.id, params.entityType, params.entitySlug],
     () =>
       GraphQL(
         FetchAIModelDetails,
@@ -356,7 +354,11 @@ export default function AIModelDetailsPage() {
       },
       onError: (error: unknown) => {
         const errorMessage =
-          typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' && error.message.trim()
+          typeof error === 'object' &&
+          error !== null &&
+          'message' in error &&
+          typeof error.message === 'string' &&
+          error.message.trim()
             ? error.message.trim()
             : 'Unable to update AI Model right now. Please try again.';
         toast(`Error: ${errorMessage}`, { id: SAVE_ERROR_TOAST_ID });
@@ -419,16 +421,8 @@ export default function AIModelDetailsPage() {
     setStatus('saving');
     const dataToUse = overrideData || formData;
 
-    // Ensure access type is always 'open' (required field)
-    if (dataToUse.accessType !== 'open') {
-      toast('Open access is required for all models', {
-        id: OPEN_ACCESS_REQUIRED_TOAST_ID,
-      });
-      setStatus('unsaved');
-      return;
-    }
-
     const updateData: Omit<UpdateAiModelInput, 'id'> = {
+      ...(dataToUse.name.trim() ? { displayName: dataToUse.name.trim() } : {}),
       description: dataToUse.description,
       modelType: (Object.values(AiModelType) as string[]).includes(
         dataToUse.modelType
@@ -449,7 +443,7 @@ export default function AIModelDetailsPage() {
         (item) => item.value
       ),
       maxTokens: parseInt(dataToUse.maxTokens) || null,
-      isPublic: dataToUse.accessType === 'open',
+      isPublic: true,
       metadata: {
         targetUsers: dataToUse.targetUsers,
         intendedUse: dataToUse.intendedUse,
@@ -485,22 +479,10 @@ export default function AIModelDetailsPage() {
     { label: 'Other', value: 'OTHER' },
   ];
 
-  const maxTokensOptions = [
-    { label: 'Click to select from dropdown', value: '' },
-    { label: '1024', value: '1024' },
-    { label: '2048', value: '2048' },
-    { label: '4096', value: '4096' },
-    { label: '8192', value: '8192' },
-    { label: '16384', value: '16384' },
-    { label: '32768', value: '32768' },
-    { label: '65536', value: '65536' },
-    { label: '131072', value: '131072' },
-  ];
-
   const languageOptions = LANGUAGE_OPTIONS;
 
   const licenseOptions = [
-    { label: 'Click to select from dropdown', value: '' },
+    { label: 'Select a license...', value: '' },
     { label: 'MIT License', value: 'MIT' },
     { label: 'Apache 2.0', value: 'Apache-2.0' },
     { label: 'GPL v3', value: 'GPL-3.0' },
@@ -512,6 +494,32 @@ export default function AIModelDetailsPage() {
     { label: 'Other', value: 'Other' },
   ];
 
+  useEffect(() => {
+    setInfoCompleted(
+      formData.name.trim().length > 0 &&
+        Boolean(formData.modelType) &&
+        plainText(formData.description).length > 0 &&
+        Boolean(formData.domain) &&
+        formData.sectors.length > 0 &&
+        formData.supportedLanguages.length > 0 &&
+        Boolean(formData.usageLicense)
+    );
+  }, [formData, setInfoCompleted]);
+
+  useEffect(() => {
+    if (AIModelData.isLoading) return;
+    const hash = window.location.hash.replace('#', '');
+    if (!hash) return;
+    setStepShowErrors(true);
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(hash)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [AIModelData.isLoading, setStepShowErrors]);
+
   if (AIModelData.isLoading) {
     return (
       <div className="flex items-center justify-center p-6">
@@ -519,163 +527,208 @@ export default function AIModelDetailsPage() {
       </div>
     );
   }
+  const nameError =
+    stepShowErrors && !formData.name.trim() ? 'Enter a model name.' : undefined;
+  const typeError =
+    stepShowErrors && !formData.modelType ? 'Select a model type.' : undefined;
+  const descriptionError =
+    stepShowErrors && !plainText(formData.description)
+      ? 'Add a description of the model.'
+      : undefined;
+  const domainError =
+    stepShowErrors && !formData.domain ? 'Select a domain.' : undefined;
+  const sectorError =
+    stepShowErrors && formData.sectors.length === 0
+      ? 'Select at least one sector.'
+      : undefined;
+  const languageError =
+    stepShowErrors && formData.supportedLanguages.length === 0
+      ? 'Define how language support applies to this model.'
+      : undefined;
+  const licenseError =
+    stepShowErrors && !formData.usageLicense
+      ? 'Select a usage license.'
+      : undefined;
+
+  const targetUserList =
+    formData.targetUsers &&
+    !TARGET_USER_OPTIONS.some((option) => option.value === formData.targetUsers)
+      ? [
+          { label: formData.targetUsers, value: formData.targetUsers },
+          ...TARGET_USER_OPTIONS,
+        ]
+      : TARGET_USER_OPTIONS;
+
   return (
-    <div className="flex flex-col gap-4 py-6">
-      {/* Model Type & Domain - side by side */}
-      <FormLayout>
-        <FormLayout.Group>
-          <Select
-            name="modelType"
-            label="Model Type"
-            requiredIndicator={true}
-            options={modelTypeOptions}
-            value={formData.modelType}
-            onChange={(value) => {
-              handleInputChange('modelType', value);
-              handleSave({ ...formData, modelType: value });
-            }}
-            required
-          />
-          <Select
-            name="domain"
-            label="Domain"
-            options={domainOptions}
-            value={formData.domain}
-            onChange={(value) => {
-              handleInputChange('domain', value);
-              handleSave({ ...formData, domain: value });
-            }}
-          />
-        </FormLayout.Group>
-      </FormLayout>
+    <div className="flex flex-col gap-6 ">
+      <SectionCard
+        title="Basic Information"
+        description="Name and describe this model so people can find and understand it."
+      >
+        <div id="basic-information" className="flex flex-col gap-5">
+          <div id="model-name">
+            <TextField
+              name="modelName"
+              label="Model Name"
+              required
+              requiredIndicator
+              value={formData.name}
+              error={nameError}
+              helpText="Use a clear name that identifies the model."
+              placeholder="Enter the model name"
+              onChange={(value) => handleInputChange('name', value)}
+              onBlur={() => handleSave()}
+            />
+          </div>
+          <div id="model-type">
+            <Combobox
+              name="modelType"
+              label="Model Type"
+              required
+              requiredIndicator
+              displaySelected
+              error={typeError}
+              placeholder="Search and select a model type..."
+              list={modelTypeOptions}
+              selectedValue={formData.modelType}
+              onChange={(value) => {
+                const next = comboboxSingle(value);
+                handleInputChange('modelType', next);
+                handleSave({ ...formData, modelType: next });
+              }}
+            />
+          </div>
+          <div id="description">
+            <RichTextEditor
+              label="Description *"
+              value={formData.description}
+              error={descriptionError}
+              placeholder="Describe what this model does, the problem it addresses, and what users should know about it."
+              onChange={(value) => handleInputChange('description', value)}
+              onBlur={() => handleSave()}
+            />
+          </div>
+        </div>
+      </SectionCard>
 
-      {/* Description */}
-      <RichTextEditor
-        label="Description"
-        value={formData.description}
-        onChange={(value) => handleInputChange('description', value)}
-        onBlur={() => handleSave()}
-        placeholder="Enter model description with rich formatting..."
-        helpText={`Character limit: ${formData?.description?.length || 0}/1000`}
-      />
-
-      {/* Target Users & Intended Use - side by side */}
-      <FormLayout>
-        <FormLayout.Group>
-          <TextField
+      <SectionCard
+        title="Purpose & Audience"
+        description="Help people understand who can use this model and what it is intended for."
+      >
+        <div className="flex flex-col gap-5">
+          <Combobox
             name="targetUsers"
             label="Target Users"
-            value={formData.targetUsers}
-            onChange={(value) => handleInputChange('targetUsers', value)}
-            onBlur={() => handleSave()}
-            multiline={3}
-            required
-            requiredIndicator={true}
+            displaySelected
+            creatable
+            placeholder="Select target users..."
+            list={targetUserList}
+            selectedValue={formData.targetUsers}
+            onChange={(value) => {
+              const next = comboboxSingle(value);
+              handleInputChange('targetUsers', next);
+              handleSave({ ...formData, targetUsers: next });
+            }}
           />
           <TextField
             name="intendedUse"
             label="Intended Use"
             value={formData.intendedUse}
+            multiline={4}
+            placeholder="Describe what this model is intended to be used for."
             onChange={(value) => handleInputChange('intendedUse', value)}
             onBlur={() => handleSave()}
-            multiline={3}
-            required
-            requiredIndicator={true}
           />
-        </FormLayout.Group>
-      </FormLayout>
+        </div>
+      </SectionCard>
 
-      {/* Sectors */}
-      <Combobox
-        displaySelected
-        name="sectors"
-        list={
-          getSectorsList.data?.sectors?.map((item) => ({
-            label: item.name,
-            value: item.id,
-          })) || []
-        }
-        key={`sectors-${getSectorsList.data?.sectors?.length || 0}-${formData.sectors.length}`}
-        label="Sectors"
-        selectedValue={formData.sectors || []}
-        onChange={(value) => {
-          const next = toSelectOptions(value);
-          handleInputChange('sectors', next);
-          handleSave({ ...formData, sectors: next });
-        }}
-        required
-        requiredIndicator={true}
-      />
-
-      {/* Tags */}
-      <Combobox
-        displaySelected
-        name="tags"
-        list={
-          getTagsList.data?.tags?.map((item) => ({
-            label: item.value,
-            value: item.id,
-          })) || []
-        }
-        key={`tags-${getTagsList.data?.tags?.length || 0}-${formData.tags.length}`}
-        label="Tags"
-        creatable
-        selectedValue={formData.tags || []}
-        requiredIndicator
-        onChange={(value) => {
-          const next = toSelectOptions(value);
-          setIsTagsListUpdated(true);
-          handleInputChange('tags', next);
-          handleSave({ ...formData, tags: next });
-        }}
-      />
-
-      {/* Maximum Tokens & Languages - side by side */}
-      <FormLayout>
-        <FormLayout.Group>
-          <Select
-            name="maxTokens"
-            label="Maximum Tokens"
-            options={maxTokensOptions}
-            value={formData.maxTokens}
-            onChange={(value) => {
-              handleInputChange('maxTokens', value);
-              handleSave({ ...formData, maxTokens: value });
-            }}
-            required
-            requiredIndicator={true}
-          />
+      <SectionCard
+        title="Classification"
+        description="Add sectors and topics to help people discover this content."
+      >
+        <div id="classification" className="flex flex-col gap-5">
+          <div id="domain">
+            <Combobox
+              name="domain"
+              label="Domain"
+              required
+              requiredIndicator
+              displaySelected
+              error={domainError}
+              placeholder="Search and select a domain..."
+              list={domainOptions.filter((option) => option.value !== '')}
+              selectedValue={formData.domain}
+              onChange={(value) => {
+                const next = comboboxSingle(value);
+                handleInputChange('domain', next);
+                handleSave({ ...formData, domain: next });
+              }}
+            />
+          </div>
+          <div id="sectors">
+            <Combobox
+              displaySelected
+              name="sectors"
+              list={
+                getSectorsList.data?.sectors?.map((item) => ({
+                  label: item.name,
+                  value: item.id,
+                })) || []
+              }
+              key={`sectors-${getSectorsList.data?.sectors?.length || 0}-${formData.sectors.length}`}
+              label="Sectors"
+              placeholder="Select sectors..."
+              selectedValue={formData.sectors || []}
+              error={sectorError}
+              onChange={(value) => {
+                const next = toSelectOptions(value);
+                handleInputChange('sectors', next);
+                handleSave({ ...formData, sectors: next });
+              }}
+              required
+              requiredIndicator
+            />
+          </div>
           <Combobox
             displaySelected
-            name="supportedLanguages"
-            list={languageOptions}
-            label="Languages"
-            key={`languages-${formData.supportedLanguages.length}`}
-            selectedValue={formData.supportedLanguages || []}
+            name="tags"
+            list={
+              getTagsList.data?.tags?.map((item) => ({
+                label: item.value,
+                value: item.id,
+              })) || []
+            }
+            key={`tags-${getTagsList.data?.tags?.length || 0}-${formData.tags.length}`}
+            label="Tags"
+            creatable
+            placeholder="Type a tag and press Enter..."
+            selectedValue={formData.tags || []}
             onChange={(value) => {
               const next = toSelectOptions(value);
-              handleInputChange('supportedLanguages', next);
-              handleSave({ ...formData, supportedLanguages: next });
+              setIsTagsListUpdated(true);
+              handleInputChange('tags', next);
+              handleSave({ ...formData, tags: next });
             }}
-            required
-            requiredIndicator={true}
           />
-        </FormLayout.Group>
-      </FormLayout>
-
-      {/* Model Website & Locations/Geography - side by side */}
-      <FormLayout>
-        <FormLayout.Group>
-          <TextField
-            name="modelWebsite"
-            label="Model Website"
-            value={formData.modelWebsite}
-            onChange={(value) => handleInputChange('modelWebsite', value)}
-            onBlur={handleWebsiteBlur}
-            placeholder="https://www.model.com"
-            required
-            requiredIndicator={true}
-          />
+          <div id="language-support">
+            <Combobox
+              displaySelected
+              name="supportedLanguages"
+              list={languageOptions}
+              label="Language Support"
+              placeholder="Select language support..."
+              key={`languages-${formData.supportedLanguages.length}`}
+              selectedValue={formData.supportedLanguages || []}
+              error={languageError}
+              onChange={(value) => {
+                const next = toSelectOptions(value);
+                handleInputChange('supportedLanguages', next);
+                handleSave({ ...formData, supportedLanguages: next });
+              }}
+              required
+              requiredIndicator
+            />
+          </div>
           <Combobox
             displaySelected
             name="geographies"
@@ -686,8 +739,8 @@ export default function AIModelDetailsPage() {
               })) || []
             }
             key={`geographies-${getGeographiesList.data?.geographies?.length || 0}-${formData.geographies.length}`}
-            label="Locations / Geography"
-            requiredIndicator
+            label="Geography"
+            placeholder="Select geography..."
             selectedValue={formData.geographies || []}
             onChange={(value) => {
               const next = toSelectOptions(value);
@@ -695,65 +748,41 @@ export default function AIModelDetailsPage() {
               handleSave({ ...formData, geographies: next });
             }}
           />
-        </FormLayout.Group>
-      </FormLayout>
+        </div>
+      </SectionCard>
 
-      {/* Usage License & Access Type - side by side */}
-      <FormLayout>
-        <FormLayout.Group>
-          <Select
-            name="usageLicense"
-            label="Usage License"
-            options={licenseOptions}
-            value={formData.usageLicense}
-            onChange={(value) => {
-              handleInputChange('usageLicense', value);
-              handleSave({ ...formData, usageLicense: value });
-            }}
+      <SectionCard
+        title="Additional Information"
+        description="Add a website and the license that applies to this model."
+      >
+        <div className="flex flex-col gap-5">
+          <TextField
+            name="modelWebsite"
+            label="Model Website"
+            value={formData.modelWebsite}
+            onChange={(value) => handleInputChange('modelWebsite', value)}
+            onBlur={handleWebsiteBlur}
+            placeholder="https://example.org/model"
+            helpText="Add the model's official website or documentation page."
           />
-          <Labelled
-            id="accessType"
-            label="Select Access Type"
-            requiredIndicator
-            error={
-              formData.accessType !== 'open'
-                ? 'Open access is required for all models'
-                : undefined
-            }
-          >
-            <div className="flex gap-6">
-              <Checkbox
-                name="accessType"
-                checked={formData.accessType === 'open'}
-                onChange={() => {
-                  handleInputChange('accessType', 'open');
-                  handleSave({ ...formData, accessType: 'open' });
-                }}
-                required
-              >
-                <div className="flex flex-col gap-1">
-                  <Text>Open Access</Text>
-                  <Text>Model can be viewed and used by everyone</Text>
-                </div>
-              </Checkbox>
-              <Checkbox
-                name="isRestricted"
-                checked={false}
-                defaultChecked={false}
-                disabled
-              >
-                <div className="flex flex-col gap-1" title="Coming Soon">
-                  <Text className="text-textDisabled">Restricted Access</Text>
-                  <Text className="text-iconDisabled">
-                    Users would require to request access to the model.
-                    Recommended for sensitive models.
-                  </Text>
-                </div>
-              </Checkbox>
-            </div>
-          </Labelled>
-        </FormLayout.Group>
-      </FormLayout>
+          <div id="usage-license">
+            <Select
+              name="usageLicense"
+              label="Usage License"
+              required
+              requiredIndicator
+              options={licenseOptions}
+              value={formData.usageLicense}
+              error={licenseError}
+              helpText="Use suggested default — CC BY 4.0"
+              onChange={(value) => {
+                handleInputChange('usageLicense', value);
+                handleSave({ ...formData, usageLicense: value });
+              }}
+            />
+          </div>
+        </div>
+      </SectionCard>
     </div>
   );
 }

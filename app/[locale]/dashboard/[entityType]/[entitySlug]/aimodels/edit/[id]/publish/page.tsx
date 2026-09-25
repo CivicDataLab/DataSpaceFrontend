@@ -3,27 +3,27 @@
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { AiModelStatus, UpdateAiModelInput } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-  Button,
-  Icon,
-  Spinner,
-  Table,
-  Tag,
-  Text,
-  toast,
-} from 'opub-ui';
+  IconArrowRight,
+  IconCheck,
+  IconCircleCheckFilled,
+  IconPencil,
+  IconSquareRoundedCheckFilled,
+} from '@tabler/icons-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { TriangleAlert } from 'lucide-react';
+import { Button, SectionCard, Spinner, Tag, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { Icons } from '@/components/icons';
-import { RichTextRenderer } from '@/components/RichTextRenderer';
+import {
+  languageList,
+  metadataString,
+  modelInfoIssues,
+  plainText,
+} from '../../aimodel-summary';
 import { useEditStatus } from '../../context';
 
-const FetchAIModelForPublish = graphql(`
+export const FetchAIModelForPublish = graphql(`
   query AIModelForPublish($filters: AIModelFilter) {
     aiModels(filters: $filters) {
       id
@@ -150,6 +150,7 @@ export default function PublishPage() {
   }>();
   const router = useRouter();
   const { setStatus } = useEditStatus();
+  const stepBase = `/dashboard/${params.entityType}/${params.entitySlug}/aimodels/edit/${params.id}`;
 
   const { data, isLoading, refetch } = useQuery(
     [
@@ -178,13 +179,15 @@ export default function PublishPage() {
 
   const model = data?.aiModels?.[0];
   const versions = model?.versions || [];
-  const primaryVersion = versions.find((v) => v.isLatest) || versions[0];
-  const hasProviders = versions.some((v) => v.providers?.length > 0);
-  const PUBLISH_SUCCESS_TOAST_ID = 'publish-ai-model-success';
-  const PUBLISH_ERROR_TOAST_ID = 'publish-ai-model-error';
+  const primaryVersion =
+    versions.find((version) => version.isLatest) || versions[0];
+  const accessReady = (primaryVersion?.providers?.length ?? 0) > 0;
+  const isPublished = model?.status === 'ACTIVE' && model?.isPublic;
 
   const { mutate, isLoading: updateLoading } = useMutation(
-    (mutationData: Pick<UpdateAiModelInput, 'status' | 'isPublic' | 'isActive'>) =>
+    (
+      mutationData: Pick<UpdateAiModelInput, 'status' | 'isPublic' | 'isActive'>
+    ) =>
       GraphQL(
         UpdateAIModelStatusMutation,
         {
@@ -214,9 +217,7 @@ export default function PublishPage() {
             isPublished
               ? 'Model unpublished successfully'
               : 'Model published successfully',
-            {
-              id: PUBLISH_SUCCESS_TOAST_ID,
-            }
+            { id: 'publish-ai-model-success' }
           );
           setStatus('saved');
           refetch();
@@ -226,337 +227,270 @@ export default function PublishPage() {
         },
         onError: (error: unknown) => {
           const errorMessage =
-            typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' && error.message.trim()
+            typeof error === 'object' &&
+            error !== null &&
+            'message' in error &&
+            typeof error.message === 'string' &&
+            error.message.trim()
               ? error.message.trim()
               : isPublished
                 ? 'Unable to unpublish model right now. Please try again.'
                 : 'Unable to publish model right now. Please try again.';
-          toast(
-            isPublished ? `Error: ${errorMessage}` : `Error: ${errorMessage}`,
-            { id: PUBLISH_ERROR_TOAST_ID }
-          );
+          toast(`Error: ${errorMessage}`, { id: 'publish-ai-model-error' });
           setStatus('unsaved');
         },
       }
     );
   };
 
-  // Validation checks for each section
-  const metadataErrors = [];
-  if (!model?.description) metadataErrors.push('Description');
-  if (!model?.tags?.length) metadataErrors.push('Tags');
-  if (!model?.sectors?.length) metadataErrors.push('Sectors');
-  if (!model?.geographies?.length) metadataErrors.push('Geographies');
+  if (isLoading) {
+    return (
+      <div className="flex h-48 items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
-  // Check required fields from metadata
-  const metadata = model?.metadata || {};
-  if (!metadata.targetUsers) metadataErrors.push('Target Users');
-  if (!metadata.intendedUse) metadataErrors.push('Intended Use');
-  if (!metadata.modelWebsite) metadataErrors.push('Model Website');
-  if (!model?.maxTokens) metadataErrors.push('Maximum Tokens');
-  if (!model?.supportedLanguages?.length)
-    metadataErrors.push('Supported Languages');
-  if (!model?.modelType) metadataErrors.push('Model Type');
+  const infoIssues = model
+    ? modelInfoIssues(model).map((issue) => ({
+        ...issue,
+        group: 'MODEL INFORMATION',
+        href: `${stepBase}/${issue.href}`,
+      }))
+    : [];
+  const issues = [...infoIssues];
+  if (versions.length === 0) {
+    issues.push({
+      id: 'versions',
+      group: 'VERSIONS',
+      message: 'Add a version.',
+      href: `${stepBase}/versions`,
+    });
+  } else if (!accessReady) {
+    issues.push({
+      id: 'access-methods',
+      group: 'ACCESS METHODS',
+      message: 'Add at least one access method to the Primary version.',
+      href: `${stepBase}/versions#access-methods`,
+    });
+  }
 
-  const versionErrors = [];
-  if (versions.length === 0) versionErrors.push('No versions created');
-  if (!primaryVersion) versionErrors.push('No primary version selected');
-  if (!hasProviders) versionErrors.push('No access methods configured');
+  const ready = issues.length === 0;
+  const metadata = model?.metadata;
+  const previewHref = `/aimodels/${params.id}`;
+  const languageLabels = languageList(model?.supportedLanguages).join(', ');
+  const sectorLabels = model?.sectors?.map((sector) => sector.name).join(', ');
+  const tagLabels = model?.tags?.map((tag) => tag.value).join(', ');
 
-  const Summary = [
-    {
-      name: 'Metadata',
-      error:
-        metadataErrors.length > 0
-          ? `${metadataErrors.join(', ')} missing. Please add to continue.`
-          : '',
-    },
-    {
-      name: 'Versions & Access Methods',
-      error:
-        versionErrors.length > 0
-          ? `${versionErrors.join('. ')}. Please configure to continue.`
-          : '',
-    },
-  ];
-
-  const isPublishDisabled =
-    metadataErrors.length > 0 || versionErrors.length > 0;
-
-  // Table data for versions
-  const versionColumns = [
-    { accessorKey: 'version', header: 'Version' },
-    { accessorKey: 'lifecycleStage', header: 'Lifecycle Stage' },
-    { accessorKey: 'providers', header: 'Access Methods' },
-    { accessorKey: 'primary', header: 'Primary' },
-  ];
-
-  const versionRows = versions.map((v) => ({
-    version: v.version,
-    lifecycleStage: lifecycleLabels[v.lifecycleStage] || v.lifecycleStage,
-    providers: v.providers?.length
-      ? v.providers
-          .map((p) => providerLabels[p.provider] || p.provider)
-          .join(', ')
-      : 'None',
-    primary: v.isLatest ? 'Yes' : 'No',
-  }));
-
-  // Primary metadata details
-  const PrimaryMetadata = [
-    {
-      label: 'Model Name',
-      value: model?.displayName || model?.name || '',
-    },
-    {
-      label: 'Model Type',
-      value:
-        (model?.modelType && modelTypeLabels[model.modelType]) ||
+  const summaryRows = [
+    ['MODEL NAME', model?.displayName || model?.name || ''],
+    [
+      'MODEL TYPE',
+      (model?.modelType && modelTypeLabels[model.modelType]) ||
         model?.modelType ||
         '',
-    },
-    {
-      label: 'Domain',
-      value: model?.domain ? domainLabels[model.domain] || model.domain : '',
-    },
-    {
-      label: 'Target Users',
-      value: metadata?.targetUsers || '',
-    },
-    {
-      label: 'Intended Use',
-      value: metadata?.intendedUse || '',
-    },
-    {
-      label: 'Model Website',
-      value: metadata?.modelWebsite || '',
-    },
-    {
-      label: 'Maximum Tokens',
-      value: model?.maxTokens ? model.maxTokens.toString() : '',
-    },
-    {
-      label: 'Supported Languages',
-      value: model?.supportedLanguages?.length
-        ? model.supportedLanguages.join(', ')
-        : '',
-    },
+    ],
+    ['DESCRIPTION', plainText(model?.description)],
+    ['TARGET USERS', metadataString(metadata, 'targetUsers')],
+    ['INTENDED USE', metadataString(metadata, 'intendedUse')],
+    ['DOMAIN', model?.domain ? domainLabels[model.domain] || model.domain : ''],
+    ['SECTORS', sectorLabels || ''],
+    ['TAGS', tagLabels || ''],
+    ['LANGUAGE SUPPORT', languageLabels],
+    ['MODEL WEBSITE', metadataString(metadata, 'modelWebsite')],
+    ['USAGE LICENSE', metadataString(metadata, 'usageLicense')],
   ];
 
-  const isPublished = model?.status === 'ACTIVE' && model?.isPublic;
-
   return (
-    <>
-      <div className="w-full py-6">
-        <div className="flex items-center justify-center gap-2 p-4">
-          <Text variant="bodyMd" className="font-semi-bold">
-            REVIEW AI MODEL DETAILS
-          </Text>
-          :
-          <Text>
-            Please check all the model details below before publishing
+    <div className="flex flex-col gap-6 px-1">
+      <div>
+        <Text variant="headingLg" fontWeight="semibold" color="highlight">
+          Review & Publish
+        </Text>
+        <div className="mt-1">
+          <Text color="subdued">
+            Check your information before making this content available
+            publicly.
           </Text>
         </div>
-        <div className="flex flex-col gap-10 pt-6">
-          {isLoading || updateLoading ? (
-            <div className="mt-8 flex justify-center">
-              <Spinner />
-            </div>
+      </div>
+
+      <div className="rounded-3 border-1 border-solid border-borderSubdued px-4 py-4">
+        <Text
+          fontWeight="semibold"
+          {...(ready ? { color: 'metadata' } : { color: 'subdued' })}
+        >
+          {ready ? 'Ready to publish' : 'Needs attention'}
+        </Text>
+        <div className="mt-1 flex flex-col">
+          {issues.length === 0 ? (
+            <Text variant="bodySm" color="subdued">
+              Required model information and a primary access method are in
+              place.
+            </Text>
           ) : (
-            <>
-              {Summary.map((item, index) => (
-                <Accordion type="single" collapsible key={index}>
-                  <AccordionItem
-                    value={`item-${index}`}
-                    className="border-none"
-                  >
-                    <AccordionTrigger className="flex w-full items-center gap-2 rounded-1 bg-baseBlueSolid3 p-4 hover:no-underline">
-                      <div className="flex flex-wrap items-center justify-start gap-2">
-                        <Text className="w-48 text-justify font-semi-bold">
-                          {item.name}
-                        </Text>
-                        {item.error !== '' && (
-                          <div className="flex items-center gap-2">
-                            <Icon
-                              source={Icons.alert}
-                              color="critical"
-                              size={24}
-                            />
-                            <Text variant="bodyMd" className="text-justify">
-                              {item.error}
-                            </Text>
-                          </div>
-                        )}
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent
-                      className="flex w-full flex-col"
-                      style={{
-                        backgroundColor: 'var(--base-pure-white)',
-                        outline: '1px solid var(--base-pure-white)',
-                      }}
-                    >
-                      <div className="py-4">
-                        {item.name === 'Metadata' ? (
-                          <div className="flex flex-col gap-4 px-8 py-4">
-                            {PrimaryMetadata.map(
-                              (meta, idx) =>
-                                meta.value && (
-                                  <div
-                                    className="flex flex-wrap gap-2"
-                                    key={idx}
-                                  >
-                                    <Text
-                                      className="lg:basis-1/6"
-                                      variant="bodyMd"
-                                    >
-                                      {meta.label}:
-                                    </Text>
-                                    <Text
-                                      variant="bodyMd"
-                                      className="lg:basis-4/5"
-                                    >
-                                      {meta.value}
-                                    </Text>
-                                  </div>
-                                )
-                            )}
-
-                            {model?.description && (
-                              <div className="flex flex-wrap gap-2">
-                                <Text className="lg:basis-1/6" variant="bodyMd">
-                                  Description:
-                                </Text>
-
-                                <Text variant="bodyMd" className="lg:basis-4/5">
-                                  <RichTextRenderer
-                                    content={model.description}
-                                  />
-                                </Text>
-                              </div>
-                            )}
-
-                            <div className="flex flex-wrap gap-2">
-                              <Text className="lg:basis-1/6" variant="bodyMd">
-                                Sectors:
-                              </Text>
-                              <div className="flex gap-2 lg:basis-4/5">
-                                {(model?.sectors?.length ?? 0) > 0 ? (
-                                  model?.sectors?.map((s, idx: number) => (
-                                    <Tag key={idx}>{s.name}</Tag>
-                                  ))
-                                ) : (
-                                  <Text variant="bodyMd" color="subdued">
-                                    None
-                                  </Text>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-2">
-                              <Text className="lg:basis-1/6" variant="bodyMd">
-                                Tags:
-                              </Text>
-                              <div className="flex gap-2 lg:basis-4/5">
-                                {(model?.tags?.length ?? 0) > 0 ? (
-                                  model?.tags?.map((t, idx: number) => (
-                                    <Tag key={idx}>{t.value}</Tag>
-                                  ))
-                                ) : (
-                                  <Text variant="bodyMd" color="subdued">
-                                    None
-                                  </Text>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-2">
-                              <Text className="lg:basis-1/6" variant="bodyMd">
-                                Geographies:
-                              </Text>
-                              <div className="flex gap-2 lg:basis-4/5">
-                                {(model?.geographies?.length ?? 0) > 0 ? (
-                                  model?.geographies?.map(
-                                    (g, idx: number) => (
-                                      <Tag key={idx}>{g.name}</Tag>
-                                    )
-                                  )
-                                ) : (
-                                  <Text variant="bodyMd" color="subdued">
-                                    None
-                                  </Text>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          // Versions & Access Methods
-                          <div className="px-4">
-                            {versions.length > 0 ? (
-                              <Table
-                                columns={versionColumns}
-                                rows={versionRows}
-                                hideFooter
-                              />
-                            ) : (
-                              <Text
-                                variant="bodyMd"
-                                color="subdued"
-                                className="px-4 py-2"
-                              >
-                                No versions found
-                              </Text>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              ))}
-
-              {/* Publication Status */}
-              {isPublished ? (
-                <div className="border bg-tertiaryAccent/10 rounded-1 border-tertiaryAccent p-4">
-                  <div className="flex items-center gap-2">
-                    <Icon source={Icons.check} color="success" size={24} />
-                    <Text variant="headingSm" className="text-primaryText">
-                      Model is Published and Active
-                    </Text>
-                  </div>
-                  <Text variant="bodySm" className="text-primaryText/80 mt-2">
-                    Your AI model is now publicly accessible and can be
-                    discovered by other users.
-                  </Text>
-                </div>
-              ) : (
-                <div className="border bg-secondaryOrange/10 rounded-1 border-secondaryOrange p-4">
-                  <div className="flex items-center gap-2">
-                    <Icon source={Icons.alert} color="warning" size={24} />
-                    <Text variant="headingSm" className="text-secondaryText">
-                      Model is not published
-                    </Text>
-                  </div>
-                  <Text variant="bodySm" className="text-secondaryText/80 mt-2">
-                    {!isPublishDisabled
-                      ? 'All checklist items are complete. You can now publish your model.'
-                      : 'Complete all required fields before publishing your model.'}
-                  </Text>
-                </div>
-              )}
-
-              <Button
-                className="m-auto w-fit"
-                onClick={handlePublish}
-                disabled={isPublishDisabled}
-                loading={updateLoading}
+            issues.map((issue) => (
+              <div
+                key={issue.id}
+                className="last:border-b-0 flex items-center justify-between gap-3 border-b-1 border-solid border-borderSubdued py-3"
               >
-                {isPublished ? 'Unpublish' : 'Publish'}
-              </Button>
-            </>
+                <div className="flex min-w-0 items-start gap-2">
+                  <TriangleAlert size={16} className="mt-[6px]" />
+                  <div>
+                    <Text variant="bodySm" color="subdued">
+                      {issue.group}
+                    </Text>
+                    <br />
+                    <Text>{issue.message}</Text>
+                  </div>
+                </div>
+
+                <Button
+                  kind="neutral"
+                  size="slim"
+                  onClick={() => router.push(issue.href)}
+                  icon={<IconArrowRight size={16} />}
+                >
+                  Fix
+                </Button>
+              </div>
+            ))
           )}
         </div>
       </div>
-    </>
+
+      <SectionCard
+        title="Model Information"
+        expandable
+        defaultExpanded
+        actions={[
+          {
+            icon: IconPencil,
+            content: 'Edit Model Information',
+            onAction: () =>
+              router.push(
+                infoIssues[0]?.href || `${stepBase}/details#model-name`
+              ),
+          },
+        ]}
+      >
+        <div className="flex flex-col">
+          {summaryRows.map(([label, value]) => (
+            <div
+              key={label}
+              className="grid gap-2 border-b-1 border-solid border-borderSubdued py-3 md:grid-cols-[220px_1fr]"
+            >
+              <Text variant="bodySm" color="subdued">
+                {label}
+              </Text>
+              <Text>{value || '—'}</Text>
+            </div>
+          ))}
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Versions"
+        expandable
+        defaultExpanded
+        actions={[
+          {
+            icon: IconPencil,
+            content: 'Edit Versions',
+            onAction: () => router.push(`${stepBase}/versions`),
+          },
+        ]}
+      >
+        <div className="flex flex-col">
+          <div className="grid gap-2 border-b-1 border-solid border-borderSubdued py-3 md:grid-cols-[220px_1fr]">
+            <Text variant="bodySm" color="subdued">
+              VERSIONS CONFIGURED
+            </Text>
+            <Text>
+              {versions.length} version{versions.length === 1 ? '' : 's'}
+            </Text>
+          </div>
+          <div className="grid gap-2 border-b-1 border-solid border-borderSubdued py-3 md:grid-cols-[220px_1fr]">
+            <Text variant="bodySm" color="subdued">
+              PRIMARY VERSION
+            </Text>
+            <div className="flex items-center gap-2">
+              <Text>
+                {primaryVersion ? `Version ${primaryVersion.version}` : '—'}
+              </Text>
+              {primaryVersion ? <Tag>Primary</Tag> : null}
+            </div>
+          </div>
+          <div className="grid gap-2 py-3 md:grid-cols-[220px_1fr]">
+            <Text variant="bodySm" color="subdued">
+              LIFECYCLE STAGE
+            </Text>
+            <Text>
+              {primaryVersion
+                ? lifecycleLabels[primaryVersion.lifecycleStage] ||
+                  primaryVersion.lifecycleStage
+                : '—'}
+            </Text>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Access"
+        expandable
+        defaultExpanded
+        actions={[
+          {
+            icon: IconPencil,
+            content: 'Edit Access Methods',
+            onAction: () => router.push(`${stepBase}/versions#access-methods`),
+          },
+        ]}
+      >
+        {accessReady && primaryVersion ? (
+          <div className="flex flex-col gap-2">
+            {primaryVersion.providers?.map((provider) => (
+              <Text key={provider.id}>
+                {providerLabels[provider.provider] || provider.provider}
+              </Text>
+            ))}
+          </div>
+        ) : (
+          <Text color="subdued">
+            No access methods configured on the Primary version yet.
+          </Text>
+        )}
+      </SectionCard>
+
+      <div className="flex flex-col items-center gap-3 rounded-2 border-1 border-solid border-borderSubdued p-6 text-center">
+        <Text>
+          Open a full preview of this AI Model in a new tab, exactly as it will
+          appear once published.
+        </Text>
+        <Button kind="primary" url={previewHref} external>
+          Preview AI Model
+        </Button>
+        <Text variant="bodySm" color="subdued">
+          Publishing happens from inside the preview.
+        </Text>
+        <Button
+          kind="primary"
+          disabled={!isPublished && !ready}
+          loading={updateLoading}
+          onClick={handlePublish}
+        >
+          {isPublished ? 'Unpublish' : 'Publish AI Model'}
+        </Button>
+      </div>
+
+      <div>
+        <Button
+          kind="tertiary"
+          onClick={() => router.push(`${stepBase}/details`)}
+        >
+          Previous
+        </Button>
+      </div>
+    </div>
   );
 }

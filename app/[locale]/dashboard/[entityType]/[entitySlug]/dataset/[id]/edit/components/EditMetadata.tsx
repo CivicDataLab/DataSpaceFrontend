@@ -259,6 +259,11 @@ function optionValue(item: unknown): unknown {
   return item;
 }
 
+function isSelectionMissing(value: string | string[] | undefined) {
+  if (Array.isArray(value)) return value.length === 0;
+  return !value;
+}
+
 function asOptionItems(value: FormFieldValue | undefined): OptionItem[] {
   if (!Array.isArray(value)) {
     return [];
@@ -277,7 +282,15 @@ function SyncStepErrors({
   errors,
 }: {
   license: string;
-  errors: { sectors?: string; tags?: string; license?: string };
+  errors: {
+    sectors?: string;
+    tags?: string;
+    license?: string;
+    taskType?: string;
+    domain?: string;
+    targetLanguages?: string;
+    targetModelTypes?: string;
+  };
 }) {
   const { setError, clearErrors, setValue } = useFormContext();
 
@@ -308,6 +321,44 @@ function SyncStepErrors({
       clearErrors('license');
     }
   }, [errors.license, setError, clearErrors]);
+
+  useEffect(() => {
+    if (errors.taskType) {
+      setError('taskType', { type: 'manual', message: errors.taskType });
+    } else {
+      clearErrors('taskType');
+    }
+  }, [errors.taskType, setError, clearErrors]);
+
+  useEffect(() => {
+    if (errors.domain) {
+      setError('domain', { type: 'manual', message: errors.domain });
+    } else {
+      clearErrors('domain');
+    }
+  }, [errors.domain, setError, clearErrors]);
+
+  useEffect(() => {
+    if (errors.targetLanguages) {
+      setError('targetLanguages', {
+        type: 'manual',
+        message: errors.targetLanguages,
+      });
+    } else {
+      clearErrors('targetLanguages');
+    }
+  }, [errors.targetLanguages, setError, clearErrors]);
+
+  useEffect(() => {
+    if (errors.targetModelTypes) {
+      setError('targetModelTypes', {
+        type: 'manual',
+        message: errors.targetModelTypes,
+      });
+    } else {
+      clearErrors('targetModelTypes');
+    }
+  }, [errors.targetModelTypes, setError, clearErrors]);
 
   return null;
 }
@@ -925,13 +976,23 @@ export function EditMetadata({ id }: { id: string }) {
     setStatus,
   ]);
 
+  const isPromptDataset =
+    getDatasetMetadata.data?.datasets?.[0]?.datasetType === 'PROMPT';
+  const promptMetadataComplete =
+    !isPromptDataset ||
+    (!isSelectionMissing(promptMetadataState.taskType) &&
+      !isSelectionMissing(promptMetadataState.domain) &&
+      !isSelectionMissing(promptMetadataState.targetLanguages) &&
+      !isSelectionMissing(promptMetadataState.targetModelTypes));
+
   useEffect(() => {
     setMetadataCompleted(
       Boolean(formData.title?.trim()) &&
         !isRichTextEmpty(formData.description) &&
         asOptionItems(formData.sectors).length > 0 &&
         asOptionItems(formData.tags).length > 0 &&
-        Boolean(formData.license)
+        Boolean(formData.license) &&
+        promptMetadataComplete
     );
   }, [
     formData.title,
@@ -939,6 +1000,7 @@ export function EditMetadata({ id }: { id: string }) {
     formData.sectors,
     formData.tags,
     formData.license,
+    promptMetadataComplete,
     setMetadataCompleted,
   ]);
 
@@ -993,6 +1055,31 @@ export function EditMetadata({ id }: { id: string }) {
   const licenseError =
     stepShowErrors && !formData.license ? 'License is required' : undefined;
 
+  const taskTypeError =
+    stepShowErrors &&
+    isPromptDataset &&
+    isSelectionMissing(promptMetadataState.taskType)
+      ? 'Task Type is required'
+      : undefined;
+  const domainError =
+    stepShowErrors &&
+    isPromptDataset &&
+    isSelectionMissing(promptMetadataState.domain)
+      ? 'Domain is required'
+      : undefined;
+  const targetLanguagesError =
+    stepShowErrors &&
+    isPromptDataset &&
+    isSelectionMissing(promptMetadataState.targetLanguages)
+      ? 'Target Languages are required'
+      : undefined;
+  const targetModelTypesError =
+    stepShowErrors &&
+    isPromptDataset &&
+    isSelectionMissing(promptMetadataState.targetModelTypes)
+      ? 'Target Model Types are required'
+      : undefined;
+
   return (
     <>
       {metadataReady ? (
@@ -1003,11 +1090,18 @@ export function EditMetadata({ id }: { id: string }) {
               sectors: sectorsError,
               tags: tagsError,
               license: licenseError,
+              taskType: taskTypeError,
+              domain: domainError,
+              targetLanguages: targetLanguagesError,
+              targetModelTypes: targetModelTypesError,
             }}
           />
           <div className="flex flex-col gap-4">
             <div id="basic-information">
-              <SectionCard title="Basic Information">
+              <SectionCard
+                title="Basic Information"
+                description="Name and describe this content so people can find and understand it."
+              >
                 <div className="flex flex-col gap-4">
                   <TextField
                     name="title"
@@ -1041,7 +1135,10 @@ export function EditMetadata({ id }: { id: string }) {
               </SectionCard>
             </div>
 
-            <SectionCard title="Classification">
+            <SectionCard
+              title="Classification"
+              description="Add sectors and topics to help people discover this content."
+            >
               <div className="flex flex-col gap-4">
                 <Combobox
                   displaySelected
@@ -1190,7 +1287,10 @@ export function EditMetadata({ id }: { id: string }) {
                     <Combobox
                       name="taskType"
                       label="Task Type"
+                      required
+                      requiredIndicator
                       displaySelected
+                      error={taskTypeError}
                       list={enumValues(PromptTaskType).map((name) => ({
                         label: name
                           .replace(/_/g, ' ')
@@ -1221,7 +1321,10 @@ export function EditMetadata({ id }: { id: string }) {
                     <Combobox
                       name="domain"
                       label="Domain"
+                      required
+                      requiredIndicator
                       displaySelected
+                      error={domainError}
                       list={enumValues(PromptDomain).map((name) => ({
                         label: name
                           .replace(/_/g, ' ')
@@ -1252,7 +1355,10 @@ export function EditMetadata({ id }: { id: string }) {
                     <Combobox
                       name="targetLanguages"
                       label="Target Languages"
+                      requiredIndicator
                       displaySelected
+                      required
+                      error={targetLanguagesError}
                       creatable
                       list={enumValues(TargetLanguage).map((name) => ({
                         label: name
@@ -1280,8 +1386,11 @@ export function EditMetadata({ id }: { id: string }) {
                     <Combobox
                       name="targetModelTypes"
                       label="Target Model Types"
+                      requiredIndicator
                       displaySelected
+                      required
                       creatable
+                      error={targetModelTypesError}
                       list={enumValues(TargetModelType).map((name) => ({
                         label: name
                           .replace(/_/g, ' ')

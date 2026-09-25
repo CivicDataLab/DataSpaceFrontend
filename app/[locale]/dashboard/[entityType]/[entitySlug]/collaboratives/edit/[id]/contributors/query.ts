@@ -7,6 +7,9 @@ export const FetchUsers = graphql(`
         id
         fullName
         username
+        profilePicture {
+          url
+        }
       }
     }
   `);

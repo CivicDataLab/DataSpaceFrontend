@@ -88,6 +88,7 @@ export function EditLayout({ children, params }: LayoutProps) {
   const pathItem = layoutList.find((item) => pathName.indexOf(item) >= 0);
   const currentStep = pathItem ? STEP_BY_PATH[pathItem] : 1;
   const dataset = getDatasetTitleRes.data?.datasets[0];
+  const completionReady = getDatasetTitleRes.isFetched;
   const isPromptDataset = dataset?.datasetType === 'PROMPT';
 
   const {
@@ -132,7 +133,7 @@ export function EditLayout({ children, params }: LayoutProps) {
         ? 'Upload prompt files'
         : 'Upload dataset files',
       icon: IconCloudUpload,
-      isCompleted: filesCompleted,
+      isCompleted: filesCompleted || (!completionReady && currentStep > 1),
       content: stepContent(currentStep === 1, children),
     },
     {
@@ -140,7 +141,8 @@ export function EditLayout({ children, params }: LayoutProps) {
       label: 'Metadata',
       description: 'Name, description & settings',
       icon: IconFileDescription,
-      isCompleted: metadataCompleted,
+      isCompleted:
+        metadataCompleted || (!completionReady && currentStep > 2),
       content: stepContent(currentStep === 2, children),
     },
     {
@@ -155,13 +157,13 @@ export function EditLayout({ children, params }: LayoutProps) {
 
   return (
     <div className="mb-10 flex flex-col rounded-4 border-1 border-solid border-baseGraySlateSolid6 bg-surfaceDefault pb-6 lg:mt-2">
-      {getDatasetTitleRes.isLoading ? null : (
-        <WizardHeader
-          title={dataset?.title ?? ''}
-          goBackURL={goBackURL}
-          status={status}
-        />
-      )}
+      <WizardHeader
+        title={
+          getDatasetTitleRes.isFetched ? (dataset?.title ?? '') : '\u00a0'
+        }
+        goBackURL={goBackURL}
+        status={status}
+      />
       <Stepper
         className={styles.datasetStepper}
         steps={steps}

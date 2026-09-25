@@ -9,7 +9,7 @@ import { GraphQL } from '@/lib/api';
 import { ActionBar } from './components/action-bar';
 import { Content } from './components/content';
 
-const createDatasetMutationDoc = graphql(`
+export const createDatasetMutationDoc = graphql(`
   mutation GenerateDatasetname {
     addDataset {
       success

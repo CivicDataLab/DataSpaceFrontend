@@ -1,4 +1,5 @@
 'use client';
+
 import { createContext, useContext, useRef, useState } from 'react';
 
 type StatusType = 'loading' | 'success';

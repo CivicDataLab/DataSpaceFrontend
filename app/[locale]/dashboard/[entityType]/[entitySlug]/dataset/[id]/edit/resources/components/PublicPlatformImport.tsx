@@ -48,11 +48,26 @@ function SyncPlatformError({ error }: { error?: string }) {
   return null;
 }
 
-export function PublicPlatformImport() {
+export interface PlatformImportDraft {
+  platform: string;
+  datasetUrl: string;
+}
+
+interface PublicPlatformImportProps {
+  onDraftChange?: (draft: PlatformImportDraft) => void;
+}
+
+export function PublicPlatformImport({
+  onDraftChange,
+}: PublicPlatformImportProps) {
   const { stepShowErrors } = useDatasetEditStatus();
   const [platform, setPlatform] = useState('');
   const [datasetUrl, setDatasetUrl] = useState('');
   const [urlBlurred, setUrlBlurred] = useState(false);
+
+  useEffect(() => {
+    onDraftChange?.({ platform, datasetUrl });
+  }, [platform, datasetUrl, onDraftChange]);
 
   const showUrlField = platform.length > 0;
   const showUrlError =
