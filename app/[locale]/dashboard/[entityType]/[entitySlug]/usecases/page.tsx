@@ -48,7 +48,7 @@ const deleteUseCase = graphql(`
   }
 `);
 
-const AddUseCase = graphql(`
+export const AddUseCase = graphql(`
   mutation Addusecase {
     addUseCase {
       __typename
@@ -144,7 +144,7 @@ export default function DatasetPage() {
           const created = response.addUseCase;
           const createdId = 'id' in created ? created.id : undefined;
           router.push(
-            `/dashboard/${entityType}/${entitySlug}/usecases/edit/${createdId}/details`
+            `/dashboard/${entityType}/${entitySlug}/usecases/edit/${createdId}/builder`
           );
           AllUseCases.refetch();
         }
@@ -207,7 +207,7 @@ export default function DatasetPage() {
           <LinkButton
             kind="tertiary"
             size="medium"
-            href={`/dashboard/${entityType}/${entitySlug}/usecases/edit/${row.original.id}/details`}
+            href={`/dashboard/${entityType}/${entitySlug}/usecases/edit/${row.original.id}`}
           >
             <span className="line-clamp-1 max-w-[280px]">
               {row.original.title}

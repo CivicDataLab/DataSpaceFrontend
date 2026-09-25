@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { InlineMessage } from 'opub-ui';
 
 import 'react-quill-new/dist/quill.snow.css';
 
@@ -12,6 +13,7 @@ interface RichTextEditorProps {
   placeholder?: string;
   label?: string;
   helpText?: string;
+  error?: string;
   readOnly?: boolean;
   showPreview?: boolean;
 }
@@ -23,6 +25,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   placeholder = 'Enter description...',
   label,
   helpText,
+  error,
   readOnly = false,
 }) => {
   const [isPreview, setIsPreview] = useState(false);
@@ -89,7 +92,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     'underline',
     'strike',
     'list',
-    'bullet',
     'indent',
     'link',
     'image',
@@ -99,7 +101,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   return (
     <div className="w-full">
       {label && (
-        <label className="text-sm text-gray-700 mb-2 block font-medium">
+        <label className="text-sm text-gray-700 font-medium mb-2 block">
           {label}
         </label>
       )}
@@ -111,7 +113,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <button
               type="button"
               onClick={() => setIsPreview(false)}
-              className="rounded text-sm text-gray-700 hover:bg-gray-200 flex items-center gap-1 px-2 py-1 font-medium"
+              className="rounded text-sm text-gray-700 hover:bg-gray-200 font-medium flex items-center gap-1 px-2 py-1"
             >
               <svg
                 className="h-4 w-4"
@@ -141,7 +143,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </div>
       ) : (
         <div
-          className={`rich-text-editor bhashini-skip-translation ${readOnly ? 'read-only' : ''}`}
+          className={`rich-text-editor bhashini-skip-translation ${readOnly ? 'read-only' : ''} ${error ? 'has-error' : ''}`}
         >
           <ReactQuill
             theme="snow"
@@ -164,6 +166,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </div>
       )}
 
+      {error ? (
+        <InlineMessage message={error} fieldID="rich-text-description" />
+      ) : null}
       {helpText && <p className="text-sm text-gray-500 mt-1">{helpText}</p>}
       <style jsx global>{`
         .rich-text-editor .quill {
@@ -176,6 +181,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           font-size: 14px;
           border-bottom-left-radius: 4px;
           border-bottom-right-radius: 4px;
+        }
+
+        .rich-text-editor.has-error .ql-toolbar,
+        .rich-text-editor.has-error .ql-container {
+          border-color: var(--border-critical-default);
         }
 
         .rich-text-editor .ql-toolbar {

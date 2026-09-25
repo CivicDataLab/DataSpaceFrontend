@@ -149,7 +149,7 @@ export default function CollaborativePage() {
           const created = response.addCollaborative;
           const createdId = 'id' in created ? created.id : undefined;
           router.push(
-            `/dashboard/${entityType}/${entitySlug}/collaboratives/edit/${createdId}/details`
+            `/dashboard/${entityType}/${entitySlug}/collaboratives/edit/${createdId}`
           );
           AllCollaboratives.refetch();
         }
@@ -212,7 +212,7 @@ export default function CollaborativePage() {
           <LinkButton
             kind="tertiary"
             size="medium"
-            href={`/dashboard/${entityType}/${entitySlug}/collaboratives/edit/${row.original.id}/details`}
+            href={`/dashboard/${entityType}/${entitySlug}/collaboratives/edit/${row.original.id}`}
           >
             <span className="line-clamp-1 max-w-[280px]">
               {row.original.title}

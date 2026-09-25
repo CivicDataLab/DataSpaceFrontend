@@ -54,3 +54,56 @@ export const updateResourceList = graphql(`
     deleteFileResource(resourceId: $resourceId)
   }
 `);
+
+export const resourceByIdDoc = graphql(`
+  query resourceById($resourceId: UUID!) {
+    resourceById(resourceId: $resourceId) {
+      id
+      dataset {
+        pk
+      }
+      previewData {
+        columns
+        rows
+      }
+      previewDetails {
+        endEntry
+        isAllEntries
+        startEntry
+      }
+      previewEnabled
+      schema {
+        id
+        fieldName
+        format
+        description
+      }
+      type
+      name
+      description
+      created
+      fileDetails {
+        id
+        resource {
+          pk
+        }
+        format
+        file {
+          name
+          path
+          url
+        }
+        size
+        created
+        modified
+      }
+      promptDetails {
+        promptFormat
+        hasSystemPrompt
+        hasExampleResponses
+        avgPromptLength
+        promptCount
+      }
+    }
+  }
+`);

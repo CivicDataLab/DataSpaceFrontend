@@ -7,6 +7,9 @@ export const FetchUsers = graphql(`
         id
         fullName
         username
+        profilePicture {
+          url
+        }
       }
     }
   `);
@@ -176,10 +179,11 @@ export const RemovePartners = graphql(`
 
 
 export const OrgList = graphql(`
-  query allOrgs {
+  query UseCaseWizardOrgs {
     allOrganizations {
       id
       name
+      organizationTypes
       logo {
         path
         url

@@ -18,6 +18,7 @@ export const getResourceDoc = graphql(`
           resource {
             pk
           }
+          format
           file {
             name
             path

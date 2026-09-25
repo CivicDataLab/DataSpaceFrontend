@@ -191,7 +191,7 @@ export default function AIModelsPage({
           id: AIMODELS_ACTION_TOAST_ID,
         });
         router.push(
-          `/dashboard/${entityType}/${entitySlug}/aimodels/edit/${newModelId}/details`
+          `/dashboard/${entityType}/${entitySlug}/aimodels/edit/${newModelId}/versions`
         );
       },
       onError: (err: unknown) => {
@@ -214,7 +214,7 @@ export default function AIModelsPage({
         <LinkButton
           kind="tertiary"
           size="medium"
-          href={`/dashboard/${entityType}/${entitySlug}/aimodels/edit/${row.original.id}/details?tab=${navigationTab ?? 'draft'}`}
+          href={`/dashboard/${entityType}/${entitySlug}/aimodels/edit/${row.original.id}?tab=${navigationTab ?? 'draft'}`}
         >
           <span className="line-clamp-1 max-w-[280px]">
             {row.original.displayName}

@@ -121,7 +121,7 @@ export const Content = () => {
                     <Text
                       color="onBgDefault"
                       fontWeight="semibold"
-                      className="whitespace-nowrap text-xs uppercase text-textSurfaceStats"
+                      className="text-xs whitespace-nowrap uppercase text-textSurfaceStats"
                     >
                       {item.label}
                     </Text>

@@ -1,18 +1,35 @@
 'use client';
+
 import { createContext, useContext, useRef, useState } from 'react';
 
 type StatusType = 'loading' | 'success';
 type BeforeNavigateHandler = (() => Promise<void> | void) | null;
 
-const DatasetEditStatusContext = createContext<{
+interface DatasetEditStatusContextValue {
   status: StatusType;
   setStatus: (status: StatusType) => void;
   registerBeforeNavigateHandler: (handler: BeforeNavigateHandler) => void;
   runBeforeNavigateHandler: () => Promise<void>;
-} | null>(null);
+  filesCompleted: boolean;
+  setFilesCompleted: (completed: boolean) => void;
+  metadataCompleted: boolean;
+  setMetadataCompleted: (completed: boolean) => void;
+  stepShowErrors: boolean;
+  setStepShowErrors: (show: boolean) => void;
+}
 
-export const DatasetEditStatusProvider = ({ children }: { children: React.ReactNode }) => {
+const DatasetEditStatusContext =
+  createContext<DatasetEditStatusContextValue | null>(null);
+
+export const DatasetEditStatusProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const [status, setStatus] = useState<StatusType>('success');
+  const [filesCompleted, setFilesCompleted] = useState(false);
+  const [metadataCompleted, setMetadataCompleted] = useState(false);
+  const [stepShowErrors, setStepShowErrors] = useState(false);
   const beforeNavigateHandlerRef = useRef<BeforeNavigateHandler>(null);
 
   const registerBeforeNavigateHandler = (handler: BeforeNavigateHandler) => {
@@ -30,6 +47,12 @@ export const DatasetEditStatusProvider = ({ children }: { children: React.ReactN
         setStatus,
         registerBeforeNavigateHandler,
         runBeforeNavigateHandler,
+        filesCompleted,
+        setFilesCompleted,
+        metadataCompleted,
+        setMetadataCompleted,
+        stepShowErrors,
+        setStepShowErrors,
       }}
     >
       {children}
@@ -40,7 +63,9 @@ export const DatasetEditStatusProvider = ({ children }: { children: React.ReactN
 export const useDatasetEditStatus = () => {
   const context = useContext(DatasetEditStatusContext);
   if (!context) {
-    throw new Error('useDatasetEditStatus must be used within DatasetEditStatusProvider');
+    throw new Error(
+      'useDatasetEditStatus must be used within DatasetEditStatusProvider'
+    );
   }
   return context;
 };
