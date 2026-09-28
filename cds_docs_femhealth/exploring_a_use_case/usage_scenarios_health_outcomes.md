@@ -8,7 +8,7 @@
 
 <img width="1567" height="711" alt="MCH Tenders vs Infant Mortality Rate choropleth map" src="https://github.com/user-attachments/assets/35a9a808-820b-4e33-889c-9f74c5f06267" />
 
-*Figure 5: MCH Tenders vs Infant Mortality Rate choropleth map.*
+*Figure: MCH Tenders vs Infant Mortality Rate choropleth map.*
 
 **What the dashboard shows:** This revealed substantial disparities. Districts such as Dibrugarh, Jorhat, and Kamrup Metro continue to exhibit higher IMR levels, even though Kamrup Metro accounts for some of the state's highest procurement spending, driven largely by a few major infrastructure projects. Conversely, districts like Bongaigaon and Dhemaji, despite receiving comparatively modest tender values, show significantly better IMR outcomes.
 
@@ -23,7 +23,7 @@
 <img width="788" height="355.5" alt="MCH Tenders vs Infant Mortality Rate choropleth map" src="https://github.com/user-attachments/assets/35a9a808-820b-4e33-889c-9f74c5f06267" />
 <img width="788" height="332.5" alt="cross referenced with District-wise Infant Mortality Trends" src="https://github.com/user-attachments/assets/822ac2c6-6089-48ea-8870-4430f6616e7d" />
 
-*Figure 6: MCH tenders vs. IMR map cross referenced with District-wise Infant Mortality Trends.*
+*Figure: MCH tenders vs. IMR map cross referenced with District-wise Infant Mortality Trends.*
 
 **What the dashboard shows:** Kamrup Metro accounts for some of the state's highest procurement spending, including the single largest MCH tender (₹2.14 billion for the 500-bedded Mother and Child Hospital at GMCH, as seen in the Top 10 table). Yet IMR in Kamrup Metro has remained elevated:
 
@@ -31,7 +31,6 @@
 |---|---|---|---|---|---|
 | Kamrup Metro | 39.04 | 46.36 | 11.67 | 33.65 | 39.42 |
 
-*Figure 4: IMR trend for Kamrup Metro, 2018-19 to 2022-23.*
 
 Dibrugarh received MCH-related infrastructure investment including a Central Gas Pipeline installation at Assam Medical College and Hospital (listed in the Top 10 table). Its IMR shows a spike in 2021-22:
 
@@ -55,7 +54,7 @@ Jorhat has persistently high IMR, remaining above 32 across all five years, desp
 
 <img width="1576" height="665" alt="District-wise Infant Mortality Trends" src="https://github.com/user-attachments/assets/822ac2c6-6089-48ea-8870-4430f6616e7d" />
 
-*Figure 7: District-wise Infant Mortality Trends showing spikes in Kamrup Rural and Dibrugarh.*
+*Figure: District-wise Infant Mortality Trends showing spikes in Kamrup Rural and Dibrugarh.*
 
 
 **What the dashboard shows:** From the data, notable spikes include:
@@ -79,7 +78,7 @@ Jorhat has persistently high IMR, remaining above 32 across all five years, desp
 <img width="788" height="332.5" alt="cross referenced with District-wise Infant Mortality Trends" src="https://github.com/user-attachments/assets/822ac2c6-6089-48ea-8870-4430f6616e7d" />
 <img width="801.5" height="398.5" alt="Cross referencing distribution of spending across departments and schemes with district-wise IMR trends" src="https://github.com/user-attachments/assets/680882cc-487b-4172-bfc6-96fd58068db8" />
 
-*Figure 8: Cross referencing distribution of spending across departments and schemes with district-wise IMR trends.*
+*Figure: Cross referencing distribution of spending across departments and schemes with district-wise IMR trends.*
 
 
 **What the dashboard shows:** From the Top 10 tenders, COVID-related procurement is visible:
