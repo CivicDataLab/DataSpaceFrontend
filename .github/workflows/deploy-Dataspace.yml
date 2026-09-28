@@ -5,6 +5,11 @@ on:
     branches:
       - dev
       - main
+    # Docs-only changes (Markdown, docs/, Read the Docs source) don't build, test or deploy
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'cds_docs_femhealth/**'
 
 # Prevent two deploys to the same environment from racing each other and
 # corrupting the releases/ directory or the .last_good / .rollback_target markers.

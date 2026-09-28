@@ -3,8 +3,18 @@ name: Build Status
 on:
   push:
     branches: ['dev']
+    # Docs-only changes (Markdown, docs/, Read the Docs source) don't build, test or deploy
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'cds_docs_femhealth/**'
   pull_request:
     branches: ['dev']
+    # Docs-only changes (Markdown, docs/, Read the Docs source) don't build, test or deploy
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'cds_docs_femhealth/**'
 
 jobs:
   build:
