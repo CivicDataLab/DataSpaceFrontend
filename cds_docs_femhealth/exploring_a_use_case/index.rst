@@ -13,6 +13,8 @@ This section walks through one of the six use cases in the FemHealth Data Collab
 
 *Figure 1.2: Scroll to explore data and dashboards associated with a use case*
 
+The usage scenarios below help you explore how real-life questions can be answered using this data.
+
 .. toctree::
    :maxdepth: 2
 
