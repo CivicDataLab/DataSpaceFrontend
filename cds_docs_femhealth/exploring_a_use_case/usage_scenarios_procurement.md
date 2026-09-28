@@ -8,9 +8,9 @@ Enter the dashboard linked to this use case to analyse the data.
 
 **Where to look:** Navigate to the Overview tab at the top of the dashboard. The dashboard reports 112 MCH-related tenders with a total of ₹3,269,789,064 spent towards MCH outcome improvement over the period 2019 to 2025.
 
-![Summary indicators showing total MCH-related tenders and procurement value](../images/overview_tab_indicators.png)
+<img width="1603" height="681" alt="Summary indicators showing total MCH-related tenders and procurement value" src="https://github.com/user-attachments/assets/76e63f80-e82d-4ce0-b5b4-f90da1c0fc4d" />
 
-*Figure 2: Summary indicators showing total MCH-related tenders and procurement value.*
+*Figure: Summary indicators showing total MCH-related tenders and procurement value.*
 
 **What the dashboard shows:** Between 2019 and 2025, a total of 112 MCH-related tenders were issued in Assam, with a combined value of approximately ₹3.27 billion (INR 3,269,789,064) spent towards MCH outcome improvement.
 
@@ -22,9 +22,9 @@ Enter the dashboard linked to this use case to analyse the data.
 
 **Where to look:** Navigate to the Department and Scheme Analysis tab to view the Sankey diagram. This Sankey diagram maps the flow of MCH-related tenders from major schemes to their implementing departments.
 
-![Sankey diagram showing flow of MCH-related tenders from schemes to departments](../images/sankey_diagram.png)
+<img width="801.5" height="398.5" alt="Sankey diagram showing flow of MCH-related tenders from schemes to departments" src="https://github.com/user-attachments/assets/680882cc-487b-4172-bfc6-96fd58068db8" />
 
-*Figure 3: Sankey diagram showing flow of MCH-related tenders from schemes to departments.*
+*Figure: Sankey diagram showing flow of MCH-related tenders from schemes to departments.*
 
 **What the dashboard shows:** State-Owned Priority Development (SOPD) schemes account for the bulk of procurement, with approximately ₹2.19 billion routed through Public Works Building and NH Department and Chief Engineer (Buildings), largely for the building of hospitals and related infrastructure.
 
@@ -42,7 +42,7 @@ Health-sector schemes account for comparatively smaller shares:
 
 **What to notice:** While multiple schemes and departments are formally linked to MCH, effective control over spending is concentrated in a few departments, and a large portion of "MCH-related" expenditure is tied up in civil works rather than direct service delivery.
 
-**Data Note:** To contextualise these patterns, CDL also mapped all schemes relevant to maternal and child health, including Pradhan Mantri Matru Vandana Yojana (PMMVY), POSHAN Abhiyan, Integrated Child Development Services (ICDS), and tea garden welfare initiatives, helping to link procurement activity to key policy interventions.
+_**Data Note:** To contextualise these patterns, CDL also mapped all schemes relevant to maternal and child health, including Pradhan Mantri Matru Vandana Yojana (PMMVY), POSHAN Abhiyan, Integrated Child Development Services (ICDS), and tea garden welfare initiatives, helping to link procurement activity to key policy interventions._
 
 ## 3. What proportion of MCH-related spending goes towards infrastructure (civil works) versus direct health service delivery?
 
@@ -50,9 +50,10 @@ Health-sector schemes account for comparatively smaller shares:
 
 **Where to look:** Two tabs: Department and Scheme Analysis + District Analysis.
 
-![Top 10 MCH Procurement by Value](../images/top10_procurement_table.png)
+<img width="801.5" height="398.5" alt="Sankey diagram showing flow of MCH-related tenders from schemes to departments" src="https://github.com/user-attachments/assets/680882cc-487b-4172-bfc6-96fd58068db8" />
+<img width="803.5" height="306" alt="Top 10 MCH Procurement by Value" src="https://github.com/user-attachments/assets/3b5cc6df-69e1-422f-b5f0-ff6a691f11b8" />
 
-*Figure 4: Sankey diagram (Department and Scheme Analysis tab) and the Top 10 MCH Procurement by Value table (District Analysis tab) explored together.*
+*Figure: Sankey diagram (Department and Scheme Analysis tab) and the Top 10 MCH Procurement by Value table (District Analysis tab) explored together.*
 
 **What the dashboard shows:** State-owned priority schemes (SOPD) account for the bulk of procurement and are routed predominantly through Public Works and Chief Engineer (Buildings), largely for the building of hospitals and related infrastructure.
 
