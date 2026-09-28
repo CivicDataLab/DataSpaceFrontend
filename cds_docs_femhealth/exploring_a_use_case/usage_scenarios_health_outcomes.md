@@ -6,7 +6,7 @@
 
 **Where to look:** In the District Analysis tab, see the MCH Tenders vs Infant Mortality Rate map. The bivariate choropleth map overlays district-level Infant Mortality Rate (IMR) data with MCH-related tender values, aggregated over the study period.
 
-![MCH Tenders vs Infant Mortality Rate choropleth map](../images/imr_choropleth_map.png)
+<img width="1567" height="711" alt="MCH Tenders vs Infant Mortality Rate choropleth map" src="https://github.com/user-attachments/assets/35a9a808-820b-4e33-889c-9f74c5f06267" />
 
 *Figure 5: MCH Tenders vs Infant Mortality Rate choropleth map.*
 
@@ -20,7 +20,8 @@
 
 **Where to look:** Two tabs: District Analysis + Health Indicators. To investigate this further, navigate to MCH Tenders vs Infant Mortality Rate map and cross-reference with District-wise Infant Mortality Trends.
 
-![MCH tenders vs. IMR map cross referenced with District-wise Infant Mortality Trends](../images/district_imr_trends.png)
+<img width="788" height="355.5" alt="MCH Tenders vs Infant Mortality Rate choropleth map" src="https://github.com/user-attachments/assets/35a9a808-820b-4e33-889c-9f74c5f06267" />
+<img width="788" height="332.5" alt="cross referenced with District-wise Infant Mortality Trends" src="https://github.com/user-attachments/assets/822ac2c6-6089-48ea-8870-4430f6616e7d" />
 
 *Figure 6: MCH tenders vs. IMR map cross referenced with District-wise Infant Mortality Trends.*
 
@@ -52,7 +53,10 @@ Jorhat has persistently high IMR, remaining above 32 across all five years, desp
 
 **Where to look:** To investigate a spike, hover on the bar in question to see the exact IMR value for that district and year.
 
+<img width="1576" height="665" alt="District-wise Infant Mortality Trends" src="https://github.com/user-attachments/assets/822ac2c6-6089-48ea-8870-4430f6616e7d" />
+
 *Figure 7: District-wise Infant Mortality Trends showing spikes in Kamrup Rural and Dibrugarh.*
+
 
 **What the dashboard shows:** From the data, notable spikes include:
 
@@ -72,7 +76,11 @@ Jorhat has persistently high IMR, remaining above 32 across all five years, desp
 
 **Where to look:** Two tabs: Department and Scheme Analysis + Health Indicators. This shift can be examined across two dashboard elements: The Sankey diagram shows the current distribution of spending across schemes and departments, with SOPD and infrastructure-related departments dominating. The District-wise Infant Mortality Trends chart shows year-on-year changes around 2020-21, where districts such as Karbi Anglong show a visible peak.
 
+<img width="788" height="332.5" alt="cross referenced with District-wise Infant Mortality Trends" src="https://github.com/user-attachments/assets/822ac2c6-6089-48ea-8870-4430f6616e7d" />
+<img width="801.5" height="398.5" alt="Cross referencing distribution of spending across departments and schemes with district-wise IMR trends" src="https://github.com/user-attachments/assets/680882cc-487b-4172-bfc6-96fd58068db8" />
+
 *Figure 8: Cross referencing distribution of spending across departments and schemes with district-wise IMR trends.*
+
 
 **What the dashboard shows:** From the Top 10 tenders, COVID-related procurement is visible:
 
