@@ -3,6 +3,11 @@ name: Update IDS-DRR Dataspace
 on:
   push:
     branches: ['dev']
+    # Docs-only changes (Markdown, docs/, Read the Docs source) don't build, test or deploy
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'cds_docs_femhealth/**'
 env:
   KEYCLOAK_CLIENT_ID: ${{secrets.KEYCLOAK_CLIENT_ID}}
   KEYCLOAK_CLIENT_SECRET: ${{secrets.KEYCLOAK_CLIENT_SECRET}}
