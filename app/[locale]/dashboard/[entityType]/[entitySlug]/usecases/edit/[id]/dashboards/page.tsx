@@ -224,11 +224,12 @@ const Dashboard = () => {
 
   const { setStatus, beforeStepNavigateRef } = useEditStatus();
   const dashboardsRef = useRef(dashboards);
-  dashboardsRef.current = dashboards;
 
   const isCheckableDashboardLink = (value: string) => {
     const trimmed = value.trim();
-    return Boolean(trimmed && (trimmed.includes('.') || /^https?:\/\//i.test(trimmed)));
+    return Boolean(
+      trimmed && (trimmed.includes('.') || /^https?:\/\//i.test(trimmed))
+    );
   };
 
   const showDisallowedToast = () => {
@@ -245,6 +246,10 @@ const Dashboard = () => {
       saveLoading || addLoading || deleteLoading ? 'loading' : 'success'
     ); // update based on mutation state
   }, [saveLoading, addLoading, deleteLoading, setStatus]);
+
+  useEffect(() => {
+    dashboardsRef.current = dashboards;
+  }, [dashboards]);
 
   useEffect(() => {
     beforeStepNavigateRef.current = () => {
