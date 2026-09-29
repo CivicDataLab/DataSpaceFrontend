@@ -1,6 +1,9 @@
-# Full test suite against dev for every PR into main. Required by branch
-# protection on main, so a PR merges (and prod deploys) only once it's green.
+# Full test suite against dev for every PR into main. Branch protection on main
+# requires the "PR Gate" job, so a PR merges (and prod deploys) only once it's green.
 # dev already runs the PR's code (it was merged to dev first).
+#
+# Docs-only PRs (Markdown, docs/, Read the Docs source) skip the suite. "PR Gate"
+# still reports, so they stay mergeable. A skipped required check would block them.
 name: PR Gate
 
 on:
@@ -12,8 +15,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect code changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - id: filter
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          code=$(gh api --paginate "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+            --jq '.[].filename' | grep -vE '\.md$|^docs/|^cds_docs_femhealth/' || true)
+          echo "code=$([ -n "$code" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          [ -n "$code" ] && printf 'Code changes:\n%s\n' "$code" || echo "Docs-only PR: skipping the full suite"
+
   full-suite:
     name: Full Suite (dev)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     uses: CivicDataLab/CivicDataSpace-test/.github/workflows/run-smoke.yml@CI
     with:
       suite: full
@@ -25,3 +47,14 @@ jobs:
       TEST_EMAIL_2: ${{ secrets.TEST_EMAIL_2 }}
       TEST_PASSWORD_2: ${{ secrets.TEST_PASSWORD_2 }}
       KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+
+  gate:
+    name: PR Gate
+    needs: [changes, full-suite]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "changes=${{ needs.changes.result }} full-suite=${{ needs.full-suite.result }}"
+          [ "${{ needs.changes.result }}" = success ] || exit 1
+          case "${{ needs.full-suite.result }}" in success|skipped) ;; *) exit 1 ;; esac
