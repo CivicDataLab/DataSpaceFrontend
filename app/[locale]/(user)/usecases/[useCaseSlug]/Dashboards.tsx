@@ -4,24 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { getSafeEmbedUrl } from '@/lib/dashboardEmbed';
 import { Loading } from '@/components/loading';
-
-const getSafeEmbedUrl = (link: string | null | undefined) => {
-  if (!link) return null;
-
-  try {
-    const url = new URL(link);
-    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
-
-    if (url.pathname.includes('/superset/')) {
-      url.searchParams.set('standalone', '1');
-    }
-
-    return url.toString();
-  } catch {
-    return null;
-  }
-};
 
 const DashboardsList = graphql(`
   query usecaseDashboards($usecaseId: Int!) {

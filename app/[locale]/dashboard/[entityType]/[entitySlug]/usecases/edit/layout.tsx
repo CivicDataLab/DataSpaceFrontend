@@ -140,14 +140,15 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
     },
   ];
 
+  const { status, setStatus, beforeStepNavigateRef } = useEditStatus();
+
   const handleTabClick = (url: string) => {
+    if (beforeStepNavigateRef.current?.() === false) return;
     router.replace(url); // Navigate to the selected tab
   };
 
   const initialTabLabel =
     links.find((option) => option.selected)?.label || 'Use Case Details';
-
-  const { status, setStatus } = useEditStatus();
 
   return (
     <div className="mt-8 flex h-full flex-col gap-6">
@@ -186,6 +187,7 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
       <div className="my-6">
         <StepNavigation
           steps={['details', 'assign', 'dashboards', 'contributors', 'publish']}
+          onBeforeNavigate={() => beforeStepNavigateRef.current?.() ?? true}
         />
       </div>
     </div>
