@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Icon, Spinner, Text, TextField, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { getSafeEmbedUrl } from '@/lib/dashboardEmbed';
 import { Icons } from '@/components/icons';
 import { useEditStatus } from '../../context';
 
@@ -221,7 +222,23 @@ const Dashboard = () => {
     }
   );
 
-  const { setStatus } = useEditStatus();
+  const { setStatus, beforeStepNavigateRef } = useEditStatus();
+  const dashboardsRef = useRef(dashboards);
+  dashboardsRef.current = dashboards;
+
+  const isCheckableDashboardLink = (value: string) => {
+    const trimmed = value.trim();
+    return Boolean(trimmed && (trimmed.includes('.') || /^https?:\/\//i.test(trimmed)));
+  };
+
+  const showDisallowedToast = () => {
+    toast.error('This dashboard URL is not allowed.', {
+      id: DASHBOARD_SAVE_ERROR_TOAST_ID,
+    });
+  };
+
+  const isDisallowedDashboardUrl = (link: string) =>
+    Boolean(link.trim() && !getSafeEmbedUrl(link));
 
   useEffect(() => {
     setStatus(
@@ -229,14 +246,41 @@ const Dashboard = () => {
     ); // update based on mutation state
   }, [saveLoading, addLoading, deleteLoading, setStatus]);
 
+  useEffect(() => {
+    beforeStepNavigateRef.current = () => {
+      const invalid = dashboardsRef.current.find((dashboard) =>
+        isDisallowedDashboardUrl(dashboard.link)
+      );
+      if (invalid) {
+        showDisallowedToast();
+        return false;
+      }
+      return true;
+    };
+
+    return () => {
+      beforeStepNavigateRef.current = null;
+    };
+  }, [beforeStepNavigateRef]);
+
   if (!isValidId) {
     return null;
   }
 
   const handleChange = (id: string, field: 'name' | 'link', value: string) => {
-    setDashboards((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, [field]: value } : d))
-    );
+    setDashboards((prev) => {
+      const next = prev.map((d) => (d.id === id ? { ...d, [field]: value } : d));
+      dashboardsRef.current = next;
+      return next;
+    });
+
+    if (
+      field === 'link' &&
+      isCheckableDashboardLink(value) &&
+      isDisallowedDashboardUrl(value)
+    ) {
+      showDisallowedToast();
+    }
   };
 
   const handleSave = (dashboard: {
@@ -244,6 +288,11 @@ const Dashboard = () => {
     name: string;
     link: string;
   }) => {
+    if (isDisallowedDashboardUrl(dashboard.link)) {
+      showDisallowedToast();
+      return;
+    }
+
     const prev = previousState[dashboard.id];
     if (dashboard.name !== prev?.name || dashboard.link !== prev?.link) {
       saveDashboard({
@@ -295,7 +344,12 @@ const Dashboard = () => {
                   name="dashboardName"
                   value={item.name}
                   onChange={(e) => handleChange(item.id, 'name', e)}
-                  onBlur={() => handleSave(item)}
+                  onBlur={() => {
+                    const latest = dashboardsRef.current.find(
+                      (dashboard) => dashboard.id === item.id
+                    );
+                    if (latest) handleSave(latest);
+                  }}
                 />
               </div>
               <div className="w-full">
@@ -305,7 +359,18 @@ const Dashboard = () => {
                   type="url"
                   value={item.link}
                   onChange={(e) => handleChange(item.id, 'link', e)}
-                  onBlur={() => handleSave(item)}
+                  onBlur={(value) => {
+                    const latest = dashboardsRef.current.find(
+                      (dashboard) => dashboard.id === item.id
+                    );
+                    const link =
+                      typeof value === 'string' ? value : (latest?.link ?? '');
+                    handleSave({
+                      id: item.id,
+                      name: latest?.name ?? item.name,
+                      link,
+                    });
+                  }}
                 />
               </div>
               <Button
