@@ -3,18 +3,33 @@
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
-import { IconInfoCircle, IconSend } from '@tabler/icons-react';
+import {
+  IconAlertTriangle,
+  IconCircleCheck,
+  IconInfoCircle,
+  IconSend,
+  IconTag,
+} from '@tabler/icons-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import {
+  ArrowRight,
+  Building,
+  Database,
+  Layers,
+  MapPin,
+  Target,
+  Users,
+} from 'lucide-react';
 import { Button, SectionCard, Spinner, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import {
-  ContentBlockView,
+  ContentBlocksRenderer,
   editAction,
   ReviewField,
   TagList,
 } from '../../components/ContentBlocksRenderer';
-import { isBlockEmpty, parseUseCaseContent } from '../../content-document';
+import { parseUseCaseContent } from '../../content-document';
 import {
   isUseCaseBuilderComplete,
   isUseCaseConnectComplete,
@@ -90,6 +105,54 @@ function mediaUrl(path?: string | null, url?: string | null) {
   return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${raw.replace('/code/files/', '')}`;
 }
 
+function ReadinessRow({
+  ok,
+  label,
+  detail,
+  onEdit,
+}: {
+  ok: boolean;
+  label: string;
+  detail: string;
+  onEdit?: () => void;
+}) {
+  return (
+    <div className="last:border-b-0 flex items-start justify-between gap-3 border-b-1 border-solid border-borderSubdued py-3">
+      <div className="flex min-w-0 items-start gap-3">
+        {ok ? (
+          <IconCircleCheck
+            size={20}
+            className="mt-0.5 shrink-0 text-textSuccess"
+          />
+        ) : (
+          <IconAlertTriangle
+            size={20}
+            className="mt-0.5 shrink-0 text-textCritical"
+          />
+        )}
+        <div className="min-w-0">
+          <Text fontWeight="semibold">{label}</Text>
+          <div className="mt-1">
+            <Text variant="bodySm" color="subdued">
+              {detail}
+            </Text>
+          </div>
+        </div>
+      </div>
+      {onEdit ? (
+        <Button
+          kind="neutral"
+          size="slim"
+          onClick={onEdit}
+          icon={<ArrowRight size={16} />}
+        >
+          Fix
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
 function sdgLabel(item: {
   number?: number | null;
   code?: string | null;
@@ -150,14 +213,31 @@ export default function PublishPage() {
   const ready = builderComplete && connectComplete && hasContent;
   const previewHref = `/usecases/${useCase?.slug || useCase?.id || params.id}`;
 
-  const missing: string[] = [];
-  if (!useCase?.logo) missing.push('Upload a thumbnail image.');
-  if (!useCase?.title?.trim()) missing.push('Enter a use case title.');
-  if (!hasContent) missing.push('Add at least one content block.');
-  if (!useCase?.sdgs?.length) missing.push('Select at least one SDG goal.');
-  if (!useCase?.sectors?.length) missing.push('Select at least one sector.');
+  const builderIssues: string[] = [];
+  if (!useCase?.title?.trim()) builderIssues.push('Enter a use case title.');
+  if (!useCase?.logo) builderIssues.push('Upload a thumbnail image.');
+  if (!hasContent) builderIssues.push('Add at least one content block.');
+  const builderOk = builderIssues.length === 0;
+  const builderDetail = builderOk
+    ? 'Title, thumbnail, and content added.'
+    : builderIssues.join(' ');
+  const builderEdit =
+    !useCase?.title?.trim() || !useCase?.logo
+      ? `${stepBase}/builder#basic-information`
+      : `${stepBase}/builder#content`;
 
-  if (reviewQuery.isLoading) {
+  const connectIssues: string[] = [];
+  if (!useCase?.sectors?.length) {
+    connectIssues.push('Select at least one sector.');
+  }
+  if (!useCase?.sdgs?.length) {
+    connectIssues.push('Select at least one SDG goal.');
+  }
+  const connectDetail = connectComplete
+    ? 'Sectors and SDG goals selected.'
+    : connectIssues.join(' ');
+
+  if (reviewQuery.isLoading || reviewQuery.isFetching) {
     return (
       <div className="flex h-48 items-center justify-center">
         <Spinner />
@@ -179,41 +259,28 @@ export default function PublishPage() {
         </div>
       </div>
 
-      <div
-        className={`rounded-3 p-4 ${
-          ready ? 'bg-surfaceSuccess' : 'bg-baseRedSolid3'
-        }`}
-      >
-        <Text fontWeight="semibold">
-          {ready ? 'Ready to publish' : 'Not ready to publish'}
-        </Text>
-        {missing.length ? (
-          <ul className="mt-2 list-disc pl-5">
-            {missing.map((item) => (
-              <li key={item}>
-                <Text variant="bodySm">{item}</Text>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        <div className="mt-3 flex flex-wrap gap-2">
-          {!builderComplete ? (
-            <Button
-              kind="tertiary"
-              onClick={() => router.push(`${stepBase}/builder`)}
-            >
-              Return to Builder
-            </Button>
-          ) : null}
-          {!connectComplete ? (
-            <Button
-              kind="tertiary"
-              onClick={() => router.push(`${stepBase}/connect`)}
-            >
-              Return to Connect
-            </Button>
-          ) : null}
+      <div className="rounded-3 border-1 border-solid border-borderSubdued px-4">
+        <div className="pt-4">
+          <Text fontWeight="semibold">
+            {ready ? 'Ready to publish' : 'Needs attention'}
+          </Text>
         </div>
+        <ReadinessRow
+          ok={builderOk}
+          label="Builder"
+          detail={builderDetail}
+          onEdit={builderOk ? undefined : () => router.push(builderEdit)}
+        />
+        <ReadinessRow
+          ok={connectComplete}
+          label="Connect"
+          detail={connectDetail}
+          onEdit={
+            connectComplete
+              ? undefined
+              : () => router.push(`${stepBase}/connect#classification`)
+          }
+        />
       </div>
 
       <SectionCard
@@ -254,20 +321,8 @@ export default function PublishPage() {
           router.push(`${stepBase}/builder#content`)
         )}
       >
-        {document.blocks.length ? (
-          <div className="flex flex-col gap-4">
-            {document.blocks.map((block) => (
-              <div key={block.id}>
-                {isBlockEmpty(block) ? (
-                  <Text>Empty {block.type} block</Text>
-                ) : (
-                  <div className="mt-2">
-                    <ContentBlockView block={block} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+        {useCaseHasContent(useCase?.summary) ? (
+          <ContentBlocksRenderer summary={useCase?.summary} />
         ) : (
           <Text>No content added.</Text>
         )}
@@ -281,8 +336,8 @@ export default function PublishPage() {
           router.push(`${stepBase}/connect#classification`)
         )}
       >
-        <div className="grid gap-4 md:grid-cols-2">
-          <ReviewField label="Tags">
+        <div className="grid gap-4 md:grid-cols-1">
+          <ReviewField label="Tags" icon={<IconTag size={16} />}>
             <TagList
               items={useCase?.tags?.map((item) => ({
                 id: item.id,
@@ -290,7 +345,7 @@ export default function PublishPage() {
               }))}
             />
           </ReviewField>
-          <ReviewField label="SDG Goals">
+          <ReviewField label="SDG Goals" icon={<Target size={16} />}>
             <TagList
               items={useCase?.sdgs?.map((item) => ({
                 id: item.id,
@@ -298,7 +353,7 @@ export default function PublishPage() {
               }))}
             />
           </ReviewField>
-          <ReviewField label="Sectors">
+          <ReviewField label="Sectors" icon={<Layers size={16} />}>
             <TagList
               items={useCase?.sectors?.map((item) => ({
                 id: item.id,
@@ -306,7 +361,7 @@ export default function PublishPage() {
               }))}
             />
           </ReviewField>
-          <ReviewField label="Geography">
+          <ReviewField label="Geography" icon={<MapPin size={16} />}>
             <TagList
               items={useCase?.geographies?.map((item) => ({
                 id: item.id,
@@ -326,7 +381,7 @@ export default function PublishPage() {
         )}
       >
         <div className="flex flex-col gap-4">
-          <ReviewField label="Datasets">
+          <ReviewField label="Datasets" icon={<Database size={16} />}>
             <TagList
               items={useCase?.datasets?.map((item) => ({
                 id: item.id,
@@ -334,7 +389,7 @@ export default function PublishPage() {
               }))}
             />
           </ReviewField>
-          <ReviewField label="Contributors">
+          <ReviewField label="Contributors" icon={<Users size={16} />}>
             <TagList
               items={useCase?.contributors?.map((item) => ({
                 id: item.id,
@@ -342,7 +397,7 @@ export default function PublishPage() {
               }))}
             />
           </ReviewField>
-          <ReviewField label="Organisations">
+          <ReviewField label="Organisations" icon={<Building size={16} />}>
             <TagList
               items={[
                 ...(useCase?.partnerOrganizations ?? []),

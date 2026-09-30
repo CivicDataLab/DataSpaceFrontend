@@ -210,13 +210,22 @@ export function SelectedChartPreview({
 export function ReviewField({
   label,
   children,
+  icon,
 }: {
   label: string;
   children: React.ReactNode;
+  icon?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <Text variant="bodySm" color="subdued">
+    <div className="flex flex-col gap-2">
+      <Text
+        variant="bodySm"
+        color="subdued"
+        className="inline-flex items-center gap-2"
+      >
+        {icon ? (
+          <span className="inline-flex items-center gap-2">{icon}</span>
+        ) : null}
         {label}
       </Text>
       {children}
@@ -237,7 +246,14 @@ export function TagList({
   return (
     <div className="flex flex-wrap gap-2">
       {items.map((item, index) => (
-        <Tag key={item.id || `${item.label}-${index}`}>{item.label}</Tag>
+        <Tag
+          key={item.id || `${item.label}-${index}`}
+          fillColor="#fdb557"
+          textColor="#000"
+          borderRadius="20px"
+        >
+          {item.label}
+        </Tag>
       ))}
     </div>
   );

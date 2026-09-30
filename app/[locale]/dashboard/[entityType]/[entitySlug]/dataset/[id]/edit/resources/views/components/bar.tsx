@@ -103,6 +103,7 @@ export const Bar = ({
     <div>
       <div className="flex flex-wrap items-start gap-4">
         <Combobox
+          variant="bright"
           name="x-axis"
           label="X Axis"
           selectedValue={xAxis}
@@ -117,6 +118,7 @@ export const Bar = ({
           list={Object.keys(data[0]).map((key) => ({ label: key, value: key }))}
         />
         <Combobox
+          variant="bright"
           name="y-axis"
           label="Y Axis"
           selectedValue={yAxis}

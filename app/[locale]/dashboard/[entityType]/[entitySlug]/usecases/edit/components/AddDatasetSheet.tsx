@@ -686,6 +686,7 @@ export function AddDatasetSheet({
                   }
                 />
                 <Combobox
+                  variant="bright"
                   displaySelected
                   name="sectors"
                   label="Sector"

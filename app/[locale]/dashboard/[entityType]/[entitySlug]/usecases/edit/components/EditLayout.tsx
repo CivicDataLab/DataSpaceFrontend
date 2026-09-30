@@ -166,9 +166,11 @@ export function EditLayout({ children, params }: LayoutProps) {
   const handleStepClick = (step: number) => {
     const nextPath = PATH_BY_STEP[step];
     if (!nextPath || nextPath === pathItem) return;
-    void runBeforeNavigateHandler().then(() => {
-      router.push(`${stepBase}/${nextPath}`);
-    });
+    void runBeforeNavigateHandler()
+      .then(() => {
+        router.push(`${stepBase}/${nextPath}`);
+      })
+      .catch(() => undefined);
   };
 
   const steps: StepperItem[] = [

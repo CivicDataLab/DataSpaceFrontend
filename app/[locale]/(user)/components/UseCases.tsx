@@ -19,7 +19,7 @@ import { GraphQL } from '@/lib/api';
 import { cn, formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { UseCaseListingSkeleton } from '@/components/loading';
-import { stripMarkdown } from '../search/components/UnifiedListingComponent';
+import { useCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
 import Styles from './datasets.module.scss';
 
 const useCasesListDoc = graphql(`
@@ -182,7 +182,7 @@ const UseCasesListingPage = () => {
                           },
                         ]}
                         imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo?.path.replace('/code/files/', '')}`}
-                        description={stripMarkdown(item.summary || '')}
+                        description={useCaseSummaryExcerpt(item.summary)}
                         iconColor="metadata"
                         variation={'collapsed'}
                         // type={[

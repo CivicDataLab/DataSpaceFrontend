@@ -57,6 +57,9 @@ const EMPTY_DOCUMENT: UseCaseContentDocument = {
   blocks: [],
 };
 
+const LEGACY_SUMMARY_BLOCK_ID = 'legacy-summary';
+const EXCERPT_LIMIT = 180;
+
 export function createBlockId() {
   return `block_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -96,7 +99,7 @@ export function parseUseCaseContent(
     subtitle: '',
     blocks: [
       {
-        id: createBlockId(),
+        id: LEGACY_SUMMARY_BLOCK_ID,
         type: 'text',
         html: summary,
       },
@@ -114,7 +117,44 @@ export function serializeUseCaseContent(doc: UseCaseContentDocument): string {
 
 export function isRichTextEmpty(html?: string | null): boolean {
   if (!html) return true;
-  return html.replace(/<(.|\n)*?>/g, '').replace(/&nbsp;/g, ' ').trim().length === 0;
+  return plainTextFromHtml(html).length === 0;
+}
+
+function plainTextFromHtml(html: string): string {
+  return html
+    .replace(/<[\s\S]*?>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function capExcerpt(value: string, limit: number): string {
+  if (value.length <= limit) return value;
+  return `${value.slice(0, limit).trimEnd()}…`;
+}
+
+export function useCaseSummaryExcerpt(
+  summary?: string | null,
+  limit: number = EXCERPT_LIMIT
+): string {
+  if (!summary?.trim()) return '';
+
+  const document = parseUseCaseContent(summary);
+  const fromSubtitle = document.subtitle.trim();
+  const fromBlocks = document.blocks
+    .filter((block): block is TextBlock => block.type === 'text')
+    .map((block) => plainTextFromHtml(block.html))
+    .filter((text) => text.length > 0)
+    .join(' ');
+  const text = fromSubtitle || fromBlocks;
+  if (text) return capExcerpt(text, limit);
+  if (!isLegacyHtmlSummary(summary)) return '';
+  return capExcerpt(plainTextFromHtml(summary), limit);
 }
 
 export function isBlockEmpty(block: ContentBlock): boolean {

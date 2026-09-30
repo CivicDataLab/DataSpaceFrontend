@@ -264,6 +264,49 @@ function isSelectionMissing(value: string | string[] | undefined) {
   return !value;
 }
 
+function readStringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (item): item is string => typeof item === 'string' && item.length > 0
+  );
+}
+
+type PromptMetadataFormState = {
+  taskType?: string;
+  domain?: string;
+  targetLanguages?: string[];
+  targetModelTypes?: string[];
+};
+
+function promptStateFromDataset(dataset?: {
+  promptMetadata?: unknown;
+} | null): PromptMetadataFormState {
+  let raw = dataset?.promptMetadata;
+  if (typeof raw === 'string') {
+    try {
+      raw = JSON.parse(raw) as unknown;
+    } catch {
+      raw = null;
+    }
+  }
+  if (!raw || typeof raw !== 'object') {
+    return {};
+  }
+  const meta = raw as Record<string, unknown>;
+  const taskType = meta.task_type ?? meta.taskType;
+  const domain = meta.domain;
+  return {
+    taskType: typeof taskType === 'string' && taskType ? taskType : undefined,
+    domain: typeof domain === 'string' && domain ? domain : undefined,
+    targetLanguages: readStringList(
+      meta.target_languages ?? meta.targetLanguages
+    ),
+    targetModelTypes: readStringList(
+      meta.target_model_types ?? meta.targetModelTypes
+    ),
+  };
+}
+
 function asOptionItems(value: FormFieldValue | undefined): OptionItem[] {
   if (!Array.isArray(value)) {
     return [];
@@ -442,12 +485,10 @@ export function EditMetadata({ id }: { id: string }) {
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
 
   // State for prompt metadata fields
-  const [promptMetadataState, setPromptMetadataState] = useState<{
-    taskType?: string;
-    domain?: string;
-    targetLanguages?: string[];
-    targetModelTypes?: string[];
-  }>({});
+  const [promptMetadataState, setPromptMetadataState] =
+    useState<PromptMetadataFormState>(() =>
+      promptStateFromDataset(getDatasetMetadata.data?.datasets?.[0])
+    );
 
   // Mutation for updating prompt metadata
   const updatePromptMetadataMutation = useMutation(
@@ -670,15 +711,7 @@ export function EditMetadata({ id }: { id: string }) {
       setFormData(updatedData);
       setPreviousFormData(updatedData);
     }
-    const promptMeta = dataset?.promptMetadata;
-    if (promptMeta) {
-      setPromptMetadataState({
-        taskType: promptMeta.task_type || undefined,
-        domain: promptMeta.domain || undefined,
-        targetLanguages: promptMeta.target_languages || [],
-        targetModelTypes: promptMeta.target_model_types || [],
-      });
-    }
+    setPromptMetadataState(promptStateFromDataset(dataset));
   }
 
   useEffect(() => {
@@ -854,6 +887,7 @@ export function EditMetadata({ id }: { id: string }) {
       return (
         <div key={metadataFormItem.id} className="w-full ">
           <Combobox
+            variant="bright"
             name={metadataFormItem.id}
             list={(metadataFormItem.options || []).map((option) => ({
               label: option,
@@ -879,6 +913,7 @@ export function EditMetadata({ id }: { id: string }) {
       return (
         <div key={metadataFormItem.id} className="w-full ">
           <Combobox
+            variant="bright"
             name={metadataFormItem.id}
             list={[
               ...((metadataFormItem.options || []).map((option) => ({
@@ -1141,6 +1176,7 @@ export function EditMetadata({ id }: { id: string }) {
             >
               <div className="flex flex-col gap-4">
                 <Combobox
+                  variant="bright"
                   displaySelected
                   label="Sector"
                   requiredIndicator
@@ -1159,6 +1195,7 @@ export function EditMetadata({ id }: { id: string }) {
                   }}
                 />
                 <Combobox
+                  variant="bright"
                   displaySelected
                   label="Geography"
                   name="geographies"
@@ -1176,6 +1213,7 @@ export function EditMetadata({ id }: { id: string }) {
                   }}
                 />
                 <Combobox
+                  variant="bright"
                   displaySelected
                   name="tags"
                   list={
@@ -1285,6 +1323,7 @@ export function EditMetadata({ id }: { id: string }) {
                 >
                   <div className="flex flex-col gap-6">
                     <Combobox
+                      variant="bright"
                       name="taskType"
                       label="Task Type"
                       required
@@ -1319,6 +1358,7 @@ export function EditMetadata({ id }: { id: string }) {
                       }}
                     />
                     <Combobox
+                      variant="bright"
                       name="domain"
                       label="Domain"
                       required
@@ -1353,6 +1393,7 @@ export function EditMetadata({ id }: { id: string }) {
                       }}
                     />
                     <Combobox
+                      variant="bright"
                       name="targetLanguages"
                       label="Target Languages"
                       requiredIndicator
@@ -1384,6 +1425,7 @@ export function EditMetadata({ id }: { id: string }) {
                       }}
                     />
                     <Combobox
+                      variant="bright"
                       name="targetModelTypes"
                       label="Target Model Types"
                       requiredIndicator

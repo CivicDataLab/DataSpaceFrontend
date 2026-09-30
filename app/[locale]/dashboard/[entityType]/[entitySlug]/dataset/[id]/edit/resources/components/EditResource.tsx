@@ -605,6 +605,7 @@ export const EditResource = ({
               {isPromptDataset ? (
                 <div className="flex flex-col gap-4">
                   <Combobox
+                    variant="bright"
                     name="promptFormat"
                     label="Prompt Format"
                     displaySelected

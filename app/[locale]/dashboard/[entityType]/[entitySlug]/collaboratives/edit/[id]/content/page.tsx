@@ -14,6 +14,7 @@ import {
   type EntityRowPickerHandle,
 } from '../../../../usecases/edit/components/EntityRowPicker';
 import { AddUseCase } from '../../../../usecases/page';
+import { useCaseSummaryExcerpt } from '../../../../usecases/edit/content-document';
 import { errorMessage } from '../../collaborative-summary';
 import { useCollaborativeEditStatus } from '../../context';
 import styles from '../../edit.module.scss';
@@ -319,7 +320,7 @@ export default function ContentPage() {
         id: String(item.id),
         title: item.title,
         subtitle: firstLabel(item.sectors),
-        summary: item.summary,
+        summary: useCaseSummaryExcerpt(item.summary),
       }))
     ) ?? [];
 

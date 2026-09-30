@@ -20,6 +20,10 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import {
+  getCollaborativeDetailUrl,
+  isReservedCollaborativeSubdomain,
+} from '@/lib/collaborativesRouting';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import {
   errorMessage,
@@ -300,6 +304,7 @@ export default function AboutPage() {
   });
   const formRef = useRef(form);
   formRef.current = form;
+  const [subdomainError, setSubdomainError] = useState<string | undefined>();
   const [logo, setLogo] = useState<File | UploadedImage | null>(null);
   const [coverImage, setCoverImage] = useState<File | UploadedImage | null>(
     null
@@ -392,13 +397,33 @@ export default function AboutPage() {
 
   const persistAbout = useCallback(
     async (next = formRef.current) => {
-      const slug = next.slug.trim() || slugify(next.title);
+      const slug = slugify(next.slug) || slugify(next.title);
+      if (slug && isReservedCollaborativeSubdomain(slug)) {
+        setSubdomainError('This subdomain is reserved. Choose another.');
+        await saveCollaborative({
+          data: {
+            id: params.id,
+            title: next.title,
+            summary: next.summary,
+            platformUrl: next.platformUrl,
+          },
+        });
+        return;
+      }
+
+      setSubdomainError(undefined);
+      const resolved = slug === next.slug ? next : { ...next, slug };
+      if (resolved !== next) {
+        formRef.current = resolved;
+        setForm(resolved);
+      }
+
       await saveCollaborative({
         data: {
           id: params.id,
-          title: next.title,
-          summary: next.summary,
-          platformUrl: next.platformUrl,
+          title: resolved.title,
+          summary: resolved.summary,
+          platformUrl: resolved.platformUrl,
           ...(slug ? { slug } : {}),
         },
       });
@@ -491,6 +516,10 @@ export default function AboutPage() {
     stepShowErrors && !form.title.trim()
       ? 'Enter a Collaborative name'
       : undefined;
+  const subdomainPreview = form.slug.trim() || slugify(form.title);
+  const subdomainHelp = subdomainPreview
+    ? `Public address: ${getCollaborativeDetailUrl(subdomainPreview)}`
+    : 'Letters, numbers, and hyphens. This becomes the public address for this Collaborative.';
   const summaryError =
     stepShowErrors && !plainSummary(form.summary)
       ? 'Add a description to continue'
@@ -551,6 +580,27 @@ export default function AboutPage() {
               onBlur={() => persistAbout()}
             />
           </div>
+          <div id="subdomain">
+            <TextField
+              label="Subdomain"
+              name="slug"
+              value={form.slug}
+              error={subdomainError}
+              placeholder={slugify(form.title) || 'collaborative-name'}
+              helpText={subdomainHelp}
+              onChange={(value) => {
+                setSubdomainError(undefined);
+                const slug = value
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]+/g, '-')
+                  .replace(/^-+/, '');
+                const next = { ...formRef.current, slug };
+                formRef.current = next;
+                setForm(next);
+              }}
+              onBlur={() => persistAbout()}
+            />
+          </div>
           <div id="description">
           <RichTextEditor
             label="Description *"
@@ -589,6 +639,7 @@ export default function AboutPage() {
         <div id="classification" className="grid gap-5">
           <div id="sectors">
           <Combobox
+            variant="bright"
             displaySelected
             required
             requiredIndicator
@@ -607,6 +658,7 @@ export default function AboutPage() {
           </div>
           <div id="sdgs">
           <Combobox
+            variant="bright"
             displaySelected
             required
             requiredIndicator
@@ -624,6 +676,7 @@ export default function AboutPage() {
           />
           </div>
           <Combobox
+            variant="bright"
             displaySelected
             creatable
             name="tags"
@@ -639,6 +692,7 @@ export default function AboutPage() {
             onChange={(value) => handleClassChange('tags', value)}
           />
           <Combobox
+            variant="bright"
             displaySelected
             name="geographies"
             label="Geography"

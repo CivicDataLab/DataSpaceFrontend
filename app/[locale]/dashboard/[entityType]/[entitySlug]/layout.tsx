@@ -76,6 +76,11 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       icon: 'light',
     },
     {
+      title: 'Publications',
+      href: `/dashboard/${params.entityType}/${params.entitySlug}/publications`,
+      icon: 'publication',
+    },
+    {
       title: 'Collaboratives',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives`,
       icon: 'userGroup',

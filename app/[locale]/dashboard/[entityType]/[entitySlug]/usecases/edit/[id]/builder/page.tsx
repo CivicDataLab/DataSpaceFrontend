@@ -202,12 +202,16 @@ export default function BuilderPage() {
   contentDocRef.current = contentDoc;
   const titleRef = useRef(title);
   titleRef.current = title;
+  const summaryHydratedRef = useRef(false);
+  const contentDirtyRef = useRef(false);
 
   useEffect(() => {
     if (!useCase) return;
     setTitle(useCase.title ?? '');
     setLogo(useCase.logo ?? null);
     setContentDoc(parseUseCaseContent(useCase.summary));
+    summaryHydratedRef.current = true;
+    contentDirtyRef.current = false;
   }, [useCase]);
 
   useEffect(() => {
@@ -216,7 +220,7 @@ export default function BuilderPage() {
     }
   }, [savedDashboard]);
 
-  const { mutate: updateUseCase, isLoading: savingUseCase } = useMutation(
+  const { mutateAsync: updateUseCase, isLoading: savingUseCase } = useMutation(
     (data: { data: UseCaseInputPartial }) =>
       GraphQL(UpdateUseCaseBuilder, ownerArgs, data),
     {
@@ -235,6 +239,9 @@ export default function BuilderPage() {
             params.entityType,
             params.entitySlug,
           ],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: [`fetch_UsecaseDetails`, params.id],
         });
       },
       onError: (error: unknown) => {
@@ -278,16 +285,20 @@ export default function BuilderPage() {
       document?: UseCaseContentDocument;
       logo?: File | null;
     }) => {
-      updateUseCase({
+      const includeSummary =
+        summaryHydratedRef.current && contentDirtyRef.current;
+      const document = next?.document ?? contentDocRef.current;
+
+      return updateUseCase({
         data: {
           id: params.id,
           title: next?.title ?? titleRef.current,
-          summary: serializeUseCaseContent(
-            next?.document ?? contentDocRef.current
-          ),
+          ...(includeSummary
+            ? { summary: serializeUseCaseContent(document) }
+            : {}),
           ...(next && 'logo' in next ? { logo: next.logo } : {}),
         },
-      });
+      }).catch(() => undefined);
     },
     [params.id, updateUseCase]
   );
@@ -310,7 +321,9 @@ export default function BuilderPage() {
   };
 
   useEffect(() => {
-    registerBeforeNavigateHandler(() => persistBuilder());
+    registerBeforeNavigateHandler(async () => {
+      await persistBuilder();
+    });
     return () => registerBeforeNavigateHandler(null);
   }, [persistBuilder, registerBeforeNavigateHandler]);
 
@@ -512,17 +525,15 @@ export default function BuilderPage() {
             helpText="Add a short, one-line summary."
             placeholder="Keep it concise..."
             value={contentDoc.subtitle}
-            onChange={(value) =>
-              setContentDoc((prev) => ({ ...prev, subtitle: value }))
-            }
-            onBlur={() =>
-              persistBuilder({
-                document: {
-                  ...contentDocRef.current,
-                  subtitle: contentDoc.subtitle,
-                },
-              })
-            }
+            onChange={(value) => {
+              if (value !== contentDocRef.current.subtitle) {
+                contentDirtyRef.current = true;
+              }
+              const next = { ...contentDocRef.current, subtitle: value };
+              contentDocRef.current = next;
+              setContentDoc(next);
+            }}
+            onBlur={() => persistBuilder({ document: contentDocRef.current })}
           />
         </div>
       </SectionCard>
@@ -536,9 +547,17 @@ export default function BuilderPage() {
           <ContentEditor
             blocks={contentDoc.blocks}
             chartOptions={chartOptions}
-            onChange={(blocks) =>
-              setContentDoc((prev) => ({ ...prev, blocks }))
-            }
+            onChange={(blocks) => {
+              if (
+                JSON.stringify(blocks) !==
+                JSON.stringify(contentDocRef.current.blocks)
+              ) {
+                contentDirtyRef.current = true;
+              }
+              const next = { ...contentDocRef.current, blocks };
+              contentDocRef.current = next;
+              setContentDoc(next);
+            }}
             onSave={(blocks) =>
               persistBuilder({
                 document: { ...contentDocRef.current, blocks },

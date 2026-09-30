@@ -512,6 +512,7 @@ function ChartBlockEditor({
         <IconChartBar size={16} className="shrink-0 text-baseGraySlateSolid9" />
         <div className="min-w-0 flex-1">
           <Combobox
+            variant="bright"
             name={`content-chart-${block.id}`}
             label="Select a chart"
             labelHidden

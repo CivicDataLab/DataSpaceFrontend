@@ -588,6 +588,7 @@ export default function AIModelDetailsPage() {
               requiredIndicator
               displaySelected
               error={typeError}
+              variant="bright"
               placeholder="Search and select a model type..."
               list={modelTypeOptions}
               selectedValue={formData.modelType}
@@ -617,6 +618,7 @@ export default function AIModelDetailsPage() {
       >
         <div className="flex flex-col gap-5">
           <Combobox
+            variant="bright"
             name="targetUsers"
             label="Target Users"
             displaySelected
@@ -668,6 +670,7 @@ export default function AIModelDetailsPage() {
           <div id="sectors">
             <Combobox
               displaySelected
+              variant="bright"
               name="sectors"
               list={
                 getSectorsList.data?.sectors?.map((item) => ({
@@ -691,6 +694,7 @@ export default function AIModelDetailsPage() {
           </div>
           <Combobox
             displaySelected
+            variant="bright"
             name="tags"
             list={
               getTagsList.data?.tags?.map((item) => ({
@@ -713,6 +717,7 @@ export default function AIModelDetailsPage() {
           <div id="language-support">
             <Combobox
               displaySelected
+              variant="bright"
               name="supportedLanguages"
               list={languageOptions}
               label="Language Support"
@@ -731,6 +736,7 @@ export default function AIModelDetailsPage() {
           </div>
           <Combobox
             displaySelected
+            variant="bright"
             name="geographies"
             list={
               getGeographiesList.data?.geographies?.map((item) => ({

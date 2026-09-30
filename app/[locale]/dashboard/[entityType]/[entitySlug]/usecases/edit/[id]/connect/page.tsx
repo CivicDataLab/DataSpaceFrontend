@@ -393,7 +393,7 @@ export default function ConnectPage() {
     return () => window.clearTimeout(timer);
   }, [datasetSearch]);
 
-  const { mutate: saveMetadata, isLoading: savingMetadata } = useMutation(
+  const { mutateAsync: saveMetadata, isLoading: savingMetadata } = useMutation(
     (input: UpdateUseCaseMetadataInput) =>
       GraphQL(UpdateConnectMetadata, ownerArgs, {
         updateMetadataInput: input,
@@ -402,6 +402,9 @@ export default function ConnectPage() {
       onSuccess: () => {
         void queryClient.invalidateQueries({
           queryKey: [`usecase_wizard_${params.id}`],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: [`fetch_UsecaseDetails`, params.id],
         });
         void useCaseQuery.refetch();
         void tagsQuery.refetch();
@@ -421,7 +424,7 @@ export default function ConnectPage() {
 
   const persistMetadata = useCallback(
     (next = formRef.current) => {
-      saveMetadata({
+      return saveMetadata({
         id: params.id,
         metadata: [],
         sectors: comboValues(next.sectors, 'value'),
@@ -430,7 +433,7 @@ export default function ConnectPage() {
         geographies: comboValues(next.geographies, 'value').map((value) =>
           parseInt(value, 10)
         ),
-      });
+      }).catch(() => undefined);
     },
     [params.id, saveMetadata]
   );
@@ -442,7 +445,7 @@ export default function ConnectPage() {
     const nextValue = Array.isArray(value) ? value : [];
     const next = { ...formRef.current, [field]: nextValue };
     setFormData(next);
-    persistMetadata(next);
+    void persistMetadata(next);
   };
 
   const { mutate: assignDatasets, isLoading: savingDatasets } = useMutation(
@@ -496,7 +499,9 @@ export default function ConnectPage() {
   );
 
   useEffect(() => {
-    registerBeforeNavigateHandler(() => persistMetadata());
+    registerBeforeNavigateHandler(async () => {
+      await persistMetadata();
+    });
     return () => registerBeforeNavigateHandler(null);
   }, [persistMetadata, registerBeforeNavigateHandler]);
 
@@ -623,6 +628,7 @@ export default function ConnectPage() {
       >
         <div id="classification" className="grid gap-5 md:grid-cols-1">
           <Combobox
+            variant="bright"
             displaySelected
             creatable
             name="tags"
@@ -637,6 +643,7 @@ export default function ConnectPage() {
             onChange={(value) => handleClassChange('tags', value)}
           />
           <Combobox
+            variant="bright"
             displaySelected
             required
             requiredIndicator
@@ -653,6 +660,7 @@ export default function ConnectPage() {
             onChange={(value) => handleClassChange('sdgs', value)}
           />
           <Combobox
+            variant="bright"
             displaySelected
             required
             requiredIndicator
@@ -669,6 +677,7 @@ export default function ConnectPage() {
             onChange={(value) => handleClassChange('sectors', value)}
           />
           <Combobox
+            variant="bright"
             displaySelected
             name="geographies"
             label="Geography"

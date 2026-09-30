@@ -418,7 +418,11 @@ export default function PublishPage() {
               <Text>
                 {primaryVersion ? `Version ${primaryVersion.version}` : '—'}
               </Text>
-              {primaryVersion ? <Tag>Primary</Tag> : null}
+              {primaryVersion ? (
+                <Tag fillColor="#EEEEEE" textColor="#000">
+                  Primary
+                </Tag>
+              ) : null}
             </div>
           </div>
           <div className="grid gap-2 py-3 md:grid-cols-[220px_1fr]">

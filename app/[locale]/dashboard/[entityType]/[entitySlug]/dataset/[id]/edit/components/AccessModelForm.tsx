@@ -643,6 +643,7 @@ const AccessModelForm: React.FC<AccessModelProps> = ({
           <div className="flex flex-wrap items-end gap-6">
             <div className={cn('w-full lg:w-3/4', styles.combobox)}>
               <Combobox
+                variant="bright"
                 label={'Select Fields of the Resource'}
                 list={availableResources}
                 selectedValue={selectedFields}
