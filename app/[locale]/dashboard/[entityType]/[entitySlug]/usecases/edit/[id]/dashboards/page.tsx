@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
@@ -223,12 +223,12 @@ const Dashboard = () => {
   );
 
   const { setStatus, beforeStepNavigateRef } = useEditStatus();
-  const dashboardsRef = useRef(dashboards);
-  dashboardsRef.current = dashboards;
 
   const isCheckableDashboardLink = (value: string) => {
     const trimmed = value.trim();
-    return Boolean(trimmed && (trimmed.includes('.') || /^https?:\/\//i.test(trimmed)));
+    return Boolean(
+      trimmed && (trimmed.includes('.') || /^https?:\/\//i.test(trimmed))
+    );
   };
 
   const showDisallowedToast = () => {
@@ -248,11 +248,13 @@ const Dashboard = () => {
 
   useEffect(() => {
     beforeStepNavigateRef.current = () => {
-      const invalid = dashboardsRef.current.find((dashboard) =>
-        isDisallowedDashboardUrl(dashboard.link)
+      const invalid = dashboards.find(
+        (dashboard) => dashboard.link.trim() && !getSafeEmbedUrl(dashboard.link)
       );
       if (invalid) {
-        showDisallowedToast();
+        toast.error('This dashboard URL is not allowed.', {
+          id: DASHBOARD_SAVE_ERROR_TOAST_ID,
+        });
         return false;
       }
       return true;
@@ -261,18 +263,16 @@ const Dashboard = () => {
     return () => {
       beforeStepNavigateRef.current = null;
     };
-  }, [beforeStepNavigateRef]);
+  }, [beforeStepNavigateRef, dashboards]);
 
   if (!isValidId) {
     return null;
   }
 
   const handleChange = (id: string, field: 'name' | 'link', value: string) => {
-    setDashboards((prev) => {
-      const next = prev.map((d) => (d.id === id ? { ...d, [field]: value } : d));
-      dashboardsRef.current = next;
-      return next;
-    });
+    setDashboards((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, [field]: value } : d))
+    );
 
     if (
       field === 'link' &&
@@ -344,12 +344,7 @@ const Dashboard = () => {
                   name="dashboardName"
                   value={item.name}
                   onChange={(e) => handleChange(item.id, 'name', e)}
-                  onBlur={() => {
-                    const latest = dashboardsRef.current.find(
-                      (dashboard) => dashboard.id === item.id
-                    );
-                    if (latest) handleSave(latest);
-                  }}
+                  onBlur={() => handleSave(item)}
                 />
               </div>
               <div className="w-full">
@@ -359,18 +354,12 @@ const Dashboard = () => {
                   type="url"
                   value={item.link}
                   onChange={(e) => handleChange(item.id, 'link', e)}
-                  onBlur={(value) => {
-                    const latest = dashboardsRef.current.find(
-                      (dashboard) => dashboard.id === item.id
-                    );
-                    const link =
-                      typeof value === 'string' ? value : (latest?.link ?? '');
+                  onBlur={(value) =>
                     handleSave({
-                      id: item.id,
-                      name: latest?.name ?? item.name,
-                      link,
-                    });
-                  }}
+                      ...item,
+                      link: typeof value === 'string' ? value : item.link,
+                    })
+                  }
                 />
               </div>
               <Button
