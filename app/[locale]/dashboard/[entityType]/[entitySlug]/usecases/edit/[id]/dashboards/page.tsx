@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Icon, Spinner, Text, TextField, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { getSafeEmbedUrl } from '@/lib/dashboardEmbed';
 import { Icons } from '@/components/icons';
 import { useEditStatus } from '../../context';
 
@@ -221,13 +222,48 @@ const Dashboard = () => {
     }
   );
 
-  const { setStatus } = useEditStatus();
+  const { setStatus, beforeStepNavigateRef } = useEditStatus();
+
+  const isCheckableDashboardLink = (value: string) => {
+    const trimmed = value.trim();
+    return Boolean(
+      trimmed && (trimmed.includes('.') || /^https?:\/\//i.test(trimmed))
+    );
+  };
+
+  const showDisallowedToast = () => {
+    toast.error('This dashboard URL is not allowed.', {
+      id: DASHBOARD_SAVE_ERROR_TOAST_ID,
+    });
+  };
+
+  const isDisallowedDashboardUrl = (link: string) =>
+    Boolean(link.trim() && !getSafeEmbedUrl(link));
 
   useEffect(() => {
     setStatus(
       saveLoading || addLoading || deleteLoading ? 'loading' : 'success'
     ); // update based on mutation state
   }, [saveLoading, addLoading, deleteLoading, setStatus]);
+
+  useEffect(() => {
+    beforeStepNavigateRef.current = () => {
+      const invalid = dashboards.find(
+        (dashboard) => dashboard.link.trim() && !getSafeEmbedUrl(dashboard.link)
+      );
+      if (invalid) {
+        toast.error('This dashboard URL is not allowed.', {
+          id: DASHBOARD_SAVE_ERROR_TOAST_ID,
+        });
+        return false;
+      }
+      return true;
+    };
+
+    return () => {
+      beforeStepNavigateRef.current = null;
+    };
+  }, [beforeStepNavigateRef, dashboards]);
 
   if (!isValidId) {
     return null;
@@ -237,6 +273,14 @@ const Dashboard = () => {
     setDashboards((prev) =>
       prev.map((d) => (d.id === id ? { ...d, [field]: value } : d))
     );
+
+    if (
+      field === 'link' &&
+      isCheckableDashboardLink(value) &&
+      isDisallowedDashboardUrl(value)
+    ) {
+      showDisallowedToast();
+    }
   };
 
   const handleSave = (dashboard: {
@@ -244,6 +288,11 @@ const Dashboard = () => {
     name: string;
     link: string;
   }) => {
+    if (isDisallowedDashboardUrl(dashboard.link)) {
+      showDisallowedToast();
+      return;
+    }
+
     const prev = previousState[dashboard.id];
     if (dashboard.name !== prev?.name || dashboard.link !== prev?.link) {
       saveDashboard({
@@ -305,7 +354,12 @@ const Dashboard = () => {
                   type="url"
                   value={item.link}
                   onChange={(e) => handleChange(item.id, 'link', e)}
-                  onBlur={() => handleSave(item)}
+                  onBlur={(value) =>
+                    handleSave({
+                      ...item,
+                      link: typeof value === 'string' ? value : item.link,
+                    })
+                  }
                 />
               </div>
               <Button

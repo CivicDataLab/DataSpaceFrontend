@@ -1,18 +1,22 @@
 'use client';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useRef, useState } from 'react';
 
 type StatusType = 'loading' | 'success';
 
 const EditStatusContext = createContext<{
   status: StatusType;
   setStatus: (status: StatusType) => void;
+  beforeStepNavigateRef: React.MutableRefObject<(() => boolean) | null>;
 } | null>(null);
 
 export const EditStatusProvider = ({ children }: { children: React.ReactNode }) => {
   const [status, setStatus] = useState<StatusType>('success');
+  const beforeStepNavigateRef = useRef<(() => boolean) | null>(null);
 
   return (
-    <EditStatusContext.Provider value={{ status, setStatus }}>
+    <EditStatusContext.Provider
+      value={{ status, setStatus, beforeStepNavigateRef }}
+    >
       {children}
     </EditStatusContext.Provider>
   );
