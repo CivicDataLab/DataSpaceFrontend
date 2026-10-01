@@ -1,41 +1,55 @@
 'use client';
 
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
+import {
+  IconAlertTriangle,
+  IconCircleCheck,
+  IconInfoCircle,
+  IconSend,
+  IconTag,
+} from '@tabler/icons-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-  Button,
-  Icon,
-  Spinner,
-  Text,
-  toast,
-} from 'opub-ui';
+  ArrowRight,
+  Building,
+  Database,
+  Layers,
+  MapPin,
+  Target,
+  Users,
+} from 'lucide-react';
+import { Button, SectionCard, Spinner, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { Icons } from '@/components/icons';
-import Assign from './Assign';
-import Contributors from './Contributors';
-import Dashboards from './Dashboards';
-import Details from './Details';
+import {
+  ContentBlocksRenderer,
+  editAction,
+  ReviewField,
+  TagList,
+} from '../../components/ContentBlocksRenderer';
+import { parseUseCaseContent } from '../../content-document';
+import {
+  isUseCaseBuilderComplete,
+  isUseCaseConnectComplete,
+  useCaseHasContent,
+} from '../../usecase-summary';
 
-const UseCaseDetails = graphql(`
-  query UseCasedata($filters: UseCaseFilter) {
+const FetchUseCaseReview = graphql(`
+  query UseCaseReviewData($filters: UseCaseFilter) {
     useCases(filters: $filters) {
       id
       title
       summary
-      website
-      platformUrl
-      metadata {
-        metadataItem {
-          id
-          label
-          dataType
-        }
+      slug
+      status
+      logo {
+        name
+        path
+        url
+      }
+      tags {
         id
         value
       }
@@ -46,72 +60,35 @@ const UseCaseDetails = graphql(`
       geographies {
         id
         name
-        code
-        type
       }
       sdgs {
         id
         code
         name
-      }
-      runningStatus
-      tags {
-        id
-        value
-      }
-      startedOn
-      completedOn
-      logo {
-        name
-        path
-        url
+        number
       }
       datasets {
-        title
         id
-        sectors {
-          name
-        }
-        modified
+        title
       }
-      contactEmail
-      status
-      slug
       contributors {
         id
         fullName
-        username
-        profilePicture {
-          url
-        }
-      }
-      supportingOrganizations {
-        id
-        name
-        logo {
-          url
-          name
-        }
       }
       partnerOrganizations {
         id
         name
-        logo {
-          url
-          name
-        }
       }
-      usecaseDashboard {
+      supportingOrganizations {
         id
         name
-        link
       }
     }
   }
 `);
 
 const publishUseCaseMutation = graphql(`
-  mutation publishUseCase($useCaseId: String!) {
+  mutation publishUseCaseWizard($useCaseId: String!) {
     publishUseCase(useCaseId: $useCaseId) {
       ... on TypeUseCase {
         id
@@ -121,212 +98,361 @@ const publishUseCaseMutation = graphql(`
   }
 `);
 
-const Publish = () => {
+function mediaUrl(path?: string | null, url?: string | null) {
+  const raw = url || path;
+  if (!raw) return '';
+  if (raw.startsWith('http')) return raw;
+  return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${raw.replace('/code/files/', '')}`;
+}
+
+function ReadinessRow({
+  ok,
+  label,
+  detail,
+  onEdit,
+}: {
+  ok: boolean;
+  label: string;
+  detail: string;
+  onEdit?: () => void;
+}) {
+  return (
+    <div className="last:border-b-0 flex items-start justify-between gap-3 border-b-1 border-solid border-borderSubdued py-3">
+      <div className="flex min-w-0 items-start gap-3">
+        {ok ? (
+          <IconCircleCheck
+            size={20}
+            className="mt-0.5 shrink-0 text-textSuccess"
+          />
+        ) : (
+          <IconAlertTriangle
+            size={20}
+            className="mt-0.5 shrink-0 text-textCritical"
+          />
+        )}
+        <div className="min-w-0">
+          <Text fontWeight="semibold">{label}</Text>
+          <div className="mt-1">
+            <Text variant="bodySm" color="subdued">
+              {detail}
+            </Text>
+          </div>
+        </div>
+      </div>
+      {onEdit ? (
+        <Button
+          kind="neutral"
+          size="slim"
+          onClick={onEdit}
+          icon={<ArrowRight size={16} />}
+        >
+          Fix
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+function sdgLabel(item: {
+  number?: number | null;
+  code?: string | null;
+  name?: string | null;
+}) {
+  const num = item.number
+    ? String(item.number).padStart(2, '0')
+    : (item.code ?? '').replace('SDG', '').padStart(2, '0');
+  return `${num}. ${item.name ?? ''}`;
+}
+
+export default function PublishPage() {
   const params = useParams<{
     entityType: string;
     entitySlug: string;
     id: string;
   }>();
-  const UseCaseData = useQuery(
+  const router = useRouter();
+  const ownerArgs = { [params.entityType]: params.entitySlug };
+  const stepBase = `/dashboard/${params.entityType}/${params.entitySlug}/usecases/edit/${params.id}`;
+
+  const reviewQuery = useQuery(
     [`fetch_UsecaseDetails`, params.id, params.entityType, params.entitySlug],
     () =>
-      GraphQL(
-        UseCaseDetails,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        {
-          filters: {
-            id: params.id,
-          },
-        }
-      ),
-    {
-      refetchOnMount: 'always',
-      refetchOnReconnect: 'always',
-    }
+      GraphQL(FetchUseCaseReview, ownerArgs, {
+        filters: { id: params.id },
+      }),
+    { refetchOnMount: 'always' }
   );
-  const router = useRouter();
-  const PUBLISH_SUCCESS_TOAST_ID = 'usecase-publish-success';
-  const PUBLISH_ERROR_TOAST_ID = 'usecase-publish-error';
 
-  const { mutate, isLoading: mutationLoading } = useMutation(
-    () =>
-      GraphQL(
-        publishUseCaseMutation,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        { useCaseId: params.id }
-      ),
+  const { mutate, isLoading: publishing } = useMutation(
+    () => GraphQL(publishUseCaseMutation, ownerArgs, { useCaseId: params.id }),
     {
       onSuccess: () => {
-        toast('UseCase Published Successfully', {
-          id: PUBLISH_SUCCESS_TOAST_ID,
-        });
+        toast('Use case published successfully');
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/usecases`
         );
       },
-      onError: (err: unknown) => {
-        const errorMessage =
-          typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' && err.message.trim()
-            ? err.message.trim()
-            : 'Unable to publish use case right now. Please try again.';
-        toast(`Error: ${errorMessage}`, { id: PUBLISH_ERROR_TOAST_ID });
+      onError: (error: unknown) => {
+        toast(
+          typeof error === 'object' &&
+            error !== null &&
+            'message' in error &&
+            typeof error.message === 'string'
+            ? error.message
+            : 'Unable to publish use case right now.'
+        );
       },
     }
   );
 
-  const Summary = [
-    {
-      name: 'Details',
-      data: UseCaseData.data?.useCases,
-      error:
-        UseCaseData.data?.useCases?.[0]?.sectors?.length === 0 ||
-        UseCaseData.data?.useCases?.[0]?.summary?.length === 0 ||
-        UseCaseData.data?.useCases?.[0]?.sdgs?.length === 0 ||
-        UseCaseData.data?.useCases?.[0]?.logo === null ||
-        !UseCaseData.data?.useCases?.[0]?.startedOn
-          ? 'Summary, SDG, Sectors, Logo, or Started On is missing. Please add to continue.'
-          : '',
-      errorType: 'critical',
-    },
-    {
-      name: 'Assign',
-      data: UseCaseData?.data?.useCases?.[0]?.datasets,
-      error:
-        UseCaseData.data && UseCaseData.data?.useCases?.[0]?.datasets?.length === 0
-          ? 'No datasets assigned. Please assign to continue.'
-          : '',
-    },
-    {
-      name: 'Dashboards',
-      data: UseCaseData?.data?.useCases?.[0] != null &&
-        'length' in UseCaseData.data.useCases[0] &&
-        typeof UseCaseData.data.useCases[0].length === 'number' &&
-        UseCaseData.data.useCases[0].length > 0,
-      error: '',
-    },
-    {
-      name: 'Contributors',
-      data: UseCaseData?.data?.useCases?.[0] != null &&
-        'length' in UseCaseData.data.useCases[0] &&
-        typeof UseCaseData.data.useCases[0].length === 'number' &&
-        UseCaseData.data.useCases[0].length > 0,
-      error: '',
-    },
-  ];
+  const useCase = reviewQuery.data?.useCases?.[0];
+  const document = parseUseCaseContent(useCase?.summary);
+  const builderComplete = isUseCaseBuilderComplete(useCase ?? {});
+  const connectComplete = isUseCaseConnectComplete(useCase ?? {});
+  const hasContent = useCaseHasContent(useCase?.summary);
+  const ready = builderComplete && connectComplete && hasContent;
+  const previewHref = `/usecases/${useCase?.slug || useCase?.id || params.id}`;
 
-  const isPublishDisabled = (useCase: {
-    datasets?: unknown[] | null;
-    sectors?: unknown[] | null;
-    summary?: string | null;
-    sdgs?: unknown[] | null;
-    logo?: unknown;
-    startedOn?: string | null;
-  } | null | undefined) => {
-    if (!useCase) return true;
+  const builderIssues: string[] = [];
+  if (!useCase?.title?.trim()) builderIssues.push('Enter a use case title.');
+  if (!useCase?.logo) builderIssues.push('Upload a thumbnail image.');
+  if (!hasContent) builderIssues.push('Add at least one content block.');
+  const builderOk = builderIssues.length === 0;
+  const builderDetail = builderOk
+    ? 'Title, thumbnail, and content added.'
+    : builderIssues.join(' ');
+  const builderEdit =
+    !useCase?.title?.trim() || !useCase?.logo
+      ? `${stepBase}/builder#basic-information`
+      : `${stepBase}/builder#content`;
 
-    const hasDatasets = (useCase.datasets?.length ?? 0) > 0;
-    const hasRequiredMetadata =
-      (useCase.sectors?.length ?? 0) > 0 &&
-      (useCase.summary?.length ?? 0) > 0 &&
-      (useCase.sdgs?.length ?? 0) > 0 &&
-      useCase.logo !== null &&
-      !!useCase.startedOn;
+  const connectIssues: string[] = [];
+  if (!useCase?.sectors?.length) {
+    connectIssues.push('Select at least one sector.');
+  }
+  if (!useCase?.sdgs?.length) {
+    connectIssues.push('Select at least one SDG goal.');
+  }
+  const connectDetail = connectComplete
+    ? 'Sectors and SDG goals selected.'
+    : connectIssues.join(' ');
 
-    // No datasets assigned
-    if (!hasDatasets) return true;
-
-    // Required metadata check
-    if (!hasRequiredMetadata) return true;
-  };
+  if (reviewQuery.isLoading || reviewQuery.isFetching) {
+    return (
+      <div className="flex h-48 items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
-    <>
-      <div className=" w-full py-6">
-        <div className="flex items-center justify-center gap-2 ">
-          <Text variant="bodyMd" className=" font-semi-bold">
-            REVIEW USECASE DETAILS
+    <div className="flex flex-col gap-6 px-6">
+      <div>
+        <Text variant="headingLg" fontWeight="semibold">
+          Review & Publish
+        </Text>
+        <div className="mt-1">
+          <Text color="subdued">
+            Check your information before making this content available
+            publicly.
           </Text>
-          :
-          <Text>
-            Please check all the UseCase details below before publishing
-          </Text>
-        </div>
-        <div className=" flex flex-col gap-10 pt-6">
-          {UseCaseData.isLoading || mutationLoading ? (
-            <div className=" mt-8 flex justify-center">
-              <Spinner />
-            </div>
-          ) : (
-            <>
-              {Summary.map((item, index) => (
-                <Accordion type="single" collapsible key={index}>
-                  <AccordionItem
-                    value={`item-${index}`}
-                    className=" border-none"
-                  >
-                    <AccordionTrigger className="flex w-full items-center gap-2 rounded-1 bg-baseBlueSolid3  p-4 hover:no-underline ">
-                      <div className="flex flex-wrap items-center justify-start gap-2">
-                        <Text className=" w-32 text-justify font-semi-bold">
-                          {item.name}
-                        </Text>
-                        {item.error !== '' && (
-                          <div className="flex items-center gap-2">
-                            <Icon
-                              source={Icons.alert}
-                              color="critical"
-                              size={24}
-                            />
-                            <Text variant="bodyMd" className="text-justify">
-                              {item.error}
-                            </Text>
-                          </div>
-                        )}
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent
-                      className="flex w-full flex-col "
-                      style={{
-                        backgroundColor: 'var( --base-pure-white)',
-                        outline: '1px solid var( --base-pure-white)',
-                      }}
-                    >
-                      <div className=" py-4">
-                        {item.name === 'Assign' ? (
-                          <Assign data={item.data} />
-                        ) : item.name === 'Details' ? (
-                          <Details data={UseCaseData.data} />
-                        ) : item.name === 'Dashboards' ? (
-                          <Dashboards
-                            data={
-                              UseCaseData.data?.useCases[0]?.usecaseDashboard
-                            }
-                          />
-                        ) : (
-                          <Contributors data={UseCaseData.data} />
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              ))}
-              <Button
-                className="m-auto w-fit"
-                onClick={() => mutate()}
-                disabled={isPublishDisabled(UseCaseData?.data?.useCases[0])}
-                loading={mutationLoading}
-              >
-                Publish
-              </Button>
-            </>
-          )}
         </div>
       </div>
-    </>
-  );
-};
 
-export default Publish;
+      <div className="rounded-3 border-1 border-solid border-borderSubdued px-4">
+        <div className="pt-4">
+          <Text fontWeight="semibold">
+            {ready ? 'Ready to publish' : 'Needs attention'}
+          </Text>
+        </div>
+        <ReadinessRow
+          ok={builderOk}
+          label="Builder"
+          detail={builderDetail}
+          onEdit={builderOk ? undefined : () => router.push(builderEdit)}
+        />
+        <ReadinessRow
+          ok={connectComplete}
+          label="Connect"
+          detail={connectDetail}
+          onEdit={
+            connectComplete
+              ? undefined
+              : () => router.push(`${stepBase}/connect#classification`)
+          }
+        />
+      </div>
+
+      <SectionCard
+        title="Use Case Overview"
+        expandable
+        defaultExpanded
+        actions={editAction('Edit Use Case Overview', () =>
+          router.push(`${stepBase}/builder#basic-information`)
+        )}
+      >
+        <div className="flex flex-col gap-4">
+          {useCase?.logo ? (
+            <Image
+              src={mediaUrl(useCase.logo.path, useCase.logo.url)}
+              alt={useCase.title ?? 'Use case thumbnail'}
+              width={720}
+              height={180}
+              className="h-auto max-h-[180px] w-auto max-w-full rounded-3 object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <Text>No thumbnail uploaded</Text>
+          )}
+          <ReviewField label="Use Case Title">
+            <Text fontWeight="medium">{useCase?.title || '—'}</Text>
+          </ReviewField>
+          <ReviewField label="Subtitle">
+            <Text>{document.subtitle || '—'}</Text>
+          </ReviewField>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Content"
+        expandable
+        defaultExpanded
+        actions={editAction('Edit Content', () =>
+          router.push(`${stepBase}/builder#content`)
+        )}
+      >
+        {useCaseHasContent(useCase?.summary) ? (
+          <ContentBlocksRenderer summary={useCase?.summary} />
+        ) : (
+          <Text>No content added.</Text>
+        )}
+      </SectionCard>
+
+      <SectionCard
+        title="Classification"
+        expandable
+        defaultExpanded
+        actions={editAction('Edit Classification', () =>
+          router.push(`${stepBase}/connect#classification`)
+        )}
+      >
+        <div className="grid gap-4 md:grid-cols-1">
+          <ReviewField label="Tags" icon={<IconTag size={16} />}>
+            <TagList
+              items={useCase?.tags?.map((item) => ({
+                id: item.id,
+                label: item.value ?? '',
+              }))}
+            />
+          </ReviewField>
+          <ReviewField label="SDG Goals" icon={<Target size={16} />}>
+            <TagList
+              items={useCase?.sdgs?.map((item) => ({
+                id: item.id,
+                label: sdgLabel(item),
+              }))}
+            />
+          </ReviewField>
+          <ReviewField label="Sectors" icon={<Layers size={16} />}>
+            <TagList
+              items={useCase?.sectors?.map((item) => ({
+                id: item.id,
+                label: item.name ?? '',
+              }))}
+            />
+          </ReviewField>
+          <ReviewField label="Geography" icon={<MapPin size={16} />}>
+            <TagList
+              items={useCase?.geographies?.map((item) => ({
+                id: item.id,
+                label: item.name ?? '',
+              }))}
+            />
+          </ReviewField>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Connections"
+        expandable
+        defaultExpanded
+        actions={editAction('Edit Connections', () =>
+          router.push(`${stepBase}/connect#datasets`)
+        )}
+      >
+        <div className="flex flex-col gap-4">
+          <ReviewField label="Datasets" icon={<Database size={16} />}>
+            <TagList
+              items={useCase?.datasets?.map((item) => ({
+                id: item.id,
+                label: item.title ?? '',
+              }))}
+            />
+          </ReviewField>
+          <ReviewField label="Contributors" icon={<Users size={16} />}>
+            <TagList
+              items={useCase?.contributors?.map((item) => ({
+                id: item.id,
+                label: item.fullName,
+              }))}
+            />
+          </ReviewField>
+          <ReviewField label="Organisations" icon={<Building size={16} />}>
+            <TagList
+              items={[
+                ...(useCase?.partnerOrganizations ?? []),
+                ...(useCase?.supportingOrganizations ?? []),
+              ].map((item) => ({
+                id: item.id,
+                label: item.name,
+              }))}
+            />
+          </ReviewField>
+        </div>
+      </SectionCard>
+
+      <div className="flex items-start gap-3 rounded-2 bg-surfaceSubdued p-4">
+        <IconInfoCircle size={20} className="mt-0.5 shrink-0" />
+        <div>
+          <Text>
+            Open a full preview of this Use Case in a new tab, exactly as it
+            will appear once published.
+          </Text>
+          <div className="mt-3">
+            <Button kind="secondary" url={previewHref} external>
+              Preview Use Case
+            </Button>
+          </div>
+          <div className="mt-2">
+            <Text variant="bodySm" color="subdued">
+              Publishing happens from this review step.
+            </Text>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center gap-3 rounded-2 border-1 border-solid border-borderSubdued p-4">
+        <Button
+          className="w-1/3 rounded-2 bg-[var(--primary)] py-2 hover:bg-[#0b2540]"
+          disabled={!ready}
+          loading={publishing}
+          onClick={() => mutate()}
+        >
+          <span className="flex items-center justify-center gap-2 font-bold">
+            Publish Use Case
+            <IconSend size={20} strokeWidth={1.5} />
+          </span>
+        </Button>
+      </div>
+
+      <div>
+        <Button
+          kind="tertiary"
+          onClick={() => router.push(`${stepBase}/connect`)}
+        >
+          Previous
+        </Button>
+      </div>
+    </div>
+  );
+}

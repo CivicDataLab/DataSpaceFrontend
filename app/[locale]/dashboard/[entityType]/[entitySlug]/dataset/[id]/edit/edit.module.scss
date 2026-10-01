@@ -1,17 +1,30 @@
+:global([class*='Select-module_PopoverWrapper']),
+:global([class*='Select-module_Popover']) {
+  z-index: calc(var(--z-max) + 1);
+  pointer-events: auto;
+}
+
 .EditPage {
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-.accessModelEdit {
-  input {
-    width: 140px;
+.datasetStepper {
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+  padding-top: var(--space-6);
+  --action-primary-basic-default: var(--blue-primary-color);
+  --text-highlight: var(--blue-primary-color);
+
+  [class*='buttonNext'] {
+    background-color: var(--blue-primary-color) !important;
+    border-color: var(--blue-primary-color) !important;
+    color: var(--base-pure-white) !important;
+    --button-color: var(--blue-primary-color);
+    --button-color-hover: var(--blue-primary-text);
+    --button-color-active: var(--blue-primary-text);
   }
 }
 
-.combobox {
-  [role='presentation'] {
-    z-index: 1000 !important;
-  }
-}
+

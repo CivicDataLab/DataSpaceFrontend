@@ -1,0 +1,56 @@
+.modelStepper {
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+  padding-top: var(--space-6);
+  --action-primary-basic-default: var(--blue-primary-color);
+  --action-primary-basic-hovered: var(--blue-primary-text);
+  --action-primary-basic-pressed: var(--blue-primary-text);
+  --text-highlight: var(--blue-primary-color);
+
+  [class*='buttonNext'] {
+    background-color: var(--blue-primary-color) !important;
+    border-color: var(--blue-primary-color) !important;
+    color: var(--base-pure-white) !important;
+    --button-color: var(--blue-primary-color);
+    --button-color-hover: var(--blue-primary-text);
+    --button-color-active: var(--blue-primary-text);
+  }
+}
+
+.sheetActions {
+  --action-primary-basic-default: var(--blue-primary-color);
+  --action-primary-basic-hovered: var(--blue-primary-text);
+  --action-primary-basic-pressed: var(--blue-primary-text);
+}
+
+.iconEdit {
+  border-radius: 8px;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--base-gray-slate-solid-3);
+  }
+}
+
+.iconDelete {
+  border-radius: 8px;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--base-red-solid-3);
+  }
+
+  &:hover :global(svg),
+  &:focus-visible :global(svg) {
+    color: var(--icon-critical) !important;
+    stroke: var(--icon-critical) !important;
+  }
+}
+
+/* Select and Combobox menus portal outside the sheet. Raise them and
+   restore clicks; the sheet marks outside content as non-interactive. */
+:global([class*='Select-module_Popover__']),
+:global([class*='Combobox-module_Popover__']) {
+  z-index: calc(var(--z-max) + 1);
+  pointer-events: auto;
+}

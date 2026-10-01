@@ -8,8 +8,8 @@ import { Button, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { buildSectorSlugParam } from '@/lib/utils';
-import { SectorListingSkeleton } from '@/components/loading';
 import { Icons } from '@/components/icons';
+import { SectorListingSkeleton } from '@/components/loading';
 import { SectorCard } from '@/components/SectorCard';
 
 const sectorDetails = graphql(`
@@ -32,7 +32,7 @@ const Sectors = () => {
   const router = useRouter();
 
   return (
-    <div className="container pt-10 pb-12 md:px-8 lg:pt-20 lg:pb-24">
+    <div className="container pb-12 pt-10 md:px-8 lg:pb-24 lg:pt-20">
       <div className="flex flex-wrap items-center justify-between gap-4 px-4 md:px-12 lg:gap-2 lg:px-12 ">
         <div className="flex flex-col gap-2">
           <Text variant="headingXl">Explore Sectors</Text>
@@ -44,7 +44,7 @@ const Sectors = () => {
         <div className="mr-8 lg:mr-12">
           <Button
             kind="tertiary"
-            className="bg-transparent border-none shadow-none text-primaryText px-0 hover:underline outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-interactive-focused)]"
+            className="shadow-none border-none bg-transparent px-0 text-primaryText outline-none hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-interactive-focused)]"
             onClick={() => {
               router.push('/sectors');
             }}

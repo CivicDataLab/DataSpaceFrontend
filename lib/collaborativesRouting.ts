@@ -76,6 +76,10 @@ const RESERVED_SUBDOMAINS = new Set([
   // existing path-like prefix used in this app
 ]);
 
+export function isReservedCollaborativeSubdomain(slug: string) {
+  return RESERVED_SUBDOMAINS.has(slug.trim().toLowerCase());
+}
+
 export const isCollaborativeSubdomainHost = (
   hostname: string,
   configuredDomain?: string | null
@@ -121,7 +125,6 @@ export const getCollaborativeDetailUrl = (slug?: string | null) => {
 
   if (domain === 'collab.localhost' || domain === 'collab.127.0.0.1') {
     const portSuffix = getConfiguredPortSuffix();
-    console.log('portSuffix', portSuffix);
     const host =
       domain === 'collab.127.0.0.1' ? 'collab.127.0.0.1' : 'collab.localhost';
     return `${protocol}//${slug}.${host}${portSuffix}${localePrefix}`;

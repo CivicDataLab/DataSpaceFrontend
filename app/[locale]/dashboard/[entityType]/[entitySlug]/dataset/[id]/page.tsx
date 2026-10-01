@@ -10,7 +10,6 @@ import { testDataset } from '@/config/dashboard';
 
 // import { Icons } from '@/components/icons';
 // import { InProgress } from '@/components/in-progress';
-// import { ActionBar } from '../components/action-bar';
 
 export default function Page() {
   const params = useParams<{ id: string }>();

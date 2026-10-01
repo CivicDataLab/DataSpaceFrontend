@@ -18,10 +18,10 @@ import { Loading } from '@/components/loading';
 import { useTourTrigger } from '@/hooks/use-tour-trigger';
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
-import { ActionBar } from './components/action-bar';
+import { ActionBar } from '../provider-flow/ActionBar';
+import { Navigation } from '../provider-flow/Navigation';
 import { Content } from './components/content';
 import { DatasetType, DatasetTypeModal } from './components/dataset-type-modal';
-import { Navigation } from './components/navigate-org-datasets';
 
 const allDatasetsQueryDoc = graphql(`
   query allDatasetsQuery($filters: DatasetFilter, $order: DatasetOrder) {
@@ -158,7 +158,7 @@ export default function DatasetPage() {
               const datasetId = data?.addDataset?.data?.id;
               // Route to edit page - prompt datasets will show additional fields there
               router.push(
-                `/dashboard/${entityType}/${entitySlug}/dataset/${datasetId}/edit/metadata`
+                `/dashboard/${entityType}/${entitySlug}/dataset/${datasetId}/edit/resources`
               );
             }
           } else {
@@ -234,7 +234,7 @@ export default function DatasetPage() {
           <LinkButton
             kind="tertiary"
             size="medium"
-            href={`/dashboard/${entityType}/${entitySlug}/dataset/${row.original.id}/edit/metadata`}
+            href={`/dashboard/${entityType}/${entitySlug}/dataset/${row.original.id}/edit`}
           >
             {row.original.title}
           </LinkButton>
@@ -337,8 +337,6 @@ export default function DatasetPage() {
         ) : (
           <Content onAddNew={() => setIsTypeModalOpen(true)} />
         )}
-
-        {/* <Page /> */}
       </div>
 
       {/* Dataset Type Selection Modal */}

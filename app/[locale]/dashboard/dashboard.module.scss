@@ -4,7 +4,7 @@
     gap var(--duration-200) var(--ease-in-out);
 
   &:hover {
-    background-color: var(--surface-selected);
+    background-color: var(--surface-subdued);
   }
 }
 
@@ -12,10 +12,10 @@
   background-color: var(--surface-selected);
 
   svg {
-    color: var(--icon-success);
+    color: var(--blue-primary-color);
   }
 }
 
 .Collapse {
-  transition: flex-basis var(--duration-300) var(--ease-in-out);
+  transition: width var(--duration-300) var(--ease-in-out);
 }

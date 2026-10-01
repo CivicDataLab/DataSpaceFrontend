@@ -1,0 +1,314 @@
+.useCaseStepper {
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+  padding-top: var(--space-6);
+  --action-primary-basic-default: var(--blue-primary-color);
+  --text-highlight: var(--blue-primary-color);
+
+  [class*='buttonNext'] {
+    background-color: var(--blue-primary-color) !important;
+    border-color: var(--blue-primary-color) !important;
+    color: var(--base-pure-white) !important;
+    --button-color: var(--blue-primary-color);
+    --button-color-hover: var(--blue-primary-text);
+    --button-color-active: var(--blue-primary-text);
+  }
+}
+
+.thumbnailRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--base-gray-slate-solid-6);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.thumbnailPreview {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.thumbnailMeta {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.thumbnailActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.thumbnailInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.overflowVisible {
+  overflow: visible !important;
+
+  :global([class*='SectionCard']),
+  :global([class*='sectionCard']) {
+    overflow: visible !important;
+  }
+}
+
+:global([class*='Select-module_PopoverWrapper']),
+:global([class*='Combobox-module_PopoverWrapper']) {
+  z-index: calc(var(--z-max, 99999) + 1) !important;
+  pointer-events: auto;
+}
+
+.menu {
+  display: flex;
+  width: 148px;
+  flex-direction: column;
+  padding: 4px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-default);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+
+  svg {
+    flex-shrink: 0;
+    color: var(--text-subdued);
+  }
+
+  &:hover {
+    background: var(--base-gray-slate-solid-3);
+  }
+}
+
+.canvas {
+  overflow: hidden;
+  border: 1px solid var(--base-gray-slate-solid-6);
+  border-radius: 12px;
+  background: var(--surface-default);
+}
+
+.canvasBody {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.canvasEmpty {
+  display: flex;
+  min-height: 220px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 56px 24px;
+  text-align: center;
+}
+
+.addContentFooter {
+  border-top: 1px solid var(--base-gray-slate-solid-6);
+  padding: 16px 24px;
+}
+
+.captionText {
+  margin: 6px 0 0;
+  color: var(--text-subdued);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.plainField {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-default);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  outline: none;
+  appearance: none;
+
+  &::placeholder {
+    color: color-mix(in srgb, var(--text-subdued) 50%, transparent);
+  }
+
+  &:hover {
+    background: color-mix(
+      in srgb,
+      var(--base-gray-slate-solid-3) 40%,
+      transparent
+    );
+  }
+
+  &:focus {
+    background: color-mix(
+      in srgb,
+      var(--base-gray-slate-solid-3) 55%,
+      transparent
+    );
+  }
+
+  &.plainFieldHeading {
+    color: var(--blue-primary-color);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  &.plainFieldSupport {
+    color: var(--text-subdued);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  &.plainFieldCaption {
+    margin-top: 6px;
+    color: var(--text-subdued);
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  &.plainFieldLabel {
+    color: var(--blue-primary-color);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  &.plainFieldMono {
+    color: var(--text-subdued);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+}
+
+.highlightRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.highlightCard {
+  flex: 1;
+  min-width: 0;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.highlightSwatches {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+}
+
+.highlightSwatch {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--base-gray-slate-solid-7);
+  border-radius: 999px;
+  cursor: pointer;
+  appearance: none;
+}
+
+.highlightSwatchSelected {
+  box-shadow:
+    0 0 0 2px var(--surface-default, #fff),
+    0 0 0 3px var(--blue-primary-color);
+}
+
+.highlightTone0 {
+  background: color-mix(in srgb, var(--blue-primary-color) 8%, white);
+}
+
+.highlightTone1 {
+  background: var(--base-amber-solid-3);
+}
+
+.highlightTone2 {
+  background: var(--base-green-solid-3);
+}
+
+.block {
+  position: relative;
+  margin-right: -12px;
+  margin-left: -12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition:
+    border-color 150ms,
+    background-color 150ms;
+
+  &:hover {
+    border-color: var(--base-gray-slate-solid-6);
+  }
+
+  &:hover .toolbar {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.blockActive {
+  border-color: color-mix(in srgb, var(--blue-primary-color) 40%, transparent);
+  background: color-mix(in srgb, var(--blue-primary-color) 4%, transparent);
+}
+
+.toolbar {
+  position: absolute;
+  top: -16px;
+  right: 8px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--base-gray-slate-solid-6);
+  border-radius: 6px;
+  background: var(--surface-default, #fff);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toolbarVisible {
+  opacity: 1;
+  pointer-events: auto;
+}

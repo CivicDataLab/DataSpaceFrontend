@@ -1,6 +1,6 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
-import { Inter as FontSans } from 'next/font/google';
+import { Inter as FontSans, JetBrains_Mono as FontMono } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import type { Metadata } from 'next';
@@ -12,6 +12,11 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import locales from '../../config/locales';
 
 const fontSans = FontSans({ subsets: ['latin'], display: 'swap' });
+const fontMono = FontMono({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-jetbrains-mono',
+});
 
 export const metadata: Metadata = {
   title: siteConfig.name,
@@ -87,7 +92,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={fontMono.variable}>
       <body className={fontSans.className}>
         <GoogleAnalytics />
         <NuqsAdapter>
