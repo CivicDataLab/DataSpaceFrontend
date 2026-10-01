@@ -224,13 +224,6 @@ const Dashboard = () => {
 
   const { setStatus, beforeStepNavigateRef } = useEditStatus();
 
-  const isCheckableDashboardLink = (value: string) => {
-    const trimmed = value.trim();
-    return Boolean(
-      trimmed && (trimmed.includes('.') || /^https?:\/\//i.test(trimmed))
-    );
-  };
-
   const showDisallowedToast = () => {
     toast.error('This dashboard URL is not allowed.', {
       id: DASHBOARD_SAVE_ERROR_TOAST_ID,
@@ -273,14 +266,6 @@ const Dashboard = () => {
     setDashboards((prev) =>
       prev.map((d) => (d.id === id ? { ...d, [field]: value } : d))
     );
-
-    if (
-      field === 'link' &&
-      isCheckableDashboardLink(value) &&
-      isDisallowedDashboardUrl(value)
-    ) {
-      showDisallowedToast();
-    }
   };
 
   const handleSave = (dashboard: {
