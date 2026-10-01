@@ -86,7 +86,10 @@ export default function DatasetPage() {
     ? { [entityType]: entitySlug }
     : null;
 
-  const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
+  const [navigationTab, setNavigationTab] = useQueryState(
+    'tab',
+    parseAsString.withDefault('drafts')
+  );
 
   const AllUseCases = useQuery(
     [`fetch_UseCases`, entityType, entitySlug, navigationTab ?? 'drafts'],
@@ -105,12 +108,10 @@ export default function DatasetPage() {
   );
 
   useEffect(() => {
-    if (navigationTab === null || navigationTab === undefined)
-      setNavigationTab('drafts');
     if (isValidParams) {
       AllUseCases.refetch();
     }
-  }, [navigationTab, isValidParams, setNavigationTab, AllUseCases]);
+  }, [navigationTab, isValidParams, AllUseCases]);
 
   const DeleteUseCaseMutation = useMutation(
     [`delete_Usecase`],

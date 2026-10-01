@@ -1,0 +1,16 @@
+version: 2
+build:
+  os: ubuntu-24.04
+  tools:
+    python: "3.12"
+  jobs:
+    post_checkout:
+      # Skip PR builds that don't touch the docs (exit 183 = cancel build)
+      # RTD clones only main, so fetch dev too: PRs target either branch
+      - if [ "$READTHEDOCS_VERSION_TYPE" = "external" ]; then git fetch -q --depth 1 origin dev:refs/remotes/origin/dev || true; for b in origin/main origin/dev; do if git diff --quiet $b -- cds_docs_femhealth/; then exit 183; fi; done; fi
+sphinx:
+  configuration: cds_docs_femhealth/conf.py
+  fail_on_warning: true
+python:
+  install:
+    - requirements: cds_docs_femhealth/requirements.txt

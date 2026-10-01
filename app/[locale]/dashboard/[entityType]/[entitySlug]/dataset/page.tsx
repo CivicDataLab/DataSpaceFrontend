@@ -87,7 +87,10 @@ export default function DatasetPage() {
     ? { [entityType]: entitySlug }
     : null;
 
-  const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
+  const [navigationTab, setNavigationTab] = useQueryState(
+    'tab',
+    parseAsString.withDefault('drafts')
+  );
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
 
   const AllDatasetsQuery = useQuery(
@@ -111,12 +114,10 @@ export default function DatasetPage() {
     );
 
   useEffect(() => {
-    if (navigationTab === null || navigationTab === undefined)
-      setNavigationTab('drafts');
     if (isValidParams) {
       AllDatasetsQuery.refetch();
     }
-  }, [navigationTab, isValidParams, AllDatasetsQuery, setNavigationTab]);
+  }, [navigationTab, isValidParams, AllDatasetsQuery]);
 
   const DeleteDatasetMutation = useMutation(
     [`delete_dataset`],

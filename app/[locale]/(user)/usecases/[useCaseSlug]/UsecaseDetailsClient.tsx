@@ -277,6 +277,7 @@ const UseCaseDetailClient = () => {
                   <Metadata data={UseCaseDetails} />
                 </div>
               </div>
+              <Dashboards />
               <div className="container py-8 lg:py-14">
                 <div className=" flex flex-col gap-1 ">
                   <Text variant="headingXl">Datasets in this Use Case</Text>
@@ -345,7 +346,6 @@ const UseCaseDetailClient = () => {
                 </div>
               </div>
             </div>
-            <Dashboards />
             {(hasSupportingOrganizations ||
               hasPartnerOrganizations ||
               hasContributors) && (

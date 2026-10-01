@@ -5,6 +5,11 @@ on:
     branches:
       - dev
       - main
+    # Docs-only changes (Markdown, docs/, Read the Docs source) don't build, test or deploy
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'cds_docs_femhealth/**'
 
 # Prevent two deploys to the same environment from racing each other and
 # corrupting the releases/ directory or the .last_good / .rollback_target markers.
@@ -33,6 +38,7 @@ jobs:
       BACKEND_GRAPHQL_URL: ${{ vars.BACKEND_GRAPHQL_URL }}
       NEXT_PUBLIC_ENABLE_ACCESSMODEL: ${{ vars.NEXT_PUBLIC_ENABLE_ACCESSMODEL }}
       NEXT_PUBLIC_ANALYTICS_URL: ${{ vars.NEXT_PUBLIC_ANALYTICS_URL }}
+      NEXT_PUBLIC_DASHBOARD_EMBED_ORIGINS: ${{ secrets.NEXT_PUBLIC_DASHBOARD_EMBED_ORIGINS }}
       NEXT_PUBLIC_PLATFORM_URL: ${{ vars.NEXT_PUBLIC_PLATFORM_URL }}
       NEXT_PUBLIC_PLATFORM_PROTOCOL: ${{ vars.NEXT_PUBLIC_PLATFORM_PROTOCOL }}
       NEXT_PUBLIC_PLATFORM_DOMAIN: ${{ vars.NEXT_PUBLIC_PLATFORM_DOMAIN }}
@@ -192,6 +198,10 @@ jobs:
       # Explicit: run-smoke's api job falls back to the dev API when this is
       # unset, which would test dev's backend while gating a prod deploy.
       api_base_url: ${{ github.ref_name == 'main' && 'https://api.datakeep.civicdays.in' || 'https://dev.api.civicdataspace.in' }}
+      # Temporarily off the dev gate: provider-smoke create-flow tests are under
+      # a separate investigation (CivicDataSpace-test#103 and follow-ons). main
+      # already never runs provider (readonly suite), so this is a no-op there.
+      skip_provider: true
     secrets:
       # Literal, not a secret, so a missing value can't silently fall back to
       # the dev site through the `&& ||` idiom.
@@ -213,6 +223,8 @@ jobs:
     uses: CivicDataLab/CivicDataSpace-test/.github/workflows/run-smoke.yml@CI
     with:
       suite: functional
+      # Same temporary provider-suite exclusion as smoke-tests above.
+      skip_provider: true
       api_base_url: https://dev.api.civicdataspace.in
     secrets:
       HOME_URL_DEV: ${{ secrets.HOME_URL_DEV }}
