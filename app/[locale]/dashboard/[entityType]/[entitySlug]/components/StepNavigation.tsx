@@ -6,7 +6,7 @@ import { Icons } from '@/components/icons';
 
 interface StepNavigationProps {
   steps: string[]; // Array of steps (e.g., ['metadata', 'details', 'publish'])
-  onBeforeNavigate?: () => Promise<void> | void;
+  onBeforeNavigate?: () => Promise<boolean | void> | boolean | void;
 }
 
 const StepNavigation = ({ steps, onBeforeNavigate }: StepNavigationProps) => {
@@ -29,9 +29,13 @@ const StepNavigation = ({ steps, onBeforeNavigate }: StepNavigationProps) => {
 
     if (onBeforeNavigate) {
       try {
-        await onBeforeNavigate();
+        const allowed = await onBeforeNavigate();
+        if (allowed === false) {
+          setIsNavigating(false);
+          return;
+        }
       } catch {
-        // Preserve current behavior: navigation should still continue.
+        // Dataset editor and other steps still navigate if the hook throws.
       }
     }
 
