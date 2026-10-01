@@ -11,17 +11,6 @@ export const createResourceFilesDoc = graphql(`
   }
 `);
 
-export const updateSchema = graphql(`
-  mutation updateSchema($schemaUpdateInput: SchemaUpdateInput!) {
-    updateFileResourceSchema(schemaUpdateInput: $schemaUpdateInput) {
-      __typename
-      ... on TypeResource {
-        id
-      }
-    }
-  }
-`);
-
 export const updateResourceDoc = graphql(`
   mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {
     updateFileResource(fileResourceInput: $fileResourceInput) {
@@ -35,16 +24,36 @@ export const updateResourceDoc = graphql(`
   }
 `);
 
-export const fetchSchema = graphql(`
-  query datasetSchema($datasetId: UUID!) {
-    datasetResources(datasetId: $datasetId) {
-      schema {
-        id
-        fieldName
-        format
-        description
+export const updatePromptResourceDoc = graphql(`
+  mutation UpdatePromptResource($updateInput: UpdatePromptResourceInput!) {
+    updatePromptResource(updateInput: $updateInput) {
+      success
+      errors {
+        fieldErrors {
+          field
+          messages
+        }
+        nonFieldErrors
       }
-      id
+      data {
+        id
+        promptDetails {
+          promptFormat
+          hasSystemPrompt
+          hasExampleResponses
+        }
+      }
+    }
+  }
+`);
+
+export const updateSchemaDoc = graphql(`
+  mutation updateSchema($schemaUpdateInput: SchemaUpdateInput!) {
+    updateFileResourceSchema(schemaUpdateInput: $schemaUpdateInput) {
+      __typename
+      ... on TypeResource {
+        id
+      }
     }
   }
 `);

@@ -456,7 +456,8 @@
   --header-background: var(--header-background-color);
   --breadcrumb-background: var(--orange-secondary-color);
   --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-family-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-mono: var(--font-family-mono);
   --radius: 0.625rem;
   --radius-md: var(--radius);
   --radius-sm: calc(var(--radius) - 2px);

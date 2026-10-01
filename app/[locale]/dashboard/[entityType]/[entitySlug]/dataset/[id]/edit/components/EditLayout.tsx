@@ -8,9 +8,12 @@ import {
   IconFileDescription,
 } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
-import { Stepper, useStepperStep } from 'opub-ui';
+import { Icon, Text } from 'opub-ui';
 import type { StepperItem } from 'opub-ui';
 
+import { WizardFrame } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/WizardFrame';
+import { wizardStepContent } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/step-content';
+import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
 import { useDatasetEditStatus } from '../context';
 import {
@@ -18,7 +21,6 @@ import {
   isDatasetMetadataComplete,
 } from '../dataset-summary';
 import styles from '../edit.module.scss';
-import { WizardHeader } from './WizardHeader';
 
 interface LayoutProps {
   children?: ReactNode;
@@ -38,27 +40,6 @@ const PATH_BY_STEP: Record<number, string> = {
 };
 
 const layoutList = ['resources', 'metadata', 'publish'];
-
-function StepErrorSync() {
-  const { showErrors } = useStepperStep();
-  const { setStepShowErrors } = useDatasetEditStatus();
-
-  useEffect(() => {
-    setStepShowErrors(showErrors);
-  }, [showErrors, setStepShowErrors]);
-
-  return null;
-}
-
-function stepContent(isActive: boolean, children: ReactNode) {
-  if (!isActive) return null;
-  return (
-    <>
-      <StepErrorSync />
-      {children}
-    </>
-  );
-}
 
 export function EditLayout({ children, params }: LayoutProps) {
   const pathName = usePathname();
@@ -98,6 +79,7 @@ export function EditLayout({ children, params }: LayoutProps) {
     setFilesCompleted,
     metadataCompleted,
     setMetadataCompleted,
+    setStepShowErrors,
   } = useDatasetEditStatus();
 
   useEffect(() => {
@@ -134,7 +116,11 @@ export function EditLayout({ children, params }: LayoutProps) {
         : 'Upload dataset files',
       icon: IconCloudUpload,
       isCompleted: filesCompleted || (!completionReady && currentStep > 1),
-      content: stepContent(currentStep === 1, children),
+      content: wizardStepContent(
+        currentStep === 1,
+        children,
+        setStepShowErrors
+      ),
     },
     {
       step: 2,
@@ -143,7 +129,11 @@ export function EditLayout({ children, params }: LayoutProps) {
       icon: IconFileDescription,
       isCompleted:
         metadataCompleted || (!completionReady && currentStep > 2),
-      content: stepContent(currentStep === 2, children),
+      content: wizardStepContent(
+        currentStep === 2,
+        children,
+        setStepShowErrors
+      ),
     },
     {
       step: 3,
@@ -151,29 +141,34 @@ export function EditLayout({ children, params }: LayoutProps) {
       description: 'Final review & publish',
       icon: IconClipboardCheck,
       isCompleted: filesCompleted && metadataCompleted,
-      content: stepContent(currentStep === 3, children),
+      content: wizardStepContent(
+        currentStep === 3,
+        children,
+        setStepShowErrors
+      ),
     },
   ];
 
   return (
-    <div className="mb-10 flex flex-col rounded-4 border-1 border-solid border-baseGraySlateSolid6 bg-surfaceDefault pb-6 lg:mt-2">
-      <WizardHeader
-        title={
-          getDatasetTitleRes.isFetched ? (dataset?.title ?? '') : '\u00a0'
-        }
-        goBackURL={goBackURL}
-        status={status}
-      />
-      <Stepper
-        className={styles.datasetStepper}
-        steps={steps}
-        currentStep={currentStep}
-        onStepClick={handleStepClick}
-        restrictNavigation
-        navigation={currentStep !== 3}
-        nextLabel="Continue"
-        previousLabel="Previous"
-      />
-    </div>
+    <WizardFrame
+      title={dataset?.title ?? ''}
+      untitledLabel="Untitled dataset"
+      titlePending={!getDatasetTitleRes.isFetched}
+      goBackURL={goBackURL}
+      status={status}
+      stepperClassName={styles.datasetStepper}
+      steps={steps}
+      currentStep={currentStep}
+      onStepClick={handleStepClick}
+      showNavigation={currentStep !== 3}
+      footer={
+        <div className="border ml-3 flex w-fit items-center gap-2 rounded-full border-1 border-solid border-baseGraySlateSolid6 bg-surfaceDefault px-2 py-1">
+          <Icon source={Icons.globe} size={16} color="default" />
+          <Text variant="bodySm" color="subdued" className=" text-textSubdued">
+            Public visibility · Public once published
+          </Text>
+        </div>
+      }
+    />
   );
 }

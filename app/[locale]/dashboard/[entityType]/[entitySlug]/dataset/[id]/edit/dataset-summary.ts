@@ -1,5 +1,7 @@
 import { graphql } from '@/gql';
 
+import { isRichTextEmpty } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/rich-text';
+
 export const datasetSummaryQueryDoc = graphql(`
   query datasetTitleQuery($filters: DatasetFilter) {
     datasets(filters: $filters) {
@@ -23,11 +25,6 @@ export const datasetSummaryQueryDoc = graphql(`
 `);
 
 export type DatasetEditStep = 'resources' | 'metadata' | 'publish';
-
-export function isRichTextEmpty(html?: string | null): boolean {
-  if (!html) return true;
-  return html.replace(/<(.|\n)*?>/g, '').trim().length === 0;
-}
 
 export function isDatasetMetadataComplete(dataset: {
   title?: string | null;

@@ -1,3 +1,9 @@
+:global([class*='Select-module_PopoverWrapper']),
+:global([class*='Select-module_Popover']) {
+  z-index: calc(var(--z-max) + 1);
+  pointer-events: auto;
+}
+
 .EditPage {
   display: flex;
   flex-direction: column;
@@ -21,15 +27,4 @@
   }
 }
 
-.accessModelEdit {
-  input {
-    width: 140px;
-  }
-}
-
-.combobox {
-  [role='presentation'] {
-    z-index: 1000 !important;
-  }
-}
 

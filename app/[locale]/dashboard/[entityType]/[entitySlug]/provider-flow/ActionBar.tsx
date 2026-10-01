@@ -7,7 +7,7 @@ import { twMerge } from 'tailwind-merge';
 
 import { useIsNavigating } from '@/config/store';
 import { Icons } from '@/components/icons';
-import styles from '../dataset.module.scss';
+import styles from './listing.module.scss';
 
 interface Props {
   title: string;

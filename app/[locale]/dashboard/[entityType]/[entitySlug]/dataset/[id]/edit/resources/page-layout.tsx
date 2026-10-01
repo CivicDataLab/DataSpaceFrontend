@@ -273,6 +273,7 @@ export function DistibutionPage({
                   refetch={refetch}
                   data={resources}
                   pendingFiles={pendingFiles}
+                  isPromptDataset={isPromptDataset}
                 />
               </SectionCard>
             ) : null}
@@ -297,6 +298,7 @@ export function DistibutionPage({
                   refetch={refetch}
                   data={resources}
                   pendingFiles={pendingFiles}
+                  isPromptDataset={isPromptDataset}
                 />
               </SectionCard>
             ) : null}
@@ -332,6 +334,11 @@ export function DistibutionPage({
       </AlertDialog>
       <ResourceViewSheet
         resourceId={resourceId}
+        isPromptDataset={isPromptDataset}
+        readOnly={
+          data.datasets[0]?.status === 'PUBLISHED' ||
+          data.datasets[0]?.status === 'ARCHIVED'
+        }
         onClose={() => {
           void setResourceId(null);
         }}

@@ -9,7 +9,11 @@ import { Button, DropZone, Icon, Labelled, Tag, Text, toast } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
-import { createResourceFilesDoc, updateResourceList } from './query';
+import {
+  createResourceFilesDoc,
+  updateResourceDoc,
+  updateResourceList,
+} from './query';
 
 export const RESOURCE_FILE_TYPES = [
   'CSV',
@@ -23,6 +27,23 @@ export const RESOURCE_FILE_TYPES = [
 
 export const RESOURCE_FILE_ACCEPT =
   '.csv,.json,.pdf,.xlsx,.xls,.xml,.zip,application/json,text/csv,application/pdf,application/zip,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/xml,application/xml';
+
+const PREVIEW_FORMATS = new Set(['CSV', 'XLS', 'XLSX', 'PDF']);
+
+export function previewStaysEnabled(formatOrName?: string | null): boolean {
+  if (!formatOrName) return false;
+  const ext = formatOrName.split('.').pop()?.replace('.', '').toUpperCase();
+  return Boolean(ext && PREVIEW_FORMATS.has(ext));
+}
+
+export const enabledFilePreview = {
+  previewEnabled: true,
+  previewDetails: {
+    isAllEntries: true,
+    startEntry: 0,
+    endEntry: 10,
+  },
+};
 
 interface ResourceDropzoneProps {
   reload: () => void | Promise<unknown>;
@@ -64,7 +85,7 @@ export const ResourceDropzone = ({
         data
       ),
     {
-      onSuccess: async (result) => {
+      onSuccess: async (result, variables) => {
         if (discardUploadRef?.current) {
           const created = result.createFileResources ?? [];
           await Promise.all(
@@ -87,6 +108,29 @@ export const ResourceDropzone = ({
           });
           return;
         }
+        const created = result.createFileResources ?? [];
+        const files = variables.fileResourceInput.files;
+        await Promise.all(
+          created.map((item, index) => {
+            const resourceId = item?.id;
+            const file = files[index];
+            if (!resourceId || !previewStaysEnabled(file?.name)) {
+              return Promise.resolve();
+            }
+            return GraphQL(
+              updateResourceDoc,
+              {
+                [params.entityType]: params.entitySlug,
+              },
+              {
+                fileResourceInput: {
+                  id: resourceId,
+                  ...enabledFilePreview,
+                },
+              }
+            );
+          })
+        );
         await reload();
         onPendingChange?.([]);
         void queryClient.invalidateQueries({

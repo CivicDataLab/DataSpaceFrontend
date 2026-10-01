@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import PdfPreview from '@/app/[locale]/(user)/components/PdfPreview';
+import { PdfPreview } from '@/components/file-preview';
 import { graphql } from '@/gql';
 import { DatasetResourcesQuery } from '@/gql/generated/graphql';
 import { useQuery } from '@tanstack/react-query';

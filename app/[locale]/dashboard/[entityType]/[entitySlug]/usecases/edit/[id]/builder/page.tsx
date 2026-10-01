@@ -17,6 +17,7 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { getSafeEmbedUrl } from '@/lib/dashboardEmbed';
 import { ContentEditor } from '../../components/ContentEditor';
 import {
   extractEmbedUrl,
@@ -345,6 +346,10 @@ export default function BuilderPage() {
       toast('Paste a dashboard URL or iframe embed code first.');
       return;
     }
+    if (!getSafeEmbedUrl(link)) {
+      toast('This dashboard URL is not allowed.');
+      return;
+    }
     const name = title.trim() || 'Use Case Dashboard';
     if (savedDashboard?.id) {
       saveDashboard({ id: savedDashboard.id, name, link });
@@ -420,6 +425,16 @@ export default function BuilderPage() {
     stepShowErrors && !title.trim() ? 'Enter a use case title' : undefined;
   const thumbnailError =
     stepShowErrors && !logo ? 'Upload a thumbnail image' : undefined;
+  const extractedDashboardLink = extractEmbedUrl(embedCode);
+  const dashboardLinkLooksLikeUrl = Boolean(
+    extractedDashboardLink &&
+      (extractedDashboardLink.includes('.') ||
+        /^https?:\/\//i.test(extractedDashboardLink))
+  );
+  const dashboardUrlError =
+    dashboardLinkLooksLikeUrl && !getSafeEmbedUrl(extractedDashboardLink)
+      ? 'This dashboard URL is not allowed.'
+      : undefined;
 
   return (
     <div className="flex flex-col gap-6 px-6">
@@ -578,6 +593,7 @@ export default function BuilderPage() {
             multiline
             placeholder="Paste your dashboard iframe embed code here..."
             value={embedCode}
+            error={dashboardUrlError}
             onChange={setEmbedCode}
           />
           <Text variant="bodySm" color="subdued">

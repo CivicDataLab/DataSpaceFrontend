@@ -337,7 +337,13 @@ const Page = () => {
                   {dataset?.tags?.length ? (
                     <div className="flex flex-wrap gap-2">
                       {dataset.tags.map((tag) => (
-                        <Tag key={tag.id}>{tag.value}</Tag>
+                        <Tag
+                          key={tag.id}
+                          // fillColor="bright"
+                          borderRadius="var(--border-radius-2)"
+                        >
+                          {tag.value}
+                        </Tag>
                       ))}
                     </div>
                   ) : (

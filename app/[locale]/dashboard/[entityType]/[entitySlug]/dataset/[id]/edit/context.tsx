@@ -1,22 +1,15 @@
 'use client';
 
-import { createContext, useContext, useRef, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 
-type StatusType = 'loading' | 'success';
-type BeforeNavigateHandler = (() => Promise<void> | void) | null;
+import { useProviderEditState } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/edit-status';
 
-interface DatasetEditStatusContextValue {
-  status: StatusType;
-  setStatus: (status: StatusType) => void;
-  registerBeforeNavigateHandler: (handler: BeforeNavigateHandler) => void;
-  runBeforeNavigateHandler: () => Promise<void>;
+type DatasetEditStatusContextValue = ReturnType<typeof useProviderEditState> & {
   filesCompleted: boolean;
   setFilesCompleted: (completed: boolean) => void;
   metadataCompleted: boolean;
   setMetadataCompleted: (completed: boolean) => void;
-  stepShowErrors: boolean;
-  setStepShowErrors: (show: boolean) => void;
-}
+};
 
 const DatasetEditStatusContext =
   createContext<DatasetEditStatusContextValue | null>(null);
@@ -26,33 +19,18 @@ export const DatasetEditStatusProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [status, setStatus] = useState<StatusType>('success');
+  const editState = useProviderEditState();
   const [filesCompleted, setFilesCompleted] = useState(false);
   const [metadataCompleted, setMetadataCompleted] = useState(false);
-  const [stepShowErrors, setStepShowErrors] = useState(false);
-  const beforeNavigateHandlerRef = useRef<BeforeNavigateHandler>(null);
-
-  const registerBeforeNavigateHandler = (handler: BeforeNavigateHandler) => {
-    beforeNavigateHandlerRef.current = handler;
-  };
-
-  const runBeforeNavigateHandler = async () => {
-    await beforeNavigateHandlerRef.current?.();
-  };
 
   return (
     <DatasetEditStatusContext.Provider
       value={{
-        status,
-        setStatus,
-        registerBeforeNavigateHandler,
-        runBeforeNavigateHandler,
+        ...editState,
         filesCompleted,
         setFilesCompleted,
         metadataCompleted,
         setMetadataCompleted,
-        stepShowErrors,
-        setStepShowErrors,
       }}
     >
       {children}

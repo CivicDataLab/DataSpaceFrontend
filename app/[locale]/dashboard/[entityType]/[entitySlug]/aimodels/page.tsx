@@ -19,8 +19,8 @@ import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { LinkButton } from '@/components/Link';
 import { Loading } from '@/components/loading';
-import { ActionBar } from '../dataset/components/action-bar';
-import { Navigation } from '../dataset/components/navigate-org-datasets';
+import { ActionBar } from '../provider-flow/ActionBar';
+import { Navigation } from '../provider-flow/Navigation';
 
 interface AIModelListItem {
   id: number;

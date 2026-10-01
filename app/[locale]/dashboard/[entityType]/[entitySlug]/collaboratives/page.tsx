@@ -14,8 +14,8 @@ import { LinkButton } from '@/components/Link';
 import { Loading } from '@/components/loading';
 import { GraphQL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
-import { ActionBar } from '../dataset/components/action-bar';
-import { Navigation } from '../dataset/components/navigate-org-datasets';
+import { ActionBar } from '../provider-flow/ActionBar';
+import { Navigation } from '../provider-flow/Navigation';
 
 interface CollaborativeListItem {
   id: string;

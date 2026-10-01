@@ -6,6 +6,8 @@ import { parseAsString, useQueryState } from 'nuqs';
 import { FileCard, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { promptFileTags } from './prompt-file';
+import { enabledFilePreview, previewStaysEnabled } from './ResourceDropzone';
 import { updateResourceDoc, updateResourceList } from './query';
 
 export interface UploadedResource {
@@ -21,12 +23,18 @@ export interface UploadedResource {
       name?: string | null;
     } | null;
   } | null;
+  promptDetails?: {
+    promptFormat?: string | null;
+    hasSystemPrompt?: boolean | null;
+    hasExampleResponses?: boolean | null;
+  } | null;
 }
 
 interface ResourceListProps {
   data: UploadedResource[];
   pendingFiles?: File[];
   refetch: () => void;
+  isPromptDataset?: boolean;
 }
 
 function formatFileSize(bytes?: number | null): string {
@@ -64,6 +72,7 @@ export const ResourceListView = ({
   data,
   pendingFiles = [],
   refetch,
+  isPromptDataset = false,
 }: ResourceListProps) => {
   const RESOURCE_DELETE_ERROR_TOAST_ID = 'dataset-resource-delete-error';
   const RESOURCE_RENAME_ERROR_TOAST_ID = 'dataset-resource-rename-error';
@@ -110,7 +119,18 @@ export const ResourceListView = ({
   );
 
   const renameMutation = useMutation(
-    (variables: { fileResourceInput: { id: string; name: string } }) =>
+    (variables: {
+      fileResourceInput: {
+        id: string;
+        name: string;
+        previewEnabled: boolean;
+        previewDetails?: {
+          isAllEntries: boolean;
+          startEntry: number;
+          endEntry: number;
+        };
+      };
+    }) =>
       GraphQL(
         updateResourceDoc,
         {
@@ -164,12 +184,18 @@ export const ResourceListView = ({
             item.fileDetails?.created || item.created
           )}
           originalName={originalName(item)}
+          tags={
+            isPromptDataset ? promptFileTags(item.promptDetails) : undefined
+          }
           status="ready"
           onRename={(name) => {
             renameMutation.mutate({
               fileResourceInput: {
                 id: item.id,
                 name,
+                ...(previewStaysEnabled(resourceFormat(item))
+                  ? enabledFilePreview
+                  : { previewEnabled: false }),
               },
             });
           }}
