@@ -23,6 +23,9 @@ export const useCaseWizardSummaryQuery = graphql(`
       sdgs {
         id
       }
+      datasets {
+        id
+      }
     }
   }
 `);
@@ -39,8 +42,13 @@ export function isUseCaseBuilderComplete(useCase: {
 export function isUseCaseConnectComplete(useCase: {
   sectors?: unknown[] | null;
   sdgs?: unknown[] | null;
+  datasets?: unknown[] | null;
 }): boolean {
-  return (useCase.sectors?.length ?? 0) > 0 && (useCase.sdgs?.length ?? 0) > 0;
+  return (
+    (useCase.sectors?.length ?? 0) > 0 &&
+    (useCase.sdgs?.length ?? 0) > 0 &&
+    (useCase.datasets?.length ?? 0) > 0
+  );
 }
 
 export function firstIncompleteUseCaseEditStep(useCase: {
@@ -49,6 +57,7 @@ export function firstIncompleteUseCaseEditStep(useCase: {
   logo?: unknown;
   sectors?: unknown[] | null;
   sdgs?: unknown[] | null;
+  datasets?: unknown[] | null;
 }): UseCaseEditStep {
   if (!isUseCaseBuilderComplete(useCase)) return 'builder';
   if (!isUseCaseConnectComplete(useCase)) return 'connect';

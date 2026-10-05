@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Building,
   Database,
+  Handshake,
   Layers,
   MapPin,
   Target,
@@ -233,9 +234,16 @@ export default function PublishPage() {
   if (!useCase?.sdgs?.length) {
     connectIssues.push('Select at least one SDG goal.');
   }
+  if (!useCase?.datasets?.length) {
+    connectIssues.push('Connect at least one dataset.');
+  }
   const connectDetail = connectComplete
-    ? 'Sectors and SDG goals selected.'
+    ? 'Sectors, SDG goals, and a dataset selected.'
     : connectIssues.join(' ');
+  const connectEdit =
+    !useCase?.sectors?.length || !useCase?.sdgs?.length
+      ? `${stepBase}/connect#classification`
+      : `${stepBase}/connect#datasets`;
 
   if (reviewQuery.isLoading || reviewQuery.isFetching) {
     return (
@@ -275,11 +283,7 @@ export default function PublishPage() {
           ok={connectComplete}
           label="Connect"
           detail={connectDetail}
-          onEdit={
-            connectComplete
-              ? undefined
-              : () => router.push(`${stepBase}/connect#classification`)
-          }
+          onEdit={connectComplete ? undefined : () => router.push(connectEdit)}
         />
       </div>
 
@@ -397,12 +401,17 @@ export default function PublishPage() {
               }))}
             />
           </ReviewField>
-          <ReviewField label="Organisations" icon={<Building size={16} />}>
+          <ReviewField label="Partners" icon={<Building size={16} />}>
             <TagList
-              items={[
-                ...(useCase?.partnerOrganizations ?? []),
-                ...(useCase?.supportingOrganizations ?? []),
-              ].map((item) => ({
+              items={useCase?.partnerOrganizations?.map((item) => ({
+                id: item.id,
+                label: item.name,
+              }))}
+            />
+          </ReviewField>
+          <ReviewField label="Supporters" icon={<Handshake size={16} />}>
+            <TagList
+              items={useCase?.supportingOrganizations?.map((item) => ({
                 id: item.id,
                 label: item.name,
               }))}

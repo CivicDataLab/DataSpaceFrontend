@@ -11,7 +11,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { Combobox, SectionCard, Spinner, toast } from 'opub-ui';
+import { Combobox, SectionCard, Spinner, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { AddDatasetSheet } from '../../components/AddDatasetSheet';
@@ -576,9 +576,10 @@ export default function ConnectPage() {
       isUseCaseConnectComplete({
         sectors: formData.sectors,
         sdgs: formData.sdgs,
+        datasets: useCase?.datasets,
       })
     );
-  }, [formData.sectors, formData.sdgs, setConnectCompleted]);
+  }, [formData.sectors, formData.sdgs, useCase?.datasets, setConnectCompleted]);
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -704,6 +705,10 @@ export default function ConnectPage() {
     stepShowErrors && formData.sectors.length === 0
       ? 'Select at least one sector'
       : undefined;
+  const datasetError =
+    stepShowErrors && (useCase?.datasets?.length ?? 0) === 0
+      ? 'Connect at least one dataset'
+      : undefined;
 
   return (
     <div className="flex flex-col gap-6 px-6">
@@ -780,7 +785,14 @@ export default function ConnectPage() {
 
       <SectionCard
         className={styles.overflowVisible}
-        title="Datasets"
+        title={
+          <>
+            Datasets{' '}
+            <Text as="span" color="critical">
+              *
+            </Text>
+          </>
+        }
         description="Connect datasets related to this Use Case."
         actions={[
           {
@@ -818,6 +830,13 @@ export default function ConnectPage() {
               );
             }}
           />
+          {datasetError ? (
+            <div className="mt-2">
+              <Text variant="bodySm" color="critical">
+                {datasetError}
+              </Text>
+            </div>
+          ) : null}
         </div>
       </SectionCard>
 
