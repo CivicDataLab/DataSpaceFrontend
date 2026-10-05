@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation';
 import { fetchDatasets } from '@/fetch';
 import { graphql } from '@/gql';
 import { UpdateUseCaseMetadataInput } from '@/gql/generated/graphql';
-import { organizationTypeLabel } from '@/hooks/useOrganizationTypes';
 import {
   useInfiniteQuery,
   useMutation,
@@ -22,16 +21,24 @@ import {
   type EntityRow,
   type EntityRowPickerHandle,
 } from '../../components/EntityRowPicker';
+import {
+  PeopleOrganisationsSection,
+  peopleOrgRoleMessage,
+  personSubtitle,
+  rawEntityId,
+} from '../../components/PeopleOrganisationsSection';
 import { useUseCaseEditStatus } from '../../context';
 import styles from '../../edit.module.scss';
 import { isUseCaseConnectComplete } from '../../usecase-summary';
 import {
   AddContributors,
   AddPartners,
+  AddSupporters,
   FetchUsers,
   OrgList,
   RemoveContributor,
   RemovePartners,
+  RemoveSupporters,
 } from '../contributors/query';
 
 interface SelectOption {
@@ -118,15 +125,28 @@ const FetchUseCaseConnect = graphql(`
       contributors {
         id
         fullName
-        username
         profilePicture {
           url
+        }
+        organizationMemberships {
+          role {
+            name
+          }
+          organization {
+            name
+          }
         }
       }
       partnerOrganizations {
         id
         name
-        organizationTypes
+        logo {
+          url
+        }
+      }
+      supportingOrganizations {
+        id
+        name
         logo {
           url
         }
@@ -275,8 +295,6 @@ export default function ConnectPage() {
   const [orgSheetOpen, setOrgSheetOpen] = useState(false);
   const [creatingOrganisation, setCreatingOrganisation] = useState(false);
   const datasetsPickerRef = useRef<EntityRowPickerHandle>(null);
-  const contributorsPickerRef = useRef<EntityRowPickerHandle>(null);
-  const orgsPickerRef = useRef<EntityRowPickerHandle>(null);
 
   const useCaseQuery = useQuery(
     [`fetch_UseCaseConnect`, params.id, params.entityType, params.entitySlug],
@@ -498,6 +516,25 @@ export default function ConnectPage() {
     { onSuccess: () => void useCaseQuery.refetch() }
   );
 
+  const { mutate: addSupporter, isLoading: addingSupporter } = useMutation(
+    (organizationId: string) =>
+      GraphQL(AddSupporters, ownerArgs, {
+        useCaseId: params.id,
+        organizationId,
+      }),
+    { onSuccess: () => void useCaseQuery.refetch() }
+  );
+
+  const { mutate: removeSupporter, isLoading: removingSupporter } =
+    useMutation(
+      (organizationId: string) =>
+        GraphQL(RemoveSupporters, ownerArgs, {
+          useCaseId: params.id,
+          organizationId,
+        }),
+      { onSuccess: () => void useCaseQuery.refetch() }
+    );
+
   useEffect(() => {
     registerBeforeNavigateHandler(async () => {
       await persistMetadata();
@@ -513,6 +550,8 @@ export default function ConnectPage() {
         removingContributor ||
         addingPartner ||
         removingPartner ||
+        addingSupporter ||
+        removingSupporter ||
         creatingDataset ||
         creatingOrganisation
         ? 'loading'
@@ -525,6 +564,8 @@ export default function ConnectPage() {
     removingContributor,
     addingPartner,
     removingPartner,
+    addingSupporter,
+    removingSupporter,
     creatingDataset,
     creatingOrganisation,
     setStatus,
@@ -579,37 +620,81 @@ export default function ConnectPage() {
       }))
     ) ?? [];
 
-  const selectedContributors: EntityRow[] =
-    useCase?.contributors?.map((item) => ({
-      id: item.id,
+  const partnerIds = new Set(
+    useCase?.partnerOrganizations?.map((item) => item.id) ?? []
+  );
+  const selectedPeople: EntityRow[] = [
+    ...(useCase?.contributors?.map((item) => ({
+      id: `user:${item.id}`,
+      kind: 'person' as const,
+      role: 'contributor',
       title: item.fullName,
-      subtitle: item.username,
+      subtitle: personSubtitle(item.organizationMemberships),
       imageUrl: fileUrl(item.profilePicture?.url),
-    })) ?? [];
-
-  const contributorOptions: EntityRow[] =
-    usersQuery.data?.searchUsers?.map((item) => ({
-      id: item.id,
+    })) ?? []),
+    ...(useCase?.partnerOrganizations?.map((item) => ({
+      id: `org:${item.id}`,
+      kind: 'org' as const,
+      role: 'partner',
+      title: item.name,
+      subtitle: 'Registered organisation',
+      imageUrl: fileUrl(item.logo?.url) || undefined,
+    })) ?? []),
+    ...(useCase?.supportingOrganizations
+      ?.filter((item) => !partnerIds.has(item.id))
+      .map((item) => ({
+        id: `org:${item.id}`,
+        kind: 'org' as const,
+        role: 'supporter',
+        title: item.name,
+        subtitle: 'Registered organisation',
+        imageUrl: fileUrl(item.logo?.url) || undefined,
+      })) ?? []),
+  ];
+  const selectedPeopleIds = new Set(selectedPeople.map((item) => item.id));
+  const peopleOptions: EntityRow[] = [
+    ...(usersQuery.data?.searchUsers?.map((item) => ({
+      id: `user:${item.id}`,
+      kind: 'person' as const,
+      role: 'contributor',
       title: item.fullName,
-      subtitle: item.username,
+      subtitle: personSubtitle(item.organizationMemberships),
       imageUrl: fileUrl(item.profilePicture?.url) || undefined,
-    })) ?? [];
-
-  const selectedOrgs: EntityRow[] =
-    useCase?.partnerOrganizations?.map((item) => ({
-      id: item.id,
+    })) ?? []),
+    ...(orgsQuery.data?.allOrganizations?.map((item) => ({
+      id: `org:${item.id}`,
+      kind: 'org' as const,
+      role: 'partner',
       title: item.name,
-      subtitle: organizationTypeLabel(item.organizationTypes),
+      subtitle: 'Registered organisation',
       imageUrl: fileUrl(item.logo?.url) || undefined,
-    })) ?? [];
+    })) ?? []),
+  ].filter((item) => !selectedPeopleIds.has(item.id));
 
-  const orgOptions: EntityRow[] =
-    orgsQuery.data?.allOrganizations?.map((item) => ({
-      id: item.id,
-      title: item.name,
-      subtitle: organizationTypeLabel(item.organizationTypes),
-      imageUrl: fileUrl(item.logo?.url) || undefined,
-    })) ?? [];
+  const removePerson = (item: EntityRow) => {
+    const id = rawEntityId(item.id);
+    if (item.role === 'partner') removePartner(id);
+    else if (item.role === 'supporter') removeSupporter(id);
+    else removeContributor(id);
+  };
+
+  const changePersonRole = (item: EntityRow, role: string) => {
+    if (role === item.role) return;
+    const blocked = peopleOrgRoleMessage(item, role);
+    if (blocked) {
+      toast(blocked);
+      return;
+    }
+    const id = rawEntityId(item.id);
+    const add = role === 'supporter' ? addSupporter : addPartner;
+    if (item.role === 'partner') {
+      removePartner(id, { onSuccess: () => add(id) });
+      return;
+    }
+    if (item.role === 'supporter') {
+      removeSupporter(id, { onSuccess: () => add(id) });
+    }
+  };
 
   const sdgError =
     stepShowErrors && formData.sdgs.length === 0
@@ -736,65 +821,35 @@ export default function ConnectPage() {
         </div>
       </SectionCard>
 
-      <SectionCard
+      <PeopleOrganisationsSection
+        subject="Use Case"
         className={styles.overflowVisible}
-        title="Contributors"
-        description="Add the people and organisations involved in creating this content."
-        actions={[
-          {
-            kind: 'neutral',
-            content: '+ Add Contributor',
-            onAction: () => contributorsPickerRef.current?.focus(),
-          },
-        ]}
-      >
-        <div id="contributors">
-          <EntityRowPicker
-            ref={contributorsPickerRef}
-            variant="person"
-            searchPlaceholder="Search contributors..."
-            emptyTitle="No contributors added yet."
-            options={contributorOptions}
-            selected={selectedContributors}
-            isLoading={userSearch.trim().length > 0 && usersQuery.isFetching}
-            onSearch={setUserSearch}
-            onAdd={(item) => addContributor(item.id)}
-            onRemove={(id) => removeContributor(id)}
-          />
-        </div>
-      </SectionCard>
-
-      <SectionCard
-        className={styles.overflowVisible}
-        title="Organisations"
-        description="Connect the organisations involved in this content."
-        actions={[
-          {
-            kind: 'neutral',
-            content: '+ Add Organisation',
-            onAction: () => setOrgSheetOpen(true),
-          },
-        ]}
-      >
-        <div id="organisations">
-          <EntityRowPicker
-            ref={orgsPickerRef}
-            variant="org"
-            searchPlaceholder="Search organisations..."
-            emptyTitle="No organizations added yet."
-            options={orgOptions}
-            selected={selectedOrgs}
-            onAdd={(item) => addPartner(item.id)}
-            onRemove={(id) => removePartner(id)}
-          />
-        </div>
-      </SectionCard>
+        options={peopleOptions}
+        selected={selectedPeople}
+        isLoading={userSearch.trim().length > 0 && usersQuery.isFetching}
+        onSearch={setUserSearch}
+        onAdd={(item) => {
+          const id = rawEntityId(item.id);
+          if (item.kind === 'org') addPartner(id);
+          else addContributor(id);
+        }}
+        onRemove={(id) => {
+          const item = selectedPeople.find((row) => row.id === id);
+          if (item) removePerson(item);
+        }}
+        onRoleChange={changePersonRole}
+        onAddOrganisation={() => setOrgSheetOpen(true)}
+      />
 
       <AddOrganisationSheet
         open={orgSheetOpen}
         onClose={() => setOrgSheetOpen(false)}
-        useCaseId={params.id}
-        ownerArgs={ownerArgs}
+        onConnect={(organizationId) =>
+          GraphQL(AddPartners, ownerArgs, {
+            useCaseId: params.id,
+            organizationId,
+          })
+        }
         onBusy={setCreatingOrganisation}
         onAdded={() => {
           void orgsQuery.refetch();

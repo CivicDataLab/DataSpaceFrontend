@@ -3,13 +3,17 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { SectionCard, Spinner, toast } from 'opub-ui';
+import { Spinner, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { AddOrganisationSheet } from '../../../../usecases/edit/components/AddOrganisationSheet';
+import { type EntityRow } from '../../../../usecases/edit/components/EntityRowPicker';
 import {
-  EntityRowPicker,
-  type EntityRow,
-} from '../../../../usecases/edit/components/EntityRowPicker';
+  PeopleOrganisationsSection,
+  peopleOrgRoleMessage,
+  personSubtitle,
+  rawEntityId,
+} from '../../../../usecases/edit/components/PeopleOrganisationsSection';
 import { errorMessage } from '../../collaborative-summary';
 import { useCollaborativeEditStatus } from '../../context';
 import styles from '../../edit.module.scss';
@@ -25,22 +29,10 @@ import {
   RemoveSupporters,
 } from '../contributors/query';
 
-type Relationship = 'contributor' | 'partner' | 'supporter';
-
-const RELATIONSHIPS: Array<{ label: string; value: Relationship }> = [
-  { label: 'Contributor', value: 'contributor' },
-  { label: 'Partner', value: 'partner' },
-  { label: 'Supporter', value: 'supporter' },
-];
-
 function fileUrl(url?: string | null) {
   if (!url) return '';
   if (url.startsWith('http')) return url;
   return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${url.replace('/code/files/', '')}`;
-}
-
-function rawId(id: string) {
-  return id.replace(/^(user|org):/, '');
 }
 
 export default function PeoplePage() {
@@ -53,6 +45,8 @@ export default function PeoplePage() {
   const { setStatus } = useCollaborativeEditStatus();
   const ownerArgs = { [params.entityType]: params.entitySlug };
   const [userSearch, setUserSearch] = useState('');
+  const [orgSheetOpen, setOrgSheetOpen] = useState(false);
+  const [creatingOrganisation, setCreatingOrganisation] = useState(false);
 
   const collaborativeQuery = useQuery(
     [`fetch_collaborative_people_${params.id}`],
@@ -144,7 +138,8 @@ export default function PeoplePage() {
         addingPartner ||
         removingPartner ||
         addingSupporter ||
-        removingSupporter
+        removingSupporter ||
+        creatingOrganisation
         ? 'loading'
         : 'success'
     );
@@ -155,6 +150,7 @@ export default function PeoplePage() {
     removingPartner,
     addingSupporter,
     removingSupporter,
+    creatingOrganisation,
     setStatus,
   ]);
 
@@ -177,7 +173,7 @@ export default function PeoplePage() {
       kind: 'person' as const,
       role: 'contributor',
       title: item.fullName,
-      subtitle: item.username,
+      subtitle: personSubtitle(item.organizationMemberships),
       imageUrl: fileUrl(item.profilePicture?.url),
     })) ?? []),
     ...(collaborative?.partnerOrganizations?.map((item) => ({
@@ -207,7 +203,7 @@ export default function PeoplePage() {
       kind: 'person' as const,
       role: 'contributor',
       title: item.fullName,
-      subtitle: item.username,
+      subtitle: personSubtitle(item.organizationMemberships),
       imageUrl: fileUrl(item.profilePicture?.url) || undefined,
     })) ?? []),
     ...(orgsQuery.data?.allOrganizations?.map((item) => ({
@@ -221,7 +217,7 @@ export default function PeoplePage() {
   ].filter((item) => !selectedIds.has(item.id));
 
   const removeMember = (item: EntityRow) => {
-    const id = rawId(item.id);
+    const id = rawEntityId(item.id);
     if (item.role === 'partner') removePartner(id);
     else if (item.role === 'supporter') removeSupporter(id);
     else removeContributor(id);
@@ -229,15 +225,12 @@ export default function PeoplePage() {
 
   const changeRole = (item: EntityRow, role: string) => {
     if (role === item.role) return;
-    const id = rawId(item.id);
-    if (item.kind === 'person') {
-      toast('People are added as contributors.');
+    const blocked = peopleOrgRoleMessage(item, role);
+    if (blocked) {
+      toast(blocked);
       return;
     }
-    if (role === 'contributor') {
-      toast('Organisations can be partners or supporters.');
-      return;
-    }
+    const id = rawEntityId(item.id);
     const add = role === 'supporter' ? addSupporter : addPartner;
     if (item.role === 'partner') {
       removePartner(id, {
@@ -254,33 +247,41 @@ export default function PeoplePage() {
 
   return (
     <div className="flex flex-col gap-6 px-6">
-      <SectionCard
+      <PeopleOrganisationsSection
+        subject="Collaborative"
         className={styles.overflowVisible}
-        title="People & Organisations"
-        description="Add the people and organisations involved in this Collaborative."
-      >
-        <EntityRowPicker
-          variant="person"
-          searchPlaceholder="+ Add People or Organisation"
-          emptyTitle="People and organisations will appear here."
-          emptyDescription="Search CivicDataSpace to add contributors, partners or supporters."
-          options={options}
-          selected={selected}
-          isLoading={userSearch.trim().length > 0 && usersQuery.isFetching}
-          onSearch={setUserSearch}
-          roleOptionsFor={() => RELATIONSHIPS}
-          onRoleChange={changeRole}
-          onAdd={(item) => {
-            const id = rawId(item.id);
-            if (item.kind === 'org') addPartner(id);
-            else addContributor(id);
-          }}
-          onRemove={(id) => {
-            const item = selected.find((row) => row.id === id);
-            if (item) removeMember(item);
-          }}
-        />
-      </SectionCard>
+        options={options}
+        selected={selected}
+        isLoading={userSearch.trim().length > 0 && usersQuery.isFetching}
+        onSearch={setUserSearch}
+        onRoleChange={changeRole}
+        onAddOrganisation={() => setOrgSheetOpen(true)}
+        onAdd={(item) => {
+          const id = rawEntityId(item.id);
+          if (item.kind === 'org') addPartner(id);
+          else addContributor(id);
+        }}
+        onRemove={(id) => {
+          const item = selected.find((row) => row.id === id);
+          if (item) removeMember(item);
+        }}
+      />
+      <AddOrganisationSheet
+        open={orgSheetOpen}
+        onClose={() => setOrgSheetOpen(false)}
+        description="Add an organisation to this Collaborative."
+        onConnect={(organizationId) =>
+          GraphQL(AddPartners, ownerArgs, {
+            collaborativeId: params.id,
+            organizationId,
+          })
+        }
+        onBusy={setCreatingOrganisation}
+        onAdded={() => {
+          void orgsQuery.refetch();
+          refresh();
+        }}
+      />
     </div>
   );
 }

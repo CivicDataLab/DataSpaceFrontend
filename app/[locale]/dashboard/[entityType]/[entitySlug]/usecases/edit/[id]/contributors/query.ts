@@ -10,39 +10,14 @@ export const FetchUsers = graphql(`
         profilePicture {
           url
         }
-      }
-    }
-  `);
-
-export const FetchUsecaseInfo = graphql(`
-    query useCaseinfo($filters: UseCaseFilter) {
-      useCases(filters: $filters) {
-        id
-        title
-        contributors {
-          id
-          fullName
-          username
-          profilePicture {
-            url
+        organizationMemberships {
+          role {
+            name
           }
-        }
-        supportingOrganizations {
-          id
-          name
-          logo {
-            url
+          organization {
             name
           }
         }
-        partnerOrganizations{
-          id
-          name
-          logo{
-            url
-            name
-          }
-        }  
       }
     }
   `);

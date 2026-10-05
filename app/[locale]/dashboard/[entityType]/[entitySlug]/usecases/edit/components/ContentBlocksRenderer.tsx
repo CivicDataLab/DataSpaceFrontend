@@ -17,7 +17,6 @@ import {
   parseUseCaseContent,
   type ContentBlock,
   type HighlightTone,
-  type UseCaseContentDocument,
 } from '../content-document';
 import styles from '../edit.module.scss';
 
@@ -267,10 +266,4 @@ export function editAction(label: string, onAction: () => void) {
       onAction,
     },
   ];
-}
-
-export function contentDocumentFromSummary(
-  summary?: string | null
-): UseCaseContentDocument {
-  return parseUseCaseContent(summary);
 }

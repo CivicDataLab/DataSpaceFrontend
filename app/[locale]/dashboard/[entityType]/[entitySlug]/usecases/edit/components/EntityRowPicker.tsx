@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react';
 import Image from 'next/image';
-import { Button, Icon, Spinner, Text } from 'opub-ui';
+import { Button, Icon, Select, Spinner, Text } from 'opub-ui';
 import { createPortal } from 'react-dom';
 
 import { Icons } from '@/components/icons';
@@ -46,9 +46,7 @@ interface EntityRowPickerProps {
   onLoadMore?: () => void;
   onAdd: (item: EntityRow) => void;
   onRemove: (id: string) => void;
-  roleOptionsFor?: (
-    item: EntityRow
-  ) => Array<{ label: string; value: string }>;
+  roleOptionsFor?: (item: EntityRow) => Array<{ label: string; value: string }>;
   onRoleChange?: (item: EntityRow, role: string) => void;
 }
 
@@ -466,16 +464,18 @@ export const EntityRowPicker = forwardRef<
                       >
                         {item.title}
                       </p>
-                      {variant === 'dataset' ? (
+                      {(item.kind ?? variant) === 'dataset' ? (
                         <div className={styles.meta}>
                           {item.badge ? (
                             <span className={styles.badge}>{item.badge}</span>
                           ) : null}
                           {item.subtitle ? (
-                            <span className={styles.subtitle}>{item.subtitle}</span>
+                            <span className={styles.subtitle}>
+                              {item.subtitle}
+                            </span>
                           ) : null}
                         </div>
-                      ) : variant === 'person' ? null : item.subtitle ? (
+                      ) : item.subtitle ? (
                         <p className={styles.subtitle}>{item.subtitle}</p>
                       ) : null}
                     </div>
@@ -509,20 +509,19 @@ export const EntityRowPicker = forwardRef<
                           </Button>
                         ) : null}
                         {roleOptionsFor ? (
-                          <select
+                          <Select
+                            label=""
                             className={styles.roleSelect}
                             value={item.role ?? ''}
                             aria-label={`Relationship for ${item.title}`}
-                            onChange={(event) =>
-                              onRoleChange?.(item, event.target.value)
-                            }
-                          >
-                            {roleOptionsFor(item).map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
+                            options={roleOptionsFor(item)}
+                            name={`role-${item.id}`}
+
+                            onChange={(role) => {
+                              onRoleChange?.(item, role);
+                              role = item.role ?? '';
+                            }}
+                          />
                         ) : variant === 'person' ? (
                           <input
                             type="text"

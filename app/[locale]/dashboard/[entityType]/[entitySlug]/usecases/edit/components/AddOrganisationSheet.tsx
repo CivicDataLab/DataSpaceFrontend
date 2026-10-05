@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AddPartners } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/[id]/contributors/query';
 import { organizationCreationMutation } from '@/app/[locale]/dashboard/[entityType]/schema';
 import {
   ApiOrganizationOrganizationTypesEnum,
@@ -41,8 +40,8 @@ const initialFormData = {
 type AddOrganisationSheetProps = {
   open: boolean;
   onClose: () => void;
-  useCaseId: string;
-  ownerArgs: Record<string, string>;
+  description?: string;
+  onConnect: (organizationId: string) => Promise<unknown>;
   onAdded: () => void;
   onBusy?: (busy: boolean) => void;
 };
@@ -50,13 +49,14 @@ type AddOrganisationSheetProps = {
 export function AddOrganisationSheet({
   open,
   onClose,
-  useCaseId,
-  ownerArgs,
+  description = 'Add an organisation to this Use Case.',
+  onConnect,
   onAdded,
   onBusy,
 }: AddOrganisationSheetProps) {
   const { organizationTypes } = useOrganizationTypes();
   const [formData, setFormData] = useState(initialFormData);
+  const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
     if (open) return;
@@ -68,15 +68,7 @@ export function AddOrganisationSheet({
       GraphQL(organizationCreationMutation, {}, { input })
   );
 
-  const { mutateAsync: addPartner, isLoading: adding } = useMutation(
-    (organizationId: string) =>
-      GraphQL(AddPartners, ownerArgs, {
-        useCaseId,
-        organizationId,
-      })
-  );
-
-  const isSaving = creating || adding;
+  const isSaving = creating || connecting;
 
   useEffect(() => {
     onBusy?.(isSaving);
@@ -103,7 +95,12 @@ export function AddOrganisationSheet({
         return;
       }
 
-      await addPartner(res.createOrganization.id);
+      setConnecting(true);
+      try {
+        await onConnect(res.createOrganization.id);
+      } finally {
+        setConnecting(false);
+      }
       toast('Organization created successfully');
       onAdded();
       onClose();
@@ -140,7 +137,7 @@ export function AddOrganisationSheet({
               Add New Organisation
             </Text>
             <Text variant="bodySm" color="subdued">
-              Add an organisation to this Use Case.
+              {description}
             </Text>
           </div>
           <IconButton

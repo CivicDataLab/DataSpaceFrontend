@@ -1,0 +1,74 @@
+.dialogTitle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.option {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--surface-default);
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.optionSelected {
+  border-color: var(--blue-primary-color);
+}
+
+.titleRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tick {
+  flex-shrink: 0;
+  color: var(--blue-primary-color);
+}
+
+.footerActions {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.continue {
+  border-color: var(--blue-primary-color) !important;
+  background: var(--blue-primary-color) !important;
+  color: var(--base-pure-white) !important;
+  --button-color: var(--blue-primary-color);
+  --button-color-hover: var(--blue-primary-text);
+  --button-color-active: var(--blue-primary-text);
+  --button-text: var(--base-pure-white);
+
+  &:hover {
+    background: var(--blue-primary-text) !important;
+  }
+}
+
+.iconWrap {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--base-gray-slate-solid-3);
+  color: var(--text-subdued);
+}

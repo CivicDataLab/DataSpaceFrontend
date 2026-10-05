@@ -60,8 +60,6 @@ export const UseCaseEditStatusProvider = ({
   );
 };
 
-export const EditStatusProvider = UseCaseEditStatusProvider;
-
 export const useUseCaseEditStatus = () => {
   const context = useContext(UseCaseEditStatusContext);
   if (!context) {
@@ -70,9 +68,4 @@ export const useUseCaseEditStatus = () => {
     );
   }
   return context;
-};
-
-export const useEditStatus = () => {
-  const { status, setStatus } = useUseCaseEditStatus();
-  return { status, setStatus };
 };
