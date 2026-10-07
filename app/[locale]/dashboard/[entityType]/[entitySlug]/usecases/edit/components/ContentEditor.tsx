@@ -1,6 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FocusEvent,
+} from 'react';
 import dynamic from 'next/dynamic';
 import {
   IconChartBar,
@@ -18,7 +24,7 @@ import {
   IconTextCaption,
   IconTrash,
 } from '@tabler/icons-react';
-import { Button, Combobox, Icon, Popover, Text, toast } from 'opub-ui';
+import { Button, Combobox, Icon, Popover, Text, TextField, toast } from 'opub-ui';
 
 import {
   ChartBlock,
@@ -27,7 +33,6 @@ import {
   createBlockId,
   HIGHLIGHT_TONES,
   HighlightBlock,
-  HighlightTone,
   ImageBlock,
   isBlockEmpty,
   LinkBlock,
@@ -36,7 +41,6 @@ import {
 import styles from '../edit.module.scss';
 import {
   ContentBlockView,
-  highlightToneClass,
   SelectedChartPreview,
 } from './ContentBlocksRenderer';
 
@@ -95,11 +99,27 @@ export function ContentEditor({
 }: ContentEditorProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const blocksRef = useRef(blocks);
+  blocksRef.current = blocks;
 
   const updateBlock = (id: string, next: ContentBlock, persist = false) => {
-    const nextBlocks = blocks.map((block) => (block.id === id ? next : block));
+    const nextBlocks = blocksRef.current.map((block) =>
+      block.id === id ? next : block
+    );
+    blocksRef.current = nextBlocks;
     onChange(nextBlocks);
     if (persist) onSave(nextBlocks);
+  };
+
+  const toggleBlock = (id: string) => {
+    if (activeId === id) {
+      const focused = document.activeElement;
+      if (focused instanceof HTMLElement) focused.blur();
+      onSave(blocksRef.current);
+      setActiveId(null);
+      return;
+    }
+    setActiveId(id);
   };
 
   const addBlock = (type: ContentBlockType) => {
@@ -168,11 +188,7 @@ export function ContentEditor({
                   isFirst={index === 0}
                   isLast={index === blocks.length - 1}
                   onActivate={() => setActiveId(block.id)}
-                  onToggle={() =>
-                    setActiveId((current) =>
-                      current === block.id ? null : block.id
-                    )
-                  }
+                  onToggle={() => toggleBlock(block.id)}
                   onMoveUp={() => moveBlock(index, -1)}
                   onMoveDown={() => moveBlock(index, 1)}
                   onDuplicate={() => duplicateBlock(index)}
@@ -570,11 +586,21 @@ function ChartBlockEditor({
   );
 }
 
-const HIGHLIGHT_SWATCHES: { tone: HighlightTone; label: string }[] = [
-  { tone: 'blue', label: 'Blue' },
-  { tone: 'amber', label: 'Amber' },
-  { tone: 'green', label: 'Green' },
-];
+function fieldValue(event: FocusEvent | undefined, fallback: string) {
+  const target = event?.currentTarget ?? event?.target;
+  return target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLInputElement
+    ? target.value
+    : fallback;
+}
+
+function sizeHighlightFields(root: HTMLElement | null) {
+  if (!root) return;
+  root.querySelectorAll('textarea').forEach((area) => {
+    area.style.height = 'auto';
+    area.style.height = `${area.scrollHeight}px`;
+  });
+}
 
 function HighlightBlockEditor({
   block,
@@ -585,46 +611,43 @@ function HighlightBlockEditor({
   onChange: (block: HighlightBlock) => void;
   onBlur: (block: HighlightBlock) => void;
 }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    sizeHighlightFields(rootRef.current);
+  }, [block.title, block.body]);
+
   return (
-    <div className={styles.highlightRow}>
-      <div
-        className={`${styles.highlightCard} ${highlightToneClass(block.tone)}`}
-      >
-        <PlainField
+    <div ref={rootRef} className={styles.highlightCard}>
+      <div className={styles.highlightTitleField}>
+        <TextField
+          label="Highlight"
+          labelHidden
           name={`highlight-title-${block.id}`}
+          multiline
+          align="center"
           value={block.title}
           placeholder="Key highlight, e.g. 32% reduction in maternal mortality"
-          size="heading"
           onChange={(value) => onChange({ ...block, title: value })}
-          onBlur={(value) => onBlur({ ...block, title: value })}
-        />
-        <PlainField
-          name={`highlight-body-${block.id}`}
-          value={block.body}
-          placeholder="Optional supporting text"
-          size="support"
-          onChange={(value) => onChange({ ...block, body: value })}
-          onBlur={(value) => onBlur({ ...block, body: value })}
+          onBlur={(event) =>
+            onBlur({ ...block, title: fieldValue(event, block.title) })
+          }
         />
       </div>
-      <div
-        className={styles.highlightSwatches}
-        role="radiogroup"
-        aria-label="Highlight color"
-      >
-        {HIGHLIGHT_SWATCHES.map((swatch) => (
-          <button
-            key={swatch.tone}
-            type="button"
-            role="radio"
-            aria-checked={block.tone === swatch.tone}
-            aria-label={swatch.label}
-            className={`${styles.highlightSwatch} ${highlightToneClass(swatch.tone)} ${
-              block.tone === swatch.tone ? styles.highlightSwatchSelected : ''
-            }`}
-            onClick={() => onBlur({ ...block, tone: swatch.tone })}
-          />
-        ))}
+      <div className={styles.highlightBodyField}>
+        <TextField
+          label="Supporting text"
+          labelHidden
+          name={`highlight-body-${block.id}`}
+          multiline
+          align="center"
+          value={block.body}
+          placeholder="Optional supporting text"
+          onChange={(value) => onChange({ ...block, body: value })}
+          onBlur={(event) =>
+            onBlur({ ...block, body: fieldValue(event, block.body) })
+          }
+        />
       </div>
     </div>
   );

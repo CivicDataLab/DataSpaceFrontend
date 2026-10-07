@@ -210,9 +210,10 @@ export default function BuilderPage() {
     if (!useCase) return;
     setTitle(useCase.title ?? '');
     setLogo(useCase.logo ?? null);
-    setContentDoc(parseUseCaseContent(useCase.summary));
+    if (!contentDirtyRef.current) {
+      setContentDoc(parseUseCaseContent(useCase.summary));
+    }
     summaryHydratedRef.current = true;
-    contentDirtyRef.current = false;
   }, [useCase]);
 
   useEffect(() => {
@@ -289,17 +290,27 @@ export default function BuilderPage() {
       const includeSummary =
         summaryHydratedRef.current && contentDirtyRef.current;
       const document = next?.document ?? contentDocRef.current;
+      const savedSummary = includeSummary
+        ? serializeUseCaseContent(document)
+        : null;
 
       return updateUseCase({
         data: {
           id: params.id,
           title: next?.title ?? titleRef.current,
-          ...(includeSummary
-            ? { summary: serializeUseCaseContent(document) }
-            : {}),
+          ...(savedSummary != null ? { summary: savedSummary } : {}),
           ...(next && 'logo' in next ? { logo: next.logo } : {}),
         },
-      }).catch(() => undefined);
+      })
+        .then(() => {
+          if (
+            savedSummary != null &&
+            serializeUseCaseContent(contentDocRef.current) === savedSummary
+          ) {
+            contentDirtyRef.current = false;
+          }
+        })
+        .catch(() => undefined);
     },
     [params.id, updateUseCase]
   );
@@ -428,8 +439,8 @@ export default function BuilderPage() {
   const extractedDashboardLink = extractEmbedUrl(embedCode);
   const dashboardLinkLooksLikeUrl = Boolean(
     extractedDashboardLink &&
-      (extractedDashboardLink.includes('.') ||
-        /^https?:\/\//i.test(extractedDashboardLink))
+    (extractedDashboardLink.includes('.') ||
+      /^https?:\/\//i.test(extractedDashboardLink))
   );
   const dashboardUrlError =
     dashboardLinkLooksLikeUrl && !getSafeEmbedUrl(extractedDashboardLink)
@@ -573,22 +584,23 @@ export default function BuilderPage() {
               contentDocRef.current = next;
               setContentDoc(next);
             }}
-            onSave={(blocks) =>
-              persistBuilder({
-                document: { ...contentDocRef.current, blocks },
-              })
-            }
+            onSave={(blocks) => {
+              contentDirtyRef.current = true;
+              const document = { ...contentDocRef.current, blocks };
+              contentDocRef.current = document;
+              persistBuilder({ document });
+            }}
           />
         </div>
       </SectionCard>
 
       <SectionCard
         title="Embedded Dashboard"
-        description="Add one external dashboard to help users explore the data behind this content."
+        description="Link an external dashboard to this Use Case by pasting its URL from your provider, such as Superset. Only one dashboard is allowed."
       >
         <div id="embedded-dashboard" className="flex flex-col gap-3">
           <TextField
-            label="Dashboard embed code"
+            label="Dashboard URL"
             name="dashboardEmbed"
             multiline
             placeholder="Paste your dashboard iframe embed code here..."
@@ -596,10 +608,6 @@ export default function BuilderPage() {
             error={dashboardUrlError}
             onChange={setEmbedCode}
           />
-          <Text variant="bodySm" color="subdued">
-            Copy the iframe embed code from your dashboard provider, such as
-            Superset.
-          </Text>
           <div>
             <Button
               onClick={handleSaveDashboard}
@@ -608,9 +616,6 @@ export default function BuilderPage() {
               Save Dashboard
             </Button>
           </div>
-          <Text variant="bodySm" color="subdued">
-            You can add one external dashboard to this Use Case.
-          </Text>
         </div>
       </SectionCard>
     </div>

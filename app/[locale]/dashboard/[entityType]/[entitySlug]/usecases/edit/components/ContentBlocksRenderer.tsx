@@ -16,17 +16,10 @@ import {
   isLegacyHtmlSummary,
   parseUseCaseContent,
   type ContentBlock,
-  type HighlightTone,
 } from '../content-document';
 import styles from '../edit.module.scss';
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
-
-export function highlightToneClass(tone: HighlightTone) {
-  if (tone === 'amber') return styles.highlightTone1;
-  if (tone === 'green') return styles.highlightTone2;
-  return styles.highlightTone0;
-}
 
 export function ContentBlocksRenderer({
   summary,
@@ -97,24 +90,12 @@ export function ContentBlockView({ block }: { block: ContentBlock }) {
       );
     case 'highlight':
       return (
-        <div
-          className={`${styles.highlightCard} ${highlightToneClass(block.tone)}`}
-        >
-          {block.title ? (
-            <Text
-              variant="headingMd"
-              fontWeight="semibold"
-              color="default"
-              className="text-primaryBlue"
-            >
-              {block.title}
-            </Text>
+        <div className={styles.highlightCard}>
+          {block.title.trim() ? (
+            <p className={styles.highlightTitle}>{block.title}</p>
           ) : null}
-          <br />
-          {block.body ? (
-            <Text variant="bodyMd" color="subdued" className="mt-1">
-              {block.body}
-            </Text>
+          {block.body.trim() ? (
+            <p className={styles.highlightBody}>{block.body}</p>
           ) : null}
         </div>
       );

@@ -1,3 +1,12 @@
+:root {
+  --highlight-body-font-weight: 400;
+  --highlight-body-font-size: 0.875rem;
+  --highlight-heading-font-size: 1.5rem;
+  --highlight-heading-font-weight: 500;
+  --highlight-body-line-height: 1.5;
+  --highlight-heading-line-height: 1.4;
+}
+
 .useCaseStepper {
   padding-left: var(--space-6);
   padding-right: var(--space-6);
@@ -208,53 +217,85 @@
   }
 }
 
-.highlightRow {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
 .highlightCard {
-  flex: 1;
-  min-width: 0;
-  border-radius: 12px;
-  padding: 14px 16px;
-}
-
-.highlightSwatches {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-top: 10px;
+  align-items: center;
+  gap: 8px;
+  // border: 1px solid var(--base-gray-slate-solid-6);
+  // border-radius: 12px;
+  background: var(--surface-default, #fff);
+  padding: 28px 32px;
+  text-align: center;
 }
 
-.highlightSwatch {
-  width: 16px;
-  height: 16px;
+.highlightTitle,
+.highlightBody {
+  width: 100%;
   margin: 0;
-  padding: 0;
-  border: 1px solid var(--base-gray-slate-solid-7);
-  border-radius: 999px;
-  cursor: pointer;
-  appearance: none;
+  white-space: pre-wrap;
 }
 
-.highlightSwatchSelected {
-  box-shadow:
-    0 0 0 2px var(--surface-default, #fff),
-    0 0 0 3px var(--blue-primary-color);
+.highlightTitle {
+  color: var(--text-default);
+  font-size: var(--highlight-heading-font-size);
+  font-weight: var(--highlight-heading-font-weight);
+  line-height: var(--highlight-heading-line-height);
 }
 
-.highlightTone0 {
-  background: color-mix(in srgb, var(--blue-primary-color) 8%, white);
+.highlightBody {
+  color: var(--text-subdued);
+  font-size: var(--highlight-body-font-size);
+  font-weight: var(--highlight-body-font-weight);
+  line-height: var(--highlight-body-line-height);
 }
 
-.highlightTone1 {
-  background: var(--base-amber-solid-3);
+.highlightTitleField,
+.highlightBodyField {
+  width: 100%;
+
+  :global([class*='Input-module_Backdrop']) {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  :global(textarea),
+  :global([class*='DummyInput']) {
+    box-sizing: border-box;
+    padding: 0 !important;
+    border-width: 0 !important;
+    text-align: center;
+  }
+
+  :global(textarea) {
+    overflow: hidden !important;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
 }
 
-.highlightTone2 {
-  background: var(--base-green-solid-3);
+.highlightTitleField {
+  :global(textarea),
+  :global([class*='DummyInput']) {
+    color: var(--text-default);
+    font-size: var(--highlight-heading-font-size);
+    font-weight: var(--highlight-heading-font-weight);
+    line-height: var(--highlight-heading-line-height);
+  }
+}
+
+.highlightBodyField {
+  :global(textarea),
+  :global([class*='DummyInput']) {
+    color: var(--text-subdued);
+    font-size: var(--highlight-body-font-size);
+    font-weight: var(--highlight-body-font-weight);
+    line-height: var(--highlight-body-line-height);
+  }
 }
 
 .block {
