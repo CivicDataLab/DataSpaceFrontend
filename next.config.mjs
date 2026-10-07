@@ -23,7 +23,18 @@ const nextConfig = withNextIntl({
       'next-intl/config': './i18n.ts',
     },
   },
-  
+
+  // Non-public environments (dev) must not be indexed by search engines.
+  async headers() {
+    if (process.env.FEATURE_SITEMAPS === 'true') return [];
+    return [
+      {
+        source: '/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+    ];
+  },
+
   // Performance optimizations
   experimental: {
     optimizePackageImports: ['opub-ui', 'echarts', 'lucide-react', '@tabler/icons-react'],
