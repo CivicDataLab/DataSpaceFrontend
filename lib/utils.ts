@@ -208,10 +208,7 @@ export type ENTITY_CONFIG_TYPE = Record<
 
 // Check if sitemap is enabled
 export const isSitemapEnabled = () => {
-  return (
-    process.env.FEATURE_SITEMAPS === 'true' ||
-    process.env.NODE_ENV === 'production'
-  );
+  return process.env.FEATURE_SITEMAPS === 'true';
 };
 
 // Entity Config
