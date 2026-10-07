@@ -6,6 +6,7 @@ import { Text } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { getSafeEmbedUrl } from '@/lib/dashboardEmbed';
 import { Loading } from '@/components/loading';
+import JusticeHubEmbed, { isJusticeHubEmbed } from './JusticeHubEmbed';
 
 const DashboardsList = graphql(`
   query usecaseDashboards($usecaseId: Int!) {
@@ -41,7 +42,10 @@ const Dashboards = () => {
       ...dashboard,
       embedUrl: getSafeEmbedUrl(dashboard.link),
     }))
-    .filter((dashboard) => dashboard.embedUrl);
+    .filter(
+      (dashboard): dashboard is typeof dashboard & { embedUrl: string } =>
+        Boolean(dashboard.embedUrl)
+    );
 
   if (!isValidId || (!isLoading && dashboards.length === 0)) {
     return null;
@@ -65,18 +69,28 @@ const Dashboards = () => {
                 <Text variant="headingLg" className="text-primaryText">
                   {dashboard.name}
                 </Text>
-                <div className="mt-4 overflow-hidden rounded-2 border border-baseGraySlateSolid9 bg-surfaceDefault">
-                  <iframe
-                    title={dashboard.name || 'Dashboard'}
-                    src={dashboard.embedUrl || undefined}
-                    className="min-h-[640px] w-full border-0"
-                    loading="lazy"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    allowFullScreen
-                  />
+                <div className="mt-4">
+                  {isJusticeHubEmbed(dashboard.embedUrl) ? (
+                    <JusticeHubEmbed
+                      key={dashboard.embedUrl}
+                      src={dashboard.embedUrl}
+                      title={dashboard.name || 'Dashboard'}
+                    />
+                  ) : (
+                    <div className="overflow-hidden rounded-2 border border-baseGraySlateSolid9 bg-surfaceDefault">
+                      <iframe
+                        title={dashboard.name || 'Dashboard'}
+                        src={dashboard.embedUrl}
+                        className="min-h-[640px] w-full border-0"
+                        loading="lazy"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
                 </div>
                 <a
-                  href={dashboard.embedUrl || undefined}
+                  href={dashboard.embedUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-4 inline-block text-primaryBlue underline"
