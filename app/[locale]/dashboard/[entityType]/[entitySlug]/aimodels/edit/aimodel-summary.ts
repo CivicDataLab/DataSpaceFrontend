@@ -20,6 +20,27 @@ export function languageList(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string');
 }
 
+/** Provider rules used by publish. Ollama needs a model id and endpoint.
+ * Custom APIs need an endpoint. HuggingFace needs a model id. The other
+ * providers need a model id and an API key. */
+export function isAccessMethodComplete(provider: {
+  provider?: string | null;
+  providerModelId?: string | null;
+  apiEndpointUrl?: string | null;
+  apiKey?: string | null;
+  hfAuthToken?: string | null;
+}): boolean {
+  const modelId = provider.providerModelId?.trim();
+  const endpoint = provider.apiEndpointUrl?.trim();
+  const key = provider.apiKey?.trim() || provider.hfAuthToken?.trim();
+  if (provider.provider === 'LLAMA_OLLAMA') return Boolean(modelId && endpoint);
+  if (provider.provider === 'CUSTOM' || provider.provider === 'LLAMA_CUSTOM') {
+    return Boolean(endpoint);
+  }
+  if (provider.provider === 'HUGGINGFACE') return Boolean(modelId);
+  return Boolean(modelId && key);
+}
+
 export type AIModelEditStep = 'versions' | 'details' | 'publish';
 
 export function firstIncompleteAIModelEditStep(model: {

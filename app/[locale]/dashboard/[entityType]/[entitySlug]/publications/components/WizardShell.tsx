@@ -189,7 +189,7 @@ export function PublicationWizard({
       label: 'Review & Publish',
       description: 'Check readiness',
       icon: IconClipboardCheck,
-      isCompleted: detailsComplete,
+      isCompleted: false,
       content: currentStep === 3 ? children : null,
     },
   ];

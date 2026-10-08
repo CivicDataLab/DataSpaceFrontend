@@ -23,6 +23,104 @@
   --action-primary-basic-pressed: var(--blue-primary-text);
 }
 
+.requestTemplate {
+  --mono-font: var(--font-family-mono);
+}
+
+.testSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: var(--border-width-1) solid var(--border-disabled);
+  border-radius: var(--border-radius-4);
+  background: var(--surface-default);
+  padding: var(--space-4) var(--space-5);
+}
+
+.testSummaryMessage {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--space-2);
+}
+
+.testSummaryText {
+  font-family: var(--font-family-mono);
+}
+
+.testResult {
+  --section-card-title-color: var(--text-default);
+}
+
+.testResult :global([class*='Title__']) {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.testTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.testTitleText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.testStatus {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.testStatusCritical {
+  color: var(--text-critical);
+}
+
+.testStatusSuccess {
+  color: var(--text-success);
+}
+
+.testStatusSubdued {
+  color: var(--text-subdued);
+}
+
+.diagnosticsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.diagnosticsLabel {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.diagnosticsBox {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  border-radius: 8px;
+  background: var(--surface-subdued);
+  padding: 12px;
+}
+
+.diagnosticsResult {
+  margin-top: 6px;
+  border-top: 1px solid var(--border-subdued);
+  padding-top: 8px;
+}
+
 .iconEdit {
   border-radius: 8px;
 

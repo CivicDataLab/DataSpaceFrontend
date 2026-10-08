@@ -1,5 +1,6 @@
 'use client';
 
+import { type ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { AiModelStatus, UpdateAiModelInput } from '@/gql/generated/graphql';
@@ -8,6 +9,7 @@ import {
   IconCheck,
   IconCircleCheckFilled,
   IconPencil,
+  IconSend,
   IconSquareRoundedCheckFilled,
 } from '@tabler/icons-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -15,7 +17,9 @@ import { TriangleAlert } from 'lucide-react';
 import { Button, SectionCard, Spinner, Tag, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { RichTextRenderer } from '@/components/RichTextRenderer';
 import {
+  isAccessMethodComplete,
   languageList,
   metadataString,
   modelInfoIssues,
@@ -60,6 +64,9 @@ export const FetchAIModelForPublish = graphql(`
           provider
           providerModelId
           isPrimary
+          apiEndpointUrl
+          apiKey
+          hfAuthToken
         }
       }
     }
@@ -131,6 +138,42 @@ const domainLabels: Record<string, string> = {
   OTHER: 'Other',
 };
 
+const languageLabels: Record<string, string> = {
+  en: 'English',
+  hi: 'Hindi',
+  es: 'Spanish',
+  fr: 'French',
+  de: 'German',
+  zh: 'Chinese',
+  ja: 'Japanese',
+  ko: 'Korean',
+  ar: 'Arabic',
+  pt: 'Portuguese',
+  ru: 'Russian',
+  ta: 'Tamil',
+  te: 'Telugu',
+  bn: 'Bengali',
+  mr: 'Marathi',
+};
+
+function brightTags(items: Array<{ id: string; label: string }>) {
+  if (items.length === 0) return '';
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((item) => (
+        <Tag
+          key={item.id}
+          fillColor="#fdb557"
+          textColor="#000"
+          borderRadius="20px"
+        >
+          {item.label}
+        </Tag>
+      ))}
+    </div>
+  );
+}
+
 // Provider display names
 const providerLabels: Record<string, string> = {
   OPENAI: 'OpenAI',
@@ -181,7 +224,13 @@ export default function PublishPage() {
   const versions = model?.versions || [];
   const primaryVersion =
     versions.find((version) => version.isLatest) || versions[0];
-  const accessReady = (primaryVersion?.providers?.length ?? 0) > 0;
+  const accessMethods = primaryVersion?.providers ?? [];
+  const accessMethodCount = accessMethods.length;
+  const primaryAccessMethod =
+    accessMethods.find((provider) => provider.isPrimary) || accessMethods[0];
+  const accessReady = primaryAccessMethod
+    ? isAccessMethodComplete(primaryAccessMethod)
+    : false;
   const isPublished = model?.status === 'ACTIVE' && model?.isPublic;
 
   const { mutate, isLoading: updateLoading } = useMutation(
@@ -266,11 +315,18 @@ export default function PublishPage() {
       message: 'Add a version.',
       href: `${stepBase}/versions`,
     });
-  } else if (!accessReady) {
+  } else if (!primaryAccessMethod) {
     issues.push({
       id: 'access-methods',
       group: 'ACCESS METHODS',
       message: 'Add at least one access method to the Primary version.',
+      href: `${stepBase}/versions#access-methods`,
+    });
+  } else if (!accessReady) {
+    issues.push({
+      id: 'access-methods',
+      group: 'ACCESS METHODS',
+      message: 'Complete the primary access method before publishing.',
       href: `${stepBase}/versions#access-methods`,
     });
   }
@@ -278,27 +334,70 @@ export default function PublishPage() {
   const ready = issues.length === 0;
   const metadata = model?.metadata;
   const previewHref = `/aimodels/${params.id}`;
-  const languageLabels = languageList(model?.supportedLanguages).join(', ');
-  const sectorLabels = model?.sectors?.map((sector) => sector.name).join(', ');
-  const tagLabels = model?.tags?.map((tag) => tag.value).join(', ');
-
-  const summaryRows = [
-    ['MODEL NAME', model?.displayName || model?.name || ''],
-    [
-      'MODEL TYPE',
-      (model?.modelType && modelTypeLabels[model.modelType]) ||
+  const summaryRows: Array<{ label: string; value: ReactNode }> = [
+    { label: 'MODEL NAME', value: model?.displayName || model?.name || '' },
+    {
+      label: 'MODEL TYPE',
+      value:
+        (model?.modelType && modelTypeLabels[model.modelType]) ||
         model?.modelType ||
         '',
-    ],
-    ['DESCRIPTION', plainText(model?.description)],
-    ['TARGET USERS', metadataString(metadata, 'targetUsers')],
-    ['INTENDED USE', metadataString(metadata, 'intendedUse')],
-    ['DOMAIN', model?.domain ? domainLabels[model.domain] || model.domain : ''],
-    ['SECTORS', sectorLabels || ''],
-    ['TAGS', tagLabels || ''],
-    ['LANGUAGE SUPPORT', languageLabels],
-    ['MODEL WEBSITE', metadataString(metadata, 'modelWebsite')],
-    ['USAGE LICENSE', metadataString(metadata, 'usageLicense')],
+    },
+    {
+      label: 'DESCRIPTION',
+      value: plainText(model?.description) ? (
+        <RichTextRenderer content={model?.description ?? ''} />
+      ) : (
+        ''
+      ),
+    },
+    { label: 'TARGET USERS', value: metadataString(metadata, 'targetUsers') },
+    { label: 'INTENDED USE', value: metadataString(metadata, 'intendedUse') },
+    {
+      label: 'DOMAIN',
+      value: model?.domain ? domainLabels[model.domain] || model.domain : '',
+    },
+    {
+      label: 'SECTORS',
+      value: brightTags(
+        model?.sectors?.map((sector) => ({
+          id: sector.id,
+          label: sector.name,
+        })) ?? []
+      ),
+    },
+    {
+      label: 'TAGS',
+      value: brightTags(
+        model?.tags?.map((tag) => ({
+          id: tag.id,
+          label: tag.value,
+        })) ?? []
+      ),
+    },
+    {
+      label: 'LANGUAGE SUPPORT',
+      value: brightTags(
+        languageList(model?.supportedLanguages).map((language) => ({
+          id: language,
+          label: languageLabels[language] || language,
+        }))
+      ),
+    },
+    {
+      label: 'GEOGRAPHY',
+      value: brightTags(
+        model?.geographies?.map((geography) => ({
+          id: geography.id,
+          label: geography.name,
+        })) ?? []
+      ),
+    },
+    { label: 'MODEL WEBSITE', value: metadataString(metadata, 'modelWebsite') },
+    {
+      label: 'USAGE LICENSE',
+      value: metadataString(metadata, 'usageLicense'),
+    },
   ];
 
   return (
@@ -375,15 +474,19 @@ export default function PublishPage() {
         ]}
       >
         <div className="flex flex-col">
-          {summaryRows.map(([label, value]) => (
+          {summaryRows.map((row) => (
             <div
-              key={label}
+              key={row.label}
               className="grid gap-2 border-b-1 border-solid border-borderSubdued py-3 md:grid-cols-[220px_1fr]"
             >
               <Text variant="bodySm" color="subdued">
-                {label}
+                {row.label}
               </Text>
-              <Text>{value || '—'}</Text>
+              {typeof row.value === 'string' ? (
+                <Text>{row.value || '—'}</Text>
+              ) : (
+                row.value
+              )}
             </div>
           ))}
         </div>
@@ -451,31 +554,61 @@ export default function PublishPage() {
           },
         ]}
       >
-        {accessReady && primaryVersion ? (
-          <div className="flex flex-col gap-2">
-            {primaryVersion.providers?.map((provider) => (
-              <Text key={provider.id}>
-                {providerLabels[provider.provider] || provider.provider}
-              </Text>
-            ))}
+        <div className="flex flex-col">
+          <div className="grid gap-2 border-b-1 border-solid border-borderSubdued py-3 md:grid-cols-[220px_1fr]">
+            <Text variant="bodySm" color="subdued">
+              ACCESS METHODS
+            </Text>
+            <Text>
+              {primaryVersion
+                ? `${accessMethodCount} configured on Version ${primaryVersion.version}`
+                : '—'}
+            </Text>
           </div>
-        ) : (
-          <Text color="subdued">
-            No access methods configured on the Primary version yet.
-          </Text>
-        )}
+          <div className="grid gap-2 border-b-1 border-solid border-borderSubdued py-3 md:grid-cols-[220px_1fr]">
+            <Text variant="bodySm" color="subdued">
+              PRIMARY ACCESS METHOD
+            </Text>
+            {primaryAccessMethod ? (
+              <div className="flex items-center gap-2">
+                <Text>
+                  {providerLabels[primaryAccessMethod.provider] ||
+                    primaryAccessMethod.provider}
+                </Text>
+                <Tag fillColor="#EEEEEE" textColor="#000">
+                  Primary
+                </Tag>
+              </div>
+            ) : (
+              <Text>—</Text>
+            )}
+          </div>
+          <div className="grid gap-2 py-3 md:grid-cols-[220px_1fr]">
+            <Text variant="bodySm" color="subdued">
+              CONFIGURATION READINESS
+            </Text>
+            <Text color={accessReady ? 'success' : 'critical'}>
+              {accessReady ? 'Ready' : 'Not ready'}
+            </Text>
+          </div>
+        </div>
       </SectionCard>
 
       <div className="flex flex-col items-center gap-3 rounded-2 border-1 border-solid border-borderSubdued p-6 text-center">
-        <Text>
+        {/* <Text>
           Open a full preview of this AI Model in a new tab, exactly as it will
           appear once published.
         </Text>
-        <Button kind="primary" url={previewHref} external>
+        <Button kind="primary" disabled url={previewHref} external>
           Preview AI Model
-        </Button>
-        <Text variant="bodySm" color="subdued">
+        </Button> */}
+        {/* <Text variant="bodySm" color="subdued">
           Publishing happens from inside the preview.
+        </Text> */}
+        <Text color="subdued">
+          {isPublished
+            ? 'This AI Model is published and available publicly.'
+            : 'This AI Model is not yet published. Please publish it to make it available publicly.'}
         </Text>
         <Button
           kind="primary"
@@ -483,7 +616,10 @@ export default function PublishPage() {
           loading={updateLoading}
           onClick={handlePublish}
         >
-          {isPublished ? 'Unpublish' : 'Publish AI Model'}
+          <span className="font-semibold flex items-center justify-center gap-2">
+            {isPublished ? 'Unpublish' : 'Publish AI Model'}
+            <IconSend size={24} strokeWidth={1.5} className="pb-1" />
+          </span>
         </Button>
       </div>
 

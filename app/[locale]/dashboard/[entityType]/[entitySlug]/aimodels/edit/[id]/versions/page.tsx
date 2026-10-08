@@ -15,11 +15,18 @@ import {
 } from '@/gql/generated/graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import {
+  IconAlertTriangle,
   IconCheck,
+  IconCircle,
+  IconClock,
+  IconFileAlert,
+  IconLoader2,
   IconPencil,
   IconPlus,
-  IconTestPipe,
+  IconRefresh,
+  IconShield,
   IconTrash,
+  IconWifiOff,
   IconX,
 } from '@tabler/icons-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -27,9 +34,9 @@ import {
   AlertDialog,
   Button,
   Checkbox,
-  Dialog,
   FormLayout,
   IconButton,
+  SectionCard,
   Select,
   Sheet,
   Spinner,
@@ -41,6 +48,7 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
+import { isAccessMethodComplete } from '../../aimodel-summary';
 import { useEditStatus } from '../../context';
 import styles from '../../edit.module.scss';
 
@@ -212,7 +220,9 @@ interface ModelVersionRow {
   providers: VersionProviderRow[];
 }
 
-function accessMethodName(config: unknown): string {
+type ApiKeyLocation = 'header' | 'query';
+
+function readConfigObject(config: unknown): Record<string, unknown> {
   const value =
     typeof config === 'string'
       ? (() => {
@@ -223,15 +233,394 @@ function accessMethodName(config: unknown): string {
           }
         })()
       : config;
-  if (
-    value &&
-    typeof value === 'object' &&
-    'name' in value &&
-    typeof value.name === 'string'
-  ) {
-    return value.name;
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
   }
-  return '';
+  return {};
+}
+
+function accessMethodName(config: unknown): string {
+  const name = readConfigObject(config).name;
+  return typeof name === 'string' ? name : '';
+}
+
+function apiKeyLocationFromConfig(config: unknown): ApiKeyLocation {
+  return readConfigObject(config).apiKeyLocation === 'query'
+    ? 'query'
+    : 'header';
+}
+
+const CUSTOM_AUTH_OPTIONS = [
+  { label: 'None', value: 'NONE' },
+  { label: 'Bearer Token', value: 'BEARER' },
+  { label: 'API Key', value: 'API_KEY' },
+  { label: 'Custom Header', value: 'CUSTOM' },
+];
+
+const API_KEY_LOCATION_OPTIONS = [
+  { label: 'Header', value: 'header' },
+  { label: 'Query Parameter', value: 'query' },
+];
+
+function authNeedsCredential(authType: string): boolean {
+  return (
+    authType === 'BEARER' ||
+    authType === 'API_KEY' ||
+    authType === 'CUSTOM' ||
+    authType === 'BASIC' ||
+    authType === 'OAUTH2'
+  );
+}
+
+type CustomApiTestStatus =
+  | 'success'
+  | 'auth-failed'
+  | 'connection-failed'
+  | 'invalid-request'
+  | 'response-extraction-failed'
+  | 'timeout'
+  | 'incomplete';
+
+type CustomApiDisplayStatus =
+  CustomApiTestStatus | 'not-tested' | 'testing' | 'stale';
+
+type CustomApiTestStep = {
+  stage: string;
+  status: 'pass' | 'fail';
+  message: string;
+};
+
+type CustomApiTestResult = {
+  status: CustomApiTestStatus;
+  steps: CustomApiTestStep[];
+  signature: string;
+};
+
+const CUSTOM_TEST_STATUS: Record<
+  CustomApiDisplayStatus,
+  { label: string; color: 'success' | 'critical' | 'subdued' }
+> = {
+  success: { label: 'Success', color: 'success' },
+  'auth-failed': { label: 'Authentication Failed', color: 'critical' },
+  'connection-failed': { label: 'Connection Failed', color: 'critical' },
+  'invalid-request': {
+    label: 'Invalid Request Configuration',
+    color: 'critical',
+  },
+  'response-extraction-failed': {
+    label: 'Response Extraction Failed',
+    color: 'critical',
+  },
+  timeout: { label: 'Request Timed Out', color: 'critical' },
+  incomplete: { label: 'Configuration Incomplete', color: 'critical' },
+  'not-tested': { label: 'Not Tested', color: 'subdued' },
+  testing: { label: 'Testing...', color: 'subdued' },
+  stale: { label: 'Configuration Changed — Test Again', color: 'subdued' },
+};
+
+function customApiDisplayStatus(
+  provider: VersionProviderRow,
+  testInput: string,
+  result: CustomApiTestResult | undefined,
+  isTesting: boolean
+): CustomApiDisplayStatus {
+  if (isTesting) return 'testing';
+  if (!result) return 'not-tested';
+  if (result.signature !== customApiSignature(provider, testInput))
+    return 'stale';
+  return result.status;
+}
+
+function isCustomTestFailure(status: CustomApiDisplayStatus) {
+  return (
+    status === 'auth-failed' ||
+    status === 'connection-failed' ||
+    status === 'invalid-request' ||
+    status === 'response-extraction-failed' ||
+    status === 'timeout' ||
+    status === 'incomplete'
+  );
+}
+
+function customTestSummaryHeadline(counts: {
+  successful: number;
+  failed: number;
+  notTested: number;
+  testing: number;
+  stale: number;
+}) {
+  if (counts.testing > 0) return 'Testing access methods';
+  if (counts.failed > 0) return 'Some access methods failed';
+  if (counts.stale > 0) return 'Configuration changed — test again';
+  if (counts.successful > 0 && counts.notTested === 0) {
+    return 'All access methods passed';
+  }
+  if (counts.successful > 0) return 'Some access methods passed';
+  return 'No access methods tested';
+}
+
+function customTestStatusIcon(status: CustomApiDisplayStatus) {
+  if (status === 'testing')
+    return <IconLoader2 size={14} className="animate-spin" />;
+  if (status === 'success') return <IconCheck size={14} />;
+  if (status === 'auth-failed') return <IconShield size={14} />;
+  if (status === 'connection-failed') return <IconWifiOff size={14} />;
+  if (status === 'timeout') return <IconClock size={14} />;
+  if (status === 'response-extraction-failed')
+    return <IconFileAlert size={14} />;
+  if (status === 'invalid-request' || status === 'incomplete') {
+    return <IconAlertTriangle size={14} />;
+  }
+  if (status === 'stale') return <IconRefresh size={14} />;
+  return <IconCircle size={14} />;
+}
+
+function customApiSignature(
+  provider: VersionProviderRow,
+  testInput: string
+): string {
+  return JSON.stringify({
+    url: provider.apiEndpointUrl,
+    method: provider.apiHttpMethod,
+    timeout: provider.apiTimeoutSeconds,
+    auth: provider.apiAuthType,
+    header: provider.apiAuthHeaderName,
+    key: provider.apiKey,
+    prefix: provider.apiKeyPrefix,
+    location: apiKeyLocationFromConfig(provider.config),
+    template: provider.apiRequestTemplate,
+    path: provider.apiResponsePath,
+    modelId: provider.providerModelId,
+    headers: provider.apiHeaders,
+    testInput,
+  });
+}
+
+function fillTemplatePlaceholders(
+  value: unknown,
+  input: string,
+  modelId: string
+): unknown {
+  if (typeof value === 'string') {
+    return value
+      .replaceAll('{input}', input)
+      .replaceAll('{prompt}', input)
+      .replaceAll('{model_id}', modelId)
+      .replaceAll('{temperature}', '0.7')
+      .replaceAll('{max_tokens}', '256');
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => fillTemplatePlaceholders(item, input, modelId));
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, item]) => [
+        key,
+        fillTemplatePlaceholders(item, input, modelId),
+      ])
+    );
+  }
+  return value;
+}
+
+function readResponsePath(data: unknown, path: string): unknown {
+  const keys = path.split(/\.|\[|\]/).filter(Boolean);
+  let current = data;
+  for (const key of keys) {
+    if (current == null || typeof current !== 'object') return undefined;
+    current = Array.isArray(current)
+      ? current[Number(key)]
+      : (current as Record<string, unknown>)[key];
+  }
+  return current;
+}
+
+function customRequest(
+  provider: VersionProviderRow,
+  testInput: string
+): {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  body: unknown;
+} {
+  const modelId = provider.providerModelId || '';
+  let url = provider.apiEndpointUrl || '';
+  if (
+    provider.apiAuthType === 'API_KEY' &&
+    apiKeyLocationFromConfig(provider.config) === 'query' &&
+    provider.apiKey
+  ) {
+    const parsed = new URL(url);
+    parsed.searchParams.set(
+      provider.apiAuthHeaderName || 'api_key',
+      provider.apiKey
+    );
+    url = parsed.toString();
+  }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(provider.apiHeaders || {}),
+  };
+  if (provider.apiKey && provider.apiAuthType !== 'NONE') {
+    const sendInQuery =
+      provider.apiAuthType === 'API_KEY' &&
+      apiKeyLocationFromConfig(provider.config) === 'query';
+    if (!sendInQuery) {
+      const name = provider.apiAuthHeaderName || 'Authorization';
+      let value = provider.apiKey;
+      if (provider.apiAuthType === 'BEARER') {
+        value =
+          `${provider.apiKeyPrefix || 'Bearer'} ${provider.apiKey}`.trim();
+      } else if (provider.apiAuthType === 'BASIC') {
+        value = `Basic ${btoa(provider.apiKey)}`;
+      }
+      headers[name] = value;
+    }
+  }
+
+  const template = provider.apiRequestTemplate;
+  const body = fillTemplatePlaceholders(
+    template && typeof template === 'object'
+      ? template
+      : { input: '{input}', model: '{model_id}' },
+    testInput,
+    modelId
+  );
+  return {
+    url,
+    method: provider.apiHttpMethod || 'POST',
+    headers,
+    body,
+  };
+}
+
+async function testCustomApi(
+  provider: VersionProviderRow,
+  testInput: string
+): Promise<CustomApiTestResult> {
+  const signature = customApiSignature(provider, testInput);
+  const steps: CustomApiTestStep[] = [];
+  const finish = (status: CustomApiTestStatus): CustomApiTestResult => ({
+    status,
+    steps,
+    signature,
+  });
+
+  if (!isAccessMethodComplete(provider)) {
+    steps.push({
+      stage: 'Configuration Validation',
+      status: 'fail',
+      message: 'Required fields for this Custom API are missing.',
+    });
+    return finish('incomplete');
+  }
+  steps.push({
+    stage: 'Configuration Validation',
+    status: 'pass',
+    message: 'All required fields for this provider are present.',
+  });
+
+  let request: ReturnType<typeof customRequest>;
+  try {
+    request = customRequest(provider, testInput);
+  } catch {
+    steps.push({
+      stage: 'Request',
+      status: 'fail',
+      message: 'The endpoint URL is not a valid HTTP address.',
+    });
+    return finish('invalid-request');
+  }
+
+  const timeoutMs = Math.max(1, provider.apiTimeoutSeconds || 30) * 1000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(request.url, {
+      method: request.method,
+      headers: request.headers,
+      body: request.method === 'GET' ? undefined : JSON.stringify(request.body),
+      signal: controller.signal,
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      steps.push({
+        stage: 'Authentication Setup',
+        status: 'fail',
+        message: 'The provider rejected the configured credentials.',
+      });
+      return finish('auth-failed');
+    }
+    steps.push({
+      stage: 'Authentication Setup',
+      status: 'pass',
+      message: 'The provider accepted the configured credentials.',
+    });
+
+    if (!response.ok) {
+      steps.push({
+        stage: 'Request',
+        status: 'fail',
+        message: `The provider returned HTTP ${response.status}.`,
+      });
+      return finish('invalid-request');
+    }
+    steps.push({
+      stage: 'Request',
+      status: 'pass',
+      message: 'The provider accepted the request.',
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      steps.push({
+        stage: 'Response Extraction',
+        status: 'fail',
+        message: 'The provider did not return JSON.',
+      });
+      return finish('response-extraction-failed');
+    }
+    const data: unknown = await response.json();
+    const path = provider.apiResponsePath?.trim() || '';
+    const extracted = path ? readResponsePath(data, path) : data;
+    if (path && (extracted === undefined || extracted === null)) {
+      steps.push({
+        stage: 'Response Extraction',
+        status: 'fail',
+        message: `No value at ${path}.`,
+      });
+      return finish('response-extraction-failed');
+    }
+    const preview =
+      typeof extracted === 'string' ? extracted : JSON.stringify(extracted);
+    steps.push({
+      stage: 'Response Extraction',
+      status: 'pass',
+      message: preview
+        ? preview.slice(0, 180)
+        : 'The provider returned a response.',
+    });
+    return finish('success');
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      steps.push({
+        stage: 'Connection',
+        status: 'fail',
+        message: 'The request timed out.',
+      });
+      return finish('timeout');
+    }
+    steps.push({
+      stage: 'Connection',
+      status: 'fail',
+      message: 'The request could not reach the Custom API.',
+    });
+    return finish('connection-failed');
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function modelIdPlaceholder(provider: string): string {
@@ -271,11 +660,7 @@ export default function VersionsPage() {
     });
   };
 
-  const [isNewVersionModalOpen, setIsNewVersionModalOpen] = useState(false);
   const [isProviderModalOpen, setIsProviderModalOpen] = useState(false);
-  const [isWhatsThisModalOpen, setIsWhatsThisModalOpen] = useState(false);
-  const [isPrimaryConfirmModalOpen, setIsPrimaryConfirmModalOpen] =
-    useState(false);
   const [selectedVersion, setSelectedVersion] =
     useState<ModelVersionRow | null>(null);
   const [sheetVersionId, setSheetVersionId] = useState<number | null>(null);
@@ -292,21 +677,15 @@ export default function VersionsPage() {
     name: string;
   } | null>(null);
   const [versionTestInput, setVersionTestInput] = useState('');
-  const [testedProviderIds, setTestedProviderIds] = useState<number[]>([]);
+  const [testResults, setTestResults] = useState<
+    Record<number, CustomApiTestResult>
+  >({});
+  const [testingIds, setTestingIds] = useState<number[]>([]);
+  const [expandedTestId, setExpandedTestId] = useState<number | null>(null);
   const hashHandled = useRef(false);
   const pendingAccessRef = useRef(false);
   const [editingProvider, setEditingProvider] =
     useState<VersionProviderRow | null>(null);
-  const [pendingPrimaryVersionId, setPendingPrimaryVersionId] = useState<
-    number | null
-  >(null);
-
-  const [newVersionData, setNewVersionData] = useState({
-    version: '',
-    lifecycleStage: AiModelLifecycleStage.Development,
-    copyFromVersionId: null as number | null,
-    isLatest: false,
-  });
 
   const [providerFormData, setProviderFormData] = useState({
     accessName: '',
@@ -322,6 +701,7 @@ export default function VersionsPage() {
     apiAuthHeaderName: 'Authorization',
     apiKey: '',
     apiKeyPrefix: 'Bearer',
+    apiKeyLocation: 'header' as ApiKeyLocation,
     // Request/Response Configuration
     apiHeaders: {} as Record<string, string>,
     apiRequestTemplate: '',
@@ -374,8 +754,6 @@ export default function VersionsPage() {
         toast('New version created successfully!', {
           id: VERSIONS_ACTION_TOAST_ID,
         });
-        setIsNewVersionModalOpen(false);
-        resetVersionForm();
         invalidateVersionQueries();
 
         // Force refetch and update selected version
@@ -545,15 +923,6 @@ export default function VersionsPage() {
     }
   );
 
-  const resetVersionForm = () => {
-    setNewVersionData({
-      version: '',
-      lifecycleStage: AiModelLifecycleStage.Development,
-      copyFromVersionId: null,
-      isLatest: false,
-    });
-  };
-
   const resetProviderForm = (isPrimary = false) => {
     setProviderFormData({
       accessName: '',
@@ -569,6 +938,7 @@ export default function VersionsPage() {
       apiAuthHeaderName: 'Authorization',
       apiKey: '',
       apiKeyPrefix: 'Bearer',
+      apiKeyLocation: 'header' as ApiKeyLocation,
       // Request/Response Configuration
       apiHeaders: {},
       apiRequestTemplate: '',
@@ -603,32 +973,10 @@ export default function VersionsPage() {
     setSheetLifecycle(AiModelLifecycleStage.Development);
     setSheetPrimary(versions.length === 0);
     setVersionTestInput('');
-    setTestedProviderIds([]);
+    setTestResults({});
+    setTestingIds([]);
+    setExpandedTestId(null);
     setSheetMode('add');
-  };
-
-  const handleSaveNewVersion = () => {
-    if (!newVersionData.version) {
-      toast('Please enter a version number', {
-        id: VERSIONS_VALIDATION_TOAST_ID,
-      });
-      return;
-    }
-    if (!newVersionData.lifecycleStage) {
-      toast('Please select a lifecycle stage', {
-        id: VERSIONS_VALIDATION_TOAST_ID,
-      });
-      return;
-    }
-
-    createVersion({
-      modelId: parseInt(params.id),
-      version: newVersionData.version,
-      lifecycleStage:
-        newVersionData.lifecycleStage || AiModelLifecycleStage.Development,
-      copyFromVersionId: newVersionData.copyFromVersionId,
-      isLatest: newVersionData.isLatest,
-    });
   };
 
   const handleOpenProviderModal = (
@@ -661,9 +1009,13 @@ export default function VersionsPage() {
         )
           ? (provider.apiAuthType as EndpointAuthType)
           : EndpointAuthType.Bearer,
-        apiAuthHeaderName: provider.apiAuthHeaderName || 'Authorization',
+        apiAuthHeaderName:
+          provider.provider === 'CUSTOM' && provider.apiAuthType === 'NONE'
+            ? provider.apiAuthHeaderName || ''
+            : provider.apiAuthHeaderName || 'Authorization',
         apiKey: provider.apiKey || '',
         apiKeyPrefix: provider.apiKeyPrefix || 'Bearer',
+        apiKeyLocation: apiKeyLocationFromConfig(provider.config),
         // Request/Response Configuration
         apiHeaders: provider.apiHeaders || {},
         apiRequestTemplate: provider.apiRequestTemplate
@@ -727,6 +1079,51 @@ export default function VersionsPage() {
       return;
     }
 
+    if (
+      providerFormData.provider === 'CUSTOM' &&
+      authNeedsCredential(providerFormData.apiAuthType)
+    ) {
+      if (!providerFormData.apiAuthHeaderName.trim()) {
+        const headerLabel =
+          providerFormData.apiAuthType === 'API_KEY'
+            ? 'Header or parameter name'
+            : providerFormData.apiAuthType === 'CUSTOM'
+              ? 'Header name'
+              : 'Authentication header name';
+        toast(`${headerLabel} is required.`, {
+          id: VERSIONS_VALIDATION_TOAST_ID,
+        });
+        return;
+      }
+      if (!providerFormData.apiKey.trim()) {
+        const credentialLabel =
+          providerFormData.apiAuthType === 'BEARER'
+            ? 'Bearer token'
+            : providerFormData.apiAuthType === 'CUSTOM'
+              ? 'Header value'
+              : providerFormData.apiAuthType === 'BASIC'
+                ? 'Basic auth credential'
+                : providerFormData.apiAuthType === 'OAUTH2'
+                  ? 'OAuth2 token'
+                  : 'API key';
+        toast(`${credentialLabel} is required.`, {
+          id: VERSIONS_VALIDATION_TOAST_ID,
+        });
+        return;
+      }
+    }
+
+    if (
+      providerFormData.provider === 'CUSTOM' &&
+      (!Number.isFinite(providerFormData.apiTimeoutSeconds) ||
+        providerFormData.apiTimeoutSeconds < 1)
+    ) {
+      toast('Timeout must be at least 1 second.', {
+        id: VERSIONS_VALIDATION_TOAST_ID,
+      });
+      return;
+    }
+
     if (isEndpointRequired && !providerFormData.apiEndpointUrl?.trim()) {
       toast('Endpoint URL is required for the selected provider.', {
         id: VERSIONS_VALIDATION_TOAST_ID,
@@ -764,28 +1161,41 @@ export default function VersionsPage() {
       }
     }
 
-    const previousConfig: Record<string, unknown> =
-      editingProvider?.config &&
-      typeof editingProvider.config === 'object' &&
-      !Array.isArray(editingProvider.config)
-        ? (editingProvider.config as Record<string, unknown>)
-        : {};
+    const previousConfig = readConfigObject(editingProvider?.config);
+    const isCustomProvider = providerFormData.provider === 'CUSTOM';
+    const customAuth = String(providerFormData.apiAuthType);
+    const nextConfig: Record<string, unknown> = {
+      ...previousConfig,
+      name: providerFormData.accessName.trim(),
+    };
+    if (isCustomProvider && customAuth === 'API_KEY') {
+      nextConfig.apiKeyLocation = providerFormData.apiKeyLocation;
+    } else {
+      delete nextConfig.apiKeyLocation;
+    }
     const baseData = {
       providerModelId: providerFormData.providerModelId,
       isPrimary: providerFormData.isPrimary,
-      config: {
-        ...previousConfig,
-        name: providerFormData.accessName.trim(),
-      },
+      config: nextConfig,
       // API Endpoint Configuration
       apiEndpointUrl: providerFormData.apiEndpointUrl || null,
       apiHttpMethod: providerFormData.apiHttpMethod || EndpointHttpMethod.Post,
       apiTimeoutSeconds: providerFormData.apiTimeoutSeconds,
       // Authentication Configuration
-      apiAuthType: providerFormData.apiAuthType || EndpointAuthType.Bearer,
-      apiAuthHeaderName: providerFormData.apiAuthHeaderName || 'Authorization',
-      apiKey: providerFormData.apiKey || null,
-      apiKeyPrefix: providerFormData.apiKeyPrefix || 'Bearer',
+      apiAuthType: isCustomProvider
+        ? providerFormData.apiAuthType
+        : providerFormData.apiAuthType || EndpointAuthType.Bearer,
+      apiAuthHeaderName: isCustomProvider
+        ? providerFormData.apiAuthHeaderName
+        : providerFormData.apiAuthHeaderName || 'Authorization',
+      apiKey:
+        isCustomProvider && customAuth === 'NONE'
+          ? null
+          : providerFormData.apiKey || null,
+      apiKeyPrefix:
+        !isCustomProvider || customAuth === 'BEARER'
+          ? providerFormData.apiKeyPrefix || 'Bearer'
+          : '',
       // Request/Response Configuration
       apiHeaders:
         Object.keys(providerFormData.apiHeaders).length > 0
@@ -807,6 +1217,7 @@ export default function VersionsPage() {
     if (editingProvider) {
       updateProvider({
         id: editingProvider.id,
+        provider: providerFormData.provider as AiModelProvider,
         ...baseData,
       });
     } else {
@@ -877,45 +1288,6 @@ export default function VersionsPage() {
       },
     }
   );
-
-  const handleLifecycleChange = (versionId: number, lifecycleStage: string) => {
-    const stage = (Object.values(AiModelLifecycleStage) as string[]).includes(
-      lifecycleStage
-    )
-      ? (lifecycleStage as AiModelLifecycleStage)
-      : undefined;
-    if (!stage) return;
-    const currentVersion = selectedVersion || latestVersion;
-    if (currentVersion?.id === versionId) {
-      setSelectedVersion({ ...currentVersion, lifecycleStage: stage });
-    }
-    updateVersion({ id: versionId, lifecycleStage: stage });
-  };
-
-  const handleSetPrimaryVersion = (versionId: number, isLatest: boolean) => {
-    if (isLatest) {
-      setPendingPrimaryVersionId(versionId);
-      setIsPrimaryConfirmModalOpen(true);
-    } else {
-      const currentVersion = selectedVersion || latestVersion;
-      if (currentVersion?.id === versionId) {
-        setSelectedVersion({ ...currentVersion, isLatest: false });
-      }
-      updateVersion({ id: versionId, isLatest: false });
-    }
-  };
-
-  const confirmSetPrimaryVersion = () => {
-    if (pendingPrimaryVersionId) {
-      const currentVersion = selectedVersion || latestVersion;
-      if (currentVersion?.id === pendingPrimaryVersionId) {
-        setSelectedVersion({ ...currentVersion, isLatest: true });
-      }
-      updateVersion({ id: pendingPrimaryVersionId, isLatest: true });
-    }
-    setIsPrimaryConfirmModalOpen(false);
-    setPendingPrimaryVersionId(null);
-  };
 
   const getProviderDisplayName = (provider: string) => {
     const names: Record<string, string> = {
@@ -1012,7 +1384,9 @@ export default function VersionsPage() {
     setSheetLifecycle(version.lifecycleStage || 'DEVELOPMENT');
     setSheetPrimary(Boolean(version.isLatest) || versions.length === 1);
     setVersionTestInput('');
-    setTestedProviderIds([]);
+    setTestResults({});
+    setTestingIds([]);
+    setExpandedTestId(null);
   };
 
   const closeVersionSheet = () => {
@@ -1104,41 +1478,54 @@ export default function VersionsPage() {
     sheetMode === 'add' ? versions.length === 0 : versions.length <= 1;
   const sheetProviders = sheetVersion?.providers ?? [];
 
-  const accessReady = (provider: VersionProviderRow) => {
-    const modelId = provider.providerModelId?.trim();
-    const endpoint = provider.apiEndpointUrl?.trim();
-    const key = provider.apiKey?.trim() || provider.hfAuthToken?.trim();
-    if (provider.provider === 'LLAMA_OLLAMA')
-      return Boolean(modelId && endpoint);
-    if (
-      provider.provider === 'CUSTOM' ||
-      provider.provider === 'LLAMA_CUSTOM'
-    ) {
-      return Boolean(endpoint);
-    }
-    if (provider.provider === 'HUGGINGFACE') return Boolean(modelId);
-    return Boolean(modelId && key);
-  };
+  const customProviders = sheetProviders.filter(
+    (provider) => provider.provider === 'CUSTOM'
+  );
+  const customTestRows = customProviders.map((provider) => {
+    const result = testResults[provider.id];
+    const isTesting = testingIds.includes(provider.id);
+    const status = customApiDisplayStatus(
+      provider,
+      versionTestInput,
+      result,
+      isTesting
+    );
+    return { provider, result, isTesting, status };
+  });
+  const testCounts = customTestRows.reduce(
+    (counts, row) => {
+      if (row.status === 'testing') counts.testing += 1;
+      else if (row.status === 'success') counts.successful += 1;
+      else if (isCustomTestFailure(row.status)) counts.failed += 1;
+      else if (row.status === 'stale') counts.stale += 1;
+      else counts.notTested += 1;
+      return counts;
+    },
+    { successful: 0, failed: 0, notTested: 0, testing: 0, stale: 0 }
+  );
+  const testedCount = testCounts.successful + testCounts.failed;
+  const notTestedCount =
+    testCounts.notTested + testCounts.stale + testCounts.testing;
 
-  const runAccessCheck = (providerIds: number[]) => {
-    setTestedProviderIds((current) =>
-      Array.from(new Set([...current, ...providerIds]))
+  const runCustomTest = async (providers: VersionProviderRow[]) => {
+    const targets = providers.filter(
+      (provider) => provider.provider === 'CUSTOM'
+    );
+    if (targets.length === 0) return;
+    setTestingIds((current) => [
+      ...new Set([...current, ...targets.map((provider) => provider.id)]),
+    ]);
+    await Promise.all(
+      targets.map(async (provider) => {
+        const result = await testCustomApi(provider, versionTestInput);
+        setTestResults((current) => ({ ...current, [provider.id]: result }));
+        setTestingIds((current) => current.filter((id) => id !== provider.id));
+      })
     );
   };
 
   return (
     <div id="versions" className="flex flex-col gap-6 px-1">
-      {/* <div>
-        <Text variant="headingLg" fontWeight="semibold">
-          Versions
-        </Text>
-        <div className="mt-1">
-          <Text color="subdued">
-            Configure releases and how each one can be accessed.
-          </Text>
-        </div>
-      </div> */}
-
       {stepShowErrors && versions.length === 0 ? (
         <Text variant="bodySm" color="critical">
           Add a version to continue.
@@ -1369,8 +1756,7 @@ export default function VersionsPage() {
                       <div className="flex shrink-0 items-center gap-1">
                         <IconButton
                           size="slim"
-                          icon={Icons.pencil}
-
+                          icon={() => <IconPencil size={20} stroke={1.5} />}
                           disabled={isProviderModalOpen || !sheetVersion}
                           onClick={() =>
                             sheetVersion &&
@@ -1381,7 +1767,8 @@ export default function VersionsPage() {
                         </IconButton>
                         <IconButton
                           size="slim"
-                          icon={Icons.delete}
+                          icon={() => <IconTrash size={20} strokeWidth={1.5} />}
+
                           disabled={isProviderModalOpen}
                           onClick={() =>
                             setAccessMethodToDelete({
@@ -1433,24 +1820,35 @@ export default function VersionsPage() {
                           options={providerOptions}
                           value={providerFormData.provider}
                           onChange={(value) =>
-                            setProviderFormData((prev) => ({
-                              ...prev,
-                              provider: (
+                            setProviderFormData((prev) => {
+                              const provider = (
                                 Object.values(AiModelProvider) as string[]
                               ).includes(value)
                                 ? (value as AiModelProvider)
-                                : prev.provider,
-                              providerModelId: '',
-                              apiKey: '',
-                              apiEndpointUrl: '',
-                              apiAuthHeaderName: 'Authorization',
-                              apiRequestTemplate: '',
-                              apiResponsePath: '',
-                              hfAuthToken: '',
-                              hfModelClass: '',
-                            }))
+                                : prev.provider;
+                              const isCustom = provider === 'CUSTOM';
+                              return {
+                                ...prev,
+                                provider,
+                                providerModelId: '',
+                                apiKey: '',
+                                apiEndpointUrl: '',
+                                apiAuthType: isCustom
+                                  ? EndpointAuthType.None
+                                  : EndpointAuthType.Bearer,
+                                apiAuthHeaderName: isCustom
+                                  ? ''
+                                  : 'Authorization',
+                                apiKeyPrefix: 'Bearer',
+                                apiKeyLocation: 'header',
+                                apiTimeoutSeconds: isCustom ? 30 : 60,
+                                apiRequestTemplate: '',
+                                apiResponsePath: '',
+                                hfAuthToken: '',
+                                hfModelClass: '',
+                              };
+                            })
                           }
-                          disabled={!!editingProvider}
                         />
                         {providerFormData.provider ? (
                           <TextField
@@ -1577,7 +1975,7 @@ export default function VersionsPage() {
                           </>
                         )}
 
-                        {/* Custom API - full configuration */}
+                        {/* Custom API — endpoint, then only the fields the auth type needs */}
                         {providerFormData.provider === 'CUSTOM' && (
                           <>
                             <TextField
@@ -1590,103 +1988,252 @@ export default function VersionsPage() {
                                   apiEndpointUrl: value,
                                 }))
                               }
-                              placeholder="https://your-api.com/v1/completions"
-                              helpText="Full endpoint URL for your custom API"
+                              placeholder="https://api.example.org/v1/predict"
                               required
                               requiredIndicator={true}
-                            />
-                            <TextField
-                              name="apiKey"
-                              label="API Key / Token"
-                              type="password"
-                              value={providerFormData.apiKey}
-                              onChange={(value) =>
-                                setProviderFormData((prev) => ({
-                                  ...prev,
-                                  apiKey: value,
-                                }))
-                              }
-                              helpText="API key or token for authentication"
                             />
                             <Select
                               name="apiAuthType"
                               label="Authentication Type"
-                              options={[
-                                { label: 'Bearer Token', value: 'BEARER' },
-                                { label: 'API Key Header', value: 'API_KEY' },
-                                { label: 'Basic Auth', value: 'BASIC' },
-                                { label: 'OAuth2', value: 'OAUTH2' },
-                                { label: 'Custom', value: 'CUSTOM' },
-                                { label: 'None', value: 'NONE' },
-                              ]}
+                              options={
+                                providerFormData.apiAuthType === 'BASIC' ||
+                                providerFormData.apiAuthType === 'OAUTH2'
+                                  ? [
+                                      ...CUSTOM_AUTH_OPTIONS,
+                                      {
+                                        label:
+                                          providerFormData.apiAuthType ===
+                                          'BASIC'
+                                            ? 'Basic Auth'
+                                            : 'OAuth2',
+                                        value: providerFormData.apiAuthType,
+                                      },
+                                    ]
+                                  : CUSTOM_AUTH_OPTIONS
+                              }
                               value={providerFormData.apiAuthType}
                               onChange={(value) =>
-                                setProviderFormData((prev) => ({
-                                  ...prev,
-                                  apiAuthType: (
+                                setProviderFormData((prev) => {
+                                  const nextAuth = (
                                     Object.values(EndpointAuthType) as string[]
                                   ).includes(value)
                                     ? (value as EndpointAuthType)
-                                    : prev.apiAuthType,
-                                }))
+                                    : prev.apiAuthType;
+                                  return {
+                                    ...prev,
+                                    apiAuthType: nextAuth,
+                                    apiAuthHeaderName:
+                                      nextAuth === 'BEARER'
+                                        ? 'Authorization'
+                                        : '',
+                                    apiKeyLocation: 'header',
+                                    apiKey: '',
+                                    apiKeyPrefix:
+                                      nextAuth === 'BEARER' ? 'Bearer' : '',
+                                  };
+                                })
                               }
                             />
-                            <TextField
-                              name="apiAuthHeaderName"
-                              label="Auth Header Name"
-                              value={providerFormData.apiAuthHeaderName}
-                              onChange={(value) =>
-                                setProviderFormData((prev) => ({
-                                  ...prev,
-                                  apiAuthHeaderName: value,
-                                }))
-                              }
-                              placeholder="Authorization"
-                              helpText="Header name for authentication (e.g., Authorization, X-API-Key)"
-                            />
-                            <TextField
-                              name="apiRequestTemplate"
-                              label="Request Body Template"
-                              value={providerFormData.apiRequestTemplate}
-                              onChange={(value) =>
-                                setProviderFormData((prev) => ({
-                                  ...prev,
-                                  apiRequestTemplate: value,
-                                }))
-                              }
-                              placeholder='{"model": "{model_id}",
-                                  "messages": [{"role": "user", "content": "{input}"}]
-                                  "temperature": {temperature},
-                                  "max_tokens": {max_tokens}
-                                  }'
-                              helpText="Request body template with placeholders like {input}, {prompt}, {model_id}, {temperature}, {max_tokens}"
-                            />
-                            <TextField
-                              name="apiResponsePath"
-                              label="Response Path"
-                              value={providerFormData.apiResponsePath}
-                              onChange={(value) =>
-                                setProviderFormData((prev) => ({
-                                  ...prev,
-                                  apiResponsePath: value,
-                                }))
-                              }
-                              placeholder="choices[0].message.content"
-                              helpText="JSON path to extract response text"
-                            />
-                            <TextField
-                              name="apiTimeoutSeconds"
-                              label="Timeout (seconds)"
-                              type="number"
-                              value={providerFormData.apiTimeoutSeconds.toString()}
-                              onChange={(value) =>
-                                setProviderFormData((prev) => ({
-                                  ...prev,
-                                  apiTimeoutSeconds: parseInt(value) || 60,
-                                }))
-                              }
-                              helpText="Request timeout in seconds"
-                            />
+
+                            {providerFormData.apiAuthType === 'BEARER' && (
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <TextField
+                                  name="apiAuthHeaderName"
+                                  label="Authentication Header Name"
+                                  value={providerFormData.apiAuthHeaderName}
+                                  onChange={(value) =>
+                                    setProviderFormData((prev) => ({
+                                      ...prev,
+                                      apiAuthHeaderName: value,
+                                    }))
+                                  }
+                                  placeholder="Authorization"
+                                  required
+                                  requiredIndicator={true}
+                                />
+                                <TextField
+                                  name="apiKey"
+                                  label="Bearer Token"
+                                  type="password"
+                                  value={providerFormData.apiKey}
+                                  onChange={(value) =>
+                                    setProviderFormData((prev) => ({
+                                      ...prev,
+                                      apiKey: value,
+                                    }))
+                                  }
+                                  placeholder="Enter bearer token"
+                                  required
+                                  requiredIndicator={true}
+                                />
+                              </div>
+                            )}
+
+                            {providerFormData.apiAuthType === 'API_KEY' && (
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <TextField
+                                  name="apiAuthHeaderName"
+                                  label="Header or Parameter Name"
+                                  value={providerFormData.apiAuthHeaderName}
+                                  onChange={(value) =>
+                                    setProviderFormData((prev) => ({
+                                      ...prev,
+                                      apiAuthHeaderName: value,
+                                    }))
+                                  }
+                                  placeholder="e.g. X-API-Key"
+                                  required
+                                  requiredIndicator={true}
+                                />
+                                <Select
+                                  name="apiKeyLocation"
+                                  label="Send key in"
+                                  options={API_KEY_LOCATION_OPTIONS}
+                                  value={providerFormData.apiKeyLocation}
+                                  onChange={(value) =>
+                                    setProviderFormData((prev) => ({
+                                      ...prev,
+                                      apiKeyLocation:
+                                        value === 'query' ? 'query' : 'header',
+                                    }))
+                                  }
+                                />
+                                <div className="md:col-span-2">
+                                  <TextField
+                                    name="apiKey"
+                                    label="API Key"
+                                    type="password"
+                                    value={providerFormData.apiKey}
+                                    onChange={(value) =>
+                                      setProviderFormData((prev) => ({
+                                        ...prev,
+                                        apiKey: value,
+                                      }))
+                                    }
+                                    placeholder="Enter API key"
+                                    required
+                                    requiredIndicator={true}
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {providerFormData.apiAuthType === 'CUSTOM' && (
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <TextField
+                                  name="apiAuthHeaderName"
+                                  label="Header Name"
+                                  value={providerFormData.apiAuthHeaderName}
+                                  onChange={(value) =>
+                                    setProviderFormData((prev) => ({
+                                      ...prev,
+                                      apiAuthHeaderName: value,
+                                    }))
+                                  }
+                                  placeholder="e.g. X-Custom-Auth"
+                                  required
+                                  requiredIndicator={true}
+                                />
+                                <TextField
+                                  name="apiKey"
+                                  label="Header Value"
+                                  type="password"
+                                  value={providerFormData.apiKey}
+                                  onChange={(value) =>
+                                    setProviderFormData((prev) => ({
+                                      ...prev,
+                                      apiKey: value,
+                                    }))
+                                  }
+                                  placeholder="Enter header value"
+                                  required
+                                  requiredIndicator={true}
+                                />
+                              </div>
+                            )}
+
+                            {(providerFormData.apiAuthType === 'BASIC' ||
+                              providerFormData.apiAuthType === 'OAUTH2') && (
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <TextField
+                                  name="apiAuthHeaderName"
+                                  label="Authentication Header Name"
+                                  value={providerFormData.apiAuthHeaderName}
+                                  onChange={(value) =>
+                                    setProviderFormData((prev) => ({
+                                      ...prev,
+                                      apiAuthHeaderName: value,
+                                    }))
+                                  }
+                                  placeholder="Authorization"
+                                  required
+                                  requiredIndicator={true}
+                                />
+                                <TextField
+                                  name="apiKey"
+                                  label={
+                                    providerFormData.apiAuthType === 'BASIC'
+                                      ? 'Basic Auth Credential'
+                                      : 'OAuth2 Token'
+                                  }
+                                  type="password"
+                                  value={providerFormData.apiKey}
+                                  onChange={(value) =>
+                                    setProviderFormData((prev) => ({
+                                      ...prev,
+                                      apiKey: value,
+                                    }))
+                                  }
+                                  required
+                                  requiredIndicator={true}
+                                />
+                              </div>
+                            )}
+
+                            <div className={styles.requestTemplate}>
+                              <TextField
+                                name="apiRequestTemplate"
+                                label="Request Body Template"
+                                multiline={4}
+                                monospaced
+                                value={providerFormData.apiRequestTemplate}
+                                onChange={(value) =>
+                                  setProviderFormData((prev) => ({
+                                    ...prev,
+                                    apiRequestTemplate: value,
+                                  }))
+                                }
+                                placeholder='{ "model": "{model_id}", "input": "{prompt}" }'
+                                helpText="Optional JSON template. Supports {input}, {prompt}, {model_id}, {temperature} and {max_tokens} placeholders."
+                              />
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <TextField
+                                name="apiResponsePath"
+                                label="Response Path"
+                                value={providerFormData.apiResponsePath}
+                                onChange={(value) =>
+                                  setProviderFormData((prev) => ({
+                                    ...prev,
+                                    apiResponsePath: value,
+                                  }))
+                                }
+                                placeholder="e.g. choices[0].message.content"
+                              />
+                              <TextField
+                                name="apiTimeoutSeconds"
+                                label="Timeout (seconds)"
+                                type="number"
+                                value={providerFormData.apiTimeoutSeconds.toString()}
+                                onChange={(value) =>
+                                  setProviderFormData((prev) => ({
+                                    ...prev,
+                                    apiTimeoutSeconds: parseInt(value, 10) || 0,
+                                  }))
+                                }
+                                placeholder="30"
+                              />
+                            </div>
                           </>
                         )}
 
@@ -1844,96 +2391,238 @@ export default function VersionsPage() {
               </div>
 
               <div className="flex flex-col gap-4 border-t-1 border-solid border-borderSubdued pt-6">
-                <Text fontWeight="semibold">Test Access Methods</Text>
-                <Text variant="bodySm" color="subdued">
-                  Test the configured access methods for this version and review
-                  the connection and response results.
-                </Text>
-                {sheetProviders.length === 0 ? (
+                <div className="flex flex-col gap-1">
+                  <Text fontWeight="semibold">Test Access Methods</Text>
+                  <Text variant="bodySm" color="subdued">
+                    Test the configured access methods for this version and
+                    review the connection and response results.
+                  </Text>
+                </div>
+                {customProviders.length === 0 ? (
                   <div className="rounded-2 bg-surfaceSubdued px-4 py-6 text-center">
                     <Text variant="bodySm" color="subdued">
-                      Add and save an access method before testing.
+                      {sheetProviders.length === 0
+                        ? 'Add and save a Custom API access method before testing.'
+                        : 'Only Custom API access methods can be tested.'}
                     </Text>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1">
+                      <Text fontWeight="semibold">Test Input</Text>
+                      <Text variant="bodySm" color="subdued">
+                        Enter a sample prompt or input to test the configured
+                        access methods.
+                      </Text>
+                    </div>
                     <TextField
                       name="versionTestInput"
                       label="Test Input"
-                      multiline={2}
+                      labelHidden
+                      multiline={4}
                       value={versionTestInput}
                       onChange={setVersionTestInput}
-                      helpText="Enter a sample prompt or input to test the configured access methods."
                       placeholder="Enter a sample prompt or input for testing..."
                     />
                     <div>
                       <Button
                         kind="neutral"
                         size="medium"
-                        icon={<IconTestPipe size={16} />}
-                        onClick={() =>
-                          runAccessCheck(
-                            sheetProviders.map((provider) => provider.id)
-                          )
-                        }
+                        disabled={testingIds.length > 0}
+                        onClick={() => runCustomTest(customProviders)}
                       >
                         Test All Access Methods
                       </Button>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      {sheetProviders.map((provider) => {
-                        const tested = testedProviderIds.includes(provider.id);
-                        const ready = accessReady(provider);
-                        const label = !tested
-                          ? 'Not Tested'
-                          : ready
-                            ? 'Configuration complete'
-                            : 'Configuration Incomplete';
-                        return (
-                          <div
-                            key={provider.id}
-                            className="flex items-center justify-between gap-3 rounded-2 border-1 border-solid border-borderSubdued p-3"
-                          >
-                            <div className="min-w-0">
-                              <Text fontWeight="medium">
-                                {getProviderDisplayName(provider.provider)}
-                              </Text>
-                              <div className="mt-1">
-                                <Text variant="bodySm" color="subdued">
-                                  {provider.providerModelId || 'No model id'}
-                                  {provider.isPrimary ? ' · Primary' : ''}
-                                </Text>
-                              </div>
-                            </div>
-                            <div className="flex shrink-0 flex-col items-end gap-2">
-                              <Text
-                                variant="bodySm"
-                                color={
-                                  !tested
-                                    ? 'subdued'
-                                    : ready
-                                      ? 'success'
-                                      : 'critical'
-                                }
-                              >
-                                {label}
-                              </Text>
-                              <Button
-                                kind="tertiary"
-                                size="slim"
-                                onClick={() => runAccessCheck([provider.id])}
-                              >
-                                Test Again
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                    <div className={styles.testSummary}>
+                      <Text fontWeight="semibold">Test Results</Text>
+                      <Text
+                        variant="bodySm"
+                        color="subdued"
+
+                        className={styles.testSummaryText}
+                      >
+                        {`${testedCount} Tested · ${testCounts.successful} Successful · ${testCounts.failed} Failed · ${notTestedCount} Not Tested`}
+                      </Text>
+                      <div className={styles.testSummaryMessage}>
+                        <Text fontWeight="semibold">
+                          {customTestSummaryHeadline(testCounts)}
+                        </Text>
+                        <Text variant="bodySm" color="subdued">
+                          Results reflect the current configuration and Test
+                          Input — editing either marks a result as changed.
+                        </Text>
+                      </div>
                     </div>
-                    <Text variant="bodySm" color="subdued">
-                      This check confirms the saved configuration. It does not
-                      send the test input to the provider.
-                    </Text>
+                    <div className="flex flex-col gap-3">
+                      {customTestRows.map(
+                        ({ provider, result, isTesting, status }) => {
+                          const meta = CUSTOM_TEST_STATUS[status];
+                          const expanded = expandedTestId === provider.id;
+                          const name =
+                            accessMethodName(provider.config) || 'Custom API';
+                          const statusTone =
+                            meta.color === 'success'
+                              ? styles.testStatusSuccess
+                              : meta.color === 'critical'
+                                ? styles.testStatusCritical
+                                : styles.testStatusSubdued;
+                          return (
+                            <SectionCard
+                              key={provider.id}
+                              className={styles.testResult}
+                              expandable
+                              expanded={expanded}
+                              onExpandedChange={(open) =>
+                                setExpandedTestId(open ? provider.id : null)
+                              }
+                              title={
+                                <span className={styles.testTitleRow}>
+                                  <span className={styles.testTitleText}>
+                                    {name}
+                                  </span>
+                                  <span
+                                    className={`${styles.testStatus} ${statusTone}`}
+                                  >
+                                    {customTestStatusIcon(status)}
+                                    <Text
+                                      as="span"
+                                      variant="bodySm"
+                                      color={meta.color}
+                                      fontWeight="medium"
+                                    >
+                                      {meta.label}
+                                    </Text>
+                                  </span>
+                                </span>
+                              }
+                              description={
+                                <>
+                                  {`Custom API${
+                                    provider.providerModelId
+                                      ? ` · ${provider.providerModelId}`
+                                      : ''
+                                  }`}
+                                  {provider.isPrimary ? (
+                                    <>
+                                      {' '}
+                                      <Tag
+                                        fillColor="#E8F1FB"
+                                        textColor="#1D4E89"
+                                      >
+                                        Primary
+                                      </Tag>
+                                    </>
+                                  ) : null}
+                                </>
+                              }
+                            >
+                              <div className={styles.diagnosticsHeader}>
+                                <Text
+                                  variant="bodySm"
+                                  color="subdued"
+                                  fontWeight="semibold"
+                                  className={styles.diagnosticsLabel}
+                                >
+                                  Diagnostics
+                                </Text>
+                                <Button
+                                  kind="tertiary"
+                                  variant="basic"
+                                  size="slim"
+                                  icon={<IconRefresh size={16} />}
+                                  disabled={isTesting}
+                                  onClick={() => runCustomTest([provider])}
+                                >
+                                  Test{' '}
+                                  {testCounts.failed > 0 ||
+                                  testCounts.stale > 0 ||
+                                  testCounts.successful > 0
+                                    ? 'Again'
+                                    : ''}
+                                </Button>
+                              </div>
+                              {isTesting ? (
+                                <div className="mt-2">
+                                  <Text variant="bodySm" color="subdued">
+                                    Running test...
+                                  </Text>
+                                </div>
+                              ) : null}
+                              {!isTesting && status === 'not-tested' ? (
+                                <div className="mt-2">
+                                  <Text variant="bodySm" color="subdued">
+                                    This access method has not been tested yet.
+                                  </Text>
+                                </div>
+                              ) : null}
+                              {!isTesting && status === 'stale' ? (
+                                <div className="mt-2">
+                                  <Text variant="bodySm" color="subdued">
+                                    The configuration or test input changed
+                                    since the last test. Test again to refresh
+                                    the result.
+                                  </Text>
+                                </div>
+                              ) : null}
+                              {!isTesting &&
+                              status !== 'not-tested' &&
+                              status !== 'stale' &&
+                              result ? (
+                                <div className={styles.diagnosticsBox}>
+                                  <Text
+                                    variant="bodySm"
+                                    color="subdued"
+                                    className="font-mono"
+                                  >
+                                    Test Started
+                                  </Text>
+                                  {result.steps.map((step) => (
+                                    <Text
+                                      key={step.stage}
+                                      variant="bodySm"
+                                      color={
+                                        step.status === 'pass'
+                                          ? 'success'
+                                          : 'critical'
+                                      }
+
+                                      className="font-mono"
+                                    >
+                                      {step.status === 'pass' ? '✓' : '✕'}{' '}
+                                      {step.stage} — {step.message}
+                                    </Text>
+                                  ))}
+                                  <div className={styles.diagnosticsResult}>
+                                    <Text
+                                      variant="bodySm"
+                                      className="font-mono"
+                                    >
+                                      Result:{' '}
+                                      <Text
+                                        as="span"
+                                        variant="bodySm"
+                                        fontWeight="semibold"
+                                        color={
+                                          CUSTOM_TEST_STATUS[result.status]
+                                            .color
+                                        }
+                                        className="font-mono"
+                                      >
+                                        {
+                                          CUSTOM_TEST_STATUS[result.status]
+                                            .label
+                                        }
+                                      </Text>
+                                    </Text>
+                                  </div>
+                                </div>
+                              ) : null}
+                            </SectionCard>
+                          );
+                        }
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1954,180 +2643,6 @@ export default function VersionsPage() {
         </Sheet.Content>
       </Sheet>
 
-      <Dialog
-        open={isNewVersionModalOpen}
-        onOpenChange={setIsNewVersionModalOpen}
-      >
-        {isNewVersionModalOpen && (
-          <Dialog.Content title="Add a New Version" limitHeight>
-            <FormLayout>
-              <TextField
-                name="version"
-                label="Version Name"
-                value={newVersionData.version}
-                onChange={(value) =>
-                  setNewVersionData((prev) => ({ ...prev, version: value }))
-                }
-                helpText="E.g Version 1.2"
-                required
-                requiredIndicator={true}
-              />
-              <Select
-                name="lifecycleStage"
-                label="Lifecycle Stage"
-                options={lifecycleStageOptions}
-                value={newVersionData.lifecycleStage}
-                onChange={(value) =>
-                  setNewVersionData((prev) => ({
-                    ...prev,
-                    lifecycleStage: (
-                      Object.values(AiModelLifecycleStage) as string[]
-                    ).includes(value)
-                      ? (value as AiModelLifecycleStage)
-                      : prev.lifecycleStage,
-                  }))
-                }
-                required
-                requiredIndicator={true}
-              />
-              {!newVersionData.lifecycleStage && (
-                <Text variant="bodySm" color="critical">
-                  Lifecycle Stage is required
-                </Text>
-              )}
-              <Select
-                name="copyFromVersionId"
-                label="Duplicate Endpoints From"
-                options={[
-                  { label: 'Create without duplicating', value: '' },
-                  ...versions.map((v) => ({
-                    label: `Version ${v.version}`,
-                    value: v.id.toString(),
-                  })),
-                ]}
-                value={newVersionData.copyFromVersionId?.toString() || ''}
-                onChange={(value) =>
-                  setNewVersionData((prev) => ({
-                    ...prev,
-                    copyFromVersionId: value ? parseInt(value) : null,
-                  }))
-                }
-                required
-                requiredIndicator={true}
-              />
-              <Checkbox
-                name="isLatestNewVersion"
-                checked={newVersionData.isLatest}
-                onChange={() =>
-                  setNewVersionData((prev) => ({
-                    ...prev,
-                    isLatest: !prev.isLatest,
-                  }))
-                }
-              >
-                <div className="flex flex-col gap-1">
-                  <Text>Select as Primary Version</Text>
-                  <Text variant="bodySm" color="subdued">
-                    This will be the default version for audits
-                  </Text>
-                </div>
-              </Checkbox>
-
-              <div className="flex justify-center pt-4">
-                <Button
-                  onClick={handleSaveNewVersion}
-                  loading={createLoading}
-                  fullWidth
-                >
-                  SAVE AND CLOSE
-                </Button>
-              </div>
-            </FormLayout>
-          </Dialog.Content>
-        )}
-      </Dialog>
-
-      {/* What is Primary Version Modal */}
-      <Dialog
-        open={isWhatsThisModalOpen}
-        onOpenChange={setIsWhatsThisModalOpen}
-      >
-        {isWhatsThisModalOpen && (
-          <Dialog.Content title="What is a Primary Version?">
-            <div className="space-y-4">
-              <Text>
-                When you set up multiple versions of your AI model, you can
-                select one version to be the Primary Version.
-              </Text>
-              <Text>
-                The Primary Version will be selected by default for audits. You
-                can switch to another version before starting your audits.
-              </Text>
-              <Text>
-                If your model is shared publicly, your primary version will be
-                displayed at the top of the list of versions.
-              </Text>
-              <div className="flex justify-center pt-4">
-                <Button
-                  onClick={() => setIsWhatsThisModalOpen(false)}
-                  fullWidth
-                >
-                  CLOSE
-                </Button>
-              </div>
-            </div>
-          </Dialog.Content>
-        )}
-      </Dialog>
-
-      {/* Primary Version Confirmation Modal */}
-      <Dialog
-        open={isPrimaryConfirmModalOpen}
-        onOpenChange={setIsPrimaryConfirmModalOpen}
-      >
-        {isPrimaryConfirmModalOpen && (
-          <Dialog.Content title="Select as Primary Version?">
-            <div className="space-y-4">
-              {(() => {
-                const currentPrimary = versions.find((v) => v.isLatest);
-                const pendingVersion = versions.find(
-                  (v) => v.id === pendingPrimaryVersionId
-                );
-                return (
-                  <>
-                    {currentPrimary &&
-                      currentPrimary.id !== pendingPrimaryVersionId && (
-                        <Text>
-                          If you confirm, version {currentPrimary.version} will
-                          no longer be your primary version.
-                        </Text>
-                      )}
-                    <Text>
-                      Do you want to make version {pendingVersion?.version} your
-                      primary version?
-                    </Text>
-                  </>
-                );
-              })()}
-              <div className="flex gap-4 pt-4">
-                <Button
-                  onClick={() => {
-                    setIsPrimaryConfirmModalOpen(false);
-                    setPendingPrimaryVersionId(null);
-                  }}
-                  kind="secondary"
-                  fullWidth
-                >
-                  CANCEL
-                </Button>
-                <Button onClick={confirmSetPrimaryVersion} fullWidth>
-                  SELECT AS PRIMARY
-                </Button>
-              </div>
-            </div>
-          </Dialog.Content>
-        )}
-      </Dialog>
       <AlertDialog
         open={versionToDelete !== null}
         onOpenChange={(open) => {

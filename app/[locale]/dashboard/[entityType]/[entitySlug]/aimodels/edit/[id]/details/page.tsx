@@ -591,7 +591,11 @@ export default function AIModelDetailsPage() {
               variant="bright"
               placeholder="Search and select a model type..."
               list={modelTypeOptions}
-              selectedValue={formData.modelType}
+              selectedValue={
+                modelTypeOptions.find(
+                  (option) => option.value === formData.modelType
+                )?.label || formData.modelType
+              }
               onChange={(value) => {
                 const next = comboboxSingle(value);
                 handleInputChange('modelType', next);

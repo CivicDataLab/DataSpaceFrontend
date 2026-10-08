@@ -1,22 +1,51 @@
 'use client';
 
+import { type ReactNode } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { IconAlertTriangle, IconCircleCheck, IconExternalLink } from '@tabler/icons-react';
+import {
+  IconAlertTriangle,
+  IconCircleCheck,
+  IconExternalLink,
+  IconFile,
+  IconPlayerPlay,
+} from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
-import { Button, SectionCard, Spinner, Text } from 'opub-ui';
+import { Button, SectionCard, Spinner, Tag, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import {
-  editAction,
-  ReviewField,
-  TagList,
-} from '../../usecases/edit/components/ContentBlocksRenderer';
-import { formatFileSize, licenseLabel } from '../model';
+import { editAction } from '../../usecases/edit/components/ContentBlocksRenderer';
+import { usePublicationDraft } from '../context';
+import { licenseLabel } from '../model';
 import { publicationEditorQuery } from '../queries';
+
+function ReviewRow({
+  label,
+  children,
+  last = false,
+}: {
+  label: string;
+  children: ReactNode;
+  last?: boolean;
+}) {
+  return (
+    <div
+      className={`grid items-start gap-2 py-3 md:grid-cols-[200px_1fr] ${
+        last ? '' : 'border-b-1 border-solid border-borderSubdued'
+      }`}
+    >
+      <Text variant="bodySm" color="subdued" className="uppercase">
+        {label}
+      </Text>
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
 
 export function ReviewStep({ publicationId }: { publicationId: string }) {
   const router = useRouter();
   const params = useParams<{ entityType: string; entitySlug: string }>();
+  const { setStatus } = usePublicationDraft();
   const stepBase = `/dashboard/${params.entityType}/${params.entitySlug}/publications/edit/${publicationId}`;
 
   const reviewQuery = useQuery(
@@ -73,27 +102,43 @@ export function ReviewStep({ publicationId }: { publicationId: string }) {
         </div>
       </div>
 
-      <div className="rounded-3 border-1 border-solid border-borderSubdued px-4">
-        <div className="flex items-center gap-2 pt-4">
+      <div
+        className={`rounded-2 px-4 py-3 ${
+          ready ? 'bg-surfaceSuccess' : 'bg-surfaceCritical'
+        }`}
+      >
+        <div className="flex items-center gap-2">
           {ready ? (
-            <IconCircleCheck size={20} className="text-textSuccess" />
+            <IconCircleCheck size={18} className="shrink-0 text-textSuccess" />
           ) : (
-            <IconAlertTriangle size={20} className="text-textCritical" />
+            <IconAlertTriangle
+              size={18}
+              className="shrink-0 text-textCritical"
+            />
           )}
-          <Text fontWeight="semibold">
+          <Text
+            fontWeight="semibold"
+            className={ready ? 'text-textSuccess' : 'text-textCritical'}
+          >
             {ready ? 'Ready to publish' : 'Needs attention'}
           </Text>
         </div>
-        <div className="py-3">
-          <Text variant="bodySm" color="subdued">
+        <div className="mt-1 pl-7">
+          <Text
+            variant="bodySm"
+            className={ready ? 'text-textSuccess' : 'text-textCritical'}
+          >
             {ready
               ? 'Everything required to publish is in place.'
               : issues.join(' ')}
           </Text>
         </div>
         {!ready ? (
-          <div className="pb-4">
-            <Button kind="tertiary" onClick={() => router.push(`${stepBase}/details`)}>
+          <div className="mt-3 pl-7">
+            <Button
+              kind="tertiary"
+              onClick={() => router.push(`${stepBase}/details`)}
+            >
               Fix details
             </Button>
           </div>
@@ -104,54 +149,71 @@ export function ReviewStep({ publicationId }: { publicationId: string }) {
         title="Details"
         expandable
         defaultExpanded
-        actions={editAction('Edit details', () => router.push(`${stepBase}/details`))}
+        actions={editAction('Edit details', () =>
+          router.push(`${stepBase}/details`)
+        )}
       >
-        <div className="flex flex-col gap-4">
-          <ReviewField label="Resource name">
+        <div className="flex flex-col">
+          <ReviewRow label="Resource name">
             <Text fontWeight="medium">{publication?.title || '—'}</Text>
-          </ReviewField>
-          <ReviewField label="Description">
+          </ReviewRow>
+          <ReviewRow label="Description">
             <Text>{publication?.description || '—'}</Text>
-          </ReviewField>
-          <ReviewField label="Contributors">
-            <TagList
-              items={publication?.authors?.map((name) => ({ label: name }))}
-              empty="—"
-            />
-          </ReviewField>
-          <ReviewField label="Date">
-            <Text>{publication?.publicationDate || '—'}</Text>
-          </ReviewField>
-          <ReviewField label="Resource type">
-            <Text>{publication?.resourceType?.name || '—'}</Text>
-          </ReviewField>
-          <ReviewField label="Sector / Domain">
-            <Text>
-              {publication?.sectors?.map((sector) => sector.name).join(', ') || '—'}
-            </Text>
-          </ReviewField>
-          <ReviewField label="Geography">
-            <Text>
-              {publication?.geographies?.map((item) => item.name).join(', ') || '—'}
-            </Text>
-          </ReviewField>
-          <ReviewField label="Usage rights">
-            <Text>{licenseLabel(publication?.license) || '—'}</Text>
-          </ReviewField>
-          <ReviewField label="External link">
-            {publication?.externalSourceLink ? (
-              <a
-                href={publication.externalSourceLink}
-                target="_blank"
-                rel="noreferrer"
-                className="text-textInteractive"
-              >
-                {publication.externalSourceLink}
-              </a>
+          </ReviewRow>
+          <ReviewRow label="Contributors">
+            {(publication?.authors?.length ?? 0) > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {publication?.authors?.map((name) => (
+                  <Tag
+                    key={name}
+                    fillColor="#F1F3F5"
+                    textColor="#1A1A1A"
+                    borderRadius="6px"
+                  >
+                    {name}
+                  </Tag>
+                ))}
+              </div>
             ) : (
               <Text>—</Text>
             )}
-          </ReviewField>
+          </ReviewRow>
+          <ReviewRow label="Date">
+            <Text>{publication?.publicationDate || '—'}</Text>
+          </ReviewRow>
+          <ReviewRow label="Resource type">
+            <Text>{publication?.resourceType?.name || '—'}</Text>
+          </ReviewRow>
+          <ReviewRow label="Sector / Domain">
+            <Text>
+              {publication?.sectors?.map((sector) => sector.name).join(', ') ||
+                '—'}
+            </Text>
+          </ReviewRow>
+          <ReviewRow label="Geography">
+            <Text>
+              {publication?.geographies
+                ?.map((item) => item.name)
+                .join(', ') || '—'}
+            </Text>
+          </ReviewRow>
+          <ReviewRow label="Usage rights">
+            <Text>{licenseLabel(publication?.license) || '—'}</Text>
+          </ReviewRow>
+          <ReviewRow label="External link" last>
+            {publication?.externalSourceLink ? (
+              <Link
+                href={publication.externalSourceLink}
+                target="_blank"
+                rel="noreferrer"
+                className="text-textInteractive underline"
+              >
+                {publication.externalSourceLink}
+              </Link>
+            ) : (
+              <Text>—</Text>
+            )}
+          </ReviewRow>
         </div>
       </SectionCard>
 
@@ -164,35 +226,54 @@ export function ReviewStep({ publicationId }: { publicationId: string }) {
         {blocks.length === 0 ? (
           <Text>No content added yet.</Text>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col">
             {blocks.map((block) => {
               const isVideo = block.blockType.toUpperCase().includes('YOUTUBE');
               const label =
                 block.title?.trim() ||
                 (isVideo ? 'YouTube video' : block.fileName || 'Untitled file');
+              const format = isVideo
+                ? ''
+                : block.fileFormat?.replace('.', '').toUpperCase();
+              const videoHref =
+                block.youtubeUrl ||
+                (block.youtubeVideoId
+                  ? `https://www.youtube.com/watch?v=${block.youtubeVideoId}`
+                  : '');
               return (
                 <div
                   key={block.id}
-                  className="flex items-center justify-between gap-3"
+                  className="flex items-center justify-between gap-3 py-2"
                 >
-                  <div className="min-w-0">
-                    <Text>{label}</Text>
-                    {block.description ? (
-                      <Text variant="bodySm" color="subdued">
-                        {block.description}
-                      </Text>
-                    ) : null}
+                  <div className="flex min-w-0 items-center gap-2">
+                    {isVideo ? (
+                      <IconPlayerPlay
+                        size={18}
+                        className="shrink-0 text-iconSubdued"
+                      />
+                    ) : (
+                      <IconFile size={18} className="shrink-0 text-iconSubdued" />
+                    )}
+                    {isVideo && videoHref ? (
+                      <Link
+                        href={videoHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="min-w-0 truncate text-textInteractive underline"
+                      >
+                        {label}
+                      </Link>
+                    ) : (
+                      <Text className="truncate">{label}</Text>
+                    )}
                   </div>
-                  <Text variant="bodySm" color="subdued">
-                    {isVideo
-                      ? 'VIDEO'
-                      : [
-                          block.fileFormat?.replace('.', '').toUpperCase(),
-                          formatFileSize(block.fileSize),
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')}
-                  </Text>
+                  {format ? (
+                    <span className="shrink-0 rounded-1 bg-surfaceSubdued px-2 py-0.5">
+                      <Text variant="bodySm" color="subdued">
+                        {format}
+                      </Text>
+                    </span>
+                  ) : null}
                 </div>
               );
             })}
@@ -200,7 +281,7 @@ export function ReviewStep({ publicationId }: { publicationId: string }) {
         )}
       </SectionCard>
 
-      <div className="flex flex-col items-center gap-3 rounded-3 border-1 border-dashed border-borderSubdued px-6 py-8 text-center">
+      <div className="flex flex-col items-center gap-3 rounded-3 border-1 border-solid border-borderSubdued px-6 py-8 text-center">
         <Text color="subdued">
           Open a full preview of this Publication in a new tab, exactly as it
           will appear once published.
@@ -223,12 +304,22 @@ export function ReviewStep({ publicationId }: { publicationId: string }) {
         </Text>
       </div>
 
-      <div>
+      <div className="flex items-center justify-between border-t-1 border-solid border-borderSubdued pt-4">
         <Button
           kind="tertiary"
           onClick={() => router.push(`${stepBase}/details`)}
         >
           Previous
+        </Button>
+        <Button
+          kind="secondary"
+          variant="success"
+          onClick={() => {
+            setStatus('success');
+            toast('All changes saved');
+          }}
+        >
+          Save Changes
         </Button>
       </div>
     </div>
