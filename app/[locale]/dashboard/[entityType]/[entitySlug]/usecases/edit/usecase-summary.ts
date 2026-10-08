@@ -64,6 +64,6 @@ export function firstIncompleteUseCaseEditStep(useCase: {
   return 'publish';
 }
 
-export function useCaseHasContent(summary?: string | null): boolean {
+export function getUseCaseHasContent(summary?: string | null): boolean {
   return hasContentBlocks(parseUseCaseContent(summary));
 }

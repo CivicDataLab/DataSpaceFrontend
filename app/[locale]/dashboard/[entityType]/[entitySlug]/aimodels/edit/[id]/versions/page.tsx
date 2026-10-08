@@ -1217,7 +1217,6 @@ export default function VersionsPage() {
     if (editingProvider) {
       updateProvider({
         id: editingProvider.id,
-        provider: providerFormData.provider as AiModelProvider,
         ...baseData,
       });
     } else {
@@ -1330,8 +1329,11 @@ export default function VersionsPage() {
     if (!hash) return;
     if (hash === 'access-methods' && !hashTarget) return;
     hashHandled.current = true;
-    if (hash === 'access-methods' && hashTarget) {
-      const version = versions.find((item) => item.id === hashTarget);
+    const version =
+      hash === 'access-methods' && hashTarget
+        ? versions.find((item) => item.id === hashTarget)
+        : undefined;
+    window.setTimeout(() => {
       if (version) {
         setSheetMode('edit');
         setSheetVersionId(version.id);
@@ -1339,8 +1341,6 @@ export default function VersionsPage() {
         setSheetLifecycle(version.lifecycleStage || 'DEVELOPMENT');
         setSheetPrimary(Boolean(version.isLatest));
       }
-    }
-    window.setTimeout(() => {
       document.getElementById(hash)?.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
@@ -1371,7 +1371,8 @@ export default function VersionsPage() {
     const version = versions.find((item) => item.id === sheetVersionId);
     if (!version) return;
     pendingAccessRef.current = false;
-    handleOpenProviderModal(toVersionRow(version));
+    const row = toVersionRow(version);
+    queueMicrotask(() => handleOpenProviderModal(row));
   }, [sheetVersionId, versions]);
 
   const openVersionSheet = (version: (typeof versions)[number]) => {

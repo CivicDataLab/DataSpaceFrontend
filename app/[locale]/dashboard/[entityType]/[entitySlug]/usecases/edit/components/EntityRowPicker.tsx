@@ -191,16 +191,27 @@ export const EntityRowPicker = forwardRef<
     width: number;
   } | null>(null);
   const [listEl, setListEl] = useState<HTMLDivElement | null>(null);
+  const [trackedOpen, setTrackedOpen] = useState(open);
+  if (open !== trackedOpen) {
+    setTrackedOpen(open);
+    if (!open) {
+      setMenuRect(null);
+      setListEl(null);
+    }
+  }
   const [awaitingResults, setAwaitingResults] = useState(false);
   const [pendingAdds, setPendingAdds] = useState<EntityRow[]>([]);
   const [removingIds, setRemovingIds] = useState<string[]>([]);
+  const [seenSelectedKey, setSeenSelectedKey] = useState('');
   const [openSummaryIds, setOpenSummaryIds] = useState<string[]>([]);
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const sawLoadingRef = useRef(false);
   const isLoadingRef = useRef(isLoading);
-  isLoadingRef.current = isLoading;
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  });
   const serverPaged = Boolean(onLoadMore);
 
   useImperativeHandle(ref, () => ({
@@ -234,11 +245,7 @@ export const EntityRowPicker = forwardRef<
   }, [awaitingResults, query]);
 
   useEffect(() => {
-    if (!open) {
-      setMenuRect(null);
-      setListEl(null);
-      return;
-    }
+    if (!open) return;
 
     const updatePosition = () => {
       const el = wrapRef.current;
@@ -283,6 +290,18 @@ export const EntityRowPicker = forwardRef<
   }, [open]);
 
   const selectedIds = new Set(selected.map((item) => item.id));
+  const selectedKey = selected.map((item) => item.id).join('\0');
+  if (selectedKey !== seenSelectedKey) {
+    setSeenSelectedKey(selectedKey);
+    setPendingAdds((prev) => {
+      const next = prev.filter((item) => !selectedIds.has(item.id));
+      return next.length === prev.length ? prev : next;
+    });
+    setRemovingIds((prev) => {
+      const next = prev.filter((id) => selectedIds.has(id));
+      return next.length === prev.length ? prev : next;
+    });
+  }
   const visible = options.filter((item) => {
     if (selectedIds.has(item.id)) return false;
     if (pendingAdds.some((pending) => pending.id === item.id)) return false;
@@ -293,12 +312,6 @@ export const EntityRowPicker = forwardRef<
   });
 
   useEffect(() => {
-    const ids = new Set(selected.map((item) => item.id));
-    setPendingAdds((prev) => prev.filter((item) => !ids.has(item.id)));
-    setRemovingIds((prev) => prev.filter((id) => ids.has(id)));
-  }, [selected]);
-
-  useEffect(() => {
     if (pendingAdds.length === 0 && removingIds.length === 0) return;
     const timer = window.setTimeout(() => {
       const ids = new Set(selected.map((item) => item.id));
@@ -307,10 +320,6 @@ export const EntityRowPicker = forwardRef<
     }, 8000);
     return () => window.clearTimeout(timer);
   }, [pendingAdds, removingIds, selected]);
-
-  useEffect(() => {
-    if (visible.length > 0) setAwaitingResults(false);
-  }, [visible.length]);
 
   const searchField = (
     <div className={styles.trigger}>

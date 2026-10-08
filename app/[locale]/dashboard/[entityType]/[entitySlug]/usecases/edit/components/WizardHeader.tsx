@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Button, Icon, Spinner, Text, TextField } from 'opub-ui';
 
@@ -23,10 +23,11 @@ export function WizardHeader({
 }: WizardHeaderProps) {
   const [editing, setEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(title);
-
-  useEffect(() => {
+  const [syncedTitle, setSyncedTitle] = useState(title);
+  if (title !== syncedTitle) {
+    setSyncedTitle(title);
     setDraftTitle(title);
-  }, [title]);
+  }
 
   const handleSave = () => {
     const next = draftTitle.trim();

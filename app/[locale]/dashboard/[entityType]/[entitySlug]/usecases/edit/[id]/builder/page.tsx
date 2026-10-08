@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
@@ -191,7 +191,6 @@ export default function BuilderPage() {
   const [logo, setLogo] = useState<File | UploadedImage | null>(null);
   const [knownBytes, setKnownBytes] = useState<number | null>(null);
   const [remoteBytes, setRemoteBytes] = useState<number | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState('');
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const [contentDoc, setContentDoc] = useState<UseCaseContentDocument>({
     version: 1,
@@ -199,28 +198,35 @@ export default function BuilderPage() {
     blocks: [],
   });
   const [embedCode, setEmbedCode] = useState('');
+  const dashboardLink = savedDashboard?.link ?? '';
+  const [syncedDashboardLink, setSyncedDashboardLink] = useState(dashboardLink);
+  if (dashboardLink && dashboardLink !== syncedDashboardLink) {
+    setSyncedDashboardLink(dashboardLink);
+    setEmbedCode(dashboardLink);
+  }
   const contentDocRef = useRef(contentDoc);
-  contentDocRef.current = contentDoc;
   const titleRef = useRef(title);
-  titleRef.current = title;
+  useEffect(() => {
+    contentDocRef.current = contentDoc;
+    titleRef.current = title;
+  });
   const summaryHydratedRef = useRef(false);
   const contentDirtyRef = useRef(false);
 
   useEffect(() => {
     if (!useCase) return;
-    setTitle(useCase.title ?? '');
-    setLogo(useCase.logo ?? null);
-    if (!contentDirtyRef.current) {
-      setContentDoc(parseUseCaseContent(useCase.summary));
-    }
+    const nextTitle = useCase.title ?? '';
+    const nextLogo = useCase.logo ?? null;
+    const nextDoc = contentDirtyRef.current
+      ? null
+      : parseUseCaseContent(useCase.summary);
     summaryHydratedRef.current = true;
+    queueMicrotask(() => {
+      setTitle(nextTitle);
+      setLogo(nextLogo);
+      if (nextDoc) setContentDoc(nextDoc);
+    });
   }, [useCase]);
-
-  useEffect(() => {
-    if (savedDashboard?.link) {
-      setEmbedCode(savedDashboard.link);
-    }
-  }, [savedDashboard]);
 
   const { mutateAsync: updateUseCase, isLoading: savingUseCase } = useMutation(
     (data: { data: UseCaseInputPartial }) =>
@@ -369,36 +375,35 @@ export default function BuilderPage() {
     addDashboard({ usecaseId, name, link });
   };
 
-  useEffect(() => {
-    if (!logo) {
-      setThumbnailPreview('');
-      return;
-    }
-    if (!(logo instanceof File)) {
-      setThumbnailPreview(mediaUrl(logo));
-      return;
-    }
-    const url = URL.createObjectURL(logo);
-    setThumbnailPreview(url);
-    return () => URL.revokeObjectURL(url);
+  const thumbnailPreview = useMemo(() => {
+    if (!logo) return '';
+    if (!(logo instanceof File)) return mediaUrl(logo);
+    return URL.createObjectURL(logo);
   }, [logo]);
 
   useEffect(() => {
-    if (!logo || logo instanceof File) {
-      setRemoteBytes(null);
-      return;
-    }
-    const url = mediaUrl(logo);
-    if (!url) return;
+    if (!(logo instanceof File) || !thumbnailPreview) return;
+    return () => URL.revokeObjectURL(thumbnailPreview);
+  }, [logo, thumbnailPreview]);
+
+  const remoteLogoUrl = !logo || logo instanceof File ? null : mediaUrl(logo);
+  const [syncedRemoteLogoUrl, setSyncedRemoteLogoUrl] = useState(remoteLogoUrl);
+  if (remoteLogoUrl !== syncedRemoteLogoUrl) {
+    setSyncedRemoteLogoUrl(remoteLogoUrl);
+    setRemoteBytes(null);
+  }
+
+  useEffect(() => {
+    if (!remoteLogoUrl) return;
     const controller = new AbortController();
-    fetch(url, { method: 'HEAD', signal: controller.signal })
+    fetch(remoteLogoUrl, { method: 'HEAD', signal: controller.signal })
       .then((response) => {
         const length = Number(response.headers.get('content-length'));
         if (Number.isFinite(length) && length > 0) setRemoteBytes(length);
       })
       .catch(() => {});
     return () => controller.abort();
-  }, [logo]);
+  }, [remoteLogoUrl]);
 
   const thumbnailBytes =
     logo instanceof File ? logo.size : (knownBytes ?? remoteBytes);

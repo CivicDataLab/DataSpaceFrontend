@@ -138,7 +138,7 @@ function capExcerpt(value: string, limit: number): string {
   return `${value.slice(0, limit).trimEnd()}…`;
 }
 
-export function useCaseSummaryExcerpt(
+export function getUseCaseSummaryExcerpt(
   summary?: string | null,
   limit: number = EXCERPT_LIMIT
 ): string {

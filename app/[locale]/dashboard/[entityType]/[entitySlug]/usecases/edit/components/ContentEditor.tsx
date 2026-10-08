@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -38,6 +39,13 @@ import {
   LinkBlock,
   TextBlock,
 } from '../content-document';
+
+const ReactQuill = dynamic(() => import('react-quill-new'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-32 animate-pulse rounded-2 bg-baseGraySlateSolid3" />
+  ),
+});
 import styles from '../edit.module.scss';
 import {
   ContentBlockView,
@@ -100,7 +108,9 @@ export function ContentEditor({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const blocksRef = useRef(blocks);
-  blocksRef.current = blocks;
+  useEffect(() => {
+    blocksRef.current = blocks;
+  });
 
   const updateBlock = (id: string, next: ContentBlock, persist = false) => {
     const nextBlocks = blocksRef.current.map((block) =>
@@ -375,17 +385,6 @@ function TextBlockEditor({
   onChange: (block: TextBlock) => void;
   onBlur: (block: TextBlock) => void;
 }) {
-  const ReactQuill = useMemo(
-    () =>
-      dynamic(() => import('react-quill-new'), {
-        ssr: false,
-        loading: () => (
-          <div className="h-32 animate-pulse rounded-2 bg-baseGraySlateSolid3" />
-        ),
-      }),
-    []
-  );
-
   const modules = useMemo(
     () => ({
       toolbar: [

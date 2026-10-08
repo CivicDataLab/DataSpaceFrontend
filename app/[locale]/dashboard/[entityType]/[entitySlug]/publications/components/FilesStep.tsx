@@ -181,23 +181,27 @@ export function FilesStep({ publicationId }: { publicationId?: string }) {
   const saveBeforeNavigateRef = useRef<() => Promise<{ id: string }>>(
     async () => ({ id: publicationId ?? '' })
   );
-  saveBeforeNavigateRef.current = async () => {
-    const queued = [...pendingRef.current];
-    setStatus('loading');
-    try {
-      const id = await ensureDraft();
-      for (const block of queued) {
-        await uploadPending(id, block);
-        setPendingBlocks((items) => items.filter((item) => item.id !== block.id));
+  useEffect(() => {
+    saveBeforeNavigateRef.current = async () => {
+      const queued = [...pendingRef.current];
+      setStatus('loading');
+      try {
+        const id = await ensureDraft();
+        for (const block of queued) {
+          await uploadPending(id, block);
+          setPendingBlocks((items) =>
+            items.filter((item) => item.id !== block.id)
+          );
+        }
+        setStatus('success');
+        return { id };
+      } catch (error) {
+        setStatus('unsaved');
+        toast(errorText(error, 'Could not save the publication.'));
+        throw error;
       }
-      setStatus('success');
-      return { id };
-    } catch (error) {
-      setStatus('unsaved');
-      toast(errorText(error, 'Could not save the publication.'));
-      throw error;
-    }
-  };
+    };
+  });
 
   useEffect(() => {
     registerBeforeNavigateHandler(() => saveBeforeNavigateRef.current());
@@ -680,10 +684,11 @@ function BlockRow({
   onRemove: () => void;
 }) {
   const [draftDescription, setDraftDescription] = useState(description);
-
-  useEffect(() => {
+  const [syncedDescription, setSyncedDescription] = useState(description);
+  if (description !== syncedDescription) {
+    setSyncedDescription(description);
     setDraftDescription(description);
-  }, [description]);
+  }
 
   return (
     <div className="flex items-start gap-2">

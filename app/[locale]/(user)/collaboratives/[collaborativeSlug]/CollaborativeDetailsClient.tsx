@@ -16,7 +16,7 @@ import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import JsonLd from '@/components/JsonLd';
 import { Loading } from '@/components/loading';
-import { useCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
+import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
 import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 import PrimaryDetails from '../components/Details';
 import Metadata from '../components/Metadata';
@@ -519,7 +519,7 @@ const CollaborativeDetailClient = () => {
 
                       const commonProps = {
                         title: useCase.title || '',
-                        description: useCaseSummaryExcerpt(useCase.summary),
+                        description: getUseCaseSummaryExcerpt(useCase.summary),
                         metadataContent: MetadataContent,
                         tag: useCase.tags?.map((t) => t.value) || [],
                         leftFooterChips: LeftFooterChips,

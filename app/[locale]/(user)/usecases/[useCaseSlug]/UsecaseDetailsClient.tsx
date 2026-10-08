@@ -15,7 +15,7 @@ import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import JsonLd from '@/components/JsonLd';
 import { Loading } from '@/components/loading';
-import { useCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
+import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
 import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 import PrimaryDetails from '../components/Details';
 import Metadata from '../components/Metadata';
@@ -218,7 +218,7 @@ const UseCaseDetailClient = () => {
     name: 'CivicDataLab',
     url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases/${params.useCaseSlug}`,
     description:
-      useCaseSummaryExcerpt(UseCaseDetails?.useCase?.summary) ||
+      getUseCaseSummaryExcerpt(UseCaseDetails?.useCase?.summary) ||
       `Explore open data and curated datasets in the ${UseCaseDetails?.useCase?.title} sector.`,
     publisher: {
       '@type': 'Organization',

@@ -17,7 +17,9 @@ export default function PdfPreview({
 }: PdfPreviewProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const onErrorRef = useRef(onError);
-  onErrorRef.current = onError;
+  useEffect(() => {
+    onErrorRef.current = onError;
+  });
 
   useEffect(() => {
     let objectUrl: string | null = null;

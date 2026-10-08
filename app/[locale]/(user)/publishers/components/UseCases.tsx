@@ -11,7 +11,7 @@ import { Card, Icon, Spinner, Text } from 'opub-ui';
 import { GraphQL } from '@/lib/api';
 import { cn, extractPublisherId, formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
-import { useCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
+import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
 
 const userPublishedUseCasesDoc = graphql(`
   query userPublishedUseCasesList($userId: ID!) {
@@ -209,7 +209,7 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
                   label: 'Published by',
                 },
               ]}
-              description={useCaseSummaryExcerpt(item.summary)}
+              description={getUseCaseSummaryExcerpt(item.summary)}
               iconColor="warning"
               variation={'collapsed'}
             />

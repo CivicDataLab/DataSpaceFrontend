@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Building2, Check, User } from 'lucide-react';
 import { Button, Dialog, Text } from 'opub-ui';
 
@@ -48,10 +48,11 @@ export function AddNewEntryDialog({
   onContinue,
 }: AddNewEntryDialogProps) {
   const [kind, setKind] = useState<NewEntryKind>('person');
-
-  useEffect(() => {
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) setKind('person');
-  }, [open]);
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

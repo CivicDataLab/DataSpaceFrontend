@@ -34,7 +34,7 @@ import { parseUseCaseContent } from '../../content-document';
 import {
   isUseCaseBuilderComplete,
   isUseCaseConnectComplete,
-  useCaseHasContent,
+  getUseCaseHasContent,
 } from '../../usecase-summary';
 
 const FetchUseCaseReview = graphql(`
@@ -210,7 +210,7 @@ export default function PublishPage() {
   const document = parseUseCaseContent(useCase?.summary);
   const builderComplete = isUseCaseBuilderComplete(useCase ?? {});
   const connectComplete = isUseCaseConnectComplete(useCase ?? {});
-  const hasContent = useCaseHasContent(useCase?.summary);
+  const hasContent = getUseCaseHasContent(useCase?.summary);
   const ready = builderComplete && connectComplete && hasContent;
   const previewHref = `/usecases/${useCase?.slug || useCase?.id || params.id}`;
 
@@ -325,7 +325,7 @@ export default function PublishPage() {
           router.push(`${stepBase}/builder#content`)
         )}
       >
-        {useCaseHasContent(useCase?.summary) ? (
+        {hasContent ? (
           <ContentBlocksRenderer summary={useCase?.summary} />
         ) : (
           <Text>No content added.</Text>

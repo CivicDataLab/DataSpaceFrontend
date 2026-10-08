@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import {
@@ -143,25 +143,17 @@ function CollaborativeImageField({
   onRemove: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState('');
-  const [knownBytes, setKnownBytes] = useState<number | null>(null);
+  const preview = useMemo(() => {
+    if (!image) return '';
+    if (!(image instanceof File)) return mediaUrl(image);
+    return URL.createObjectURL(image);
+  }, [image]);
+  const knownBytes = image instanceof File ? image.size : null;
 
   useEffect(() => {
-    if (!image) {
-      setPreview('');
-      setKnownBytes(null);
-      return;
-    }
-    if (!(image instanceof File)) {
-      setPreview(mediaUrl(image));
-      setKnownBytes(null);
-      return;
-    }
-    setKnownBytes(image.size);
-    const url = URL.createObjectURL(image);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [image]);
+    if (!(image instanceof File) || !preview) return;
+    return () => URL.revokeObjectURL(preview);
+  }, [image, preview]);
 
   return (
     <div>
@@ -303,7 +295,9 @@ export default function AboutPage() {
     geographies: [],
   });
   const formRef = useRef(form);
-  formRef.current = form;
+  useEffect(() => {
+    formRef.current = form;
+  });
   const [subdomainError, setSubdomainError] = useState<string | undefined>();
   const [logo, setLogo] = useState<File | UploadedImage | null>(null);
   const [coverImage, setCoverImage] = useState<File | UploadedImage | null>(

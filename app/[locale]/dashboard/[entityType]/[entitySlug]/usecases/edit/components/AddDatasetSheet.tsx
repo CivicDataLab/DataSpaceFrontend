@@ -329,13 +329,19 @@ export function AddDatasetSheet({
   const createdIdRef = useRef<string | null>(null);
   const connectedRef = useRef(false);
   const uploadedKeyRef = useRef('');
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (!open) {
+      setForm(emptyDraft);
+      setFiles([]);
+      setTab('upload');
+      setShowErrors(false);
+    }
+  }
 
   useEffect(() => {
     if (open) return;
-    setForm(emptyDraft);
-    setFiles([]);
-    setTab('upload');
-    setShowErrors(false);
     uploadedKeyRef.current = '';
     connectedRef.current = false;
   }, [open]);

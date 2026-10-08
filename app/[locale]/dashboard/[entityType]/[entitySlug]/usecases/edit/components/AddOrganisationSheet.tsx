@@ -57,11 +57,11 @@ export function AddOrganisationSheet({
   const { organizationTypes } = useOrganizationTypes();
   const [formData, setFormData] = useState(initialFormData);
   const [connecting, setConnecting] = useState(false);
-
-  useEffect(() => {
-    if (open) return;
-    setFormData(initialFormData);
-  }, [open]);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (!open) setFormData(initialFormData);
+  }
 
   const { mutateAsync: createOrganisation, isLoading: creating } = useMutation(
     (input: OrganizationInput) =>

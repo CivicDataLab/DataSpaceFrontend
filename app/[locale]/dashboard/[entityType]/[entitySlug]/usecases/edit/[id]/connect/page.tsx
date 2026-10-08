@@ -286,7 +286,9 @@ export default function ConnectPage() {
     geographies: [],
   });
   const formRef = useRef(formData);
-  formRef.current = formData;
+  useEffect(() => {
+    formRef.current = formData;
+  });
   const [userSearch, setUserSearch] = useState('');
   const [datasetSearch, setDatasetSearch] = useState('');
   const [debouncedDatasetSearch, setDebouncedDatasetSearch] = useState('');
@@ -377,9 +379,9 @@ export default function ConnectPage() {
   ]);
 
   const useCase = useCaseQuery.data?.useCases?.[0];
-
-  useEffect(() => {
-    if (!useCase) return;
+  const [syncedUseCase, setSyncedUseCase] = useState(useCase);
+  if (useCase && useCase !== syncedUseCase) {
+    setSyncedUseCase(useCase);
     setFormData({
       tags:
         useCase.tags?.map((item) => ({
@@ -402,7 +404,7 @@ export default function ConnectPage() {
           value: item.id,
         })) ?? [],
     });
-  }, [useCase]);
+  }
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
