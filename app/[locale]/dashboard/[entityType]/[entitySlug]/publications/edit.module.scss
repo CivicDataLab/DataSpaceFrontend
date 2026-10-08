@@ -3,6 +3,8 @@
   padding-right: var(--space-6);
   padding-top: var(--space-6);
   --action-primary-basic-default: var(--blue-primary-color);
+  --action-primary-basic-hovered: var(--blue-primary-text);
+  --action-primary-basic-pressed: var(--blue-primary-text);
   --text-highlight: var(--blue-primary-color);
 
   [class*='buttonNext'] {

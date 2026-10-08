@@ -6,18 +6,22 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   IconAlertTriangle,
   IconCircleCheck,
-  IconExternalLink,
   IconFile,
   IconPlayerPlay,
+  IconSend,
 } from '@tabler/icons-react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, SectionCard, Spinner, Tag, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { editAction } from '../../usecases/edit/components/ContentBlocksRenderer';
 import { usePublicationDraft } from '../context';
-import { licenseLabel } from '../model';
-import { publicationEditorQuery } from '../queries';
+import { errorText, licenseLabel, mutationMessage } from '../model';
+import {
+  publicationEditorQuery,
+  publishPublicationMutation,
+  unpublishPublicationMutation,
+} from '../queries';
 
 function ReviewRow({
   label,
@@ -60,6 +64,60 @@ export function ReviewStep({ publicationId }: { publicationId: string }) {
   );
 
   const publication = reviewQuery.data?.getPublication;
+  const published = publication?.status === 'PUBLISHED';
+  const headers = { [params.entityType]: params.entitySlug };
+  const listHref = `/dashboard/${params.entityType}/${params.entitySlug}/publications`;
+
+  const publish = useMutation(
+    () =>
+      GraphQL(publishPublicationMutation, headers, { publicationId }),
+    {
+      onSuccess: (result) => {
+        const message = mutationMessage(
+          result.publishPublication,
+          'Could not publish this publication.'
+        );
+        if (message) {
+          toast(message);
+          setStatus('unsaved');
+          return;
+        }
+        toast('Publication published');
+        setStatus('success');
+        router.push(`${listHref}?tab=published`);
+      },
+      onError: (error: unknown) => {
+        toast(errorText(error, 'Could not publish this publication.'));
+        setStatus('unsaved');
+      },
+    }
+  );
+
+  const unpublish = useMutation(
+    () =>
+      GraphQL(unpublishPublicationMutation, headers, { publicationId }),
+    {
+      onSuccess: (result) => {
+        const message = mutationMessage(
+          result.unpublishPublication,
+          'Could not unpublish this publication.'
+        );
+        if (message) {
+          toast(message);
+          setStatus('unsaved');
+          return;
+        }
+        toast('Publication unpublished');
+        setStatus('success');
+        router.push(`${listHref}?tab=drafts`);
+      },
+      onError: (error: unknown) => {
+        toast(errorText(error, 'Could not unpublish this publication.'));
+        setStatus('unsaved');
+      },
+    }
+  );
+
   const issues: string[] = [];
   if (!publication?.title?.trim()) issues.push('Enter a resource name.');
   if (!publication?.description?.trim()) issues.push('Enter a description.');
@@ -283,25 +341,25 @@ export function ReviewStep({ publicationId }: { publicationId: string }) {
 
       <div className="flex flex-col items-center gap-3 rounded-3 border-1 border-solid border-borderSubdued px-6 py-8 text-center">
         <Text color="subdued">
-          Open a full preview of this Publication in a new tab, exactly as it
-          will appear once published.
+          {published
+            ? 'This publication is published and available publicly.'
+            : 'This publication is not yet published. Publish it to make it available publicly.'}
         </Text>
         <Button
           kind="primary"
-          icon={<IconExternalLink size={16} />}
-          onClick={() =>
-            window.open(
-              `/dashboard/${params.entityType}/${params.entitySlug}/publications/preview/${publicationId}`,
-              '_blank',
-              'noopener'
-            )
-          }
+          disabled={!published && !ready}
+          loading={published ? unpublish.isLoading : publish.isLoading}
+          onClick={() => {
+            setStatus('loading');
+            if (published) unpublish.mutate();
+            else publish.mutate();
+          }}
         >
-          Preview Publication
+          <span className="flex items-center justify-center gap-2 font-semibold">
+            {published ? 'Unpublish' : 'Publish Publication'}
+            <IconSend size={24} strokeWidth={1.5} className="pb-1" />
+          </span>
         </Button>
-        <Text variant="bodySm" color="subdued">
-          Publishing happens from inside the preview.
-        </Text>
       </div>
 
       <div className="flex items-center justify-between border-t-1 border-solid border-borderSubdued pt-4">
