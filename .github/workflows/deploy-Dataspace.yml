@@ -10,6 +10,13 @@ on:
       - '**.md'
       - 'docs/**'
       - 'cds_docs_femhealth/**'
+  workflow_dispatch:
+    inputs:
+      rollback:
+        description: "Roll dev back to the release before the last deploy (no build, no tests). Ignored on main."
+        type: boolean
+        required: false
+        default: false
 
 # Prevent two deploys to the same environment from racing each other and
 # corrupting the releases/ directory or the .last_good / .rollback_target markers.
@@ -19,6 +26,7 @@ concurrency:
 
 jobs:
   build-and-deploy:
+    if: ${{ !inputs.rollback }}
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
     outputs:
@@ -277,9 +285,11 @@ jobs:
     needs: [build-and-deploy, smoke-tests, functional-tests]
     # Explicit results rather than failure(), so that a skipped functional stage
     # on main never reads as a failure.
+    # Also the manual rollback button: Run workflow on dev with `rollback` ticked.
     if: >-
-      ${{ !cancelled() && needs.build-and-deploy.result == 'success' &&
-      (needs.smoke-tests.result == 'failure' || needs.functional-tests.result == 'failure') }}
+      ${{ !cancelled() && ((inputs.rollback && github.ref_name != 'main') ||
+      (needs.build-and-deploy.result == 'success' &&
+      (needs.smoke-tests.result == 'failure' || needs.functional-tests.result == 'failure'))) }}
     runs-on: ubuntu-latest
     # Same environment-scoped vars.EC2_HOST issue as promote - see the
     # comment there.
@@ -300,8 +310,10 @@ jobs:
             export PATH="$NODE_BIN:$PATH"
             PM2="$NODE_BIN/pm2"
             TARGET=$(cat "$BASE/releases/.rollback_target")
-            echo "Smoke tests failed. Reverting DataExFrontend -> releases/$TARGET"
+            echo "${{ inputs.rollback && 'Manual rollback' || 'Smoke tests failed' }}. Reverting DataExFrontend -> releases/$TARGET"
             ln -sfn "$BASE/releases/$TARGET" "$BASE/DataExFrontend"
+            # The restored release is now the one the next deploy falls back to.
+            echo "$TARGET" > "$BASE/releases/.last_good"
             "$PM2" restart dataspace
             sleep 3
             curl -f http://127.0.0.1:3000 -o /dev/null -s -w "post-rollback HTTP %{http_code}\n"
