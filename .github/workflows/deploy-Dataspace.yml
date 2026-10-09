@@ -10,6 +10,13 @@ on:
       - '**.md'
       - 'docs/**'
       - 'cds_docs_femhealth/**'
+  workflow_dispatch:
+    inputs:
+      rollback:
+        description: "Roll dev back to the release before the last deploy (no build, no tests). Ignored on main."
+        type: boolean
+        required: false
+        default: false
 
 # Prevent two deploys to the same environment from racing each other and
 # corrupting the releases/ directory or the .last_good / .rollback_target markers.
@@ -19,6 +26,7 @@ concurrency:
 
 jobs:
   build-and-deploy:
+    if: ${{ !inputs.rollback }}
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
     outputs:
@@ -190,6 +198,9 @@ jobs:
       # deploy knows what to roll back to if it fails.
   smoke-tests:
     needs: build-and-deploy
+    # Repo variable SKIP_DEV_TESTS=true skips the dev test gates (e.g. while the
+    # test owner is away). main ignores it: prod deploys are always gated.
+    if: github.ref_name == 'main' || vars.SKIP_DEV_TESTS != 'true'
     uses: CivicDataLab/CivicDataSpace-test/.github/workflows/run-smoke.yml@CI
     with:
       # main: only the readonly allowlist ever runs against prod.
@@ -234,16 +245,27 @@ jobs:
       TEST_PASSWORD_2: ${{ secrets.TEST_PASSWORD_2 }}
       KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
 
+  tests-skipped:
+    name: Tests skipped (SKIP_DEV_TESTS)
+    needs: build-and-deploy
+    if: github.ref_name != 'main' && vars.SKIP_DEV_TESTS == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "::notice::SKIP_DEV_TESTS=true: smoke and functional tests were skipped for this dev deploy."
+          echo "**SKIP_DEV_TESTS=true**: smoke and functional tests were skipped. Delete the repo variable to turn them back on." >> "$GITHUB_STEP_SUMMARY"
+
   # Only once the tests pass does this release become the thing a future
   # rollback would target -- on prod too, which used to be marked
   # last-known-good straight after deploy with no tests at all.
   promote:
     needs: [build-and-deploy, smoke-tests, functional-tests]
     # Explicit results, not success()/!failure(): on main the functional stage
-    # is skipped by design.
+    # is skipped by design, and on dev SKIP_DEV_TESTS skips smoke too (the
+    # release is then marked last-known-good untested).
     if: >-
       ${{ !cancelled() && needs.build-and-deploy.result == 'success' &&
-      needs.smoke-tests.result == 'success' &&
+      (needs.smoke-tests.result == 'success' || needs.smoke-tests.result == 'skipped') &&
       (needs.functional-tests.result == 'success' || needs.functional-tests.result == 'skipped') }}
     runs-on: ubuntu-latest
     # vars.EC2_HOST is an environment-scoped variable, only visible to jobs
@@ -263,9 +285,11 @@ jobs:
     needs: [build-and-deploy, smoke-tests, functional-tests]
     # Explicit results rather than failure(), so that a skipped functional stage
     # on main never reads as a failure.
+    # Also the manual rollback button: Run workflow on dev with `rollback` ticked.
     if: >-
-      ${{ !cancelled() && needs.build-and-deploy.result == 'success' &&
-      (needs.smoke-tests.result == 'failure' || needs.functional-tests.result == 'failure') }}
+      ${{ !cancelled() && ((inputs.rollback && github.ref_name != 'main') ||
+      (needs.build-and-deploy.result == 'success' &&
+      (needs.smoke-tests.result == 'failure' || needs.functional-tests.result == 'failure'))) }}
     runs-on: ubuntu-latest
     # Same environment-scoped vars.EC2_HOST issue as promote - see the
     # comment there.
@@ -286,8 +310,10 @@ jobs:
             export PATH="$NODE_BIN:$PATH"
             PM2="$NODE_BIN/pm2"
             TARGET=$(cat "$BASE/releases/.rollback_target")
-            echo "Smoke tests failed. Reverting DataExFrontend -> releases/$TARGET"
+            echo "${{ inputs.rollback && 'Manual rollback' || 'Smoke tests failed' }}. Reverting DataExFrontend -> releases/$TARGET"
             ln -sfn "$BASE/releases/$TARGET" "$BASE/DataExFrontend"
+            # The restored release is now the one the next deploy falls back to.
+            echo "$TARGET" > "$BASE/releases/.last_good"
             "$PM2" restart dataspace
             sleep 3
             curl -f http://127.0.0.1:3000 -o /dev/null -s -w "post-rollback HTTP %{http_code}\n"
