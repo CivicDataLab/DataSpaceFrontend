@@ -4,6 +4,7 @@ export const getResourceDoc = graphql(`
   query getResources($filters: DatasetFilter) {
     datasets(filters: $filters) {
       datasetType
+      status
       resources {
         id
         dataset {
@@ -13,11 +14,17 @@ export const getResourceDoc = graphql(`
         name
         description
         created
+        promptDetails {
+          promptFormat
+          hasSystemPrompt
+          hasExampleResponses
+        }
         fileDetails {
           id
           resource {
             pk
           }
+          format
           file {
             name
             path

@@ -7,39 +7,17 @@ export const FetchUsers = graphql(`
         id
         fullName
         username
-      }
-    }
-  `);
-
-export const FetchUsecaseInfo = graphql(`
-    query useCaseinfo($filters: UseCaseFilter) {
-      useCases(filters: $filters) {
-        id
-        title
-        contributors {
-          id
-          fullName
-          username
-          profilePicture {
-            url
-          }
+        profilePicture {
+          url
         }
-        supportingOrganizations {
-          id
-          name
-          logo {
-            url
+        organizationMemberships {
+          role {
+            name
+          }
+          organization {
             name
           }
         }
-        partnerOrganizations{
-          id
-          name
-          logo{
-            url
-            name
-          }
-        }  
       }
     }
   `);
@@ -176,10 +154,11 @@ export const RemovePartners = graphql(`
 
 
 export const OrgList = graphql(`
-  query allOrgs {
+  query UseCaseWizardOrgs {
     allOrganizations {
       id
       name
+      organizationTypes
       logo {
         path
         url

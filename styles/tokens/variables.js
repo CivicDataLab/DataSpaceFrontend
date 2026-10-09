@@ -146,7 +146,7 @@ module.exports = {
   "shadowXl": "0px 4px 18px -2px #1f212414",
   "shadow2xl": "0px 32px 32px 0px #1f212426",
   "fontFamilyPrimary": "Inter",
-  "fontFamilyMono": "Space Mono",
+  "fontFamilyMono": "JetBrains Mono",
   "fontWeightRegular": "400",
   "fontWeightMedium": "500",
   "fontWeightBold": "600",

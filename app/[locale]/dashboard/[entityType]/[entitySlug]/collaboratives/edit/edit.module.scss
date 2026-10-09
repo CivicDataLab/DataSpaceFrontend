@@ -1,0 +1,64 @@
+.collaborativeStepper {
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+  padding-top: var(--space-6);
+  --action-primary-basic-default: var(--blue-primary-color);
+  --text-highlight: var(--blue-primary-color);
+
+  [class*='buttonNext'] {
+    background-color: var(--blue-primary-color) !important;
+    border-color: var(--blue-primary-color) !important;
+    color: var(--base-pure-white) !important;
+    --button-color: var(--blue-primary-color);
+    --button-color-hover: var(--blue-primary-text);
+    --button-color-active: var(--blue-primary-text);
+  }
+}
+
+.thumbnailRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--base-gray-slate-solid-6);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.thumbnailPreview {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.thumbnailMeta {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.thumbnailActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.thumbnailInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.overflowVisible {
+  overflow: visible !important;
+
+  :global([class*='SectionCard']),
+  :global([class*='sectionCard']) {
+    overflow: visible !important;
+  }
+}

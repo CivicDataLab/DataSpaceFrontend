@@ -1,342 +1,238 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { graphql } from '@/gql';
+import { IconAlertTriangle, IconCircleCheck, IconSend } from '@tabler/icons-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-  Button,
-  Icon,
-  Spinner,
-  Text,
-  toast,
-} from 'opub-ui';
+import { Button, Spinner, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { Icons } from '@/components/icons';
-import Assign from './Assign';
-import Contributors from './Contributors';
-import Details from './Details';
+import {
+  aboutEditTarget,
+  contentEditTarget,
+  errorMessage,
+  isCollaborativeAboutComplete,
+  isCollaborativeContentComplete,
+  plainSummary,
+} from '../../collaborative-summary';
+import {
+  FetchCollaborativeReview,
+  publishCollaborativeMutation,
+} from '../../wizard-documents';
 
-// prettier-ignore
-const CollaborativeDetails = graphql(`
-  query CollabDetails($filters: CollaborativeFilter) {
-    collaboratives(filters: $filters) {
-      id
-      title
-      summary
-      website
-      platformUrl
-      metadata {
-        metadataItem {
-          id
-          label
-          dataType
-        }
-        id
-        value
-      }
-      sectors {
-        id
-        name
-      }
-      sdgs {
-        id
-        code
-        name
-      }
-      tags {
-        id
-        value
-      }
-      startedOn
-      completedOn
-      logo {
-        name
-        path
-        url
-      }
-      coverImage {
-        name
-        path
-        url
-      }
-      datasets {
-        title
-        id
-        sectors {
-          name
-        }
-        modified
-      }
-      useCases {
-        title
-        id
-        slug
-        sectors {
-          name
-        }
-        modified
-      }
-      contactEmail
-      status
-      slug
-      contributors {
-        id
-        fullName
-        username
-        profilePicture {
-          url
-        }
-      }
-      supportingOrganizations {
-        id
-        name
-        logo {
-          url
-          name
-        }
-      }
-      partnerOrganizations {
-        id
-        name
-        logo {
-          url
-          name
-        }
-      }
-    }
-  }
-`);
+function ReadinessRow({
+  ok,
+  label,
+  detail,
+  onEdit,
+}: {
+  ok: boolean;
+  label: string;
+  detail: string;
+  onEdit?: () => void;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3 border-b-1 border-solid border-borderSubdued py-3 last:border-b-0">
+      <div className="flex min-w-0 items-start gap-3">
+        {ok ? (
+          <IconCircleCheck size={20} className="mt-0.5 shrink-0 text-textSuccess" />
+        ) : (
+          <IconAlertTriangle size={20} className="mt-0.5 shrink-0 text-textCritical" />
+        )}
+        <div className="min-w-0">
+          <Text fontWeight="semibold">{label}</Text>
+          <div className="mt-1">
+            <Text variant="bodySm" color="subdued">
+              {detail}
+            </Text>
+          </div>
+        </div>
+      </div>
+      {onEdit ? (
+        <Button kind="secondary" size="slim" onClick={onEdit}>
+          Edit
+        </Button>
+      ) : null}
+    </div>
+  );
+}
 
-const publishCollaborativeMutation = graphql(`
-  mutation publishCollaborative($collaborativeId: String!) {
-    publishCollaborative(collaborativeId: $collaborativeId) {
-      ... on TypeCollaborative {
-        id
-        status
-      }
-    }
-  }
-`);
-
-const Publish = () => {
+export default function PublishPage() {
   const params = useParams<{
     entityType: string;
     entitySlug: string;
     id: string;
   }>();
-  const CollaborativeData =
-    useQuery(
-      [
-        `fetch_CollaborativeDetails`,
-        params.entityType,
-        params.entitySlug,
-        params.id,
-      ],
-      () =>
-        GraphQL(
-          CollaborativeDetails,
-          {
-            [params.entityType]: params.entitySlug,
-          },
-          {
-            filters: {
-              id: params.id,
-            },
-          }
-        ),
-      {
-        // We navigate between tabs via routing; always refetch to avoid showing stale cached data.
-        refetchOnMount: 'always',
-        refetchOnReconnect: 'always',
-      }
-    );
   const router = useRouter();
-  const PUBLISH_SUCCESS_TOAST_ID = 'collaboratives-publish-toast';
-  const PUBLISH_ERROR_TOAST_ID = 'collaboratives-publish-toast';
+  const ownerArgs = { [params.entityType]: params.entitySlug };
+  const stepBase = `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives/edit/${params.id}`;
 
-  const { mutate, isLoading: mutationLoading } = useMutation(
+  const reviewQuery = useQuery(
+    [`collaborative_wizard_${params.id}`],
     () =>
-      GraphQL(
-        publishCollaborativeMutation,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        { collaborativeId: params.id }
-      ),
+      GraphQL(FetchCollaborativeReview, ownerArgs, {
+        filters: { id: params.id },
+      }),
+    { refetchOnMount: 'always' }
+  );
+
+  const { mutate, isLoading: publishing } = useMutation(
+    () =>
+      GraphQL(publishCollaborativeMutation, ownerArgs, {
+        collaborativeId: params.id,
+      }),
     {
       onSuccess: () => {
-        toast('Collaborative Published Successfully', {
-          id: PUBLISH_SUCCESS_TOAST_ID,
-        });
+        toast('Collaborative published successfully');
         router.push(
           `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives`
         );
       },
-      onError: (err: unknown) => {
-        const errorMessage =
-          typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' && err.message.trim()
-            ? err.message.trim()
-            : 'Unable to publish collaborative right now. Please try again.';
-        toast(`Error: ${errorMessage}`, { id: PUBLISH_ERROR_TOAST_ID });
+      onError: (error: unknown) => {
+        toast(errorMessage(error, 'Unable to publish this collaborative.'));
       },
     }
   );
 
-  const Summary = [
-    {
-      name: 'Details',
-      data: CollaborativeData.data?.collaboratives,
-      error:
-        CollaborativeData.data?.collaboratives?.[0]?.sectors?.length === 0 ||
-        CollaborativeData.data?.collaboratives?.[0]?.summary?.length === 0 ||
-        CollaborativeData.data?.collaboratives?.[0]?.sdgs?.length === 0 ||
-        CollaborativeData.data?.collaboratives?.[0]?.logo === null ||
-        CollaborativeData.data?.collaboratives?.[0]?.coverImage === null
-          ? 'Summary, SDG, Sectors, Logo, or Cover Image is missing. Please add to continue.'
-          : '',
-      errorType: 'critical',
-    },
-    {
-      name: 'Datasets',
-      data: CollaborativeData?.data?.collaboratives?.[0]?.datasets,
-      error:
-        CollaborativeData.data &&
-        CollaborativeData.data?.collaboratives?.[0]?.datasets?.length === 0
-          ? 'No datasets assigned. Please assign to continue.'
-          : '',
-    },
-    {
-      name: 'Use Cases',
-      data: CollaborativeData?.data?.collaboratives?.[0]?.useCases,
-      error: '',
-    },
-    // {
-    //   name: 'Dashboards',
-    //   data: CollaborativeData?.data?.collaboratives[0]?.length > 0,
-    //   error: '',
-    // },
-    {
-      name: 'Contributors',
-      data: CollaborativeData?.data?.collaboratives?.[0] != null &&
-        'length' in CollaborativeData.data.collaboratives[0] &&
-        typeof CollaborativeData.data.collaboratives[0].length === 'number' &&
-        CollaborativeData.data.collaboratives[0].length > 0,
-      error: '',
-    },
-  ];
+  const collaborative = reviewQuery.data?.collaboratives?.[0];
 
-  const isPublishDisabled = (collaborative: {
-    datasets?: unknown[] | null;
-    sectors?: unknown[] | null;
-    summary?: string | null;
-    sdgs?: unknown[] | null;
-    logo?: unknown;
-    coverImage?: unknown;
-  } | null | undefined) => {
-    if (!collaborative) return true;
+  if (reviewQuery.isLoading) {
+    return (
+      <div className="flex h-48 items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
-    const hasDatasets = (collaborative.datasets?.length ?? 0) > 0;
-    const hasRequiredMetadata =
-      (collaborative.sectors?.length ?? 0) > 0 &&
-      (collaborative.summary?.length ?? 0) > 0 &&
-      (collaborative.sdgs?.length ?? 0) > 0 &&
-      collaborative.logo !== null &&
-      collaborative.coverImage !== null;
+  const aboutOk = isCollaborativeAboutComplete(collaborative ?? {});
+  const contentOk = isCollaborativeContentComplete(collaborative ?? {});
+  const contributorCount = collaborative?.contributors?.length ?? 0;
+  const partnerCount = collaborative?.partnerOrganizations?.length ?? 0;
+  const supporterCount = collaborative?.supportingOrganizations?.length ?? 0;
+  const peopleCount = contributorCount + partnerCount + supporterCount;
+  const ready = aboutOk && contentOk;
+  const published = collaborative?.status === 'PUBLISHED';
+  const previewHref = `/collaboratives/${collaborative?.slug || params.id}`;
 
-    // No datasets assigned
-    if (!hasDatasets) return true;
+  const aboutDetail = aboutOk
+    ? 'Name, description, sectors, and SDG goals added.'
+    : [
+        !collaborative?.title?.trim() ? 'Enter a Collaborative name.' : null,
+        !plainSummary(collaborative?.summary)
+          ? 'Add a description to continue.'
+          : null,
+        (collaborative?.sectors?.length ?? 0) === 0
+          ? 'Select at least one sector.'
+          : null,
+        (collaborative?.sdgs?.length ?? 0) === 0
+          ? 'Select at least one SDG goal.'
+          : null,
+      ]
+        .filter(Boolean)
+        .join(' ');
 
-    // Required metadata check
-    if (!hasRequiredMetadata) return true;
-  };
+  const relationshipBits = [
+    contributorCount ? `${contributorCount} Contributor` : null,
+    partnerCount ? `${partnerCount} Partner` : null,
+    supporterCount ? `${supporterCount} Supporter` : null,
+  ].filter(Boolean);
+
+  const peopleDetail =
+    peopleCount > 0
+      ? `${peopleCount} people and organisations added${
+          relationshipBits.length ? ` — ${relationshipBits.join(', ')}` : ''
+        }`
+      : 'No people or organisations added yet.';
+
+  const datasetCount = collaborative?.datasets?.length ?? 0;
+  const useCaseCount = collaborative?.useCases?.length ?? 0;
+  const contentDetail = contentOk
+    ? `${datasetCount} dataset${datasetCount === 1 ? '' : 's'} and ${useCaseCount} use case${useCaseCount === 1 ? '' : 's'} connected.`
+    : 'Add at least one dataset or use case to continue.';
 
   return (
-    <>
-      <div className=" w-full py-6">
-        <div className="flex items-center justify-center gap-2 ">
-          <Text variant="bodyMd" className=" font-semi-bold">
-            REVIEW COLLABORATIVE DETAILS
+    <div className="flex flex-col gap-6 px-6">
+      <div>
+        <Text variant="headingLg" fontWeight="semibold">
+          Review & Publish
+        </Text>
+        <div className="mt-1">
+          <Text color="subdued">
+            Check your information before making this content available
+            publicly.
           </Text>
-          :
-          <Text>
-            Please check all the Collaborative details below before publishing
-          </Text>
-        </div>
-        <div className=" flex flex-col gap-10 pt-6">
-          {CollaborativeData.isLoading || mutationLoading ? (
-            <div className=" mt-8 flex justify-center">
-              <Spinner />
-            </div>
-          ) : (
-            <>
-              {Summary.map((item, index) => (
-                <Accordion type="single" collapsible key={index}>
-                  <AccordionItem
-                    value={`item-${index}`}
-                    className=" border-none"
-                  >
-                    <AccordionTrigger className="flex w-full items-center gap-2 rounded-1 bg-baseBlueSolid3  p-4 hover:no-underline ">
-                      <div className="flex flex-wrap items-center justify-start gap-2">
-                        <Text className=" w-32 text-justify font-semi-bold">
-                          {item.name}
-                        </Text>
-                        {item.error !== '' && (
-                          <div className="flex items-center gap-2">
-                            <Icon
-                              source={Icons.alert}
-                              color="critical"
-                              size={24}
-                            />
-                            <Text variant="bodyMd" className="text-justify">
-                              {item.error}
-                            </Text>
-                          </div>
-                        )}
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent
-                      className="flex w-full flex-col "
-                      style={{
-                        backgroundColor: 'var( --base-pure-white)',
-                        outline: '1px solid var( --base-pure-white)',
-                      }}
-                    >
-                      <div className=" py-4">
-                        {item.name === 'Datasets' ? (
-                          <Assign data={item.data} />
-                        ) : item.name === 'Use Cases' ? (
-                          <Assign data={item.data} />
-                        ) : item.name === 'Details' ? (
-                          <Details data={CollaborativeData.data} />
-                        ) : (
-                          <Contributors data={CollaborativeData.data} />
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              ))}
-              <Button
-                className="m-auto w-fit"
-                onClick={() => mutate()}
-                disabled={isPublishDisabled(
-                  CollaborativeData?.data?.collaboratives[0]
-                )}
-                loading={mutationLoading}
-              >
-                Publish
-              </Button>
-            </>
-          )}
         </div>
       </div>
-    </>
-  );
-};
 
-export default Publish;
+      <div className="rounded-3 border-1 border-solid border-borderSubdued px-4">
+        <div className="pt-4">
+          <Text fontWeight="semibold">
+            {ready ? 'Ready to publish' : 'Needs attention'}
+          </Text>
+        </div>
+        <ReadinessRow
+          ok={aboutOk}
+          label="About"
+          detail={aboutDetail}
+          onEdit={
+            aboutOk
+              ? undefined
+              : () =>
+                  router.push(
+                    `${stepBase}/about#${aboutEditTarget(collaborative ?? {})}`
+                  )
+          }
+        />
+        <ReadinessRow ok label="People" detail={peopleDetail} />
+        <ReadinessRow
+          ok={contentOk}
+          label="Content"
+          detail={contentDetail}
+          onEdit={
+            contentOk
+              ? undefined
+              : () =>
+                  router.push(
+                    `${stepBase}/content#${contentEditTarget(collaborative ?? {})}`
+                  )
+          }
+        />
+      </div>
+
+      <div className="flex flex-col items-center gap-3 rounded-2 border-1 border-solid border-borderSubdued p-6 text-center">
+        <Text>
+          Open a full preview of this Collaborative in a new tab, exactly as it
+          will appear once published.
+        </Text>
+        <Button kind="primary" url={previewHref} external>
+          Preview Collaborative
+        </Button>
+        <Text variant="bodySm" color="subdued">
+          Publishing happens from this review step.
+        </Text>
+      </div>
+
+      <div className="flex flex-col items-center gap-3 rounded-2 border-1 border-solid border-borderSubdued p-4">
+        <Button
+          className="w-1/3 rounded-2 bg-[var(--primary)] py-2 hover:bg-[#0b2540]"
+          disabled={!ready || published}
+          loading={publishing}
+          onClick={() => mutate()}
+        >
+          <span className="flex items-center justify-center gap-2 font-bold">
+            {published ? 'Published' : 'Publish Collaborative'}
+            <IconSend size={20} strokeWidth={1.5} />
+          </span>
+        </Button>
+      </div>
+
+      <div>
+        <Button
+          kind="tertiary"
+          onClick={() => router.push(`${stepBase}/content`)}
+        >
+          Previous
+        </Button>
+      </div>
+    </div>
+  );
+}

@@ -3,6 +3,7 @@ import { graphql } from '@/gql';
 
 import { GraphQLPublic } from '@/lib/api';
 import { generatePageMetadata } from '@/lib/utils';
+import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
 import UseCaseDetailClient from './UsecaseDetailsClient';
 
 const UseCaseInfoQuery = graphql(`
@@ -36,7 +37,7 @@ export async function generateMetadata({
     return generatePageMetadata({
       title: `${UseCase?.title} | Sector Data | CivicDataSpace`,
       description:
-        UseCase?.summary ||
+        getUseCaseSummaryExcerpt(UseCase?.summary) ||
         `Explore open data and curated datasets in the ${UseCase?.title} sector.`,
       keywords: UseCase?.tags?.map((tag) => tag.value) || [],
       openGraph: {
@@ -45,7 +46,7 @@ export async function generateMetadata({
         url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases/${useCaseSlug}`,
         title: `${UseCase?.title} | Sector Data | CivicDataSpace`,
         description:
-          UseCase?.summary ||
+          getUseCaseSummaryExcerpt(UseCase?.summary) ||
           `Explore open data and curated datasets in the ${UseCase?.title} sector.`,
         siteName: 'CivicDataSpace',
         image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,

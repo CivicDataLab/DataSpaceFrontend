@@ -1,19 +1,28 @@
 'use client';
 
-import { graphql } from '@/gql';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ReactNode, useEffect } from 'react';
 import {
   useParams,
   usePathname,
   useRouter,
   useSearchParams,
 } from 'next/navigation';
-import { Tab, TabList, Tabs, toast } from 'opub-ui';
+import { graphql } from '@/gql';
+import {
+  IconClipboardCheck,
+  IconFileDescription,
+  IconVersions,
+} from '@tabler/icons-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Stepper, toast, useStepperStep } from 'opub-ui';
+import type { StepperItem } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import StepNavigation from '../../components/StepNavigation';
-import TitleBar from '../../components/title-bar';
+import { isModelInfoComplete } from './aimodel-summary';
+import { WizardHeader } from './components/WizardHeader';
 import { EditStatusProvider, useEditStatus } from './context';
+import styles from './edit.module.scss';
+import { FetchAIModelForPublish } from './[id]/publish/page';
 
 const UpdateAIModelNameMutation = graphql(`
   mutation updateAIModelName($input: UpdateAIModelInput!) {
@@ -27,18 +36,42 @@ const UpdateAIModelNameMutation = graphql(`
   }
 `);
 
-const FetchAIModelName = graphql(`
-  query AIModelName($filters: AIModelFilter) {
-    aiModels(filters: $filters) {
-      id
-      displayName
-      status
-      isPublic
-    }
-  }
-`);
+const STEP_BY_PATH: Record<string, number> = {
+  versions: 1,
+  details: 2,
+  publish: 3,
+};
 
-const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
+const PATH_BY_STEP: Record<number, string> = {
+  1: 'versions',
+  2: 'details',
+  3: 'publish',
+};
+
+const layoutList = ['versions', 'details', 'publish'];
+
+function StepErrorSync() {
+  const { showErrors } = useStepperStep();
+  const { setStepShowErrors } = useEditStatus();
+
+  useEffect(() => {
+    setStepShowErrors(showErrors);
+  }, [showErrors, setStepShowErrors]);
+
+  return null;
+}
+
+function stepContent(isActive: boolean, children: ReactNode) {
+  if (!isActive) return null;
+  return (
+    <>
+      <StepErrorSync />
+      {children}
+    </>
+  );
+}
+
+function Wizard({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathName = usePathname();
   const searchParams = useSearchParams();
@@ -49,66 +82,63 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
   }>();
   const queryClient = useQueryClient();
 
-  const layoutList = ['details', 'versions', 'publish'];
+  const pathItem = layoutList.find((item) => pathName.includes(`/${item}`));
+  const currentStep = pathItem ? STEP_BY_PATH[pathItem] : 1;
 
-  const pathItem = layoutList.find(function (v) {
-    return pathName.indexOf(v) >= 0;
-  });
-
-  const AIModelData = useQuery(
+  const summaryQuery = useQuery(
     [
-      `fetch_AIModelData`,
+      `fetch_AIModelForPublish`,
       params.id,
       params.entityType,
       params.entitySlug,
     ],
     () =>
       GraphQL(
-        FetchAIModelName,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        {
-          filters: {
-            id: parseInt(params.id),
-          },
-        }
+        FetchAIModelForPublish,
+        { [params.entityType]: params.entitySlug },
+        { filters: { id: parseInt(params.id, 10) } }
       ),
     {
+      enabled: Boolean(params.id),
       refetchOnMount: true,
-      refetchOnReconnect: true,
     }
   );
-  const AIMODEL_TITLE_SUCCESS_TOAST_ID = 'aimodel-title-save-success';
-  const AIMODEL_TITLE_ERROR_TOAST_ID = 'aimodel-title-save-error';
 
-  const { mutate, isLoading: editMutationLoading } = useMutation(
-    (data: { displayName: string }) =>
+  const model = summaryQuery.data?.aiModels?.[0];
+  const completionReady = summaryQuery.isFetched;
+  const {
+    status,
+    setStatus,
+    versionsCompleted,
+    setVersionsCompleted,
+    infoCompleted,
+    setInfoCompleted,
+    runBeforeNavigateHandler,
+  } = useEditStatus();
+
+  useEffect(() => {
+    if (!model || !pathItem) return;
+    if (pathItem !== 'versions') {
+      setVersionsCompleted((model.versions?.length ?? 0) > 0);
+    }
+    if (pathItem !== 'details') {
+      setInfoCompleted(isModelInfoComplete(model));
+    }
+  }, [model, pathItem, setVersionsCompleted, setInfoCompleted]);
+
+  const { mutate: saveTitle, isLoading: titleSaving } = useMutation(
+    (displayName: string) =>
       GraphQL(
         UpdateAIModelNameMutation,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        {
-          input: {
-            id: parseInt(params.id),
-            displayName: data.displayName,
-          },
-        }
+        { [params.entityType]: params.entitySlug },
+        { input: { id: parseInt(params.id, 10), displayName } }
       ),
     {
+      onMutate: () => setStatus('saving'),
       onSuccess: () => {
-        toast('AI Model updated successfully',{id: AIMODEL_TITLE_SUCCESS_TOAST_ID});
-        AIModelData.refetch();
-        queryClient.invalidateQueries({
-          queryKey: [
-            `fetch_AIModelForPublish`,
-            params.id,
-            params.entityType,
-            params.entitySlug,
-          ],
-        });
-        queryClient.invalidateQueries({
+        setStatus('saved');
+        void summaryQuery.refetch();
+        void queryClient.invalidateQueries({
           queryKey: [
             `fetch_AIModelDetails`,
             params.id,
@@ -116,104 +146,103 @@ const TabsAndChildren = ({ children }: { children: React.ReactNode }) => {
             params.entitySlug,
           ],
         });
+        toast('AI Model updated successfully', {
+          id: 'aimodel-title-save-success',
+        });
       },
       onError: (error: unknown) => {
-        toast(`Error: ${typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' ? error.message : String(error)}`,{id: AIMODEL_TITLE_ERROR_TOAST_ID});
+        setStatus('unsaved');
+        const message =
+          typeof error === 'object' &&
+          error !== null &&
+          'message' in error &&
+          typeof error.message === 'string'
+            ? error.message
+            : 'Unable to update the model name.';
+        toast(`Error: ${message}`, { id: 'aimodel-title-save-error' });
       },
     }
   );
 
-  const sourceTab = searchParams.get('tab');
+  if (!pathItem) {
+    return <>{children}</>;
+  }
 
+  const sourceTab = searchParams.get('tab');
   const goBackURL =
     sourceTab === 'active'
       ? `/dashboard/${params.entityType}/${params.entitySlug}/aimodels?tab=active`
       : `/dashboard/${params.entityType}/${params.entitySlug}/aimodels`;
+  const stepBase = `/dashboard/${params.entityType}/${params.entitySlug}/aimodels/edit/${params.id}`;
 
-  const links = [
+  const handleStepClick = (step: number) => {
+    const nextPath = PATH_BY_STEP[step];
+    if (!nextPath || nextPath === pathItem) return;
+    void runBeforeNavigateHandler().then(() => {
+      router.push(`${stepBase}/${nextPath}`);
+    });
+  };
+
+  const primaryVersion =
+    model?.versions?.find((version) => version.isLatest) || model?.versions?.[0];
+  const accessReady = (primaryVersion?.providers?.length ?? 0) > 0;
+
+  const steps: StepperItem[] = [
     {
-      label: 'Metadata',
-      url: `/dashboard/${params.entityType}/${params.entitySlug}/aimodels/edit/${params.id}/details`,
-      selected: pathItem === 'details',
+      step: 1,
+      label: 'Versions',
+      description: 'Configure releases and access',
+      icon: IconVersions,
+      isCompleted:
+        versionsCompleted || (!completionReady && currentStep > 1),
+      content: stepContent(currentStep === 1, children),
     },
     {
-      label: 'Version',
-      url: `/dashboard/${params.entityType}/${params.entitySlug}/aimodels/edit/${params.id}/versions`,
-      selected: pathItem === 'versions',
+      step: 2,
+      label: 'Model Information',
+      description: 'Describe the model',
+      icon: IconFileDescription,
+      isCompleted:
+        infoCompleted || (!completionReady && currentStep > 2),
+      content: stepContent(currentStep === 2, children),
     },
     {
-      label: 'Publish',
-      url: `/dashboard/${params.entityType}/${params.entitySlug}/aimodels/edit/${params.id}/publish`,
-      selected: pathItem === 'publish',
+      step: 3,
+      label: 'Review & Publish',
+      description: 'Check readiness',
+      icon: IconClipboardCheck,
+      isCompleted: versionsCompleted && infoCompleted && accessReady,
+      content: stepContent(currentStep === 3, children),
     },
   ];
 
-  const handleTabClick = (url: string) => {
-    router.replace(url);
-  };
-
-  const initialTabLabel =
-    links.find((option) => option.selected)?.label || 'Model Details';
-
-  const { status, setStatus } = useEditStatus();
-
-  // Map our status to TitleBar's expected status
-  const titleBarStatus: 'loading' | 'success' =
-    status === 'saving' ? 'loading' : 'success';
-
-  const handleStatusChange = (s: 'loading' | 'success') => {
-    setStatus(s === 'loading' ? 'saving' : 'saved');
-  };
-
   return (
-    <div className="mt-8 flex h-full flex-col gap-6">
-      <TitleBar
-        label={'AI MODEL NAME'}
-        title={AIModelData?.data?.aiModels?.[0]?.displayName ?? ''}
+    <div className="mb-10 flex flex-col rounded-4 border-1 border-solid border-baseGraySlateSolid6 bg-surfaceDefault pb-6 lg:mt-2">
+      <WizardHeader
+        title={model?.displayName || ''}
+        titlePending={!completionReady}
         goBackURL={goBackURL}
-        onSave={(e) => mutate({ displayName: e })}
-        loading={editMutationLoading}
-        status={titleBarStatus}
-        setStatus={handleStatusChange}
+        status={status === 'saving' || titleSaving ? 'loading' : 'success'}
+        onTitleSave={(nextTitle) => saveTitle(nextTitle)}
       />
-      <Tabs
-        value={initialTabLabel}
-        onValueChange={(newValue) =>
-          handleTabClick(
-            links.find((link) => link.label === newValue)?.url || ''
-          )
-        }
-      >
-        <TabList fitted border>
-          {links.map((item, index) => (
-            <Tab
-              theme="dataSpace"
-              value={item.label}
-              key={index}
-              onClick={() => handleTabClick(item.url)}
-              className="uppercase"
-            >
-              {item.label}
-            </Tab>
-          ))}
-        </TabList>
-      </Tabs>
-      <div className="">{children}</div>
-      <div className="my-6">
-        <StepNavigation
-          steps={['details', 'versions', 'publish']}
-        />
-      </div>
+      <Stepper
+        className={styles.modelStepper}
+        steps={steps}
+        currentStep={currentStep}
+        onStepClick={handleStepClick}
+        restrictNavigation
+        navigation={currentStep !== 3}
+        nextLabel="Continue"
+        previousLabel="Previous"
+      />
     </div>
   );
-};
+}
 
-const EditAIModel = ({ children }: { children: React.ReactNode }) => {
+export default function EditAIModel({ children }: { children: ReactNode }) {
   return (
     <EditStatusProvider>
-      <TabsAndChildren>{children}</TabsAndChildren>
+      <Wizard>{children}</Wizard>
     </EditStatusProvider>
   );
-};
-
-export default EditAIModel;
+}

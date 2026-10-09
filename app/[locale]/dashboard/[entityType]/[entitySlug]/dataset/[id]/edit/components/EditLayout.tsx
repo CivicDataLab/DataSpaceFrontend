@@ -1,81 +1,60 @@
 'use client';
 
-import { graphql } from '@/gql';
-import { UpdateDatasetInput } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { ReactNode, useEffect } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
-import { Tab, TabList, Tabs, toast } from 'opub-ui';
-import { ReactNode, useState } from 'react';
+import {
+  IconClipboardCheck,
+  IconCloudUpload,
+  IconFileDescription,
+} from '@tabler/icons-react';
+import { useQuery } from '@tanstack/react-query';
+import { Icon, Text } from 'opub-ui';
+import type { StepperItem } from 'opub-ui';
 
+import { WizardFrame } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/WizardFrame';
+import { wizardStepContent } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/step-content';
+import { Icons } from '@/components/icons';
 import { GraphQL } from '@/lib/api';
-import StepNavigation from '../../../../components/StepNavigation';
-import TitleBar from '../../../../components/title-bar';
 import { useDatasetEditStatus } from '../context';
-
-const datasetQueryDoc = graphql(`
-  query datasetTitleQuery($filters: DatasetFilter) {
-    datasets(filters: $filters) {
-      id
-      title
-      created
-      datasetType
-    }
-  }
-`);
-
-const updateDatasetTitleMutationDoc = graphql(`
-  mutation SaveTitle($updateDatasetInput: UpdateDatasetInput!) {
-    updateDataset(updateDatasetInput: $updateDatasetInput) {
-      __typename
-      ... on TypeDataset {
-        id
-        title
-        created
-      }
-      ... on OperationInfo {
-        messages {
-          kind
-          message
-        }
-      }
-    }
-  }
-`);
+import {
+  datasetSummaryQueryDoc,
+  isDatasetMetadataComplete,
+} from '../dataset-summary';
+import styles from '../edit.module.scss';
 
 interface LayoutProps {
   children?: ReactNode;
   params: { id: string };
 }
 
-const layoutList = ['metadata', 'resources', 'publish'];
+const STEP_BY_PATH: Record<string, number> = {
+  resources: 1,
+  metadata: 2,
+  publish: 3,
+};
+
+const PATH_BY_STEP: Record<number, string> = {
+  1: 'resources',
+  2: 'metadata',
+  3: 'publish',
+};
+
+const layoutList = ['resources', 'metadata', 'publish'];
 
 export function EditLayout({ children, params }: LayoutProps) {
-  const DATASET_TITLE_SAVE_ERROR_TOAST_ID = 'dataset-title-save-error';
-  const getErrorMessage = (err: unknown, fallback: string) =>
-    typeof err === 'object' &&
-    err !== null &&
-    'message' in err &&
-    typeof err.message === 'string' &&
-    err.message.trim()
-      ? err.message.trim()
-      : fallback;
-
-  // const { data } = useQuery([`dataset_layout_${params.id}`], () =>
-  //   GraphQL(datasetQueryDoc, { dataset_id: Number(params.id) })
-  // );
-
   const pathName = usePathname();
+  const router = useRouter();
   const routerParams = useParams<{
     entityType: string;
     entitySlug: string;
     id: string;
   }>();
 
-  const [, setEditMode] = useState(false);
-
-  const getDatasetTitleRes = useQuery([`dataset_title_${routerParams.id}`], () =>
+  const getDatasetTitleRes = useQuery(
+    [`dataset_title_${routerParams.id}`],
+    () =>
       GraphQL(
-        datasetQueryDoc,
+        datasetSummaryQueryDoc,
         {
           [routerParams.entityType]: routerParams.entitySlug,
         },
@@ -85,180 +64,111 @@ export function EditLayout({ children, params }: LayoutProps) {
           },
         }
       )
-    );
-
-  const updateDatasetTitleMutation = useMutation(
-    (data: { updateDatasetInput: UpdateDatasetInput }) =>
-      GraphQL(
-        updateDatasetTitleMutationDoc,
-        {
-          [routerParams.entityType]: routerParams.entitySlug,
-        },
-        data
-      ),
-    {
-      onSuccess: () => {
-        // queryClient.invalidateQueries({
-        //   queryKey: [`create_dataset_${'52'}`],
-        // });
-
-        setEditMode(false);
-
-        getDatasetTitleRes.refetch();
-      },
-      onError: (err: unknown) => {
-        toast(getErrorMessage(err, 'Unable to update dataset title right now.'), {
-          id: DATASET_TITLE_SAVE_ERROR_TOAST_ID,
-        });
-      },
-    }
   );
 
-  const pathItem = layoutList.find(function (v) {
-    return pathName.indexOf(v) >= 0;
-  });
+  const pathItem = layoutList.find((item) => pathName.indexOf(item) >= 0);
+  const currentStep = pathItem ? STEP_BY_PATH[pathItem] : 1;
+  const dataset = getDatasetTitleRes.data?.datasets[0];
+  const completionReady = getDatasetTitleRes.isFetched;
+  const isPromptDataset = dataset?.datasetType === 'PROMPT';
 
-  const { status, setStatus, runBeforeNavigateHandler } = useDatasetEditStatus();
+  const {
+    status,
+    runBeforeNavigateHandler,
+    filesCompleted,
+    setFilesCompleted,
+    metadataCompleted,
+    setMetadataCompleted,
+    setStepShowErrors,
+  } = useDatasetEditStatus();
 
-  // if not from the layoutList, return children
+  useEffect(() => {
+    if (!dataset) return;
+    setFilesCompleted((dataset.resources?.length ?? 0) > 0);
+    if (pathItem !== 'metadata') {
+      if (isDatasetMetadataComplete(dataset)) {
+        setMetadataCompleted(true);
+      }
+    }
+  }, [dataset, pathItem, setFilesCompleted, setMetadataCompleted]);
+
   if (!pathItem) {
     return <>{children}</>;
   }
 
-  return (
-    <div className="flex h-full flex-col lg:mt-8">
-      {getDatasetTitleRes.isLoading ? (
-        <></>
-      ) : (
-        <TitleBar
-          label={'DATASET NAME'}
-          title={getDatasetTitleRes?.data?.datasets[0]?.title ?? ''}
-          goBackURL={`/dashboard/${routerParams.entityType}/${routerParams.entitySlug}/dataset`}
-          onSave={(val) =>
-            updateDatasetTitleMutation.mutate({
-              updateDatasetInput: {
-                dataset: routerParams.id,
-                title: val,
-              },
-            })
-          }
-          loading={updateDatasetTitleMutation.isLoading}
-          status={status}
-          setStatus={setStatus}
-        />
-      )}
-      <div className="lg:flex-column mt-4 flex flex-col">
-        <div>
-          <Navigation
-            id={params.id}
-            pathItem={pathItem}
-            organization={routerParams.entitySlug.toString()}
-            entityType={routerParams.entityType.toString()}
-            isPromptDataset={getDatasetTitleRes?.data?.datasets?.[0]?.datasetType === 'PROMPT'}
-          />
-        </div>
-        <div className="bg-surface border-l-divider rounded-tl-none  my-6  flex-grow">
-          {children}
-        </div>
-      <div>
-        <StepNavigation
-          steps={['metadata', 'resources', 'publish']}
-          onBeforeNavigate={runBeforeNavigateHandler}
-        />
-      </div>
-      </div>
-    </div>
-  );
-}
+  const goBackURL = `/dashboard/${routerParams.entityType}/${routerParams.entitySlug}/dataset`;
+  const stepBase = `/dashboard/${routerParams.entityType}/${routerParams.entitySlug}/dataset/${params.id}/edit`;
 
-const Navigation = ({
-  id,
-  pathItem,
-  organization,
-  entityType,
-  isPromptDataset,
-}: {
-  id: string;
-  pathItem: string;
-  organization: string;
-  entityType: string;
-  isPromptDataset?: boolean;
-}) => {
-  const router = useRouter();
+  const handleStepClick = (step: number) => {
+    const nextPath = PATH_BY_STEP[step];
+    if (!nextPath || nextPath === pathItem) return;
+    void runBeforeNavigateHandler().then(() => {
+      router.push(`${stepBase}/${nextPath}`);
+    });
+  };
 
-  const links = [
+  const steps: StepperItem[] = [
     {
-      label: 'Metadata',
-      id: 'metadata',
-      url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/metadata`,
-      // selected: pathItem === 'metadata',
-    },
-    {
+      step: 1,
       label: isPromptDataset ? 'Prompt Files' : 'Data Files',
-      id: 'resources',
-      url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/resources`,
-      // selected: pathItem === 'resources',
+      description: isPromptDataset
+        ? 'Upload prompt files'
+        : 'Upload dataset files',
+      icon: IconCloudUpload,
+      isCompleted: filesCompleted || (!completionReady && currentStep > 1),
+      content: wizardStepContent(
+        currentStep === 1,
+        children,
+        setStepShowErrors
+      ),
     },
-    ...(process.env.NEXT_PUBLIC_ENABLE_ACCESSMODEL === 'true'
-      ? [
-          {
-            label: 'Access Models',
-            id: 'access',
-            url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/access?list=true`,
-            // selected: pathItem === 'access',
-          },
-        ]
-      : []),
-    // {
-    //   label: 'Charts',
-    //   id: 'charts',
-    //   url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/charts?type=list`,
-    //   // selected: pathItem === 'charts',
-    // },
-
     {
-      label: 'Publish',
-      id: 'publish',
-      url: `/dashboard/${entityType}/${organization}/dataset/${id}/edit/publish`,
-      // selected: pathItem === 'publish',
+      step: 2,
+      label: 'Metadata',
+      description: 'Name, description & settings',
+      icon: IconFileDescription,
+      isCompleted:
+        metadataCompleted || (!completionReady && currentStep > 2),
+      content: wizardStepContent(
+        currentStep === 2,
+        children,
+        setStepShowErrors
+      ),
+    },
+    {
+      step: 3,
+      label: 'Review & Publish',
+      description: 'Final review & publish',
+      icon: IconClipboardCheck,
+      isCompleted: filesCompleted && metadataCompleted,
+      content: wizardStepContent(
+        currentStep === 3,
+        children,
+        setStepShowErrors
+      ),
     },
   ];
 
-  const [selectedTab, setSelectedTab] = useState(pathItem || 'distributions');
-  const [prevPathItem, setPrevPathItem] = useState(pathItem);
-  if (pathItem !== prevPathItem) {
-    setPrevPathItem(pathItem);
-    setSelectedTab(pathItem);
-  }
-
-  const handleTabClick = (item: {
-    label: string;
-    id: string;
-    url: string;
-    // selected: boolean;
-  }) => {
-    if (item.id !== selectedTab) {
-      setSelectedTab(item.id);
-      router.replace(item.url);
-    }
-  };
-
   return (
-    <div>
-      <Tabs value={selectedTab}>
-        <TabList fitted border>
-          {links.map((item, index) => (
-            <Tab
-              theme="dataSpace"
-              value={item.id}
-              key={index}
-              onClick={() => handleTabClick(item)}
-            >
-              {item.label}
-            </Tab>
-          ))}
-        </TabList>
-      </Tabs>
-    </div>
+    <WizardFrame
+      title={dataset?.title ?? ''}
+      untitledLabel="Untitled dataset"
+      titlePending={!getDatasetTitleRes.isFetched}
+      goBackURL={goBackURL}
+      status={status}
+      stepperClassName={styles.datasetStepper}
+      steps={steps}
+      currentStep={currentStep}
+      onStepClick={handleStepClick}
+      showNavigation={currentStep !== 3}
+      footer={
+        <div className="border ml-3 flex w-fit items-center gap-2 rounded-full border-1 border-solid border-baseGraySlateSolid6 bg-surfaceDefault px-2 py-1">
+          <Icon source={Icons.globe} size={16} color="default" />
+          <Text variant="bodySm" color="subdued" className=" text-textSubdued">
+            Public visibility · Public once published
+          </Text>
+        </div>
+      }
+    />
   );
-};
+}
