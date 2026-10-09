@@ -10,7 +10,8 @@ import {
 } from '@/lib/sitemap-utils';
 
 interface EntityItem {
-  id: string;
+  // AIModel ids are GraphQL Int; every other entity's are strings.
+  id: string | number;
   slug?: string;
   name?: string;
   fullName?: string;
@@ -25,7 +26,7 @@ function isEntityItem(item: unknown): item is EntityItem {
     typeof item === 'object' &&
     item !== null &&
     'id' in item &&
-    typeof (item as { id: unknown }).id === 'string'
+    ['string', 'number'].includes(typeof (item as { id: unknown }).id)
   );
 }
 

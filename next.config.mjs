@@ -23,7 +23,21 @@ const nextConfig = withNextIntl({
       'next-intl/config': './i18n.ts',
     },
   },
-  
+
+  // Non-public environments (dev) must not be indexed by search engines.
+  // X-Git-Sha: the commit this build came from (GITHUB_SHA in CI), so tests can
+  // tell which code is live, like the backend's /health/ git_sha.
+  async headers() {
+    const headers = [];
+    if (process.env.GITHUB_SHA) {
+      headers.push({ key: 'X-Git-Sha', value: process.env.GITHUB_SHA });
+    }
+    if (process.env.FEATURE_SITEMAPS !== 'true') {
+      headers.push({ key: 'X-Robots-Tag', value: 'noindex, nofollow' });
+    }
+    return headers.length ? [{ source: '/:path*', headers }] : [];
+  },
+
   // Performance optimizations
   experimental: {
     optimizePackageImports: ['opub-ui', 'echarts', 'lucide-react', '@tabler/icons-react'],
