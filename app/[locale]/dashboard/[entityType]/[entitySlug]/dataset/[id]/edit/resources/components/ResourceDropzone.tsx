@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button, DropZone, Icon, Labelled, Tag, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { invalidateDatasetReview } from '../../dataset-summary';
 import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import {
@@ -106,6 +107,7 @@ export const ResourceDropzone = ({
           void queryClient.invalidateQueries({
             queryKey: [`dataset_title_${params.id}`],
           });
+          invalidateDatasetReview(queryClient, params.id);
           return;
         }
         const created = result.createFileResources ?? [];
@@ -136,6 +138,7 @@ export const ResourceDropzone = ({
         void queryClient.invalidateQueries({
           queryKey: [`dataset_title_${params.id}`],
         });
+        invalidateDatasetReview(queryClient, params.id);
       },
       onError: (err: unknown) => {
         toast(getErrorMessage(err, 'Unable to upload resource right now.'), {

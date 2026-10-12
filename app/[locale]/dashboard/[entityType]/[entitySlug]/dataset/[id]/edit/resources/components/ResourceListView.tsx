@@ -6,6 +6,7 @@ import { parseAsString, useQueryState } from 'nuqs';
 import { FileCard, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { invalidateDatasetReview } from '../../dataset-summary';
 import { promptFileTags } from './prompt-file';
 import { enabledFilePreview, previewStaysEnabled } from './ResourceDropzone';
 import { updateResourceDoc, updateResourceList } from './query';
@@ -108,6 +109,7 @@ export const ResourceListView = ({
         void queryClient.invalidateQueries({
           queryKey: [`dataset_title_${params.id}`],
         });
+        invalidateDatasetReview(queryClient, params.id);
         toast('Resource deleted successfully');
       },
       onError: (err: unknown) => {
@@ -141,6 +143,7 @@ export const ResourceListView = ({
     {
       onSuccess: () => {
         refetch();
+        invalidateDatasetReview(queryClient, params.id);
       },
       onError: (err: unknown) => {
         toast(getErrorMessage(err, 'Unable to rename resource right now.'), {

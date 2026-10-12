@@ -27,6 +27,7 @@ import {
 import { useFormContext } from 'react-hook-form';
 
 import { GraphQL } from '@/lib/api';
+import { invalidateDatasetReview } from '../dataset-summary';
 import { enumValues } from '@/lib/enumValues';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import DatasetLoading from '../../../components/loading-dataset';
@@ -509,6 +510,7 @@ export function EditMetadata({ id }: { id: string }) {
           queryClient.invalidateQueries({
             queryKey: [`metadata_values_query_${params.id}`],
           });
+          invalidateDatasetReview(queryClient, params.id);
         } else {
           const responseError =
             res.updatePromptMetadata?.errors?.fieldErrors?.[0]?.messages?.[0] ||
@@ -568,6 +570,7 @@ export function EditMetadata({ id }: { id: string }) {
           void queryClient.invalidateQueries({
             queryKey: [`dataset_title_${params.id}`],
           });
+          invalidateDatasetReview(queryClient, params.id);
           const updatedData = defaultValuesPrepFn(
             res.addUpdateDatasetMetadata.data ?? undefined
           );
@@ -615,6 +618,7 @@ export function EditMetadata({ id }: { id: string }) {
         void queryClient.invalidateQueries({
           queryKey: [`metadata_values_query_${params.id}`],
         });
+        invalidateDatasetReview(queryClient, params.id);
       },
       onError: (err: unknown) => {
         toast(

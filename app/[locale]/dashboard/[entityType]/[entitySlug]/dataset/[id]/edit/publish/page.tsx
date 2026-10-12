@@ -178,14 +178,17 @@ const Page = () => {
   }>();
   const router = useRouter();
 
-  const getDatasetsSummary = useQuery([`summary_${params.id}`], () =>
-    GraphQL(
-      datasetSummaryQuery,
-      {
-        [params.entityType]: params.entitySlug,
-      },
-      { filters: { id: params.id } }
-    )
+  const getDatasetsSummary = useQuery(
+    [`summary_${params.id}`],
+    () =>
+      GraphQL(
+        datasetSummaryQuery,
+        {
+          [params.entityType]: params.entitySlug,
+        },
+        { filters: { id: params.id } }
+      ),
+    { refetchOnMount: true }
   );
 
   const dataset = getDatasetsSummary.data?.datasets[0];

@@ -1,6 +1,20 @@
+import type { QueryClient } from '@tanstack/react-query';
 import { graphql } from '@/gql';
 
 import { isRichTextEmpty } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/rich-text';
+
+export function datasetReviewQueryKey(datasetId: string) {
+  return [`summary_${datasetId}`];
+}
+
+export function invalidateDatasetReview(
+  queryClient: QueryClient,
+  datasetId: string
+) {
+  void queryClient.invalidateQueries({
+    queryKey: datasetReviewQueryKey(datasetId),
+  });
+}
 
 export const datasetSummaryQueryDoc = graphql(`
   query datasetTitleQuery($filters: DatasetFilter) {

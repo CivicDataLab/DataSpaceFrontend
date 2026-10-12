@@ -17,6 +17,7 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { invalidateDatasetReview } from '../dataset-summary';
 import { useDatasetEditStatus } from '../context';
 import {
   platformDraftFromSource,
@@ -204,6 +205,7 @@ export function DistibutionPage({
         void queryClient.invalidateQueries({
           queryKey: [`dataset_title_${params.id}`],
         });
+        invalidateDatasetReview(queryClient, params.id);
         if (results.some((cleared) => !cleared)) {
           discardUploadRef.current = false;
           toast('Unable to clear files right now.', {
@@ -299,7 +301,7 @@ export function DistibutionPage({
         <TabPanel value="platform">
           <div className="flex flex-col gap-4 pt-4">
             <PublicPlatformImport
-              key={platformResetKey}
+              key={`${platformResetKey}-${savedPlatformDraft.platform}-${savedPlatformDraft.datasetUrl}`}
               initialDraft={savedPlatformDraft}
               onDraftChange={handlePlatformDraftChange}
             />
@@ -362,6 +364,7 @@ export function DistibutionPage({
         }}
         onSaved={() => {
           void refetch();
+          invalidateDatasetReview(queryClient, params.id);
         }}
       />
     </div>

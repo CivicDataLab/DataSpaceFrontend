@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   ImportPlatform,
@@ -66,12 +66,6 @@ const PLATFORM_OPTIONS = [
   },
 ];
 
-const platformFormOptions = {
-  defaultValues: {
-    platform: '',
-  },
-};
-
 function SyncPlatformError({ error }: { error?: string }) {
   const { setError, clearErrors } = useFormContext();
 
@@ -82,6 +76,18 @@ function SyncPlatformError({ error }: { error?: string }) {
       clearErrors('platform');
     }
   }, [error, setError, clearErrors]);
+
+  return null;
+}
+
+function SyncPlatformValue({ platform }: { platform: string }) {
+  const { setValue, watch } = useFormContext();
+  const formPlatform = watch('platform');
+
+  useEffect(() => {
+    if (formPlatform === platform) return;
+    setValue('platform', platform, { shouldValidate: false });
+  }, [formPlatform, platform, setValue]);
 
   return null;
 }
@@ -140,6 +146,14 @@ export function PublicPlatformImport({
   const [platform, setPlatform] = useState(initialDraft?.platform ?? '');
   const [datasetUrl, setDatasetUrl] = useState(initialDraft?.datasetUrl ?? '');
   const [urlBlurred, setUrlBlurred] = useState(false);
+  const platformFormOptions = useMemo(
+    () => ({
+      defaultValues: {
+        platform: initialDraft?.platform ?? '',
+      },
+    }),
+    [initialDraft?.platform]
+  );
 
   const generateMutation = useMutation(
     (importInput: ImportPlatformDatasetInput) =>
@@ -210,6 +224,7 @@ export function PublicPlatformImport({
     >
       <Form formOptions={platformFormOptions}>
         <SyncPlatformError error={platformError} />
+        <SyncPlatformValue platform={platform} />
         <div className="flex flex-col gap-4">
           <Select
             name="platform"
