@@ -19,6 +19,7 @@ import {
 import { GraphQL } from '@/lib/api';
 import { useDatasetEditStatus } from '../context';
 import {
+  platformDraftFromSource,
   PublicPlatformImport,
   type PlatformImportDraft,
 } from './components/PublicPlatformImport';
@@ -26,7 +27,7 @@ import { updateResourceList } from './components/query';
 import { ResourceDropzone } from './components/ResourceDropzone';
 import { ResourceListView } from './components/ResourceListView';
 import { ResourceViewSheet } from './components/ResourceViewSheet';
-import { getResourceDoc } from './query';
+import { datasetPlatformSourceDoc, getResourceDoc } from './query';
 
 type UploadTab = 'upload' | 'platform';
 
@@ -101,7 +102,7 @@ export function DistibutionPage({
   const { setFilesCompleted, stepShowErrors } = useDatasetEditStatus();
   const queryClient = useQueryClient();
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-  const [sourceTab, setSourceTab] = useState<UploadTab>('upload');
+  const [sourceTab, setSourceTab] = useState<UploadTab | null>(null);
   const [platformDraft, setPlatformDraft] =
     useState<PlatformImportDraft>(EMPTY_PLATFORM_DRAFT);
   const [platformResetKey, setPlatformResetKey] = useState(0);
@@ -110,21 +111,36 @@ export function DistibutionPage({
   const clearingRef = useRef(false);
   const discardUploadRef = useRef(false);
 
+  const ownerHeaders = {
+    [params.entityType]: params.entitySlug,
+  };
   const { data, isLoading, refetch } = useQuery(
     [`fetch_resources_${params.id}`],
+    () => GraphQL(getResourceDoc, ownerHeaders, { filters: { id: params.id } })
+  );
+  const platformSourceQuery = useQuery(
+    [`dataset_platform_source_${params.id}`],
     () =>
-      GraphQL(
-        getResourceDoc,
-        {
-          [params.entityType]: params.entitySlug,
-        },
-        { filters: { id: params.id } }
-      )
+      GraphQL(datasetPlatformSourceDoc, ownerHeaders, {
+        filters: { id: params.id },
+      }),
+    { retry: false }
   );
 
   const resources = data?.datasets[0]?.resources ?? [];
   const isPromptDataset = data?.datasets[0]?.datasetType === 'PROMPT';
   const fileLabel = isPromptDataset ? 'Prompt Files' : 'Dataset File';
+  const savedPlatformDraft =
+    platformResetKey === 0 && !platformSourceQuery.isError
+      ? (platformDraftFromSource(
+          platformSourceQuery.data?.datasets[0]?.source
+        ) ?? EMPTY_PLATFORM_DRAFT)
+      : EMPTY_PLATFORM_DRAFT;
+  const hasSavedPlatform =
+    savedPlatformDraft.platform.length > 0 ||
+    savedPlatformDraft.datasetUrl.trim().length > 0;
+  const activeTab: UploadTab =
+    sourceTab ?? (hasSavedPlatform ? 'platform' : 'upload');
 
   const [resourceId, setResourceId] = useQueryState('id', parseAsString);
 
@@ -142,13 +158,14 @@ export function DistibutionPage({
   const hasFiles = resources.length > 0 || pendingFiles.length > 0;
   const platformOccupied =
     platformDraft.platform.length > 0 ||
-    platformDraft.datasetUrl.trim().length > 0;
+    platformDraft.datasetUrl.trim().length > 0 ||
+    (activeTab === 'platform' && hasSavedPlatform);
 
   const handleTabChange = (next: string) => {
-    if (!isUploadTab(next) || next === sourceTab || clearingRef.current) return;
+    if (!isUploadTab(next) || next === activeTab || clearingRef.current) return;
 
-    const leavingFiles = sourceTab === 'upload' && hasFiles;
-    const leavingPlatform = sourceTab === 'platform' && platformOccupied;
+    const leavingFiles = activeTab === 'upload' && hasFiles;
+    const leavingPlatform = activeTab === 'platform' && platformOccupied;
     if (leavingFiles || leavingPlatform) {
       setSwitchTarget(next);
       return;
@@ -211,7 +228,7 @@ export function DistibutionPage({
     ? switchDialogCopy(switchTarget, platformDraft)
     : null;
 
-  if (isLoading) {
+  if (isLoading || platformSourceQuery.isLoading) {
     return (
       <div className="flex min-h-[240px] w-full items-center justify-center">
         <Spinner size={40} />
@@ -237,7 +254,7 @@ export function DistibutionPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <Tabs value={sourceTab} onValueChange={handleTabChange}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabList boxed>
           <Tab value="upload" icon={IconFileSpreadsheet}>
             File Upload
@@ -249,7 +266,7 @@ export function DistibutionPage({
         <TabPanel
           value="upload"
           forceMount
-          style={sourceTab === 'upload' ? undefined : { display: 'none' }}
+          style={activeTab === 'upload' ? undefined : { display: 'none' }}
         >
           <div className="flex flex-col gap-4 pt-4">
             <SectionCard title={`Upload ${fileLabel}`}>
@@ -283,6 +300,7 @@ export function DistibutionPage({
           <div className="flex flex-col gap-4 pt-4">
             <PublicPlatformImport
               key={platformResetKey}
+              initialDraft={savedPlatformDraft}
               onDraftChange={handlePlatformDraftChange}
             />
             {readyCount > 0 || pendingFiles.length > 0 ? (

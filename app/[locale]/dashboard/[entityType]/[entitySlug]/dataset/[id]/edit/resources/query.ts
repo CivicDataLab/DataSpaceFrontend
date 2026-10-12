@@ -38,3 +38,14 @@ export const getResourceDoc = graphql(`
     }
   }
 `);
+
+export const datasetPlatformSourceDoc = graphql(`
+  query datasetPlatformSource($filters: DatasetFilter) {
+    datasets(filters: $filters) {
+      source {
+        platform
+        sourceUrl
+      }
+    }
+  }
+`);
