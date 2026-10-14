@@ -350,7 +350,7 @@ export default function DatasetPage() {
 
   return (
     <>
-      <div className={`flex h-full flex-col lg:mt-2 ${styles.listing}`}>
+      <div className={`flex h-full flex-col md:mt-5 lg:mt-2 ${styles.listing}`}>
         <DataTable
           columnContentTypes={[...columnContentTypes]}
           columns={datasetColumns}
