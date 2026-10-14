@@ -38,7 +38,10 @@ export const authOptions: AuthOptions = {
       clientSecret: `${env.KEYCLOAK_CLIENT_SECRET}`,
       issuer: `${env.AUTH_ISSUER}`,
       httpOptions: {
-        timeout: 10000,
+        // The local resolver often takes longer than 10s to reach Keycloak.
+        // A shorter timeout aborts the code exchange after the user has already
+        // signed in, so the app comes back with no session.
+        timeout: 60000,
       },
     }),
   ],

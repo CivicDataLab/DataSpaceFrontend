@@ -29,6 +29,8 @@ import {
   IconDatabasePlus,
   IconDotsVertical,
   IconDownload,
+  IconEye,
+  IconFileDescription,
   IconFileDownload,
   IconFilePlus,
   IconFileUpload,
@@ -66,6 +68,7 @@ import {
 } from '@tabler/icons-react';
 
 export const Icons = {
+  eye: IconEye,
   access: IconShieldCheck,
   addDataset: IconDatabasePlus,
   alert: IconAlertCircleFilled,
@@ -96,6 +99,7 @@ export const Icons = {
   notification: IconBellFilled,
   openAccess: IconShieldCheck,
   pencil: IconPencil,
+  publication: IconFileDescription,
   plus: IconPlus,
   registeredAccess: IconShieldStar,
   restrictedAccess: IconShieldLock,

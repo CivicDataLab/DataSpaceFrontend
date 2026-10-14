@@ -1,35 +1,36 @@
 'use client';
-import { createContext, useContext, useRef, useState } from 'react';
 
-type StatusType = 'loading' | 'success';
-type BeforeNavigateHandler = (() => Promise<void> | void) | null;
+import { createContext, useContext, useState } from 'react';
 
-const DatasetEditStatusContext = createContext<{
-  status: StatusType;
-  setStatus: (status: StatusType) => void;
-  registerBeforeNavigateHandler: (handler: BeforeNavigateHandler) => void;
-  runBeforeNavigateHandler: () => Promise<void>;
-} | null>(null);
+import { useProviderEditState } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/edit-status';
 
-export const DatasetEditStatusProvider = ({ children }: { children: React.ReactNode }) => {
-  const [status, setStatus] = useState<StatusType>('success');
-  const beforeNavigateHandlerRef = useRef<BeforeNavigateHandler>(null);
+type DatasetEditStatusContextValue = ReturnType<typeof useProviderEditState> & {
+  filesCompleted: boolean;
+  setFilesCompleted: (completed: boolean) => void;
+  metadataCompleted: boolean;
+  setMetadataCompleted: (completed: boolean) => void;
+};
 
-  const registerBeforeNavigateHandler = (handler: BeforeNavigateHandler) => {
-    beforeNavigateHandlerRef.current = handler;
-  };
+const DatasetEditStatusContext =
+  createContext<DatasetEditStatusContextValue | null>(null);
 
-  const runBeforeNavigateHandler = async () => {
-    await beforeNavigateHandlerRef.current?.();
-  };
+export const DatasetEditStatusProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const editState = useProviderEditState();
+  const [filesCompleted, setFilesCompleted] = useState(false);
+  const [metadataCompleted, setMetadataCompleted] = useState(false);
 
   return (
     <DatasetEditStatusContext.Provider
       value={{
-        status,
-        setStatus,
-        registerBeforeNavigateHandler,
-        runBeforeNavigateHandler,
+        ...editState,
+        filesCompleted,
+        setFilesCompleted,
+        metadataCompleted,
+        setMetadataCompleted,
       }}
     >
       {children}
@@ -40,7 +41,9 @@ export const DatasetEditStatusProvider = ({ children }: { children: React.ReactN
 export const useDatasetEditStatus = () => {
   const context = useContext(DatasetEditStatusContext);
   if (!context) {
-    throw new Error('useDatasetEditStatus must be used within DatasetEditStatusProvider');
+    throw new Error(
+      'useDatasetEditStatus must be used within DatasetEditStatusProvider'
+    );
   }
   return context;
 };

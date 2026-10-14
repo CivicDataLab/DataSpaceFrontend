@@ -6,7 +6,8 @@ import { Button, Icon, Spinner, Tag, Text, Tray } from 'opub-ui';
 
 import { UseCasedetailsQuery } from '@/gql/generated/graphql';
 import { Icons } from '@/components/icons';
-import { RichTextRenderer } from '@/components/RichTextRenderer';
+import { ContentBlocksRenderer } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/components/ContentBlocksRenderer';
+import { parseUseCaseContent } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
 import Metadata from './Metadata';
 
 interface PrimaryDetailsProps {
@@ -16,12 +17,20 @@ interface PrimaryDetailsProps {
 
 const PrimaryDetails = ({ data, isLoading }: PrimaryDetailsProps) => {
   const [open, setOpen] = useState(false);
+  const content = parseUseCaseContent(data.useCase.summary);
 
   return (
     <div>
       <div>
         <Text variant="heading2xl">{data.useCase.title}</Text>
       </div>
+      {content.subtitle ? (
+        <div className="mt-2">
+          <Text variant="bodyLg" color="subdued">
+            {content.subtitle}
+          </Text>
+        </div>
+      ) : null}
       <div className="mt-4 flex flex-wrap gap-2">
         {data.useCase.tags?.map((item, index: number) => (
           <div key={index}>
@@ -96,7 +105,7 @@ const PrimaryDetails = ({ data, isLoading }: PrimaryDetailsProps) => {
           </div>
         )}
         <div className="mt-6 lg:mt-10">
-          <RichTextRenderer content={data.useCase.summary ?? ''} />
+          <ContentBlocksRenderer summary={data.useCase.summary} />
         </div>
       </div>
     </div>

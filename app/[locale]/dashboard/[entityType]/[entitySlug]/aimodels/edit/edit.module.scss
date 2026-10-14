@@ -1,0 +1,154 @@
+.modelStepper {
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+  padding-top: var(--space-6);
+  --action-primary-basic-default: var(--blue-primary-color);
+  --action-primary-basic-hovered: var(--blue-primary-text);
+  --action-primary-basic-pressed: var(--blue-primary-text);
+  --text-highlight: var(--blue-primary-color);
+
+  [class*='buttonNext'] {
+    background-color: var(--blue-primary-color) !important;
+    border-color: var(--blue-primary-color) !important;
+    color: var(--base-pure-white) !important;
+    --button-color: var(--blue-primary-color);
+    --button-color-hover: var(--blue-primary-text);
+    --button-color-active: var(--blue-primary-text);
+  }
+}
+
+.sheetActions {
+  --action-primary-basic-default: var(--blue-primary-color);
+  --action-primary-basic-hovered: var(--blue-primary-text);
+  --action-primary-basic-pressed: var(--blue-primary-text);
+}
+
+.requestTemplate {
+  --mono-font: var(--font-family-mono);
+}
+
+.testSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: var(--border-width-1) solid var(--border-disabled);
+  border-radius: var(--border-radius-4);
+  background: var(--surface-default);
+  padding: var(--space-4) var(--space-5);
+}
+
+.testSummaryMessage {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--space-2);
+}
+
+.testSummaryText {
+  font-family: var(--font-family-mono);
+}
+
+.testResult {
+  --section-card-title-color: var(--text-default);
+}
+
+.testResult :global([class*='Title__']) {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.testTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.testTitleText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.testStatus {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.testStatusCritical {
+  color: var(--text-critical);
+}
+
+.testStatusSuccess {
+  color: var(--text-success);
+}
+
+.testStatusSubdued {
+  color: var(--text-subdued);
+}
+
+.diagnosticsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.diagnosticsLabel {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.diagnosticsBox {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  border-radius: 8px;
+  background: var(--surface-subdued);
+  padding: 12px;
+}
+
+.diagnosticsResult {
+  margin-top: 6px;
+  border-top: 1px solid var(--border-subdued);
+  padding-top: 8px;
+}
+
+.iconEdit {
+  border-radius: 8px;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--base-gray-slate-solid-3);
+  }
+}
+
+.iconDelete {
+  border-radius: 8px;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--base-red-solid-3);
+  }
+
+  &:hover :global(svg),
+  &:focus-visible :global(svg) {
+    color: var(--icon-critical) !important;
+    stroke: var(--icon-critical) !important;
+  }
+}
+
+/* Select and Combobox menus portal outside the sheet. Raise them and
+   restore clicks; the sheet marks outside content as non-interactive. */
+:global([class*='Select-module_Popover__']),
+:global([class*='Combobox-module_Popover__']) {
+  z-index: calc(var(--z-max) + 1);
+  pointer-events: auto;
+}

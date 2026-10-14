@@ -7,6 +7,17 @@ export const FetchUsers = graphql(`
         id
         fullName
         username
+        profilePicture {
+          url
+        }
+        organizationMemberships {
+          role {
+            name
+          }
+          organization {
+            name
+          }
+        }
       }
     }
   `);
@@ -19,9 +30,16 @@ export const FetchCollaborativeInfo = graphql(`
         contributors {
           id
           fullName
-          username
           profilePicture {
             url
+          }
+          organizationMemberships {
+            role {
+              name
+            }
+            organization {
+              name
+            }
           }
         }
         supportingOrganizations {

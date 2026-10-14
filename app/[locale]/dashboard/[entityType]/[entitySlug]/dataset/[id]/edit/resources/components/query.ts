@@ -11,17 +11,6 @@ export const createResourceFilesDoc = graphql(`
   }
 `);
 
-export const updateSchema = graphql(`
-  mutation updateSchema($schemaUpdateInput: SchemaUpdateInput!) {
-    updateFileResourceSchema(schemaUpdateInput: $schemaUpdateInput) {
-      __typename
-      ... on TypeResource {
-        id
-      }
-    }
-  }
-`);
-
 export const updateResourceDoc = graphql(`
   mutation updateFileResource($fileResourceInput: UpdateFileResourceInput!) {
     updateFileResource(fileResourceInput: $fileResourceInput) {
@@ -35,16 +24,36 @@ export const updateResourceDoc = graphql(`
   }
 `);
 
-export const fetchSchema = graphql(`
-  query datasetSchema($datasetId: UUID!) {
-    datasetResources(datasetId: $datasetId) {
-      schema {
-        id
-        fieldName
-        format
-        description
+export const updatePromptResourceDoc = graphql(`
+  mutation UpdatePromptResource($updateInput: UpdatePromptResourceInput!) {
+    updatePromptResource(updateInput: $updateInput) {
+      success
+      errors {
+        fieldErrors {
+          field
+          messages
+        }
+        nonFieldErrors
       }
-      id
+      data {
+        id
+        promptDetails {
+          promptFormat
+          hasSystemPrompt
+          hasExampleResponses
+        }
+      }
+    }
+  }
+`);
+
+export const updateSchemaDoc = graphql(`
+  mutation updateSchema($schemaUpdateInput: SchemaUpdateInput!) {
+    updateFileResourceSchema(schemaUpdateInput: $schemaUpdateInput) {
+      __typename
+      ... on TypeResource {
+        id
+      }
     }
   }
 `);
@@ -52,5 +61,58 @@ export const fetchSchema = graphql(`
 export const updateResourceList = graphql(`
   mutation deleteFileResource($resourceId: UUID!) {
     deleteFileResource(resourceId: $resourceId)
+  }
+`);
+
+export const resourceByIdDoc = graphql(`
+  query resourceById($resourceId: UUID!) {
+    resourceById(resourceId: $resourceId) {
+      id
+      dataset {
+        pk
+      }
+      previewData {
+        columns
+        rows
+      }
+      previewDetails {
+        endEntry
+        isAllEntries
+        startEntry
+      }
+      previewEnabled
+      schema {
+        id
+        fieldName
+        format
+        description
+      }
+      type
+      name
+      description
+      created
+      fileDetails {
+        id
+        resource {
+          pk
+        }
+        format
+        file {
+          name
+          path
+          url
+        }
+        size
+        created
+        modified
+      }
+      promptDetails {
+        promptFormat
+        hasSystemPrompt
+        hasExampleResponses
+        avgPromptLength
+        promptCount
+      }
+    }
   }
 `);

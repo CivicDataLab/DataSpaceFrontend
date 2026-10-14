@@ -212,6 +212,7 @@ const ChartImageUpload = ({
         <div className="flex flex-col gap-4">
           <Labelled label="Select Dataset" requiredIndicator>
             <Combobox
+              variant="bright"
               label=""
               name="selectDataset"
               list={
