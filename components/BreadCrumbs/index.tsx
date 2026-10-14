@@ -14,7 +14,7 @@ interface BreadCrumbsProps {
 
 const BreadCrumbs: React.FC<BreadCrumbsProps> = ({ data }) => {
   return (
-    <div className="border-b sticky top-[70px] z-2 bg-secondaryOrange px-6 py-2 lg:top-[86px] ">
+    <div className="sticky top-[83px] z-2 border-b bg-secondaryOrange px-6 py-2 sm:top-[99px] md:top-[80px] lg:top-[92px]">
       <Breadcrumb className="mx-1">
         <BreadcrumbList className="">
           {data.map((item, index) => (

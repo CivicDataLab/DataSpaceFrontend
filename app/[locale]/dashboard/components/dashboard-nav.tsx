@@ -90,7 +90,7 @@ export function DashboardNav({
   return (
     <aside
       className={cn(
-        'mb-10 mt-2 hidden h-fit min-w-0 shrink-0 flex-col self-start overflow-hidden rounded-4 border-1 border-solid border-baseGraySlateSolid6 bg-surfaceDefault md:sticky md:top-[calc(80px+1rem)] md:z-1 md:flex',
+        'mt-2 hidden max-h-[calc(100dvh-120px-2rem)] min-h-0 min-w-0 shrink-0 flex-col self-start overflow-hidden rounded-4 border-1 border-solid border-baseGraySlateSolid6 bg-surfaceDefault md:sticky md:top-[calc(120px+2rem)] md:z-1 md:flex',
         isCollapsed ? 'w-[72px]' : 'w-[220px]',
         styles.Collapse
       )}
@@ -98,7 +98,7 @@ export function DashboardNav({
       {type === 'organization' || type === 'self' ? (
         <div
           className={cn(
-            'flex items-center gap-3 border-b-1 border-solid border-baseGraySlateSolid6 px-4 py-4',
+            'flex shrink-0 items-center gap-3 border-b-1 border-solid border-baseGraySlateSolid6 px-4 py-4',
             isCollapsed && 'justify-center px-2'
           )}
         >
@@ -147,7 +147,7 @@ export function DashboardNav({
         </div>
       ) : null}
 
-      <nav className="flex flex-col gap-4 px-2 py-2">
+      <nav className="flex min-h-0 flex-1 flex-col gap-4 px-2 py-2">
         {groupNames.map((groupName, groupIndex) => (
           <div key={groupName} className="flex flex-col gap-1">
             {showGroupLabels ? (
