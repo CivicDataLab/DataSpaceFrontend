@@ -14,7 +14,6 @@ import {
   IconCheck,
   IconChevronDown,
   IconChevronUp,
-  IconCloudUpload,
   IconCopy,
   IconExternalLink,
   IconLink,
@@ -25,7 +24,7 @@ import {
   IconTextCaption,
   IconTrash,
 } from '@tabler/icons-react';
-import { Button, Combobox, Icon, Popover, Text, TextField, toast } from 'opub-ui';
+import { Button, Combobox, Icon, Popover, Text, TextField } from 'opub-ui';
 
 import {
   ChartBlock,
@@ -36,6 +35,7 @@ import {
   HighlightBlock,
   ImageBlock,
   isBlockEmpty,
+  isHostedImageUrl,
   LinkBlock,
   TextBlock,
 } from '../content-document';
@@ -53,8 +53,6 @@ import {
 } from './ContentBlocksRenderer';
 
 import 'react-quill-new/dist/quill.snow.css';
-
-import Image from 'next/image';
 
 interface ChartOption {
   id: string;
@@ -414,9 +412,6 @@ function TextBlockEditor({
   );
 }
 
-const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
-const MAX_INLINE_IMAGE_BYTES = 500 * 1024;
-
 function ImageBlockEditor({
   block,
   onChange,
@@ -426,77 +421,35 @@ function ImageBlockEditor({
   onChange: (block: ImageBlock, persist: boolean) => void;
   showErrors?: boolean;
 }) {
-  const handleFile = (file?: File) => {
-    if (!file) return;
-    if (file.size > MAX_IMAGE_BYTES) {
-      toast('Images must be 20MB or smaller.');
-      return;
-    }
-    if (file.size > MAX_INLINE_IMAGE_BYTES) {
-      toast('Images over 500KB need a hosted URL. Paste the URL below.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        onChange({ ...block, src: reader.result }, true);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const hostedSrc =
+  const imageUrl =
     block.src.startsWith('data:') || block.src.startsWith('blob:')
       ? ''
       : block.src;
+  const previewUrl = isHostedImageUrl(imageUrl) ? imageUrl : '';
 
   return (
     <figure>
-      {block.src ? (
-        <Image
-          src={block.src}
+      {previewUrl ? (
+        // A pasted URL can be any host. next/image only allows configured hosts.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={previewUrl}
           alt={block.caption || 'Use case image'}
-          width={1200}
-          height={675}
           className="h-auto w-full rounded-2 border-1 border-solid border-baseGraySlateSolid6 object-cover"
         />
-      ) : (
-        <label className="flex h-40 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-2 border-1 border-dashed border-baseGraySlateSolid6 bg-baseGraySlateSolid2 text-center">
-          <IconCloudUpload size={20} className="text-baseGraySlateSolid9" />
-          <Text variant="bodySm" color="subdued">
-            Upload image
-          </Text>
-          <span className="text-xs text-textSubdued">
-            JPG, PNG or WEBP. Max 20MB.
-          </span>
-          <input
-            type="file"
-            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-            className="sr-only"
-            onChange={(event) => {
-              handleFile(event.target.files?.[0]);
-              event.target.value = '';
-            }}
-          />
-        </label>
-      )}
-      {showErrors && !block.src ? (
+      ) : null}
+      {showErrors && !previewUrl ? (
         <Text variant="bodySm" color="critical">
-          Upload an image or paste a URL
+          Paste an image URL
         </Text>
       ) : null}
       <PlainField
         name={`content-image-url-${block.id}`}
-        value={hostedSrc}
-        placeholder="Or paste an image URL"
+        value={imageUrl}
+        placeholder="Paste an image URL"
         size="caption"
         onChange={(value) => onChange({ ...block, src: value }, false)}
-        onBlur={(value) => {
-          const keepInline =
-            !value.trim() &&
-            (block.src.startsWith('data:') || block.src.startsWith('blob:'));
-          onChange(keepInline ? block : { ...block, src: value }, true);
-        }}
+        onBlur={(value) => onChange({ ...block, src: value.trim() }, true)}
       />
       <PlainField
         name={`content-image-caption-${block.id}`}

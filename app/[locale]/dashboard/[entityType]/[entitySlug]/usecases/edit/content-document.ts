@@ -157,12 +157,17 @@ export function getUseCaseSummaryExcerpt(
   return capExcerpt(plainTextFromHtml(summary), limit);
 }
 
+export function isHostedImageUrl(value?: string | null): boolean {
+  const src = value?.trim() ?? '';
+  return src.startsWith('http://') || src.startsWith('https://');
+}
+
 export function isBlockEmpty(block: ContentBlock): boolean {
   switch (block.type) {
     case 'text':
       return isRichTextEmpty(block.html);
     case 'image':
-      return !block.src?.trim() || block.src.startsWith('blob:');
+      return !isHostedImageUrl(block.src);
     case 'chart':
       return !block.chartId?.trim();
     case 'highlight':

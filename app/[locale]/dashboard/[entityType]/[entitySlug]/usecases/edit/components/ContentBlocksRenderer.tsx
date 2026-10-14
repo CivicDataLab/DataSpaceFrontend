@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getResourceChartDetails } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/charts/queries';
@@ -13,6 +12,7 @@ import { GraphQL } from '@/lib/api';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 import {
   isBlockEmpty,
+  isHostedImageUrl,
   isLegacyHtmlSummary,
   parseUseCaseContent,
   type ContentBlock,
@@ -51,13 +51,14 @@ export function ContentBlockView({ block }: { block: ContentBlock }) {
     case 'text':
       return <RichTextRenderer content={block.html} />;
     case 'image':
+      if (!isHostedImageUrl(block.src)) return null;
       return (
         <figure className="flex flex-col gap-2">
-          <Image
+          {/* A pasted URL can be any host. next/image only allows configured hosts. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={block.src}
             alt={block.caption || 'Use case image'}
-            width={1200}
-            height={675}
             loading="lazy"
             className="h-auto w-full rounded-3 object-contain"
           />
