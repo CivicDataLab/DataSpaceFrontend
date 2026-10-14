@@ -350,12 +350,15 @@ export default function DatasetPage() {
 
   return (
     <>
-      <div className={`mt-8 flex h-full flex-col ${styles.listing}`}>
+      <div className={`flex h-full flex-col md:mt-5 lg:mt-2 ${styles.listing}`}>
         <DataTable
           columnContentTypes={[...columnContentTypes]}
           columns={datasetColumns}
           rows={rows}
           hideSelection
+          style={{
+            borderRadius: '20px',
+          }}
           withServer
           title="Datasets"
           subtitle="Discover, create and manage datasets on CivicDataSpace."
