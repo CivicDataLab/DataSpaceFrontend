@@ -1,6 +1,16 @@
-.listing {
+@mixin listing-primary {
   --action-primary-basic-default: var(--blue-primary-color);
   --action-primary-basic-hovered: var(--blue-primary-text);
   --action-primary-basic-pressed: var(--blue-primary-text);
   --action-primary-basic-depressed: var(--blue-primary-text);
+}
+
+.listing {
+  @include listing-primary;
+}
+
+// The filter popover and confirm dialog are portaled outside .listing.
+:global([class*='ManagementFilterPopover']),
+:global([class*='AlertDialog-module_AlertDialog']) {
+  @include listing-primary;
 }
