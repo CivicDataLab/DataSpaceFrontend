@@ -10,7 +10,6 @@ import {
 import { useTourTrigger } from '@/hooks/use-tour-trigger';
 import {
   IconEyeOff,
-  IconFile,
   IconFileText,
   IconPencil,
   IconTrash,
@@ -217,8 +216,27 @@ export default function DatasetPage() {
       enabled: isValidParams,
       staleTime: 0,
       refetchOnMount: 'always',
+      keepPreviousData: true,
     }
   );
+
+  const settledCounts =
+    datasetsQuery.data &&
+    !datasetsQuery.isFetching &&
+    !datasetsQuery.isPreviousData
+      ? toStatusCounts(datasetsQuery.data.datasetsTable.statusCounts)
+      : undefined;
+  const [statusCounts, setStatusCounts] = useState(settledCounts);
+  if (
+    settledCounts &&
+    (statusCounts?.all !== settledCounts.all ||
+      statusCounts[DatasetStatus.Draft] !==
+        settledCounts[DatasetStatus.Draft] ||
+      statusCounts[DatasetStatus.Published] !==
+        settledCounts[DatasetStatus.Published])
+  ) {
+    setStatusCounts(settledCounts);
+  }
 
   const sectorsQuery = useQuery(
     ['dataset_table_sectors', entityType, entitySlug],
@@ -228,11 +246,6 @@ export default function DatasetPage() {
   const geographiesQuery = useQuery(
     ['dataset_table_geographies', entityType, entitySlug],
     () => GraphQL(datasetTableGeographiesQueryDoc, ownerArgs || {}),
-    { enabled: isValidParams }
-  );
-  const tagsQuery = useQuery(
-    ['dataset_table_tags', entityType, entitySlug],
-    () => GraphQL(datasetTableTagsQueryDoc, ownerArgs || {}),
     { enabled: isValidParams }
   );
 
@@ -374,9 +387,7 @@ export default function DatasetPage() {
           loadError={datasetsQuery.isError && !datasetsQuery.isFetching}
           onRetry={() => datasetsQuery.refetch()}
           totalRows={datasetsQuery.data?.datasetsTable.totalItemsCount ?? 0}
-          statusCounts={toStatusCounts(
-            datasetsQuery.data?.datasetsTable.statusCounts
-          )}
+          statusCounts={statusCounts}
           searchState={search}
           onSearchChange={setSearch}
           statusState={status}
