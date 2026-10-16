@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
@@ -10,7 +10,6 @@ import {
 import { useTourTrigger } from '@/hooks/use-tour-trigger';
 import {
   IconEyeOff,
-  IconFile,
   IconFileText,
   IconPencil,
   IconTrash,
@@ -221,24 +220,23 @@ export default function DatasetPage() {
     }
   );
 
-  const [statusCounts, setStatusCounts] = useState<Record<string, number>>();
-
-  useEffect(() => {
-    if (
-      datasetsQuery.isFetching ||
-      datasetsQuery.isPreviousData ||
-      !datasetsQuery.data
-    ) {
-      return;
-    }
-    setStatusCounts(
-      toStatusCounts(datasetsQuery.data.datasetsTable.statusCounts)
-    );
-  }, [
-    datasetsQuery.data,
-    datasetsQuery.isFetching,
-    datasetsQuery.isPreviousData,
-  ]);
+  const settledCounts =
+    datasetsQuery.data &&
+    !datasetsQuery.isFetching &&
+    !datasetsQuery.isPreviousData
+      ? toStatusCounts(datasetsQuery.data.datasetsTable.statusCounts)
+      : undefined;
+  const [statusCounts, setStatusCounts] = useState(settledCounts);
+  if (
+    settledCounts &&
+    (statusCounts?.all !== settledCounts.all ||
+      statusCounts[DatasetStatus.Draft] !==
+        settledCounts[DatasetStatus.Draft] ||
+      statusCounts[DatasetStatus.Published] !==
+        settledCounts[DatasetStatus.Published])
+  ) {
+    setStatusCounts(settledCounts);
+  }
 
   const sectorsQuery = useQuery(
     ['dataset_table_sectors', entityType, entitySlug],
