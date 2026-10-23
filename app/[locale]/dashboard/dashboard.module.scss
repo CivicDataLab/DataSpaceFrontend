@@ -10,9 +10,11 @@
 
 .Selected {
   background-color: var(--surface-selected);
+  --icon-default: var(--blue-primary-color);
 
   svg {
     color: var(--blue-primary-color);
+    stroke: var(--blue-primary-color);
   }
 }
 
