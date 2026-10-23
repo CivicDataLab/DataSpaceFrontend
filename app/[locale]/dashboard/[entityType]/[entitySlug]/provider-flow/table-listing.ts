@@ -291,7 +291,8 @@ export function formatUpdated(value?: string | null) {
 }
 
 export function formatCount(count: number, singular: string, plural: string) {
-  return count === 1 ? `1 ${singular}` : `${count} ${plural}`;
+  const label = count === 0 || count === 1 ? singular : plural;
+  return `${count} ${label}`;
 }
 
 export function errorMessage(err: unknown) {
