@@ -1,46 +1,47 @@
 'use client';
 
-import { graphql } from '@/gql';
-import { Ordering, UseCaseStatus } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
-import { parseAsString, useQueryState } from 'nuqs';
-import { Button, DataTable, Icon, IconButton, Text, toast } from 'opub-ui';
-import { useEffect } from 'react';
-import { twMerge } from 'tailwind-merge';
+import { graphql } from '@/gql';
+import { UseCaseStatus } from '@/gql/generated/graphql';
+import { IconBulb, IconFolderStats } from '@tabler/icons-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import {
+  FolderKanban,
+  FolderKanbanIcon,
+  LucideFolderKanban,
+} from 'lucide-react';
+import { toast, type ColumnFilterConfig } from 'opub-ui';
 
-import { Icons } from '@/components/icons';
-import { LinkButton } from '@/components/Link';
-import { Loading } from '@/components/loading';
 import { GraphQL } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
-import { ActionBar } from '../provider-flow/ActionBar';
-import { Navigation } from '../provider-flow/Navigation';
-
-interface UseCaseListItem {
-  id: string;
-  title?: string | null;
-  created?: string | null;
-  modified?: string | null;
-}
-
-interface UseCaseTableRow {
-  id: string;
-  title?: string | null;
-  created: string;
-  modified: string;
-}
-
-const allUseCases = graphql(`
-  query UseCasesData($filters: UseCaseFilter, $order: UseCaseOrder) {
-    useCases(filters: $filters, order: $order) {
-      title
-      id
-      created
-      modified
-    }
-  }
-`);
+import {
+  listingRowActions,
+  ListingStatus,
+  ListingTitle,
+  ProviderListingTable,
+} from '../provider-flow/ProviderListingTable';
+import {
+  errorMessage,
+  listingEmptyLabel,
+  listingOwner,
+  listingQueryOptions,
+  listingQuerySettled,
+  sectorGeographyFilters,
+  toApiFilters,
+  toApiSort,
+  useListingFacets,
+  useProviderTable,
+  useSettledStatusCounts,
+} from '../provider-flow/table-listing';
+import {
+  INITIAL_USE_CASE_SORT,
+  RUNNING_STATUS_FILTER_OPTIONS,
+  toUseCaseRows,
+  USE_CASE_FIELD_MAP,
+  USE_CASE_TAB_KEYS,
+  USE_CASE_TABLE_STATUSES,
+  UseCaseListingRow,
+  useCasesTableQueryDoc,
+} from './listing';
 
 const deleteUseCase = graphql(`
   mutation deleteUseCase($useCaseId: String!) {
@@ -60,7 +61,7 @@ export const AddUseCase = graphql(`
   }
 `);
 
-const unPublishUseCase = graphql(`
+const unpublishUseCase = graphql(`
   mutation unPublishUseCaseMutation($useCaseId: String!) {
     unpublishUseCase(useCaseId: $useCaseId) {
       __typename
@@ -73,256 +74,207 @@ const unPublishUseCase = graphql(`
   }
 `);
 
-export default function DatasetPage() {
+const useCaseColumns = [
+  {
+    accessorKey: 'title',
+    header: 'Use Case',
+    searchable: true,
+    meta: { truncate: true },
+    cell: ({ row }: { row: { original: UseCaseListingRow } }) => (
+      <ListingTitle icon={IconFolderStats} label={row.original.title} />
+    ),
+  },
+  {
+    accessorKey: 'runningStatus',
+    header: 'Running Status',
+    meta: { optional: true },
+  },
+  {
+    accessorKey: 'sector',
+    header: 'Sector',
+    maxSize: 160,
+    meta: { optional: true, truncate: true },
+  },
+  {
+    accessorKey: 'geography',
+    header: 'Geography',
+    meta: { optional: true, truncate: true },
+  },
+  {
+    accessorKey: 'datasets',
+    header: 'Datasets',
+    meta: { optional: true },
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    meta: { optional: true },
+    cell: ({ row }: { row: { original: UseCaseListingRow } }) => (
+      <ListingStatus
+        published={row.original.status === UseCaseStatus.Published}
+        label={
+          row.original.status === UseCaseStatus.Published
+            ? 'Published'
+            : 'Draft'
+        }
+      />
+    ),
+  },
+  {
+    accessorKey: 'modified',
+    header: 'Last Updated',
+  },
+];
+
+export default function UseCasesPage() {
   const router = useRouter();
   const params = useParams<{ entityType?: string; entitySlug?: string }>();
   const entityType = params?.entityType;
   const entitySlug = params?.entitySlug;
+  const ownerArgs = listingOwner(entityType, entitySlug);
+  const isValidParams = ownerArgs !== null;
 
-  const isValidParams =
-    typeof entityType === 'string' && typeof entitySlug === 'string';
+  const table = useProviderTable(USE_CASE_TAB_KEYS, INITIAL_USE_CASE_SORT);
+  const facets = useListingFacets(entityType, entitySlug);
 
-  const ownerArgs: Record<string, string> | null = isValidParams
-    ? { [entityType]: entitySlug }
-    : null;
-
-  const [navigationTab, setNavigationTab] = useQueryState(
-    'tab',
-    parseAsString.withDefault('drafts')
-  );
-
-  const AllUseCases = useQuery(
-    [`fetch_UseCases`, entityType, entitySlug, navigationTab ?? 'drafts'],
+  const useCasesQuery = useQuery(
+    [
+      'usecases_table',
+      entityType,
+      entitySlug,
+      table.filters,
+      table.sorting,
+      table.pagination,
+    ],
     () =>
-      GraphQL(
-        allUseCases,
-        ownerArgs || {},
-        {
-          filters: {
-            status: navigationTab === 'published' ? UseCaseStatus.Published : UseCaseStatus.Draft,
-          },
-          order: { modified: Ordering.Desc },
-        }
-      ),
-    { enabled: isValidParams }
+      GraphQL(useCasesTableQueryDoc, ownerArgs || {}, {
+        filters: toApiFilters(table.filters, USE_CASE_FIELD_MAP),
+        sortOptions: toApiSort(table.sorting, USE_CASE_FIELD_MAP),
+        limit: table.pagination.limit,
+        offset: table.pagination.offset,
+      }),
+    {
+      enabled: isValidParams,
+      ...listingQueryOptions,
+    }
   );
 
-  useEffect(() => {
-    if (isValidParams) {
-      AllUseCases.refetch();
-    }
-  }, [navigationTab, isValidParams, AllUseCases]);
+  const statusCounts = useSettledStatusCounts(
+    useCasesQuery.data?.useCasesTable.statusCounts,
+    listingQuerySettled(useCasesQuery),
+    USE_CASE_TAB_KEYS
+  );
 
-  const DeleteUseCaseMutation = useMutation(
-    [`delete_Usecase`],
-    (data: { id: string }) =>
-      GraphQL(
-        deleteUseCase,
-        ownerArgs || {},
-        { useCaseId: data.id }
-      ),
+  const deleteMutation = useMutation(
+    (id: string) => GraphQL(deleteUseCase, ownerArgs || {}, { useCaseId: id }),
     {
-      onSuccess: () => {
-        toast(`Deleted UseCase successfully`);
-        if (isValidParams) {
-          AllUseCases.refetch();
+      onSuccess: (result) => {
+        if (!result.deleteUseCase) {
+          toast('Error: Could not delete the use case');
+          return;
         }
+        toast('Deleted use case successfully');
+        useCasesQuery.refetch();
       },
       onError: (err: unknown) => {
-        toast('Error:  ' + (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : String(err)).split(':')[0]);
+        toast(`Error: ${errorMessage(err)}`);
       },
     }
   );
 
-  const CreateUseCase = useMutation(
-    [`delete_Usecase`],
+  const unpublishMutation = useMutation(
+    (id: string) =>
+      GraphQL(unpublishUseCase, ownerArgs || {}, { useCaseId: id }),
+    {
+      onSuccess: (result) => {
+        if (result.unpublishUseCase.__typename !== 'TypeUseCase') {
+          toast('Error: Could not unpublish the use case');
+          return;
+        }
+        toast('Unpublished use case successfully');
+        useCasesQuery.refetch();
+      },
+      onError: (err: unknown) => {
+        toast(`Error: ${errorMessage(err)}`);
+      },
+    }
+  );
+
+  const createMutation = useMutation(
     () => GraphQL(AddUseCase, ownerArgs || {}),
     {
       onSuccess: (response) => {
-        toast(`UseCase created successfully`);
-        if (isValidParams && entityType && entitySlug) {
-          const created = response.addUseCase;
-          const createdId = 'id' in created ? created.id : undefined;
-          router.push(
-            `/dashboard/${entityType}/${entitySlug}/usecases/edit/${createdId}/builder`
-          );
-          AllUseCases.refetch();
+        const created = response.addUseCase;
+        const createdId = 'id' in created ? created.id : undefined;
+        if (!createdId || !entityType || !entitySlug) {
+          toast('Error: Could not create the use case');
+          return;
         }
+        toast('Use case created successfully!');
+        router.push(
+          `/dashboard/${entityType}/${entitySlug}/usecases/edit/${createdId}/builder`
+        );
       },
       onError: (err: unknown) => {
-        toast('Error:  ' + (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : String(err)).split(':')[0]);
-      },
-    }
-  );
-  const UnpublishDatasetMutation = useMutation(
-    [`unpublish_usecase`],
-    (data: { id: string }) =>
-      GraphQL(
-        unPublishUseCase,
-        ownerArgs || {},
-        { useCaseId: data.id }
-      ),
-    {
-      onSuccess: () => {
-        toast(`Unpublished usecase successfully`);
-        if (isValidParams) {
-          AllUseCases.refetch();
-        }
-      },
-      onError: (err: unknown) => {
-        toast('Error:  ' + (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : String(err)).split(':')[0]);
+        toast(`Error: ${errorMessage(err)}`);
       },
     }
   );
 
-  if (!isValidParams) {
+  const filterConfig: ColumnFilterConfig[] = [
+    {
+      columnId: 'runningStatus',
+      type: 'select',
+      options: RUNNING_STATUS_FILTER_OPTIONS,
+    },
+    ...sectorGeographyFilters(facets),
+  ];
+
+  if (!isValidParams || !entityType || !entitySlug) {
     return null;
   }
 
-  const navigationOptions = [
-    {
-      label: 'Drafts',
-      url: `drafts`,
-      selected: navigationTab === 'drafts',
-    },
-    {
-      label: 'Published',
-      url: `published`,
-      selected: navigationTab === 'published',
-    },
-  ];
-  const datasetsListColumns = [
-    {
-      accessorKey: 'title',
-      header: 'Title',
-      cell: ({ row }: { row: { original: UseCaseTableRow } }) =>
-        navigationTab === 'published' ? (
-          <Text
-            className="line-clamp-1 max-w-[280px]"
-            title={row.original.title ?? undefined}
-          >
-            {row.original.title}
-          </Text>
-        ) : (
-          <LinkButton
-            kind="tertiary"
-            size="medium"
-            href={`/dashboard/${entityType}/${entitySlug}/usecases/edit/${row.original.id}`}
-          >
-            <span className="line-clamp-1 max-w-[280px]">
-              {row.original.title}
-            </span>
-          </LinkButton>
-        ),
-    },
-    { accessorKey: 'created', header: 'Date Created' },
-    { accessorKey: 'modified', header: 'Date Modified' },
-    {
-      accessorKey: 'delete',
-      header: 'Delete',
-      cell: ({ row }: { row: { original: UseCaseTableRow } }) =>
-        navigationTab === 'published' ? (
-          <Button
-            size="medium"
-            kind="tertiary"
-            onClick={() => {
-              UnpublishDatasetMutation.mutate({
-                id: row.original?.id,
-              });
-            }}
-          >
-            Unpublish
-          </Button>
-        ) : (
-          <IconButton
-            size="medium"
-            icon={Icons.delete}
-            color="interactive"
-            onClick={() => {
-              DeleteUseCaseMutation.mutate({
-                id: row.original?.id,
-              });
-            }}
-          >
-            Delete
-          </IconButton>
-        ),
-    },
-  ];
-
-  const generateTableData = (list: UseCaseListItem[]) => {
-    return list.map((item) => {
-      return {
-        title: item.title,
-        id: item.id,
-        created: formatDate(item.created ?? null) || '',
-        modified: formatDate(item.modified ?? null) || '',
-      };
-    });
-  };
+  const rows = toUseCaseRows(useCasesQuery.data?.useCasesTable.data ?? []);
 
   return (
-    <>
-      <div className="mt-8 flex h-full flex-col">
-        <Navigation
-          setNavigationTab={setNavigationTab}
-          options={navigationOptions}
-        />
-
-        {AllUseCases.data?.useCases && AllUseCases.data.useCases.length > 0 ? (
-          <div className="mt-6">
-            <ActionBar
-              title={
-                navigationOptions.find((item) => item.selected)?.label || ''
-              }
-              primaryAction={{
-                content: 'Add New UseCase',
-                onAction: () => CreateUseCase.mutate(),
-              }}
-            />
-
-            <DataTable
-              columns={datasetsListColumns}
-              rows={generateTableData(AllUseCases.data?.useCases ?? [])}
-              hideSelection
-              hideViewSelector
-            />
-          </div>
-        ) : AllUseCases.isLoading ? (
-          <Loading />
-        ) : (
-          <>
-            <div className="flex h-full w-full grow flex-col items-center justify-center">
-              <div
-                className={twMerge('h-100 flex flex-col items-center gap-4')}
-              >
-                <Icon
-                  source={Icons.light}
-                  color="interactive"
-                  stroke={1}
-                  size={80}
-                />
-                {navigationTab === 'drafts' ? (
-                  <>
-                    <Text variant="headingSm" color="subdued">
-                      You have not added any usecase yet.
-                    </Text>
-                    <Button onClick={() => CreateUseCase.mutate()}>
-                      Add New UseCase
-                    </Button>
-                  </>
-                ) : (
-                  <Text variant="headingSm" color="subdued">
-                    No Published UseCases yet.
-                  </Text>
-                )}
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* <Page /> */}
-      </div>
-    </>
+    <ProviderListingTable
+      title="Use Cases"
+      subtitle="Discover, create and manage use cases on CivicDataSpace."
+      addLabel="Create Use Case"
+      onAdd={() => {
+        if (!createMutation.isLoading) createMutation.mutate();
+      }}
+      placeholder="Search use cases..."
+      columns={useCaseColumns}
+      rows={rows}
+      sortColumns={['title', 'modified']}
+      filters={filterConfig}
+      statuses={USE_CASE_TABLE_STATUSES}
+      emptyLabel={listingEmptyLabel(
+        table.filters,
+        table.status,
+        'No use cases yet'
+      )}
+      loading={useCasesQuery.isFetching}
+      loadError={useCasesQuery.isError && !useCasesQuery.isFetching}
+      onRetry={() => useCasesQuery.refetch()}
+      totalRows={useCasesQuery.data?.useCasesTable.totalItemsCount ?? 0}
+      statusCounts={statusCounts}
+      table={table}
+      getRowActions={(row: UseCaseListingRow) => {
+        const published = row.status === UseCaseStatus.Published;
+        return listingRowActions({
+          published,
+          title: row.title,
+          noun: 'use case',
+          onEdit: () =>
+            router.push(
+              `/dashboard/${entityType}/${entitySlug}/usecases/edit/${row.id}`
+            ),
+          onUnpublish: () => unpublishMutation.mutate(row.id),
+          onDelete: () => deleteMutation.mutate(row.id),
+        });
+      }}
+    />
   );
 }

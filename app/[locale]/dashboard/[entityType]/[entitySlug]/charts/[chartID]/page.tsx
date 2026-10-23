@@ -1,30 +1,32 @@
 'use client';
 
-import { useParams, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { Spinner } from 'opub-ui';
 
-import ChartGenVizPreview from './components/ChartGenVizPreview';
-import ChartImagePreview from './components/ChartImagePreview';
+import { chartsBasePath } from '../wizard/model';
 
-const ChartDetails = () => {
-  /*
-    Chart preview page to edit chart details and publish the chart
-  */
-
+export default function ChartDetailsRedirect() {
   const params = useParams<{
     entityType: string;
     entitySlug: string;
     chartID: string;
   }>();
-
   const searchParams = useSearchParams();
+  const router = useRouter();
 
-  const chartPreviewType = searchParams.get('type');
+  useEffect(() => {
+    const base = chartsBasePath(params.entityType, params.entitySlug);
+    const destination =
+      searchParams.get('type') === 'TypeResourceChartImage'
+        ? `${base}/image/${params.chartID}/edit/build`
+        : `${base}/${params.chartID}/edit/build`;
+    router.replace(destination);
+  }, [params.chartID, params.entitySlug, params.entityType, router, searchParams]);
 
-  return chartPreviewType === 'TypeResourceChartImage' ? (
-    <ChartImagePreview params={params} />
-  ) : (
-    <ChartGenVizPreview params={params} />
+  return (
+    <div className="flex justify-center py-16">
+      <Spinner />
+    </div>
   );
-};
-
-export default ChartDetails;
+}

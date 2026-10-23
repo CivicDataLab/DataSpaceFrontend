@@ -37,18 +37,6 @@ export type EditorPublication = {
   blocks?: Array<EditorBlock> | null;
 };
 
-export const publicationListQuery = graphql(`
-  query dashboardPublications($pagination: OffsetPaginationInput) {
-    publications(pagination: $pagination) {
-      id
-      title
-      status
-      created
-      modified
-    }
-  }
-`);
-
 export const publicationEditorQuery = operation<
   { getPublication?: EditorPublication | null },
   { publicationId: string }

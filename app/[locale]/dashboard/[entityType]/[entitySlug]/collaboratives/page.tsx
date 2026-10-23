@@ -1,49 +1,41 @@
 'use client';
 
-import { graphql } from '@/gql';
-import { CollaborativeStatus, Ordering } from '@/gql/generated/graphql';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
-import { parseAsString, useQueryState } from 'nuqs';
-import { Button, DataTable, Icon, IconButton, Text, toast } from 'opub-ui';
-import { useEffect } from 'react';
-import { twMerge } from 'tailwind-merge';
+import { graphql } from '@/gql';
+import { CollaborativeStatus } from '@/gql/generated/graphql';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { toast } from 'opub-ui';
 
-import { Icons } from '@/components/icons';
-import { LinkButton } from '@/components/Link';
-import { Loading } from '@/components/loading';
 import { GraphQL } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
-import { ActionBar } from '../provider-flow/ActionBar';
-import { Navigation } from '../provider-flow/Navigation';
-
-interface CollaborativeListItem {
-  id: string;
-  title?: string | null;
-  created?: string | null;
-  modified?: string | null;
-}
-
-interface CollaborativeTableRow {
-  id: string;
-  title?: string | null;
-  created: string;
-  modified: string;
-}
-
-const allCollaboratives = graphql(`
-  query CollaborativesData(
-    $filters: CollaborativeFilter
-    $order: CollaborativeOrder
-  ) {
-    collaboratives(filters: $filters, order: $order) {
-      title
-      id
-      created
-      modified
-    }
-  }
-`);
+import { Icons } from '@/components/icons';
+import {
+  listingRowActions,
+  ListingStatus,
+  ListingTitle,
+  ProviderListingTable,
+} from '../provider-flow/ProviderListingTable';
+import {
+  errorMessage,
+  listingEmptyLabel,
+  listingOwner,
+  listingQueryOptions,
+  listingQuerySettled,
+  sectorGeographyFilters,
+  toApiFilters,
+  toApiSort,
+  useListingFacets,
+  useProviderTable,
+  useSettledStatusCounts,
+} from '../provider-flow/table-listing';
+import {
+  COLLABORATIVE_FIELD_MAP,
+  COLLABORATIVE_TAB_KEYS,
+  COLLABORATIVE_TABLE_STATUSES,
+  CollaborativeListingRow,
+  collaborativesTableQueryDoc,
+  INITIAL_COLLABORATIVE_SORT,
+  toCollaborativeRows,
+} from './listing';
 
 const deleteCollaborative = graphql(`
   mutation deleteCollaborative($collaborativeId: String!) {
@@ -51,7 +43,7 @@ const deleteCollaborative = graphql(`
   }
 `);
 
-const AddCollaborative = graphql(`
+const addCollaborative = graphql(`
   mutation AddCollaborative {
     addCollaborative {
       __typename
@@ -63,7 +55,7 @@ const AddCollaborative = graphql(`
   }
 `);
 
-const unPublishCollaborative = graphql(`
+const unpublishCollaborative = graphql(`
   mutation unPublishCollaborativeMutation($collaborativeId: String!) {
     unpublishCollaborative(collaborativeId: $collaborativeId) {
       __typename
@@ -76,256 +68,206 @@ const unPublishCollaborative = graphql(`
   }
 `);
 
+const collaborativeColumns = [
+  {
+    accessorKey: 'title',
+    header: 'Collaborative',
+    searchable: true,
+    meta: { truncate: true },
+    cell: ({ row }: { row: { original: CollaborativeListingRow } }) => (
+      <ListingTitle icon={Icons.userList} label={row.original.title} />
+    ),
+  },
+  {
+    accessorKey: 'sector',
+    header: 'Sector',
+    maxSize: 160,
+    meta: { optional: true, truncate: true },
+  },
+  {
+    accessorKey: 'geography',
+    header: 'Geography',
+    maxSize: 160,
+    meta: { optional: true, truncate: true },
+  },
+  {
+    accessorKey: 'useCases',
+    header: 'Use Cases',
+    meta: { optional: true },
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    meta: { optional: true },
+    cell: ({ row }: { row: { original: CollaborativeListingRow } }) => (
+      <ListingStatus
+        published={row.original.status === CollaborativeStatus.Published}
+        label={
+          row.original.status === CollaborativeStatus.Published
+            ? 'Published'
+            : 'Draft'
+        }
+      />
+    ),
+  },
+  {
+    accessorKey: 'modified',
+    header: 'Last Updated',
+  },
+];
+
 export default function CollaborativePage() {
   const router = useRouter();
   const params = useParams<{ entityType?: string; entitySlug?: string }>();
   const entityType = params?.entityType;
   const entitySlug = params?.entitySlug;
+  const ownerArgs = listingOwner(entityType, entitySlug);
+  const isValidParams = ownerArgs !== null;
 
-  const isValidParams =
-    typeof entityType === 'string' && typeof entitySlug === 'string';
-
-  const ownerArgs: Record<string, string> | null = isValidParams
-    ? { [entityType]: entitySlug }
-    : null;
-
-  const [navigationTab, setNavigationTab] = useQueryState(
-    'tab',
-    parseAsString.withDefault('drafts')
+  const table = useProviderTable(
+    COLLABORATIVE_TAB_KEYS,
+    INITIAL_COLLABORATIVE_SORT
   );
+  const facets = useListingFacets(entityType, entitySlug);
 
-  const AllCollaboratives =
-    useQuery(
-      [
-        'fetch_Collaboratives',
-        entityType,
-        entitySlug,
-        navigationTab ?? 'drafts',
-      ],
-      () =>
-        GraphQL(allCollaboratives, ownerArgs || {}, {
-          filters: {
-            status: navigationTab === 'published' ? CollaborativeStatus.Published : CollaborativeStatus.Draft,
-          },
-          order: { modified: Ordering.Desc },
-        }),
-      { enabled: isValidParams }
-    );
-
-  useEffect(() => {
-    if (isValidParams) {
-      AllCollaboratives.refetch();
-    }
-  }, [navigationTab, isValidParams, AllCollaboratives]);
-
-  const COLLAB_LIST_TOAST_ID = 'collaboratives-list-toast';
-
-  const DeleteCollaborativeMutation = useMutation(
-    [`delete_Collaborative`],
-    (data: { id: string }) =>
-      GraphQL(deleteCollaborative, ownerArgs || {}, {
-        collaborativeId: data.id,
+  const collaborativesQuery = useQuery(
+    [
+      'collaboratives_table',
+      entityType,
+      entitySlug,
+      table.filters,
+      table.sorting,
+      table.pagination,
+    ],
+    () =>
+      GraphQL(collaborativesTableQueryDoc, ownerArgs || {}, {
+        filters: toApiFilters(table.filters, COLLABORATIVE_FIELD_MAP),
+        sortOptions: toApiSort(table.sorting, COLLABORATIVE_FIELD_MAP),
+        limit: table.pagination.limit,
+        offset: table.pagination.offset,
       }),
     {
-      onSuccess: () => {
-        toast(`Deleted Collaborative successfully`, { id: COLLAB_LIST_TOAST_ID });
-        if (isValidParams) {
-          AllCollaboratives.refetch();
+      enabled: isValidParams,
+      ...listingQueryOptions,
+    }
+  );
+
+  const statusCounts = useSettledStatusCounts(
+    collaborativesQuery.data?.collaborativesTable.statusCounts,
+    listingQuerySettled(collaborativesQuery),
+    COLLABORATIVE_TAB_KEYS
+  );
+
+  const deleteMutation = useMutation(
+    (id: string) =>
+      GraphQL(deleteCollaborative, ownerArgs || {}, { collaborativeId: id }),
+    {
+      onSuccess: (result) => {
+        if (!result.deleteCollaborative) {
+          toast('Error: Could not delete the collaborative');
+          return;
         }
+        toast('Deleted collaborative successfully');
+        collaborativesQuery.refetch();
       },
       onError: (err: unknown) => {
-        toast('Error:  ' + (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : String(err)).split(':')[0], { id: COLLAB_LIST_TOAST_ID });
+        toast(`Error: ${errorMessage(err)}`);
       },
     }
   );
 
-  const CreateCollaborative = useMutation(
-    [`create_Collaborative`],
-    () => GraphQL(AddCollaborative, ownerArgs || {}),
+  const unpublishMutation = useMutation(
+    (id: string) =>
+      GraphQL(unpublishCollaborative, ownerArgs || {}, {
+        collaborativeId: id,
+      }),
+    {
+      onSuccess: (result) => {
+        if (result.unpublishCollaborative.__typename !== 'TypeCollaborative') {
+          toast('Error: Could not unpublish the collaborative');
+          return;
+        }
+        toast('Unpublished collaborative successfully');
+        collaborativesQuery.refetch();
+      },
+      onError: (err: unknown) => {
+        toast(`Error: ${errorMessage(err)}`);
+      },
+    }
+  );
+
+  const createMutation = useMutation(
+    () => GraphQL(addCollaborative, ownerArgs || {}),
     {
       onSuccess: (response) => {
-        toast(`Collaborative created successfully`, { id: COLLAB_LIST_TOAST_ID });
-        if (isValidParams && entityType && entitySlug) {
-          const created = response.addCollaborative;
-          const createdId = 'id' in created ? created.id : undefined;
-          router.push(
-            `/dashboard/${entityType}/${entitySlug}/collaboratives/edit/${createdId}`
-          );
-          AllCollaboratives.refetch();
+        const created = response.addCollaborative;
+        const createdId = 'id' in created ? created.id : undefined;
+        if (!createdId || !entityType || !entitySlug) {
+          toast('Error: Could not create the collaborative');
+          return;
         }
+        toast('Collaborative created successfully!');
+        router.push(
+          `/dashboard/${entityType}/${entitySlug}/collaboratives/edit/${createdId}`
+        );
       },
       onError: (err: unknown) => {
-        toast('Error:  ' + (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : String(err)).split(':')[0], { id: COLLAB_LIST_TOAST_ID });
+        toast(`Error: ${errorMessage(err)}`);
       },
     }
   );
 
-  const UnpublishCollaborativeMutation = useMutation(
-    [`unpublish_collaborative`],
-    (data: { id: string }) =>
-      GraphQL(unPublishCollaborative, ownerArgs || {}, {
-        collaborativeId: data.id,
-      }),
-    {
-      onSuccess: () => {
-        toast(`Unpublished collaborative successfully`, { id: COLLAB_LIST_TOAST_ID });
-        if (isValidParams) {
-          AllCollaboratives.refetch();
-        }
-      },
-      onError: (err: unknown) => {
-        toast('Error:  ' + (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : String(err)).split(':')[0], { id: COLLAB_LIST_TOAST_ID });
-      },
-    }
-  );
+  const filterConfig = sectorGeographyFilters(facets);
 
-  if (!isValidParams) {
+  if (!isValidParams || !entityType || !entitySlug) {
     return null;
   }
 
-  const navigationOptions = [
-    {
-      label: 'Drafts',
-      url: `drafts`,
-      selected: navigationTab === 'drafts',
-    },
-    {
-      label: 'Published',
-      url: `published`,
-      selected: navigationTab === 'published',
-    },
-  ];
-
-  const collaborativesListColumns = [
-    {
-      accessorKey: 'title',
-      header: 'Title',
-      cell: ({ row }: { row: { original: CollaborativeTableRow } }) =>
-        navigationTab === 'published' ? (
-          <Text
-            className="line-clamp-1 max-w-[280px]"
-            title={row.original.title ?? undefined}
-          >
-            {row.original.title}
-          </Text>
-        ) : (
-          <LinkButton
-            kind="tertiary"
-            size="medium"
-            href={`/dashboard/${entityType}/${entitySlug}/collaboratives/edit/${row.original.id}`}
-          >
-            <span className="line-clamp-1 max-w-[280px]">
-              {row.original.title}
-            </span>
-          </LinkButton>
-        ),
-    },
-    { accessorKey: 'created', header: 'Date Created' },
-    { accessorKey: 'modified', header: 'Date Modified' },
-    {
-      accessorKey: 'delete',
-      header: 'Delete',
-      cell: ({ row }: { row: { original: CollaborativeTableRow } }) =>
-        navigationTab === 'published' ? (
-          <Button
-            size="medium"
-            kind="tertiary"
-            onClick={() => {
-              UnpublishCollaborativeMutation.mutate({
-                id: row.original?.id,
-              });
-            }}
-          >
-            Unpublish
-          </Button>
-        ) : (
-          <IconButton
-            size="medium"
-            icon={Icons.delete}
-            color="interactive"
-            onClick={() => {
-              DeleteCollaborativeMutation.mutate({
-                id: row.original?.id,
-              });
-            }}
-          >
-            Delete
-          </IconButton>
-        ),
-    },
-  ];
-
-  const generateTableData = (list: CollaborativeListItem[]) => {
-    return list.map((item) => {
-      return {
-        title: item.title,
-        id: item.id,
-        created: formatDate(item.created ?? null) || '',
-        modified: formatDate(item.modified ?? null) || '',
-      };
-    });
-  };
+  const rows = toCollaborativeRows(
+    collaborativesQuery.data?.collaborativesTable.data ?? []
+  );
 
   return (
-    <>
-      <div className="mt-8 flex h-full flex-col">
-        <Navigation
-          setNavigationTab={setNavigationTab}
-          options={navigationOptions}
-        />
-
-        {AllCollaboratives.data?.collaboratives && AllCollaboratives.data.collaboratives.length > 0 ? (
-          <div className="mt-6">
-            <ActionBar
-              title={
-                navigationOptions.find((item) => item.selected)?.label || ''
-              }
-              primaryAction={{
-                content: 'Add New Collaborative',
-                onAction: () => CreateCollaborative.mutate(),
-              }}
-            />
-
-            <DataTable
-              columns={collaborativesListColumns}
-              rows={generateTableData(AllCollaboratives.data?.collaboratives ?? [])}
-              hideSelection
-              hideViewSelector
-            />
-          </div>
-        ) : AllCollaboratives.isLoading ? (
-          <Loading />
-        ) : (
-          <>
-            <div className="flex h-full w-full grow flex-col items-center justify-center">
-              <div
-                className={twMerge('h-100 flex flex-col items-center gap-4')}
-              >
-                <Icon
-                  source={Icons.light}
-                  color="interactive"
-                  stroke={1}
-                  size={80}
-                />
-                {navigationTab === 'drafts' ? (
-                  <>
-                    <Text variant="headingSm" color="subdued">
-                      You have not added any collaborative yet.
-                    </Text>
-                    <Button onClick={() => CreateCollaborative.mutate()}>
-                      Add New Collaborative
-                    </Button>
-                  </>
-                ) : (
-                  <Text variant="headingSm" color="subdued">
-                    No Published Collaboratives yet.
-                  </Text>
-                )}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    </>
+    <ProviderListingTable
+      title="Collaboratives"
+      subtitle="Discover, create and manage collaboratives on CivicDataSpace."
+      addLabel="Create Collaborative"
+      onAdd={() => {
+        if (!createMutation.isLoading) createMutation.mutate();
+      }}
+      placeholder="Search collaboratives..."
+      columns={collaborativeColumns}
+      rows={rows}
+      sortColumns={['title', 'modified']}
+      filters={filterConfig}
+      statuses={COLLABORATIVE_TABLE_STATUSES}
+      emptyLabel={listingEmptyLabel(
+        table.filters,
+        table.status,
+        'No collaboratives yet'
+      )}
+      loading={collaborativesQuery.isFetching}
+      loadError={collaborativesQuery.isError && !collaborativesQuery.isFetching}
+      onRetry={() => collaborativesQuery.refetch()}
+      totalRows={
+        collaborativesQuery.data?.collaborativesTable.totalItemsCount ?? 0
+      }
+      statusCounts={statusCounts}
+      table={table}
+      getRowActions={(row: CollaborativeListingRow) => {
+        const published = row.status === CollaborativeStatus.Published;
+        return listingRowActions({
+          published,
+          title: row.title,
+          noun: 'collaborative',
+          onEdit: () =>
+            router.push(
+              `/dashboard/${entityType}/${entitySlug}/collaboratives/edit/${row.id}`
+            ),
+          onUnpublish: () => unpublishMutation.mutate(row.id),
+          onDelete: () => deleteMutation.mutate(row.id),
+        });
+      }}
+    />
   );
 }

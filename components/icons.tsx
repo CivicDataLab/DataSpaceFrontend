@@ -22,6 +22,7 @@ import {
   IconCircleCheck,
   IconCircleCheckFilled,
   IconCloudUpload,
+  IconCpu,
   IconDatabase,
   IconDatabaseCog,
   IconDatabaseEdit,
@@ -35,6 +36,7 @@ import {
   IconFilePlus,
   IconFileUpload,
   IconFolder,
+  IconFolderStats,
   IconInfoCircle,
   IconLayoutGrid,
   IconLayoutList,
@@ -137,4 +139,6 @@ export const Icons = {
   calendarEvent: IconCalendarEvent,
   fileDownload: IconFileDownload,
   worldPin: IconWorldPin,
+  folderStats: IconFolderStats,
+  iconCpu: IconCpu,
 };

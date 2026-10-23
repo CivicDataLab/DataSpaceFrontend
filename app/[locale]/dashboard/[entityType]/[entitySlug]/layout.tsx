@@ -68,12 +68,12 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
     {
       title: 'Use Cases',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/usecases`,
-      icon: 'grid',
+      icon: 'folderStats',
     },
     {
       title: 'AI Models',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/aimodels`,
-      icon: 'light',
+      icon: 'iconCpu',
     },
     {
       title: 'Publications',
@@ -83,7 +83,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
     {
       title: 'Collaboratives',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/collaboratives`,
-      icon: 'userGroup',
+      icon: 'userList',
     },
     {
       title: 'Charts',

@@ -8,46 +8,40 @@ import {
   DatasetType as GqlDatasetType,
 } from '@/gql/generated/graphql';
 import { useTourTrigger } from '@/hooks/use-tour-trigger';
-import {
-  IconEyeOff,
-  IconFile,
-  IconFileText,
-  IconPencil,
-  IconTrash,
-} from '@tabler/icons-react';
+import { IconFileText } from '@tabler/icons-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import {
-  Badge,
-  DataTable,
-  Icon,
-  Text,
-  toast,
-  type ColumnFilterConfig,
-  type DataTableRowAction,
-  type FilterField,
-  type SortField,
-  type TablePaginationState,
-} from 'opub-ui';
+import { toast, type ColumnFilterConfig } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import {
+  listingRowActions,
+  ListingStatus,
+  ListingTitle,
+  ProviderListingTable,
+} from '../provider-flow/ProviderListingTable';
+import {
+  errorMessage,
+  listingEmptyLabel,
+  listingOwner,
+  listingQueryOptions,
+  listingQuerySettled,
+  sectorGeographyFilters,
+  toApiFilters,
+  useListingFacets,
+  useProviderTable,
+  useSettledStatusCounts,
+} from '../provider-flow/table-listing';
 import { DatasetType, DatasetTypeModal } from './components/dataset-type-modal';
 import {
-  DATASET_TABLE_PAGE_SIZE,
+  DATASET_FIELD_MAP,
+  DATASET_TAB_KEYS,
   DATASET_TABLE_STATUSES,
   DATASET_TYPE_FILTER_OPTIONS,
   DatasetListingRow,
   datasetsTableQueryDoc,
-  datasetTableGeographiesQueryDoc,
-  datasetTableSectorsQueryDoc,
-  datasetTableTagsQueryDoc,
-  hasListingFilters,
   INITIAL_DATASET_SORT,
-  toApiFilters,
   toListingRows,
-  toStatusCounts,
-  withStatusFilter,
 } from './listing';
-import styles from './listing.module.scss';
 
 const createDatasetMutationDoc = graphql(`
   mutation GenerateDatasetName($createInput: CreateDatasetInput) {
@@ -86,16 +80,6 @@ const unpublishDatasetMutationDoc = graphql(`
   }
 `);
 
-const columnContentTypes = [
-  'text',
-  'text',
-  'text',
-  'text',
-  'text',
-  'text',
-  'text',
-] as const;
-
 interface DatasetTableCell {
   row: { original: DatasetListingRow };
 }
@@ -107,14 +91,7 @@ const datasetColumns = [
     searchable: true,
     meta: { truncate: true },
     cell: ({ row }: DatasetTableCell) => (
-      <span className="flex w-full min-w-0 items-center gap-2">
-        <span className="inline-flex shrink-0">
-          <Icon source={IconFileText} color="subdued" size={18} />
-        </span>
-        <Text className="min-w-0 truncate" title={row.original.title}>
-          {row.original.title}
-        </Text>
-      </span>
+      <ListingTitle icon={IconFileText} label={row.original.title} />
     ),
   },
   {
@@ -125,11 +102,13 @@ const datasetColumns = [
   {
     accessorKey: 'sector',
     header: 'Sector',
+    maxSize: 160,
     meta: { optional: true, truncate: true },
   },
   {
     accessorKey: 'geography',
     header: 'Geography',
+    maxSize: 160,
     meta: { optional: true, truncate: true },
   },
   {
@@ -142,17 +121,14 @@ const datasetColumns = [
     header: 'Status',
     meta: { optional: true },
     cell: ({ row }: DatasetTableCell) => (
-      <Badge
-        status={
+      <ListingStatus
+        published={row.original.status === DatasetStatus.Published}
+        label={
           row.original.status === DatasetStatus.Published
-            ? 'success'
-            : 'warning'
+            ? 'Published'
+            : 'Draft'
         }
-      >
-        {row.original.status === DatasetStatus.Published
-          ? 'Published'
-          : 'Draft'}
-      </Badge>
+      />
     ),
   },
   {
@@ -161,79 +137,45 @@ const datasetColumns = [
   },
 ];
 
-function optionList(
-  items: Array<{ label: string; value: string }>
-): Array<{ label: string; value: string }> {
-  return [...items].sort((left, right) =>
-    left.label.localeCompare(right.label)
-  );
-}
-
-function errorMessage(err: unknown) {
-  return typeof err === 'object' &&
-    err !== null &&
-    'message' in err &&
-    typeof err.message === 'string'
-    ? err.message.split(':')[0]
-    : 'Unknown error';
-}
-
 export default function DatasetPage() {
   useTourTrigger(true, 1500);
   const router = useRouter();
   const params = useParams<{ entityType?: string; entitySlug?: string }>();
   const entityType = params?.entityType;
   const entitySlug = params?.entitySlug;
-
-  const isValidParams =
-    typeof entityType === 'string' && typeof entitySlug === 'string';
-
-  const ownerArgs: Record<string, string> | null = isValidParams
-    ? { [entityType]: entitySlug }
-    : null;
+  const ownerArgs = listingOwner(entityType, entitySlug);
+  const isValidParams = ownerArgs !== null;
 
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
-  const [filters, setFilters] = useState<FilterField[]>(() =>
-    withStatusFilter([], 'all')
-  );
-  const [sorting, setSorting] = useState<SortField[]>(INITIAL_DATASET_SORT);
-  const [pagination, setPagination] = useState<TablePaginationState>({
-    limit: DATASET_TABLE_PAGE_SIZE,
-    offset: 0,
-  });
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('all');
+  const table = useProviderTable(DATASET_TAB_KEYS, INITIAL_DATASET_SORT);
+  const facets = useListingFacets(entityType, entitySlug);
 
   const datasetsQuery = useQuery(
-    ['datasets_table', entityType, entitySlug, filters, sorting, pagination],
+    [
+      'datasets_table',
+      entityType,
+      entitySlug,
+      table.filters,
+      table.sorting,
+      table.pagination,
+    ],
     () =>
       GraphQL(datasetsTableQueryDoc, ownerArgs || {}, {
-        filters: toApiFilters(filters),
-        sortOptions: sorting,
-        limit: pagination.limit,
-        offset: pagination.offset,
+        filters: toApiFilters(table.filters, DATASET_FIELD_MAP),
+        sortOptions: table.sorting,
+        limit: table.pagination.limit,
+        offset: table.pagination.offset,
       }),
     {
       enabled: isValidParams,
-      staleTime: 0,
-      refetchOnMount: 'always',
+      ...listingQueryOptions,
     }
   );
 
-  const sectorsQuery = useQuery(
-    ['dataset_table_sectors', entityType, entitySlug],
-    () => GraphQL(datasetTableSectorsQueryDoc, ownerArgs || {}),
-    { enabled: isValidParams }
-  );
-  const geographiesQuery = useQuery(
-    ['dataset_table_geographies', entityType, entitySlug],
-    () => GraphQL(datasetTableGeographiesQueryDoc, ownerArgs || {}),
-    { enabled: isValidParams }
-  );
-  const tagsQuery = useQuery(
-    ['dataset_table_tags', entityType, entitySlug],
-    () => GraphQL(datasetTableTagsQueryDoc, ownerArgs || {}),
-    { enabled: isValidParams }
+  const statusCounts = useSettledStatusCounts(
+    datasetsQuery.data?.datasetsTable.statusCounts,
+    listingQuerySettled(datasetsQuery),
+    DATASET_TAB_KEYS
   );
 
   const deleteDatasetMutation = useMutation(
@@ -296,154 +238,61 @@ export default function DatasetPage() {
     }
   );
 
-  const selectStatus = (nextStatus: string) => {
-    setStatus(nextStatus);
-    setFilters((current) => withStatusFilter(current, nextStatus));
-  };
-
   const filterConfig: ColumnFilterConfig[] = [
     {
       columnId: 'datasetType',
       type: 'select',
       options: DATASET_TYPE_FILTER_OPTIONS,
     },
-    {
-      columnId: 'geography',
-      type: 'select',
-      options: optionList(
-        (geographiesQuery.data?.geographies ?? []).map((geography) => ({
-          label: geography.name,
-          value: geography.id,
-        }))
-      ),
-    },
-    {
-      columnId: 'sector',
-      type: 'multiSelect',
-      options: optionList(
-        (sectorsQuery.data?.sectors ?? []).map((sector) => ({
-          label: sector.name,
-          value: String(sector.id),
-        }))
-      ),
-    },
-    // {
-    //   columnId: 'Tags',
-    //   type: 'multiSelect',
-    //   options: optionList(
-    //     (tagsQuery.data?.tags ?? []).map((tag) => ({
-    //       label: tag.value,
-    //       value: tag.value,
-    //     }))
-    //   ),
-    // },
+    ...sectorGeographyFilters(facets),
   ];
-
-  const rows = toListingRows(datasetsQuery.data?.datasetsTable.data ?? []);
-  const emptyLabel = hasListingFilters(filters, status)
-    ? 'No records match your filters'
-    : 'No datasets yet';
 
   if (!isValidParams || !entityType || !entitySlug) {
     return null;
   }
 
+  const rows = toListingRows(datasetsQuery.data?.datasetsTable.data ?? []);
+
   return (
     <>
-      <div className={`flex h-full flex-col md:mt-5 lg:mt-2 ${styles.listing}`}>
-        <DataTable
-          columnContentTypes={[...columnContentTypes]}
-          columns={datasetColumns}
-          rows={rows}
-          hideSelection
-          style={{
-            borderRadius: '20px',
-          }}
-          withServer
-          title="Datasets"
-          subtitle="Discover, create and manage datasets on CivicDataSpace."
-          addLabel="Create Dataset"
-          onAdd={() => setIsTypeModalOpen(true)}
-          placeholder="Search datasets..."
-          sortColumns={['title', 'modified']}
-          filters={filterConfig}
-          statuses={DATASET_TABLE_STATUSES}
-          defaultRowCount={DATASET_TABLE_PAGE_SIZE}
-          labels={{ empty: emptyLabel }}
-          loading={datasetsQuery.isFetching}
-          loadError={datasetsQuery.isError && !datasetsQuery.isFetching}
-          onRetry={() => datasetsQuery.refetch()}
-          totalRows={datasetsQuery.data?.datasetsTable.totalItemsCount ?? 0}
-          statusCounts={toStatusCounts(
-            datasetsQuery.data?.datasetsTable.statusCounts
-          )}
-          searchState={search}
-          onSearchChange={setSearch}
-          statusState={status}
-          onStatusChange={selectStatus}
-          filterState={filters}
-          sortingState={sorting}
-          paginationState={pagination}
-          onFiltersChange={(next) => {
-            const exact = next.find(
-              (filter) =>
-                filter.field === 'status' && filter.condition === 'exact'
-            );
-            const nextStatus =
-              exact?.value === DatasetStatus.Draft ||
-              exact?.value === DatasetStatus.Published
-                ? exact.value
-                : status;
-            setStatus(nextStatus);
-            setFilters(withStatusFilter(next, nextStatus));
-          }}
-          onSortingChange={setSorting}
-          onPaginationChange={setPagination}
-          getRowActions={(row: DatasetListingRow): DataTableRowAction[] => {
-            const actions: DataTableRowAction[] = [];
-            const isPublished = row.status === DatasetStatus.Published;
-
-            if (isPublished) {
-              actions.push({
-                key: 'unpublish',
-                icon: IconEyeOff,
-                color: 'critical',
-                label: `Unpublish`,
-                onClick: () =>
-                  unpublishDatasetMutation.mutate({ datasetId: row.id }),
-                alert: {
-                  title: 'Unpublish dataset?',
-                  children: `Unpublishing "${row.title}" will move it back to draft.`,
-                },
-              });
-            } else {
-              actions.push({
-                key: 'edit',
-                icon: IconPencil,
-                label: `Edit ${row.title}`,
-                onClick: () =>
-                  router.push(
-                    `/dashboard/${entityType}/${entitySlug}/dataset/${row.id}/edit`
-                  ),
-              });
-            }
-            actions.push({
-              key: 'delete',
-              icon: IconTrash,
-              label: `Delete`,
-              destructive: true,
-              onClick: () =>
-                deleteDatasetMutation.mutate({ datasetId: row.id }),
-              alert: {
-                title: 'Delete dataset?',
-                children: `Deleting "${row.title}" will permanently remove it. This action cannot be undone.`,
-              },
-            });
-            return actions;
-          }}
-          data-tour="my-datasets"
-        />
-      </div>
+      <ProviderListingTable
+        title="Datasets"
+        subtitle="Discover, create and manage datasets on CivicDataSpace."
+        addLabel="Create Dataset"
+        onAdd={() => setIsTypeModalOpen(true)}
+        placeholder="Search datasets..."
+        columns={datasetColumns}
+        rows={rows}
+        sortColumns={['title', 'modified']}
+        filters={filterConfig}
+        statuses={DATASET_TABLE_STATUSES}
+        emptyLabel={listingEmptyLabel(
+          table.filters,
+          table.status,
+          'No datasets yet'
+        )}
+        loading={datasetsQuery.isFetching}
+        loadError={datasetsQuery.isError && !datasetsQuery.isFetching}
+        onRetry={() => datasetsQuery.refetch()}
+        totalRows={datasetsQuery.data?.datasetsTable.totalItemsCount ?? 0}
+        statusCounts={statusCounts}
+        table={table}
+        tourId="my-datasets"
+        getRowActions={(row: DatasetListingRow) =>
+          listingRowActions({
+            published: row.status === DatasetStatus.Published,
+            title: row.title,
+            noun: 'dataset',
+            onEdit: () =>
+              router.push(
+                `/dashboard/${entityType}/${entitySlug}/dataset/${row.id}/edit`
+              ),
+            onUnpublish: () =>
+              unpublishDatasetMutation.mutate({ datasetId: row.id }),
+            onDelete: () => deleteDatasetMutation.mutate({ datasetId: row.id }),
+          })
+        }
+      />
 
       <DatasetTypeModal
         open={isTypeModalOpen}
