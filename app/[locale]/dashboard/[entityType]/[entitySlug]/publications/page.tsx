@@ -1,66 +1,155 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { PublicationStatus } from '@/gql/generated/graphql';
+import { IconFileDescription } from '@tabler/icons-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'nuqs';
-import { Button, DataTable, Icon, IconButton, Text, toast } from 'opub-ui';
-import { twMerge } from 'tailwind-merge';
+import { toast, type ColumnFilterConfig } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
-import { Icons } from '@/components/icons';
-import { LinkButton } from '@/components/Link';
-import { Loading } from '@/components/loading';
-import { ActionBar } from '../provider-flow/ActionBar';
-import { Navigation } from '../provider-flow/Navigation';
+import {
+  listingRowActions,
+  ListingStatus,
+  ListingTitle,
+  ProviderListingTable,
+} from '../provider-flow/ProviderListingTable';
+import {
+  listingEmptyLabel,
+  listingOwner,
+  listingQueryOptions,
+  listingQuerySettled,
+  optionList,
+  sectorGeographyFilters,
+  toApiFilters,
+  toApiSort,
+  useListingFacets,
+  useProviderTable,
+  useSettledStatusCounts,
+} from '../provider-flow/table-listing';
+import {
+  INITIAL_PUBLICATION_SORT,
+  LICENSE_FILTER_OPTIONS,
+  PUBLICATION_FIELD_MAP,
+  PUBLICATION_TAB_KEYS,
+  PUBLICATION_TABLE_STATUSES,
+  PublicationListingRow,
+  publicationResourceTypesQueryDoc,
+  publicationsTableQueryDoc,
+  toPublicationRows,
+} from './listing';
 import { errorText, mutationMessage } from './model';
 import {
   createPublicationMutation,
   deletePublicationMutation,
-  publicationListQuery,
   unpublishPublicationMutation,
 } from './queries';
 
-interface PublicationListItem {
-  id: string;
-  title?: string | null;
-  status?: string | null;
-  created?: string | null;
-  modified?: string | null;
-}
+const publicationColumns = [
+  {
+    accessorKey: 'title',
+    header: 'Publication',
+    searchable: true,
+    meta: { truncate: true },
+    cell: ({ row }: { row: { original: PublicationListingRow } }) => (
+      <ListingTitle icon={IconFileDescription} label={row.original.title} />
+    ),
+  },
+  {
+    accessorKey: 'resourceType',
+    header: 'Type',
+    meta: { optional: true, truncate: true },
+  },
+  {
+    accessorKey: 'license',
+    header: 'License',
+    meta: { optional: true, truncate: true },
+  },
+  {
+    accessorKey: 'sector',
+    header: 'Sector',
+    maxSize: 160,
+    meta: { optional: true, truncate: true },
+  },
+  {
+    accessorKey: 'geography',
+    header: 'Geography',
+    maxSize: 160,
+    meta: { optional: true, truncate: true },
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    meta: { optional: true },
+    cell: ({ row }: { row: { original: PublicationListingRow } }) => (
+      <ListingStatus
+        published={row.original.status === PublicationStatus.Published}
+        label={
+          row.original.status === PublicationStatus.Published
+            ? 'Published'
+            : 'Draft'
+        }
+      />
+    ),
+  },
+  {
+    accessorKey: 'modified',
+    header: 'Last Updated',
+  },
+];
 
 export default function PublicationsPage() {
   const router = useRouter();
   const params = useParams<{ entityType?: string; entitySlug?: string }>();
   const entityType = params?.entityType;
   const entitySlug = params?.entitySlug;
-  const isValidParams =
-    typeof entityType === 'string' && typeof entitySlug === 'string';
-  const ownerArgs = isValidParams ? { [entityType]: entitySlug } : {};
-  const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
+  const ownerArgs = listingOwner(entityType, entitySlug);
+  const isValidParams = ownerArgs !== null;
 
-  const listQuery = useQuery(
+  const table = useProviderTable(
+    PUBLICATION_TAB_KEYS,
+    INITIAL_PUBLICATION_SORT
+  );
+  const facets = useListingFacets(entityType, entitySlug);
+
+  const publicationsQuery = useQuery(
     [
-      'dashboard_publications',
+      'publications_table',
       entityType,
       entitySlug,
-      navigationTab ?? 'drafts',
+      table.filters,
+      table.sorting,
+      table.pagination,
     ],
     () =>
-      GraphQL(publicationListQuery, ownerArgs, {
-        pagination: { limit: 100, offset: 0 },
+      GraphQL(publicationsTableQueryDoc, ownerArgs || {}, {
+        filters: toApiFilters(table.filters, PUBLICATION_FIELD_MAP),
+        sortOptions: toApiSort(table.sorting, PUBLICATION_FIELD_MAP),
+        limit: table.pagination.limit,
+        offset: table.pagination.offset,
       }),
+    {
+      enabled: isValidParams,
+      ...listingQueryOptions,
+    }
+  );
+
+  const resourceTypesQuery = useQuery(
+    ['publication_table_resource_types'],
+    () => GraphQL(publicationResourceTypesQueryDoc, ownerArgs || {}),
     { enabled: isValidParams }
   );
 
-  useEffect(() => {
-    if (navigationTab == null) setNavigationTab('drafts');
-  }, [navigationTab, setNavigationTab]);
+  const statusCounts = useSettledStatusCounts(
+    publicationsQuery.data?.publicationsTable.statusCounts,
+    listingQuerySettled(publicationsQuery),
+    PUBLICATION_TAB_KEYS
+  );
 
   const deleteMutation = useMutation(
     (id: string) =>
-      GraphQL(deletePublicationMutation, ownerArgs, { publicationId: id }),
+      GraphQL(deletePublicationMutation, ownerArgs || {}, {
+        publicationId: id,
+      }),
     {
       onSuccess: (result) => {
         const message = mutationMessage(
@@ -71,8 +160,8 @@ export default function PublicationsPage() {
           toast(message);
           return;
         }
-        toast('Publication deleted');
-        void listQuery.refetch();
+        toast('Deleted publication successfully');
+        publicationsQuery.refetch();
       },
       onError: (error: unknown) => {
         toast(errorText(error, 'Could not delete the publication.'));
@@ -82,7 +171,9 @@ export default function PublicationsPage() {
 
   const unpublishMutation = useMutation(
     (id: string) =>
-      GraphQL(unpublishPublicationMutation, ownerArgs, { publicationId: id }),
+      GraphQL(unpublishPublicationMutation, ownerArgs || {}, {
+        publicationId: id,
+      }),
     {
       onSuccess: (result) => {
         const message = mutationMessage(
@@ -93,8 +184,8 @@ export default function PublicationsPage() {
           toast(message);
           return;
         }
-        toast('Publication unpublished');
-        void listQuery.refetch();
+        toast('Unpublished publication successfully');
+        publicationsQuery.refetch();
       },
       onError: (error: unknown) => {
         toast(errorText(error, 'Could not unpublish the publication.'));
@@ -103,10 +194,7 @@ export default function PublicationsPage() {
   );
 
   const createMutation = useMutation(
-    () =>
-      GraphQL(createPublicationMutation, ownerArgs, {
-        input: {},
-      }),
+    () => GraphQL(createPublicationMutation, ownerArgs || {}, { input: {} }),
     {
       onSuccess: (result) => {
         const message = mutationMessage(
@@ -118,8 +206,7 @@ export default function PublicationsPage() {
           toast(message || 'Could not create the publication.');
           return;
         }
-        toast('Publication created successfully');
-        void listQuery.refetch();
+        toast('Publication created successfully!');
         router.push(
           `/dashboard/${entityType}/${entitySlug}/publications/edit/${id}/files`
         );
@@ -130,135 +217,74 @@ export default function PublicationsPage() {
     }
   );
 
-  if (!isValidParams) return null;
-
-  const navigationOptions = [
-    { label: 'Drafts', url: 'drafts', selected: navigationTab !== 'published' },
+  const filterConfig: ColumnFilterConfig[] = [
     {
-      label: 'Published',
-      url: 'published',
-      selected: navigationTab === 'published',
+      columnId: 'resourceType',
+      type: 'select',
+      options: optionList(
+        (resourceTypesQuery.data?.resourceTypes ?? [])
+          .filter((type) => type.isActive)
+          .map((type) => ({
+            label: type.name,
+            value: String(type.id),
+          }))
+      ),
     },
+    {
+      columnId: 'license',
+      type: 'select',
+      options: LICENSE_FILTER_OPTIONS,
+    },
+    ...sectorGeographyFilters(facets),
   ];
-  const publishedTab = navigationTab === 'published';
-  const rows = (listQuery.data?.publications ?? []).filter((item) =>
-    publishedTab ? item.status === 'PUBLISHED' : item.status !== 'PUBLISHED'
+
+  if (!isValidParams || !entityType || !entitySlug) {
+    return null;
+  }
+
+  const rows = toPublicationRows(
+    publicationsQuery.data?.publicationsTable.data ?? []
   );
 
-  const columns = [
-    {
-      accessorKey: 'title',
-      header: 'Title',
-      cell: ({ row }: { row: { original: PublicationListItem } }) =>
-        publishedTab ? (
-          <Text
-            className="line-clamp-1 max-w-[280px]"
-            title={row.original.title ?? undefined}
-          >
-            {row.original.title}
-          </Text>
-        ) : (
-          <LinkButton
-            kind="tertiary"
-            size="medium"
-            href={`/dashboard/${entityType}/${entitySlug}/publications/edit/${row.original.id}/files`}
-          >
-            <span className="line-clamp-1 max-w-[280px]">
-              {row.original.title || 'Untitled Publication'}
-            </span>
-          </LinkButton>
-        ),
-    },
-    { accessorKey: 'created', header: 'Date Created' },
-    { accessorKey: 'modified', header: 'Date Modified' },
-    {
-      accessorKey: 'delete',
-      header: publishedTab ? 'Unpublish' : 'Delete',
-      cell: ({ row }: { row: { original: PublicationListItem } }) =>
-        publishedTab ? (
-          <Button
-            size="medium"
-            kind="tertiary"
-            onClick={() => unpublishMutation.mutate(row.original.id)}
-          >
-            Unpublish
-          </Button>
-        ) : (
-          <IconButton
-            size="medium"
-            icon={Icons.delete}
-            color="interactive"
-            onClick={() => deleteMutation.mutate(row.original.id)}
-          >
-            Delete
-          </IconButton>
-        ),
-    },
-  ];
-
-  const tableRows = rows.map((item) => ({
-    title: item.title,
-    id: item.id,
-    status: item.status,
-    created: formatDate(item.created ?? null) || '',
-    modified: formatDate(item.modified ?? null) || '',
-  }));
-
   return (
-    <div className="mt-8 flex h-full flex-col">
-      <Navigation
-        setNavigationTab={setNavigationTab}
-        options={navigationOptions}
-        currentValue={navigationTab ?? 'drafts'}
-      />
-      {rows.length > 0 ? (
-        <div className="mt-6">
-          <ActionBar
-            title={publishedTab ? 'Published' : 'Drafts'}
-            isLoading={createMutation.isLoading}
-            primaryAction={{
-              content: 'Add New Publication',
-              onAction: () => createMutation.mutate(),
-            }}
-          />
-          <DataTable
-            columns={columns}
-            rows={tableRows}
-            hideSelection
-            hideViewSelector
-          />
-        </div>
-      ) : listQuery.isLoading ? (
-        <Loading />
-      ) : (
-        <div className="flex h-full w-full grow flex-col items-center justify-center">
-          <div className={twMerge('h-100 flex flex-col items-center gap-4')}>
-            <Icon
-              source={Icons.publication}
-              color="interactive"
-              stroke={1}
-              size={80}
-            />
-            {publishedTab ? (
-              <Text variant="headingSm" color="subdued">
-                No published publications yet.
-              </Text>
-            ) : (
-              <>
-                <Text variant="headingSm" color="subdued">
-                  You have not added any publication yet.
-                </Text>
-                <Button
-                  loading={createMutation.isLoading}
-                  onClick={() => createMutation.mutate()}
-                >
-                  Add New Publication
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+    <ProviderListingTable
+      title="Publications"
+      subtitle="Discover, create and manage publications on CivicDataSpace."
+      addLabel="Create Publication"
+      onAdd={() => {
+        if (!createMutation.isLoading) createMutation.mutate();
+      }}
+      placeholder="Search publications..."
+      columns={publicationColumns}
+      rows={rows}
+      sortColumns={['title', 'modified']}
+      filters={filterConfig}
+      statuses={PUBLICATION_TABLE_STATUSES}
+      emptyLabel={listingEmptyLabel(
+        table.filters,
+        table.status,
+        'No publications yet'
       )}
-    </div>
+      loading={publicationsQuery.isFetching}
+      loadError={publicationsQuery.isError && !publicationsQuery.isFetching}
+      onRetry={() => publicationsQuery.refetch()}
+      totalRows={publicationsQuery.data?.publicationsTable.totalItemsCount ?? 0}
+      statusCounts={statusCounts}
+      table={table}
+      getRowActions={(row: PublicationListingRow) => {
+        const published = row.status === PublicationStatus.Published;
+        return listingRowActions({
+          published,
+          title: row.title,
+          noun: 'publication',
+          onEdit: () =>
+            router.push(
+              `/dashboard/${entityType}/${entitySlug}/publications/edit/${row.id}/files`
+            ),
+          onUnpublish: () => unpublishMutation.mutate(row.id),
+          onDelete: () => deleteMutation.mutate(row.id),
+        });
+      }}
+    />
   );
 }

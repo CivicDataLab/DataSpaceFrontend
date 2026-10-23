@@ -1,63 +1,47 @@
 'use client';
 
-import { use, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
   AiModelProvider,
   AiModelStatus,
   AiModelType,
-  Ordering,
 } from '@/gql/generated/graphql';
+import { IconCpu } from '@tabler/icons-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { parseAsString, useQueryState } from 'nuqs';
-import { Button, DataTable, Icon, IconButton, Text, toast } from 'opub-ui';
-import { twMerge } from 'tailwind-merge';
+import { toast, type ColumnFilterConfig } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { formatDate } from '@/lib/utils';
-import { Icons } from '@/components/icons';
-import { LinkButton } from '@/components/Link';
-import { Loading } from '@/components/loading';
-import { ActionBar } from '../provider-flow/ActionBar';
-import { Navigation } from '../provider-flow/Navigation';
-
-interface AIModelListItem {
-  id: number;
-  displayName: string;
-  name: string;
-  modelType: string;
-  provider: string;
-  status: string;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-}
-
-interface AIModelTableRow {
-  id: number;
-  displayName: string;
-  name: string;
-  modelType: string;
-  provider: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-const allAIModels = graphql(`
-  query AIModelsData($filters: AIModelFilter, $order: AIModelOrder) {
-    aiModels(filters: $filters, order: $order) {
-      id
-      displayName
-      name
-      modelType
-      provider
-      status
-      createdAt
-      updatedAt
-    }
-  }
-`);
+import {
+  listingRowActions,
+  ListingStatus,
+  ListingTitle,
+  ProviderListingTable,
+} from '../provider-flow/ProviderListingTable';
+import {
+  errorMessage,
+  listingEmptyLabel,
+  listingOwner,
+  listingQueryOptions,
+  listingQuerySettled,
+  sectorGeographyFilters,
+  toApiFilters,
+  toApiSort,
+  useListingFacets,
+  useProviderTable,
+  useSettledStatusCounts,
+} from '../provider-flow/table-listing';
+import {
+  AI_MODEL_FIELD_MAP,
+  AI_MODEL_TAB_KEYS,
+  AI_MODEL_TABLE_STATUSES,
+  AIModelListingRow,
+  aiModelsTableQueryDoc,
+  INITIAL_AI_MODEL_SORT,
+  MODEL_TYPE_FILTER_OPTIONS,
+  PROVIDER_FILTER_OPTIONS,
+  toAIModelRows,
+} from './listing';
 
 const deleteAIModel = graphql(`
   mutation deleteAIModel($modelId: Int!) {
@@ -81,258 +65,241 @@ const createAIModel = graphql(`
   }
 `);
 
-const AIMODELS_ACTION_TOAST_ID = 'aimodels-list-action-toast';
+const unpublishAIModel = graphql(`
+  mutation unpublishAIModelListing($input: UpdateAIModelInput!) {
+    updateAiModel(input: $input) {
+      success
+      data {
+        id
+        status
+      }
+    }
+  }
+`);
 
-export default function AIModelsPage({
-  params,
-}: {
-  params: Promise<{ entityType: string; entitySlug: string }>;
-}) {
-  const { entityType, entitySlug } = use(params) as {
-    entityType: string;
-    entitySlug: string;
-  };
-  const router = useRouter();
-
-  const [navigationTab, setNavigationTab] = useQueryState('tab', parseAsString);
-
-  const navigationOptions = [
-    {
-      label: 'Draft',
-      url: `draft`,
-      selected: navigationTab === 'draft',
-    },
-    {
-      label: 'Published',
-      url: `published`,
-      selected: navigationTab === 'published',
-    },
-    // {
-    //   label: 'Approved',
-    //   url: `approved`,
-    //   selected: navigationTab === 'approved',
-    // },
-  ];
-
-  const AllAIModels = useQuery(
-    [`fetch_AIModels`, navigationTab],
-    () =>
-      GraphQL(
-        allAIModels,
-        {
-          [entityType]: entitySlug,
-        },
-        {
-          filters: {
-            status:
-              navigationTab === 'published'
-                ? AiModelStatus.Active
-                : navigationTab === 'draft'
-                  ? AiModelStatus.Registered
-                  : AiModelStatus.Approved,
-          },
-          order: { updatedAt: Ordering.Desc },
+const aiModelColumns = [
+  {
+    accessorKey: 'displayName',
+    header: 'AI Model',
+    searchable: true,
+    meta: { truncate: true },
+    cell: ({ row }: { row: { original: AIModelListingRow } }) => (
+      <ListingTitle icon={IconCpu} label={row.original.displayName} />
+    ),
+  },
+  {
+    accessorKey: 'modelType',
+    header: 'Type',
+    meta: { optional: true },
+  },
+  {
+    accessorKey: 'provider',
+    header: 'Provider',
+    meta: { optional: true },
+  },
+  {
+    accessorKey: 'sector',
+    header: 'Sector',
+    maxSize: 160,
+    meta: { optional: true, truncate: true },
+  },
+  {
+    accessorKey: 'geography',
+    header: 'Geography',
+    meta: { optional: true, truncate: true },
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    meta: { optional: true },
+    cell: ({ row }: { row: { original: AIModelListingRow } }) => (
+      <ListingStatus
+        published={row.original.status === AiModelStatus.Active}
+        label={
+          row.original.status === AiModelStatus.Active ? 'Published' : 'Draft'
         }
-      )
+      />
+    ),
+  },
+  {
+    accessorKey: 'updatedAt',
+    header: 'Last Updated',
+  },
+];
+
+export default function AIModelsPage() {
+  const router = useRouter();
+  const params = useParams<{ entityType?: string; entitySlug?: string }>();
+  const entityType = params?.entityType;
+  const entitySlug = params?.entitySlug;
+  const ownerArgs = listingOwner(entityType, entitySlug);
+  const isValidParams = ownerArgs !== null;
+
+  const table = useProviderTable(AI_MODEL_TAB_KEYS, INITIAL_AI_MODEL_SORT);
+  const facets = useListingFacets(entityType, entitySlug);
+
+  const modelsQuery = useQuery(
+    [
+      'aimodels_table',
+      entityType,
+      entitySlug,
+      table.filters,
+      table.sorting,
+      table.pagination,
+    ],
+    () =>
+      GraphQL(aiModelsTableQueryDoc, ownerArgs || {}, {
+        filters: toApiFilters(table.filters, AI_MODEL_FIELD_MAP),
+        sortOptions: toApiSort(table.sorting, AI_MODEL_FIELD_MAP),
+        limit: table.pagination.limit,
+        offset: table.pagination.offset,
+      }),
+    {
+      enabled: isValidParams,
+      ...listingQueryOptions,
+    }
   );
 
-  useEffect(() => {
-    if (navigationTab === null || navigationTab === undefined)
-      setNavigationTab('draft');
-    AllAIModels.refetch();
-  }, [AllAIModels, navigationTab, setNavigationTab]);
+  const statusCounts = useSettledStatusCounts(
+    modelsQuery.data?.aiModelsTable.statusCounts,
+    listingQuerySettled(modelsQuery),
+    AI_MODEL_TAB_KEYS
+  );
 
-  const DeleteAIModelMutation = useMutation(
-    [`delete_AIModel`],
-    (data: { id: number }) =>
-      GraphQL(
-        deleteAIModel,
-        {
-          [entityType]: entitySlug,
-        },
-        { modelId: data.id }
-      ),
+  const deleteMutation = useMutation(
+    (id: number) => GraphQL(deleteAIModel, ownerArgs || {}, { modelId: id }),
     {
-      onSuccess: () => {
-        toast(`Deleted AI Model successfully`, {
-          id: AIMODELS_ACTION_TOAST_ID,
-        });
-        AllAIModels.refetch();
+      onSuccess: (result) => {
+        if (!result.deleteAiModel.success) {
+          toast('Error: Could not delete the AI model');
+          return;
+        }
+        toast('Deleted AI model successfully');
+        modelsQuery.refetch();
       },
       onError: (err: unknown) => {
-        toast('Error: ' + (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : String(err)).split(':')[0], {
-          id: AIMODELS_ACTION_TOAST_ID,
-        });
+        toast(`Error: ${errorMessage(err)}`);
       },
     }
   );
 
-  const CreateAIModelMutation = useMutation(
-    [`create_AIModel`],
-    () =>
-      GraphQL(
-        createAIModel,
-        {
-          [entityType]: entitySlug,
+  const unpublishMutation = useMutation(
+    (id: number) =>
+      GraphQL(unpublishAIModel, ownerArgs || {}, {
+        input: {
+          id,
+          status: AiModelStatus.Registered,
+          isPublic: false,
+          isActive: false,
         },
-        {
-          input: {
-            name: `new-model-${Date.now()}`,
-            displayName: 'New AI Model',
-            modelType: AiModelType.TextGeneration,
-            provider: AiModelProvider.Custom,
-          },
+      }),
+    {
+      onSuccess: (result) => {
+        if (!result.updateAiModel.success) {
+          toast('Error: Could not unpublish the AI model');
+          return;
         }
-      ),
+        toast('Unpublished AI model successfully');
+        modelsQuery.refetch();
+      },
+      onError: (err: unknown) => {
+        toast(`Error: ${errorMessage(err)}`);
+      },
+    }
+  );
+
+  const createMutation = useMutation(
+    () =>
+      GraphQL(createAIModel, ownerArgs || {}, {
+        input: {
+          name: `new-model-${Date.now()}`,
+          displayName: 'New AI Model',
+          modelType: AiModelType.TextGeneration,
+          provider: AiModelProvider.Custom,
+        },
+      }),
     {
       onSuccess: (data) => {
         const newModelId = data.createAiModel.data?.id;
-        toast(`Created AI Model successfully`, {
-          id: AIMODELS_ACTION_TOAST_ID,
-        });
+        if (
+          !data.createAiModel.success ||
+          !newModelId ||
+          !entityType ||
+          !entitySlug
+        ) {
+          toast('Error: Could not create the AI model');
+          return;
+        }
+        toast('AI model created successfully!');
         router.push(
           `/dashboard/${entityType}/${entitySlug}/aimodels/edit/${newModelId}/versions`
         );
       },
       onError: (err: unknown) => {
-        toast('Error: ' + (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string' ? err.message : String(err)).split(':')[0], {
-          id: AIMODELS_ACTION_TOAST_ID,
-        });
+        toast(`Error: ${errorMessage(err)}`);
       },
     }
   );
 
-  const handleCreateNewModel = () => {
-    CreateAIModelMutation.mutate();
-  };
-
-  const modelsListColumns = [
+  const filterConfig: ColumnFilterConfig[] = [
     {
-      accessorKey: 'displayName',
-      header: 'Display Name',
-      cell: ({ row }: { row: { original: AIModelTableRow } }) => (
-        <LinkButton
-          kind="tertiary"
-          size="medium"
-          href={`/dashboard/${entityType}/${entitySlug}/aimodels/edit/${row.original.id}?tab=${navigationTab ?? 'draft'}`}
-        >
-          <span className="line-clamp-1 max-w-[280px]">
-            {row.original.displayName}
-          </span>
-        </LinkButton>
-      ),
-    },
-    // {
-    //   accessorKey: 'name',
-    //   header: 'Model Name',
-    //   cell: ({ row }: { row: { original: AIModelTableRow } }) => (
-    //     <Text className="line-clamp-1 max-w-[200px]" title={row.original.name}>
-    //       {row.original.name}
-    //     </Text>
-    //   ),
-    // },
-    {
-      accessorKey: 'modelType',
-      header: 'Type',
-      cell: ({ row }: { row: { original: AIModelTableRow } }) => (
-        <Text className="text-xs">{row.original.modelType}</Text>
-      ),
+      columnId: 'modelType',
+      type: 'select',
+      options: MODEL_TYPE_FILTER_OPTIONS,
     },
     {
-      accessorKey: 'provider',
-      header: 'Provider',
-      cell: ({ row }: { row: { original: AIModelTableRow } }) => (
-        <Text className="text-xs">{row.original.provider}</Text>
-      ),
+      columnId: 'provider',
+      type: 'select',
+      options: PROVIDER_FILTER_OPTIONS,
     },
-    { accessorKey: 'createdAt', header: 'Date Created' },
-    { accessorKey: 'updatedAt', header: 'Last Updated' },
-    {
-      accessorKey: 'delete',
-      header: 'Delete',
-      cell: ({ row }: { row: { original: AIModelTableRow } }) => (
-        <IconButton
-          size="medium"
-          icon={Icons.delete}
-          color="interactive"
-          onClick={() => {
-            DeleteAIModelMutation.mutate({
-              id: row.original?.id,
-            });
-          }}
-        >
-          Delete
-        </IconButton>
-      ),
-    },
+    ...sectorGeographyFilters(facets),
   ];
 
-  const generateTableData = (list: AIModelListItem[]) => {
-    return list.map((item) => {
-      return {
-        id: item.id,
-        displayName: item.displayName,
-        name: item.name,
-        modelType: item.modelType,
-        provider: item.provider,
-        status: item.status,
-        createdAt: formatDate(item.createdAt ?? null) || '',
-        updatedAt: formatDate(item.updatedAt ?? null) || '',
-      };
-    });
-  };
+  if (!isValidParams || !entityType || !entitySlug) {
+    return null;
+  }
+
+  const rows = toAIModelRows(modelsQuery.data?.aiModelsTable.data ?? []);
 
   return (
-    <>
-      <div className="mt-8 flex h-full flex-col">
-        <Navigation
-          setNavigationTab={setNavigationTab}
-          options={navigationOptions}
-          currentValue={navigationTab ?? 'draft'}
-        />
-
-        {AllAIModels.data?.aiModels && AllAIModels.data.aiModels.length > 0 ? (
-          <div className="mt-6">
-            <ActionBar
-              title={
-                navigationOptions.find((item) => item.selected)?.label || ''
-              }
-              primaryAction={{
-                content: 'Add New AI Model',
-                onAction: handleCreateNewModel,
-              }}
-            />
-
-            <DataTable
-              columns={modelsListColumns}
-              rows={generateTableData(AllAIModels.data?.aiModels ?? [])}
-              hideSelection
-              hideViewSelector
-            />
-          </div>
-        ) : AllAIModels.isLoading ? (
-          <Loading />
-        ) : (
-          <>
-            <div className="flex h-full w-full grow flex-col items-center justify-center">
-              <div
-                className={twMerge('h-100 flex flex-col items-center gap-4')}
-              >
-                <Icon
-                  source={Icons.light}
-                  color="interactive"
-                  stroke={1}
-                  size={80}
-                />
-                <Text variant="headingSm" color="subdued">
-                  You have not added any AI models yet.
-                </Text>
-                <Button onClick={handleCreateNewModel}>Add New AI Model</Button>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    </>
+    <ProviderListingTable
+      title="AI Models"
+      subtitle="Discover, create and manage AI models on CivicDataSpace."
+      addLabel="Create AI Model"
+      onAdd={() => {
+        if (!createMutation.isLoading) createMutation.mutate();
+      }}
+      placeholder="Search AI models..."
+      columns={aiModelColumns}
+      rows={rows}
+      sortColumns={['displayName', 'modelType', 'provider', 'updatedAt']}
+      filters={filterConfig}
+      statuses={AI_MODEL_TABLE_STATUSES}
+      emptyLabel={listingEmptyLabel(
+        table.filters,
+        table.status,
+        'No AI models yet'
+      )}
+      loading={modelsQuery.isFetching}
+      loadError={modelsQuery.isError && !modelsQuery.isFetching}
+      onRetry={() => modelsQuery.refetch()}
+      totalRows={modelsQuery.data?.aiModelsTable.totalItemsCount ?? 0}
+      statusCounts={statusCounts}
+      table={table}
+      getRowActions={(row: AIModelListingRow) => {
+        const published = row.status === AiModelStatus.Active;
+        return listingRowActions({
+          published,
+          title: row.displayName,
+          noun: 'AI model',
+          onEdit: () =>
+            router.push(
+              `/dashboard/${entityType}/${entitySlug}/aimodels/edit/${row.id}`
+            ),
+          onUnpublish: () => unpublishMutation.mutate(row.id),
+          onDelete: () => deleteMutation.mutate(row.id),
+        });
+      }}
+    />
   );
 }
