@@ -46,6 +46,7 @@ interface EntityRowPickerProps {
   onLoadMore?: () => void;
   onAdd: (item: EntityRow) => void;
   onRemove: (id: string) => void;
+  hidePlaceholder?: boolean;
   roleOptionsFor?: (item: EntityRow) => Array<{ label: string; value: string }>;
   onRoleChange?: (item: EntityRow, role: string) => void;
 }
@@ -178,6 +179,7 @@ export const EntityRowPicker = forwardRef<
     onLoadMore,
     onAdd,
     onRemove,
+    hidePlaceholder = false,
     roleOptionsFor,
     onRoleChange,
   },
@@ -433,16 +435,18 @@ export const EntityRowPicker = forwardRef<
       {menu}
 
       {shownSelected.length === 0 ? (
-        <div className={styles.placeholder}>
-          <Text color="subdued">{emptyTitle}</Text>
-          {emptyDescription ? (
-            <div className="mt-1">
-              <Text variant="bodySm" color="subdued">
-                {emptyDescription}
-              </Text>
-            </div>
-          ) : null}
-        </div>
+        hidePlaceholder ? null : (
+          <div className={styles.placeholder}>
+            <Text color="subdued">{emptyTitle}</Text>
+            {emptyDescription ? (
+              <div className="mt-1">
+                <Text variant="bodySm" color="subdued">
+                  {emptyDescription}
+                </Text>
+              </div>
+            ) : null}
+          </div>
+        )
       ) : (
         <div className={styles.selectedCards}>
           {shownSelected.map((item) => {

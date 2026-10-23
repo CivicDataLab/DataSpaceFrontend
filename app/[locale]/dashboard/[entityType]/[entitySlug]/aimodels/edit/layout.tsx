@@ -18,11 +18,11 @@ import { Stepper, toast, useStepperStep } from 'opub-ui';
 import type { StepperItem } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { FetchAIModelForPublish } from './[id]/publish/page';
 import { isModelInfoComplete } from './aimodel-summary';
 import { WizardHeader } from './components/WizardHeader';
 import { EditStatusProvider, useEditStatus } from './context';
 import styles from './edit.module.scss';
-import { FetchAIModelForPublish } from './[id]/publish/page';
 
 const UpdateAIModelNameMutation = graphql(`
   mutation updateAIModelName($input: UpdateAIModelInput!) {
@@ -184,7 +184,8 @@ function Wizard({ children }: { children: ReactNode }) {
   };
 
   const primaryVersion =
-    model?.versions?.find((version) => version.isLatest) || model?.versions?.[0];
+    model?.versions?.find((version) => version.isLatest) ||
+    model?.versions?.[0];
   const accessReady = (primaryVersion?.providers?.length ?? 0) > 0;
 
   const steps: StepperItem[] = [
@@ -193,8 +194,7 @@ function Wizard({ children }: { children: ReactNode }) {
       label: 'Versions',
       description: 'Configure releases and access',
       icon: IconVersions,
-      isCompleted:
-        versionsCompleted || (!completionReady && currentStep > 1),
+      isCompleted: versionsCompleted || (!completionReady && currentStep > 1),
       content: stepContent(currentStep === 1, children),
     },
     {
@@ -202,8 +202,7 @@ function Wizard({ children }: { children: ReactNode }) {
       label: 'Model Information',
       description: 'Describe the model',
       icon: IconFileDescription,
-      isCompleted:
-        infoCompleted || (!completionReady && currentStep > 2),
+      isCompleted: infoCompleted || (!completionReady && currentStep > 2),
       content: stepContent(currentStep === 2, children),
     },
     {

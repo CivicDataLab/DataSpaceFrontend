@@ -15,7 +15,7 @@ import {
 import { GraphQL } from '@/lib/api';
 import { toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
-import ChartEditor from './ChartEditor';
+import { chartsBasePath } from '../wizard/model';
 
 interface ChartsListProps {
   setType: (type: string) => void;
@@ -101,8 +101,7 @@ const ChartsList: React.FC<ChartsListProps> = () => {
   }>();
 
   const router = useRouter();
-
-  const [editorView, setEditorView] = useState(false);
+  const chartsBase = chartsBasePath(params.entityType, params.entitySlug);
 
   const chartListRes = useQuery([`chartList`], () =>
     GraphQL(
@@ -172,13 +171,9 @@ const ChartsList: React.FC<ChartsListProps> = () => {
 
   const handleChart = (row: ChartTableCellContext['row']) => {
     if (row.original.typename === 'TypeResourceChart') {
-      router.push(
-        `/dashboard/${params.entityType}/${params.entitySlug}/charts/${row.original.id}?type=TypeResourceChart`
-      );
+      router.push(`${chartsBase}/${row.original.id}/edit/build`);
     } else {
-      router.push(
-        `/dashboard/${params.entityType}/${params.entitySlug}/charts/${row.original.id}?type=TypeResourceChartImage`
-      );
+      router.push(`${chartsBase}/image/${row.original.id}/edit/build`);
     }
   };
 
@@ -265,9 +260,7 @@ const ChartsList: React.FC<ChartsListProps> = () => {
 
   return (
     <>
-      {editorView ? (
-        <ChartEditor setEditorView={setEditorView} />
-      ) : chartListRes.isLoading || deleteResourceChartmutation.isLoading ? (
+      {chartListRes.isLoading || deleteResourceChartmutation.isLoading ? (
         <div className=" mt-8 flex justify-center">
           <Spinner />
         </div>
@@ -285,7 +278,9 @@ const ChartsList: React.FC<ChartsListProps> = () => {
               onChange={(e) => handleSearchChange(e)}
             />
             <div className="flex justify-end gap-3">
-              <Button onClick={() => setEditorView(true)}>Add Chart</Button>
+              <Button onClick={() => router.push(`${chartsBase}/new`)}>
+                Add Chart
+              </Button>
             </div>
           </div>
           {filteredRows.length > 0 ? (

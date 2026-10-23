@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 
 export type ProviderSaveStatus = 'loading' | 'success';
-export type BeforeNavigateHandler = (() => Promise<void> | void) | null;
+export type BeforeNavigateHandler = (() => Promise<void | false> | void | false) | null;
 
 export function useProviderEditState() {
   const [status, setStatus] = useState<ProviderSaveStatus>('success');
@@ -15,7 +15,7 @@ export function useProviderEditState() {
   };
 
   const runBeforeNavigateHandler = async () => {
-    await beforeNavigateHandlerRef.current?.();
+    return beforeNavigateHandlerRef.current?.();
   };
 
   return {
