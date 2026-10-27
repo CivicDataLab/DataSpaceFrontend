@@ -10,7 +10,7 @@ const Profile = () => {
   const path = usePathname();
 
   return (
-    <div className="mt-8 flex h-full flex-col">
+    <div className="flex h-full flex-col">
       {path.includes('self') ? <UserProfile /> : <OrgProfile />}
     </div>
   );
