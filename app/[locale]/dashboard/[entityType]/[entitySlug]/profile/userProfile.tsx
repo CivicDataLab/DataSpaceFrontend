@@ -3,12 +3,35 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { UpdateUserInput } from '@/gql/generated/graphql';
-import { useMutation } from '@tanstack/react-query';
-import { Button, DropZone, Text, TextField, toast } from 'opub-ui';
+import {
+  SectorInfoDocument,
+  UpdateUserInput,
+  UserDataDocument,
+} from '@/gql/generated/graphql';
+import { IconArrowRight, IconKey, IconShieldCheck } from '@tabler/icons-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import {
+  AlertDialog,
+  Badge,
+  Button,
+  Icon,
+  SectionCard,
+  Text,
+  TextField,
+  toast,
+} from 'opub-ui';
 
-import { DashboardLogo, useDashboardStore } from '@/config/store';
+import { useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
+import {
+  BIO_MAX_LENGTH,
+  ContributionCard,
+  isProfileUrl,
+  normalizeProfileUrl,
+  ProfilePictureField,
+  ProfileSaveButton,
+  ProfileShell,
+} from './profile-layout';
 
 const updateUserMutation = graphql(`
   mutation updateUser($input: UpdateUserInput!) {
@@ -35,37 +58,38 @@ const updateUserMutation = graphql(`
   }
 `);
 
-const githubRegex =
-  /^https:\/\/github\.com\/[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
-const linkedinRegex =
-  /^https:\/\/(?:www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
-const twitterRegex =
-  /^https:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/[a-zA-Z0-9_]+\/?$/;
-
-const prettyField = (f: string) => {
-  switch (f) {
+const prettyField = (field: string) => {
+  switch (field) {
     case 'github_profile':
       return 'GitHub URL';
     case 'linkedin_profile':
       return 'LinkedIn URL';
     case 'twitter_profile':
-      return 'Twitter URL';
+      return 'X URL';
+    case 'profile_picture':
+      return 'Profile picture';
     default:
-      return f.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      return field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   }
 };
 
+type SocialField = 'githubProfile' | 'linkedinProfile' | 'twitterProfile';
+type FormErrors = Partial<
+  Record<'firstName' | 'lastName' | SocialField, string>
+>;
+
 const UserProfile = () => {
   const params = useParams<{ entityType: string; entitySlug: string }>();
-
   const { setUserDetails, userDetails } = useDashboardStore();
+  const saved = userDetails?.me;
 
   const initialFormData = {
     firstName: '',
     lastName: '',
     email: '',
     bio: '',
-    profilePicture: null as File | DashboardLogo | null,
+    profilePicture: null as
+      File | { url?: string | null; name?: string | null } | null,
     githubProfile: '',
     linkedinProfile: '',
     twitterProfile: '',
@@ -73,74 +97,116 @@ const UserProfile = () => {
   };
 
   const [formData, setFormData] = React.useState(initialFormData);
+  const [errors, setErrors] = React.useState<FormErrors>({});
+  const [discardOpen, setDiscardOpen] = React.useState(false);
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [prevUserDetails, setPrevUserDetails] = React.useState<
     typeof userDetails | undefined
   >(undefined);
+
   if (userDetails !== prevUserDetails) {
     setPrevUserDetails(userDetails);
-    if (userDetails && userDetails?.me) {
+    if (userDetails?.me) {
       setFormData({
-        firstName: userDetails?.me?.firstName ?? '',
-        lastName: userDetails?.me?.lastName ?? '',
-        email: userDetails?.me?.email ?? '',
-        bio: userDetails?.me?.bio ?? '',
-        profilePicture: userDetails?.me?.profilePicture ?? null,
-        githubProfile: userDetails?.me?.githubProfile ?? '',
-        linkedinProfile: userDetails?.me?.linkedinProfile ?? '',
-        twitterProfile: userDetails?.me?.twitterProfile ?? '',
-        location: userDetails?.me?.location ?? '',
+        firstName: userDetails.me.firstName ?? '',
+        lastName: userDetails.me.lastName ?? '',
+        email: userDetails.me.email ?? '',
+        bio: userDetails.me.bio ?? '',
+        profilePicture: userDetails.me.profilePicture ?? null,
+        githubProfile: userDetails.me.githubProfile ?? '',
+        linkedinProfile: userDetails.me.linkedinProfile ?? '',
+        twitterProfile: userDetails.me.twitterProfile ?? '',
+        location: userDetails.me.location ?? '',
       });
+      setErrors({});
     }
   }
 
-  const { mutate } = useMutation(
-    (input: { input: UpdateUserInput }) =>
+  const userId = saved?.id;
+  const contributionQuery = useQuery(
+    ['profile_contributions', userId],
+    () =>
       GraphQL(
-        updateUserMutation,
+        UserDataDocument,
         { [params.entityType]: params.entitySlug },
-        input
+        { userId: userId ?? '' }
       ),
-    {
-      onSuccess: (res) => {
-        toast('User details updated successfully');
-        setFormData({
-          firstName: res.updateUser.firstName,
-          lastName: res.updateUser.lastName,
-          email: res.updateUser.email,
-          bio: res.updateUser.bio ?? '',
-          profilePicture: res.updateUser.profilePicture ?? null,
-          githubProfile: res.updateUser.githubProfile ?? '',
-          linkedinProfile: res.updateUser.linkedinProfile ?? '',
-          twitterProfile: res.updateUser.twitterProfile ?? '',
-          location: res.updateUser.location ?? '',
+    { enabled: Boolean(userId) }
+  );
+  const sectorQuery = useQuery(
+    ['profile_sectors', userId],
+    () =>
+      GraphQL(
+        SectorInfoDocument,
+        { [params.entityType]: params.entitySlug },
+        { userId: userId ?? '' }
+      ),
+    { enabled: Boolean(userId) }
+  );
+
+  const { mutate, isLoading } = useMutation(
+    async (payload: { input: UpdateUserInput; picture: File | null }) => {
+      const headers = { [params.entityType]: params.entitySlug };
+      const saved = await GraphQL(updateUserMutation, headers, {
+        input: payload.input,
+      });
+      if (!(payload.picture instanceof File)) {
+        return { result: saved, pictureFailed: false };
+      }
+
+      try {
+        const withPicture = await GraphQL(updateUserMutation, headers, {
+          input: { profilePicture: payload.picture },
         });
+        return { result: withPicture, pictureFailed: false };
+      } catch {
+        return { result: saved, pictureFailed: true };
+      }
+    },
+    {
+      onSuccess: ({ result, pictureFailed }) => {
+        toast(
+          pictureFailed
+            ? 'Profile saved, but the picture could not be updated.'
+            : 'User details updated successfully'
+        );
+        const updated = result.updateUser;
+        setFormData({
+          firstName: updated.firstName,
+          lastName: updated.lastName,
+          email: updated.email,
+          bio: updated.bio ?? '',
+          profilePicture: updated.profilePicture ?? null,
+          githubProfile: updated.githubProfile ?? '',
+          linkedinProfile: updated.linkedinProfile ?? '',
+          twitterProfile: updated.twitterProfile ?? '',
+          location: updated.location ?? '',
+        });
+        setErrors({});
         setUserDetails({
           ...userDetails,
-          me: res.updateUser,
+          me: updated,
         });
       },
-
       onError: (error: unknown) => {
         const message = error instanceof Error ? error.message : undefined;
         if (typeof message === 'string') {
-
-          // Try to extract field errors
           const tryField = (field: string) => {
-            const m = message.match(
+            const match = message.match(
               new RegExp(`'${field}'\\s*:\\s*\\['([^']+)'\\]`)
             );
-            if (m?.[1]) {
-              const prettyName = prettyField(field);
-              const errorMsg = `${prettyName}: ${m[1]}`;
-              toast.error(errorMsg);
+            if (match?.[1]) {
+              toast.error(`${prettyField(field)}: ${match[1]}`);
             }
-            return Boolean(m?.[1]);
+            return Boolean(match?.[1]);
           };
 
           const anyMatched =
             tryField('github_profile') ||
             tryField('linkedin_profile') ||
-            tryField('twitter_profile');
+            tryField('twitter_profile') ||
+            tryField('profile_picture') ||
+            tryField('location');
 
           if (!anyMatched) {
             toast.error(`Error: ${message}`);
@@ -153,159 +219,383 @@ const UserProfile = () => {
     }
   );
 
-  const handleSave = () => {
-    // Create mutation input with only changed fields
-    const formValidation =
-      formData.firstName &&
-      formData.lastName &&
-      formData.email &&
-      formData.bio &&
-      formData.profilePicture;
+  const hasUnsavedChanges = saved
+    ? formData.firstName.trim() !== (saved.firstName ?? '') ||
+      formData.lastName.trim() !== (saved.lastName ?? '') ||
+      formData.location.trim() !== (saved.location ?? '') ||
+      formData.bio.trim() !== (saved.bio ?? '') ||
+      formData.githubProfile.trim() !== (saved.githubProfile ?? '') ||
+      formData.linkedinProfile.trim() !== (saved.linkedinProfile ?? '') ||
+      formData.twitterProfile.trim() !== (saved.twitterProfile ?? '') ||
+      formData.profilePicture instanceof File
+    : false;
 
-    if (!formValidation) {
-      toast('Please fill all the required fields');
+  const resetForm = () => {
+    if (!saved) return;
+    setFormData({
+      firstName: saved.firstName ?? '',
+      lastName: saved.lastName ?? '',
+      email: saved.email ?? '',
+      bio: saved.bio ?? '',
+      profilePicture: saved.profilePicture ?? null,
+      githubProfile: saved.githubProfile ?? '',
+      linkedinProfile: saved.linkedinProfile ?? '',
+      twitterProfile: saved.twitterProfile ?? '',
+      location: saved.location ?? '',
+    });
+    setErrors({});
+  };
+
+  const clearError = (field: keyof FormErrors) => {
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
+  const handleCancel = () => {
+    if (!hasUnsavedChanges) {
+      resetForm();
       return;
     }
-    if (formData.githubProfile && !githubRegex.test(formData.githubProfile)) {
-      toast.error('GitHub URL: Enter a valid URL.');
-      return;
+    setDiscardOpen(true);
+  };
+
+  const handleSave = () => {
+    const nextErrors: FormErrors = {};
+    if (!formData.firstName.trim()) {
+      nextErrors.firstName = 'Enter your first name.';
     }
-    if (
-      formData.linkedinProfile &&
-      !linkedinRegex.test(formData.linkedinProfile)
-    ) {
-      toast.error('LinkedIn URL: Enter a valid URL.');
-      return;
+    if (!formData.lastName.trim()) {
+      nextErrors.lastName = 'Enter your last name.';
     }
-    if (
-      formData.twitterProfile &&
-      !twitterRegex.test(formData.twitterProfile)
-    ) {
-      toast.error('Twitter URL: Enter a valid URL.');
+    const githubProfile = normalizeProfileUrl(formData.githubProfile);
+    const linkedinProfile = normalizeProfileUrl(formData.linkedinProfile);
+    const twitterProfile = normalizeProfileUrl(formData.twitterProfile);
+    if (githubProfile && !isProfileUrl(githubProfile)) {
+      nextErrors.githubProfile = 'Enter a valid GitHub profile URL.';
+    }
+    if (linkedinProfile && !isProfileUrl(linkedinProfile)) {
+      nextErrors.linkedinProfile = 'Enter a valid LinkedIn profile URL.';
+    }
+    if (twitterProfile && !isProfileUrl(twitterProfile)) {
+      nextErrors.twitterProfile = 'Enter a valid X profile URL.';
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      toast.error('Check the highlighted profile fields.');
       return;
     }
 
     const inputData: UpdateUserInput = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      bio: formData.bio,
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      bio: formData.bio.trim(),
       email: formData.email,
-      githubProfile: formData.githubProfile,
-      linkedinProfile: formData.linkedinProfile,
-      twitterProfile: formData.twitterProfile,
-      location: formData.location,
+      githubProfile,
+      linkedinProfile,
+      twitterProfile,
+      location: formData.location.trim(),
     };
 
-    // Only add logo if it has changed
-    if (formData.profilePicture instanceof File) {
-      inputData.profilePicture = formData.profilePicture;
-    }
-    mutate({ input: inputData });
+    mutate({
+      input: inputData,
+      picture:
+        formData.profilePicture instanceof File
+          ? formData.profilePicture
+          : null,
+    });
   };
 
-  return (
-    <div>
-      <div>
-        <Text variant="headingXl">My Profile</Text>
-      </div>
-      <div className=" mt-6 flex flex-col gap-4">
-        <div className="flex flex-wrap gap-4 lg:flex-nowrap">
-          <div className="flex w-full flex-col flex-wrap gap-4 lg:flex-nowrap">
-            <div className="flex w-full flex-wrap gap-6 md:flex-nowrap lg:flex-nowrap">
-              <div className="w-full">
-                <TextField
-                  label="First Name *"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e })}
-                />
-              </div>
-              <div className=" w-full">
-                <TextField
-                  label="Last Name *"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e })}
-                />
-              </div>
-            </div>
+  const openChangePassword = async () => {
+    try {
+      const response = await fetch('/api/auth/change-password');
+      const data = (await response.json()) as { url?: string };
+      if (!data.url) {
+        toast.error('Could not open the Keycloak password page.');
+        return;
+      }
+      window.location.assign(data.url);
+    } catch {
+      toast.error('Could not open the Keycloak password page.');
+    }
+  };
 
-            <div className=" w-full">
+  const areas = (sectorQuery.data?.userContributedSectors ?? []).map(
+    (sector) => sector.name
+  );
+
+  return (
+    <>
+      <ProfileShell
+        title="My Profile"
+        subtitle="Manage your profile information and how you appear on CivicDataSpace."
+        footer={
+          <>
+            <Button kind="tertiary" disabled={isLoading} onClick={handleCancel}>
+              Cancel
+            </Button>
+            <ProfileSaveButton loading={isLoading} onClick={handleSave}>
+              Save changes
+            </ProfileSaveButton>
+          </>
+        }
+      >
+        <SectionCard
+          title="Personal information"
+          description="Basic information associated with your CivicDataSpace profile."
+        >
+          <div className="flex flex-col gap-5">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <TextField
-                label="Email *"
-                disabled
-                name="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e })}
+                name="firstName"
+                label="First Name"
+                requiredIndicator
+                value={formData.firstName}
+                error={errors.firstName}
+                onChange={(value) => {
+                  setFormData({ ...formData, firstName: value });
+                  clearError('firstName');
+                }}
+              />
+              <TextField
+                name="lastName"
+                label="Last Name"
+                requiredIndicator
+                value={formData.lastName}
+                error={errors.lastName}
+                onChange={(value) => {
+                  setFormData({ ...formData, lastName: value });
+                  clearError('lastName');
+                }}
               />
             </div>
-            <div className=" w-full">
-              <TextField
-                label="Location"
-                name="location"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e })}
-              />
-            </div>
-          </div>
-          <div className="flex w-full flex-col gap-4">
             <TextField
-              label="Github Profile"
+              name="email"
+              label="Email"
+              disabled
+              value={formData.email}
+              helpText="Email is linked to your account and cannot be changed here."
+              onChange={() => undefined}
+            />
+            <TextField
+              name="location"
+              label="Location"
+              placeholder="City, Country"
+              value={formData.location}
+              onChange={(value) =>
+                setFormData({ ...formData, location: value })
+              }
+            />
+          </div>
+        </SectionCard>
+
+        <SectionCard title="About">
+          <div className="flex flex-col gap-5">
+            <div>
+              <TextField
+                name="bio"
+                label="Bio"
+                multiline={4}
+                maxLength={BIO_MAX_LENGTH}
+                helpText="Briefly describe your role, expertise or areas of interest."
+                value={formData.bio}
+                onChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    bio: value.slice(0, BIO_MAX_LENGTH),
+                  })
+                }
+              />
+              <Text
+                as="p"
+                variant="bodySm"
+                color="subdued"
+                alignment="end"
+                className="mt-1"
+              >
+                {formData.bio.length} / {BIO_MAX_LENGTH}
+              </Text>
+            </div>
+            <ProfilePictureField
+              id="profile-picture"
+              label="Profile picture"
+              value={formData.profilePicture}
+              onChange={(file) => {
+                if (file !== null) {
+                  setFormData({ ...formData, profilePicture: file });
+                  return;
+                }
+                if (formData.profilePicture instanceof File) {
+                  setFormData({
+                    ...formData,
+                    profilePicture: saved?.profilePicture ?? null,
+                  });
+                  return;
+                }
+                toast('Removing a saved profile picture isn’t available yet.');
+              }}
+            />
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          title="Social profiles"
+          description="Add links to your professional or social profiles."
+        >
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+            <TextField
               name="githubProfile"
+              label="GitHub"
               type="url"
               placeholder="https://github.com/username"
               value={formData.githubProfile}
-              onChange={(e) => setFormData({ ...formData, githubProfile: e })}
+              error={errors.githubProfile}
+              onChange={(value) => {
+                setFormData({ ...formData, githubProfile: value });
+                clearError('githubProfile');
+              }}
             />
             <TextField
-              label="Linkedin Profile"
               name="linkedinProfile"
+              label="LinkedIn"
               type="url"
               placeholder="https://linkedin.com/in/username"
               value={formData.linkedinProfile}
-              onChange={(e) => setFormData({ ...formData, linkedinProfile: e })}
+              error={errors.linkedinProfile}
+              onChange={(value) => {
+                setFormData({ ...formData, linkedinProfile: value });
+                clearError('linkedinProfile');
+              }}
             />
             <TextField
-              label="Twitter Profile"
               name="twitterProfile"
+              label="X"
               type="url"
-              placeholder="https://twitter.com/username"
+              placeholder="https://x.com/username"
               value={formData.twitterProfile}
-              onChange={(e) => setFormData({ ...formData, twitterProfile: e })}
+              error={errors.twitterProfile}
+              onChange={(value) => {
+                setFormData({ ...formData, twitterProfile: value });
+                clearError('twitterProfile');
+              }}
             />
           </div>
-        </div>
-        <div className="flex w-full flex-col gap-4 lg:flex-row">
-          <div className=" w-full">
-            <TextField
-              label="Bio *"
-              name="bio"
-              multiline={6}
-              value={formData.bio}
-              onChange={(e) => setFormData({ ...formData, bio: e })}
-            />
-          </div>
-          <div className="w-full">
-            <DropZone
-              label={'Upload Profile Picture *'}
-              onDrop={(e) => setFormData({ ...formData, profilePicture: e[0] })}
-              name={'Profile Picture'}
-            >
-              <DropZone.FileUpload
-                actionTitle={
-                  formData.profilePicture?.name?.split('/').pop() ||
-                  'Name of the profile picture'
-                }
-              />
-            </DropZone>
-          </div>
-        </div>
+        </SectionCard>
 
-        <Button className="m-auto w-1/6" onClick={handleSave}>
-          Save
-        </Button>
-      </div>
-    </div>
+        <ContributionCard
+          datasetCount={
+            contributionQuery.data?.userById?.publishedDatasetsCount
+          }
+          useCaseCount={
+            contributionQuery.data?.userById?.publishedUseCasesCount
+          }
+          areas={areas}
+          loading={
+            !userId || contributionQuery.isLoading || sectorQuery.isLoading
+          }
+          failed={contributionQuery.isError || sectorQuery.isError}
+        />
+
+        <SectionCard title="Account & security">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <Text as="p" variant="bodyMd" fontWeight="medium">
+                  Email
+                </Text>
+                <Text as="p" variant="bodyMd" color="subdued" truncate>
+                  {formData.email || '—'}
+                </Text>
+              </div>
+              <Text as="span" variant="bodySm" color="subdued">
+                Account email
+              </Text>
+            </div>
+            <div className="flex items-center justify-between gap-4 border-t-1 border-solid border-baseGraySlateSolid6 pt-4">
+              <div className="flex items-center gap-2">
+                <Icon source={IconShieldCheck} color="subdued" size={16} />
+                <div>
+                  <Text as="p" variant="bodyMd" fontWeight="medium">
+                    Sign-in method
+                  </Text>
+                  <Text as="p" variant="bodyMd" color="subdued">
+                    Keycloak
+                  </Text>
+                </div>
+              </div>
+              <Badge status="success">Connected</Badge>
+            </div>
+            <div className="flex items-center justify-between gap-4 border-t-1 border-solid border-baseGraySlateSolid6 pt-4">
+              <div className="flex items-center gap-2">
+                <Icon source={IconKey} color="subdued" size={16} />
+                <div>
+                  <Text as="p" variant="bodyMd" fontWeight="medium">
+                    Password
+                  </Text>
+                  <Text as="p" variant="bodyMd" color="subdued">
+                    ••••••••
+                  </Text>
+                </div>
+              </div>
+              <Button
+                kind="tertiary"
+                size="slim"
+                onClick={openChangePassword}
+                disabled
+                icon={<IconArrowRight size={16} />}
+              >
+                Change password
+              </Button>
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          className="!border-[var(--border-critical-subdued)]"
+          title={
+            <span className="text-[var(--text-critical)]">Danger zone</span>
+          }
+        >
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <Text as="p" variant="bodyMd" fontWeight="medium">
+                Delete account
+              </Text>
+              <Text as="p" variant="bodyMd" color="subdued" className="mt-0.5">
+                Permanently delete your CivicDataSpace account and account
+                information.
+              </Text>
+            </div>
+            <Button variant="critical" onClick={() => setDeleteOpen(true)}>
+              Delete account
+            </Button>
+          </div>
+        </SectionCard>
+      </ProfileShell>
+
+      <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
+        <AlertDialog.Content
+          title="Unsaved changes"
+          primaryAction={{
+            content: 'Discard changes',
+            destructive: true,
+            onAction: () => resetForm(),
+          }}
+          secondaryActions={[{ content: 'Stay' }]}
+        >
+          You have unsaved changes. Are you sure you want to leave?
+        </AlertDialog.Content>
+      </AlertDialog>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialog.Content
+          title="Delete account"
+          primaryAction={{ content: 'Close' }}
+        >
+          Permanently deleting your CivicDataSpace account isn’t available from
+          this page yet.
+        </AlertDialog.Content>
+      </AlertDialog>
+    </>
   );
 };
 

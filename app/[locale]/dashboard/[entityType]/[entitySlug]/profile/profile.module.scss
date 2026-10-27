@@ -1,0 +1,11 @@
+.profile {
+  --text-highlight: var(--blue-primary-color);
+}
+
+.saveChanges {
+  display: inline-flex;
+  --action-primary-basic-default: var(--blue-primary-color);
+  --action-primary-basic-hovered: var(--blue-primary-text);
+  --action-primary-basic-pressed: var(--blue-primary-text);
+  --text-highlight: var(--blue-primary-color);
+}
