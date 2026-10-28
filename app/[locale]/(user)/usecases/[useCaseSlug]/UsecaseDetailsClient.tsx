@@ -1,38 +1,53 @@
 'use client';
 
+// Public use case page. Shows the cover, the story, and the related datasets.
+// Docs: ../architecture.md
 import { useEffect } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
 import { graphql } from '@/gql';
+import {
+  UseCasedetailsDocument,
+  type UseCasedetailsQuery,
+} from '@/gql/generated/graphql';
 import { useAnalytics } from '@/hooks/use-analytics';
 import { useQuery } from '@tanstack/react-query';
-import { Card, Text } from 'opub-ui';
+import { Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
-import { formatDate, generateJsonLd } from '@/lib/utils';
+import { generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
-import { Icons } from '@/components/icons';
+import { EntityCover } from '@/components/entity-cover/EntityCover';
 import JsonLd from '@/components/JsonLd';
 import { Loading } from '@/components/loading';
-import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
-import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
-import PrimaryDetails from '../components/Details';
-import Metadata from '../components/Metadata';
+import { SharePanel } from '@/components/share-panel/SharePanel';
+import { StoryRail } from '@/components/story-rail/StoryRail';
+import { ContentsNav } from '../components/ContentsNav';
+import { ContributorList } from '../components/ContributorList';
+import { DatasetStories } from '../components/DatasetStories';
+import { storyHeadings } from '../components/story-outline';
+import { TopicBar } from '../components/TopicBar';
+import {
+  buildUseCaseCover,
+  buildUseCasePageUrl,
+} from '../components/usecase-cover';
+import {
+  buildRailContributors,
+  buildUseCaseTopics,
+} from '../components/usecase-rail';
+import { UseCaseStory } from '../components/UseCaseStory';
 import Dashboards from './Dashboards';
 
-const UseCasedetails = graphql(`
+void graphql(`
   query UseCasedetails($pk: ID!) {
     useCase(pk: $pk) {
       id
       title
       summary
       created
-      startedOn
       isIndividualUsecase
       user {
         fullName
-        email
         id
         profilePicture {
           url
@@ -42,56 +57,27 @@ const UseCasedetails = graphql(`
         name
         slug
         id
-        contactEmail
         logo {
           url
         }
-      }
-      website
-      metadata {
-        metadataItem {
-          id
-          label
-          dataType
-        }
-        id
-        value
       }
       sectors {
         id
         name
       }
       geographies {
-        id
         name
-        code
-        type
-        parentId {
-          id
-          name
-          type
-        }
       }
       sdgs {
         id
         code
         name
       }
-      runningStatus
       tags {
         id
         value
       }
-      publishers {
-        name
-        contactEmail
-        logo {
-          url
-        }
-      }
-      platformUrl
       logo {
-        name
         path
       }
       datasets {
@@ -100,7 +86,6 @@ const UseCasedetails = graphql(`
         isIndividualDataset
         user {
           fullName
-          id
           profilePicture {
             url
           }
@@ -113,30 +98,14 @@ const UseCasedetails = graphql(`
             url
           }
         }
-        metadata {
-          metadataItem {
-            id
-            label
-            dataType
-          }
-          id
-          value
-        }
         sectors {
           name
         }
         geographies {
-          id
           name
-          code
-          type
         }
         modified
       }
-      contactEmail
-      status
-      slug
-      modified
       contributors {
         id
         fullName
@@ -175,10 +144,13 @@ const UseCaseDetailClient = () => {
   } = useQuery(
     [`fetch_UsecaseDetails_${params.useCaseSlug}`],
     async () => {
-      const result = await GraphQLPublic(UseCasedetails, {}, {
-        pk:
-          typeof params.useCaseSlug === 'string' ? params.useCaseSlug : '',
-      });
+      const result = await GraphQLPublic(
+        UseCasedetailsDocument,
+        {},
+        {
+          pk: typeof params.useCaseSlug === 'string' ? params.useCaseSlug : '',
+        }
+      );
       return result;
     },
     {
@@ -199,18 +171,6 @@ const UseCaseDetailClient = () => {
       );
     }
   }, [UseCaseDetails?.useCase, trackUsecase]);
-
-  const datasets = UseCaseDetails?.useCase?.datasets || []; // Fallback to an empty array
-
-  const hasSupportingOrganizations =
-    UseCaseDetails?.useCase?.supportingOrganizations &&
-    UseCaseDetails?.useCase?.supportingOrganizations?.length > 0;
-  const hasPartnerOrganizations =
-    UseCaseDetails?.useCase?.partnerOrganizations &&
-    UseCaseDetails?.useCase?.partnerOrganizations?.length > 0;
-  const hasContributors =
-    UseCaseDetails?.useCase?.contributors &&
-    UseCaseDetails?.useCase?.contributors?.length > 0;
 
   const jsonLd = generateJsonLd({
     '@context': 'https://schema.org',
@@ -243,8 +203,7 @@ const UseCaseDetailClient = () => {
               </Text>
               <Text variant="bodyLg">
                 {error instanceof Error &&
-                (error.message.includes('401') ||
-                  error.message.includes('403'))
+                (error.message.includes('401') || error.message.includes('403'))
                   ? 'You do not have permission to view this use case. Please log in or contact the administrator.'
                   : 'Failed to load use case details. Please try again later.'}
               </Text>
@@ -260,195 +219,85 @@ const UseCaseDetailClient = () => {
             </div>
           </div>
         ) : (
-          <>
-            <BreadCrumbs
-              data={[
-                { href: '/', label: 'Home' },
-                { href: '/usecases', label: 'Use Cases' },
-                { href: '#', label: UseCaseDetails?.useCase?.title || '' },
-              ]}
-            />
-            <div className=" bg-onSurfaceDefault">
-              <div className="container flex flex-row">
-                <div className="w-full border-solid border-greyExtralight py-8 pr-8 lg:w-3/4 lg:border-r-2 lg:py-10 lg:pr-8">
-                  <PrimaryDetails data={UseCaseDetails} isLoading={isLoading} />
-                </div>
-                <div className="hidden lg:block lg:w-1/4">
-                  <Metadata data={UseCaseDetails} />
-                </div>
-              </div>
-              <Dashboards />
-              <div className="container py-8 lg:py-14">
-                <div className=" flex flex-col gap-1 ">
-                  <Text variant="headingXl">Datasets in this Use Case</Text>
-                  <Text variant="bodyLg" fontWeight="regular">
-                    Explore datasets related to this use case{' '}
-                  </Text>
-                </div>
-                <div className="grid  grid-cols-1 gap-6 pt-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ">
-                  {/* <div className="grid grid-cols-1 p-4 gap-6 overflow-y-auto  md:grid-cols-2 lg:grid-cols-3 max-h-[calc(100vh-250px)]"> */}
-                  {datasets.length > 0 &&
-                    datasets.map((dataset) => (
-                      <Card
-                        key={dataset.id}
-                        title={dataset.title}
-                        variation={'collapsed'}
-                        iconColor={'warning'}
-                        metadataContent={[
-                          {
-                            icon: Icons.calendarEvent,
-                            label: 'Date',
-                            value: formatDate(dataset.modified) || '',
-                            stroke: 1.2,
-                          },
-                          {
-                            icon: Icons.fileDownload,
-                            label: 'Download',
-                            value: dataset.downloadCount.toString(),
-                            stroke: 1.2,
-                          },
-                          {
-                            icon: Icons.worldPin,
-                            label: 'Geography',
-                            value:
-                              dataset.geographies &&
-                              dataset.geographies.length > 0
-                                ? dataset.geographies
-                                    .map((geo) => geo.name)
-                                    .join(', ')
-                                : '',
-                            stroke: 1.2,
-                          },
-                        ]}
-                        href={`/datasets/${dataset.id}`}
-                        leftFooterChips={[
-                          {
-                            icon: `/Sectors/${dataset.sectors[0]?.name}.svg`,
-                            label: 'Sectors',
-                          },
-                        ]}
-                        rightFooterChips={[
-                          {
-                            icon: dataset.isIndividualDataset
-                              ? dataset?.user?.profilePicture
-                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${dataset.user.profilePicture.url}`
-                                : '/profile.png'
-                              : dataset?.organization?.logo
-                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${dataset.organization.logo.url}`
-                                : '/org.png',
-                            label: 'Published by',
-                          },
-                        ]}
-                        description={stripMarkdown(dataset.description || '')}
-                        withViewButton={false}
-                      />
-                    ))}
-                </div>
-              </div>
-            </div>
-            {(hasSupportingOrganizations ||
-              hasPartnerOrganizations ||
-              hasContributors) && (
-              <div className=" bg-primaryBlue">
-                <div className="container flex flex-wrap gap-8 py-10 lg:flex-nowrap ">
-                  {hasSupportingOrganizations && (
-                    <div className="w-full lg:w-2/4">
-                      <Text variant="headingXl" color="onBgDefault">
-                        Supported by
-                      </Text>
-                      <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
-                        {UseCaseDetails?.useCase?.supportingOrganizations?.map(
-                          (org) => (
-                            <Link
-                              href={`/publishers/organization/${org.slug || org.name}_${org.id}`}
-                              key={org.id}
-                            >
-                              <div className=" rounded-4 bg-surfaceDefault  p-4">
-                                <Image
-                                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
-                                  alt={org.name}
-                                  width={140}
-                                  height={100}
-                                  className=" object-contain"
-                                />
-                              </div>
-                            </Link>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  {hasPartnerOrganizations && (
-                    <div className="w-full lg:w-2/4">
-                      <Text variant="headingXl" color="onBgDefault">
-                        Partnered by
-                      </Text>
-                      <div className="mt-8 flex h-fit w-fit flex-wrap items-center justify-start gap-6 ">
-                        {UseCaseDetails?.useCase?.partnerOrganizations?.map(
-                          (org) => (
-                            <Link
-                              href={`/publishers/organization/${org.slug || org.name}_${org.id}`}
-                              key={org.id}
-                            >
-                              <div className=" rounded-4 bg-surfaceDefault  p-4">
-                                <Image
-                                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
-                                  alt={org.name}
-                                  width={140}
-                                  height={100}
-                                  className=" object-contain"
-                                />
-                              </div>
-                            </Link>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {hasContributors && (
-                  <div className="container py-10">
-                    <div className="flex flex-col gap-1">
-                      <Text variant="headingXl" color="onBgDefault">
-                        Contributors{' '}
-                      </Text>
-                      <Text color="onBgDefault" variant="bodyLg">
-                        Publisher and Contributors who have added to the Use
-                        Case
-                      </Text>
-                    </div>
-                    <div className="mt-8 flex flex-wrap items-center justify-start gap-8">
-                      {UseCaseDetails?.useCase?.contributors?.map(
-                        (contributor) => (
-                          <Link
-                            href={`/publishers/${contributor.fullName}_${contributor.id}`}
-                            key={contributor.id}
-                          >
-                            <Image
-                              alt={contributor.fullName}
-                              width={120}
-                              height={120}
-                              className="rounded-full object-cover"
-                              key={contributor.id}
-                              src={
-                                contributor.profilePicture?.url
-                                  ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${contributor.profilePicture?.url}`
-                                  : '/profile.png'
-                              }
-                            />
-                          </Link>
-                        )
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
+          <PublishedUseCase
+            useCase={UseCaseDetails.useCase}
+            pageSlug={
+              typeof params.useCaseSlug === 'string' ? params.useCaseSlug : ''
+            }
+          />
         )}
       </div>
     </>
   );
 };
+
+function PublishedUseCase({
+  useCase,
+  pageSlug,
+}: {
+  useCase: NonNullable<UseCasedetailsQuery['useCase']>;
+  pageSlug: string;
+}) {
+  // Shape the cover from the published record.
+  const cover = buildUseCaseCover(useCase);
+  // Public address the share actions use.
+  const pageUrl = buildUseCasePageUrl(pageSlug);
+  // Section titles inside the story, for the contents list.
+  const headings = storyHeadings(useCase.summary);
+  // People and organisations attached to this use case.
+  const contributors = buildRailContributors(useCase);
+  // Tags, goals, and sectors that open search.
+  const topics = buildUseCaseTopics(useCase);
+
+  return (
+    <>
+      <BreadCrumbs
+        data={[
+          { href: '/', label: 'Home' },
+          { href: '/usecases', label: 'Use Cases' },
+          { href: '#', label: cover.title },
+        ]}
+      />
+      <EntityCover
+        backHref="/usecases"
+        title={cover.title}
+        description={cover.description}
+        imageSrc={cover.imageSrc}
+        imageAlt={cover.imageAlt}
+        publisher={cover.publisher}
+        meta={cover.meta}
+      />
+      <div className="bg-white">
+        <div className="mx-auto w-full max-w-[1760px] px-4 py-8 md:px-6 lg:px-8 lg:py-12 xl:px-10">
+          <div className="mx-auto grid w-full max-w-6xl items-start gap-8 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-12">
+            <StoryRail>
+              <SharePanel
+                label="Share this use case"
+                url={pageUrl}
+                title={cover.title}
+              />
+              {headings.length > 0 ? <ContentsNav items={headings} /> : null}
+              {contributors.length > 0 ? (
+                <ContributorList people={contributors} />
+              ) : null}
+            </StoryRail>
+            <div className="min-w-0">
+              <UseCaseStory summary={useCase.summary} headings={headings} />
+            </div>
+          </div>
+          <div className="mx-auto w-full max-w-6xl">
+            <Dashboards usecaseId={String(useCase.id)} />
+            <DatasetStories datasets={useCase.datasets ?? []} />
+            <TopicBar
+              tags={topics.tags}
+              sdgs={topics.sdgs}
+              sectors={topics.sectors}
+            />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
 
 export default UseCaseDetailClient;

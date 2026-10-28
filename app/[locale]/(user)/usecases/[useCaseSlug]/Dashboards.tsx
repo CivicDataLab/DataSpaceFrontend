@@ -1,7 +1,5 @@
-import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
-import { Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { getSafeEmbedUrl } from '@/lib/dashboardEmbed';
@@ -18,14 +16,10 @@ const DashboardsList = graphql(`
   }
 `);
 
-const Dashboards = () => {
-  const params = useParams<{ useCaseSlug?: string }>();
-  const useCaseSlug = params?.useCaseSlug;
-
-  const usecaseId =
-    typeof useCaseSlug === 'string' ? Number.parseInt(useCaseSlug, 10) : NaN;
-
-  const isValidId = !Number.isNaN(usecaseId);
+const Dashboards = ({ usecaseId: usecaseIdValue }: { usecaseId: string }) => {
+  const usecaseId = Number.parseInt(usecaseIdValue, 10);
+  const isValidId =
+    Number.isInteger(usecaseId) && String(usecaseId) === usecaseIdValue;
 
   const { data, isLoading } = useQuery(
     ['fetch_dashboardData', usecaseId],
@@ -42,9 +36,8 @@ const Dashboards = () => {
       ...dashboard,
       embedUrl: getSafeEmbedUrl(dashboard.link),
     }))
-    .filter(
-      (dashboard): dashboard is typeof dashboard & { embedUrl: string } =>
-        Boolean(dashboard.embedUrl)
+    .filter((dashboard): dashboard is typeof dashboard & { embedUrl: string } =>
+      Boolean(dashboard.embedUrl)
     );
 
   if (!isValidId || (!isLoading && dashboards.length === 0)) {
@@ -52,57 +45,41 @@ const Dashboards = () => {
   }
 
   return (
-    <div>
+    <section className="mt-12" aria-label="Explore the data">
+      <h2 className="text-[24px] font-semi-bold leading-[30px] text-[#0a0a0a]">
+        Explore the data
+      </h2>
+      <p className="mt-2 text-100 font-regular leading-[21px] text-[#6B6B6B]">
+        Explore the data in greater depth through the embedded dashboard.
+      </p>
       {isLoading ? (
-        <Loading />
+        <div className="mt-4 flex min-h-[420px] items-center justify-center rounded-4 bg-baseGraySlateSolid3">
+          <Loading />
+        </div>
       ) : (
-        <div className="container py-10">
-          <div className=" flex flex-col gap-1 ">
-            <Text variant="headingXl">Dashboards Linked to this Use Case</Text>
-            <Text variant="bodyLg" fontWeight="regular">
-              Analytical dashboards to explore the data further{' '}
-            </Text>
-          </div>
-          <div className="mt-8 flex flex-col gap-10">
-            {dashboards.map((dashboard) => (
-              <div key={dashboard.id}>
-                <Text variant="headingLg" className="text-primaryText">
-                  {dashboard.name}
-                </Text>
-                <div className="mt-4">
-                  {isJusticeHubEmbed(dashboard.embedUrl) ? (
-                    <JusticeHubEmbed
-                      key={dashboard.embedUrl}
-                      src={dashboard.embedUrl}
-                      title={dashboard.name || 'Dashboard'}
-                    />
-                  ) : (
-                    <div className="overflow-hidden rounded-2 border border-baseGraySlateSolid9 bg-surfaceDefault">
-                      <iframe
-                        title={dashboard.name || 'Dashboard'}
-                        src={dashboard.embedUrl}
-                        className="min-h-[640px] w-full border-0"
-                        loading="lazy"
-                        referrerPolicy="strict-origin-when-cross-origin"
-                        allowFullScreen
-                      />
-                    </div>
-                  )}
-                </div>
-                <a
-                  href={dashboard.embedUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-4 inline-block text-primaryBlue underline"
-                >
-                  Open dashboard in a new tab
-                </a>
-              </div>
-            ))}
-          </div>
+        <div className="mt-4 flex flex-col gap-6">
+          {dashboards.map((dashboard) =>
+            isJusticeHubEmbed(dashboard.embedUrl) ? (
+              <JusticeHubEmbed
+                key={dashboard.id}
+                src={dashboard.embedUrl}
+                title={dashboard.name || 'Dashboard'}
+              />
+            ) : (
+              <iframe
+                key={dashboard.id}
+                title={dashboard.name || 'Dashboard'}
+                src={dashboard.embedUrl}
+                className="border-0 min-h-[420px] w-full rounded-4 bg-baseGraySlateSolid3"
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            )
+          )}
         </div>
       )}
-    </div>
+    </section>
   );
 };
 

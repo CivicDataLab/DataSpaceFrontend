@@ -121,12 +121,6 @@ export const datasetDetailTour: TourConfig = {
       placement: 'top',
       skipBeacon: true,
     },
-    {
-      target: '[data-tour="related-datasets"]',
-      content: 'Discover related datasets that might be useful for your work.',
-      placement: 'top',
-      skipBeacon: true,
-    },
   ],
 };
 
