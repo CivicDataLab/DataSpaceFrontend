@@ -179,7 +179,8 @@ const Metadata = ({ data, setOpen }: MetadataProps) => {
             width={120}
             src={image}
             alt="Collaborative logo"
-            className="w-full object-contain"
+            className="h-auto w-full object-contain"
+            loading="eager"
           />
         </div>
         <div className="flex flex-col gap-8">

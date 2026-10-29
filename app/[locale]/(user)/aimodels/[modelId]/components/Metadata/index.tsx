@@ -153,7 +153,8 @@ export default function Metadata({ data }: MetadataProps) {
               width={100}
               src={image}
               alt={isIndividual ? 'Publisher logo' : 'Organization logo'}
-              className="w-full object-contain"
+              className="h-auto w-full object-contain"
+              loading="eager"
               fallback={isIndividual ? '/profile.png' : '/org.png'}
             />
           </Link>
