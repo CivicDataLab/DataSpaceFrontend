@@ -13,7 +13,7 @@ const CollaborativeInfoQuery = graphql(`
       summary
       slug
       logo {
-        url
+        path
       }
       tags {
         id

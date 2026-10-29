@@ -14,7 +14,7 @@ const UseCaseInfoQuery = graphql(`
       summary
       slug
       logo {
-        url
+        path
       }
       tags {
         id

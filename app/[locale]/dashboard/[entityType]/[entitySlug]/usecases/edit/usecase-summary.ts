@@ -14,6 +14,7 @@ export const useCaseWizardSummaryQuery = graphql(`
       slug
       logo {
         name
+        path
         url
       }
       sectors {

@@ -14,7 +14,6 @@ import {
 import { Combobox, SectionCard, Spinner, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { mediaUrl } from '@/lib/utils';
 import { AddDatasetSheet } from '../../components/AddDatasetSheet';
 import { AddOrganisationSheet } from '../../components/AddOrganisationSheet';
 import {
@@ -246,6 +245,12 @@ const sdgsListQuery = graphql(`
 
 function comboValues(value: SelectOption[], key: 'value' | 'label'): string[] {
   return value.map((item) => String(item[key] ?? ''));
+}
+
+function fileUrl(url?: string | null) {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${url.replace('/code/files/', '')}`;
 }
 
 function sdgLabel(item: {
@@ -628,7 +633,7 @@ export default function ConnectPage() {
       role: 'contributor',
       title: item.fullName,
       subtitle: personSubtitle(item.organizationMemberships),
-      imageUrl: mediaUrl(item.profilePicture?.url),
+      imageUrl: fileUrl(item.profilePicture?.url),
     })) ?? []),
     ...(useCase?.partnerOrganizations?.map((item) => ({
       id: `org:${item.id}`,
@@ -636,7 +641,7 @@ export default function ConnectPage() {
       role: 'partner',
       title: item.name,
       subtitle: 'Registered organisation',
-      imageUrl: mediaUrl(item.logo?.url) || undefined,
+      imageUrl: fileUrl(item.logo?.url) || undefined,
     })) ?? []),
     ...(useCase?.supportingOrganizations
       ?.filter((item) => !partnerIds.has(item.id))
@@ -646,7 +651,7 @@ export default function ConnectPage() {
         role: 'supporter',
         title: item.name,
         subtitle: 'Registered organisation',
-        imageUrl: mediaUrl(item.logo?.url) || undefined,
+        imageUrl: fileUrl(item.logo?.url) || undefined,
       })) ?? []),
   ];
   const selectedPeopleIds = new Set(selectedPeople.map((item) => item.id));
@@ -657,7 +662,7 @@ export default function ConnectPage() {
       role: 'contributor',
       title: item.fullName,
       subtitle: personSubtitle(item.organizationMemberships),
-      imageUrl: mediaUrl(item.profilePicture?.url) || undefined,
+      imageUrl: fileUrl(item.profilePicture?.url) || undefined,
     })) ?? []),
     ...(orgsQuery.data?.allOrganizations?.map((item) => ({
       id: `org:${item.id}`,
@@ -665,7 +670,7 @@ export default function ConnectPage() {
       role: 'partner',
       title: item.name,
       subtitle: 'Registered organisation',
-      imageUrl: mediaUrl(item.logo?.url) || undefined,
+      imageUrl: fileUrl(item.logo?.url) || undefined,
     })) ?? []),
   ].filter((item) => !selectedPeopleIds.has(item.id));
 

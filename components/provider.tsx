@@ -44,25 +44,6 @@ function HolyLoaderWithValidAria() {
   return <HolyLoader color="var(--action-primary-success-default)" />;
 }
 
-function FallbackUI() {
-  return (
-    <div className="flex min-h-[60vh] w-full flex-col items-center justify-center gap-4 p-8 text-center">
-      <p className="text-lg font-medium">Something went wrong.</p>
-      <p className="text-600">
-        An unexpected error occurred while loading this page. Please refresh
-        or try again later.
-      </p>
-      <button
-        type="button"
-        className="rounded-md bg-[var(--action-primary-default,#0057ff)] px-4 py-2 text-white"
-        onClick={() => window.location.reload()}
-      >
-        Reload page
-      </button>
-    </div>
-  );
-}
-
 export default function Provider({ children }: { children: React.ReactNode }) {
   const [client] = React.useState(
     new QueryClient({
@@ -98,7 +79,7 @@ export default function Provider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ErrorBoundary fallback={<FallbackUI />}>
+    <ErrorBoundary>
       <SessionProvider>
         <SessionGuard>
           <QueryClientProvider client={client}>

@@ -199,6 +199,7 @@ export const OrgList = graphql(`
       id
       name
       logo {
+        path
         url
       }
     }

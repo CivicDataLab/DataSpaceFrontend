@@ -4,9 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Divider, Tag, Text, Tooltip } from 'opub-ui';
 
-import { mediaUrl } from '@/lib/utils';
-import MediaImage from '@/components/MediaImage';
-
 interface MetadataProvider {
   provider: string;
   isPrimary?: boolean;
@@ -50,10 +47,10 @@ export default function Metadata({ data }: MetadataProps) {
 
   const image = isIndividual
     ? data?.user?.profilePicture?.url
-      ? mediaUrl(data.user.profilePicture.url)
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}${data.user.profilePicture.url}`
       : '/profile.png'
     : data?.organization?.logo?.url
-      ? mediaUrl(data.organization.logo.url)
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}${data.organization.logo.url}`
       : '/org.png';
 
   const publisherName = isIndividual
@@ -148,14 +145,12 @@ export default function Metadata({ data }: MetadataProps) {
         {/* Organization Logo */}
         <div className="hidden rounded-2 border-1 border-solid border-greyExtralight bg-white p-2 lg:block">
           <Link href={getPublisherURL()}>
-            <MediaImage
+            <Image
               height={140}
               width={100}
               src={image}
               alt={isIndividual ? 'Publisher logo' : 'Organization logo'}
-              className="h-auto w-full object-contain"
-              loading="eager"
-              fallback={isIndividual ? '/profile.png' : '/org.png'}
+              className="w-full object-contain"
             />
           </Link>
         </div>

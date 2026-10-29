@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
@@ -9,13 +10,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
-import { formatDate, generateJsonLd, mediaUrl } from '@/lib/utils';
+import { formatDate, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import JsonLd from '@/components/JsonLd';
 import { Loading } from '@/components/loading';
 import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
-import MediaImage from '@/components/MediaImage';
 import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 import PrimaryDetails from '../components/Details';
 import Metadata from '../components/Metadata';
@@ -92,7 +92,7 @@ const UseCasedetails = graphql(`
       platformUrl
       logo {
         name
-        url
+        path
       }
       datasets {
         title
@@ -331,10 +331,10 @@ const UseCaseDetailClient = () => {
                           {
                             icon: dataset.isIndividualDataset
                               ? dataset?.user?.profilePicture
-                                ? mediaUrl(dataset.user.profilePicture.url)
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${dataset.user.profilePicture.url}`
                                 : '/profile.png'
                               : dataset?.organization?.logo
-                                ? mediaUrl(dataset.organization.logo.url)
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${dataset.organization.logo.url}`
                                 : '/org.png',
                             label: 'Published by',
                           },
@@ -364,8 +364,8 @@ const UseCaseDetailClient = () => {
                               key={org.id}
                             >
                               <div className=" rounded-4 bg-surfaceDefault  p-4">
-                                <MediaImage
-                                  src={mediaUrl(org.logo?.url)}
+                                <Image
+                                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
                                   alt={org.name}
                                   width={140}
                                   height={100}
@@ -391,8 +391,8 @@ const UseCaseDetailClient = () => {
                               key={org.id}
                             >
                               <div className=" rounded-4 bg-surfaceDefault  p-4">
-                                <MediaImage
-                                  src={mediaUrl(org.logo?.url)}
+                                <Image
+                                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
                                   alt={org.name}
                                   width={140}
                                   height={100}
@@ -424,7 +424,7 @@ const UseCaseDetailClient = () => {
                             href={`/publishers/${contributor.fullName}_${contributor.id}`}
                             key={contributor.id}
                           >
-                            <MediaImage
+                            <Image
                               alt={contributor.fullName}
                               width={120}
                               height={120}
@@ -432,10 +432,9 @@ const UseCaseDetailClient = () => {
                               key={contributor.id}
                               src={
                                 contributor.profilePicture?.url
-                                  ? mediaUrl(contributor.profilePicture?.url)
+                                  ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${contributor.profilePicture?.url}`
                                   : '/profile.png'
                               }
-                              fallback="/profile.png"
                             />
                           </Link>
                         )

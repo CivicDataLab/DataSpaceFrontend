@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Icon, Spinner, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { cn, extractPublisherId, mediaUrl } from '@/lib/utils';
+import { cn, extractPublisherId } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 
@@ -202,10 +202,10 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
                 {
                   icon: item.isIndividualDataset
                     ? item?.user?.profilePicture
-                      ? mediaUrl(item.user.profilePicture.url)
+                      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
                       : '/profile.png'
                     : item?.organization?.logo
-                      ? mediaUrl(item.organization.logo.url)
+                      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
                       : '/org.png',
                   label: 'Published by',
                 },

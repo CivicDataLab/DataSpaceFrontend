@@ -1,15 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { graphql } from '@/gql';
 import { ResourceChartImageInputPartial } from '@/gql/generated/graphql';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { mediaUrl } from '@/lib/utils';
 import { Loading } from '@/components/loading';
-import MediaImage from '@/components/MediaImage';
 import TitleBar from '../../../components/title-bar';
 
 const getResourceChartImageDetailsDoc = graphql(`
@@ -25,7 +24,11 @@ const getResourceChartImageDetailsDoc = graphql(`
       name
       image {
         name
+        path
+        size
         url
+        width
+        height
       }
       status
     }
@@ -161,11 +164,11 @@ const ChartImagePreview = ({
         <div className="border-t-2 border-solid border-greyExtralight pt-8">
           <div className="flex flex-col items-center justify-center gap-4">
             <div className="relative aspect-video w-full max-w-5xl">
-              <MediaImage
-                src={mediaUrl(
+              <Image
+                src={`${process.env.NEXT_PUBLIC_BACKEND_URL ?? ''}${
                   getResourceChartDetailsRes?.data?.resourceChartImage?.image
                     ?.url ?? ''
-                )}
+                }`}
                 alt={getResourceChartDetailsRes?.data?.resourceChartImage?.name}
                 //   width={
                 //     getResourceChartDetailsRes?.data?.resourceChartImage?.image

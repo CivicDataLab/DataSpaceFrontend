@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UseCaseInputPartial } from '@/gql/generated/graphql';
@@ -17,8 +18,6 @@ import {
 
 import { GraphQL } from '@/lib/api';
 import { getSafeEmbedUrl } from '@/lib/dashboardEmbed';
-import { mediaUrl } from '@/lib/utils';
-import MediaImage from '@/components/MediaImage';
 import { ContentEditor } from '../../components/ContentEditor';
 import {
   extractEmbedUrl,
@@ -44,6 +43,7 @@ const FetchUseCaseBuilder = graphql(`
       summary
       logo {
         name
+        path
         url
       }
     }
@@ -59,6 +59,7 @@ const UpdateUseCaseBuilder = graphql(`
       summary
       logo {
         name
+        path
         url
       }
     }
@@ -126,6 +127,13 @@ const chartListQuery = graphql(`
 `);
 
 const MAX_THUMBNAIL_BYTES = 20 * 1024 * 1024;
+
+function mediaUrl(file?: UploadedImage | null) {
+  const raw = file?.url || file?.path;
+  if (!raw) return '';
+  if (raw.startsWith('http')) return raw;
+  return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${raw.replace('/code/files/', '')}`;
+}
 
 function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes}B`;
@@ -369,7 +377,7 @@ export default function BuilderPage() {
 
   const thumbnailPreview = useMemo(() => {
     if (!logo) return '';
-    if (!(logo instanceof File)) return mediaUrl(logo.url);
+    if (!(logo instanceof File)) return mediaUrl(logo);
     return URL.createObjectURL(logo);
   }, [logo]);
 
@@ -378,8 +386,7 @@ export default function BuilderPage() {
     return () => URL.revokeObjectURL(thumbnailPreview);
   }, [logo, thumbnailPreview]);
 
-  const remoteLogoUrl =
-    !logo || logo instanceof File ? null : mediaUrl(logo.url);
+  const remoteLogoUrl = !logo || logo instanceof File ? null : mediaUrl(logo);
   const [syncedRemoteLogoUrl, setSyncedRemoteLogoUrl] = useState(remoteLogoUrl);
   if (remoteLogoUrl !== syncedRemoteLogoUrl) {
     setSyncedRemoteLogoUrl(remoteLogoUrl);
@@ -476,7 +483,7 @@ export default function BuilderPage() {
               {thumbnailPreview ? (
                 <div className="flex flex-col gap-2">
                   <div className={styles.thumbnailRow}>
-                    <MediaImage
+                    <Image
                       src={thumbnailPreview}
                       alt="Thumbnail"
                       width={200}

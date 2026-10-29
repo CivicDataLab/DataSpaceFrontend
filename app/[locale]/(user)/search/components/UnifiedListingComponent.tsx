@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import GraphqlPagination from '@/app/[locale]/dashboard/components/GraphqlPagination/graphqlPagination';
@@ -15,12 +16,11 @@ import {
   Tray,
 } from 'opub-ui';
 
-import { cn, formatDate, mediaUrl } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { getCollaborativeDetailUrl } from '@/lib/collaborativesRouting';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
-import MediaImage from '@/components/MediaImage';
 import Filter from '../../datasets/components/FIlter/Filter';
 import Styles from '../../datasets/dataset.module.scss';
 
@@ -397,7 +397,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   useUrlParams(queryParams, setQueryParams, setVariables);
   const latestFetchId = useRef(0);
 
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -407,13 +407,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       fetchUnifiedData(variables)
         .then((res) => {
           if (currentFetchId === latestFetchId.current) {
-            if (res && Array.isArray(res.results)) {
-              setFacets(res);
-              setError(null);
-            } else {
-              setFacets(null);
-              setError('Search returned an unexpected response.');
-            }
+            setFacets(res);
             setIsLoading(false);
           }
         })
@@ -421,7 +415,6 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
           console.error('Search error:', err);
           if (currentFetchId === latestFetchId.current) {
             setError('Failed to load search results. Please try again.');
-            setFacets(null);
             setIsLoading(false);
           }
         });
@@ -613,16 +606,16 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
     const image =
       item.type === 'publisher'
         ? item.logo
-          ? mediaUrl(item.logo)
+          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`
           : item.publisher_type === 'user'
             ? '/profile.png'
             : '/org.png'
         : isIndividual
           ? item?.user?.profile_picture
-            ? mediaUrl(item.user.profile_picture)
+            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
             : '/profile.png'
           : item?.organization?.logo
-            ? mediaUrl(item.organization.logo)
+            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
             : '/org.png';
 
     const geographies =
@@ -827,12 +820,12 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
 
     if (item.type === 'publisher') {
       if (item.logo) {
-        commonProps.imageUrl = mediaUrl(item.logo);
+        commonProps.imageUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`;
       } else if (item.profile_picture) {
-        commonProps.imageUrl = mediaUrl(item.profile_picture);
+        commonProps.imageUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.profile_picture}`;
       }
     } else if (item.logo) {
-      commonProps.imageUrl = mediaUrl(item.logo);
+      commonProps.imageUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`;
     }
 
     if (item.type === 'publisher') {
@@ -847,21 +840,20 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
           className="flex flex-col gap-4 rounded-4 p-6 shadow-card"
         >
           <div className="flex items-center gap-4">
-            <MediaImage
+            <Image
               height={80}
               width={80}
               src={
                 item.publisher_type === 'user'
                   ? item.profile_picture
-                    ? mediaUrl(item.profile_picture)
+                    ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.profile_picture}`
                     : '/profile.png'
                   : item.logo
-                    ? mediaUrl(item.logo)
+                    ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`
                     : '/org.png'
               }
               alt="publisher logo"
               className="rounded-2 border-2 border-solid border-greyExtralight object-contain p-2"
-              fallback={item.publisher_type === 'user' ? '/profile.png' : '/org.png'}
             />
             <div className="flex flex-col gap-2">
               <Text className="text-primaryBlue" fontWeight="semibold">
@@ -1150,13 +1142,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                 </div>
               )}
 
-              {error && facets === null ? (
-                <div className="flex min-h-[320px] items-center justify-center">
-                  <Text variant="heading2xl">
-                    Unable to load results. Please try again later.
-                  </Text>
-                </div>
-              ) : facets === null ? (
+              {facets === null ? (
                 <Loading />
               ) : results.length > 0 ? (
                 isSectionedLanding ? (

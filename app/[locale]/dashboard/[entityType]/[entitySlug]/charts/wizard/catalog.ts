@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { GraphQL } from '@/lib/api';
-import { mediaUrl } from '@/lib/utils';
 import { chartWizardDatasetsDoc, chartWizardSchemaDoc } from './documents';
 import { entityHeaders, type SchemaField } from './model';
 import type { DatasetOption } from './BuildStep';
@@ -63,5 +62,5 @@ export function useChartCatalog(
 export function imageSource(url?: string | null): string | null {
   if (!url) return null;
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  return mediaUrl(url);
+  return `${process.env.NEXT_PUBLIC_BACKEND_URL ?? ''}${url}`;
 }

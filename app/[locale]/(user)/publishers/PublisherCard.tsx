@@ -1,8 +1,7 @@
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { PublishersListQuery } from '@/gql/generated/graphql';
-import { mediaUrl } from '@/lib/utils';
-import MediaImage from '@/components/MediaImage';
 import { Text, Tooltip } from 'opub-ui';
 
 interface CardProps {
@@ -24,21 +23,20 @@ const PublisherCard: React.FC<CardProps> = ({ data }) => {
             className="flex flex-col gap-4 rounded-4 p-6 shadow-card"
           >
             <div className="flex items-center gap-4">
-              <MediaImage
+              <Image
                 height={80}
                 width={80}
                 src={
                   item.__typename === 'TypeUser'
                     ? item?.profilePicture
-                      ? mediaUrl(item.profilePicture.url)
+                      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.profilePicture.url}`
                       : '/profile.png'
                     : item?.logo
-                      ? mediaUrl(item.logo.url)
+                      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo.url}`
                       : '/org.png'
                 }
                 alt={'logo'}
                 className=" rounded-2 border-2  border-solid border-greyExtralight object-contain p-2"
-                fallback={item.__typename === 'TypeUser' ? '/profile.png' : '/org.png'}
               />
               <div className="flex flex-col gap-2">
                 <Text className=" text-primaryBlue" fontWeight="semibold">

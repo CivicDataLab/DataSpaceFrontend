@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
@@ -9,9 +10,8 @@ import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { Divider, Icon, IconButton, Text, Tooltip } from 'opub-ui';
 
 import { DashboardOrganization, DashboardUser } from '@/config/store';
-import { cn, mediaUrl } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
-import MediaImage from '@/components/MediaImage';
 import styles from '../dashboard.module.scss';
 
 interface DashboardNavProps {
@@ -105,13 +105,10 @@ export function DashboardNav({
           {entityDetails ? (
             <>
               {isImageValid && imageUrl ? (
-                <MediaImage
+                <Image
                   height={60}
                   width={60}
-                  src={mediaUrl(imageUrl)}
-                  fallback={
-                    type === 'organization' ? '/org.png' : '/profile.png'
-                  }
+                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${imageUrl}`}
                   alt={`${name} logo`}
                   onError={() => {
                     setIsImageValid(false);
@@ -252,7 +249,8 @@ export function DashboardNav({
           className="shrink-0"
           size="slim"
           icon={isCollapsed ? IconChevronRight : IconChevronLeft}
-          aria-label={isCollapsed ? 'Expand' : 'Collapse'}
+          withTooltip
+          tooltipSide="right"
           onClick={() => setIsCollapsed((open) => !open)}
         >
           {isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}

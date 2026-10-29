@@ -45,6 +45,7 @@ const updateUserMutation = graphql(`
         bio
         profilePicture {
           name
+          path
           url
         }
         username

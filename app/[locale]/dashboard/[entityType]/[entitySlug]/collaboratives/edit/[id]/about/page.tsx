@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import {
   CollaborativeInputPartial,
@@ -24,8 +25,6 @@ import {
   isReservedCollaborativeSubdomain,
 } from '@/lib/collaborativesRouting';
 import { RichTextEditor } from '@/components/RichTextEditor';
-import { mediaUrl } from '@/lib/utils';
-import MediaImage from '@/components/MediaImage';
 import {
   errorMessage,
   isCollaborativeAboutComplete,
@@ -67,6 +66,13 @@ interface AboutForm {
 }
 
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
+
+function mediaUrl(file?: UploadedImage | null) {
+  const raw = file?.url || file?.path;
+  if (!raw) return '';
+  if (raw.startsWith('http')) return raw;
+  return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${raw.replace('/code/files/', '')}`;
+}
 
 function imageName(file: File | UploadedImage) {
   if (file instanceof File) return file.name;
@@ -139,7 +145,7 @@ function CollaborativeImageField({
   const inputRef = useRef<HTMLInputElement>(null);
   const preview = useMemo(() => {
     if (!image) return '';
-    if (!(image instanceof File)) return mediaUrl(image.url);
+    if (!(image instanceof File)) return mediaUrl(image);
     return URL.createObjectURL(image);
   }, [image]);
   const knownBytes = image instanceof File ? image.size : null;
@@ -174,7 +180,7 @@ function CollaborativeImageField({
         {preview ? (
           <div className="flex flex-col gap-2">
             <div className={styles.thumbnailRow}>
-              <MediaImage
+              <Image
                 src={preview}
                 alt={label}
                 width={200}

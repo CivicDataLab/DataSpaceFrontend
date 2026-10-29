@@ -6,7 +6,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Spinner, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { mediaUrl } from '@/lib/utils';
 import { AddOrganisationSheet } from '../../../../usecases/edit/components/AddOrganisationSheet';
 import { type EntityRow } from '../../../../usecases/edit/components/EntityRowPicker';
 import {
@@ -29,6 +28,12 @@ import {
   RemovePartners,
   RemoveSupporters,
 } from '../contributors/query';
+
+function fileUrl(url?: string | null) {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${url.replace('/code/files/', '')}`;
+}
 
 export default function PeoplePage() {
   const params = useParams<{
@@ -169,7 +174,7 @@ export default function PeoplePage() {
       role: 'contributor',
       title: item.fullName,
       subtitle: personSubtitle(item.organizationMemberships),
-      imageUrl: mediaUrl(item.profilePicture?.url),
+      imageUrl: fileUrl(item.profilePicture?.url),
     })) ?? []),
     ...(collaborative?.partnerOrganizations?.map((item) => ({
       id: `org:${item.id}`,
@@ -177,7 +182,7 @@ export default function PeoplePage() {
       role: 'partner',
       title: item.name,
       subtitle: 'Registered organisation',
-      imageUrl: mediaUrl(item.logo?.url),
+      imageUrl: fileUrl(item.logo?.url),
     })) ?? []),
     ...(collaborative?.supportingOrganizations
       ?.filter((item) => !partnerIds.has(item.id))
@@ -187,7 +192,7 @@ export default function PeoplePage() {
         role: 'supporter',
         title: item.name,
         subtitle: 'Registered organisation',
-        imageUrl: mediaUrl(item.logo?.url),
+        imageUrl: fileUrl(item.logo?.url),
       })) ?? []),
   ];
 
@@ -199,7 +204,7 @@ export default function PeoplePage() {
       role: 'contributor',
       title: item.fullName,
       subtitle: personSubtitle(item.organizationMemberships),
-      imageUrl: mediaUrl(item.profilePicture?.url) || undefined,
+      imageUrl: fileUrl(item.profilePicture?.url) || undefined,
     })) ?? []),
     ...(orgsQuery.data?.allOrganizations?.map((item) => ({
       id: `org:${item.id}`,
@@ -207,7 +212,7 @@ export default function PeoplePage() {
       role: 'partner',
       title: item.name,
       subtitle: 'Registered organisation',
-      imageUrl: mediaUrl(item.logo?.url) || undefined,
+      imageUrl: fileUrl(item.logo?.url) || undefined,
     })) ?? []),
   ].filter((item) => !selectedIds.has(item.id));
 

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
@@ -23,8 +24,6 @@ import {
 import { Button, SectionCard, Spinner, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { mediaUrl } from '@/lib/utils';
-import MediaImage from '@/components/MediaImage';
 import {
   ContentBlocksRenderer,
   editAction,
@@ -48,6 +47,7 @@ const FetchUseCaseReview = graphql(`
       status
       logo {
         name
+        path
         url
       }
       tags {
@@ -98,6 +98,13 @@ const publishUseCaseMutation = graphql(`
     }
   }
 `);
+
+function mediaUrl(path?: string | null, url?: string | null) {
+  const raw = url || path;
+  if (!raw) return '';
+  if (raw.startsWith('http')) return raw;
+  return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${raw.replace('/code/files/', '')}`;
+}
 
 function ReadinessRow({
   ok,
@@ -290,8 +297,8 @@ export default function PublishPage() {
       >
         <div className="flex flex-col gap-4">
           {useCase?.logo ? (
-            <MediaImage
-              src={mediaUrl(useCase.logo.url)}
+            <Image
+              src={mediaUrl(useCase.logo.path, useCase.logo.url)}
               alt={useCase.title ?? 'Use case thumbnail'}
               width={720}
               height={180}

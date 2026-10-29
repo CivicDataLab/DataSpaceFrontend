@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button, Card, Icon, SearchInput, Select, Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
-import { cn, formatDate, generateJsonLd, mediaUrl } from '@/lib/utils';
+import { cn, formatDate, generateJsonLd } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import JsonLd from '@/components/JsonLd';
@@ -45,7 +45,7 @@ const PublishedCollaboratives = graphql(`
       }
       logo {
         name
-        url
+        path
       }
       tags {
         id
@@ -66,7 +66,7 @@ const PublishedCollaboratives = graphql(`
       }
       coverImage {
         name
-        url
+        path
       }
       datasetCount
       metadata {
@@ -331,10 +331,10 @@ const CollaborativesListingClient = () => {
                         iconColor="warning"
                         imageUrl={
                           collaborative.coverImage
-                            ? mediaUrl(collaborative.coverImage?.url)
-                            : mediaUrl(collaborative.logo?.url)
+                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.coverImage?.path.replace('/code/files/', '')}`
+                            : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.logo?.path.replace('/code/files/', '')}`
                         }
-                        // imageUrl={mediaUrl(collaborative.logo?.url)}
+                        // imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.logo?.path.replace('/code/files/', '')}`}
                         metadataContent={[
                           {
                             icon: Icons.calendarEvent,
@@ -374,10 +374,10 @@ const CollaborativesListingClient = () => {
                           {
                             icon: collaborative.isIndividualCollaborative
                               ? collaborative?.user?.profilePicture
-                                ? mediaUrl(collaborative.user.profilePicture.url)
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.user.profilePicture.url}`
                                 : '/profile.png'
                               : collaborative?.organization?.logo
-                                ? mediaUrl(collaborative.organization.logo.url)
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.organization.logo.url}`
                                 : '/org.png',
                             label: 'Published by',
                           },

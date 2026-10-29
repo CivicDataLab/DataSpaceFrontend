@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef } from 'react';
 import { IconUser } from '@tabler/icons-react';
 import { Button, Icon, SectionCard, Tag, Text, toast } from 'opub-ui';
 
-import { mediaUrl } from '@/lib/utils';
 import styles from './profile.module.scss';
 
 export const BIO_MAX_LENGTH = 500;
@@ -229,5 +228,5 @@ function imageSrc(value: ProfileImage) {
   const raw = value.url;
   if (!raw) return null;
   if (raw.startsWith('http') || raw.startsWith('blob:')) return raw;
-  return mediaUrl(raw);
+  return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${raw}`;
 }
