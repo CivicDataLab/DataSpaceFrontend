@@ -65,11 +65,14 @@ const Datasets = () => {
   useEffect(() => {
     fetchDatasets('?sort=recent&size=5&page=1&sort=recent')
       .then((res) => {
-        setFacets(res);
+        if (res && typeof res === 'object' && Array.isArray(res.results)) {
+          setFacets(res);
+        }
         setIsLoading(false);
       })
       .catch((err) => {
         console.error(err);
+        setIsLoading(false);
       });
   }, []);
 
