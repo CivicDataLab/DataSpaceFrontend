@@ -13,7 +13,7 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { cn } from '@/lib/utils';
+import { cn, mediaUrl } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import Styles from './similarDatasets.module.scss';
 
@@ -174,10 +174,10 @@ const SimilarDatasets: React.FC = () => {
                               {
                                 icon: item.isIndividualDataset
                                   ? item?.user?.profilePicture
-                                    ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
+                                    ? mediaUrl(item.user.profilePicture.url)
                                     : '/profile.png'
                                   : item?.organization?.logo
-                                    ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
+                                    ? mediaUrl(item.organization.logo.url)
                                     : '/org.png',
                                 label: 'Published by',
                               },
