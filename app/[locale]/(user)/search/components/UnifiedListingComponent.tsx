@@ -397,7 +397,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   useUrlParams(queryParams, setQueryParams, setVariables);
   const latestFetchId = useRef(0);
 
-  const [, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -407,7 +407,13 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
       fetchUnifiedData(variables)
         .then((res) => {
           if (currentFetchId === latestFetchId.current) {
-            setFacets(res);
+            if (res && Array.isArray(res.results)) {
+              setFacets(res);
+              setError(null);
+            } else {
+              setFacets(null);
+              setError('Search returned an unexpected response.');
+            }
             setIsLoading(false);
           }
         })
@@ -415,6 +421,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
           console.error('Search error:', err);
           if (currentFetchId === latestFetchId.current) {
             setError('Failed to load search results. Please try again.');
+            setFacets(null);
             setIsLoading(false);
           }
         });
@@ -1142,7 +1149,13 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                 </div>
               )}
 
-              {facets === null ? (
+              {error && facets === null ? (
+                <div className="flex min-h-[320px] items-center justify-center">
+                  <Text variant="heading2xl">
+                    Unable to load results. Please try again later.
+                  </Text>
+                </div>
+              ) : facets === null ? (
                 <Loading />
               ) : results.length > 0 ? (
                 isSectionedLanding ? (
