@@ -99,7 +99,6 @@ export const resourceByIdDoc = graphql(`
         format
         file {
           name
-          path
           url
         }
         size

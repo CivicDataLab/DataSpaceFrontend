@@ -7,11 +7,7 @@ export const getOrgDetailsQryDoc = graphql(`
       name
       logo {
         name
-        path
-        size
         url
-        width
-        height
       }
       homepage
       organizationTypes
@@ -35,7 +31,6 @@ export const UserDetailsQryDoc = graphql(`
       lastName
       profilePicture {
         name
-        path
         url
       }
       username
