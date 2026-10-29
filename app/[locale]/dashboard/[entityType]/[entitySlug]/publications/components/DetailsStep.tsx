@@ -16,6 +16,7 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { mediaUrl } from '@/lib/utils';
 import {
   EntityRowPicker,
   type EntityRow,
@@ -45,12 +46,6 @@ import {
 
 function toTagOptions(value: string | TagOption[]): TagOption[] {
   return Array.isArray(value) ? value : [];
-}
-
-function fileUrl(url?: string | null) {
-  if (!url) return '';
-  if (url.startsWith('http')) return url;
-  return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${url.replace('/code/files/', '')}`;
 }
 
 export function DetailsStep({ publicationId }: { publicationId?: string }) {
@@ -337,7 +332,7 @@ export function DetailsStep({ publicationId }: { publicationId?: string }) {
       id: item.id,
       title: item.fullName,
       subtitle: item.username,
-      imageUrl: fileUrl(item.profilePicture?.url) || undefined,
+      imageUrl: mediaUrl(item.profilePicture?.url) || undefined,
     })) ?? [];
 
   return (
