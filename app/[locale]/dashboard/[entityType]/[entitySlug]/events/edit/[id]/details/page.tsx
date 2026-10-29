@@ -50,7 +50,10 @@ export default function EventDetailsPage() {
 
   const event = editorQuery.data?.event;
   const current = form ?? (event ? eventToDraft(event) : emptyEventDraft());
-  formRef.current = current;
+
+  useEffect(() => {
+    formRef.current = current;
+  }, [current]);
 
   useEffect(() => {
     if (!event || hydrated.current) return;
