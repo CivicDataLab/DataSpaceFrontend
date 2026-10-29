@@ -2,8 +2,8 @@
 
 import { ReactNode } from 'react';
 
-import { EventEditFrame } from '../../wizard/EventEditFrame';
 import { EventEditStatusProvider } from '../../wizard/context';
+import { EventEditFrame } from '../../wizard/EventEditFrame';
 
 export default function EventEditLayout({ children }: { children: ReactNode }) {
   return (

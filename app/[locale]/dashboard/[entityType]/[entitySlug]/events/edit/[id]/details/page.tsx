@@ -17,8 +17,8 @@ import {
   type EventDraft,
 } from '../../../model';
 import { eventEditorQuery, updateEventMutation } from '../../../queries';
-import { eventToDraft } from '../../../wizard/EventEditFrame';
 import { useEventEditStatus } from '../../../wizard/context';
+import { eventToDraft } from '../../../wizard/EventEditFrame';
 
 export default function EventDetailsPage() {
   const params = useParams<{
@@ -80,11 +80,16 @@ export default function EventDetailsPage() {
       const result = await GraphQL(updateEventMutation, headers, {
         input: { id: params.id, ...eventWriteInput(draft) },
       });
-      const message = mutationMessage(result.updateEvent, 'Could not save the event.');
+      const message = mutationMessage(
+        result.updateEvent,
+        'Could not save the event.'
+      );
       if (message) throw new Error(message);
       setDetailsComplete(isEventComplete(draft));
       setTitleOverride(draft.name);
-      await queryClient.invalidateQueries({ queryKey: ['event_editor', params.id] });
+      await queryClient.invalidateQueries({
+        queryKey: ['event_editor', params.id],
+      });
     } catch (error) {
       if (!(error instanceof Error) || error.message !== 'incomplete') {
         toast(errorText(error, 'Could not save the event.'));
@@ -122,7 +127,8 @@ export default function EventDetailsPage() {
     return <div>Could not load this event.</div>;
   }
 
-  const errors = showErrors || stepShowErrors ? eventFieldErrors(current, true) : {};
+  const errors =
+    showErrors || stepShowErrors ? eventFieldErrors(current, true) : {};
 
   return (
     <div className="flex flex-col gap-6">
