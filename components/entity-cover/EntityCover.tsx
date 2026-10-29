@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { IconCalendar, IconMapPin, IconUser } from '@tabler/icons-react';
 
 import { Icons } from '@/components/icons';
+import MediaImage from '@/components/MediaImage';
 
 export type EntityCoverPublisher = {
   name: string;
@@ -68,7 +69,7 @@ export function EntityCover({
 
             {meta.length > 0 ? <CoverMeta meta={meta} /> : null}
 
-            <h1 className="mt-5 font-primary text-[38px] font-semi-bold leading-[41.8px] text-pretty text-[#0a0a0a]">
+            <h1 className="mt-5 text-pretty font-primary text-[38px] font-semi-bold leading-[41.8px] text-[#0a0a0a]">
               {title}
             </h1>
             {description ? (
@@ -82,7 +83,7 @@ export function EntityCover({
                 className="mt-6 inline-flex items-center gap-3 rounded-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primaryBlue"
               >
                 {publisher.imageSrc ? (
-                  <Image
+                  <MediaImage
                     src={publisher.imageSrc}
                     alt={publisher.imageAlt}
                     width={44}

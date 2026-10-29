@@ -5,11 +5,8 @@
  */
 
 import { parseUseCaseContent } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
-import type {
-  EntityCoverMeta,
-  EntityCoverPublisher,
-} from '@/components/entity-cover/EntityCover';
 import { env } from '@/env';
+
 import {
   backendFileUrl,
   formatShortDate,
@@ -17,13 +14,17 @@ import {
   organizationPublisherHref,
   personPublisherHref,
 } from '@/lib/public-entity';
+import type {
+  EntityCoverMeta,
+  EntityCoverPublisher,
+} from '@/components/entity-cover/EntityCover';
 
 export type UseCaseCoverSource = {
   title?: string | null;
   summary?: string | null;
   created?: string | number | null;
   isIndividualUsecase?: boolean | null;
-  logo?: { path?: string | null } | null;
+  logo?: { url?: string | null } | null;
   user?: {
     id: string;
     fullName: string;
@@ -67,7 +68,7 @@ export function buildUseCaseCover(useCase: UseCaseCoverSource): UseCaseCover {
   return {
     title,
     description: description || null,
-    imageSrc: backendFileUrl(useCase.logo?.path, { stripCodeFiles: true }),
+    imageSrc: backendFileUrl(useCase.logo?.url),
     imageAlt: title,
     publisher,
     meta,

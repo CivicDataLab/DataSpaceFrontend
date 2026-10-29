@@ -3,24 +3,25 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import * as Sentry from '@sentry/nextjs';
 import {
   IconCalendarWeek,
   IconChartBar,
   IconDownload,
   IconFileStack,
   IconFileTypography,
-  IconTable,
   IconMapPin,
   IconScale,
   IconShare,
   IconStack2,
+  IconTable,
   IconUser,
   IconWorldMap,
 } from '@tabler/icons-react';
-import * as Sentry from '@sentry/nextjs';
 import { Button, Popover, Tooltip } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
+import MediaImage from '@/components/MediaImage';
 import { SharePanel } from '@/components/share-panel/SharePanel';
 import type {
   DatasetCover as DatasetCoverModel,
@@ -45,235 +46,245 @@ export function DatasetCover({
   return (
     <section className="bg-white">
       <div className="mx-auto box-border flex min-w-0 max-w-[1400px] flex-col gap-6 px-5 pb-2 pt-8 leading-3 text-[#0a0a0a] sm:px-6 lg:px-8 lg:pt-10 xl:px-0">
-          <div className="flex w-full min-w-0 flex-nowrap items-center justify-between gap-3">
-            <Link
-              href={backHref}
-              className="inline-flex w-fit items-center gap-1.5 rounded-1 text-100 font-medium leading-[18px] text-[#0a0a0a]/75 transition-colors hover:text-[#0a0a0a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primaryBlue"
-            >
-              <Icons.back size={16} stroke={2} className="shrink-0" aria-hidden />
-              Back
-            </Link>
-            <div className="flex min-w-0 items-center gap-2">
-              <div data-tour="download-button">
-                <Button
-                  kind="primary"
-                  url={cover.download.href ?? undefined}
-                  external={cover.download.external}
-                  disabled={!cover.download.href}
-                  accessibilityLabel={
-                    cover.download.href
-                      ? 'Download dataset'
-                      : 'No files to download'
-                  }
-                  className="!inline-flex !h-11 !items-center !justify-center !gap-2 !rounded-[10px] !bg-primaryBlue !px-6 !py-0 !text-[16px] !font-medium !leading-[24px] !text-white hover:!bg-[#254c75]"
-                >
-                  <span className="inline-flex items-center gap-2 text-[16px] font-medium leading-[24px]">
-                    <IconDownload size={18} stroke={1.75} aria-hidden />
-                    Download
-                  </span>
-                </Button>
-              </div>
-              <Popover>
-                <Popover.Trigger>
-                  <Button
-                    kind="tertiary"
-                    accessibilityLabel="Share dataset"
-                    // opub-ui Button forwards extra props to the element, but its type omits `title`.
-                    {...{ title: 'Share' }}
-                    className="!m-0 !inline-flex !size-11 !min-h-11 !min-w-11 !items-center !justify-center !rounded-full !border-1 !border-solid !border-primaryBlue !bg-transparent !p-0 !leading-0 !text-primaryBlue hover:!bg-[#0b3865]/5"
-                  >
-                    <IconShare size={20} stroke={2} aria-hidden className="block" />
-                  </Button>
-                </Popover.Trigger>
-                <Popover.Content
-                  side="bottom"
-                  align="end"
-                  sideOffset={8}
-                  className="!m-0 !box-border !w-[288px] !rounded-[10px] !border-[0.8px] !border-solid !border-[#e5e5e5] !bg-white !p-2 !font-primary !text-100 !leading-3 !text-[#0a0a0a] !shadow-[0px_4px_16px_0px_rgba(0,0,0,0.05)]"
-                >
-                  <SharePanel
-                    label="Share on"
-                    url={pageUrl}
-                    title={cover.title}
-                    showPageActions
-                    onDownloadCard={() => {
-                      const card = cardRef.current;
-                      if (card) {
-                        downloadDataCard(cover.title, card).catch((error) =>
-                          Sentry.captureException(error)
-                        );
-                      }
-                    }}
-                  />
-                </Popover.Content>
-              </Popover>
-            </div>
-          </div>
-
-          <div
-            ref={cardRef}
-            className="box-border flex min-w-0 max-w-full flex-col gap-5 rounded-[24px] bg-[#f3f5f8] p-6 text-primaryBlue leading-3"
-            data-tour="dataset-info"
+        <div className="flex w-full min-w-0 flex-nowrap items-center justify-between gap-3">
+          <Link
+            href={backHref}
+            className="inline-flex w-fit items-center gap-1.5 rounded-1 text-100 font-medium leading-[18px] text-[#0a0a0a]/75 transition-colors hover:text-[#0a0a0a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primaryBlue"
           >
-            <h1 className="min-w-0 max-w-full break-words font-primary text-[32px] font-semi-bold leading-[36px] text-[#000] sm:text-[38px] sm:leading-[41.8px] lg:max-w-[70%]">
-              {cover.title}
-            </h1>
-
-            <div className="grid min-w-0 items-stretch gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.44625fr)_minmax(0,0.40375fr)]">
-              <div className="flex min-w-0 flex-col">
-                <DescriptionPanel description={cover.description} />
-                <section
-                  className={`order-3 box-border mt-3 grid min-w-0 grid-cols-2 items-center gap-4 rounded-4 p-6 font-primary leading-3 text-primaryBlue lg:order-none ${LILAC_TILE}`}
-                >
-                  <FactChip
-                    icon={
-                      <IconStack2
-                        size={32}
-                        stroke={1.25}
-                        className="shrink-0 text-[#0b3865]/80"
-                        aria-hidden
-                      />
-                    }
-                    label="Sector"
-                    value={cover.sector}
-                  />
-                  <FactChip
-                    icon={
-                      <IconMapPin
-                        size={32}
-                        stroke={1.25}
-                        className="shrink-0 text-[#0b3865]/80"
-                        aria-hidden
-                      />
-                    }
-                    label="Geography"
-                    value={cover.geography}
-                  />
-                </section>
-              </div>
-
-              <div className="flex min-w-0 flex-col lg:col-span-2">
-                {cover.usage ? (
-                  <section className="flex min-h-[110px] shrink-0 items-center gap-3 rounded-4 bg-white p-6 text-[15px] leading-3 text-primaryBlue">
-                    <IconChartBar
-                      size={61}
-                      stroke={1.75}
-                      className="shrink-0 text-[#e0e0f0]"
-                      aria-hidden
-                    />
-                    <p>
-                      This dataset supports{' '}
-                      <UsageLink item={cover.usage.useCases} />, is part of{' '}
-                      <UsageLink item={cover.usage.collaboratives} />, and powers{' '}
-                      <UsageLink item={cover.usage.visualisations} />.
-                    </p>
-                  </section>
-                ) : (
-                  <section
-                    className="flex min-h-[110px] shrink-0 items-center gap-3 rounded-4 bg-white p-6"
-                    aria-busy="true"
-                    aria-label="Loading where this dataset is used"
-                  >
-                    <IconChartBar
-                      size={61}
-                      stroke={1.75}
-                      className="shrink-0 text-[#e0e0f0]"
-                      aria-hidden
-                    />
-                    <span className="flex min-w-0 flex-1 flex-col gap-2" aria-hidden>
-                      <span className="h-3 w-4/5 animate-pulse rounded-full bg-[#e6e8ee]" />
-                      <span className="h-3 w-2/3 animate-pulse rounded-full bg-[#e6e8ee]" />
-                    </span>
-                  </section>
-                )}
-                <div className="mt-4 grid min-h-0 flex-1 content-stretch gap-3 sm:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-                  <section className="box-border flex h-full min-w-0 flex-col justify-between rounded-4 bg-white p-6 leading-3 text-primaryBlue sm:row-span-2">
-                    <IconTable
-                      size={61}
-                      stroke={1.75}
-                      className="shrink-0 text-[#e2e2f2]"
-                      aria-hidden
-                    />
-                    <div className="mt-6">
-                      <p className="font-primary text-300 font-semi-bold leading-3 tracking-[0px] text-primaryBlue">
-                        {cover.recordCount}
-                      </p>
-                      <p className="mt-1 font-primary text-75 font-regular leading-1 tracking-[0px] text-[#606d6b]">
-                        Records
-                      </p>
-                    </div>
-                    <div className="mt-4 border-t-1 border-solid border-[#e6e8ee] pt-4">
-                      <p className="font-primary text-300 font-semi-bold leading-3 tracking-[0px] text-primaryBlue">
-                        {cover.downloadCount}
-                      </p>
-                      <p className="mt-1 font-primary text-75 font-regular leading-1 tracking-[0px] text-[#606d6b]">
-                        Downloads
-                      </p>
-                    </div>
-                  </section>
-                  <div
-                    className={`box-border flex min-w-0 items-center gap-4 rounded-4 p-4 font-primary leading-3 text-primaryBlue ${LILAC_TILE}`}
-                  >
-                    <IconFileStack
-                      size={32}
-                      className="shrink-0 text-[#fff]"
-                      aria-hidden
-                    />
-                    <div className="min-w-0">
-                      <p className="font-primary text-200 font-semi-bold leading-2 tracking-[0px] text-primaryBlue">
-                        {cover.fileCount}
-                      </p>
-                      <p className="font-primary text-75 font-regular leading-1 tracking-[0px] text-[#606868]">
-                        Data files
-                      </p>
-                    </div>
-                  </div>
-                  <div
-                    className={`box-border flex min-w-0 items-center gap-4 rounded-4 p-4 font-primary leading-3 text-primaryBlue ${LILAC_TILE}`}
-                  >
-                    <IconFileTypography
-                      size={32}
-                      className="shrink-0 text-[#fff]"
-                      aria-hidden
-                    />
-                    <div className="min-w-0">
-                      <p className="break-words font-primary text-200 font-semi-bold leading-2 tracking-[0px] text-primaryBlue">
-                        {cover.fileTypes ?? '—'}
-                      </p>
-                      <p className="font-primary text-75 font-regular leading-1 tracking-[0px] text-[#606868]">
-                        File types
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <section className="box-border grid min-w-0 items-center gap-4 rounded-4 bg-white p-6 font-primary leading-3 text-primaryBlue lg:col-span-2 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.44625fr)] lg:gap-3 lg:p-0">
-                <div className="grid items-center gap-4 sm:grid-cols-2 lg:p-6">
-                  <FooterFact
-                    icon={<IconScale size={20} stroke={1.75} aria-hidden />}
-                    label="License"
-                    value={cover.license}
-                  />
-                  <FooterFact
-                    icon={<IconWorldMap size={20} stroke={1.75} aria-hidden />}
-                    label="Source"
-                    value={cover.source?.label ?? null}
-                    href={cover.source?.href}
-                  />
-                </div>
-                <div className="lg:p-6">
-                  <FooterFact
-                    icon={<IconCalendarWeek size={20} stroke={1.75} aria-hidden />}
-                    label="Last Updated"
-                    value={cover.updated}
-                    alignWithTextAbove
-                  />
-                </div>
-              </section>
-              <PublisherFact publisher={cover.publisher} />
+            <Icons.back size={16} stroke={2} className="shrink-0" aria-hidden />
+            Back
+          </Link>
+          <div className="flex min-w-0 items-center gap-2">
+            <div data-tour="download-button">
+              <Button
+                kind="primary"
+                url={cover.download.href ?? undefined}
+                external={cover.download.external}
+                disabled={!cover.download.href}
+                accessibilityLabel={
+                  cover.download.href
+                    ? 'Download dataset'
+                    : 'No files to download'
+                }
+                className="!inline-flex !h-11 !items-center !justify-center !gap-2 !rounded-[10px] !bg-primaryBlue !px-6 !py-0 !text-[16px] !font-medium !leading-[24px] !text-white hover:!bg-[#254c75]"
+              >
+                <span className="inline-flex items-center gap-2 text-[16px] font-medium leading-[24px]">
+                  <IconDownload size={18} stroke={1.75} aria-hidden />
+                  Download
+                </span>
+              </Button>
             </div>
+            <Popover>
+              <Popover.Trigger>
+                <Button
+                  kind="tertiary"
+                  accessibilityLabel="Share dataset"
+                  // opub-ui Button forwards extra props to the element, but its type omits `title`.
+                  {...{ title: 'Share' }}
+                  className="!m-0 !inline-flex !size-11 !min-h-11 !min-w-11 !items-center !justify-center !rounded-full !border-1 !border-solid !border-primaryBlue !bg-transparent !p-0 !leading-0 !text-primaryBlue hover:!bg-[#0b3865]/5"
+                >
+                  <IconShare
+                    size={20}
+                    stroke={2}
+                    aria-hidden
+                    className="block"
+                  />
+                </Button>
+              </Popover.Trigger>
+              <Popover.Content
+                side="bottom"
+                align="end"
+                sideOffset={8}
+                className="!m-0 !box-border !w-[288px] !rounded-[10px] !border-[0.8px] !border-solid !border-[#e5e5e5] !bg-white !p-2 !font-primary !text-100 !leading-3 !text-[#0a0a0a] !shadow-[0px_4px_16px_0px_rgba(0,0,0,0.05)]"
+              >
+                <SharePanel
+                  label="Share on"
+                  url={pageUrl}
+                  title={cover.title}
+                  showPageActions
+                  onDownloadCard={() => {
+                    const card = cardRef.current;
+                    if (card) {
+                      downloadDataCard(cover.title, card).catch((error) =>
+                        Sentry.captureException(error)
+                      );
+                    }
+                  }}
+                />
+              </Popover.Content>
+            </Popover>
           </div>
+        </div>
+
+        <div
+          ref={cardRef}
+          className="box-border flex min-w-0 max-w-full flex-col gap-5 rounded-[24px] bg-[#f3f5f8] p-6 leading-3 text-primaryBlue"
+          data-tour="dataset-info"
+        >
+          <h1 className="min-w-0 max-w-full break-words font-primary text-[32px] font-semi-bold leading-[36px] text-[#000] sm:text-[38px] sm:leading-[41.8px] lg:max-w-[70%]">
+            {cover.title}
+          </h1>
+
+          <div className="grid min-w-0 items-stretch gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.44625fr)_minmax(0,0.40375fr)]">
+            <div className="flex min-w-0 flex-col">
+              <DescriptionPanel description={cover.description} />
+              <section
+                className={`order-3 mt-3 box-border grid min-w-0 grid-cols-2 items-center gap-4 rounded-4 p-6 font-primary leading-3 text-primaryBlue lg:order-none ${LILAC_TILE}`}
+              >
+                <FactChip
+                  icon={
+                    <IconStack2
+                      size={32}
+                      stroke={1.25}
+                      className="shrink-0 text-[#0b3865]/80"
+                      aria-hidden
+                    />
+                  }
+                  label="Sector"
+                  value={cover.sector}
+                />
+                <FactChip
+                  icon={
+                    <IconMapPin
+                      size={32}
+                      stroke={1.25}
+                      className="shrink-0 text-[#0b3865]/80"
+                      aria-hidden
+                    />
+                  }
+                  label="Geography"
+                  value={cover.geography}
+                />
+              </section>
+            </div>
+
+            <div className="flex min-w-0 flex-col lg:col-span-2">
+              {cover.usage ? (
+                <section className="flex min-h-[110px] shrink-0 items-center gap-3 rounded-4 bg-white p-6 text-[15px] leading-3 text-primaryBlue">
+                  <IconChartBar
+                    size={61}
+                    stroke={1.75}
+                    className="shrink-0 text-[#e0e0f0]"
+                    aria-hidden
+                  />
+                  <p>
+                    This dataset supports{' '}
+                    <UsageLink item={cover.usage.useCases} />, is part of{' '}
+                    <UsageLink item={cover.usage.collaboratives} />, and powers{' '}
+                    <UsageLink item={cover.usage.visualisations} />.
+                  </p>
+                </section>
+              ) : (
+                <section
+                  className="flex min-h-[110px] shrink-0 items-center gap-3 rounded-4 bg-white p-6"
+                  aria-busy="true"
+                  aria-label="Loading where this dataset is used"
+                >
+                  <IconChartBar
+                    size={61}
+                    stroke={1.75}
+                    className="shrink-0 text-[#e0e0f0]"
+                    aria-hidden
+                  />
+                  <span
+                    className="flex min-w-0 flex-1 flex-col gap-2"
+                    aria-hidden
+                  >
+                    <span className="h-3 w-4/5 animate-pulse rounded-full bg-[#e6e8ee]" />
+                    <span className="h-3 w-2/3 animate-pulse rounded-full bg-[#e6e8ee]" />
+                  </span>
+                </section>
+              )}
+              <div className="mt-4 grid min-h-0 flex-1 content-stretch gap-3 sm:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+                <section className="box-border flex h-full min-w-0 flex-col justify-between rounded-4 bg-white p-6 leading-3 text-primaryBlue sm:row-span-2">
+                  <IconTable
+                    size={61}
+                    stroke={1.75}
+                    className="shrink-0 text-[#e2e2f2]"
+                    aria-hidden
+                  />
+                  <div className="mt-6">
+                    <p className="font-primary text-300 font-semi-bold leading-3 tracking-[0px] text-primaryBlue">
+                      {cover.recordCount}
+                    </p>
+                    <p className="mt-1 font-primary text-75 font-regular leading-1 tracking-[0px] text-[#606d6b]">
+                      Records
+                    </p>
+                  </div>
+                  <div className="mt-4 border-t-1 border-solid border-[#e6e8ee] pt-4">
+                    <p className="font-primary text-300 font-semi-bold leading-3 tracking-[0px] text-primaryBlue">
+                      {cover.downloadCount}
+                    </p>
+                    <p className="mt-1 font-primary text-75 font-regular leading-1 tracking-[0px] text-[#606d6b]">
+                      Downloads
+                    </p>
+                  </div>
+                </section>
+                <div
+                  className={`box-border flex min-w-0 items-center gap-4 rounded-4 p-4 font-primary leading-3 text-primaryBlue ${LILAC_TILE}`}
+                >
+                  <IconFileStack
+                    size={32}
+                    className="shrink-0 text-[#fff]"
+                    aria-hidden
+                  />
+                  <div className="min-w-0">
+                    <p className="font-primary text-200 font-semi-bold leading-2 tracking-[0px] text-primaryBlue">
+                      {cover.fileCount}
+                    </p>
+                    <p className="font-primary text-75 font-regular leading-1 tracking-[0px] text-[#606868]">
+                      Data files
+                    </p>
+                  </div>
+                </div>
+                <div
+                  className={`box-border flex min-w-0 items-center gap-4 rounded-4 p-4 font-primary leading-3 text-primaryBlue ${LILAC_TILE}`}
+                >
+                  <IconFileTypography
+                    size={32}
+                    className="shrink-0 text-[#fff]"
+                    aria-hidden
+                  />
+                  <div className="min-w-0">
+                    <p className="break-words font-primary text-200 font-semi-bold leading-2 tracking-[0px] text-primaryBlue">
+                      {cover.fileTypes ?? '—'}
+                    </p>
+                    <p className="font-primary text-75 font-regular leading-1 tracking-[0px] text-[#606868]">
+                      File types
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <section className="box-border grid min-w-0 items-center gap-4 rounded-4 bg-white p-6 font-primary leading-3 text-primaryBlue lg:col-span-2 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.44625fr)] lg:gap-3 lg:p-0">
+              <div className="grid items-center gap-4 sm:grid-cols-2 lg:p-6">
+                <FooterFact
+                  icon={<IconScale size={20} stroke={1.75} aria-hidden />}
+                  label="License"
+                  value={cover.license}
+                />
+                <FooterFact
+                  icon={<IconWorldMap size={20} stroke={1.75} aria-hidden />}
+                  label="Source"
+                  value={cover.source?.label ?? null}
+                  href={cover.source?.href}
+                />
+              </div>
+              <div className="lg:p-6">
+                <FooterFact
+                  icon={
+                    <IconCalendarWeek size={20} stroke={1.75} aria-hidden />
+                  }
+                  label="Last Updated"
+                  value={cover.updated}
+                  alignWithTextAbove
+                />
+              </div>
+            </section>
+            <PublisherFact publisher={cover.publisher} />
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -315,7 +326,7 @@ function DescriptionCopy({ description }: { description: string }) {
     <p
       ref={textRef}
       tabIndex={truncated ? 0 : undefined}
-      className="mt-3 min-w-0 max-w-full break-words font-primary text-400 font-semi-bold leading-[30px] tracking-[0px] text-primaryBlue line-clamp-4 sm:max-w-[28rem]"
+      className="mt-3 line-clamp-4 min-w-0 max-w-full break-words font-primary text-400 font-semi-bold leading-[30px] tracking-[0px] text-primaryBlue sm:max-w-[28rem]"
     >
       {description}
     </p>
@@ -332,11 +343,13 @@ function DescriptionCopy({ description }: { description: string }) {
 
 function DescriptionPanel({ description }: { description: string | null }) {
   return (
-    <div className="relative box-border flex min-h-[280px] min-w-0 max-w-full flex-1 flex-col overflow-hidden rounded-[16px] bg-[#d3e9ff] p-8 text-primaryBlue leading-3">
+    <div className="relative box-border flex min-h-[280px] min-w-0 max-w-full flex-1 flex-col overflow-hidden rounded-[16px] bg-[#d3e9ff] p-8 leading-3 text-primaryBlue">
       <p className="font-primary text-75 font-semi-bold uppercase leading-1 tracking-[0.3px] text-[#0b3865cc]">
         What this data tells us
       </p>
-      {description ? <DescriptionCopy description={description} /> : (
+      {description ? (
+        <DescriptionCopy description={description} />
+      ) : (
         <p className="mt-3 max-w-[28rem] text-[18px] leading-[1.35] text-[#5d6b7c]">
           No description yet.
         </p>
@@ -408,7 +421,7 @@ function FooterFact({
     <div
       className={`flex min-w-0 items-center gap-3 ${alignWithTextAbove ? 'lg:-ml-[44px]' : ''}`}
     >
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f3e6d4] text-[#b46702] leading-3">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f3e6d4] leading-3 text-[#b46702]">
         {icon}
       </span>
       <span className="min-w-0">
@@ -469,7 +482,7 @@ function PublisherFact({
   const body = (
     <span className="flex min-w-0 items-center gap-3 lg:-ml-2">
       {publisher?.imageSrc ? (
-        <Image
+        <MediaImage
           src={publisher.imageSrc}
           alt=""
           width={36}
@@ -502,11 +515,7 @@ function PublisherFact({
   const cardClass = `box-border flex h-full min-w-0 items-center rounded-4 p-6 font-primary leading-3 text-primaryBlue ${LILAC_TILE}`;
 
   if (!publisher) {
-    return (
-      <section className={cardClass}>
-        {body}
-      </section>
-    );
+    return <section className={cardClass}>{body}</section>;
   }
 
   return (

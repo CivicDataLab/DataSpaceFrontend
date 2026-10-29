@@ -1,16 +1,16 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { stripMarkdown } from '@/app/[locale]/(user)/search/components/UnifiedListingComponent';
+import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Spinner } from 'opub-ui';
 
-import { Icons } from '@/components/icons';
 import { GraphQLPublic } from '@/lib/api';
 import { backendFileUrl, joinNames } from '@/lib/public-entity';
 import { formatDate } from '@/lib/utils';
-import { stripMarkdown } from '@/app/[locale]/(user)/search/components/UnifiedListingComponent';
-import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
+import { Icons } from '@/components/icons';
 import type { DatasetCoverLink } from '../../dataset-cover';
 
 const connectedUseCaseQuery = graphql(`
@@ -35,7 +35,7 @@ const connectedUseCaseQuery = graphql(`
         }
       }
       logo {
-        path
+        url
       }
       geographies {
         name
@@ -70,10 +70,10 @@ const connectedCollaborativeQuery = graphql(`
         }
       }
       logo {
-        path
+        url
       }
       coverImage {
-        path
+        url
       }
       geographies {
         name
@@ -102,7 +102,7 @@ export type ConnectedUseCase = {
     name?: string | null;
     logo?: { url?: string | null } | null;
   } | null;
-  logo?: { path?: string | null } | null;
+  logo?: { url?: string | null } | null;
   geographies?: Array<{ name?: string | null }> | null;
   sectors?: Array<{ name?: string | null }> | null;
   datasets?: Array<{ id?: string | null }> | null;
@@ -124,8 +124,8 @@ export type ConnectedCollaborative = {
     name?: string | null;
     logo?: { url?: string | null } | null;
   } | null;
-  logo?: { path?: string | null } | null;
-  coverImage?: { path?: string | null } | null;
+  logo?: { url?: string | null } | null;
+  coverImage?: { url?: string | null } | null;
   geographies?: Array<{ name?: string | null }> | null;
   sectors?: Array<{ name?: string | null }> | null;
   datasets?: Array<{ id?: string | null }> | null;
@@ -181,7 +181,11 @@ export function DatasetConnected({
         Explore how this dataset is connected to other resources, projects, and
         initiatives across CivicDataSpace.
       </p>
-      <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Connection type">
+      <div
+        className="mt-6 flex flex-wrap gap-2"
+        role="group"
+        aria-label="Connection type"
+      >
         {FILTERS.map((item) => {
           const selected = filter === item.value;
           return (
@@ -277,10 +281,7 @@ function useCardDetails<TData, TCard extends { id: string }>(
   const ids = (links ?? []).map((link) => link.id);
   const cards = useQuery(
     ['dataset-connected-cards', kind, ...ids],
-    () =>
-      Promise.all(
-        ids.map((id) => GraphQLPublic(document, {}, { pk: id }))
-      ),
+    () => Promise.all(ids.map((id) => GraphQLPublic(document, {}, { pk: id }))),
     { enabled: loadCards && ids.length > 0 }
   );
 
@@ -394,7 +395,7 @@ function UseCaseCard({ item }: { item: ConnectedUseCase }) {
       variation="collapsed"
       iconColor="success"
       href={`/usecases/${item.id}`}
-      imageUrl={imageUrl(item.logo?.path)}
+      imageUrl={imageUrl(item.logo?.url)}
       leftFooterChips={[
         {
           icon: sector ? `/Sectors/${sector}.svg` : '/Sectors/default.svg',
@@ -440,7 +441,7 @@ function CollaborativeCard({ item }: { item: ConnectedCollaborative }) {
     : ([started, datasets] as const);
   const sector = item.sectors?.[0]?.name;
   const individual = Boolean(item.isIndividualCollaborative);
-  const image = item.coverImage?.path || item.logo?.path;
+  const image = item.coverImage?.url || item.logo?.url;
 
   return (
     <Card
@@ -469,6 +470,6 @@ function CollaborativeCard({ item }: { item: ConnectedCollaborative }) {
   );
 }
 
-function imageUrl(path: string | null | undefined): string {
-  return backendFileUrl(path, { stripCodeFiles: true }) || '';
+function imageUrl(url: string | null | undefined): string {
+  return backendFileUrl(url) || '';
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, type ComponentType } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   IconArrowUpRight,
@@ -21,16 +20,16 @@ import {
   IconWorld,
   IconWorldMap,
 } from '@tabler/icons-react';
-
-import { RichTextRenderer } from '@/components/RichTextRenderer';
 import { Tooltip } from 'opub-ui';
 
+import MediaImage from '@/components/MediaImage';
+import { RichTextRenderer } from '@/components/RichTextRenderer';
+import type { DatasetCoverDataset } from '../../dataset-cover';
 import {
   buildMetadataPanel,
   type MetadataFact,
   type MetadataPublisher,
 } from '../../dataset-metadata';
-import type { DatasetCoverDataset } from '../../dataset-cover';
 
 const CARD =
   'box-border rounded-[18px] border-[0.8px] border-solid border-[#e5e5e5] bg-white p-6';
@@ -63,11 +62,7 @@ type IconComponent = ComponentType<{
   'aria-hidden'?: boolean;
 }>;
 
-export function DatasetMetadata({
-  dataset,
-}: {
-  dataset: DatasetCoverDataset;
-}) {
+export function DatasetMetadata({ dataset }: { dataset: DatasetCoverDataset }) {
   const panel = buildMetadataPanel(dataset);
   const hasInformation =
     panel.facts.length > 0 ||
@@ -146,7 +141,11 @@ export function DatasetMetadata({
             ) : null}
 
             {panel.sources.length || panel.notes.length ? (
-              <SourceSection sources={panel.sources} notes={panel.notes} hasDivider={panel.facts.length > 0 || panel.tags.length > 0} />
+              <SourceSection
+                sources={panel.sources}
+                notes={panel.notes}
+                hasDivider={panel.facts.length > 0 || panel.tags.length > 0}
+              />
             ) : null}
           </div>
         </section>
@@ -187,7 +186,13 @@ function SourceSection({
   const hiddenCount = sources.length - visible.length;
 
   return (
-    <div className={hasDivider ? 'mt-6 border-t-[0.8px] border-solid border-[#e5e5e5] pt-5' : ''}>
+    <div
+      className={
+        hasDivider
+          ? 'mt-6 border-t-[0.8px] border-solid border-[#e5e5e5] pt-5'
+          : ''
+      }
+    >
       <h4 className="m-0 font-primary text-200 font-semi-bold leading-2 tracking-[0px] text-primaryBlue">
         Source & Provenance
       </h4>
@@ -250,39 +255,39 @@ function PublisherCard({ publisher }: { publisher: MetadataPublisher }) {
       <h3 className={`${HEADING} m-0`}>About the publisher</h3>
       <div className={CARD_RULE}>
         <div className="flex items-start gap-3">
-        {publisher.imageSrc ? (
-          <Image
-            src={publisher.imageSrc}
-            alt=""
-            width={48}
-            height={48}
-            className="h-12 w-12 shrink-0 rounded-full object-cover"
-          />
-        ) : (
-          <span
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#e7ebf5] text-[#667085]"
-            aria-hidden
-          >
-            <IconUser size={22} stroke={1.75} />
-          </span>
-        )}
-        <div className="min-w-0">
-          <p className="m-0 font-primary text-100 font-medium leading-2 tracking-[0px] text-[#0a0a0a]">
-            <Link href={publisher.href} className="text-inherit no-underline">
-              {publisher.name}
-            </Link>
-          </p>
-          {publisher.bio ? (
-            <p className="mt-1 font-primary text-100 font-regular leading-2 tracking-[0px] text-[#686868]">
-              {publisher.bio}
+          {publisher.imageSrc ? (
+            <MediaImage
+              src={publisher.imageSrc}
+              alt=""
+              width={48}
+              height={48}
+              className="h-12 w-12 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <span
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#e7ebf5] text-[#667085]"
+              aria-hidden
+            >
+              <IconUser size={22} stroke={1.75} />
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="m-0 font-primary text-100 font-medium leading-2 tracking-[0px] text-[#0a0a0a]">
+              <Link href={publisher.href} className="text-inherit no-underline">
+                {publisher.name}
+              </Link>
             </p>
-          ) : null}
-          {publisher.location ? (
-            <p className="mt-1 font-primary text-100 font-regular leading-2 tracking-[0px] text-[#68686b]">
-              {publisher.location}
-            </p>
-          ) : null}
-        </div>
+            {publisher.bio ? (
+              <p className="mt-1 font-primary text-100 font-regular leading-2 tracking-[0px] text-[#686868]">
+                {publisher.bio}
+              </p>
+            ) : null}
+            {publisher.location ? (
+              <p className="mt-1 font-primary text-100 font-regular leading-2 tracking-[0px] text-[#68686b]">
+                {publisher.location}
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
     </section>
@@ -303,12 +308,7 @@ function InfoFact({
 
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <Icon
-        size={24}
-        stroke={1.5}
-        className={FACT_ICON}
-        aria-hidden
-      />
+      <Icon size={24} stroke={1.5} className={FACT_ICON} aria-hidden />
       <div className="min-w-0">
         <p className={LABEL}>{fact.label}</p>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">

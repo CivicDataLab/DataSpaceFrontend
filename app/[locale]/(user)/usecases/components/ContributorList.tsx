@@ -1,7 +1,7 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { IconUser } from '@tabler/icons-react';
 
+import MediaImage from '@/components/MediaImage';
 import type { RailContributor } from './usecase-rail';
 
 type ContributorListProps = {
@@ -24,12 +24,13 @@ export function ContributorList({ people }: ContributorListProps) {
               className="flex items-center gap-3 rounded-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primaryBlue"
             >
               {person.imageSrc ? (
-                <Image
+                <MediaImage
                   src={person.imageSrc}
                   alt=""
                   width={32}
                   height={32}
                   className="h-8 w-8 shrink-0 rounded-full object-cover text-75 font-regular leading-1 !text-[#0a0a0a]"
+                  fallback="/profile.png"
                 />
               ) : (
                 <span
