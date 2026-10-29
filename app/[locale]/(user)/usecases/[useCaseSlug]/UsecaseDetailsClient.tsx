@@ -78,7 +78,7 @@ void graphql(`
         value
       }
       logo {
-        path
+        url
       }
       datasets {
         title
