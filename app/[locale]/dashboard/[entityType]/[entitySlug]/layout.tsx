@@ -91,6 +91,11 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
       icon: 'chartBar',
     },
     {
+      title: 'Events',
+      href: `/dashboard/${params.entityType}/${params.entitySlug}/events`,
+      icon: 'calendarEvent',
+    },
+    {
       title: 'Profile',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/profile`,
       icon: 'user',
