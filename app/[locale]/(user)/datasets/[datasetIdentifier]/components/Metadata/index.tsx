@@ -138,7 +138,8 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
                   ? 'Publisher logo'
                   : 'Organization logo'
               }
-              className="w-full object-contain"
+              className="h-auto w-full object-contain"
+              loading="eager"
               fallback={data.isIndividualDataset ? '/profile.png' : '/org.png'}
             />
           </Link>

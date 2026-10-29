@@ -212,7 +212,8 @@ const Metadata = ({ data, setOpen }: MetadataProps) => {
                   ? 'Publisher logo'
                   : 'Organization logo'
               }
-              className="w-full object-contain"
+              className="h-auto w-full object-contain"
+              loading="eager"
               fallback={data.useCase.isIndividualUsecase ? '/profile.png' : '/org.png'}
             />
           </div>
