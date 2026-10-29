@@ -15,15 +15,13 @@ const Charts = () => {
   const [chartId, setChartId] = useQueryState('id', parseAsString);
   const [imageId, setImageId] = useQueryState('id', parseAsString);
 
+  if (type === 'list') {
+    return <ChartsList />;
+  }
+
   return (
     <div className=" mt-6">
-      {type === 'list' ? (
-        <ChartsList
-          setType={setType}
-          setChartId={setChartId}
-          setImageId={setImageId}
-        />
-      ) : type === 'visualize' ? (
+      {type === 'visualize' ? (
         <ChartsVisualize
           setType={setType}
           chartId={chartId}
