@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { graphql } from '@/gql';
 
 import { GraphQL } from '@/lib/api';
-import { extractPublisherId, generatePageMetadata, mediaUrl } from '@/lib/utils';
+import { extractPublisherId, generatePageMetadata } from '@/lib/utils';
 import OrgPageClient from './OrgPageClient';
 
 const orgDataQuery = graphql(`
@@ -52,7 +52,7 @@ export async function generateMetadata({
       siteName: 'CivicDataSpace',
       url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/publishers/${organizationSlug}`,
       image: org?.logo?.url
-        ? mediaUrl(org.logo.url)
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo.url}`
         : `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
       locale: 'en_US',
     },

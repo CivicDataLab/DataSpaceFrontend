@@ -11,7 +11,11 @@ export const allOrganizationsListingDoc = graphql(`
       location
       logo {
         name
+        path
+        size
         url
+        width
+        height
       }
       slug
     }
@@ -25,7 +29,11 @@ export const allDataSpacesListingDoc = graphql(`
       name
       logo {
         name
+        path
+        size
         url
+        width
+        height
       }
       slug
     }
@@ -41,6 +49,7 @@ export const organizationCreationMutation = graphql(`
         name
         logo {
           name
+          path
           url
         }
         homepage

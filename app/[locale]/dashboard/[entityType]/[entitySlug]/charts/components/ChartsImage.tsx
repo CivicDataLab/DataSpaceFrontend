@@ -34,7 +34,7 @@ interface ChartImageFormData {
   id: string;
   name: string;
   description: string;
-  image: { name: string; url: string } | null;
+  image: { name: string; path: string } | null;
 }
 
 const getResourceChartImageDetails = graphql(`
@@ -45,7 +45,7 @@ const getResourceChartImageDetails = graphql(`
       description
       image {
         name
-        url
+        path
       }
     }
   }
@@ -59,7 +59,7 @@ const getDatasetResourceChartImageDetails = graphql(`
       description
       image {
         name
-        url
+        path
       }
     }
   }
@@ -87,7 +87,7 @@ const UpdateChartImageMutation = graphql(`
         description
         image {
           name
-          url
+          path
         }
       }
     }
@@ -183,7 +183,7 @@ const ChartsImage: React.FC<ImageProps> = ({
         image: imageDetails.image
           ? {
               name: imageDetails.image.name ?? '',
-              url: imageDetails.image.url ?? '',
+              path: imageDetails.image.path ?? '',
             }
           : null,
         id: imageDetails.id ?? '',

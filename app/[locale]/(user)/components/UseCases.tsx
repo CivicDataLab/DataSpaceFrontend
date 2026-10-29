@@ -16,7 +16,7 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { cn, formatDate, mediaUrl } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { UseCaseListingSkeleton } from '@/components/loading';
 import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
@@ -47,7 +47,7 @@ const useCasesListDoc = graphql(`
         }
       }
       logo {
-        url
+        path
       }
       geographies {
         id
@@ -65,7 +65,7 @@ const useCasesListDoc = graphql(`
       }
       publishers {
         logo {
-          url
+          path
         }
         name
       }
@@ -173,15 +173,15 @@ const UseCasesListingPage = () => {
                           {
                             icon: item.isIndividualUsecase
                               ? item?.user?.profilePicture
-                                ? mediaUrl(item.user.profilePicture.url)
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
                                 : '/profile.png'
                               : item?.organization?.logo
-                                ? mediaUrl(item.organization.logo.url)
+                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
                                 : '/org.png',
                             label: 'Published by',
                           },
                         ]}
-                        imageUrl={mediaUrl(item.logo?.url)}
+                        imageUrl={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo?.path.replace('/code/files/', '')}`}
                         description={getUseCaseSummaryExcerpt(item.summary)}
                         iconColor="metadata"
                         variation={'collapsed'}

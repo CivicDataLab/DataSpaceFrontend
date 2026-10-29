@@ -6,8 +6,6 @@ import { Icon, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
-import { mediaUrl } from '@/lib/utils';
-import MediaImage from '@/components/MediaImage';
 
 interface SidebarCardData {
   id?: string;
@@ -82,21 +80,20 @@ const SidebarCard: React.FC<SidebarCardProps> = ({ data, type }) => {
     <div className="m-auto flex flex-col gap-4">
       <div>
         {type === 'organization' ? (
-          <MediaImage
-            src={data?.logo?.url ? mediaUrl(data.logo.url) : '/org.png'}
+          <Image
+            src={`${data?.logo?.url ? process.env.NEXT_PUBLIC_BACKEND_URL + data?.logo?.url : '/org.png'}`}
             alt={data?.fullName ?? data?.name ?? ''}
             width={168}
             height={168}
             className="m-auto rounded-4 bg-surfaceDefault object-contain p-4"
           />
         ) : (
-          <MediaImage
-            src={data?.profilePicture?.url ? mediaUrl(data.profilePicture.url) : '/profile.png'}
+          <Image
+            src={`${data?.profilePicture?.url ? process.env.NEXT_PUBLIC_BACKEND_URL + data?.profilePicture?.url : '/profile.png'}`}
             alt={data?.fullName ?? data?.name ?? ''}
             width={240}
             height={240}
             className="m-auto rounded-full object-cover"
-            fallback="/profile.png"
           />
         )}
       </div>

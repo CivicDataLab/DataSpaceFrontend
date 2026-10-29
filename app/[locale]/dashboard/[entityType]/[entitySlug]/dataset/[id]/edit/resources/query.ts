@@ -27,6 +27,7 @@ export const getResourceDoc = graphql(`
           format
           file {
             name
+            path
             url
           }
           size

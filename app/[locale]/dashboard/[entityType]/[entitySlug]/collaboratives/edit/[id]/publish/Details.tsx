@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Tag, Text } from 'opub-ui';
 
-import { getWebsiteTitle, mediaUrl } from '@/lib/utils';
+import { getWebsiteTitle } from '@/lib/utils';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
-import MediaImage from '@/components/MediaImage';
 
 interface NamedItem {
   id?: string | null;
@@ -27,8 +27,8 @@ interface CollaborativePublishDetails {
     value?: string | null;
     metadataItem?: { label?: string | null } | null;
   }> | null;
-  logo?: { url?: string | null } | null;
-  coverImage?: { url?: string | null } | null;
+  logo?: { path?: string | null } | null;
+  coverImage?: { path?: string | null } | null;
 }
 
 interface DetailsProps {
@@ -182,8 +182,8 @@ const Details = ({ data }: DetailsProps) => {
                   Logo:
                 </Text>
               </div>
-              <MediaImage
-                src={mediaUrl(collaborative.logo.url ?? '')}
+              <Image
+                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.logo.path?.replace('/code/files/', '') ?? ''}`}
                 alt={collaborative.title ?? ''}
                 width={240}
                 className="object-contain"
@@ -198,8 +198,8 @@ const Details = ({ data }: DetailsProps) => {
                   Cover Image:
                 </Text>
               </div>
-              <MediaImage
-                src={mediaUrl(collaborative.coverImage.url ?? '')}
+              <Image
+                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${collaborative.coverImage.path?.replace('/code/files/', '') ?? ''}`}
                 alt={collaborative.title ?? ''}
                 width={240}
                 className="object-contain"

@@ -1,7 +1,5 @@
+import Image from 'next/image';
 import { Text } from 'opub-ui';
-
-import { mediaUrl } from '@/lib/utils';
-import MediaImage from '@/components/MediaImage';
 
 interface Contributor {
   fullName?: string | null;
@@ -83,17 +81,16 @@ const Contributors = ({ data }: ContributorsProps) => {
           <div className="flex flex-wrap gap-2">
             {item?.image.map((data, index) => (
               <div key={index} className="flex flex-col items-center gap-4">
-                <MediaImage
+                <Image
                   src={
                     data?.profilePicture?.url
-                      ? mediaUrl(data.profilePicture.url)
+                      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.profilePicture.url}`
                       : '/profile.png'
                   }
                   alt={item.label}
                   width={80}
                   height={80}
                   className="rounded-full object-cover"
-                  fallback="/profile.png"
                 />
 
                 <Text
@@ -116,8 +113,12 @@ const Contributors = ({ data }: ContributorsProps) => {
             {item.image.map((data, index) => (
               <div key={index} className="flex flex-col items-center gap-4">
                 <div className="rounded-4 bg-surfaceDefault p-4 shadow-basicMd">
-                  <MediaImage
-                    src={data?.logo?.url ? mediaUrl(data.logo.url) : '/org.png'}
+                  <Image
+                    src={
+                      data?.logo?.url
+                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.logo.url}`
+                        : '/org.png'
+                    }
                     alt={item.label}
                     width={140}
                     height={100}

@@ -23,11 +23,10 @@ import {
 
 import { DashboardOrganization, useDashboardStore } from '@/config/store';
 import { GraphQL } from '@/lib/api';
-import { cn, mediaUrl } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
-import MediaImage from '@/components/MediaImage';
 import styles from './../components/styles.module.scss';
 import { organizationCreationMutation } from './schema';
 
@@ -315,10 +314,10 @@ const EntityCard = ({ entityItem, params }: EntityCardProps) => {
         >
           <div className="border-var(--border-radius-5) rounded-2">
             {isImageValid ? (
-              <MediaImage
+              <Image
                 height={160}
                 width={160}
-                src={mediaUrl(entityItem?.logo?.url)}
+                src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${entityItem?.logo?.url}`}
                 alt={`${entityItem.name} logo`}
                 onError={() => {
                   setIsImageValid(false);

@@ -4,9 +4,8 @@ import Link from 'next/link';
 import { Button, Divider, Icon, Text, Tooltip } from 'opub-ui';
 
 import { UseCasedetailsQuery } from '@/gql/generated/graphql';
-import { formatDate, getWebsiteTitle, mediaUrl } from '@/lib/utils';
+import { formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
-import MediaImage from '@/components/MediaImage';
 
 interface MetadataProps {
   data: UseCasedetailsQuery;
@@ -172,10 +171,10 @@ const Metadata = ({ data, setOpen }: MetadataProps) => {
   ];
   const image = data.useCase.isIndividualUsecase
     ? data.useCase?.user?.profilePicture
-      ? mediaUrl(data.useCase.user.profilePicture.url)
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.useCase.user.profilePicture.url}`
       : '/profile.png'
     : data?.useCase.organization?.logo
-      ? mediaUrl(data.useCase.organization.logo.url)
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.useCase.organization.logo.url}`
       : '/org.png';
 
   return (
@@ -203,7 +202,7 @@ const Metadata = ({ data, setOpen }: MetadataProps) => {
       <div className=" flex flex-col gap-8">
         <Link href={getOrganizationLink()}>
           <div className="hidden rounded-2 border-1 border-solid border-greyExtralight bg-white p-2 lg:block">
-            <MediaImage
+            <Image
               height={140}
               width={100}
               src={image}
@@ -212,9 +211,7 @@ const Metadata = ({ data, setOpen }: MetadataProps) => {
                   ? 'Publisher logo'
                   : 'Organization logo'
               }
-              className="h-auto w-full object-contain"
-              loading="eager"
-              fallback={data.useCase.isIndividualUsecase ? '/profile.png' : '/org.png'}
+              className="w-full object-contain"
             />
           </div>
         </Link>

@@ -16,10 +16,12 @@ export const UpdateCollaborativeMutation = graphql(`
       platformUrl
       logo {
         name
+        path
         url
       }
       coverImage {
         name
+        path
         url
       }
     }
@@ -35,10 +37,12 @@ export const FetchCollaborative = graphql(`
       platformUrl
       logo {
         name
+        path
         url
       }
       coverImage {
         name
+        path
         url
       }
       status
@@ -300,10 +304,12 @@ export const FetchCollaborativeReview = graphql(`
       completedOn
       logo {
         name
+        path
         url
       }
       coverImage {
         name
+        path
         url
       }
       datasets {

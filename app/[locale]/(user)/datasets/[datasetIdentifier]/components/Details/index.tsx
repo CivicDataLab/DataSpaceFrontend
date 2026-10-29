@@ -43,6 +43,7 @@ const DetailsQuery = graphql(`
         description
         image {
           name
+          path
           url
         }
       }

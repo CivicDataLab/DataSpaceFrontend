@@ -160,6 +160,7 @@ export const OrgList = graphql(`
       name
       organizationTypes
       logo {
+        path
         url
       }
     }
