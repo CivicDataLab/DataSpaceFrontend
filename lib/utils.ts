@@ -114,6 +114,16 @@ export const blobToBase64 = function (blob: Blob) {
   reader.readAsDataURL(blob);
 };
 
+// Media lives in S3 and the API returns absolute URLs. Search documents indexed
+// before the move still hold backend-relative paths ("public/files/..."), so
+// those keep the backend prefix, which redirects them to S3.
+export function mediaUrl(url?: string | null): string {
+  if (!url) return '';
+  if (/^https?:\/\//.test(url)) return url;
+  const base = (process.env.NEXT_PUBLIC_BACKEND_URL ?? '').replace(/\/+$/, '');
+  return `${base}/${url.replace(/^\/+/, '')}`;
+}
+
 // function to convert bytes into friendly format
 export function bytesToSize(bytes: number) {
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
