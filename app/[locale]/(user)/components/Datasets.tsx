@@ -14,7 +14,7 @@ import {
   Text,
 } from 'opub-ui';
 
-import { cn } from '@/lib/utils';
+import { cn, mediaUrl } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { DatasetListingSkeleton } from '@/components/loading';
 import { stripMarkdown } from '../search/components/UnifiedListingComponent';
@@ -178,10 +178,10 @@ const Datasets = () => {
                         {
                           icon: item.is_individual_dataset
                             ? item?.user?.profile_picture
-                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
+                              ? mediaUrl(item.user.profile_picture)
                               : '/profile.png'
                             : item?.organization?.logo
-                              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
+                              ? mediaUrl(item.organization.logo)
                               : '/org.png',
                           label: 'Published by',
                         },

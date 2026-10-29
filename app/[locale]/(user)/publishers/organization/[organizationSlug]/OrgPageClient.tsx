@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Spinner } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { generateJsonLd } from '@/lib/utils';
+import { generateJsonLd, mediaUrl } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import JsonLd from '@/components/JsonLd';
 import ProfileDetails from '../../components/ProfileDetails';
@@ -57,7 +57,7 @@ const OrgPageClient = ({ organizationSlug }: { organizationSlug: string }) => {
     logo: {
       '@type': 'ImageObject',
       url: org?.logo?.url
-        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo.url}`
+        ? mediaUrl(org.logo.url)
         : `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
     },
     publisher: {

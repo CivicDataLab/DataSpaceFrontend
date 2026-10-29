@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Icon, Spinner, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
-import { cn, extractPublisherId, formatDate } from '@/lib/utils';
+import { cn, extractPublisherId, formatDate, mediaUrl } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
 
@@ -44,7 +44,7 @@ const userPublishedUseCasesDoc = graphql(`
       }
       publishers {
         logo {
-          path
+          url
         }
         name
       }
@@ -89,7 +89,7 @@ const orgPublishedUseCasesDoc = graphql(`
       }
       publishers {
         logo {
-          path
+          url
         }
         name
       }
@@ -201,10 +201,10 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
                 {
                   icon: item.isIndividualUsecase
                     ? item?.user?.profilePicture
-                      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profilePicture.url}`
+                      ? mediaUrl(item.user.profilePicture.url)
                       : '/profile.png'
                     : item?.organization?.logo
-                      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo.url}`
+                      ? mediaUrl(item.organization.logo.url)
                       : '/org.png',
                   label: 'Published by',
                 },
