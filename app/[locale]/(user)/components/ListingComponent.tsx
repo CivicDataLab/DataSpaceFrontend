@@ -18,7 +18,7 @@ import {
   Tray,
 } from 'opub-ui';
 
-import { cn, formatDate } from '@/lib/utils';
+import { cn, formatDate, mediaUrl } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import {
@@ -602,10 +602,10 @@ const ListingComponent: React.FC<ListingProps> = ({
                   {datasetDetails.map((item, index) => {
                     const image = item.is_individual_dataset
                       ? item?.user?.profile_picture
-                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
+                        ? mediaUrl(item.user.profile_picture)
                         : '/profile.png'
                       : item?.organization?.logo
-                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
+                        ? mediaUrl(item.organization.logo)
                         : '/org.png';
 
                     const geographies =
@@ -711,7 +711,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                     };
 
                     if (item.logo) {
-                      commonProps.imageUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`;
+                      commonProps.imageUrl = mediaUrl(item.logo);
                     }
 
                     return (

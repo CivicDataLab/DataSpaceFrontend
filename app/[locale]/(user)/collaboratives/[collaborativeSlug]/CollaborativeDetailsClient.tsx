@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useSyncExternalStore } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
@@ -11,12 +10,13 @@ import { Card, Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
 import { isCollaborativeSubdomainHost as isCollaborativeSubdomainHostname } from '@/lib/collaborativesRouting';
-import { formatDate, generateJsonLd } from '@/lib/utils';
+import { formatDate, generateJsonLd, mediaUrl } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import JsonLd from '@/components/JsonLd';
 import { Loading } from '@/components/loading';
 import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
+import MediaImage from '@/components/MediaImage';
 import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 import PrimaryDetails from '../components/Details';
 import Metadata from '../components/Metadata';
@@ -86,11 +86,11 @@ const CollaborativeDetails = graphql(`
       }
       logo {
         name
-        path
+        url
       }
       coverImage {
         name
-        path
+        url
       }
       datasets {
         title
@@ -157,7 +157,7 @@ const CollaborativeDetails = graphql(`
         }
         logo {
           name
-          path
+          url
         }
         sectors {
           name
@@ -402,8 +402,8 @@ const CollaborativeDetailClient = () => {
                                 key={org.id}
                               >
                                 <div className=" rounded-4 bg-surfaceDefault  p-4">
-                                  <Image
-                                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
+                                  <MediaImage
+                                    src={mediaUrl(org.logo?.url)}
                                     alt={org.name}
                                     width={140}
                                     height={100}
@@ -429,8 +429,8 @@ const CollaborativeDetailClient = () => {
                                 key={org.id}
                               >
                                 <div className=" rounded-4 bg-surfaceDefault  p-4">
-                                  <Image
-                                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${org.logo?.url}`}
+                                  <MediaImage
+                                    src={mediaUrl(org.logo?.url)}
                                     alt={org.name}
                                     width={140}
                                     height={100}
@@ -464,10 +464,10 @@ const CollaborativeDetailClient = () => {
                     {useCases.map((useCase) => {
                       const image = useCase.isIndividualUsecase
                         ? useCase?.user?.profilePicture
-                          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.user.profilePicture.url}`
+                          ? mediaUrl(useCase.user.profilePicture.url)
                           : '/profile.png'
                         : useCase?.organization?.logo
-                          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.organization.logo.url}`
+                          ? mediaUrl(useCase.organization.logo.url)
                           : '/org.png';
 
                       const Geography =
@@ -528,7 +528,7 @@ const CollaborativeDetailClient = () => {
                       };
 
                       if (useCase.logo) {
-                        commonProps.imageUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${useCase.logo.path.replace('/code/files/', '')}`;
+                        commonProps.imageUrl = mediaUrl(useCase.logo.url);
                       }
 
                       return (
@@ -610,10 +610,10 @@ const CollaborativeDetailClient = () => {
                           {
                             icon: dataset.isIndividualDataset
                               ? dataset?.user?.profilePicture
-                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${dataset.user.profilePicture.url}`
+                                ? mediaUrl(dataset.user.profilePicture.url)
                                 : '/profile.png'
                               : dataset?.organization?.logo
-                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${dataset.organization.logo.url}`
+                                ? mediaUrl(dataset.organization.logo.url)
                                 : '/org.png',
                             label: 'Published by',
                           },

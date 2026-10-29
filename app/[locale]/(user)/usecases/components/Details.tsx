@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { Button, Icon, Spinner, Tag, Text, Tray } from 'opub-ui';
 
 import { UseCasedetailsQuery } from '@/gql/generated/graphql';
 import { Icons } from '@/components/icons';
 import { ContentBlocksRenderer } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/components/ContentBlocksRenderer';
 import { parseUseCaseContent } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
+import { mediaUrl } from '@/lib/utils';
+import MediaImage from '@/components/MediaImage';
 import Metadata from './Metadata';
 
 interface PrimaryDetailsProps {
@@ -77,8 +78,8 @@ const PrimaryDetails = ({ data, isLoading }: PrimaryDetailsProps) => {
         </Tray>
       </div>
       <div className="mt-6 lg:mt-10">
-        <Image
-          src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.useCase.logo?.path.replace('/code/files/', '')}`}
+        <MediaImage
+          src={mediaUrl(data.useCase.logo?.url)}
           alt={data.useCase.title ?? ''}
           width={100}
           height={100}
