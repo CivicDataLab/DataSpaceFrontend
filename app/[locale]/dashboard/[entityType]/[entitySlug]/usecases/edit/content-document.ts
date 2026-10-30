@@ -1,3 +1,5 @@
+import { plainTextFromHtml } from '@/lib/public-entity';
+
 export type ContentBlockType =
   | 'text'
   | 'image'
@@ -118,19 +120,6 @@ export function serializeUseCaseContent(doc: UseCaseContentDocument): string {
 export function isRichTextEmpty(html?: string | null): boolean {
   if (!html) return true;
   return plainTextFromHtml(html).length === 0;
-}
-
-function plainTextFromHtml(html: string): string {
-  return html
-    .replace(/<[\s\S]*?>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/\s+/g, ' ')
-    .trim();
 }
 
 function capExcerpt(value: string, limit: number): string {
