@@ -21,6 +21,7 @@ import {
   toast,
 } from 'opub-ui';
 
+import { datasetLicenseLabel } from '@/lib/datasetLicense';
 import { GraphQL } from '@/lib/api';
 import { formatDate, getWebsiteTitle } from '@/lib/utils';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
@@ -86,14 +87,6 @@ const publishDatasetMutation = graphql(`
     }
   }
 `);
-
-const LICENSE_LABELS: Record<string, string> = {
-  GOVERNMENT_OPEN_DATA_LICENSE: 'Government Open Data License',
-  CC_BY_4_0_ATTRIBUTION: 'CC BY 4.0',
-  CC_BY_SA_4_0_ATTRIBUTION_SHARE_ALIKE: 'CC BY-SA 4.0',
-  OPEN_DATA_COMMONS_BY_ATTRIBUTION: 'Open Data Commons By Attribution',
-  OPEN_DATABASE_LICENSE: 'Open Database License',
-};
 
 interface PromptMetadata {
   task_type?: string;
@@ -399,7 +392,7 @@ const Page = () => {
                 <ReviewField label="License">
                   <Text variant="bodyMd" fontWeight="medium">
                     {dataset?.license
-                      ? LICENSE_LABELS[dataset.license] || dataset.license
+                      ? datasetLicenseLabel(dataset.license)
                       : '—'}
                   </Text>
                 </ReviewField>

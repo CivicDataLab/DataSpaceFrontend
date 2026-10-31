@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button, Divider, Icon, Tag, Text, Tooltip } from 'opub-ui';
 
 import { GetDatasetQuery } from '@/gql/generated/graphql';
+import { datasetLicenseLabel } from '@/lib/datasetLicense';
 import { cn, formatDate, getWebsiteTitle } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
@@ -51,34 +52,6 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
     value: item.value,
     type: item.metadataItem.dataType,
   }));
-
-  const licenseOptions = [
-    {
-      label: 'Government Open Data License',
-      value: 'GOVERNMENT_OPEN_DATA_LICENSE',
-    },
-    {
-      label: 'CC BY 4.0 (Attribution)',
-      value: 'CC_BY_4_0_ATTRIBUTION',
-    },
-    {
-      label: 'CC BY-SA 4.0 (Attribution-ShareAlike)',
-      value: 'CC_BY_SA_4_0_ATTRIBUTION_SHARE_ALIKE',
-    },
-    {
-      label: 'Open Data Commons By Attribution',
-      value: 'OPEN_DATA_COMMONS_BY_ATTRIBUTION',
-    },
-    {
-      label: 'Open Database License',
-      value: 'OPEN_DATABASE_LICENSE',
-    },
-  ];
-
-  const getLicenseLabel = (value: string): string => {
-    const option = licenseOptions.find((option) => option.value === value);
-    return option ? option.label : value;
-  };
 
   const image = data.isIndividualDataset
     ? data?.user?.profilePicture
@@ -253,7 +226,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             License
           </Text>
           <Text className="" variant="bodyLg" fontWeight="medium">
-            {getLicenseLabel(String(data.license))}
+            {datasetLicenseLabel(String(data.license))}
           </Text>
         </div>
         {data.downloadCount > 0 && (
