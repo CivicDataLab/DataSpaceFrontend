@@ -36,33 +36,11 @@ import {
   toast,
 } from 'opub-ui';
 
+import { useDatasetLicenses } from '@/hooks/useDatasetLicenses';
 import { GraphQL } from '@/lib/api';
 import { Icons } from '@/components/icons';
 
 const MAX_RESOURCE_BYTES = 50 * 1024 * 1024;
-
-const LICENSE_OPTIONS: Array<{ label: string; value: DatasetLicense }> = [
-  {
-    label: 'Government Open Data License',
-    value: DatasetLicense.GovernmentOpenDataLicense,
-  },
-  {
-    label: 'CC BY 4.0 (Attribution)',
-    value: DatasetLicense.CcBy_4_0Attribution,
-  },
-  {
-    label: 'CC BY-SA 4.0 (Attribution-ShareAlike)',
-    value: DatasetLicense.CcBySa_4_0AttributionShareAlike,
-  },
-  {
-    label: 'Open Data Commons By Attribution',
-    value: DatasetLicense.OpenDataCommonsByAttribution,
-  },
-  {
-    label: 'Open Database License',
-    value: DatasetLicense.OpenDatabaseLicense,
-  },
-];
 
 const updateDatasetTitleMutationDoc = graphql(`
   mutation SaveTitle($updateDatasetInput: UpdateDatasetInput!) {
@@ -213,8 +191,10 @@ export interface AddDatasetSheetProps {
   descriptionPlaceholder?: string;
 }
 
+// The options come from the backend's DatasetLicense enum, so any selected
+// value is a valid license.
 function isLicense(value: string): value is DatasetLicense {
-  return LICENSE_OPTIONS.some((option) => option.value === value);
+  return value !== '';
 }
 
 function isAccess(value: string): value is DatasetAccessType {
@@ -321,6 +301,7 @@ export function AddDatasetSheet({
   successMessage = 'Dataset created and added to this Use Case',
   descriptionPlaceholder = 'Briefly describe what this dataset contains and how it relates to this Use Case.',
 }: AddDatasetSheetProps): React.ReactElement {
+  const { licenses } = useDatasetLicenses();
   const [form, setForm] = useState<DatasetDraft>(emptyDraft);
   const [files, setFiles] = useState<File[]>([]);
   const [tab, setTab] = useState<UploadTab>('upload');
@@ -749,10 +730,7 @@ export function AddDatasetSheet({
                   label="License"
                   requiredIndicator
                   placeholder="Select a license..."
-                  options={LICENSE_OPTIONS.map((option) => ({
-                    label: option.label,
-                    value: option.value,
-                  }))}
+                  options={licenses}
                   value={form.license}
                   error={errors.license}
                   onChange={(value) => {
