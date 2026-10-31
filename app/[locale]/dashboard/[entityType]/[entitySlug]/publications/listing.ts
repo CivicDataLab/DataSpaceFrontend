@@ -2,13 +2,8 @@ import { graphql } from '@/gql';
 import { PublicationStatus } from '@/gql/generated/graphql';
 import type { SortField } from 'opub-ui';
 
-import {
-  formatUpdated,
-  joinNames,
-  labelFromValue,
-  optionList,
-} from '../provider-flow/table-listing';
-import { LICENSE_OPTIONS } from './model';
+import { datasetLicenseLabel } from '@/lib/datasetLicense';
+import { formatUpdated, joinNames } from '../provider-flow/table-listing';
 
 export const PUBLICATION_TAB_KEYS: readonly string[] = [
   PublicationStatus.Draft,
@@ -29,17 +24,6 @@ export const PUBLICATION_FIELD_MAP: Record<string, string> = {
   geography: 'geographies__id',
   sector: 'sectors__id',
 };
-
-const LICENSE_LABELS = Object.fromEntries(
-  LICENSE_OPTIONS.map((option) => [option.value, option.label])
-);
-
-export const LICENSE_FILTER_OPTIONS = optionList(
-  LICENSE_OPTIONS.map((option) => ({
-    label: option.label,
-    value: option.value,
-  }))
-);
 
 export const publicationsTableQueryDoc = graphql(`
   query PublicationsTableListing(
@@ -119,7 +103,7 @@ export function toPublicationRows(
     id: publication.id,
     title: publication.title?.trim() || 'Untitled Publication',
     resourceType: publication.resourceType?.name?.trim() || '—',
-    license: labelFromValue(publication.license, LICENSE_LABELS),
+    license: datasetLicenseLabel(publication.license),
     sector: joinNames(publication.sectors),
     geography: joinNames(publication.geographies),
     status: publication.status,
