@@ -15,6 +15,7 @@ import {
   toast,
 } from 'opub-ui';
 
+import { useDatasetLicenses } from '@/hooks/useDatasetLicenses';
 import { GraphQL } from '@/lib/api';
 import {
   EntityRowPicker,
@@ -28,7 +29,6 @@ import {
   errorText,
   isDetailsComplete,
   isHttpUrl,
-  LICENSE_OPTIONS,
   mutationMessage,
   publicationWriteInput,
   type DetailsDraft,
@@ -91,6 +91,8 @@ export function DetailsStep({ publicationId }: { publicationId?: string }) {
   const referenceQuery = useQuery(['publication_form_reference'], () =>
     GraphQL(publicationReferenceQuery, headers)
   );
+
+  const { licenses } = useDatasetLicenses();
 
   const usersQuery = useQuery(
     ['publication_contributor_search', userSearch],
@@ -465,7 +467,7 @@ export function DetailsStep({ publicationId }: { publicationId?: string }) {
               label="Usage Rights"
               required
               requiredIndicator
-              options={LICENSE_OPTIONS}
+              options={licenses}
               placeholder="Select"
               value={form.license}
               error={errors.license}

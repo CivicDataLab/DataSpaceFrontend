@@ -26,6 +26,7 @@ import {
 } from 'opub-ui';
 import { useFormContext } from 'react-hook-form';
 
+import { useDatasetLicenses } from '@/hooks/useDatasetLicenses';
 import { GraphQL } from '@/lib/api';
 import { invalidateDatasetReview } from '../dataset-summary';
 import { enumValues } from '@/lib/enumValues';
@@ -482,6 +483,8 @@ export function EditMetadata({ id }: { id: string }) {
       }
     )
   );
+
+  const { licenses } = useDatasetLicenses();
 
   const [isTagsListUpdated, setIsTagsListUpdated] = useState(false);
 
@@ -980,29 +983,6 @@ export function EditMetadata({ id }: { id: string }) {
     return null;
   }
 
-  const licenseOptions = [
-    {
-      label: 'Government Open Data License',
-      value: 'GOVERNMENT_OPEN_DATA_LICENSE',
-    },
-    {
-      label: 'CC BY 4.0 (Attribution)',
-      value: 'CC_BY_4_0_ATTRIBUTION',
-    },
-    {
-      label: 'CC BY-SA 4.0 (Attribution-ShareAlike)',
-      value: 'CC_BY_SA_4_0_ATTRIBUTION_SHARE_ALIKE',
-    },
-    {
-      label: 'Open Data Commons By Attribution',
-      value: 'OPEN_DATA_COMMONS_BY_ATTRIBUTION',
-    },
-    {
-      label: 'Open Database License',
-      value: 'OPEN_DATABASE_LICENSE',
-    },
-  ];
-
   useEffect(() => {
     setStatus(
       updateMetadataMutation.isLoading || updateDatasetTitleMutation.isLoading
@@ -1300,10 +1280,7 @@ export function EditMetadata({ id }: { id: string }) {
                   <Select
                     name="license"
                     requiredIndicator
-                    options={licenseOptions.map((item) => ({
-                      label: item.label,
-                      value: item.value,
-                    }))}
+                    options={licenses}
                     label="License"
                     placeholder="Select a license"
                     value={formData.license ? formData.license : ''}
