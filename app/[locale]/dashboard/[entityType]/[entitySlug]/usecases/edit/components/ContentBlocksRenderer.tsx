@@ -8,7 +8,7 @@ import { IconExternalLink, IconPencil } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { Tag, Text } from 'opub-ui';
 
-import { GraphQL } from '@/lib/api';
+import { GraphQL, GraphQLPublic } from '@/lib/api';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 import {
   isBlockEmpty,
@@ -143,27 +143,41 @@ export function SelectedChartPreview({
 }) {
   const params = useParams<{ entityType?: string; entitySlug?: string }>();
   const { entityType, entitySlug } = params;
-  const canFetch = Boolean(entityType && entitySlug);
+  const hasOwner = Boolean(entityType && entitySlug);
   const isImage = chartKind === 'TypeResourceChartImage';
 
   const chartQuery = useQuery(
-    [`usecase_block_chart_${chartId}`],
+    [`usecase_block_chart_${chartId}`, hasOwner ? entitySlug : 'public'],
     () => {
-      if (!entityType || !entitySlug) {
-        return Promise.resolve(null);
+      if (entityType && entitySlug) {
+        return GraphQL(
+          getResourceChartDetails,
+          { [entityType]: entitySlug },
+          { chartDetailsId: chartId }
+        );
       }
-      return GraphQL(
+      return GraphQLPublic(
         getResourceChartDetails,
-        { [entityType]: entitySlug },
+        {},
         { chartDetailsId: chartId }
       );
     },
-    { enabled: canFetch && !isImage }
+    { enabled: !isImage }
   );
 
   const options = chartQuery.data?.resourceChart?.chart?.options;
 
-  if (!canFetch) return null;
+  if (isImage && !hasOwner) {
+    return (
+      // A published chart image is served by the public download route.
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/download/chart_image/${chartId}`}
+        alt={chartName || 'Chart'}
+        className="h-auto max-h-[280px] w-full object-contain"
+      />
+    );
+  }
 
   if (!isImage && options && typeof options === 'object') {
     return (

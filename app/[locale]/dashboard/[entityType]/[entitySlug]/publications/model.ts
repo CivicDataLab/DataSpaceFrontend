@@ -1,3 +1,5 @@
+import { datasetLicenseLabel } from '@/lib/datasetLicense';
+
 export const MAX_PUBLICATION_FILE_BYTES = 50 * 1024 * 1024;
 
 export const PUBLICATION_FILE_EXTENSIONS = [
@@ -11,26 +13,6 @@ export const PUBLICATION_FILE_EXTENSIONS = [
 export const PUBLICATION_FILE_ACCEPT = PUBLICATION_FILE_EXTENSIONS.map(
   (extension) => `.${extension}`
 ).join(',');
-
-export const LICENSE_OPTIONS = [
-  {
-    label: 'CC BY 4.0',
-    value: 'CC_BY_4_0_ATTRIBUTION',
-  },
-  {
-    label: 'CC BY-SA 4.0',
-    value: 'CC_BY_SA_4_0_ATTRIBUTION_SHARE_ALIKE',
-  },
-  {
-    label: 'Government Open Data License',
-    value: 'GOVERNMENT_OPEN_DATA_LICENSE',
-  },
-  {
-    label: 'Open Data Commons (Attribution)',
-    value: 'OPEN_DATA_COMMONS_BY_ATTRIBUTION',
-  },
-  { label: 'Open Database License', value: 'OPEN_DATABASE_LICENSE' },
-];
 
 export type ContributorDraft = {
   id: string;
@@ -116,7 +98,7 @@ export function emptyDetails(): DetailsDraft {
 }
 
 export function licenseLabel(value?: string | null) {
-  return LICENSE_OPTIONS.find((option) => option.value === value)?.label ?? value ?? '';
+  return datasetLicenseLabel(value);
 }
 
 export function fileExtension(name: string) {
