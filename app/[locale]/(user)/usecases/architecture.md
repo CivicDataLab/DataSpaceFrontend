@@ -75,7 +75,7 @@ No tables are written. The cover reads fields the public query already returns: 
 
 The published line uses `created`, formatted as `06 Aug 2026`. There is no separate published-on field on this query.
 
-The thumbnail is the use case logo. Its stored path still has the `/code/files/` prefix stripped before it is joined to the backend file host, which is how the old page loaded the same image.
+The thumbnail is the use case logo, read from its `url` field, which already points at the file's host.
 
 ### Indexing & performance
 

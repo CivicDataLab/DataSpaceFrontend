@@ -1,7 +1,8 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { IconUser } from '@tabler/icons-react';
 
+import MediaImage from '@/components/MediaImage';
+import { publisherImageFallback } from '@/lib/public-entity';
 import type { RailContributor } from './usecase-rail';
 
 type ContributorListProps = {
@@ -24,8 +25,9 @@ export function ContributorList({ people }: ContributorListProps) {
               className="flex items-center gap-3 rounded-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primaryBlue"
             >
               {person.imageSrc ? (
-                <Image
+                <MediaImage
                   src={person.imageSrc}
+                  fallback={publisherImageFallback(person.href)}
                   alt=""
                   width={32}
                   height={32}

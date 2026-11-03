@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { IconCalendar, IconMapPin, IconUser } from '@tabler/icons-react';
 
 import { Icons } from '@/components/icons';
+import MediaImage from '@/components/MediaImage';
+import { publisherImageFallback } from '@/lib/public-entity';
 
 export type EntityCoverPublisher = {
   name: string;
@@ -82,8 +84,9 @@ export function EntityCover({
                 className="mt-6 inline-flex items-center gap-3 rounded-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primaryBlue"
               >
                 {publisher.imageSrc ? (
-                  <Image
+                  <MediaImage
                     src={publisher.imageSrc}
+                    fallback={publisherImageFallback(publisher.href)}
                     alt={publisher.imageAlt}
                     width={44}
                     height={44}

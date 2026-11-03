@@ -18,7 +18,7 @@ import {
   Tray,
 } from 'opub-ui';
 
-import { cn, formatDate } from '@/lib/utils';
+import { cn, formatDate, mediaUrl } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
 import {
@@ -284,13 +284,14 @@ const ListingComponent: React.FC<ListingProps> = ({
     total: number;
     aggregations: Aggregations;
   } | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [variables, setVariables] = useState('');
   const [open, setOpen] = useState(false);
   const [queryParams, setQueryParams] = useReducer(queryReducer, initialState);
   const [view] = useState<'collapsed' | 'expanded'>('collapsed');
 
   const count = facets?.total ?? 0;
-  const datasetDetails = facets?.results ?? [];
+  const datasetDetails = Array.isArray(facets?.results) ? facets.results : [];
 
   const lockedFiltersKey = JSON.stringify(lockedFilters);
   const stableLockedFilters = useMemo(
@@ -309,11 +310,29 @@ const ListingComponent: React.FC<ListingProps> = ({
         .then((res) => {
           // Only set if this is the latest call
           if (currentFetchId === latestFetchId.current) {
-            setFacets(res);
+            if (
+              res &&
+              typeof res === 'object' &&
+              Array.isArray((res as { results?: unknown }).results)
+            ) {
+              setFacets(res);
+              setFetchError(null);
+            } else {
+              setFacets(null);
+              setFetchError('Search returned an unexpected response.');
+            }
           }
         })
         .catch((err) => {
           console.error(err);
+          if (currentFetchId === latestFetchId.current) {
+            setFacets(null);
+            setFetchError(
+              err instanceof Error
+                ? err.message
+                : 'Failed to load results. Please try again.'
+            );
+          }
         });
     }
   }, [variables, type]);
@@ -563,9 +582,15 @@ const ListingComponent: React.FC<ListingProps> = ({
                 </div>
               )}
 
-              {facets === null ? (
+              {fetchError ? (
+                <div className="flex min-h-[320px] items-center justify-center">
+                  <Text variant="heading2xl">
+                    Unable to load results. Please try again later.
+                  </Text>
+                </div>
+              ) : facets === null ? (
                 <Loading />
-              ) : facets.results.length > 0 ? (
+              ) : datasetDetails.length > 0 ? (
                 <GraphqlPagination
                   totalRows={count}
                   pageSize={queryParams.pageSize}
@@ -577,10 +602,10 @@ const ListingComponent: React.FC<ListingProps> = ({
                   {datasetDetails.map((item, index) => {
                     const image = item.is_individual_dataset
                       ? item?.user?.profile_picture
-                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.user.profile_picture}`
+                        ? mediaUrl(item.user.profile_picture)
                         : '/profile.png'
                       : item?.organization?.logo
-                        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.organization.logo}`
+                        ? mediaUrl(item.organization.logo)
                         : '/org.png';
 
                     const geographies =
@@ -686,7 +711,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                     };
 
                     if (item.logo) {
-                      commonProps.imageUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.logo}`;
+                      commonProps.imageUrl = mediaUrl(item.logo);
                     }
 
                     return (

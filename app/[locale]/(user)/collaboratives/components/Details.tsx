@@ -1,12 +1,13 @@
 'use client';
 
-import Image from 'next/image';
 import { Button, Icon, Spinner, Tag, Text, Tray } from 'opub-ui';
 import { useState } from 'react';
 
 import { CollaborativeQueryQuery } from '@/gql/generated/graphql';
 import { Icons } from '@/components/icons';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
+import { mediaUrl } from '@/lib/utils';
+import MediaImage from '@/components/MediaImage';
 import Metadata from './Metadata';
 
 interface PrimaryDetailsProps {
@@ -71,8 +72,8 @@ const PrimaryDetails = ({ data, isLoading }: PrimaryDetailsProps) => {
       </div>
       {data.collaborativeBySlug.coverImage && (
         <div className="mt-6 lg:mt-10">
-          <Image
-            src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.coverImage?.path.replace('/code/files/', '')}`}
+          <MediaImage
+            src={mediaUrl(data.collaborativeBySlug.coverImage?.url)}
             alt={data.collaborativeBySlug.title ?? ''}
             width={1200}
             height={400}

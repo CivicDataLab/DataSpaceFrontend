@@ -5,8 +5,9 @@ import { Button, Icon, Text, Tooltip } from 'opub-ui';
 
 import { CollaborativeQueryQuery } from '@/gql/generated/graphql';
 import { getPlatformRootUrl } from '@/lib/collaborativesRouting';
-import { formatDate, getWebsiteTitle } from '@/lib/utils';
+import { formatDate, getWebsiteTitle, mediaUrl } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import MediaImage from '@/components/MediaImage';
 
 interface MetadataProps {
   data: CollaborativeQueryQuery;
@@ -121,8 +122,8 @@ const Metadata = ({ data, setOpen }: MetadataProps) => {
   ];
 
   // Use collaborative logo if available, otherwise use a default
-  const image = data.collaborativeBySlug?.logo?.path
-    ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.collaborativeBySlug.logo.path.replace('/code/files/', '')}`
+  const image = data.collaborativeBySlug?.logo?.url
+    ? mediaUrl(data.collaborativeBySlug.logo.url)
     : '/org.png';
 
   const platformRootUrl = getPlatformRootUrl();
@@ -173,12 +174,13 @@ const Metadata = ({ data, setOpen }: MetadataProps) => {
       <div className="h-0.5 w-full bg-baseGraySlateSolid9"></div>
       <div className=" flex flex-col gap-8">
         <div className="hidden rounded-2 border-1 border-solid border-greyExtralight bg-white p-2 lg:block">
-          <Image
+          <MediaImage
             height={180}
             width={120}
             src={image}
             alt="Collaborative logo"
-            className="w-full object-contain"
+            className="h-auto w-full object-contain"
+            loading="eager"
           />
         </div>
         <div className="flex flex-col gap-8">
@@ -219,16 +221,17 @@ const Metadata = ({ data, setOpen }: MetadataProps) => {
                         key={contributor.id}
                       >
                         <Tooltip content={contributor.fullName}>
-                          <Image
+                          <MediaImage
                             alt={contributor.fullName}
                             width={40}
                             height={40}
                             className="rounded-full object-cover"
                             src={
                               contributor.profilePicture?.url
-                                ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${contributor.profilePicture?.url}`
+                                ? mediaUrl(contributor.profilePicture?.url)
                                 : '/profile.png'
                             }
+                            fallback="/profile.png"
                           />
                         </Tooltip>
                       </Link>

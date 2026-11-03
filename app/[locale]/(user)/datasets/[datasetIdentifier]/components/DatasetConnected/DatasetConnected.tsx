@@ -35,7 +35,7 @@ const connectedUseCaseQuery = graphql(`
         }
       }
       logo {
-        path
+        url
       }
       geographies {
         name
@@ -70,10 +70,10 @@ const connectedCollaborativeQuery = graphql(`
         }
       }
       logo {
-        path
+        url
       }
       coverImage {
-        path
+        url
       }
       geographies {
         name
@@ -102,7 +102,7 @@ export type ConnectedUseCase = {
     name?: string | null;
     logo?: { url?: string | null } | null;
   } | null;
-  logo?: { path?: string | null } | null;
+  logo?: { url?: string | null } | null;
   geographies?: Array<{ name?: string | null }> | null;
   sectors?: Array<{ name?: string | null }> | null;
   datasets?: Array<{ id?: string | null }> | null;
@@ -124,8 +124,8 @@ export type ConnectedCollaborative = {
     name?: string | null;
     logo?: { url?: string | null } | null;
   } | null;
-  logo?: { path?: string | null } | null;
-  coverImage?: { path?: string | null } | null;
+  logo?: { url?: string | null } | null;
+  coverImage?: { url?: string | null } | null;
   geographies?: Array<{ name?: string | null }> | null;
   sectors?: Array<{ name?: string | null }> | null;
   datasets?: Array<{ id?: string | null }> | null;
@@ -394,7 +394,7 @@ function UseCaseCard({ item }: { item: ConnectedUseCase }) {
       variation="collapsed"
       iconColor="success"
       href={`/usecases/${item.id}`}
-      imageUrl={imageUrl(item.logo?.path)}
+      imageUrl={backendFileUrl(item.logo?.url) || ''}
       leftFooterChips={[
         {
           icon: sector ? `/Sectors/${sector}.svg` : '/Sectors/default.svg',
@@ -440,7 +440,7 @@ function CollaborativeCard({ item }: { item: ConnectedCollaborative }) {
     : ([started, datasets] as const);
   const sector = item.sectors?.[0]?.name;
   const individual = Boolean(item.isIndividualCollaborative);
-  const image = item.coverImage?.path || item.logo?.path;
+  const image = item.coverImage?.url || item.logo?.url;
 
   return (
     <Card
@@ -450,7 +450,7 @@ function CollaborativeCard({ item }: { item: ConnectedCollaborative }) {
       variation="collapsed"
       iconColor="warning"
       href={`/collaboratives/${item.slug || item.id}`}
-      imageUrl={imageUrl(image)}
+      imageUrl={backendFileUrl(image) || ''}
       leftFooterChips={[
         {
           icon: sector ? `/Sectors/${sector}.svg` : '/Sectors/default.svg',
@@ -467,8 +467,4 @@ function CollaborativeCard({ item }: { item: ConnectedCollaborative }) {
       ]}
     />
   );
-}
-
-function imageUrl(path: string | null | undefined): string {
-  return backendFileUrl(path, { stripCodeFiles: true }) || '';
 }
