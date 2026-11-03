@@ -11,6 +11,9 @@ jiti('./env');
 
 const backendUrl = new URL(process.env.BACKEND_URL || 'http://localhost:8000');
 const platformUrl = new URL(process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000');
+const cdnUrl = process.env.STORAGE_PUBLIC_BASE_URL
+  ? new URL(process.env.STORAGE_PUBLIC_BASE_URL)
+  : null;
 
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
@@ -97,6 +100,16 @@ const nextConfig = withNextIntl({
         port: platformUrl.port || '',
         pathname: '/**',
       },
+      ...(cdnUrl
+        ? [
+            {
+              protocol: cdnUrl.protocol.slice(0, -1),
+              hostname: cdnUrl.hostname,
+              port: cdnUrl.port || '',
+              pathname: '/**',
+            },
+          ]
+        : []),
     ],
   },
 });
