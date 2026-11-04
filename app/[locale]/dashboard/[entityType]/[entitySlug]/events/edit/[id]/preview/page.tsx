@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   IconAlertTriangle,
@@ -43,12 +43,14 @@ export default function EventPreviewPage() {
   const editBase = `${eventsBasePath(params.entityType, params.entitySlug)}/edit/${params.id}`;
   const {
     setStatus,
+    setDetailsComplete,
     setTitleOverride,
     registerTitleSave,
     registerBeforeNavigateHandler,
   } = useEventEditStatus();
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const hydrated = useRef(false);
 
   const editorQuery = useQuery(
     ['event_editor', params.id],
@@ -61,6 +63,12 @@ export default function EventPreviewPage() {
   const embed = draft ? parseLumaEmbed(draft.lumaEmbed) : null;
   const ready = draft ? isEventComplete(draft) : false;
   const published = event?.status === EventStatus.Published;
+
+  useEffect(() => {
+    if (!event || hydrated.current) return;
+    hydrated.current = true;
+    setDetailsComplete(isEventComplete(eventToDraft(event)));
+  }, [event, setDetailsComplete]);
 
   const save = async (next: NonNullable<typeof draft>, leave: boolean) => {
     setSaving(true);
