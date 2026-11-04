@@ -31,10 +31,10 @@ export type PublicEvent = {
 
 export const eventBySlugQuery = operation<
   { eventBySlug?: PublicEvent | null },
-  { slug: string }
+  { publicId: string }
 >(`
-  query EventBySlug($slug: String!) {
-    eventBySlug(slug: $slug) {
+  query EventBySlug($publicId: String!) {
+    eventBySlug(publicId: $publicId) {
       id
       name
       urlSlug
