@@ -1,8 +1,8 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { IconCalendar, IconMapPin, IconUser } from '@tabler/icons-react';
 import { Text } from 'opub-ui';
 
+import MediaImage from '@/components/MediaImage';
 import { backendFileUrl } from '@/lib/public-entity';
 import { EventCover } from './EventCover';
 import { formatEventRange } from './format';
@@ -77,12 +77,13 @@ export function EventCard({
 function HostAvatar({ src, name }: { src: string | null; name: string }) {
   if (src) {
     return (
-      <Image
+      <MediaImage
         src={src}
         alt={name || 'Host'}
         width={24}
         height={24}
-        className="h-6 w-6 rounded-full object-cover"
+        fallback="/profile.png"
+        className="h-6 w-6 shrink-0 rounded-full object-cover"
       />
     );
   }
