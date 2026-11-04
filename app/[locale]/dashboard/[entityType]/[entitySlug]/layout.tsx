@@ -88,7 +88,7 @@ export default function OrgDashboardLayout({ children }: DashboardLayoutProps) {
     {
       title: 'Charts',
       href: `/dashboard/${params.entityType}/${params.entitySlug}/charts`,
-      icon: 'chartBar',
+      icon: 'IconChartDots2',
     },
     {
       title: 'Events',

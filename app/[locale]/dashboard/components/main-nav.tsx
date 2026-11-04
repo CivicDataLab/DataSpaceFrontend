@@ -124,6 +124,10 @@ export function MainNav({ hideSearch = false }: MainNavProps) {
       href: '/usecases',
     },
     {
+      title: 'Events',
+      href: '/events',
+    },
+    {
       title: 'Collaboratives',
       href: '/collaboratives',
     },

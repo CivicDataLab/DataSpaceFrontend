@@ -171,6 +171,7 @@ export const STATIC_SITEMAP_PATHS = [
   '',
   '/datasets',
   '/usecases',
+  '/events',
   '/collaboratives',
   '/publishers',
   '/sectors',

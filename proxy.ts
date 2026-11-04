@@ -14,6 +14,8 @@ const publicPages = [
   '/sectors/(.*)',
   '/usecases',
   '/usecases/(.*)',
+  '/events',
+  '/events/(.*)',
   '/collaboratives',
   '/collaboratives/(.*)',
   '/about-us',

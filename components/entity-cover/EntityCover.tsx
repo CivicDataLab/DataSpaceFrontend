@@ -70,7 +70,7 @@ export function EntityCover({
 
             {meta.length > 0 ? <CoverMeta meta={meta} /> : null}
 
-            <h1 className="mt-5 font-primary text-[38px] font-semi-bold leading-[41.8px] text-pretty text-[#0a0a0a]">
+            <h1 className="mt-5 text-pretty font-primary text-[38px] font-semi-bold leading-[41.8px] text-[#0a0a0a]">
               {title}
             </h1>
             {description ? (

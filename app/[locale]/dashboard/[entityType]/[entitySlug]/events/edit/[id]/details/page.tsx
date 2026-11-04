@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { SectionCard, Spinner, TextField, toast } from 'opub-ui';
+import { SectionCard, Spinner, Text, TextField, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
 import {
@@ -190,6 +190,17 @@ export default function EventDetailsPage() {
           helpText="Paste the iframe from Luma, or an https://lu.ma/embed/ URL."
           onChange={(value) => updateForm({ lumaEmbed: value })}
         />
+        <Text variant="bodySm" color="subdued" className="mt-1">
+          On the Luma event, open Share, choose Embed, and copy the code.{' '}
+          <a
+            href="https://help.luma.com/p/embed-luma-on-your-website"
+            target="_blank"
+            rel="noreferrer"
+            className="text-textInteractive underline"
+          >
+            How to get the embed
+          </a>
+        </Text>
       </SectionCard>
     </div>
   );

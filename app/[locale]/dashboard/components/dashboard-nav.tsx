@@ -152,7 +152,7 @@ export function DashboardNav({
 
       <nav className="flex min-h-0 flex-1 flex-col gap-4 px-2 py-2">
         {groupNames.map((groupName, groupIndex) => (
-          <div key={groupName} className="flex flex-col gap-1">
+          <div key={groupName} className="flex flex-col gap-1 ">
             {showGroupLabels ? (
               <Text
                 variant="bodySm"
@@ -194,7 +194,7 @@ export function DashboardNav({
                           content={isCollapsed ? item.title : undefined}
                         >
                           <div className="basis-5 px-3 py-2">
-                            <Icon source={icon} color="default" />
+                            <Icon source={icon} color="default" stroke={1.7} />
                           </div>
                         </Tooltip>
                         <div
@@ -222,7 +222,7 @@ export function DashboardNav({
             })}
             {showGroupLabels && groupIndex < groupNames.length - 1 ? (
               <div className={cn('mx-3 mt-3', isCollapsed && 'invisible')}>
-                <Divider />
+                <Divider className="h-[1px] bg-baseGraySlateSolid6" />
               </div>
             ) : null}
           </div>

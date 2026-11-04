@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 
@@ -10,7 +10,6 @@ import {
   entityHeaders,
   eventsBasePath,
   formatLumaEmbed,
-  isEventComplete,
   type LumaEmbed,
 } from '../model';
 import { eventEditorQuery } from '../queries';
@@ -46,7 +45,6 @@ export function EventEditFrame({ children }: { children: ReactNode }) {
     status,
     runBeforeNavigateHandler,
     detailsComplete,
-    setDetailsComplete,
     titleOverride,
     saveTitle,
     setStepShowErrors,
@@ -63,12 +61,6 @@ export function EventEditFrame({ children }: { children: ReactNode }) {
   );
 
   const loadedName = eventQuery.data?.event?.name ?? '';
-
-  useEffect(() => {
-    const event = eventQuery.data?.event;
-    if (!event) return;
-    setDetailsComplete(isEventComplete(eventToDraft(event)));
-  }, [eventQuery.data, setDetailsComplete]);
 
   const handleStepClick = (step: number) => {
     const nextPath = step === 2 ? 'preview' : 'details';
