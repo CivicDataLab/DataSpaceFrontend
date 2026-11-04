@@ -23,7 +23,7 @@ export async function generateMetadata({
     const result = await GraphQLPublic(
       eventBySlugQuery,
       {},
-      { slug: eventSlug }
+      { publicId: eventSlug }
     );
     const event = result.eventBySlug;
     const title = event?.name?.trim() || 'Event';
@@ -68,7 +68,7 @@ export default async function EventDetailPage({
   const result = await GraphQLPublic(
     eventBySlugQuery,
     {},
-    { slug: eventSlug }
+    { publicId: eventSlug }
   ).catch(() => null);
   const event = result?.eventBySlug;
   if (!event) notFound();
