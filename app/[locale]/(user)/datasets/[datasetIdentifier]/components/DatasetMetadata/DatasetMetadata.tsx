@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, type ComponentType } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   IconArrowUpRight,
@@ -22,7 +21,9 @@ import {
   IconWorldMap,
 } from '@tabler/icons-react';
 
+import MediaImage from '@/components/MediaImage';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
+import { publisherImageFallback } from '@/lib/public-entity';
 import { Tooltip } from 'opub-ui';
 
 import {
@@ -251,8 +252,9 @@ function PublisherCard({ publisher }: { publisher: MetadataPublisher }) {
       <div className={CARD_RULE}>
         <div className="flex items-start gap-3">
         {publisher.imageSrc ? (
-          <Image
+          <MediaImage
             src={publisher.imageSrc}
+            fallback={publisherImageFallback(publisher.href)}
             alt=""
             width={48}
             height={48}

@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { Button, Divider, Icon, Tag, Text, Tooltip } from 'opub-ui';
 
 import { GetDatasetQuery } from '@/gql/generated/graphql';
-import { cn, formatDate, getWebsiteTitle } from '@/lib/utils';
+import { datasetLicenseLabel } from '@/lib/datasetLicense';
+import { cn, formatDate, getWebsiteTitle, mediaUrl } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
+import MediaImage from '@/components/MediaImage';
 import Styles from '../../../dataset.module.scss';
 
 interface MetadataProps {
@@ -52,40 +54,12 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
     type: item.metadataItem.dataType,
   }));
 
-  const licenseOptions = [
-    {
-      label: 'Government Open Data License',
-      value: 'GOVERNMENT_OPEN_DATA_LICENSE',
-    },
-    {
-      label: 'CC BY 4.0 (Attribution)',
-      value: 'CC_BY_4_0_ATTRIBUTION',
-    },
-    {
-      label: 'CC BY-SA 4.0 (Attribution-ShareAlike)',
-      value: 'CC_BY_SA_4_0_ATTRIBUTION_SHARE_ALIKE',
-    },
-    {
-      label: 'Open Data Commons By Attribution',
-      value: 'OPEN_DATA_COMMONS_BY_ATTRIBUTION',
-    },
-    {
-      label: 'Open Database License',
-      value: 'OPEN_DATABASE_LICENSE',
-    },
-  ];
-
-  const getLicenseLabel = (value: string): string => {
-    const option = licenseOptions.find((option) => option.value === value);
-    return option ? option.label : value;
-  };
-
   const image = data.isIndividualDataset
     ? data?.user?.profilePicture
-      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.user.profilePicture.url}`
+      ? mediaUrl(data.user.profilePicture.url)
       : '/profile.png'
     : data?.organization?.logo
-      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/${data.organization.logo.url}`
+      ? mediaUrl(data.organization.logo.url)
       : '/org.png';
   const getPublisherURL = (
     dataset: NonNullable<GetDatasetQuery['getDataset']>
@@ -128,7 +102,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
       <div className=" flex flex-col gap-8">
         <div className=" hidden rounded-2 border-1 border-solid border-greyExtralight bg-white p-2 lg:block">
           <Link href={getPublisherURL(data)}>
-            <Image
+            <MediaImage
               height={140}
               width={100}
               src={image}
@@ -137,7 +111,9 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
                   ? 'Publisher logo'
                   : 'Organization logo'
               }
-              className="w-full object-contain"
+              className="h-auto w-full object-contain"
+              loading="eager"
+              fallback={data.isIndividualDataset ? '/profile.png' : '/org.png'}
             />
           </Link>
         </div>
@@ -253,7 +229,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             License
           </Text>
           <Text className="" variant="bodyLg" fontWeight="medium">
-            {getLicenseLabel(String(data.license))}
+            {datasetLicenseLabel(String(data.license))}
           </Text>
         </div>
         {data.downloadCount > 0 && (

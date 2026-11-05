@@ -38,7 +38,6 @@ const organizationUpdateMutation = graphql(`
         name
         logo {
           name
-          path
           url
         }
         linkedinProfile

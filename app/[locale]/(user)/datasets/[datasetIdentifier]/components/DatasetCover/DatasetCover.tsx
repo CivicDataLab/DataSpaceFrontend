@@ -21,7 +21,9 @@ import * as Sentry from '@sentry/nextjs';
 import { Button, Popover, Tooltip } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
+import MediaImage from '@/components/MediaImage';
 import { SharePanel } from '@/components/share-panel/SharePanel';
+import { publisherImageFallback } from '@/lib/public-entity';
 import type {
   DatasetCover as DatasetCoverModel,
   DatasetCoverUsageItem,
@@ -469,8 +471,9 @@ function PublisherFact({
   const body = (
     <span className="flex min-w-0 items-center gap-3 lg:-ml-2">
       {publisher?.imageSrc ? (
-        <Image
+        <MediaImage
           src={publisher.imageSrc}
+          fallback={publisherImageFallback(publisher.href)}
           alt=""
           width={36}
           height={36}

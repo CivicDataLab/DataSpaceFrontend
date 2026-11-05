@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMetaKeyPress } from '@/hooks/use-meta-key-press';
@@ -10,8 +9,9 @@ import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { Divider, Icon, IconButton, Text, Tooltip } from 'opub-ui';
 
 import { DashboardOrganization, DashboardUser } from '@/config/store';
-import { cn } from '@/lib/utils';
+import { cn, mediaUrl } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import MediaImage from '@/components/MediaImage';
 import styles from '../dashboard.module.scss';
 
 interface DashboardNavProps {
@@ -105,10 +105,13 @@ export function DashboardNav({
           {entityDetails ? (
             <>
               {isImageValid && imageUrl ? (
-                <Image
+                <MediaImage
                   height={60}
                   width={60}
-                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${imageUrl}`}
+                  src={mediaUrl(imageUrl)}
+                  fallback={
+                    type === 'organization' ? '/org.png' : '/profile.png'
+                  }
                   alt={`${name} logo`}
                   onError={() => {
                     setIsImageValid(false);
@@ -149,7 +152,7 @@ export function DashboardNav({
 
       <nav className="flex min-h-0 flex-1 flex-col gap-4 px-2 py-2">
         {groupNames.map((groupName, groupIndex) => (
-          <div key={groupName} className="flex flex-col gap-1">
+          <div key={groupName} className="flex flex-col gap-1 ">
             {showGroupLabels ? (
               <Text
                 variant="bodySm"
@@ -191,7 +194,7 @@ export function DashboardNav({
                           content={isCollapsed ? item.title : undefined}
                         >
                           <div className="basis-5 px-3 py-2">
-                            <Icon source={icon} color="default" />
+                            <Icon source={icon} color="default" stroke={1.7} />
                           </div>
                         </Tooltip>
                         <div
@@ -219,7 +222,7 @@ export function DashboardNav({
             })}
             {showGroupLabels && groupIndex < groupNames.length - 1 ? (
               <div className={cn('mx-3 mt-3', isCollapsed && 'invisible')}>
-                <Divider />
+                <Divider className="h-[1px] bg-baseGraySlateSolid6" />
               </div>
             ) : null}
           </div>
@@ -249,8 +252,7 @@ export function DashboardNav({
           className="shrink-0"
           size="slim"
           icon={isCollapsed ? IconChevronRight : IconChevronLeft}
-          withTooltip
-          tooltipSide="right"
+          aria-label={isCollapsed ? 'Expand' : 'Collapse'}
           onClick={() => setIsCollapsed((open) => !open)}
         >
           {isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}

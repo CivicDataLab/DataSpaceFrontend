@@ -14,6 +14,7 @@ import {
   IconCalendar,
   IconCalendarEvent,
   IconChartBar,
+  IconChartDots2,
   IconChartLine,
   IconChartTreemap,
   IconCheck,
@@ -141,4 +142,5 @@ export const Icons = {
   worldPin: IconWorldPin,
   folderStats: IconFolderStats,
   iconCpu: IconCpu,
+  IconChartDots2: IconChartDots2,
 };

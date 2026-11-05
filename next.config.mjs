@@ -11,6 +11,9 @@ jiti('./env');
 
 const backendUrl = new URL(process.env.BACKEND_URL || 'http://localhost:8000');
 const platformUrl = new URL(process.env.NEXT_PUBLIC_PLATFORM_URL || 'http://localhost:3000');
+const cdnUrl = process.env.STORAGE_PUBLIC_BASE_URL
+  ? new URL(process.env.STORAGE_PUBLIC_BASE_URL)
+  : null;
 
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
@@ -42,7 +45,7 @@ const nextConfig = withNextIntl({
   experimental: {
     optimizePackageImports: ['opub-ui', 'echarts', 'lucide-react', '@tabler/icons-react'],
   },
-  
+
   // Webpack optimizations
   webpack: (config, { dev, isServer }) => {
     // Optimize for development speed
@@ -52,7 +55,7 @@ const nextConfig = withNextIntl({
         ignored: ['**/node_modules', '**/.git', '**/.next'],
       };
     }
-    
+
     // Production bundle optimizations
     if (!dev && !isServer) {
       config.optimization = config.optimization || {};
@@ -79,10 +82,10 @@ const nextConfig = withNextIntl({
         },
       };
     }
-    
+
     return config;
   },
-  
+
   images: {
     remotePatterns: [
       {
@@ -95,6 +98,31 @@ const nextConfig = withNextIntl({
         protocol: platformUrl.protocol.slice(0, -1),
         hostname: platformUrl.hostname,
         port: platformUrl.port || '',
+        pathname: '/**',
+      },
+      ...(cdnUrl
+        ? [
+          {
+            protocol: cdnUrl.protocol.slice(0, -1),
+            hostname: cdnUrl.hostname,
+            port: cdnUrl.port || '',
+            pathname: '/**',
+          },
+        ]
+        : []),
+      {
+        protocol: 'https',
+        hostname: 'images.lumacdn.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.lu.ma',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.lu.ma',
         pathname: '/**',
       },
     ],
@@ -118,7 +146,7 @@ const sentryConfig = withSentryConfig(
 
     // Upload a larger set of source maps for prettier stack traces (increases build time)
     widenClientFileUpload: process.env.NODE_ENV === 'production',
-    
+
     // Disable source map upload in development for speed
     sourcemaps: {
       disable: process.env.NODE_ENV === 'development',

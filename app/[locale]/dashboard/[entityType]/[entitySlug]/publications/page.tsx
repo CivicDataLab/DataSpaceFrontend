@@ -6,6 +6,7 @@ import { IconFileDescription } from '@tabler/icons-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast, type ColumnFilterConfig } from 'opub-ui';
 
+import { useDatasetLicenses } from '@/hooks/useDatasetLicenses';
 import { GraphQL } from '@/lib/api';
 import {
   listingRowActions,
@@ -28,7 +29,6 @@ import {
 } from '../provider-flow/table-listing';
 import {
   INITIAL_PUBLICATION_SORT,
-  LICENSE_FILTER_OPTIONS,
   PUBLICATION_FIELD_MAP,
   PUBLICATION_TAB_KEYS,
   PUBLICATION_TABLE_STATUSES,
@@ -133,6 +133,8 @@ export default function PublicationsPage() {
     }
   );
 
+  const { licenses } = useDatasetLicenses();
+
   const resourceTypesQuery = useQuery(
     ['publication_table_resource_types'],
     () => GraphQL(publicationResourceTypesQueryDoc, ownerArgs || {}),
@@ -233,7 +235,7 @@ export default function PublicationsPage() {
     {
       columnId: 'license',
       type: 'select',
-      options: LICENSE_FILTER_OPTIONS,
+      options: optionList(licenses),
     },
     ...sectorGeographyFilters(facets),
   ];

@@ -12,13 +12,8 @@ const SHORT_DATE = new Intl.DateTimeFormat('en-GB', {
 
 /**
  * Full address for a file the backend stores. Absolute URLs pass through.
- * Use-case and collaborative images carry a `/code/files/` storage prefix
- * that must be removed first; set `stripCodeFiles` for those.
  */
-export function backendFileUrl(
-  path: string | null | undefined,
-  { stripCodeFiles = false }: { stripCodeFiles?: boolean } = {}
-): string | null {
+export function backendFileUrl(path: string | null | undefined): string | null {
   const trimmed = path?.trim();
   if (!trimmed) return null;
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
@@ -26,14 +21,18 @@ export function backendFileUrl(
   const base = (process.env.NEXT_PUBLIC_BACKEND_URL ?? '').replace(/\/$/, '');
   if (!base) return null;
 
-  const relative = (
-    stripCodeFiles ? trimmed.replace('/code/files/', '') : trimmed
-  ).replace(/^\//, '');
-  return `${base}/${relative}`;
+  return `${base}/${trimmed.replace(/^\//, '')}`;
 }
 
 export function personPublisherHref(name: string, id: string): string {
   return `/publishers/${name}_${id}`;
+}
+
+/** Placeholder for a publisher image that fails to load. */
+export function publisherImageFallback(href: string): string {
+  return href.startsWith('/publishers/organization/')
+    ? '/org.png'
+    : '/profile.png';
 }
 
 export function organizationPublisherHref(organization: {
