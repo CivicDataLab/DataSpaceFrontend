@@ -43,3 +43,6 @@ next-env.d.ts
 /gql/generated/
 # next-agents-md
 .next-docs/
+
+# Local agent instructions — keep on disk, do not track
+AGENTS.md
