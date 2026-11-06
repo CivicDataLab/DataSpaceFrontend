@@ -16,6 +16,7 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { publicHref } from '@/lib/public-link';
 import { cn, formatDate, mediaUrl } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { UseCaseListingSkeleton } from '@/components/loading';
@@ -29,6 +30,7 @@ const useCasesListDoc = graphql(`
   ) {
     publishedUseCases(filters: $filters, pagination: $pagination) {
       id
+      urlSlug
       title
       summary
       slug
@@ -143,7 +145,7 @@ const UseCasesListingPage = () => {
                       <Card
                         title={item.title || ''}
                         key={index}
-                        href={`/usecases/${item.id}`}
+                        href={publicHref('usecases', item.urlSlug, item.id)}
                         metadataContent={[
                           {
                             icon: Icons.calendarEvent,

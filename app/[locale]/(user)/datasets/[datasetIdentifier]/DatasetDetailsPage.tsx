@@ -13,6 +13,7 @@ import { useAnalytics } from '@/hooks/use-analytics';
 import { useTourTrigger } from '@/hooks/use-tour-trigger';
 import { env } from '@/env';
 import { GraphQL } from '@/lib/api';
+import { datasetLookup } from '@/lib/public-link';
 import { generateJsonLd } from '@/lib/utils';
 import {
   buildDatasetCover,
@@ -25,9 +26,10 @@ import { DatasetCover } from './components/DatasetCover/DatasetCover';
 import { DatasetTabs } from './components/DatasetTabs/DatasetTabs';
 
 const datasetQuery = graphql(`
-  query getDataset($datasetId: UUID!) {
-    getDataset(datasetId: $datasetId) {
+  query getDataset($datasetId: UUID, $publicId: String) {
+    getDataset(datasetId: $datasetId, publicId: $publicId) {
       id
+      urlSlug
       title
       description
       downloadCount
@@ -133,18 +135,22 @@ export default function DatasetDetailsPage({
   useTourTrigger(true, 1500);
   const { trackDataset } = useAnalytics();
 
+  // Load this dataset. Old UUID links and the current urlSlug both resolve.
+  const datasetQueryResult = useQuery(['dataset-cover', datasetId], () =>
+    GraphQL(datasetQuery, {}, datasetLookup(datasetId))
+  );
+  const recordId = datasetQueryResult.data?.getDataset?.id;
+
   // Record one view per dataset, whichever tab the visitor opens.
   useEffect(() => {
-    trackDataset(datasetId);
-  }, [datasetId, trackDataset]);
+    if (recordId) trackDataset(recordId);
+  }, [recordId, trackDataset]);
 
-  // Load this dataset.
-  const datasetQueryResult = useQuery(['dataset-cover', datasetId], () =>
-    GraphQL(datasetQuery, {}, { datasetId })
-  );
-  // Count the charts that belong to this dataset.
-  const chartQueryResult = useQuery(['dataset-charts', datasetId], () =>
-    GraphQL(chartCountQuery, {}, { datasetId })
+  // Count the charts that belong to this dataset. Charts are keyed by the UUID.
+  const chartQueryResult = useQuery(
+    ['dataset-charts', recordId],
+    () => GraphQL(chartCountQuery, {}, { datasetId: recordId as string }),
+    { enabled: Boolean(recordId) }
   );
   // Collect published use cases so the summary can count the ones that include this dataset.
   const useCaseQueryResult = useQuery(['dataset-use-case-ids'], () =>
@@ -157,7 +163,7 @@ export default function DatasetDetailsPage({
 
   const dataset = datasetQueryResult.data?.getDataset;
   // Public address the share actions use.
-  const pageUrl = buildDatasetPageUrl(datasetId);
+  const pageUrl = buildDatasetPageUrl(dataset?.urlSlug || datasetId);
   const jsonLd = generateJsonLd({
     '@context': 'https://schema.org',
     '@type': 'Dataset',

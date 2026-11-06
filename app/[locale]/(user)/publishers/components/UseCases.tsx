@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Icon, Spinner, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { publicHref } from '@/lib/public-link';
 import { cn, extractPublisherId, formatDate, mediaUrl } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
@@ -17,6 +18,7 @@ const userPublishedUseCasesDoc = graphql(`
   query userPublishedUseCasesList($userId: ID!) {
     userPublishedUseCases(userId: $userId) {
       id
+      urlSlug
       title
       summary
       slug
@@ -62,6 +64,7 @@ const orgPublishedUseCasesDoc = graphql(`
   query orgPublishedUseCasesList($organizationId: ID!) {
     organizationPublishedUseCases(organizationId: $organizationId) {
       id
+      urlSlug
       title
       summary
       slug
@@ -171,7 +174,7 @@ const UseCases = ({ type }: { type: 'organization' | 'Publisher' }) => {
               // ]}
               title={item.title ?? ''}
               key={index}
-              href={`/usecases/${item.id}`}
+              href={publicHref('usecases', item.urlSlug, item.id)}
               metadataContent={[
                 {
                   icon: Icons.calendarEvent,

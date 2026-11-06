@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Icon, Spinner, Text } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { publicHref } from '@/lib/public-link';
 import { cn, extractPublisherId, mediaUrl } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
@@ -16,6 +17,7 @@ const userPublishedDatasetsDoc = graphql(`
   query userPublishedDatasetsList($userId: ID!) {
     userPublishedDatasets(userId: $userId) {
       id
+      urlSlug
       title
       downloadCount
       id
@@ -63,6 +65,7 @@ const organizationPublishedDatasetsDoc = graphql(`
   query organizationPublishedDatasetsList($organizationId: ID!) {
     organizationPublishedDatasets(organizationId: $organizationId) {
       id
+      urlSlug
       title
       downloadCount
       id
@@ -212,7 +215,7 @@ const Datasets = ({ type }: { type: 'organization' | 'Publisher' }) => {
               ]}
               variation={'collapsed'}
               iconColor="warning"
-              href={`/datasets/${item.id}`}
+              href={publicHref('datasets', item.urlSlug, item.id)}
               withViewButton={false}
             />
           ))

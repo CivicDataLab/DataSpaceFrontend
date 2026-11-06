@@ -7,6 +7,7 @@ import { Card, Spinner } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
 import { GraphQLPublic } from '@/lib/api';
+import { publicHref } from '@/lib/public-link';
 import { backendFileUrl, joinNames } from '@/lib/public-entity';
 import { formatDate } from '@/lib/utils';
 import { stripMarkdown } from '@/app/[locale]/(user)/search/components/UnifiedListingComponent';
@@ -17,6 +18,7 @@ const connectedUseCaseQuery = graphql(`
   query connectedUseCaseCard($pk: ID!) {
     useCase(pk: $pk) {
       id
+      urlSlug
       title
       summary
       slug
@@ -91,6 +93,7 @@ export type ConnectedUseCase = {
   id: string;
   title?: string | null;
   summary?: string | null;
+  urlSlug?: string | null;
   slug?: string | null;
   modified?: string | number | null;
   isIndividualUsecase?: boolean | null;
@@ -393,7 +396,7 @@ function UseCaseCard({ item }: { item: ConnectedUseCase }) {
       metadataContent={metadataContent}
       variation="collapsed"
       iconColor="success"
-      href={`/usecases/${item.id}`}
+      href={publicHref('usecases', item.urlSlug, item.id)}
       imageUrl={backendFileUrl(item.logo?.url) || ''}
       leftFooterChips={[
         {

@@ -13,6 +13,7 @@ import {
 } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { publicHref } from '@/lib/public-link';
 import { cn, mediaUrl } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import Styles from './similarDatasets.module.scss';
@@ -25,6 +26,7 @@ const similarDatasetQuery = graphql(`
       similarDatasets {
         downloadCount
         id
+        urlSlug
         title
         tags {
           id
@@ -184,7 +186,7 @@ const SimilarDatasets: React.FC = () => {
                             ]}
                             variation={'collapsed'}
                             iconColor="warning"
-                            href={`/datasets/${item.id}`}
+                            href={publicHref('datasets', item.urlSlug, item.id)}
                             withViewButton={false}
                           />
                         </CarouselItem>

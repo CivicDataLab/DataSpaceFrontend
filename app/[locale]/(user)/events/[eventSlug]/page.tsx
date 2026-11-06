@@ -3,6 +3,11 @@ import { Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
 import { lumaCover } from '@/lib/luma-cover';
+import {
+  isCanonicalRedirect,
+  redirectToCanonical,
+} from '@/lib/canonical-redirect';
+import { publicPageUrl } from '@/lib/public-link';
 import { generatePageMetadata } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import {
@@ -26,7 +31,9 @@ export async function generateMetadata({
       { publicId: eventSlug }
     );
     const event = result.eventBySlug;
+    await redirectToCanonical('events', eventSlug, event?.urlSlug);
     const title = event?.name?.trim() || 'Event';
+    const segment = event?.urlSlug || eventSlug;
     return generatePageMetadata({
       title: `${title} | Events | CivicDataSpace`,
       description: event?.location?.trim() || title,
@@ -34,14 +41,15 @@ export async function generateMetadata({
       openGraph: {
         type: 'article',
         locale: 'en_US',
-        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/events/${eventSlug}`,
+        url: publicPageUrl('events', segment),
         title,
         description: event?.location?.trim() || title,
         siteName: 'CivicDataSpace',
         image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
       },
     });
-  } catch {
+  } catch (error) {
+    if (isCanonicalRedirect(error)) throw error;
     return generatePageMetadata({
       title: 'Event | CivicDataSpace',
       description: 'An event on CivicDataSpace.',
@@ -72,6 +80,7 @@ export default async function EventDetailPage({
   ).catch(() => null);
   const event = result?.eventBySlug;
   if (!event) notFound();
+  await redirectToCanonical('events', eventSlug, event.urlSlug);
 
   const name = event.name?.trim() || 'Untitled event';
   const cover = await lumaCover(event.lumaEmbed?.src);

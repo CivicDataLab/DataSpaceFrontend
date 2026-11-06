@@ -23,6 +23,7 @@ import {
 import { Button, SectionCard, Spinner, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { publicHref } from '@/lib/public-link';
 import { mediaUrl } from '@/lib/utils';
 import MediaImage from '@/components/MediaImage';
 import {
@@ -42,6 +43,7 @@ const FetchUseCaseReview = graphql(`
   query UseCaseReviewData($filters: UseCaseFilter) {
     useCases(filters: $filters) {
       id
+      urlSlug
       title
       summary
       slug
@@ -205,7 +207,11 @@ export default function PublishPage() {
   const connectComplete = isUseCaseConnectComplete(useCase ?? {});
   const hasContent = getUseCaseHasContent(useCase?.summary);
   const ready = builderComplete && connectComplete && hasContent;
-  const previewHref = `/usecases/${useCase?.slug || useCase?.id || params.id}`;
+  const previewHref = publicHref(
+    'usecases',
+    useCase?.urlSlug,
+    useCase?.id || params.id
+  );
 
   const builderIssues: string[] = [];
   if (!useCase?.title?.trim()) builderIssues.push('Enter a use case title.');

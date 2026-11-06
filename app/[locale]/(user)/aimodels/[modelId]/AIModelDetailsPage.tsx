@@ -7,15 +7,17 @@ import { Spinner, Text } from 'opub-ui';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import JsonLd from '@/components/JsonLd';
 import { GraphQL } from '@/lib/api';
+import { aiModelLookup, publicPageUrl } from '@/lib/public-link';
 import { generateJsonLd } from '@/lib/utils';
 import Metadata from './components/Metadata';
 import PrimaryData from './components/PrimaryData';
 import Versions from './components/Versions';
 
 const aiModelQuery = graphql(`
-  query getAIModel($modelId: Int!) {
-    getAiModel(modelId: $modelId) {
+  query getAIModel($modelId: Int, $publicId: String) {
+    getAiModel(modelId: $modelId, publicId: $publicId) {
       id
+      urlSlug
       name
       displayName
       description
@@ -93,7 +95,7 @@ export default function AIModelDetailsPage({
 }) {
   const { data, isLoading, error } = useQuery(
     [`aimodel_details_${modelId}`],
-    () => GraphQL(aiModelQuery, {}, { modelId: parseInt(modelId) }),
+    () => GraphQL(aiModelQuery, {}, aiModelLookup(modelId)),
     {
       retry: false,
       onError: (err) => {
@@ -108,7 +110,7 @@ export default function AIModelDetailsPage({
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: modelData?.displayName || modelData?.name,
-    url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/aimodels/${modelId}`,
+    url: publicPageUrl('aimodels', modelData?.urlSlug || modelId),
     description: modelData?.description,
     applicationCategory: 'AI Model',
     publisher: {

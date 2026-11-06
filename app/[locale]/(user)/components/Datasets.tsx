@@ -14,6 +14,7 @@ import {
   Text,
 } from 'opub-ui';
 
+import { publicHref } from '@/lib/public-link';
 import { cn, mediaUrl } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { DatasetListingSkeleton } from '@/components/loading';
@@ -40,6 +41,7 @@ interface DatasetPublisher {
 
 interface DatasetResult {
   id: string | number;
+  url_slug?: string | null;
   title: string;
   description?: string;
   modified: string;
@@ -188,7 +190,7 @@ const Datasets = () => {
                       ]}
                       variation={'collapsed'}
                       iconColor="metadata"
-                      href={`/datasets/${item.id}`}
+                      href={publicHref('datasets', item.url_slug, item.id)}
                       withViewButton={false}
                       // type={[
                       //   {

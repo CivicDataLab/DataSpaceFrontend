@@ -15,6 +15,7 @@ import {
   Tray,
 } from 'opub-ui';
 
+import { publicHref } from '@/lib/public-link';
 import { cn, formatDate, mediaUrl } from '@/lib/utils';
 import { getCollaborativeDetailUrl } from '@/lib/collaborativesRouting';
 import BreadCrumbs from '@/components/BreadCrumbs';
@@ -113,6 +114,7 @@ interface SearchSector {
 interface SearchResult {
   type?: string;
   id: string | number;
+  url_slug?: string | null;
   slug?: string;
   publisher_type?: string;
   is_individual_dataset?: boolean;
@@ -567,11 +569,11 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
   const getRedirectUrl = (item: SearchResult) => {
     switch (item.type) {
       case 'dataset':
-        return `/datasets/${item.id}`;
+        return publicHref('datasets', item.url_slug, item.id);
       case 'usecase':
-        return `/usecases/${item.id}`;
+        return publicHref('usecases', item.url_slug, item.id);
       case 'aimodel':
-        return `/aimodels/${item.id}`;
+        return publicHref('aimodels', item.url_slug, item.id);
       case 'collaborative':
         return getCollaborativeDetailUrl(item.slug);
       case 'publisher':

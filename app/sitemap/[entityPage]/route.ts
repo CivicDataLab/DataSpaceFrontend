@@ -12,6 +12,8 @@ import {
 interface EntityItem {
   // AIModel ids are GraphQL Int; every other entity's are strings.
   id: string | number;
+  urlSlug?: string;
+  url_slug?: string;
   slug?: string;
   name?: string;
   fullName?: string;
@@ -76,13 +78,11 @@ function getEntityLoc(
     case 'collaboratives':
       return `${baseUrl}/collaboratives/${encodeURIComponent(item.slug || item.id)}`;
     case 'datasets':
-      // App routes use dataset id (not slug).
-      return `${baseUrl}/datasets/${item.id}`;
+      return `${baseUrl}/datasets/${encodeURIComponent(item.url_slug || item.urlSlug || String(item.id))}`;
     case 'aimodels':
-      return `${baseUrl}/aimodels/${item.id}`;
+      return `${baseUrl}/aimodels/${encodeURIComponent(item.urlSlug || String(item.id))}`;
     case 'usecases':
-      // App routes use usecase id (not slug).
-      return `${baseUrl}/usecases/${item.id}`;
+      return `${baseUrl}/usecases/${encodeURIComponent(item.urlSlug || String(item.id))}`;
     case 'sectors':
       return `${baseUrl}/sectors/${encodeURIComponent(item.slug || item.id)}`;
     default:

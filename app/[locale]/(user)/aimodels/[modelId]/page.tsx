@@ -1,45 +1,76 @@
+import { graphql } from '@/gql';
+
+import { GraphQL } from '@/lib/api';
+import {
+  isCanonicalRedirect,
+  redirectToCanonical,
+} from '@/lib/canonical-redirect';
+import { aiModelLookup, publicPageUrl } from '@/lib/public-link';
 import { generatePageMetadata } from '@/lib/utils';
-import { use } from 'react';
 import AIModelDetailsPage from './AIModelDetailsPage';
 
-// For now, we'll use a simple metadata generation
-// You can add GraphQL query later if needed
+const aiModelMetaQuery = graphql(`
+  query getAIModelInfo($modelId: Int, $publicId: String) {
+    getAiModel(modelId: $modelId, publicId: $publicId) {
+      name
+      displayName
+      description
+      urlSlug
+    }
+  }
+`);
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ modelId: string }>;
 }) {
+  const { modelId } = await params;
   try {
-    const { modelId } = await params;
-    // TODO: Fetch AI model data from backend API
-    // const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/aimodels/${modelId}`);
-    // const model = await res.json();
-    
+    const res = await GraphQL(aiModelMetaQuery, {}, aiModelLookup(modelId));
+    const model = res?.getAiModel;
+    await redirectToCanonical('aimodels', modelId, model?.urlSlug);
+    const title = model?.displayName || model?.name || 'AI Model Details';
+    const description =
+      model?.description ||
+      'Explore AI model details, capabilities, and specifications';
+    const segment = model?.urlSlug || modelId;
+
     return generatePageMetadata({
-      title: `AI Model Details | CivicDataSpace`,
-      description: 'Explore AI model details, capabilities, and specifications',
+      title: `${title} | CivicDataSpace`,
+      description,
       keywords: ['AI Model', 'Machine Learning', 'API', 'Model Registry'],
       openGraph: {
         type: 'website',
         locale: 'en_US',
-        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/aimodels/${modelId}`,
-        title: 'AI Model Details',
-        description: 'Explore AI model details and capabilities',
+        url: publicPageUrl('aimodels', segment),
+        title,
+        description,
         siteName: 'CivicDataSpace',
         image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
       },
     });
   } catch (e) {
+    if (isCanonicalRedirect(e)) throw e;
     console.error('Metadata fetch error', e);
     return generatePageMetadata({ title: 'AI Model Details' });
   }
 }
 
-export default function Page({
+export default async function Page({
   params,
 }: {
   params: Promise<{ modelId: string }>;
 }) {
-  const { modelId } = use(params);
+  const { modelId } = await params;
+
+  try {
+    const res = await GraphQL(aiModelMetaQuery, {}, aiModelLookup(modelId));
+    await redirectToCanonical('aimodels', modelId, res?.getAiModel?.urlSlug);
+  } catch (error) {
+    if (isCanonicalRedirect(error)) throw error;
+    console.error('AI model lookup error', error);
+  }
+
   return <AIModelDetailsPage modelId={modelId} />;
 }

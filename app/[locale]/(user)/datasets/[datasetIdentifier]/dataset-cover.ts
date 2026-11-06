@@ -4,7 +4,7 @@
  * Also builds the public page address used by the share actions.
  */
 
-import { env } from '@/env';
+import { publicPageUrl } from '@/lib/public-link';
 import {
   backendFileUrl,
   formatShortDate,
@@ -128,9 +128,8 @@ const CHARTS_ANCHOR = '#dataset-visualisations';
 const CONNECTED_USE_CASES = '#dataset-connected-usecases';
 const CONNECTED_COLLABORATIVES = '#dataset-connected-collaboratives';
 
-export function buildDatasetPageUrl(datasetId: string): string {
-  const base = env.NEXT_PUBLIC_PLATFORM_URL.replace(/\/$/, '');
-  return `${base}/datasets/${encodeURIComponent(datasetId)}`;
+export function buildDatasetPageUrl(segment: string): string {
+  return publicPageUrl('datasets', segment);
 }
 
 export function buildDatasetCover(
