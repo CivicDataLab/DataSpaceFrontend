@@ -2,17 +2,22 @@ import { Metadata } from 'next';
 import { graphql } from '@/gql';
 
 import { GraphQLPublic } from '@/lib/api';
+import {
+  isCanonicalRedirect,
+  redirectToCanonical,
+} from '@/lib/canonical-redirect';
+import { isIntegerId, publicPageUrl } from '@/lib/public-link';
 import { generatePageMetadata } from '@/lib/utils';
 import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
 import UseCaseDetailClient from './UsecaseDetailsClient';
 
 const UseCaseInfoQuery = graphql(`
-  query UseCaseInfo($pk: ID!) {
-    useCase(pk: $pk) {
+  query UseCaseInfo($publicId: String!) {
+    useCaseBySlug(publicId: $publicId) {
       id
       title
       summary
-      slug
+      urlSlug
       logo {
         url
       }
@@ -24,6 +29,38 @@ const UseCaseInfoQuery = graphql(`
   }
 `);
 
+const UseCaseLegacyInfoQuery = graphql(`
+  query UseCaseLegacyInfo($pk: ID!) {
+    useCase(pk: $pk) {
+      id
+      title
+      summary
+      urlSlug
+      logo {
+        url
+      }
+      tags {
+        id
+        value
+      }
+    }
+  }
+`);
+
+async function loadUseCase(segment: string) {
+  if (isIntegerId(segment)) {
+    const data = await GraphQLPublic(
+      UseCaseLegacyInfoQuery,
+      {},
+      { pk: segment }
+    );
+    return data.useCase;
+  }
+
+  const data = await GraphQLPublic(UseCaseInfoQuery, {}, { publicId: segment });
+  return data.useCaseBySlug;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -31,8 +68,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { useCaseSlug } = await params;
   try {
-    const data = await GraphQLPublic(UseCaseInfoQuery, {}, { pk: useCaseSlug });
-    const UseCase = data?.useCase;
+    const UseCase = await loadUseCase(useCaseSlug);
+    await redirectToCanonical('usecases', useCaseSlug, UseCase?.urlSlug);
+    const segment = UseCase?.urlSlug || useCaseSlug;
 
     return generatePageMetadata({
       title: `${UseCase?.title} | Sector Data | CivicDataSpace`,
@@ -43,7 +81,7 @@ export async function generateMetadata({
       openGraph: {
         type: 'article',
         locale: 'en_US',
-        url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases/${useCaseSlug}`,
+        url: publicPageUrl('usecases', segment),
         title: `${UseCase?.title} | Sector Data | CivicDataSpace`,
         description:
           getUseCaseSummaryExcerpt(UseCase?.summary) ||
@@ -53,7 +91,7 @@ export async function generateMetadata({
       },
     });
   } catch (error) {
-    // Fallback to generic metadata if the API call fails
+    if (isCanonicalRedirect(error)) throw error;
     console.error('Error fetching use case info:', error);
     return generatePageMetadata({
       title: `Use Case Details | CivicDataSpace`,
@@ -72,6 +110,20 @@ export async function generateMetadata({
   }
 }
 
-export default function Page() {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ useCaseSlug: string }>;
+}) {
+  const { useCaseSlug } = await params;
+
+  try {
+    const useCase = await loadUseCase(useCaseSlug);
+    await redirectToCanonical('usecases', useCaseSlug, useCase?.urlSlug);
+  } catch (error) {
+    if (isCanonicalRedirect(error)) throw error;
+    console.error('Use case lookup error', error);
+  }
+
   return <UseCaseDetailClient />;
 }

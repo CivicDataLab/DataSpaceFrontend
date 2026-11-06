@@ -9,7 +9,7 @@ import type {
   EntityCoverMeta,
   EntityCoverPublisher,
 } from '@/components/entity-cover/EntityCover';
-import { env } from '@/env';
+import { publicPageUrl } from '@/lib/public-link';
 import {
   backendFileUrl,
   formatShortDate,
@@ -47,9 +47,8 @@ export type UseCaseCover = {
   meta: EntityCoverMeta[];
 };
 
-export function buildUseCasePageUrl(slug: string): string {
-  const base = env.NEXT_PUBLIC_PLATFORM_URL.replace(/\/$/, '');
-  return `${base}/usecases/${encodeURIComponent(slug)}`;
+export function buildUseCasePageUrl(segment: string): string {
+  return publicPageUrl('usecases', segment);
 }
 
 export function buildUseCaseCover(useCase: UseCaseCoverSource): UseCaseCover {

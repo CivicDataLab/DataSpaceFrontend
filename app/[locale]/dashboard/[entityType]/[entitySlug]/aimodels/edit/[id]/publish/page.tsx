@@ -17,6 +17,7 @@ import { TriangleAlert } from 'lucide-react';
 import { Button, SectionCard, Spinner, Tag, Text, toast } from 'opub-ui';
 
 import { GraphQL } from '@/lib/api';
+import { publicHref } from '@/lib/public-link';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 import {
   isAccessMethodComplete,
@@ -31,6 +32,7 @@ export const FetchAIModelForPublish = graphql(`
   query AIModelForPublish($filters: AIModelFilter) {
     aiModels(filters: $filters) {
       id
+      urlSlug
       name
       displayName
       description
@@ -333,7 +335,7 @@ export default function PublishPage() {
 
   const ready = issues.length === 0;
   const metadata = model?.metadata;
-  const previewHref = `/aimodels/${params.id}`;
+  const previewHref = publicHref('aimodels', model?.urlSlug, model?.id || params.id);
   const summaryRows: Array<{ label: string; value: ReactNode }> = [
     { label: 'MODEL NAME', value: model?.displayName || model?.name || '' },
     {

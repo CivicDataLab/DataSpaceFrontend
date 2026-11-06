@@ -232,6 +232,7 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     graphqlQuery: `query SitemapAIModels {
       aiModels(filters: { isPublic: true, status: ACTIVE }) {
         id
+        urlSlug
         updatedAt
       }
     }`,
@@ -243,6 +244,7 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     graphqlQuery: `query PublishedUseCasesList {
       publishedUseCases {
         id
+        urlSlug
         slug
       }
     }`,

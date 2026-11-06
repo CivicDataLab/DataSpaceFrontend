@@ -2,6 +2,7 @@
 
 import { Card } from 'opub-ui';
 
+import { publicHref } from '@/lib/public-link';
 import { backendFileUrl } from '@/lib/public-entity';
 import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
@@ -9,6 +10,7 @@ import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
 
 type StoryDataset = {
   id: string;
+  urlSlug?: string | null;
   title?: string | null;
   description?: string | null;
   modified?: string | null;
@@ -132,7 +134,7 @@ function listingCardProps(dataset: StoryDataset) {
     ],
     variation: 'collapsed' as const,
     iconColor: 'warning' as const,
-    href: `/datasets/${dataset.id}`,
+    href: publicHref('datasets', dataset.urlSlug, dataset.id),
     withViewButton: false,
   };
 }

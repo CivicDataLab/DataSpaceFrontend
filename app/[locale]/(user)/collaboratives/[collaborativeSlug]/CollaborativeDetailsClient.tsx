@@ -95,6 +95,7 @@ const CollaborativeDetails = graphql(`
       datasets {
         title
         id
+        urlSlug
         isIndividualDataset
         user {
           fullName
@@ -133,6 +134,7 @@ const CollaborativeDetails = graphql(`
       }
       useCases {
         id
+        urlSlug
         title
         summary
         slug
@@ -539,7 +541,7 @@ const CollaborativeDetailClient = () => {
                           iconColor="success"
                           href={getPlatformEntityUrl(
                             'usecases',
-                            useCase.id,
+                            useCase.urlSlug || useCase.id,
                             locale
                           )}
                         />
@@ -597,7 +599,7 @@ const CollaborativeDetailClient = () => {
                         ]}
                         href={getPlatformEntityUrl(
                           'datasets',
-                          dataset.id,
+                          dataset.urlSlug || dataset.id,
                           locale
                         )}
                         leftFooterChips={[

@@ -39,9 +39,10 @@ import { UseCaseStory } from '../components/UseCaseStory';
 import Dashboards from './Dashboards';
 
 void graphql(`
-  query UseCasedetails($pk: ID!) {
-    useCase(pk: $pk) {
+  query UseCasedetails($publicId: String!) {
+    useCaseBySlug(publicId: $publicId) {
       id
+      urlSlug
       title
       summary
       created
@@ -83,6 +84,7 @@ void graphql(`
       datasets {
         title
         id
+        urlSlug
         isIndividualDataset
         user {
           fullName
@@ -144,12 +146,12 @@ const UseCaseDetailClient = () => {
   } = useQuery(
     [`fetch_UsecaseDetails_${params.useCaseSlug}`],
     async () => {
+      const segment =
+        typeof params.useCaseSlug === 'string' ? params.useCaseSlug : '';
       const result = await GraphQLPublic(
         UseCasedetailsDocument,
         {},
-        {
-          pk: typeof params.useCaseSlug === 'string' ? params.useCaseSlug : '',
-        }
+        { publicId: segment }
       );
       return result;
     },
@@ -164,26 +166,31 @@ const UseCaseDetailClient = () => {
 
   // Track usecase view when data is loaded
   useEffect(() => {
-    if (UseCaseDetails?.useCase) {
+    if (UseCaseDetails?.useCaseBySlug) {
       trackUsecase(
-        UseCaseDetails.useCase.id,
-        UseCaseDetails.useCase.title || undefined
+        UseCaseDetails.useCaseBySlug.id,
+        UseCaseDetails.useCaseBySlug.title || undefined
       );
     }
-  }, [UseCaseDetails?.useCase, trackUsecase]);
+  }, [UseCaseDetails?.useCaseBySlug, trackUsecase]);
+
+  const pageSegment =
+    UseCaseDetails?.useCaseBySlug?.urlSlug ||
+    (typeof params.useCaseSlug === 'string' ? params.useCaseSlug : '');
+  const pageUrl = buildUseCasePageUrl(pageSegment);
 
   const jsonLd = generateJsonLd({
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: 'CivicDataLab',
-    url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases/${params.useCaseSlug}`,
+    url: pageUrl,
     description:
-      getUseCaseSummaryExcerpt(UseCaseDetails?.useCase?.summary) ||
-      `Explore open data and curated datasets in the ${UseCaseDetails?.useCase?.title} sector.`,
+      getUseCaseSummaryExcerpt(UseCaseDetails?.useCaseBySlug?.summary) ||
+      `Explore open data and curated datasets in the ${UseCaseDetails?.useCaseBySlug?.title} sector.`,
     publisher: {
       '@type': 'Organization',
       name: 'CivicDataSpace',
-      url: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/usecases/${params.useCaseSlug}`,
+      url: pageUrl,
     },
   });
 
@@ -209,7 +216,7 @@ const UseCaseDetailClient = () => {
               </Text>
             </div>
           </div>
-        ) : !UseCaseDetails?.useCase ? (
+        ) : !UseCaseDetails?.useCaseBySlug ? (
           <div className="container py-10">
             <div className="flex flex-col items-center justify-center gap-4">
               <Text variant="headingXl">Use Case Not Found</Text>
@@ -220,10 +227,8 @@ const UseCaseDetailClient = () => {
           </div>
         ) : (
           <PublishedUseCase
-            useCase={UseCaseDetails.useCase}
-            pageSlug={
-              typeof params.useCaseSlug === 'string' ? params.useCaseSlug : ''
-            }
+            useCase={UseCaseDetails.useCaseBySlug}
+            pageSlug={UseCaseDetails.useCaseBySlug.urlSlug || pageSegment}
           />
         )}
       </div>
@@ -235,7 +240,7 @@ function PublishedUseCase({
   useCase,
   pageSlug,
 }: {
-  useCase: NonNullable<UseCasedetailsQuery['useCase']>;
+  useCase: NonNullable<UseCasedetailsQuery['useCaseBySlug']>;
   pageSlug: string;
 }) {
   // Shape the cover from the published record.

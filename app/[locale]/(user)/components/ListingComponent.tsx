@@ -18,6 +18,7 @@ import {
   Tray,
 } from 'opub-ui';
 
+import { publicHref } from '@/lib/public-link';
 import { cn, formatDate, mediaUrl } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { Icons } from '@/components/icons';
@@ -58,6 +59,7 @@ interface ListingSdg {
 
 interface ListingResult {
   id: string | number;
+  url_slug?: string | null;
   title: string;
   description?: string;
   modified: string;
@@ -722,7 +724,13 @@ const ListingComponent: React.FC<ListingProps> = ({
                           view === 'expanded' ? 'expanded' : 'collapsed'
                         }
                         iconColor="warning"
-                        href={`${redirectionURL}/${item.id}`}
+                        href={publicHref(
+                          redirectionURL === '/usecases' || type === 'usecase'
+                            ? 'usecases'
+                            : 'datasets',
+                          item.url_slug,
+                          item.id
+                        )}
                         data-tour={
                           index === 0 && type === 'dataset'
                             ? 'dataset-card'
