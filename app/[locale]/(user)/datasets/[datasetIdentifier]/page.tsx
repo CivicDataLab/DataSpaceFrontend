@@ -1,12 +1,9 @@
 import { graphql } from '@/gql';
 import { ClientError } from 'graphql-request';
+import { permanentRedirect } from 'next/navigation';
 
 import { GraphQL } from '@/lib/api';
-import {
-  isCanonicalRedirect,
-  redirectToCanonical,
-} from '@/lib/canonical-redirect';
-import { datasetLookup, publicPageUrl } from '@/lib/public-link';
+import { datasetLookup, isUuid, publicHref, publicPageUrl } from '@/lib/public-link';
 import { generatePageMetadata } from '@/lib/utils';
 import DatasetDetailsPage from './DatasetDetailsPage';
 
@@ -15,7 +12,6 @@ const datasetMetaQuery = graphql(`
     getDataset(datasetId: $datasetId, publicId: $publicId) {
       title
       description
-      id
       urlSlug
       tags {
         id
@@ -50,13 +46,7 @@ export async function generateMetadata({
       {},
       datasetLookup(datasetIdentifier)
     );
-
     const dataset = res?.getDataset;
-    await redirectToCanonical(
-      'datasets',
-      datasetIdentifier,
-      dataset?.urlSlug
-    );
     const segment = dataset?.urlSlug || datasetIdentifier;
     return generatePageMetadata({
       title: `${dataset?.title ?? ''} | Dataset | CivicDataSpace`,
@@ -72,10 +62,9 @@ export async function generateMetadata({
         image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
       },
     });
-  } catch (e) {
-    if (isCanonicalRedirect(e)) throw e;
-    if (!isUnpublishedDatasetError(e)) {
-      console.error('Metadata fetch error', e);
+  } catch (error) {
+    if (!isUnpublishedDatasetError(error)) {
+      console.error('Metadata fetch error', error);
     }
     return generatePageMetadata({ title: 'Dataset Details' });
   }
@@ -88,21 +77,13 @@ export default async function Page({
 }) {
   const { datasetIdentifier } = await params;
 
-  try {
-    const res = await GraphQL(
-      datasetMetaQuery,
-      {},
-      datasetLookup(datasetIdentifier)
+  if (isUuid(datasetIdentifier)) {
+    const res = await GraphQL(datasetMetaQuery, {}, { datasetId: datasetIdentifier }).catch(
+      () => null
     );
-    await redirectToCanonical(
-      'datasets',
-      datasetIdentifier,
-      res?.getDataset?.urlSlug
-    );
-  } catch (error) {
-    if (isCanonicalRedirect(error)) throw error;
-    if (!isUnpublishedDatasetError(error)) {
-      console.error('Dataset lookup error', error);
+    const urlSlug = res?.getDataset?.urlSlug;
+    if (urlSlug && urlSlug !== datasetIdentifier) {
+      permanentRedirect(publicHref('datasets', urlSlug, urlSlug));
     }
   }
 

@@ -24,70 +24,7 @@ import {
 } from './dataset-cover';
 import { DatasetCover } from './components/DatasetCover/DatasetCover';
 import { DatasetTabs } from './components/DatasetTabs/DatasetTabs';
-
-const datasetQuery = graphql(`
-  query getDataset($datasetId: UUID, $publicId: String) {
-    getDataset(datasetId: $datasetId, publicId: $publicId) {
-      id
-      urlSlug
-      title
-      description
-      downloadCount
-      created
-      modified
-      isIndividualDataset
-      license
-      formats
-      user {
-        fullName
-        id
-        bio
-        location
-        profilePicture {
-          url
-        }
-      }
-      tags {
-        id
-        value
-      }
-      accessType
-      metadata {
-        metadataItem {
-          id
-          label
-          dataType
-        }
-        value
-      }
-      source {
-        sourceHomepage
-        sourceUrl
-        platform
-      }
-      resources {
-        id
-        noOfEntries
-      }
-      organization {
-        name
-        description
-        location
-        logo {
-          url
-        }
-        slug
-        id
-      }
-      sectors {
-        name
-      }
-      geographies {
-        name
-      }
-    }
-  }
-`);
+import { datasetQuery } from './queries';
 
 const chartCountQuery = graphql(`
   query datasetVisualisationCount($datasetId: UUID!) {
@@ -135,7 +72,6 @@ export default function DatasetDetailsPage({
   useTourTrigger(true, 1500);
   const { trackDataset } = useAnalytics();
 
-  // Load this dataset. Old UUID links and the current urlSlug both resolve.
   const datasetQueryResult = useQuery(['dataset-cover', datasetId], () =>
     GraphQL(datasetQuery, {}, datasetLookup(datasetId))
   );

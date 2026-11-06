@@ -1,13 +1,9 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { Text } from 'opub-ui';
 
 import { GraphQLPublic } from '@/lib/api';
 import { lumaCover } from '@/lib/luma-cover';
-import {
-  isCanonicalRedirect,
-  redirectToCanonical,
-} from '@/lib/canonical-redirect';
-import { publicPageUrl } from '@/lib/public-link';
+import { publicHref, publicPageUrl } from '@/lib/public-link';
 import { generatePageMetadata } from '@/lib/utils';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import {
@@ -31,25 +27,26 @@ export async function generateMetadata({
       { publicId: eventSlug }
     );
     const event = result.eventBySlug;
-    await redirectToCanonical('events', eventSlug, event?.urlSlug);
     const title = event?.name?.trim() || 'Event';
     const segment = event?.urlSlug || eventSlug;
-    return generatePageMetadata({
-      title: `${title} | Events | CivicDataSpace`,
-      description: event?.location?.trim() || title,
-      keywords: ['Events', 'CivicDataSpace'],
-      openGraph: {
-        type: 'article',
-        locale: 'en_US',
-        url: publicPageUrl('events', segment),
-        title,
+    return {
+      ...generatePageMetadata({
+        title: `${title} | Events | CivicDataSpace`,
         description: event?.location?.trim() || title,
-        siteName: 'CivicDataSpace',
-        image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
-      },
-    });
-  } catch (error) {
-    if (isCanonicalRedirect(error)) throw error;
+        keywords: ['Events', 'CivicDataSpace'],
+        openGraph: {
+          type: 'article',
+          locale: 'en_US',
+          url: publicPageUrl('events', segment),
+          title,
+          description: event?.location?.trim() || title,
+          siteName: 'CivicDataSpace',
+          image: `${process.env.NEXT_PUBLIC_PLATFORM_URL}/og.png`,
+        },
+      }),
+      alternates: { canonical: publicPageUrl('events', segment) },
+    };
+  } catch {
     return generatePageMetadata({
       title: 'Event | CivicDataSpace',
       description: 'An event on CivicDataSpace.',
@@ -80,7 +77,9 @@ export default async function EventDetailPage({
   ).catch(() => null);
   const event = result?.eventBySlug;
   if (!event) notFound();
-  await redirectToCanonical('events', eventSlug, event.urlSlug);
+  if (event.urlSlug && event.urlSlug !== eventSlug) {
+    permanentRedirect(publicHref('events', event.urlSlug, event.urlSlug));
+  }
 
   const name = event.name?.trim() || 'Untitled event';
   const cover = await lumaCover(event.lumaEmbed?.src);

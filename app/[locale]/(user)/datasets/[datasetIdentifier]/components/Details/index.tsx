@@ -7,7 +7,6 @@ import {
   type ReactNode,
 } from 'react';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
 import {
   IconChartBar,
   IconChartLine,
@@ -515,13 +514,7 @@ function ChartCard({
 const CHART_HEIGHT = 280;
 const chartNudge = { transform: 'translateX(calc(-5% + 8px))' };
 
-const Details: React.FC = () => {
-  const params = useParams();
-
-  const datasetId = Array.isArray(params.datasetIdentifier)
-    ? params.datasetIdentifier[0]
-    : params.datasetIdentifier;
-
+const Details = ({ datasetId }: { datasetId: string }) => {
   const { data, isLoading } = useQuery(
     [`chartDetails_${datasetId}`],
     () => GraphQL(DetailsQuery, {}, { datasetId }),

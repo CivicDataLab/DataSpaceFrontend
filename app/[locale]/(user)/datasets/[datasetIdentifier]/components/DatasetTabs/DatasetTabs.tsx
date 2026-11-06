@@ -121,7 +121,9 @@ export function DatasetTabs({
               <p className="mt-1 font-primary text-100 font-regular leading-2 tracking-[0px] text-[#6b686b]">
                 Charts and maps created from this dataset.
               </p>
-              {tab === 'visualisations' ? <Details /> : null}
+              {tab === 'visualisations' ? (
+                <Details datasetId={datasetId} />
+              ) : null}
             </div>
           </div>
           <div
