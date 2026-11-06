@@ -5,11 +5,7 @@
 import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
-import { graphql } from '@/gql';
-import {
-  UseCasedetailsDocument,
-  type UseCasedetailsQuery,
-} from '@/gql/generated/graphql';
+import { type UseCasedetailsQuery } from '@/gql/generated/graphql';
 import { useAnalytics } from '@/hooks/use-analytics';
 import { useQuery } from '@tanstack/react-query';
 import { Text } from 'opub-ui';
@@ -37,107 +33,13 @@ import {
 } from '../components/usecase-rail';
 import { UseCaseStory } from '../components/UseCaseStory';
 import Dashboards from './Dashboards';
-
-void graphql(`
-  query UseCasedetails($publicId: String!) {
-    useCaseBySlug(publicId: $publicId) {
-      id
-      urlSlug
-      title
-      summary
-      created
-      isIndividualUsecase
-      user {
-        fullName
-        id
-        profilePicture {
-          url
-        }
-      }
-      organization {
-        name
-        slug
-        id
-        logo {
-          url
-        }
-      }
-      sectors {
-        id
-        name
-      }
-      geographies {
-        name
-      }
-      sdgs {
-        id
-        code
-        name
-      }
-      tags {
-        id
-        value
-      }
-      logo {
-        url
-      }
-      datasets {
-        title
-        id
-        urlSlug
-        isIndividualDataset
-        user {
-          fullName
-          profilePicture {
-            url
-          }
-        }
-        downloadCount
-        description
-        organization {
-          name
-          logo {
-            url
-          }
-        }
-        sectors {
-          name
-        }
-        geographies {
-          name
-        }
-        modified
-      }
-      contributors {
-        id
-        fullName
-        profilePicture {
-          url
-        }
-      }
-      supportingOrganizations {
-        id
-        slug
-        name
-        logo {
-          url
-        }
-      }
-      partnerOrganizations {
-        id
-        slug
-        name
-        logo {
-          url
-        }
-      }
-    }
-  }
-`);
+import { useCaseDetailsQuery } from './queries';
 
 const UseCaseDetailClient = () => {
   const params = useParams();
   const { trackUsecase } = useAnalytics();
+  const requested =
+    typeof params.useCaseSlug === 'string' ? params.useCaseSlug : '';
 
   const {
     data: UseCaseDetails,
@@ -146,21 +48,12 @@ const UseCaseDetailClient = () => {
   } = useQuery(
     [`fetch_UsecaseDetails_${params.useCaseSlug}`],
     async () => {
-      const segment =
-        typeof params.useCaseSlug === 'string' ? params.useCaseSlug : '';
       const result = await GraphQLPublic(
-        UseCasedetailsDocument,
+        useCaseDetailsQuery,
         {},
-        { publicId: segment }
+        { publicId: requested }
       );
       return result;
-    },
-    {
-      refetchOnMount: true,
-      refetchOnReconnect: true,
-      retry: (failureCount) => {
-        return failureCount < 3;
-      },
     }
   );
 

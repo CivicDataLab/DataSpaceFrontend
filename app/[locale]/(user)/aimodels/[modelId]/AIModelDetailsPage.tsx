@@ -1,6 +1,5 @@
 'use client';
 
-import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import { Spinner, Text } from 'opub-ui';
 
@@ -12,81 +11,7 @@ import { generateJsonLd } from '@/lib/utils';
 import Metadata from './components/Metadata';
 import PrimaryData from './components/PrimaryData';
 import Versions from './components/Versions';
-
-const aiModelQuery = graphql(`
-  query getAIModel($modelId: Int, $publicId: String) {
-    getAiModel(modelId: $modelId, publicId: $publicId) {
-      id
-      urlSlug
-      name
-      displayName
-      description
-      modelType
-      domain
-      metadata
-      status
-      isPublic
-      isActive
-      createdAt
-      updatedAt
-      tags {
-        id
-        value
-      }
-      sectors {
-        id
-        name
-      }
-      geographies {
-        id
-        name
-      }
-      organization {
-        id
-        name
-        logo {
-          url
-        }
-      }
-      user {
-        id
-        fullName
-        profilePicture {
-          url
-        }
-      }
-      versions {
-        id
-        version
-        versionNotes
-        lifecycleStage
-        isLatest
-        supportsStreaming
-        maxTokens
-        supportedLanguages
-        status
-        createdAt
-        updatedAt
-        providers {
-          id
-          provider
-          providerModelId
-          isPrimary
-          isActive
-          # API Configuration
-          apiEndpointUrl
-          apiHttpMethod
-          apiTimeoutSeconds
-          apiAuthType
-          # HuggingFace Configuration
-          hfUsePipeline
-          hfModelClass
-          framework
-        }
-      }
-    }
-  }
-`);
+import { aiModelQuery } from './queries';
 
 export default function AIModelDetailsPage({
   modelId,
@@ -96,12 +21,7 @@ export default function AIModelDetailsPage({
   const { data, isLoading, error } = useQuery(
     [`aimodel_details_${modelId}`],
     () => GraphQL(aiModelQuery, {}, aiModelLookup(modelId)),
-    {
-      retry: false,
-      onError: (err) => {
-        console.error('Error fetching AI model:', err);
-      },
-    }
+    { retry: false }
   );
 
   const modelData = data?.getAiModel;
