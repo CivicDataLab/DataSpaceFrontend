@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
 import { UseCaseInputPartial } from '@/gql/generated/graphql';
@@ -54,13 +54,21 @@ const UpdateUseCaseTitleMutation = graphql(`
 
 function StepErrorSync() {
   const { showErrors } = useStepperStep();
-  const { setStepShowErrors } = useUseCaseEditStatus();
+  const { stepShowErrors, setStepShowErrors } = useUseCaseEditStatus();
+  const markerRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     setStepShowErrors(showErrors);
   }, [showErrors, setStepShowErrors]);
 
-  return null;
+  useEffect(() => {
+    if (!stepShowErrors) return;
+    markerRef.current?.parentElement
+      ?.querySelector<HTMLElement>('[id$="-error"]')
+      ?.scrollIntoView({ block: 'center' });
+  }, [stepShowErrors]);
+
+  return <span ref={markerRef} hidden />;
 }
 
 function stepContent(isActive: boolean, children: ReactNode) {

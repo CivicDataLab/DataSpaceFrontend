@@ -259,6 +259,48 @@ function sdgLabel(item: {
   return `${num}. ${item.name ?? ''}`;
 }
 
+const emptyConnectForm: ConnectFormData = {
+  tags: [],
+  sdgs: [],
+  sectors: [],
+  geographies: [],
+};
+
+function toConnectForm(useCase: {
+  tags?: Array<{ id: string; value?: string | null }> | null;
+  sdgs?: Array<{
+    id: string;
+    number?: number | null;
+    code?: string | null;
+    name?: string | null;
+  }> | null;
+  sectors?: Array<{ id: string; name?: string | null }> | null;
+  geographies?: Array<{ id: string; name?: string | null }> | null;
+}): ConnectFormData {
+  return {
+    tags:
+      useCase.tags?.map((item) => ({
+        label: item.value ?? '',
+        value: item.id,
+      })) ?? [],
+    sdgs:
+      useCase.sdgs?.map((item) => ({
+        label: sdgLabel(item),
+        value: item.id,
+      })) ?? [],
+    sectors:
+      useCase.sectors?.map((item) => ({
+        label: item.name ?? '',
+        value: item.id,
+      })) ?? [],
+    geographies:
+      useCase.geographies?.map((item) => ({
+        label: item.name ?? '',
+        value: item.id,
+      })) ?? [],
+  };
+}
+
 export default function ConnectPage() {
   const params = useParams<{
     entityType: string;
@@ -274,16 +316,6 @@ export default function ConnectPage() {
   } = useUseCaseEditStatus();
   const ownerArgs = { [params.entityType]: params.entitySlug };
 
-  const [formData, setFormData] = useState<ConnectFormData>({
-    tags: [],
-    sdgs: [],
-    sectors: [],
-    geographies: [],
-  });
-  const formRef = useRef(formData);
-  useEffect(() => {
-    formRef.current = formData;
-  });
   const [userSearch, setUserSearch] = useState('');
   const [datasetSearch, setDatasetSearch] = useState('');
   const [debouncedDatasetSearch, setDebouncedDatasetSearch] = useState('');
@@ -374,32 +406,21 @@ export default function ConnectPage() {
   ]);
 
   const useCase = useCaseQuery.data?.useCases?.[0];
+  const [formData, setFormData] = useState<ConnectFormData>(() =>
+    useCase ? toConnectForm(useCase) : emptyConnectForm
+  );
+  const formRef = useRef(formData);
   const [syncedUseCase, setSyncedUseCase] = useState(useCase);
+  const [metadataReady, setMetadataReady] = useState(Boolean(useCase));
   if (useCase && useCase !== syncedUseCase) {
     setSyncedUseCase(useCase);
-    setFormData({
-      tags:
-        useCase.tags?.map((item) => ({
-          label: item.value ?? '',
-          value: item.id,
-        })) ?? [],
-      sdgs:
-        useCase.sdgs?.map((item) => ({
-          label: sdgLabel(item),
-          value: item.id,
-        })) ?? [],
-      sectors:
-        useCase.sectors?.map((item) => ({
-          label: item.name ?? '',
-          value: item.id,
-        })) ?? [],
-      geographies:
-        useCase.geographies?.map((item) => ({
-          label: item.name ?? '',
-          value: item.id,
-        })) ?? [],
-    });
+    setFormData(toConnectForm(useCase));
+    setMetadataReady(true);
   }
+
+  useEffect(() => {
+    formRef.current = formData;
+  });
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -439,6 +460,7 @@ export default function ConnectPage() {
 
   const persistMetadata = useCallback(
     (next = formRef.current) => {
+      if (!metadataReady) return Promise.resolve();
       return saveMetadata({
         id: params.id,
         metadata: [],
@@ -450,7 +472,7 @@ export default function ConnectPage() {
         ),
       }).catch(() => undefined);
     },
-    [params.id, saveMetadata]
+    [metadataReady, params.id, saveMetadata]
   );
 
   const handleClassChange = (
@@ -828,7 +850,7 @@ export default function ConnectPage() {
             }}
           />
           {datasetError ? (
-            <div className="mt-2">
+            <div id="connected-datasets-error" className="mt-2">
               <Text variant="bodySm" color="critical">
                 {datasetError}
               </Text>
