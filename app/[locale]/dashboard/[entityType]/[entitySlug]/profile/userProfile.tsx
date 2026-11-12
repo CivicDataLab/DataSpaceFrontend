@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { graphql } from '@/gql';
 import {
   SectorInfoDocument,
@@ -306,13 +307,13 @@ const UserProfile = () => {
 
   const openChangePassword = async () => {
     try {
-      const response = await fetch('/api/auth/change-password');
-      const data = (await response.json()) as { url?: string };
-      if (!data.url) {
-        toast.error('Could not open the Keycloak password page.');
-        return;
-      }
-      window.location.assign(data.url);
+      // kc_action skips the account "Signing in" page and opens the
+      // update-password form. NextAuth adds state so the user returns here.
+      await signIn(
+        'keycloak',
+        { callbackUrl: window.location.href },
+        { kc_action: 'UPDATE_PASSWORD' }
+      );
     } catch {
       toast.error('Could not open the Keycloak password page.');
     }
@@ -539,7 +540,6 @@ const UserProfile = () => {
                 kind="tertiary"
                 size="slim"
                 onClick={openChangePassword}
-                disabled
                 icon={<IconArrowRight size={16} />}
               >
                 Change password
