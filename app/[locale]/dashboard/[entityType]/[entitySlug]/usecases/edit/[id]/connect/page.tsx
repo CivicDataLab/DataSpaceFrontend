@@ -316,12 +316,6 @@ export default function ConnectPage() {
   } = useUseCaseEditStatus();
   const ownerArgs = { [params.entityType]: params.entitySlug };
 
-  const [formData, setFormData] = useState<ConnectFormData>(emptyConnectForm);
-  const formRef = useRef(formData);
-  const metadataReadyRef = useRef(false);
-  useEffect(() => {
-    formRef.current = formData;
-  });
   const [userSearch, setUserSearch] = useState('');
   const [datasetSearch, setDatasetSearch] = useState('');
   const [debouncedDatasetSearch, setDebouncedDatasetSearch] = useState('');
@@ -412,14 +406,21 @@ export default function ConnectPage() {
   ]);
 
   const useCase = useCaseQuery.data?.useCases?.[0];
+  const [formData, setFormData] = useState<ConnectFormData>(() =>
+    useCase ? toConnectForm(useCase) : emptyConnectForm
+  );
+  const formRef = useRef(formData);
   const [syncedUseCase, setSyncedUseCase] = useState(useCase);
-  if (useCase && (useCase !== syncedUseCase || !metadataReadyRef.current)) {
-    const next = toConnectForm(useCase);
+  const [metadataReady, setMetadataReady] = useState(Boolean(useCase));
+  if (useCase && useCase !== syncedUseCase) {
     setSyncedUseCase(useCase);
-    setFormData(next);
-    formRef.current = next;
-    metadataReadyRef.current = true;
+    setFormData(toConnectForm(useCase));
+    setMetadataReady(true);
   }
+
+  useEffect(() => {
+    formRef.current = formData;
+  });
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -459,7 +460,7 @@ export default function ConnectPage() {
 
   const persistMetadata = useCallback(
     (next = formRef.current) => {
-      if (!metadataReadyRef.current) return Promise.resolve();
+      if (!metadataReady) return Promise.resolve();
       return saveMetadata({
         id: params.id,
         metadata: [],
@@ -471,7 +472,7 @@ export default function ConnectPage() {
         ),
       }).catch(() => undefined);
     },
-    [params.id, saveMetadata]
+    [metadataReady, params.id, saveMetadata]
   );
 
   const handleClassChange = (
