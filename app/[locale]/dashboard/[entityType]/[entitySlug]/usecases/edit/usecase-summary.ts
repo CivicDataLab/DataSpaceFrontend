@@ -34,8 +34,13 @@ export type UseCaseEditStep = 'builder' | 'connect' | 'publish';
 export function isUseCaseBuilderComplete(useCase: {
   title?: string | null;
   logo?: unknown;
+  summary?: string | null;
 }): boolean {
-  return Boolean(useCase.title?.trim()) && useCase.logo != null;
+  return (
+    Boolean(useCase.title?.trim()) &&
+    useCase.logo != null &&
+    getUseCaseHasContent(useCase.summary)
+  );
 }
 
 export function isUseCaseConnectComplete(useCase: {

@@ -368,19 +368,25 @@ export default function AIModelDetailsPage() {
   );
 
   const [prevId, setPrevId] = useState(params.id);
-  if (params.id !== prevId) {
+  // Fill the form when this model is first loaded, not on every refetch.
+  // A refetch is a new object for the same id and was wiping in-progress text.
+  const [hydratedModelId, setHydratedModelId] = useState<string | null>(null);
+  const modelId = model?.id != null ? String(model.id) : null;
+  const routeChanged = params.id !== prevId;
+
+  if (routeChanged) {
     setPrevId(params.id);
+    setHydratedModelId(null);
     setFormData(emptyAIModelForm());
   }
 
-  const [prevModel, setPrevModel] = useState<typeof model | undefined>(
-    undefined
-  );
-  if (model !== prevModel) {
-    setPrevModel(model);
-    if (model) {
-      setFormData(formDataFromModel(model));
-    }
+  if (
+    model &&
+    modelId === params.id &&
+    modelId !== (routeChanged ? null : hydratedModelId)
+  ) {
+    setHydratedModelId(modelId);
+    setFormData(formDataFromModel(model));
   }
 
   const handleInputChange = (

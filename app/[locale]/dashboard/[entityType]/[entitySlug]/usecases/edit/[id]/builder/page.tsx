@@ -22,6 +22,7 @@ import MediaImage from '@/components/MediaImage';
 import { ContentEditor } from '../../components/ContentEditor';
 import {
   extractEmbedUrl,
+  hasContentBlocks,
   parseUseCaseContent,
   serializeUseCaseContent,
   type UseCaseContentDocument,
@@ -346,8 +347,14 @@ export default function BuilderPage() {
   }, [savingUseCase, addingDashboard, savingDashboard, setStatus]);
 
   useEffect(() => {
-    setBuilderCompleted(isUseCaseBuilderComplete({ title, logo }));
-  }, [title, logo, setBuilderCompleted]);
+    setBuilderCompleted(
+      isUseCaseBuilderComplete({
+        title,
+        logo,
+        summary: serializeUseCaseContent(contentDoc),
+      })
+    );
+  }, [title, logo, contentDoc, setBuilderCompleted]);
 
   const handleSaveDashboard = () => {
     const link = extractEmbedUrl(embedCode);
@@ -434,6 +441,10 @@ export default function BuilderPage() {
     stepShowErrors && !title.trim() ? 'Enter a use case title' : undefined;
   const thumbnailError =
     stepShowErrors && !logo ? 'Upload a thumbnail image' : undefined;
+  const contentError =
+    stepShowErrors && !hasContentBlocks(contentDoc)
+      ? 'Add at least one content block'
+      : undefined;
   const extractedDashboardLink = extractEmbedUrl(embedCode);
   const dashboardLinkLooksLikeUrl = Boolean(
     extractedDashboardLink &&
@@ -563,7 +574,14 @@ export default function BuilderPage() {
       </SectionCard>
 
       <SectionCard
-        title="Content"
+        title={
+          <>
+            Content{' '}
+            <Text as="span" color="critical">
+              *
+            </Text>
+          </>
+        }
         description="Add the main information that explains this content."
         className={styles.overflowVisible}
       >
@@ -589,6 +607,13 @@ export default function BuilderPage() {
               persistBuilder({ document });
             }}
           />
+          {contentError ? (
+            <div id="use-case-content-error" className="mt-2">
+              <Text variant="bodySm" color="critical">
+                {contentError}
+              </Text>
+            </div>
+          ) : null}
         </div>
       </SectionCard>
 
