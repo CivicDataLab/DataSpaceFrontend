@@ -22,6 +22,8 @@ const publicPages = [
   '/privacy',
   '/publishers',
   '/publishers/(.*)',
+  '/publications',
+  '/publications/(.*)',
   '/search',
   '/search/(.*)',
   '/aimodels',

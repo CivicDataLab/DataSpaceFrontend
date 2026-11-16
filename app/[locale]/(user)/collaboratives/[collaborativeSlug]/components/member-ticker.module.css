@@ -1,0 +1,47 @@
+/* Rows of organisation and people pills that scroll sideways in a loop. */
+
+.ticker {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll var(--ticker-duration, 80s) linear infinite;
+  animation-delay: var(--ticker-delay, 0s);
+}
+
+.track[data-reverse='true'] {
+  animation-direction: reverse;
+}
+
+.ticker:hover .track,
+.ticker:focus-within .track,
+.ticker[data-paused='true'] .track {
+  animation-play-state: paused;
+}
+
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    flex-wrap: wrap;
+    gap: 16px;
+    width: auto;
+    animation: none;
+  }
+
+  .loopCopy {
+    display: none;
+  }
+}

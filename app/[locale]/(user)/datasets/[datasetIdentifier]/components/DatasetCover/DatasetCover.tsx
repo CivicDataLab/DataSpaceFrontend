@@ -22,6 +22,7 @@ import { Button, Popover, Tooltip } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
 import MediaImage from '@/components/MediaImage';
+import { downloadCardImage } from '@/components/share-panel/download-card';
 import { SharePanel } from '@/components/share-panel/SharePanel';
 import { publisherImageFallback } from '@/lib/public-entity';
 import type {
@@ -101,9 +102,10 @@ export function DatasetCover({
                     onDownloadCard={() => {
                       const card = cardRef.current;
                       if (card) {
-                        downloadDataCard(cover.title, card).catch((error) =>
-                          Sentry.captureException(error)
-                        );
+                        downloadCardImage(cover.title, card, {
+                          fileSuffix: 'data-card',
+                          backgroundColor: '#f3f5f8',
+                        }).catch((error) => Sentry.captureException(error));
                       }
                     }}
                   />
@@ -284,6 +286,7 @@ export function DatasetCover({
 function DescriptionCopy({ description }: { description: string }) {
   const textRef = useRef<HTMLParagraphElement>(null);
   const [truncated, setTruncated] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
 
   useEffect(() => {
     const node = textRef.current;
@@ -323,10 +326,18 @@ function DescriptionCopy({ description }: { description: string }) {
     </p>
   );
 
-  if (!truncated) return copy;
-
+  // Keep the tooltip mounted and only let it open when the text is cut off.
+  // Adding or removing the wrapper re-creates the text, which undoes the
+  // Bhashini translation and makes the text flicker between languages.
   return (
-    <Tooltip content={description} width="wide" side="top" align="start">
+    <Tooltip
+      content={description}
+      width="wide"
+      side="top"
+      align="start"
+      open={truncated && tooltipOpen}
+      onOpenChange={setTooltipOpen}
+    >
       {copy}
     </Tooltip>
   );
@@ -443,6 +454,7 @@ function PublisherFact({
 }) {
   const nameRef = useRef<HTMLSpanElement>(null);
   const [nameTruncated, setNameTruncated] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
   const name = publisher?.name ?? '—';
 
   useEffect(() => {
@@ -488,13 +500,15 @@ function PublisherFact({
         </span>
       )}
       <span className="min-w-0">
-        {nameTruncated ? (
-          <Tooltip content={name} side="top">
-            {nameNode}
-          </Tooltip>
-        ) : (
-          nameNode
-        )}
+        {/* Always mounted so the name isn't re-created; see DescriptionCopy. */}
+        <Tooltip
+          content={name}
+          side="top"
+          open={nameTruncated && tooltipOpen}
+          onOpenChange={setTooltipOpen}
+        >
+          {nameNode}
+        </Tooltip>
         <span className="block font-primary text-75 font-regular leading-1 tracking-[0px] text-[#68686b]">
           Publisher
         </span>
@@ -519,52 +533,6 @@ function PublisherFact({
     >
       {body}
     </Link>
-  );
-}
-
-function dataCardFileName(title: string) {
-  const slug = title
-    .toLowerCase()
-    .replace(/&/g, ' ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  return `${slug || 'dataset'}-data-card.png`;
-}
-
-async function downloadDataCard(title: string, card: HTMLElement) {
-  const { toPng } = await import('html-to-image');
-  const blocked = remoteStylesheets();
-  const markers = blocked.map((node) => {
-    const marker = document.createComment('remote-stylesheet');
-    node.replaceWith(marker);
-    return { node, marker };
-  });
-  try {
-    const href = await toPng(card, {
-      pixelRatio: 2,
-      backgroundColor: '#f3f5f8',
-      includeQueryParams: true,
-    });
-    const link = document.createElement('a');
-    link.href = href;
-    link.download = dataCardFileName(title);
-    link.click();
-  } finally {
-    for (const { node, marker } of markers) marker.replaceWith(node);
-  }
-}
-
-function remoteStylesheets() {
-  return [...document.querySelectorAll('link[rel="stylesheet"]')].filter(
-    (node): node is HTMLLinkElement => {
-      if (!(node instanceof HTMLLinkElement) || !node.sheet) return false;
-      try {
-        void node.sheet.cssRules;
-        return false;
-      } catch {
-        return true;
-      }
-    }
   );
 }
 

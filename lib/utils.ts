@@ -304,6 +304,18 @@ export const ENTITY_CONFIG: ENTITY_CONFIG_TYPE = {
     queryResKey: 'activeSectors',
     path: 'sectors',
   },
+  publications: {
+    source: 'graphql',
+    graphqlQuery: `query SitemapPublications {
+      publications(includePublic: true, filters: { status: PUBLISHED }) {
+        id
+        urlSlug
+        modified
+      }
+    }`,
+    queryResKey: 'publications',
+    path: 'publications',
+  },
 };
 export const extractPublisherId = (publisherSlug: string): string => {
   // If the param contains an underscore, split and take the last part

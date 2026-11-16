@@ -43,3 +43,11 @@ next-env.d.ts
 /gql/generated/
 # next-agents-md
 .next-docs/
+
+# local agent instructions
+AGENTS.md
+code-quality.md
+craft-standard.md
+safety-review.md
+qc.md
+accessibility.md

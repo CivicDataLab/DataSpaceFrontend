@@ -21,6 +21,8 @@ type SharePanelProps = {
   /** Dataset page: Copy link and Download Data Card sit above the share icons. */
   showPageActions?: boolean;
   onDownloadCard?: () => void;
+  /** Text of the download action; the dataset page calls it a Data Card. */
+  downloadLabel?: string;
 };
 
 const SHARE_ICON = {
@@ -37,6 +39,7 @@ export function SharePanel({
   title,
   showPageActions = false,
   onDownloadCard,
+  downloadLabel = 'Download Data Card',
 }: SharePanelProps) {
   const targets = buildShareTargets(url, title).filter(
     (target) => !showPageActions || target.id !== 'copy'
@@ -71,7 +74,7 @@ export function SharePanel({
             onSelect={onCopy}
           />
           <PageAction
-            label="Download Data Card"
+            label={downloadLabel}
             icon={IconPhoto}
             onSelect={() => onDownloadCard?.()}
           />

@@ -146,6 +146,7 @@ function FileBrowser({
 function TreeLabel({ name }: { name: string }) {
   const labelRef = useRef<HTMLSpanElement>(null);
   const [truncated, setTruncated] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
 
   useEffect(() => {
     const node = labelRef.current;
@@ -167,10 +168,16 @@ function TreeLabel({ name }: { name: string }) {
     </span>
   );
 
-  if (!truncated) return label;
-
+  // Keep the tooltip mounted and only let it open when the name is cut off.
+  // Adding or removing the wrapper re-creates the text, which undoes the
+  // Bhashini translation and makes the name flicker between languages.
   return (
-    <Tooltip content={name} side="top">
+    <Tooltip
+      content={name}
+      side="top"
+      open={truncated && tooltipOpen}
+      onOpenChange={setTooltipOpen}
+    >
       {label}
     </Tooltip>
   );

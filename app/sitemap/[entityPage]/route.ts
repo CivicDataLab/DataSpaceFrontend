@@ -83,6 +83,8 @@ function getEntityLoc(
       return `${baseUrl}/aimodels/${encodeURIComponent(item.urlSlug || String(item.id))}`;
     case 'usecases':
       return `${baseUrl}/usecases/${encodeURIComponent(item.urlSlug || String(item.id))}`;
+    case 'publications':
+      return `${baseUrl}/publications/${encodeURIComponent(item.urlSlug || String(item.id))}`;
     case 'sectors':
       return `${baseUrl}/sectors/${encodeURIComponent(item.slug || item.id)}`;
     default:

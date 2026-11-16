@@ -602,7 +602,11 @@ const ListingComponent: React.FC<ListingProps> = ({
                   view={view}
                 >
                   {datasetDetails.map((item, index) => {
-                    const image = item.is_individual_dataset
+                    // Publication results carry no is_individual flag: no organisation means a person published it.
+                    const isIndividual =
+                      item.is_individual_dataset ||
+                      (type === 'publication' && !item.organization);
+                    const image = isIndividual
                       ? item?.user?.profile_picture
                         ? mediaUrl(item.user.profile_picture)
                         : '/profile.png'
@@ -697,7 +701,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                       {
                         icon: image,
                         label: 'Published by',
-                        tooltip: `${item.is_individual_dataset ? item.user?.name : item.organization?.name}`,
+                        tooltip: `${isIndividual ? item.user?.name : item.organization?.name}`,
                       },
                     ];
 
@@ -725,9 +729,12 @@ const ListingComponent: React.FC<ListingProps> = ({
                         }
                         iconColor="warning"
                         href={publicHref(
-                          redirectionURL === '/usecases' || type === 'usecase'
-                            ? 'usecases'
-                            : 'datasets',
+                          type === 'publication'
+                            ? 'publications'
+                            : redirectionURL === '/usecases' ||
+                                type === 'usecase'
+                              ? 'usecases'
+                              : 'datasets',
                           item.url_slug,
                           item.id
                         )}
@@ -756,7 +763,11 @@ const ListingComponent: React.FC<ListingProps> = ({
                 </GraphqlPagination>
               ) : (
                 <div className="flex h-screen items-center justify-center">
-                  <Text variant="heading2xl">No datasets found</Text>
+                  <Text variant="heading2xl">
+                    {type === 'publication'
+                      ? 'No publications found'
+                      : 'No datasets found'}
+                  </Text>
                 </div>
               )}
             </div>
