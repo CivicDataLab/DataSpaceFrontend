@@ -523,6 +523,7 @@ export default function AboutPage() {
 
   const handleClassChange = (field: keyof AboutForm, value: unknown) => {
     const next = { ...formRef.current, [field]: asOptions(value) };
+    formRef.current = next;
     setForm(next);
     persistMetadata(next);
   };
@@ -562,9 +563,11 @@ export default function AboutPage() {
               value={form.title}
               error={titleError}
               helpText="Use a clear name that describes the initiative."
-              onChange={(value) =>
-                setForm((prev) => ({ ...prev, title: value }))
-              }
+              onChange={(value) => {
+                const next = { ...formRef.current, title: value };
+                formRef.current = next;
+                setForm(next);
+              }}
               onBlur={() => persistAbout()}
             />
           </div>
@@ -596,11 +599,14 @@ export default function AboutPage() {
             error={summaryError}
             helpText="Describe the problem this Collaborative addresses, why collaboration is needed, and what the initiative aims to achieve."
             placeholder="Describe this Collaborative..."
-            onChange={(value) =>
-              setForm((prev) => ({ ...prev, summary: value }))
-            }
+            onChange={(value) => {
+              const next = { ...formRef.current, summary: value };
+              formRef.current = next;
+              setForm(next);
+            }}
             onBlur={(value) => {
               const next = { ...formRef.current, summary: value };
+              formRef.current = next;
               setForm(next);
               persistAbout(next);
             }}
@@ -612,9 +618,11 @@ export default function AboutPage() {
             type="url"
             value={form.platformUrl}
             helpText="Add a link to the Collaborative's website or external resource."
-            onChange={(value) =>
-              setForm((prev) => ({ ...prev, platformUrl: value }))
-            }
+            onChange={(value) => {
+              const next = { ...formRef.current, platformUrl: value };
+              formRef.current = next;
+              setForm(next);
+            }}
             onBlur={() => persistAbout()}
           />
         </div>
