@@ -16,7 +16,6 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Combobox,
-  Form,
   RadioGroup,
   RadioItem,
   SectionCard,
@@ -24,7 +23,6 @@ import {
   TextField,
   toast,
 } from 'opub-ui';
-import { useFormContext } from 'react-hook-form';
 
 import { useDatasetLicenses } from '@/hooks/useDatasetLicenses';
 import { GraphQL } from '@/lib/api';
@@ -321,98 +319,6 @@ function asOptionItems(value: FormFieldValue | undefined): OptionItem[] {
       'value' in item
   );
 }
-
-function SyncStepErrors({
-  license,
-  errors,
-}: {
-  license: string;
-  errors: {
-    sectors?: string;
-    tags?: string;
-    license?: string;
-    taskType?: string;
-    domain?: string;
-    targetLanguages?: string;
-    targetModelTypes?: string;
-  };
-}) {
-  const { setError, clearErrors, setValue } = useFormContext();
-
-  useEffect(() => {
-    setValue('license', license);
-  }, [license, setValue]);
-
-  useEffect(() => {
-    if (errors.sectors) {
-      setError('sectors', { type: 'manual', message: errors.sectors });
-    } else {
-      clearErrors('sectors');
-    }
-  }, [errors.sectors, setError, clearErrors]);
-
-  useEffect(() => {
-    if (errors.tags) {
-      setError('tags', { type: 'manual', message: errors.tags });
-    } else {
-      clearErrors('tags');
-    }
-  }, [errors.tags, setError, clearErrors]);
-
-  useEffect(() => {
-    if (errors.license) {
-      setError('license', { type: 'manual', message: errors.license });
-    } else {
-      clearErrors('license');
-    }
-  }, [errors.license, setError, clearErrors]);
-
-  useEffect(() => {
-    if (errors.taskType) {
-      setError('taskType', { type: 'manual', message: errors.taskType });
-    } else {
-      clearErrors('taskType');
-    }
-  }, [errors.taskType, setError, clearErrors]);
-
-  useEffect(() => {
-    if (errors.domain) {
-      setError('domain', { type: 'manual', message: errors.domain });
-    } else {
-      clearErrors('domain');
-    }
-  }, [errors.domain, setError, clearErrors]);
-
-  useEffect(() => {
-    if (errors.targetLanguages) {
-      setError('targetLanguages', {
-        type: 'manual',
-        message: errors.targetLanguages,
-      });
-    } else {
-      clearErrors('targetLanguages');
-    }
-  }, [errors.targetLanguages, setError, clearErrors]);
-
-  useEffect(() => {
-    if (errors.targetModelTypes) {
-      setError('targetModelTypes', {
-        type: 'manual',
-        message: errors.targetModelTypes,
-      });
-    } else {
-      clearErrors('targetModelTypes');
-    }
-  }, [errors.targetModelTypes, setError, clearErrors]);
-
-  return null;
-}
-
-const metadataFormOptions = {
-  defaultValues: {
-    license: '',
-  },
-};
 
 export function EditMetadata({ id }: { id: string }) {
   const params = useParams<{
@@ -1102,19 +1008,6 @@ export function EditMetadata({ id }: { id: string }) {
   return (
     <>
       {metadataReady ? (
-        <Form formOptions={metadataFormOptions}>
-          <SyncStepErrors
-            license={formData.license ?? ''}
-            errors={{
-              sectors: sectorsError,
-              tags: tagsError,
-              license: licenseError,
-              taskType: taskTypeError,
-              domain: domainError,
-              targetLanguages: targetLanguagesError,
-              targetModelTypes: targetModelTypesError,
-            }}
-          />
           <div className="flex flex-col gap-4">
             <div id="basic-information">
               <SectionCard
@@ -1442,7 +1335,6 @@ export function EditMetadata({ id }: { id: string }) {
               </div>
             ) : null}
           </div>
-        </Form>
       ) : (
         <DatasetLoading />
       )}
