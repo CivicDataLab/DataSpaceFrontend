@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { InlineMessage } from 'opub-ui';
 
@@ -29,6 +29,21 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   readOnly = false,
 }) => {
   const [isPreview, setIsPreview] = useState(false);
+  const fieldId = useId();
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const editor = editorRef.current?.querySelector<HTMLElement>('.ql-editor');
+    if (!editor) return;
+    editor.id = fieldId;
+    if (error) {
+      editor.setAttribute('aria-invalid', 'true');
+      editor.setAttribute('aria-describedby', `${fieldId}-error`);
+    } else {
+      editor.removeAttribute('aria-invalid');
+      editor.removeAttribute('aria-describedby');
+    }
+  }, [error, fieldId, isPreview]);
   // Dynamically import ReactQuill to avoid SSR issues
   const ReactQuill = useMemo(
     () =>
@@ -101,7 +116,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   return (
     <div className="w-full">
       {label && (
-        <label className="text-sm text-gray-700 font-medium mb-2 block">
+        <label
+          htmlFor={fieldId}
+          className="text-sm text-gray-700 font-medium mb-2 block"
+        >
           {label}
         </label>
       )}
@@ -143,6 +161,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </div>
       ) : (
         <div
+          ref={editorRef}
           className={`rich-text-editor bhashini-skip-translation ${readOnly ? 'read-only' : ''} ${error ? 'has-error' : ''}`}
         >
           <ReactQuill
@@ -167,7 +186,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       )}
 
       {error ? (
-        <InlineMessage message={error} fieldID="rich-text-description" />
+        <InlineMessage message={error} fieldID={fieldId} />
       ) : null}
       {helpText && <p className="text-sm text-gray-500 mt-1">{helpText}</p>}
       <style jsx global>{`
