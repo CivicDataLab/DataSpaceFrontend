@@ -14,6 +14,7 @@ import { SparklesIcon } from 'lucide-react';
 import { Button, Form, SectionCard, Select, TextField, toast } from 'opub-ui';
 import { useFormContext } from 'react-hook-form';
 
+import { useSettleSaveStatus } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/edit-status';
 import { GraphQL } from '@/lib/api';
 import { useDatasetEditStatus } from '../../context';
 
@@ -137,7 +138,7 @@ export function PublicPlatformImport({
   initialDraft,
   onDraftChange,
 }: PublicPlatformImportProps) {
-  const { stepShowErrors } = useDatasetEditStatus();
+  const { stepShowErrors, setStatus } = useDatasetEditStatus();
   const router = useRouter();
   const params = useParams<{
     entityType: string;
@@ -188,6 +189,8 @@ export function PublicPlatformImport({
       },
     }
   );
+
+  useSettleSaveStatus(generateMutation.isLoading, setStatus);
 
   useEffect(() => {
     onDraftChange?.({ platform, datasetUrl });
@@ -257,7 +260,10 @@ export function PublicPlatformImport({
                 PLATFORM_OPTIONS.find((p) => p.value === platform)?.helpText
               }
               error={showUrlError ? 'Enter the dataset URL.' : undefined}
-              onChange={setDatasetUrl}
+              onChange={(value) => {
+                setStatus('unsaved');
+                setDatasetUrl(value);
+              }}
               onBlur={() => setUrlBlurred(true)}
             />
           ) : null}

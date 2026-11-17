@@ -167,7 +167,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           <ReactQuill
             theme="snow"
             value={value || ''}
-            onChange={(content) => {
+            onChange={(content, _delta, source) => {
+              // Quill also emits this while applying the saved HTML. That is not an edit.
+              if (source !== 'user') return;
               const stripped = content.replace(/<(.|\n)*?>/g, '').trim();
               onChange(stripped === '' ? '' : content);
             }}

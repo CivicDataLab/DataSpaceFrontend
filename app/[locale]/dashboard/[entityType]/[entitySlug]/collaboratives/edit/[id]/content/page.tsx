@@ -6,6 +6,7 @@ import { fetchData, fetchDatasets } from '@/fetch';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SectionCard, Spinner, toast } from 'opub-ui';
 
+import { useSettleSaveStatus } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/edit-status';
 import { GraphQL } from '@/lib/api';
 import { AddDatasetSheet } from '../../../../usecases/edit/components/AddDatasetSheet';
 import {
@@ -244,19 +245,10 @@ export default function ContentPage() {
     return () => window.cancelAnimationFrame(frame);
   }, [contentReady]);
 
-  useEffect(() => {
-    setStatus(
-      savingDatasets || savingUseCases || creatingDataset || creatingUseCase
-        ? 'loading'
-        : 'success'
-    );
-  }, [
-    savingDatasets,
-    savingUseCases,
-    creatingDataset,
-    creatingUseCase,
-    setStatus,
-  ]);
+  useSettleSaveStatus(
+    savingDatasets || savingUseCases || creatingDataset || creatingUseCase,
+    setStatus
+  );
 
   const loadMoreDatasets = useCallback(() => {
     if (!datasetsQuery.hasNextPage || datasetsQuery.isFetchingNextPage) return;

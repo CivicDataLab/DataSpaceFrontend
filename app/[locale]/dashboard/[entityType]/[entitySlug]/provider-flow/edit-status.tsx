@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-export type ProviderSaveStatus = 'loading' | 'success';
+export type ProviderSaveStatus = 'unsaved' | 'loading' | 'success';
 export type BeforeNavigateHandler = (() => Promise<void | false> | void | false) | null;
 
 export function useProviderEditState() {
@@ -26,4 +26,32 @@ export function useProviderEditState() {
     stepShowErrors,
     setStepShowErrors,
   };
+}
+
+export function formSaveStatus(
+  saving: boolean,
+  dirty: boolean
+): ProviderSaveStatus {
+  if (saving) return 'loading';
+  if (dirty) return 'unsaved';
+  return 'success';
+}
+
+export function useSettleSaveStatus(
+  saving: boolean,
+  setStatus: (status: ProviderSaveStatus) => void
+) {
+  const wasSaving = useRef(false);
+
+  useEffect(() => {
+    if (saving) {
+      wasSaving.current = true;
+      setStatus('loading');
+      return;
+    }
+    if (wasSaving.current) {
+      wasSaving.current = false;
+      setStatus('success');
+    }
+  }, [saving, setStatus]);
 }

@@ -2,14 +2,18 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button, Icon, Spinner, Text, TextField } from 'opub-ui';
+import { Button, Icon, Text, TextField } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
+import {
+  SaveStatusBadge,
+  WizardSaveStatus,
+} from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/SaveStatusBadge';
 
 interface WizardHeaderProps {
   title: string;
   goBackURL: string;
-  status: 'loading' | 'success';
+  status: WizardSaveStatus;
   titlePending?: boolean;
   onTitleSave?: (title: string) => void;
 }
@@ -85,16 +89,7 @@ export function WizardHeader({
             </>
           )}
         </div>
-        <div className="flex items-center gap-1 rounded-full bg-surfaceSuccess px-3 py-1 text-textSuccess">
-          {status === 'loading' ? (
-            <Spinner size={16} />
-          ) : (
-            <Icon source={Icons.check} size={16} color="success" />
-          )}
-          <Text variant="bodySm" className="text-textSuccess">
-            {status === 'loading' ? 'Saving…' : 'All changes saved'}
-          </Text>
-        </div>
+        <SaveStatusBadge status={status} />
       </div>
     </div>
   );
