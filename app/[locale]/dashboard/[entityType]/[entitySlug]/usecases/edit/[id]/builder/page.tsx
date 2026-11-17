@@ -15,6 +15,7 @@ import {
   toast,
 } from 'opub-ui';
 
+import { useSettleSaveStatus } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/edit-status';
 import { GraphQL } from '@/lib/api';
 import { getSafeEmbedUrl } from '@/lib/dashboardEmbed';
 import { mediaUrl } from '@/lib/utils';
@@ -338,13 +339,10 @@ export default function BuilderPage() {
     return () => registerBeforeNavigateHandler(null);
   }, [persistBuilder, registerBeforeNavigateHandler]);
 
-  useEffect(() => {
-    setStatus(
-      savingUseCase || addingDashboard || savingDashboard
-        ? 'loading'
-        : 'success'
-    );
-  }, [savingUseCase, addingDashboard, savingDashboard, setStatus]);
+  useSettleSaveStatus(
+    savingUseCase || addingDashboard || savingDashboard,
+    setStatus
+  );
 
   useEffect(() => {
     setBuilderCompleted(
@@ -551,7 +549,10 @@ export default function BuilderPage() {
             error={titleError}
             placeholder="e.g. Maternal Health Monitoring in Rural Districts"
             value={title}
-            onChange={setTitle}
+            onChange={(value) => {
+              setStatus('unsaved');
+              setTitle(value);
+            }}
             onBlur={() => persistBuilder({ title })}
           />
           <TextField
@@ -561,6 +562,7 @@ export default function BuilderPage() {
             placeholder="Keep it concise..."
             value={contentDoc.subtitle}
             onChange={(value) => {
+              setStatus('unsaved');
               if (value !== contentDocRef.current.subtitle) {
                 contentDirtyRef.current = true;
               }
@@ -590,6 +592,7 @@ export default function BuilderPage() {
             blocks={contentDoc.blocks}
             chartOptions={chartOptions}
             onChange={(blocks) => {
+              setStatus('unsaved');
               if (
                 JSON.stringify(blocks) !==
                 JSON.stringify(contentDocRef.current.blocks)

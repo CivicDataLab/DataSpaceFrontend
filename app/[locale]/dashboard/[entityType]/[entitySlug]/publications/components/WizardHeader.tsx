@@ -2,14 +2,18 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button, Icon, Spinner, Text, TextField } from 'opub-ui';
+import { Button, Icon, Text, TextField } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
+import {
+  SaveStatusBadge,
+  WizardSaveStatus,
+} from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/SaveStatusBadge';
 
 interface WizardHeaderProps {
   title: string;
   goBackURL: string;
-  status: 'unsaved' | 'loading' | 'success';
+  status: WizardSaveStatus;
   titlePending?: boolean;
   onTitleSave?: (title: string) => void;
 }
@@ -31,8 +35,6 @@ export function WizardHeader({
     }
     setEditing(false);
   };
-
-  const saved = status === 'success';
 
   return (
     <div className="flex flex-col gap-4 border-b-1 border-solid border-baseGraySlateSolid6 pb-4">
@@ -85,29 +87,7 @@ export function WizardHeader({
             </>
           )}
         </div>
-        <div
-          className={`flex items-center gap-1 rounded-full px-3 py-1 ${
-            saved
-              ? 'bg-surfaceSuccess text-textSuccess'
-              : 'bg-surfaceNeutral text-textSubdued'
-          }`}
-        >
-          {status === 'loading' ? (
-            <Spinner size={16} />
-          ) : saved ? (
-            <Icon source={Icons.check} size={16} color="success" />
-          ) : null}
-          <Text
-            variant="bodySm"
-            className={saved ? 'text-textSuccess' : 'text-textSubdued'}
-          >
-            {status === 'loading'
-              ? 'Saving…'
-              : saved
-                ? 'All changes saved'
-                : 'Unsaved changes'}
-          </Text>
-        </div>
+        <SaveStatusBadge status={status} />
       </div>
     </div>
   );

@@ -221,7 +221,10 @@ export default function ChartBuildPage() {
   return (
     <BuildStep
       state={state}
-      onChange={(patch) => setState((current) => ({ ...current, ...patch }))}
+      onChange={(patch) => {
+        setStatus('unsaved');
+        setState((current) => ({ ...current, ...patch }));
+      }}
       datasets={catalog.datasets}
       datasetsLoading={catalog.datasetsLoading}
       fields={fields}

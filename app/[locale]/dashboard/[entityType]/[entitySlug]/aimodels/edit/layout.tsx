@@ -221,7 +221,13 @@ function Wizard({ children }: { children: ReactNode }) {
         title={model?.displayName || ''}
         titlePending={!completionReady}
         goBackURL={goBackURL}
-        status={status === 'saving' || titleSaving ? 'loading' : 'success'}
+        status={
+          status === 'saving' || titleSaving
+            ? 'loading'
+            : status === 'unsaved'
+              ? 'unsaved'
+              : 'success'
+        }
         onTitleSave={(nextTitle) => saveTitle(nextTitle)}
       />
       <Stepper

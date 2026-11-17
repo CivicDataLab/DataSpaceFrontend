@@ -18,6 +18,7 @@ import {
   toast,
 } from 'opub-ui';
 
+import { useSettleSaveStatus } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/edit-status';
 import { GraphQL } from '@/lib/api';
 import {
   getCollaborativeDetailUrl,
@@ -466,9 +467,7 @@ export default function AboutPage() {
     return () => registerBeforeNavigateHandler(null);
   }, [persistAbout, registerBeforeNavigateHandler]);
 
-  useEffect(() => {
-    setStatus(savingCollaborative || savingMetadata ? 'loading' : 'success');
-  }, [savingCollaborative, savingMetadata, setStatus]);
+  useSettleSaveStatus(savingCollaborative || savingMetadata, setStatus);
 
   const formReady =
     !basicQuery.isLoading &&
@@ -564,6 +563,7 @@ export default function AboutPage() {
               error={titleError}
               helpText="Use a clear name that describes the initiative."
               onChange={(value) => {
+                setStatus('unsaved');
                 const next = { ...formRef.current, title: value };
                 formRef.current = next;
                 setForm(next);
@@ -580,6 +580,7 @@ export default function AboutPage() {
               placeholder={slugify(form.title) || 'collaborative-name'}
               helpText={subdomainHelp}
               onChange={(value) => {
+                setStatus('unsaved');
                 setSubdomainError(undefined);
                 const slug = value
                   .toLowerCase()
@@ -600,6 +601,7 @@ export default function AboutPage() {
             helpText="Describe the problem this Collaborative addresses, why collaboration is needed, and what the initiative aims to achieve."
             placeholder="Describe this Collaborative..."
             onChange={(value) => {
+              setStatus('unsaved');
               const next = { ...formRef.current, summary: value };
               formRef.current = next;
               setForm(next);
@@ -619,6 +621,7 @@ export default function AboutPage() {
             value={form.platformUrl}
             helpText="Add a link to the Collaborative's website or external resource."
             onChange={(value) => {
+              setStatus('unsaved');
               const next = { ...formRef.current, platformUrl: value };
               formRef.current = next;
               setForm(next);

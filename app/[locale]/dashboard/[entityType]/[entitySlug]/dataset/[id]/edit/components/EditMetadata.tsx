@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
 import {
@@ -24,12 +24,13 @@ import {
   toast,
 } from 'opub-ui';
 
+import { formSaveStatus } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/edit-status';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { useDatasetLicenses } from '@/hooks/useDatasetLicenses';
 import { GraphQL } from '@/lib/api';
-import { invalidateDatasetReview } from '../dataset-summary';
 import { enumValues } from '@/lib/enumValues';
-import { RichTextEditor } from '@/components/RichTextEditor';
 import DatasetLoading from '../../../components/loading-dataset';
+import { invalidateDatasetReview } from '../dataset-summary';
 import { useDatasetEditStatus } from '../context';
 
 const sectorsListQueryDoc = graphql(`
@@ -259,6 +260,148 @@ function optionValue(item: unknown): unknown {
   return item;
 }
 
+function fieldToMetadataValue(field: FormFieldValue): string {
+  if (Array.isArray(field)) {
+    return field.map(optionValue).join(', ');
+  }
+  return String(field ?? '');
+}
+
+function sameField(
+  left: FormFieldValue | undefined,
+  right: FormFieldValue | undefined
+): boolean {
+  if (Array.isArray(left) || Array.isArray(right)) {
+    const leftValues = Array.isArray(left) ? left.map(optionValue) : [];
+    const rightValues = Array.isArray(right) ? right.map(optionValue) : [];
+    return JSON.stringify(leftValues) === JSON.stringify(rightValues);
+  }
+  return left === right;
+}
+
+function formDiffers(current: MetadataFormData, saved: MetadataFormData): boolean {
+  const keys = new Set([...Object.keys(current), ...Object.keys(saved)]);
+  for (const key of keys) {
+    if (!sameField(current[key], saved[key])) return true;
+  }
+  return false;
+}
+
+function DraftTextField({
+  value,
+  onDraftDirty,
+  onCommit,
+  ...props
+}: {
+  value: string;
+  onDraftDirty: (dirty: boolean, value: string) => void;
+  onCommit: (value: string) => void;
+  name: string;
+  label: string;
+  type?: 'text' | 'url' | 'date';
+  disabled?: boolean;
+  max?: string;
+  requiredIndicator?: boolean;
+  error?: string;
+}) {
+  const [draft, setDraft] = useState(value);
+  const focused = useRef(false);
+  const onDraftDirtyRef = useRef(onDraftDirty);
+
+  useEffect(() => {
+    onDraftDirtyRef.current = onDraftDirty;
+  });
+
+  useEffect(() => {
+    if (focused.current) return;
+    setDraft(value);
+    onDraftDirtyRef.current(false, value);
+  }, [value]);
+
+  return (
+    <TextField
+      {...props}
+      value={draft}
+      onFocus={() => {
+        focused.current = true;
+      }}
+      onChange={(next) => {
+        if (!focused.current) return;
+        setDraft(next);
+        onDraftDirtyRef.current(next !== value, next);
+      }}
+      onBlur={(event) => {
+        focused.current = false;
+        const target = event?.target;
+        const raw =
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement
+            ? target.value
+            : draft;
+        const next = raw.trim();
+        setDraft(next);
+        onDraftDirtyRef.current(next !== value, next);
+        if (next !== value) onCommit(next);
+      }}
+    />
+  );
+}
+
+function DraftDescription({
+  value,
+  onDraftDirty,
+  onCommit,
+  error,
+}: {
+  value: string;
+  onDraftDirty: (dirty: boolean, value: string) => void;
+  onCommit: (value: string) => void;
+  error?: string;
+}) {
+  const [draft, setDraft] = useState(value);
+  const focused = useRef(false);
+  const edited = useRef(false);
+  const onDraftDirtyRef = useRef(onDraftDirty);
+
+  useEffect(() => {
+    onDraftDirtyRef.current = onDraftDirty;
+  });
+
+  useEffect(() => {
+    if (focused.current) return;
+    setDraft(value);
+    onDraftDirtyRef.current(false, value);
+  }, [value]);
+
+  return (
+    <RichTextEditor
+      label="Description *"
+      value={draft}
+      placeholder="Enter dataset description..."
+      helpText={`Character limit: ${draft.length}/1000`}
+      error={error}
+      onChange={(next) => {
+        focused.current = true;
+        edited.current = true;
+        setDraft(next);
+        onDraftDirtyRef.current(next !== value, next);
+      }}
+      onBlur={(next) => {
+        focused.current = false;
+        if (!edited.current || next === value) {
+          edited.current = false;
+          setDraft(value);
+          onDraftDirtyRef.current(false, value);
+          return;
+        }
+        edited.current = false;
+        setDraft(next);
+        onCommit(next);
+      }}
+    />
+  );
+}
+
 function isSelectionMissing(value: string | string[] | undefined) {
   if (Array.isArray(value)) return value.length === 0;
   return !value;
@@ -480,15 +623,10 @@ export function EditMetadata({ id }: { id: string }) {
             queryKey: [`dataset_title_${params.id}`],
           });
           invalidateDatasetReview(queryClient, params.id);
-          const updatedData = defaultValuesPrepFn(
-            res.addUpdateDatasetMetadata.data ?? undefined
-          );
           if (isTagsListUpdated) {
             getTagsList.refetch();
             setIsTagsListUpdated(false);
           }
-          setFormData(updatedData);
-          setPreviousFormData(updatedData);
         } else {
           const responseError =
             res.addUpdateDatasetMetadata?.errors?.fieldErrors?.[0]
@@ -613,23 +751,40 @@ export function EditMetadata({ id }: { id: string }) {
   );
   const [previousFormData, setPreviousFormData] = useState(formData);
   const formDataRef = useRef(formData);
-  const [prevMetadataData, setPrevMetadataData] = useState(
-    getDatasetMetadata.data
-  );
-  if (getDatasetMetadata.data !== prevMetadataData) {
-    setPrevMetadataData(getDatasetMetadata.data);
-    const dataset = getDatasetMetadata.data?.datasets?.[0];
-    if (dataset) {
-      const updatedData = defaultValuesPrepFn(dataset);
-      setFormData(updatedData);
-      setPreviousFormData(updatedData);
-    }
-    setPromptMetadataState(promptStateFromDataset(dataset));
+  // Load the server record once. Later refetches are a new object for the same
+  // dataset and were replacing text the user was still typing.
+  const [hydratedForId, setHydratedForId] = useState<string | null>(null);
+  const loadedDataset = getDatasetMetadata.data?.datasets?.[0];
+  if (loadedDataset && hydratedForId !== params.id) {
+    const initial = defaultValuesPrepFn(loadedDataset);
+    setHydratedForId(params.id);
+    setFormData(initial);
+    setPreviousFormData(initial);
+    setPromptMetadataState(promptStateFromDataset(loadedDataset));
   }
 
   useEffect(() => {
     formDataRef.current = formData;
   }, [formData]);
+
+  const draftFields = useRef(new Set<string>());
+  const drafts = useRef<Record<string, string>>({});
+  const [hasDraft, setHasDraft] = useState(false);
+  const setDraftDirty = useCallback(
+    (field: string, isDirty: boolean, value: string) => {
+      const fields = draftFields.current;
+      const wasDirty = fields.has(field);
+      if (isDirty) {
+        fields.add(field);
+        drafts.current[field] = value;
+      } else {
+        fields.delete(field);
+        delete drafts.current[field];
+      }
+      if (wasDirty !== isDirty) setHasDraft(fields.size > 0);
+    },
+    []
+  );
 
   const handleChange = (field: string, value: FormFieldValue) => {
     formDataRef.current = {
@@ -674,35 +829,27 @@ export function EditMetadata({ id }: { id: string }) {
 
     if (Object.keys(changedFields).length === 0) return null;
 
-    const transformedValues = Object.keys(changedFields).reduce<
-      Record<string, string>
-    >((acc, key) => {
-      const field = changedFields[key];
-      acc[key] = Array.isArray(field)
-        ? field.map(optionValue).join(', ')
-        : String(field ?? '');
-      return acc;
-    }, {});
+    const metadataFieldIds = new Set(
+      (getMetaDataListQuery.data?.metadata ?? []).map((item) => item.id)
+    );
+    const metadataChanged = Object.keys(changedFields).some((key) =>
+      metadataFieldIds.has(key)
+    );
+    // addUpdateDatasetMetadata replaces the whole metadata set. A partial list
+    // deletes the fields that were not in this save, including Source Website.
+    const metadata = metadataChanged
+      ? Object.keys(updatedData)
+          .filter((key) => metadataFieldIds.has(key))
+          .map((key) => ({
+            id: key,
+            value: fieldToMetadataValue(updatedData[key]),
+          }))
+          .filter((item) => item.value !== '')
+      : [];
 
     return {
       dataset: id,
-      metadata: Object.keys(transformedValues)
-        .filter(
-          (key) =>
-            ![
-              'title',
-              'sectors',
-              'description',
-              'tags',
-              'geographies',
-              'isPublic',
-              'license',
-            ].includes(key) && transformedValues[key] !== ''
-        )
-        .map((key) => ({
-          id: key,
-          value: transformedValues[key],
-        })),
+      metadata,
       ...(typeof changedFields.license === 'string' && {
         license: changedFields.license as UpdateMetadataInput['license'],
       }),
@@ -731,7 +878,16 @@ export function EditMetadata({ id }: { id: string }) {
     const updateInput = getUpdateInput(updatedData);
     if (!updateInput) return;
 
-    updateMetadataMutation.mutate({ UpdateMetadataInput: updateInput });
+    updateMetadataMutation.mutate(
+      { UpdateMetadataInput: updateInput },
+      {
+        onSuccess: (res) => {
+          if (res.addUpdateDatasetMetadata.success) {
+            setPreviousFormData(updatedData);
+          }
+        },
+      }
+    );
   };
 
   const {
@@ -746,23 +902,31 @@ export function EditMetadata({ id }: { id: string }) {
       const trimmedTitle = String(updatedData.title ?? '').trim();
       const currentTitle = getDatasetMetadata.data?.datasets?.[0]?.title;
       if (trimmedTitle && trimmedTitle !== currentTitle) {
-        await updateDatasetTitleMutation.mutateAsync({
+        const titleResult = await updateDatasetTitleMutation.mutateAsync({
           updateDatasetInput: {
             dataset: params.id,
             title: trimmedTitle,
           },
         });
+        if (titleResult.updateDataset.__typename === 'TypeDataset') {
+          setPreviousFormData((prev) => ({ ...prev, title: trimmedTitle }));
+        }
       }
 
       const updateInput = getUpdateInput(updatedData);
       if (!updateInput) return;
 
-      await updateMetadataMutation.mutateAsync({
+      const metadataResult = await updateMetadataMutation.mutateAsync({
         UpdateMetadataInput: updateInput,
       });
+      if (metadataResult.addUpdateDatasetMetadata.success) {
+        setPreviousFormData(updatedData);
+      }
     };
 
-    registerBeforeNavigateHandler(() => handleSaveAsync(formDataRef.current));
+    registerBeforeNavigateHandler(() =>
+      handleSaveAsync({ ...formDataRef.current, ...drafts.current })
+    );
 
     return () => {
       registerBeforeNavigateHandler(null);
@@ -785,12 +949,17 @@ export function EditMetadata({ id }: { id: string }) {
     if (metadataFormItem.dataType === 'STRING') {
       return (
         <div key={metadataFormItem.id} className="w-full ">
-          <TextField
+          <DraftTextField
             name={metadataFormItem.id}
             label={metadataFormItem.label}
             value={formValueAsString(formData[metadataFormItem.id])}
-            onChange={(e) => handleChange(metadataFormItem.id, e)}
-            onBlur={() => handleSave(formData)}
+            onDraftDirty={(dirty, next) =>
+              setDraftDirty(metadataFormItem.id, dirty, next)
+            }
+            onCommit={(next) => {
+              handleChange(metadataFormItem.id, next);
+              handleSave(formDataRef.current);
+            }}
           />
         </div>
       );
@@ -810,10 +979,7 @@ export function EditMetadata({ id }: { id: string }) {
             displaySelected
             onChange={(value) => {
               handleChange(metadataFormItem.id, value);
-              handleSave({
-                ...formData,
-                [metadataFormItem.id]: value,
-              });
+              handleSave(formDataRef.current);
             }}
           />
         </div>
@@ -839,10 +1005,7 @@ export function EditMetadata({ id }: { id: string }) {
             selectedValue={prefillData}
             onChange={(value) => {
               handleChange(metadataFormItem.id, value);
-              handleSave({
-                ...formData,
-                [metadataFormItem.id]: value,
-              });
+              handleSave(formDataRef.current);
             }}
           />
         </div>
@@ -851,7 +1014,7 @@ export function EditMetadata({ id }: { id: string }) {
     if (metadataFormItem.dataType === 'URL') {
       return (
         <div key={metadataFormItem.id} className="w-full">
-          <TextField
+          <DraftTextField
             name={metadataFormItem.id}
             type="url"
             value={formValueAsString(formData[metadataFormItem.id])}
@@ -859,8 +1022,13 @@ export function EditMetadata({ id }: { id: string }) {
             disabled={
               getMetaDataListQuery.isLoading || !metadataFormItem.enabled
             }
-            onChange={(e) => handleChange(metadataFormItem.id, e)}
-            onBlur={() => handleSave(formData)}
+            onDraftDirty={(dirty, next) =>
+              setDraftDirty(metadataFormItem.id, dirty, next)
+            }
+            onCommit={(next) => {
+              handleChange(metadataFormItem.id, next);
+              handleSave(formDataRef.current);
+            }}
           />
         </div>
       );
@@ -869,7 +1037,7 @@ export function EditMetadata({ id }: { id: string }) {
     if (metadataFormItem.dataType === 'DATE') {
       return (
         <div key={metadataFormItem.id} className="w-full">
-          <TextField
+          <DraftTextField
             type="date"
             name={metadataFormItem.id}
             max={new Date().toISOString().split('T')[0]}
@@ -878,8 +1046,13 @@ export function EditMetadata({ id }: { id: string }) {
             disabled={
               getMetaDataListQuery.isLoading || !metadataFormItem.enabled
             }
-            onChange={(e) => handleChange(metadataFormItem.id, e)}
-            onBlur={() => handleSave(formData)}
+            onDraftDirty={(dirty, next) =>
+              setDraftDirty(metadataFormItem.id, dirty, next)
+            }
+            onCommit={(next) => {
+              handleChange(metadataFormItem.id, next);
+              handleSave(formDataRef.current);
+            }}
           />
         </div>
       );
@@ -889,17 +1062,14 @@ export function EditMetadata({ id }: { id: string }) {
     return null;
   }
 
+  const saving =
+    updateMetadataMutation.isLoading || updateDatasetTitleMutation.isLoading;
+  const dirty = hasDraft || formDiffers(formData, previousFormData);
+  const nextStatus = formSaveStatus(saving, dirty);
+
   useEffect(() => {
-    setStatus(
-      updateMetadataMutation.isLoading || updateDatasetTitleMutation.isLoading
-        ? 'loading'
-        : 'success'
-    );
-  }, [
-    updateMetadataMutation.isLoading,
-    updateDatasetTitleMutation.isLoading,
-    setStatus,
-  ]);
+    setStatus(nextStatus);
+  }, [nextStatus, setStatus]);
 
   const isPromptDataset =
     getDatasetMetadata.data?.datasets?.[0]?.datasetType === 'PROMPT';
@@ -934,12 +1104,21 @@ export function EditMetadata({ id }: { id: string }) {
     if (!trimmed || trimmed === getDatasetMetadata.data?.datasets?.[0]?.title) {
       return;
     }
-    updateDatasetTitleMutation.mutate({
-      updateDatasetInput: {
-        dataset: params.id,
-        title: trimmed,
+    updateDatasetTitleMutation.mutate(
+      {
+        updateDatasetInput: {
+          dataset: params.id,
+          title: trimmed,
+        },
       },
-    });
+      {
+        onSuccess: (res) => {
+          if (res.updateDataset.__typename === 'TypeDataset') {
+            setPreviousFormData((prev) => ({ ...prev, title: trimmed }));
+          }
+        },
+      }
+    );
   };
 
   const metadataFields = getMetaDataListQuery?.data?.metadata ?? [];
@@ -1015,7 +1194,7 @@ export function EditMetadata({ id }: { id: string }) {
                 description="Name and describe this content so people can find and understand it."
               >
                 <div className="flex flex-col gap-4">
-                  <TextField
+                  <DraftTextField
                     name="title"
                     label="Dataset name"
                     requiredIndicator
@@ -1025,23 +1204,28 @@ export function EditMetadata({ id }: { id: string }) {
                         ? 'Dataset name is required'
                         : undefined
                     }
-                    onChange={(value) => handleChange('title', value)}
-                    onBlur={() => saveTitle(formData.title)}
-                  />
-                  <RichTextEditor
-                    label="Description *"
-                    value={formData.description}
-                    onChange={(value) => handleChange('description', value)}
-                    onBlur={(value) =>
-                      handleSave({ ...formData, description: value })
+                    onDraftDirty={(dirty, next) =>
+                      setDraftDirty('title', dirty, next)
                     }
-                    placeholder="Enter dataset description..."
-                    helpText={`Character limit: ${formData?.description?.length || 0}/1000`}
+                    onCommit={(next) => {
+                      handleChange('title', next);
+                      saveTitle(next);
+                    }}
+                  />
+                  <DraftDescription
+                    value={formData.description}
                     error={
                       stepShowErrors && isRichTextEmpty(formData.description)
                         ? 'Description is required'
                         : undefined
                     }
+                    onDraftDirty={(dirty, next) =>
+                      setDraftDirty('description', dirty, next)
+                    }
+                    onCommit={(next) => {
+                      handleChange('description', next);
+                      handleSave(formDataRef.current);
+                    }}
                   />
                 </div>
               </SectionCard>
@@ -1068,7 +1252,7 @@ export function EditMetadata({ id }: { id: string }) {
                   onChange={(value) => {
                     const next = Array.isArray(value) ? value : [];
                     handleChange('sectors', next);
-                    handleSave({ ...formData, sectors: next });
+                    handleSave(formDataRef.current);
                   }}
                 />
                 <Combobox
@@ -1086,7 +1270,7 @@ export function EditMetadata({ id }: { id: string }) {
                   onChange={(value) => {
                     const next = Array.isArray(value) ? value : [];
                     handleChange('geographies', next);
-                    handleSave({ ...formData, geographies: next });
+                    handleSave(formDataRef.current);
                   }}
                 />
                 <Combobox
@@ -1109,7 +1293,7 @@ export function EditMetadata({ id }: { id: string }) {
                     setIsTagsListUpdated(true);
                     const next = Array.isArray(value) ? value : [];
                     handleChange('tags', next);
-                    handleSave({ ...formData, tags: next });
+                    handleSave(formDataRef.current);
                   }}
                 />
               </div>
@@ -1181,7 +1365,7 @@ export function EditMetadata({ id }: { id: string }) {
                     error={licenseError}
                     onChange={(value) => {
                       handleChange('license', value);
-                      handleSave({ ...formData, license: value });
+                      handleSave(formDataRef.current);
                     }}
                   />
                 </div>

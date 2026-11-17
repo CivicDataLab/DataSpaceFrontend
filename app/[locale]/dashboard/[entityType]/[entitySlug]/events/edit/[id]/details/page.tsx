@@ -63,6 +63,7 @@ export default function EventDetailsPage() {
   }, [event, setDetailsComplete, setTitleOverride]);
 
   const updateForm = (patch: Partial<EventDraft>) => {
+    setStatus('unsaved');
     const next = { ...formRef.current, ...patch };
     formRef.current = next;
     setForm(next);

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useRef, useState } from 'react';
 
-type StatusType = 'loading' | 'success';
+type StatusType = 'unsaved' | 'loading' | 'success';
 type BeforeNavigateHandler = (() => Promise<void> | void) | null;
 
 interface UseCaseEditStatusContextValue {
