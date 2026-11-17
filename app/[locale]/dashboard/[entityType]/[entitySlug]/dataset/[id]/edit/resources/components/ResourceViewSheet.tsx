@@ -27,7 +27,9 @@ import {
   toast,
 } from 'opub-ui';
 
+import { useSettleSaveStatus } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/edit-status';
 import { GraphQL } from '@/lib/api';
+import { useDatasetEditStatus } from '../../context';
 import {
   PDF_PREVIEW_HEIGHT,
   PdfPreview,
@@ -241,6 +243,7 @@ export function ResourceViewSheet({
     entityType: string;
     entitySlug: string;
   }>();
+  const { setStatus } = useDatasetEditStatus();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [promptFormat, setPromptFormat] = useState('');
@@ -520,6 +523,14 @@ export function ResourceViewSheet({
     }
   );
 
+  useSettleSaveStatus(
+    saveMutation.isLoading ||
+      promptMutation.isLoading ||
+      schemaMutation.isLoading ||
+      replaceMutation.isLoading,
+    setStatus
+  );
+
   const savePrompt = (patch: {
     promptFormat?: string;
     hasSystemPrompt?: boolean;
@@ -578,6 +589,7 @@ export function ResourceViewSheet({
   const columnSchemaExpected = ['CSV', 'XLS', 'XLSX', 'JSON'].includes(format);
 
   const updateFieldDescription = (id: string, value: string) => {
+    setStatus('unsaved');
     setFields((current) =>
       current.map((item) =>
         item.id === id ? { ...item, description: value } : item
@@ -692,9 +704,10 @@ export function ResourceViewSheet({
                         maxLength={PROMPT_FILE_NAME_MAX_LENGTH}
                         disabled={readOnly}
                         error={nameError}
-                        onChange={(value) =>
-                          setTitle(value.slice(0, PROMPT_FILE_NAME_MAX_LENGTH))
-                        }
+                        onChange={(value) => {
+                          setStatus('unsaved');
+                          setTitle(value.slice(0, PROMPT_FILE_NAME_MAX_LENGTH));
+                        }}
                         onBlur={commitName}
                       />
                     </div>
@@ -749,7 +762,10 @@ export function ResourceViewSheet({
                       label="File Description"
                       value={description}
                       disabled={readOnly}
-                      onChange={setDescription}
+                      onChange={(value) => {
+                        setStatus('unsaved');
+                        setDescription(value);
+                      }}
                       onBlur={() =>
                         saveField('description', description.trim())
                       }
@@ -819,7 +835,10 @@ export function ResourceViewSheet({
                       label="Title"
                       value={title}
                       disabled={readOnly}
-                      onChange={setTitle}
+                      onChange={(value) => {
+                        setStatus('unsaved');
+                        setTitle(value);
+                      }}
                       onBlur={() => saveField('name', title)}
                     />
                     <TextField
@@ -827,7 +846,10 @@ export function ResourceViewSheet({
                       label="Description"
                       value={description}
                       disabled={readOnly}
-                      onChange={setDescription}
+                      onChange={(value) => {
+                        setStatus('unsaved');
+                        setDescription(value);
+                      }}
                       onBlur={() => saveField('description', description)}
                       multiline={3}
                       helpText="Starts from a system-generated summary — edit it to add context."

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useSettleSaveStatus } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/edit-status';
 import { fetchDatasets } from '@/fetch';
 import { graphql } from '@/gql';
 import { UpdateUseCaseMetadataInput } from '@/gql/generated/graphql';
@@ -544,15 +545,14 @@ export default function ConnectPage() {
     { onSuccess: () => void useCaseQuery.refetch() }
   );
 
-  const { mutate: removeSupporter, isLoading: removingSupporter } =
-    useMutation(
-      (organizationId: string) =>
-        GraphQL(RemoveSupporters, ownerArgs, {
-          useCaseId: params.id,
-          organizationId,
-        }),
-      { onSuccess: () => void useCaseQuery.refetch() }
-    );
+  const { mutate: removeSupporter, isLoading: removingSupporter } = useMutation(
+    (organizationId: string) =>
+      GraphQL(RemoveSupporters, ownerArgs, {
+        useCaseId: params.id,
+        organizationId,
+      }),
+    { onSuccess: () => void useCaseQuery.refetch() }
+  );
 
   useEffect(() => {
     registerBeforeNavigateHandler(async () => {
@@ -561,34 +561,19 @@ export default function ConnectPage() {
     return () => registerBeforeNavigateHandler(null);
   }, [persistMetadata, registerBeforeNavigateHandler]);
 
-  useEffect(() => {
-    setStatus(
-      savingMetadata ||
-        savingDatasets ||
-        addingContributor ||
-        removingContributor ||
-        addingPartner ||
-        removingPartner ||
-        addingSupporter ||
-        removingSupporter ||
-        creatingDataset ||
-        creatingOrganisation
-        ? 'loading'
-        : 'success'
-    );
-  }, [
-    savingMetadata,
-    savingDatasets,
-    addingContributor,
-    removingContributor,
-    addingPartner,
-    removingPartner,
-    addingSupporter,
-    removingSupporter,
-    creatingDataset,
-    creatingOrganisation,
-    setStatus,
-  ]);
+  useSettleSaveStatus(
+    savingMetadata ||
+      savingDatasets ||
+      addingContributor ||
+      removingContributor ||
+      addingPartner ||
+      removingPartner ||
+      addingSupporter ||
+      removingSupporter ||
+      creatingDataset ||
+      creatingOrganisation,
+    setStatus
+  );
 
   useEffect(() => {
     setConnectCompleted(

@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Spinner, toast } from 'opub-ui';
 
+import { useSettleSaveStatus } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/edit-status';
 import { GraphQL } from '@/lib/api';
 import { mediaUrl } from '@/lib/utils';
 import { AddOrganisationSheet } from '../../../../usecases/edit/components/AddOrganisationSheet';
@@ -126,28 +127,16 @@ export default function PeoplePage() {
       { onSuccess: refresh, onError }
     );
 
-  useEffect(() => {
-    setStatus(
-      addingContributor ||
-        removingContributor ||
-        addingPartner ||
-        removingPartner ||
-        addingSupporter ||
-        removingSupporter ||
-        creatingOrganisation
-        ? 'loading'
-        : 'success'
-    );
-  }, [
-    addingContributor,
-    removingContributor,
-    addingPartner,
-    removingPartner,
-    addingSupporter,
-    removingSupporter,
-    creatingOrganisation,
-    setStatus,
-  ]);
+  useSettleSaveStatus(
+    addingContributor ||
+      removingContributor ||
+      addingPartner ||
+      removingPartner ||
+      addingSupporter ||
+      removingSupporter ||
+      creatingOrganisation,
+    setStatus
+  );
 
   if (collaborativeQuery.isLoading || orgsQuery.isLoading) {
     return (
