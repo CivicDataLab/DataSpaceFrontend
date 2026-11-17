@@ -20,7 +20,7 @@ import {
   type ResourceKind,
   type ResourceRow,
 } from '../collaborative-detail';
-import { MemberTicker, type MemberKind } from './MemberTicker';
+import { MemberTicker, shouldScroll, type MemberKind } from './MemberTicker';
 
 type SectionKey =
   'use-cases' | 'publications' | 'datasets' | 'organisations' | 'people';
@@ -32,8 +32,8 @@ const FILTERS: Array<{ value: Filter; label: string }> = [
   { value: 'use-cases', label: 'Use Cases' },
   { value: 'publications', label: 'Publications' },
   { value: 'datasets', label: 'Datasets' },
-  { value: 'organisations', label: 'Organisations' },
-  { value: 'people', label: 'People' },
+  { value: 'organisations', label: 'Organisations and Partners' },
+  { value: 'people', label: 'Contributors' },
 ];
 
 const EMPTY_STATE =
@@ -43,8 +43,8 @@ const NOUNS: Record<SectionKey, [string, string]> = {
   'use-cases': ['use case', 'use cases'],
   publications: ['publication', 'publications'],
   datasets: ['dataset', 'datasets'],
-  organisations: ['organisation', 'organisations'],
-  people: ['person', 'people'],
+  organisations: ['organisation or partner', 'organisations or partners'],
+  people: ['contributor', 'contributors'],
 };
 
 export function CollaborativeExplore({
@@ -54,7 +54,7 @@ export function CollaborativeExplore({
 }) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
-  // One switch pauses both the organisation and the people rows.
+  // One switch pauses both the organisation and the contributor rows.
   const [paused, setPaused] = useState(false);
   const searching = searchWords(query).length > 0;
 
@@ -115,7 +115,7 @@ export function CollaborativeExplore({
         <SearchInput
           label="Search everything in this collaborative"
           name="collaborative-search"
-          placeholder="Search use cases, publications, datasets, organisations, people…"
+          placeholder="Search use cases, publications, datasets, organisations, partners, contributors…"
           onChange={setQuery}
           onClear={() => setQuery('')}
         />
@@ -215,15 +215,15 @@ export function CollaborativeExplore({
         {shown('organisations') ? (
           <Subsection
             id="organisations"
-            title="Organisations"
+            title="Organisations and Partners"
             count={countLabel('organisations')}
-            description="Organisations working together in this collaborative."
+            description="Organisations and partners working together in this collaborative."
           >
             <MemberSection
-              label="Organisations"
+              label="Organisations and Partners"
               kind="organisation"
               rows={matches.organisations}
-              rowCount={2}
+              itemsPerRow={5}
               empty={noMatch('organisations')}
               paused={paused}
               onTogglePaused={() => setPaused((current) => !current)}
@@ -233,15 +233,15 @@ export function CollaborativeExplore({
         {shown('people') ? (
           <Subsection
             id="people"
-            title="People"
+            title="Contributors"
             count={countLabel('people')}
             description="People contributing to this collaborative."
           >
             <MemberSection
-              label="People"
+              label="Contributors"
               kind="person"
               rows={matches.people}
-              rowCount={3}
+              itemsPerRow={6}
               empty={noMatch('people')}
               paused={paused}
               onTogglePaused={() => setPaused((current) => !current)}
@@ -495,7 +495,7 @@ function MemberSection({
   label,
   kind,
   rows,
-  rowCount,
+  itemsPerRow,
   empty,
   paused,
   onTogglePaused,
@@ -503,7 +503,7 @@ function MemberSection({
   label: string;
   kind: MemberKind;
   rows: MemberRow[];
-  rowCount: number;
+  itemsPerRow: number;
   empty: string;
   paused: boolean;
   onTogglePaused: () => void;
@@ -511,6 +511,18 @@ function MemberSection({
   if (rows.length === 0) {
     return <p className={EMPTY_STATE}>{empty}</p>;
   }
+
+  const ticker = (
+    <MemberTicker
+      label={label}
+      kind={kind}
+      rows={rows}
+      itemsPerRow={itemsPerRow}
+      paused={paused}
+    />
+  );
+  // Static chips have nothing to pause.
+  if (!shouldScroll(rows.length, itemsPerRow)) return ticker;
 
   return (
     <>
@@ -532,13 +544,7 @@ function MemberSection({
           </span>
         </Button>
       </div>
-      <MemberTicker
-        label={label}
-        kind={kind}
-        rows={rows}
-        rowCount={rowCount}
-        paused={paused}
-      />
+      {ticker}
     </>
   );
 }

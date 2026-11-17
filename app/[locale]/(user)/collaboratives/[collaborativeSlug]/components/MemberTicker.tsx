@@ -22,17 +22,38 @@ type MemberTickerProps = {
   label: string;
   kind: MemberKind;
   rows: MemberRow[];
-  rowCount: number;
+  /** Fewest pills that scroll; each `itemsPerRow` pills add one row. */
+  itemsPerRow: number;
   paused: boolean;
 };
+
+/** A section scrolls only once it has `itemsPerRow` pills or more. */
+export function shouldScroll(count: number, itemsPerRow: number): boolean {
+  return count >= itemsPerRow;
+}
 
 export function MemberTicker({
   label,
   kind,
   rows,
-  rowCount,
+  itemsPerRow,
   paused,
 }: MemberTickerProps) {
+  if (!shouldScroll(rows.length, itemsPerRow)) {
+    return (
+      <ul
+        aria-label={label}
+        className="m-0 flex list-none flex-wrap gap-y-4 p-0"
+      >
+        {rows.map((item) => (
+          <Pill key={item.id} item={item} kind={kind} hidden={false} />
+        ))}
+      </ul>
+    );
+  }
+
+  const rowCount = Math.floor(rows.length / itemsPerRow);
+
   return (
     <div
       role="group"
@@ -91,13 +112,17 @@ export function MemberTicker({
   );
 }
 
-/** Splits rows into at most `count` even rows. */
+/** Splits rows into `count` even rows; the first rows take one extra each when it doesn't divide. */
 function splitRows(rows: MemberRow[], count: number): MemberRow[][] {
-  const rowTotal = Math.max(1, Math.min(count, rows.length));
-  const perRow = Math.ceil(rows.length / rowTotal);
-  return Array.from({ length: rowTotal }, (_, index) =>
-    rows.slice(index * perRow, (index + 1) * perRow)
-  ).filter((row) => row.length > 0);
+  const base = Math.floor(rows.length / count);
+  const extra = rows.length % count;
+  let start = 0;
+  return Array.from({ length: count }, (_, index) => {
+    const size = base + (index < extra ? 1 : 0);
+    const row = rows.slice(start, start + size);
+    start += size;
+    return row;
+  });
 }
 
 /** One pill; repeated copies are hidden from screen readers and the tab order. */

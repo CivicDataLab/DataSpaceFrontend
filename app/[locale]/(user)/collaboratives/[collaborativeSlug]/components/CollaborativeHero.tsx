@@ -193,7 +193,7 @@ export function CollaborativeHero({
                 icon={IconUsers}
                 tone="bg-[#e0e8f2] text-[#2a78d6]"
                 total={counts.peopleAndOrganisations}
-                label={['People', '& organisations']}
+                label={['Contributors', '& organisations']}
               />
               <StatTile
                 icon={IconDatabase}
@@ -338,10 +338,10 @@ function SdgTile({ goals, linkBase }: { goals: SdgGoal[]; linkBase: string }) {
           ))}
           {overflow ? (
             <li className={`${slide} ${SDG_LAYER[0]} ${stacked}`}>
+              {/* Hoverable, so a long list can be scrolled inside the tooltip. */}
               <Tooltip
                 side="top"
                 width="wide"
-                disableHoverableContent
                 content={
                   <>
                     <span className="block font-semi-bold text-primaryBlue">

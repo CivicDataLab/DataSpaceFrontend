@@ -68,13 +68,13 @@ export function CollaborativeAbout({
     },
     {
       key: 'people',
-      label: 'People',
+      label: 'Contributors',
       caption: `${counts.people} connected`,
       icon: IconUsers,
     },
     {
       key: 'organisations',
-      label: 'Organisations',
+      label: 'Organisations and Partners',
       caption: `${counts.organisations} connected`,
       icon: IconBuilding,
     },
