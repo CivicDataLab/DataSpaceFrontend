@@ -298,7 +298,7 @@ function DraftTextField({
   onCommit: (value: string) => void;
   name: string;
   label: string;
-  type?: string;
+  type?: 'text' | 'url' | 'date';
   disabled?: boolean;
   max?: string;
   requiredIndicator?: boolean;
@@ -307,21 +307,15 @@ function DraftTextField({
   const [draft, setDraft] = useState(value);
   const focused = useRef(false);
   const onDraftDirtyRef = useRef(onDraftDirty);
-  onDraftDirtyRef.current = onDraftDirty;
 
-  const report = (isDirty: boolean, next: string) => {
-    onDraftDirtyRef.current(isDirty, next);
-  };
-
-  if (!focused.current && draft !== value) {
-    setDraft(value);
-  }
+  useEffect(() => {
+    onDraftDirtyRef.current = onDraftDirty;
+  });
 
   useEffect(() => {
     if (focused.current) return;
-    report(false, value);
-    // report closes over refs only
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setDraft(value);
+    onDraftDirtyRef.current(false, value);
   }, [value]);
 
   return (
@@ -334,7 +328,7 @@ function DraftTextField({
       onChange={(next) => {
         if (!focused.current) return;
         setDraft(next);
-        report(next !== value, next);
+        onDraftDirtyRef.current(next !== value, next);
       }}
       onBlur={(event) => {
         focused.current = false;
@@ -346,7 +340,7 @@ function DraftTextField({
             : draft;
         const next = raw.trim();
         setDraft(next);
-        report(next !== value, next);
+        onDraftDirtyRef.current(next !== value, next);
         if (next !== value) onCommit(next);
       }}
     />
@@ -368,20 +362,15 @@ function DraftDescription({
   const focused = useRef(false);
   const edited = useRef(false);
   const onDraftDirtyRef = useRef(onDraftDirty);
-  onDraftDirtyRef.current = onDraftDirty;
 
-  const report = (isDirty: boolean, next: string) => {
-    onDraftDirtyRef.current(isDirty, next);
-  };
-
-  if (!focused.current && draft !== value) {
-    setDraft(value);
-  }
+  useEffect(() => {
+    onDraftDirtyRef.current = onDraftDirty;
+  });
 
   useEffect(() => {
     if (focused.current) return;
-    report(false, value);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setDraft(value);
+    onDraftDirtyRef.current(false, value);
   }, [value]);
 
   return (
@@ -395,14 +384,14 @@ function DraftDescription({
         focused.current = true;
         edited.current = true;
         setDraft(next);
-        report(next !== value, next);
+        onDraftDirtyRef.current(next !== value, next);
       }}
       onBlur={(next) => {
         focused.current = false;
         if (!edited.current || next === value) {
           edited.current = false;
           setDraft(value);
-          report(false, value);
+          onDraftDirtyRef.current(false, value);
           return;
         }
         edited.current = false;
@@ -771,9 +760,12 @@ export function EditMetadata({ id }: { id: string }) {
     setHydratedForId(params.id);
     setFormData(initial);
     setPreviousFormData(initial);
-    formDataRef.current = initial;
     setPromptMetadataState(promptStateFromDataset(loadedDataset));
   }
+
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
 
   const draftFields = useRef(new Set<string>());
   const drafts = useRef<Record<string, string>>({});
