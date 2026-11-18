@@ -33,16 +33,37 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const editor = editorRef.current?.querySelector<HTMLElement>('.ql-editor');
-    if (!editor) return;
-    editor.id = fieldId;
-    if (error) {
-      editor.setAttribute('aria-invalid', 'true');
-      editor.setAttribute('aria-describedby', `${fieldId}-error`);
-    } else {
-      editor.removeAttribute('aria-invalid');
-      editor.removeAttribute('aria-describedby');
-    }
+    const root = editorRef.current;
+    if (!root) return;
+
+    // Quill creates `.ql-editor` after this effect, and a slow chunk load
+    // can do it long after `error` is set. Re-apply whenever that node appears.
+    const apply = () => {
+      const editor = root.querySelector<HTMLElement>('.ql-editor');
+      if (!editor) return;
+      const describedBy = `${fieldId}-error`;
+      if (editor.id !== fieldId) editor.id = fieldId;
+      if (error) {
+        if (editor.getAttribute('aria-invalid') !== 'true') {
+          editor.setAttribute('aria-invalid', 'true');
+        }
+        if (editor.getAttribute('aria-describedby') !== describedBy) {
+          editor.setAttribute('aria-describedby', describedBy);
+        }
+        return;
+      }
+      if (editor.hasAttribute('aria-invalid')) {
+        editor.removeAttribute('aria-invalid');
+      }
+      if (editor.getAttribute('aria-describedby') === describedBy) {
+        editor.removeAttribute('aria-describedby');
+      }
+    };
+
+    apply();
+    const observer = new MutationObserver(apply);
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, [error, fieldId, isPreview]);
   // Dynamically import ReactQuill to avoid SSR issues
   const ReactQuill = useMemo(
