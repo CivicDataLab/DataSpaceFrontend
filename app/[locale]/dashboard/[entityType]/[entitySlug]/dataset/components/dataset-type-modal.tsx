@@ -1,12 +1,38 @@
 'use client';
 
-import { Button, Dialog, Icon, Text } from 'opub-ui';
-import React, { useState } from 'react';
-import { twMerge } from 'tailwind-merge';
+import { useState, type ReactNode } from 'react';
+import { Check, Database, MessageSquareText } from 'lucide-react';
+import { Dialog, Text, type ComplexAction } from 'opub-ui';
 
-import { Icons } from '@/components/icons';
+import styles from './dataset-type-modal.module.scss';
 
 export type DatasetType = 'DATA' | 'PROMPT';
+
+const OPTIONS: Array<{
+  value: DatasetType;
+  label: string;
+  description: string;
+  icon: typeof Database;
+}> = [
+  {
+    value: 'DATA',
+    label: 'Dataset',
+    description:
+      'Create a standard dataset containing structured or unstructured data for public discovery, analysis, and reuse.',
+    icon: Database,
+  },
+  {
+    value: 'PROMPT',
+    label: 'Prompt Dataset',
+    description:
+      'Create a dataset containing prompts and prompt-response examples for AI training, evaluation, and machine learning use cases.',
+    icon: MessageSquareText,
+  },
+];
+
+function dialogTitle(title: ReactNode) {
+  return title as unknown as string;
+}
 
 interface DatasetTypeModalProps {
   open: boolean;
@@ -15,112 +41,112 @@ interface DatasetTypeModalProps {
   isLoading?: boolean;
 }
 
-interface TypeCardProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  selected: boolean;
-  onSelect: () => void;
-}
-
-const TypeCard = ({
-  title,
-  description,
-  icon,
-  selected,
-  onSelect,
-}: TypeCardProps) => {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={twMerge(
-        'flex flex-col items-center gap-3 rounded-lg border-2 p-6 text-center transition-all hover:border-interactive hover:bg-surfaceHovered',
-        selected
-          ? 'border-interactive bg-surfaceSelected'
-          : 'border-borderSubdued bg-surface'
-      )}
-    >
-      <div
-        className={twMerge(
-          'flex h-16 w-16 items-center justify-center rounded-full',
-          selected ? 'bg-interactive text-onInteractive' : 'bg-surfaceNeutral'
-        )}
-      >
-        {icon}
-      </div>
-      <div className="flex flex-col gap-1">
-        <Text variant="headingMd" as="h3">
-          {title}
-        </Text>
-        <Text variant="bodySm" color="subdued">
-          {description}
-        </Text>
-      </div>
-    </button>
-  );
-};
-
 export function DatasetTypeModal({
   open,
   onClose,
   onSelect,
   isLoading,
 }: DatasetTypeModalProps) {
-  const [selectedType, setSelectedType] = useState<DatasetType>('DATA');
-
-  const handleCreate = () => {
-    onSelect(selectedType);
-  };
+  const [selectedType, setSelectedType] = useState<DatasetType | null>(null);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setSelectedType(null);
+  }
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      {open && (
-        <Dialog.Content title="Create New Dataset">
-          <div className="flex flex-col gap-4">
-            <Text variant="bodyMd">
-              Select the type of dataset you want to create:
+      {open ? (
+        <Dialog.Content
+          style={{
+            borderRadius: 'var(--border-radius-4)',
+            maxWidth: '32rem',
+            overflow: 'hidden',
+          }}
+          title={dialogTitle(
+            <span className={styles.dialogTitle}>
+              Add New Dataset
+              <Text
+                as="span"
+                variant="bodySm"
+                color="subdued"
+                fontWeight="regular"
+              >
+                Choose what kind of dataset you want to create.
+              </Text>
+            </span>
+          )}
+          secondaryActions={[
+            {
+              content: 'Cancel',
+              onAction: onClose,
+              disabled: Boolean(isLoading),
+              kind: 'tertiary',
+              className: 'mr-4',
+            } as ComplexAction,
+          ]}
+          footer={<span />}
+          primaryAction={
+            {
+              content: 'Continue',
+              onAction: () => {
+                if (selectedType) onSelect(selectedType);
+              },
+              disabled: !selectedType || Boolean(isLoading),
+              loading: Boolean(isLoading),
+              className: selectedType ? styles.continue : undefined,
+            } as ComplexAction
+          }
+        >
+          <div
+            className={styles.body}
+            role="radiogroup"
+            aria-label="Dataset type"
+          >
+            {OPTIONS.map((option) => {
+              const selected = selectedType === option.value;
+              const Icon = option.icon;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  disabled={isLoading}
+                  className={`${styles.option} ${selected ? styles.optionSelected : ''}`}
+                  onClick={() => setSelectedType(option.value)}
+                >
+                  <span
+                    className={`${styles.iconWrap} ${selected ? styles.iconSelected : ''}`}
+                    aria-hidden
+                  >
+                    <Icon size={18} />
+                  </span>
+                  <span className={styles.copy}>
+                    <span className={styles.titleRow}>
+                      <Text fontWeight="semibold">{option.label}</Text>
+                      {selected ? (
+                        <Check size={16} className={styles.tick} aria-hidden />
+                      ) : null}
+                    </span>
+                    <Text
+                      as="span"
+                      variant="bodySm"
+                      color="subdued"
+                      className={styles.description}
+                    >
+                      {option.description}
+                    </Text>
+                  </span>
+                </button>
+              );
+            })}
+            <Text variant="bodySm" color="subdued" className={styles.footnote}>
+              You can&apos;t change this after the draft is created.
             </Text>
-
-            <div className="grid grid-cols-2 gap-4">
-              <TypeCard
-                title="Data Dataset"
-                description="Upload data files like CSV, Excel, or connect to APIs. Ideal for structured data, statistics, and tabular information."
-                icon={<Icon source={Icons.dataset} size={32} />}
-                selected={selectedType === 'DATA'}
-                onSelect={() => setSelectedType('DATA')}
-              />
-
-              <TypeCard
-                title="Prompt Dataset"
-                description="Create a collection of prompts for AI models. Includes prompt-specific metadata like task type, target languages, and domains."
-                icon={<Icon source={Icons.light} size={32} />}
-                selected={selectedType === 'PROMPT'}
-                onSelect={() => setSelectedType('PROMPT')}
-              />
-            </div>
-
-            {selectedType === 'PROMPT' && (
-              <div className="mt-2 rounded-md bg-surfaceNeutralSubdued p-3">
-                <Text variant="bodySm" color="subdued">
-                  <strong>Prompt datasets</strong> include additional metadata
-                  fields for AI/ML use cases: task type, target languages, domain,
-                  prompt format, and more.
-                </Text>
-              </div>
-            )}
-
-            <div className="mt-4 flex justify-end gap-2">
-              <Button kind="tertiary" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreate} loading={isLoading}>
-                Create Dataset
-              </Button>
-            </div>
           </div>
         </Dialog.Content>
-      )}
+      ) : null}
     </Dialog>
   );
 }

@@ -33,7 +33,7 @@ const addUserDoc = graphql(`
     }
   }
 `);
-const allRolesDoc = graphql(`
+export const allRolesDoc = graphql(`
   query AllRolesDoc {
     roles {
       id
@@ -125,12 +125,10 @@ const AddUser = ({
     }
   );
 
-  const RolesList = useQuery(
-    [`fetch_UseCaseData`],
-    () =>
-      GraphQL(allRolesDoc, {
-        [params.entityType]: params.entitySlug,
-      })
+  const RolesList = useQuery([`fetch_UseCaseData`], () =>
+    GraphQL(allRolesDoc, {
+      [params.entityType]: params.entitySlug,
+    })
   );
 
   const { mutate } = useMutation(
