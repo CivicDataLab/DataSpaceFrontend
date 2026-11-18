@@ -3,12 +3,13 @@
 import {
   forwardRef,
   useEffect,
+  useId,
   useImperativeHandle,
   useRef,
   useState,
 } from 'react';
 import Image from 'next/image';
-import { Button, Icon, Select, Spinner, Text } from 'opub-ui';
+import { Button, Icon, InlineMessage, Select, Spinner, Text } from 'opub-ui';
 import { createPortal } from 'react-dom';
 
 import { Icons } from '@/components/icons';
@@ -49,6 +50,7 @@ interface EntityRowPickerProps {
   hidePlaceholder?: boolean;
   roleOptionsFor?: (item: EntityRow) => Array<{ label: string; value: string }>;
   onRoleChange?: (item: EntityRow, role: string) => void;
+  error?: string;
 }
 
 function EntityAvatar({
@@ -182,9 +184,11 @@ export const EntityRowPicker = forwardRef<
     hidePlaceholder = false,
     roleOptionsFor,
     onRoleChange,
+    error,
   },
   ref
 ) {
+  const fieldId = useId();
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [menuRect, setMenuRect] = useState<{
@@ -330,11 +334,14 @@ export const EntityRowPicker = forwardRef<
       </span>
       <input
         ref={inputRef}
+        id={fieldId}
         type="text"
         autoComplete="off"
         value={query}
         placeholder={searchPlaceholder}
         className={styles.searchInput}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${fieldId}-error` : undefined}
         onChange={(event) => {
           const value = event.target.value;
           setQuery(value);
@@ -572,6 +579,7 @@ export const EntityRowPicker = forwardRef<
           })}
         </div>
       )}
+      {error ? <InlineMessage message={error} fieldID={fieldId} /> : null}
     </div>
   );
 });

@@ -833,14 +833,8 @@ export default function ConnectPage() {
                   .map((row) => row.id)
               );
             }}
+            error={datasetError}
           />
-          {datasetError ? (
-            <div id="connected-datasets-error" className="mt-2">
-              <Text variant="bodySm" color="critical">
-                {datasetError}
-              </Text>
-            </div>
-          ) : null}
         </div>
       </SectionCard>
 
