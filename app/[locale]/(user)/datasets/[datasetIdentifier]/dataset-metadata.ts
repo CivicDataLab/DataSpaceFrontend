@@ -4,6 +4,7 @@
  * including tags and any extra notes the provider attached.
  */
 
+import { datasetLicenseTermsUrl } from '@/lib/datasetLicense';
 import {
   backendFileUrl,
   formatShortDate,
@@ -44,16 +45,6 @@ export type MetadataPanel = {
   sources: MetadataFact[];
   notes: MetadataFact[];
   publisher: MetadataPublisher | null;
-};
-
-const LICENSE_TERMS_URLS: Record<string, string> = {
-  GOVERNMENT_OPEN_DATA_LICENSE:
-    'https://data.gov.in/government-open-data-license-india',
-  CC_BY_4_0_ATTRIBUTION: 'https://creativecommons.org/licenses/by/4.0/',
-  CC_BY_SA_4_0_ATTRIBUTION_SHARE_ALIKE:
-    'https://creativecommons.org/licenses/by-sa/4.0/',
-  OPEN_DATA_COMMONS_BY_ATTRIBUTION: 'https://opendatacommons.org/licenses/by/1.0/',
-  OPEN_DATABASE_LICENSE: 'https://opendatacommons.org/licenses/odbl/1-0/',
 };
 
 export function buildMetadataPanel(
@@ -98,9 +89,7 @@ export function buildMetadataPanel(
     description: dataset.description?.trim() || '',
     facts,
     tags: uniqueNames(dataset.tags?.map((tag) => tag.value)),
-    licenseTermsHref: dataset.license
-      ? (LICENSE_TERMS_URLS[dataset.license] ?? null)
-      : null,
+    licenseTermsHref: datasetLicenseTermsUrl(dataset.license),
     sources: provenance.sources,
     notes: provenance.notes,
     publisher: metadataPublisher(dataset),

@@ -3,7 +3,12 @@ import { env } from '@/env';
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export type PublicSection = 'datasets' | 'usecases' | 'aimodels' | 'events';
+export type PublicSection =
+  | 'datasets'
+  | 'usecases'
+  | 'aimodels'
+  | 'events'
+  | 'publications';
 
 /** Dataset primary keys are UUIDs. A UUID is an old link, so it is not a publicId. */
 export function isUuid(value: string): boolean {

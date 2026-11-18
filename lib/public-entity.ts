@@ -30,7 +30,8 @@ export function personPublisherHref(name: string, id: string): string {
 
 /** Placeholder for a publisher image that fails to load. */
 export function publisherImageFallback(href: string): string {
-  return href.startsWith('/publishers/organization/')
+  // `includes`, not `startsWith`: on a collaborative subdomain the link is absolute.
+  return href.includes('/publishers/organization/')
     ? '/org.png'
     : '/profile.png';
 }

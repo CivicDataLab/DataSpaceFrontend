@@ -63,7 +63,7 @@ type CardMeta = {
 };
 
 /** Card metadata accepts at most three rows, typed as a tuple. */
-function firstThree<T>(
+export function firstThree<T>(
   items: T[]
 ): readonly [] | readonly [T] | readonly [T, T] | readonly [T, T, T] {
   const [first, second, third] = items;

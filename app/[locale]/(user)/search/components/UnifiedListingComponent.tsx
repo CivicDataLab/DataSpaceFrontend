@@ -1116,6 +1116,23 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                 </Button>
                 <Button
                   kind={
+                    queryParams.types === 'collaborative'
+                      ? 'primary'
+                      : 'secondary'
+                  }
+                  onClick={() => handleTypeFilter('collaborative')}
+                  size="large"
+                  className={getTypeButtonClass('collaborative')}
+                >
+                  Collaboratives
+                  {displayTypeCounts.collaborative !== undefined && (
+                    <span className="text-xs ml-1">
+                      ({displayTypeCounts.collaborative || 0})
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  kind={
                     queryParams.types === 'publisher' ? 'primary' : 'secondary'
                   }
                   onClick={() => handleTypeFilter('publisher')}
