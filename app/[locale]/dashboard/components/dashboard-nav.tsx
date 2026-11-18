@@ -150,7 +150,12 @@ export function DashboardNav({
         </div>
       ) : null}
 
-      <nav className="flex min-h-0 flex-1 flex-col gap-4 px-2 py-2">
+      <nav
+        className={cn(
+          'flex min-h-0 flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto px-2 py-2',
+          styles.NavScroll
+        )}
+      >
         {groupNames.map((groupName, groupIndex) => (
           <div key={groupName} className="flex flex-col gap-1 ">
             {showGroupLabels ? (
@@ -229,7 +234,7 @@ export function DashboardNav({
         ))}
       </nav>
 
-      <div className="flex flex-nowrap items-center justify-between border-t-1 border-solid border-baseGraySlateSolid6 px-1 py-2">
+      <div className="flex shrink-0 flex-nowrap items-center justify-between border-t-1 border-solid border-baseGraySlateSolid6 px-1 py-2">
         <Link
           href={dashboardHref}
           className={cn(

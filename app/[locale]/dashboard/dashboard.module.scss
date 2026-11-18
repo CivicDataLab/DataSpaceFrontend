@@ -21,3 +21,21 @@
 .Collapse {
   transition: width var(--duration-300) var(--ease-in-out);
 }
+
+.NavScroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--base-gray-slate-solid-7) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--base-gray-slate-solid-7);
+    border-radius: 999px;
+  }
+}
