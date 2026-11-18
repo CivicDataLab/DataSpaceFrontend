@@ -1,0 +1,107 @@
+.dialogTitle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.option {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--surface-default);
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--duration-150) var(--ease);
+
+  &:hover:not(.optionSelected) {
+    border-color: color-mix(
+      in srgb,
+      var(--blue-primary-color) 40%,
+      var(--border-default)
+    );
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--border-interactive-focused);
+    outline-offset: 2px;
+  }
+}
+
+.optionSelected {
+  border-color: var(--blue-primary-color);
+  background: color-mix(
+    in srgb,
+    var(--blue-primary-color) 6%,
+    var(--surface-default)
+  );
+}
+
+.copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.description {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+
+.tick {
+  flex-shrink: 0;
+  color: var(--blue-primary-color);
+}
+
+.footnote {
+  margin-top: 4px;
+}
+
+.continue {
+  border-color: var(--blue-primary-color) !important;
+  background: var(--blue-primary-color) !important;
+  color: var(--base-pure-white) !important;
+  --button-color: var(--blue-primary-color);
+  --button-color-hover: var(--blue-primary-text);
+  --button-text: var(--base-pure-white);
+
+  &:hover {
+    background: var(--blue-primary-text) !important;
+  }
+}
+
+.iconWrap {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--base-gray-slate-solid-3);
+  color: var(--text-subdued);
+}
+
+.iconSelected {
+  background: var(--blue-primary-color);
+  color: var(--base-pure-white);
+}
