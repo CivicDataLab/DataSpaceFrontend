@@ -60,7 +60,7 @@ export function PublicationCover({
 
   return (
     <section className="bg-white">
-      <div className="mx-auto box-border flex min-w-0 max-w-[1152px] flex-col gap-4 px-5 pt-8 text-[#0a0a0a] sm:px-6 lg:px-8 lg:pt-10 xl:px-0">
+      <div className="mx-auto box-border flex min-w-0 max-w-[1232px] flex-col gap-4 px-4 pt-8 text-[#0a0a0a] md:px-6 lg:px-8 lg:pt-10 xl:px-10">
         <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <Link
             href={backHref}

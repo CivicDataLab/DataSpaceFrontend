@@ -77,7 +77,7 @@ export function DatasetTabs({
       <span id="dataset-connected" className="sr-only" />
       <span id="dataset-connected-usecases" className="sr-only" />
       <span id="dataset-connected-collaboratives" className="sr-only" />
-      <div className="mx-auto box-border min-w-0 max-w-[1400px] px-5 pb-16 pt-6 sm:px-6 lg:px-8 xl:px-0">
+      <div className="mx-auto box-border min-w-0 max-w-[1480px] px-4 pb-16 pt-6 md:px-6 lg:px-8 xl:px-10">
           <UnderlineTabs
             label="Dataset sections"
             idPrefix="dataset-tab"

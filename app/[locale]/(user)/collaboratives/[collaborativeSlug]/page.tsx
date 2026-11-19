@@ -190,7 +190,7 @@ export default async function CollaborativeDetailPage({ params }: PageProps) {
             publications: explore.publications.length,
           }}
         />
-        <div className="mx-auto box-border min-w-0 max-w-[1400px] px-5 sm:px-6 lg:px-8 xl:px-0">
+        <div className="mx-auto box-border min-w-0 max-w-[1480px] px-4 md:px-6 lg:px-8 xl:px-10">
           <CollaborativeAbout
             title={title}
             summaryHtml={summaryText ? (collaborative.summary ?? null) : null}
