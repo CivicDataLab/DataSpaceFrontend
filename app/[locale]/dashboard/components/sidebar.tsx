@@ -4,7 +4,7 @@ import { Button, Icon, Sheet, Spinner, Text } from 'opub-ui';
 import React, { useState } from 'react';
 
 import { Icons } from '@/components/icons';
-import { ProfileContent } from './main-nav';
+import { isVerifiedSession, ProfileContent } from './main-nav';
 
 interface SidebarProps {
   data: { href: string; title: string }[];
@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <Spinner />
               ) : (
                 <div>
-                  {session?.user ? (
+                  {isVerifiedSession(status, session) ? (
                     <ProfileContent
                       session={session}
                     />

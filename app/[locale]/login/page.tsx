@@ -1,9 +1,9 @@
 'use client';
 
-import { signIn, useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { Spinner, Text } from 'opub-ui';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { signIn, useSession } from 'next-auth/react';
+import { Spinner, Text } from 'opub-ui';
 
 import MainFooter from '../dashboard/components/main-footer';
 import { MainNav } from '../dashboard/components/main-nav';
@@ -34,10 +34,10 @@ export default SignIn;
 const LogginInPage = () => {
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-surfaceDefault">
-      <header className="sticky top-0 z-1 bg-primaryBlue pointer-events-none select-none">
+      <header className="pointer-events-none sticky top-0 z-1 select-none bg-primaryBlue">
         <MainNav />
       </header>
-      <div className="flex flex-1 w-full flex-col items-center justify-center gap-1">
+      <div className="flex w-full flex-1 flex-col items-center justify-center gap-1">
         <Spinner />
         <Text variant="headingLg">Logging In</Text>
       </div>

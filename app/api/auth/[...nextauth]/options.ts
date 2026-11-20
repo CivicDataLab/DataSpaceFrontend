@@ -4,6 +4,22 @@ import { Account, AuthOptions, Session } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import KeycloakProvider from 'next-auth/providers/keycloak';
 
+// One Keycloak refresh per refresh token. Overlapping /api/auth/session calls
+// used to refresh the same token together; the loser got invalid_grant and
+// saved RefreshAccessTokenError over a refresh that had just succeeded.
+let refreshTask: { key: string; promise: Promise<JWT> } | null = null;
+
+function refreshOnce(token: JWT): Promise<JWT> {
+  const key = String(token.refresh_token ?? '');
+  if (refreshTask?.key === key) return refreshTask.promise;
+
+  const promise = refreshAccessToken(token).finally(() => {
+    if (refreshTask?.promise === promise) refreshTask = null;
+  });
+  refreshTask = { key, promise };
+  return promise;
+}
+
 // this will refresh an expired access token, when needed
 async function refreshAccessToken(token: JWT) {
   const urlObj: Record<string, string> = {
@@ -59,30 +75,21 @@ export const authOptions: AuthOptions = {
         token.refresh_token = account.refresh_token;
         return token;
       } else if (token.error === 'RefreshAccessTokenError') {
-        // A previous refresh already failed. Return the token as-is instead of
-        // retrying.
-        //
-        // This callback runs on every session fetch, and a failed refresh used to
-        // leave `expires_at` in the past - so every subsequent fetch attempted the
-        // same refresh, and failed the same way. Combined with SessionGuard reacting
-        // to the error by signing out (which triggers another session fetch), that
-        // produced an unbounded loop: 35,685 signout calls and 107,612 session
-        // fetches from a single client in one day, peaking at 6,230 requests/minute.
-        //
-        // The session is unrecoverable at this point. The user has to sign in again,
-        // which SessionGuard handles; hammering Keycloak in the meantime helps
-        // nobody.
-        return token;
+        // The cookie still holds a dead session. Throwing makes the session
+        // route delete that cookie. Returning the token here saved it again,
+        // which put the profile chip back after sign-out.
+        throw new Error('RefreshAccessTokenError');
       } else if (nowTimeStamp < (token.expires_at as number)) {
         // token has not expired yet, return it
         return token;
       } else {
         // token is expired, try to refresh it
         try {
-          const refreshedToken = await refreshAccessToken(token);
-          return refreshedToken;
+          return await refreshOnce(token);
         } catch (error) {
           console.error('Error refreshing access token', error);
+          // Mark it once so the next session read takes the branch above and
+          // deletes the cookie, without calling Keycloak again.
           return { ...token, error: 'RefreshAccessTokenError' };
         }
       }

@@ -1,52 +1,36 @@
 'use client';
 
 import { ReactNode, useEffect, useRef } from 'react';
-import { usePathname } from 'next/navigation';
-import { signIn, signOut, useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 export default function SessionGuard({ children }: { children: ReactNode }) {
   const { data } = useSession();
-  const pathname = usePathname();
 
-  // Guards against re-running the cleanup for an error we have already acted on.
-  //
-  // Without this, an expired session produced an unbounded loop: the effect called
-  // signOut(), useSession refetched, the session still carried
-  // RefreshAccessTokenError, and the effect fired again - as fast as the network
-  // allowed. One client produced 35,685 signout calls and 107,612 session fetches in
-  // a day, peaking at 6,230 requests/minute, which exhausted the backend's per-IP
-  // rate limit and returned 429s to every other user behind the same NAT address.
-  //
-  // The loop was self-sustaining: once rate-limited, the signOut call itself started
-  // failing, so the session was never cleared and the condition never resolved.
+  // One sign-out per expired session. signOut() itself fetches /api/auth/csrf
+  // and /api/auth/session. Re-arming this flag on the empty session from that
+  // sign-out made the next expired payload sign out again, which is the loop
+  // that swapped the Login button and the profile chip.
+  // A verified session (user present, no refresh error) is the only thing that
+  // may arm a later cleanup.
   const cleanupAttempted = useRef(false);
 
   useEffect(() => {
-    if (data?.error !== 'RefreshAccessTokenError') {
-      // Session recovered (or the user signed in again) - allow a future cleanup.
-      cleanupAttempted.current = false;
+    const expired = data?.error === 'RefreshAccessTokenError';
+
+    if (!expired) {
+      if (data?.user && !data.error) {
+        cleanupAttempted.current = false;
+      }
       return;
     }
 
     if (cleanupAttempted.current) return;
     cleanupAttempted.current = true;
 
-    const clearExpiredSession = async () => {
-      try {
-        await signOut({ redirect: false });
-      } catch {
-        // Deliberately swallowed. If signOut fails - the backend being rate-limited
-        // is exactly when it will - retrying immediately is what created the loop.
-        // The flag above stays set, so this settles instead of spinning.
-      }
-
-      if (pathname.includes('dashboard')) {
-        signIn('keycloak');
-      }
-    };
-
-    void clearExpiredSession();
-  }, [data, pathname]);
+    void signOut({ redirect: false }).catch(() => {
+      // Leave the flag set. Signing out again is the loop.
+    });
+  }, [data]);
 
   return <>{children}</>;
 }
