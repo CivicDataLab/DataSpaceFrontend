@@ -108,6 +108,12 @@ const createVersionMutation = graphql(`
   mutation CreateNewModelVersion($input: CreateAIModelVersionInput!) {
     createAiModelVersion(input: $input) {
       success
+      errors {
+        nonFieldErrors
+        fieldErrors {
+          messages
+        }
+      }
       data {
         id
         version
@@ -121,6 +127,12 @@ const updateVersionMutation = graphql(`
   mutation UpdateModelVersion($input: UpdateAIModelVersionInput!) {
     updateAiModelVersion(input: $input) {
       success
+      errors {
+        nonFieldErrors
+        fieldErrors {
+          messages
+        }
+      }
       data {
         id
         version
@@ -134,6 +146,12 @@ const createProviderMutation = graphql(`
   mutation CreateModelVersionProvider($input: CreateVersionProviderInput!) {
     createVersionProvider(input: $input) {
       success
+      errors {
+        nonFieldErrors
+        fieldErrors {
+          messages
+        }
+      }
       data {
         id
         provider
@@ -148,6 +166,12 @@ const updateProviderMutation = graphql(`
   mutation UpdateModelVersionProvider($input: UpdateVersionProviderInput!) {
     updateVersionProvider(input: $input) {
       success
+      errors {
+        nonFieldErrors
+        fieldErrors {
+          messages
+        }
+      }
       data {
         id
         provider
@@ -221,6 +245,29 @@ interface ModelVersionRow {
 }
 
 type ApiKeyLocation = 'header' | 'query';
+
+// Version and provider saves report refused input (for example a timeout
+// outside 1 to 600 seconds) as `success: false` with a message, not as an
+// error, so a refusal would otherwise look like a successful save.
+function saveRefusal(
+  result:
+    | {
+        success: boolean;
+        errors?: {
+          nonFieldErrors?: string[] | null;
+          fieldErrors?: { messages: string[] }[] | null;
+        } | null;
+      }
+    | null
+    | undefined
+): string | null {
+  if (result?.success) return null;
+  return (
+    result?.errors?.nonFieldErrors?.[0] ||
+    result?.errors?.fieldErrors?.[0]?.messages?.[0] ||
+    'Could not save. Please check the values and try again.'
+  );
+}
 
 function readConfigObject(config: unknown): Record<string, unknown> {
   const value =
@@ -751,6 +798,11 @@ export default function VersionsPage() {
       ),
     {
       onSuccess: async (response) => {
+        const refusal = saveRefusal(response?.createAiModelVersion);
+        if (refusal) {
+          toast(`Error: ${refusal}`, { id: VERSIONS_ACTION_TOAST_ID });
+          return;
+        }
         toast('New version created successfully!', {
           id: VERSIONS_ACTION_TOAST_ID,
         });
@@ -795,7 +847,12 @@ export default function VersionsPage() {
           { input }
         ),
       {
-        onSuccess: async () => {
+        onSuccess: async (response) => {
+          const refusal = saveRefusal(response?.createVersionProvider);
+          if (refusal) {
+            toast(`Error: ${refusal}`, { id: VERSIONS_ACTION_TOAST_ID });
+            return;
+          }
           toast('Provider added successfully!', {
             id: VERSIONS_ACTION_TOAST_ID,
           });
@@ -833,7 +890,12 @@ export default function VersionsPage() {
           { input }
         ),
       {
-        onSuccess: async () => {
+        onSuccess: async (response) => {
+          const refusal = saveRefusal(response?.updateVersionProvider);
+          if (refusal) {
+            toast(`Error: ${refusal}`, { id: VERSIONS_ACTION_TOAST_ID });
+            return;
+          }
           toast('Provider updated successfully!', {
             id: VERSIONS_ACTION_TOAST_ID,
           });
@@ -1116,9 +1178,10 @@ export default function VersionsPage() {
     if (
       providerFormData.provider === 'CUSTOM' &&
       (!Number.isFinite(providerFormData.apiTimeoutSeconds) ||
-        providerFormData.apiTimeoutSeconds < 1)
+        providerFormData.apiTimeoutSeconds < 1 ||
+        providerFormData.apiTimeoutSeconds > 600)
     ) {
-      toast('Timeout must be at least 1 second.', {
+      toast('Timeout must be between 1 and 600 seconds.', {
         id: VERSIONS_VALIDATION_TOAST_ID,
       });
       return;
@@ -1272,7 +1335,12 @@ export default function VersionsPage() {
         { input }
       ),
     {
-      onSuccess: () => {
+      onSuccess: (response) => {
+        const refusal = saveRefusal(response?.updateAiModelVersion);
+        if (refusal) {
+          toast(`Error: ${refusal}`, { id: VERSIONS_ACTION_TOAST_ID });
+          return;
+        }
         toast('Version updated successfully!', {
           id: VERSIONS_ACTION_TOAST_ID,
         });

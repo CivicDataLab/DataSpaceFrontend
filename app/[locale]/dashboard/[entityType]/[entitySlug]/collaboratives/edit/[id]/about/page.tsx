@@ -88,7 +88,10 @@ function slugify(value: string) {
     .trim()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
-    .slice(0, 80);
+    // The slug is the subdomain, and one part of a web address holds at most
+    // 63 characters; the backend refuses a longer one.
+    .slice(0, 63)
+    .replace(/-+$/, '');
 }
 
 function sdgLabel(item: {
