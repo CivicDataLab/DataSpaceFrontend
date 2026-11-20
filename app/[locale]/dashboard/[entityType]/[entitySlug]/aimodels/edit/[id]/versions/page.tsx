@@ -341,6 +341,7 @@ type CustomApiTestResult = {
   status: CustomApiTestStatus;
   steps: CustomApiTestStep[];
   signature: string;
+  responseDetail?: string;
 };
 
 const CUSTOM_TEST_STATUS: Record<
@@ -373,6 +374,7 @@ function customApiDisplayStatus(
 ): CustomApiDisplayStatus {
   if (isTesting) return 'testing';
   if (!result) return 'not-tested';
+
   if (result.signature !== customApiSignature(provider, testInput))
     return 'stale';
   return result.status;
@@ -470,6 +472,27 @@ function fillTemplatePlaceholders(
   return value;
 }
 
+function formatHttpDetail(
+  status: number,
+  statusText: string,
+  body: string
+): string {
+  const heading = `HTTP ${status}${statusText ? ` ${statusText}` : ''}`;
+  const trimmed = body.trim();
+  if (!trimmed) return `${heading}\n\n(empty body)`;
+  let formatted = trimmed;
+  try {
+    formatted = JSON.stringify(JSON.parse(trimmed), null, 2);
+  } catch {
+    formatted = trimmed;
+  }
+  const max = 20000;
+  if (formatted.length > max) {
+    formatted = `${formatted.slice(0, max)}\n…`;
+  }
+  return `${heading}\n\n${formatted}`;
+}
+
 function readResponsePath(data: unknown, path: string): unknown {
   const keys = path.split(/\.|\[|\]/).filter(Boolean);
   let current = data;
@@ -549,10 +572,14 @@ async function testCustomApi(
 ): Promise<CustomApiTestResult> {
   const signature = customApiSignature(provider, testInput);
   const steps: CustomApiTestStep[] = [];
-  const finish = (status: CustomApiTestStatus): CustomApiTestResult => ({
+  const finish = (
+    status: CustomApiTestStatus,
+    responseDetail?: string
+  ): CustomApiTestResult => ({
     status,
     steps,
     signature,
+    responseDetail,
   });
 
   if (!isAccessMethodComplete(provider)) {
@@ -572,13 +599,15 @@ async function testCustomApi(
   let request: ReturnType<typeof customRequest>;
   try {
     request = customRequest(provider, testInput);
-  } catch {
+  } catch (error) {
+    const detail =
+      error instanceof Error ? error.message : 'Could not build the request.';
     steps.push({
       stage: 'Request',
       status: 'fail',
       message: 'The endpoint URL is not a valid HTTP address.',
     });
-    return finish('invalid-request');
+    return finish('invalid-request', detail);
   }
 
   const timeoutMs = Math.max(1, provider.apiTimeoutSeconds || 30) * 1000;
@@ -591,6 +620,12 @@ async function testCustomApi(
       body: request.method === 'GET' ? undefined : JSON.stringify(request.body),
       signal: controller.signal,
     });
+    const rawBody = await response.text();
+    const responseDetail = formatHttpDetail(
+      response.status,
+      response.statusText,
+      rawBody
+    );
 
     if (response.status === 401 || response.status === 403) {
       steps.push({
@@ -598,7 +633,7 @@ async function testCustomApi(
         status: 'fail',
         message: 'The provider rejected the configured credentials.',
       });
-      return finish('auth-failed');
+      return finish('auth-failed', responseDetail);
     }
     steps.push({
       stage: 'Authentication Setup',
@@ -612,7 +647,7 @@ async function testCustomApi(
         status: 'fail',
         message: `The provider returned HTTP ${response.status}.`,
       });
-      return finish('invalid-request');
+      return finish('invalid-request', responseDetail);
     }
     steps.push({
       stage: 'Request',
@@ -627,9 +662,19 @@ async function testCustomApi(
         status: 'fail',
         message: 'The provider did not return JSON.',
       });
-      return finish('response-extraction-failed');
+      return finish('response-extraction-failed', responseDetail);
     }
-    const data: unknown = await response.json();
+    let data: unknown;
+    try {
+      data = rawBody.trim() ? JSON.parse(rawBody) : null;
+    } catch {
+      steps.push({
+        stage: 'Response Extraction',
+        status: 'fail',
+        message: 'The provider did not return JSON.',
+      });
+      return finish('response-extraction-failed', responseDetail);
+    }
     const path = provider.apiResponsePath?.trim() || '';
     const extracted = path ? readResponsePath(data, path) : data;
     if (path && (extracted === undefined || extracted === null)) {
@@ -638,7 +683,7 @@ async function testCustomApi(
         status: 'fail',
         message: `No value at ${path}.`,
       });
-      return finish('response-extraction-failed');
+      return finish('response-extraction-failed', responseDetail);
     }
     const preview =
       typeof extracted === 'string' ? extracted : JSON.stringify(extracted);
@@ -651,20 +696,22 @@ async function testCustomApi(
     });
     return finish('success');
   } catch (error) {
+    const detail =
+      error instanceof Error ? error.message : 'The request failed.';
     if (error instanceof DOMException && error.name === 'AbortError') {
       steps.push({
         stage: 'Connection',
         status: 'fail',
         message: 'The request timed out.',
       });
-      return finish('timeout');
+      return finish('timeout', detail);
     }
     steps.push({
       stage: 'Connection',
       status: 'fail',
       message: 'The request could not reach the Custom API.',
     });
-    return finish('connection-failed');
+    return finish('connection-failed', detail);
   } finally {
     clearTimeout(timer);
   }
@@ -729,6 +776,7 @@ export default function VersionsPage() {
   >({});
   const [testingIds, setTestingIds] = useState<number[]>([]);
   const [expandedTestId, setExpandedTestId] = useState<number | null>(null);
+  const [responseDetailIds, setResponseDetailIds] = useState<number[]>([]);
   const hashHandled = useRef(false);
   const pendingAccessRef = useRef(false);
   const [editingProvider, setEditingProvider] =
@@ -2527,6 +2575,14 @@ export default function VersionsPage() {
                       {customTestRows.map(
                         ({ provider, result, isTesting, status }) => {
                           const meta = CUSTOM_TEST_STATUS[status];
+                          const detailsOpen = responseDetailIds.includes(
+                            provider.id
+                          );
+                          const showResponseDetail = Boolean(
+                            result &&
+                              isCustomTestFailure(result.status) &&
+                              result.responseDetail
+                          );
                           const expanded = expandedTestId === provider.id;
                           const name =
                             accessMethodName(provider.config) || 'Custom API';
@@ -2663,27 +2719,54 @@ export default function VersionsPage() {
                                     </Text>
                                   ))}
                                   <div className={styles.diagnosticsResult}>
-                                    <Text
-                                      variant="bodySm"
-                                      className="font-mono"
-                                    >
-                                      Result:{' '}
+                                    <div className={styles.diagnosticsResultRow}>
                                       <Text
-                                        as="span"
                                         variant="bodySm"
-                                        fontWeight="semibold"
-                                        color={
-                                          CUSTOM_TEST_STATUS[result.status]
-                                            .color
-                                        }
                                         className="font-mono"
                                       >
-                                        {
-                                          CUSTOM_TEST_STATUS[result.status]
-                                            .label
-                                        }
+                                        Result:{' '}
+                                        <Text
+                                          as="span"
+                                          variant="bodySm"
+                                          fontWeight="semibold"
+                                          color={
+                                            CUSTOM_TEST_STATUS[result.status]
+                                              .color
+                                          }
+                                          className="font-mono"
+                                        >
+                                          {
+                                            CUSTOM_TEST_STATUS[result.status]
+                                              .label
+                                          }
+                                        </Text>
                                       </Text>
-                                    </Text>
+                                      {showResponseDetail ? (
+                                        <button
+                                          type="button"
+                                          className={styles.seeDetails}
+                                          aria-expanded={detailsOpen}
+                                          onClick={() =>
+                                            setResponseDetailIds((current) =>
+                                              current.includes(provider.id)
+                                                ? current.filter(
+                                                    (id) => id !== provider.id
+                                                  )
+                                                : [...current, provider.id]
+                                            )
+                                          }
+                                        >
+                                          {detailsOpen
+                                            ? 'Hide details'
+                                            : 'See details'}
+                                        </button>
+                                      ) : null}
+                                    </div>
+                                    {detailsOpen && result.responseDetail ? (
+                                      <pre className={styles.responseDetail}>
+                                        {result.responseDetail}
+                                      </pre>
+                                    ) : null}
                                   </div>
                                 </div>
                               ) : null}
