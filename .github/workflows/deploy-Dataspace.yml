@@ -41,6 +41,8 @@ jobs:
       END_SESSION_URL: ${{ secrets.END_SESSION_URL }}
       REFRESH_TOKEN_URL: ${{ secrets.REFRESH_TOKEN_URL }}
       NEXT_PUBLIC_BACKEND_URL: ${{ vars.NEXT_PUBLIC_BACKEND_URL }}
+      # CloudFront host for S3 media; next.config.mjs adds it to images.remotePatterns at build time
+      STORAGE_PUBLIC_BASE_URL: ${{ vars.STORAGE_PUBLIC_BASE_URL }}
       BACKEND_URL: ${{ vars.BACKEND_URL }}
       NEXT_PUBLIC_BACKEND_GRAPHQL_URL: ${{ vars.NEXT_PUBLIC_BACKEND_GRAPHQL_URL }}
       BACKEND_GRAPHQL_URL: ${{ vars.BACKEND_GRAPHQL_URL }}
