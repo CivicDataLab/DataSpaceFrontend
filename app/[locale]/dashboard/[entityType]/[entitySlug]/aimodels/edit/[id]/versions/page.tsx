@@ -324,6 +324,9 @@ type CustomApiTestStatus =
   | 'auth-failed'
   | 'connection-failed'
   | 'invalid-request'
+  | 'quota-exceeded'
+  | 'rate-limited'
+  | 'provider-error'
   | 'response-extraction-failed'
   | 'timeout'
   | 'incomplete';
@@ -355,6 +358,9 @@ const CUSTOM_TEST_STATUS: Record<
     label: 'Invalid Request Configuration',
     color: 'critical',
   },
+  'quota-exceeded': { label: 'Quota Exhausted', color: 'critical' },
+  'rate-limited': { label: 'Rate Limit Exceeded', color: 'critical' },
+  'provider-error': { label: 'Provider Error', color: 'critical' },
   'response-extraction-failed': {
     label: 'Response Extraction Failed',
     color: 'critical',
@@ -385,6 +391,9 @@ function isCustomTestFailure(status: CustomApiDisplayStatus) {
     status === 'auth-failed' ||
     status === 'connection-failed' ||
     status === 'invalid-request' ||
+    status === 'quota-exceeded' ||
+    status === 'rate-limited' ||
+    status === 'provider-error' ||
     status === 'response-extraction-failed' ||
     status === 'timeout' ||
     status === 'incomplete'
@@ -417,7 +426,13 @@ function customTestStatusIcon(status: CustomApiDisplayStatus) {
   if (status === 'timeout') return <IconClock size={14} />;
   if (status === 'response-extraction-failed')
     return <IconFileAlert size={14} />;
-  if (status === 'invalid-request' || status === 'incomplete') {
+  if (
+    status === 'invalid-request' ||
+    status === 'quota-exceeded' ||
+    status === 'rate-limited' ||
+    status === 'provider-error' ||
+    status === 'incomplete'
+  ) {
     return <IconAlertTriangle size={14} />;
   }
   if (status === 'stale') return <IconRefresh size={14} />;
@@ -491,6 +506,40 @@ function formatHttpDetail(
     formatted = `${formatted.slice(0, max)}\n…`;
   }
   return `${heading}\n\n${formatted}`;
+}
+
+function httpFailure(
+  httpStatus: number,
+  body: string
+): { status: CustomApiTestStatus; message: string } {
+  const quota =
+    httpStatus === 402 ||
+    (httpStatus === 429 &&
+      /insufficient_quota|credit_balance_exhausted|no credits|quota exceeded/i.test(
+        body
+      ));
+  if (quota) {
+    return {
+      status: 'quota-exceeded',
+      message: 'The provider account has no credits remaining.',
+    };
+  }
+  if (httpStatus === 429) {
+    return {
+      status: 'rate-limited',
+      message: 'The provider rate limit was reached.',
+    };
+  }
+  if (httpStatus >= 500) {
+    return {
+      status: 'provider-error',
+      message: `The provider returned HTTP ${httpStatus}.`,
+    };
+  }
+  return {
+    status: 'invalid-request',
+    message: `The provider returned HTTP ${httpStatus}.`,
+  };
 }
 
 function readResponsePath(data: unknown, path: string): unknown {
@@ -642,12 +691,13 @@ async function testCustomApi(
     });
 
     if (!response.ok) {
+      const failure = httpFailure(response.status, rawBody);
       steps.push({
         stage: 'Request',
         status: 'fail',
-        message: `The provider returned HTTP ${response.status}.`,
+        message: failure.message,
       });
-      return finish('invalid-request', responseDetail);
+      return finish(failure.status, responseDetail);
     }
     steps.push({
       stage: 'Request',

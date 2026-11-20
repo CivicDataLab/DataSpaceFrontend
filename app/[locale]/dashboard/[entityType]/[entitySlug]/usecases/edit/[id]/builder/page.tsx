@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { graphql } from '@/gql';
-import { UseCaseInputPartial } from '@/gql/generated/graphql';
+import {
+  AddUseCaseBuilderDashboardMutation,
+  UpdateUseCaseBuilderDashboardMutation,
+  UseCaseInputPartial,
+} from '@/gql/generated/graphql';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Button,
@@ -85,6 +89,9 @@ const addDashboardMutation = graphql(`
   ) {
     addUsecaseDashboard(usecaseId: $usecaseId, name: $name, link: $link) {
       success
+      errors {
+        nonFieldErrors
+      }
       data {
         id
         name
@@ -102,6 +109,9 @@ const updateDashboardMutation = graphql(`
   ) {
     updateUsecaseDashboard(id: $id, name: $name, link: $link) {
       success
+      errors {
+        nonFieldErrors
+      }
       data {
         id
         name
@@ -140,6 +150,28 @@ function thumbnailName(file: File | UploadedImage) {
   if (file instanceof File) return file.name;
   const raw = file.name || file.path || 'Thumbnail';
   return raw.split('/').pop() || raw;
+}
+
+function dashboardSaveMessage(error: unknown) {
+  return typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string'
+    ? error.message
+    : 'Unable to save dashboard.';
+}
+
+function dashboardRefusal(
+  result:
+    | {
+        success: boolean;
+        errors?: { nonFieldErrors?: Array<string | null> | null } | null;
+      }
+    | null
+    | undefined
+) {
+  if (result?.success) return null;
+  return result?.errors?.nonFieldErrors?.[0] || 'Unable to save dashboard.';
 }
 
 export default function BuilderPage() {
@@ -191,13 +223,10 @@ export default function BuilderPage() {
     subtitle: '',
     blocks: [],
   });
-  const [embedCode, setEmbedCode] = useState('');
-  const dashboardLink = savedDashboard?.link ?? '';
-  const [syncedDashboardLink, setSyncedDashboardLink] = useState(dashboardLink);
-  if (dashboardLink && dashboardLink !== syncedDashboardLink) {
-    setSyncedDashboardLink(dashboardLink);
-    setEmbedCode(dashboardLink);
-  }
+  const [embedCode, setEmbedCode] = useState(savedDashboard?.link ?? '');
+  useEffect(() => {
+    if (savedDashboard?.link) setEmbedCode(savedDashboard.link);
+  }, [savedDashboard?.link]);
   const contentDocRef = useRef(contentDoc);
   const titleRef = useRef(title);
   useEffect(() => {
@@ -260,23 +289,43 @@ export default function BuilderPage() {
   );
 
   const { mutate: addDashboard, isLoading: addingDashboard } = useMutation(
-    (input: { usecaseId: number; name: string; link: string }) =>
+    (
+      input: { usecaseId: number; name: string; link: string }
+    ): Promise<AddUseCaseBuilderDashboardMutation> =>
       GraphQL(addDashboardMutation, ownerArgs, input),
     {
-      onSuccess: () => {
+      onSuccess: (res) => {
+        const refusal = dashboardRefusal(res.addUsecaseDashboard);
+        if (refusal) {
+          toast(refusal);
+          return;
+        }
         void dashboardsQuery.refetch();
         toast('Dashboard saved');
+      },
+      onError: (error: unknown) => {
+        toast(dashboardSaveMessage(error));
       },
     }
   );
 
   const { mutate: saveDashboard, isLoading: savingDashboard } = useMutation(
-    (input: { id: string; name: string; link: string }) =>
+    (
+      input: { id: string; name: string; link: string }
+    ): Promise<UpdateUseCaseBuilderDashboardMutation> =>
       GraphQL(updateDashboardMutation, ownerArgs, input),
     {
-      onSuccess: () => {
+      onSuccess: (res) => {
+        const refusal = dashboardRefusal(res.updateUsecaseDashboard);
+        if (refusal) {
+          toast(refusal);
+          return;
+        }
         void dashboardsQuery.refetch();
         toast('Dashboard saved');
+      },
+      onError: (error: unknown) => {
+        toast(dashboardSaveMessage(error));
       },
     }
   );
