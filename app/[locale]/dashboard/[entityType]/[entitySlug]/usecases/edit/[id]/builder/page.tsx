@@ -223,10 +223,13 @@ export default function BuilderPage() {
     subtitle: '',
     blocks: [],
   });
-  const [embedCode, setEmbedCode] = useState(savedDashboard?.link ?? '');
-  useEffect(() => {
-    if (savedDashboard?.link) setEmbedCode(savedDashboard.link);
-  }, [savedDashboard?.link]);
+  const savedLink = savedDashboard?.link ?? '';
+  const [embedCode, setEmbedCode] = useState(savedLink);
+  const [appliedLink, setAppliedLink] = useState(savedLink);
+  if (savedLink !== appliedLink) {
+    setAppliedLink(savedLink);
+    setEmbedCode(savedLink);
+  }
   const contentDocRef = useRef(contentDoc);
   const titleRef = useRef(title);
   useEffect(() => {
