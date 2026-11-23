@@ -37,6 +37,18 @@ interface MainNavProps {
   hideSearch?: boolean;
 }
 
+/** A session Keycloak can still use. An expired refresh still carries session.user, which is what put the profile chip back. */
+export function isVerifiedSession(
+  status: 'authenticated' | 'unauthenticated' | 'loading',
+  session: Session | null
+): session is Session {
+  return (
+    status === 'authenticated' &&
+    !!session?.user &&
+    session.error !== 'RefreshAccessTokenError'
+  );
+}
+
 export function MainNav({ hideSearch = false }: MainNavProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -62,29 +74,24 @@ export function MainNav({ hideSearch = false }: MainNavProps) {
     }
   };
 
-  const [hasFetched, setHasFetched] = useState(false);
-  if ((status !== 'authenticated' || !session?.user) && hasFetched) {
-    setHasFetched(false);
-  }
+  const sessionVerified = isVerifiedSession(status, session);
 
   useEffect(() => {
-    if (status !== 'authenticated' || !session?.user) {
-      return;
-    }
+    if (!sessionVerified) return;
 
+    let cancelled = false;
     const fetchData = async () => {
-      if (hasFetched) return;
-
       try {
         const [userDetailsRes, entityDetailsRes] = await Promise.all([
           GraphQL(UserDetailsQryDoc),
           GraphQL(allOrganizationsListingDoc),
         ]);
+        if (cancelled) return;
 
         setUserDetails(userDetailsRes);
         setAllEntityDetails(entityDetailsRes);
-        setHasFetched(true);
       } catch (err: unknown) {
+        if (cancelled) return;
         const errorMessage =
           err instanceof Error ? err.message : String(err ?? '');
         const isUnauthenticated = errorMessage.includes(
@@ -94,14 +101,14 @@ export function MainNav({ hideSearch = false }: MainNavProps) {
         if (!isUnauthenticated) {
           console.error('Error fetching user/org data:', err);
         }
-
-        // Stop repeated retries/log spam for unauthenticated sessions.
-        setHasFetched(true);
       }
     };
 
-    fetchData();
-  }, [status, session?.user, hasFetched, setUserDetails, setAllEntityDetails]);
+    void fetchData();
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionVerified, setUserDetails, setAllEntityDetails]);
 
   const exploreLinks = [
     {
@@ -152,6 +159,7 @@ export function MainNav({ hideSearch = false }: MainNavProps) {
       router.push(`/search?query=${encodeURIComponent(value)}`);
     }
   };
+
   return (
     <nav className="z-50 sticky top-1 min-h-[80px] px-4 py-6 sm:py-8 md:py-5 lg:px-6 lg:py-3">
       <div className="flex items-center justify-between gap-4">
@@ -291,7 +299,7 @@ export function MainNav({ hideSearch = false }: MainNavProps) {
             <Spinner />
           ) : (
             <div className=" hidden lg:block">
-              {session?.user ? (
+              {sessionVerified && session ? (
                 <ProfileContent session={session} />
               ) : (
                 <Button

@@ -121,6 +121,41 @@
   padding-top: 8px;
 }
 
+.diagnosticsResultRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.seeDetails {
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--blue-primary-color);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.responseDetail {
+  margin: 8px 0 0;
+  max-height: 240px;
+  overflow: auto;
+  border-radius: 6px;
+  background: #2b2d30;
+  color: #bcbec4;
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .iconEdit {
   border-radius: 8px;
 
