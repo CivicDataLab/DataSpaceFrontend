@@ -2,7 +2,7 @@ import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 
 import { GraphQL } from '@/lib/api';
-import { getSafeEmbedUrl } from '@/lib/dashboardEmbed';
+import { toEmbedSrc } from '@/lib/dashboardEmbed';
 import { Loading } from '@/components/loading';
 import JusticeHubEmbed, { isJusticeHubEmbed } from './JusticeHubEmbed';
 
@@ -11,7 +11,7 @@ const DashboardsList = graphql(`
     usecaseDashboards(usecaseId: $usecaseId) {
       id
       name
-      link
+      embedUrl
     }
   }
 `);
@@ -34,7 +34,7 @@ const Dashboards = ({ usecaseId: usecaseIdValue }: { usecaseId: string }) => {
   const dashboards = (data?.usecaseDashboards ?? [])
     .map((dashboard) => ({
       ...dashboard,
-      embedUrl: getSafeEmbedUrl(dashboard.link),
+      embedUrl: toEmbedSrc(dashboard.embedUrl),
     }))
     .filter((dashboard): dashboard is typeof dashboard & { embedUrl: string } =>
       Boolean(dashboard.embedUrl)
