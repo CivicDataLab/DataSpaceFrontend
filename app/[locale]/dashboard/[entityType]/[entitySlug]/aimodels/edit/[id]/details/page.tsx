@@ -487,6 +487,22 @@ export default function AIModelDetailsPage() {
 
   const languageOptions = LANGUAGE_OPTIONS;
 
+  const maxTokensOptions = [
+    { label: '1024', value: '1024' },
+    { label: '2048', value: '2048' },
+    { label: '4096', value: '4096' },
+    { label: '8192', value: '8192' },
+    { label: '16384', value: '16384' },
+    { label: '32768', value: '32768' },
+    { label: '65536', value: '65536' },
+    { label: '131072', value: '131072' },
+  ];
+
+  const selectedDomainLabel =
+    domainOptions.find(
+      (option) => option.value === formData.domain && option.value
+    )?.label || formData.domain;
+
   const licenseOptions = [
     { label: 'Select a license...', value: '' },
     { label: 'MIT License', value: 'MIT' },
@@ -669,7 +685,7 @@ export default function AIModelDetailsPage() {
               error={domainError}
               placeholder="Search and select a domain..."
               list={domainOptions.filter((option) => option.value !== '')}
-              selectedValue={formData.domain}
+              selectedValue={selectedDomainLabel}
               onChange={(value) => {
                 const next = comboboxSingle(value);
                 handleInputChange('domain', next);
@@ -762,6 +778,17 @@ export default function AIModelDetailsPage() {
               const next = toSelectOptions(value);
               handleInputChange('geographies', next);
               handleSave({ ...formData, geographies: next });
+            }}
+          />
+          <Select
+            name="maxTokens"
+            label="Maximum Tokens"
+            options={maxTokensOptions}
+            value={formData.maxTokens}
+            placeholder="Select maximum tokens..."
+            onChange={(value) => {
+              handleInputChange('maxTokens', value);
+              handleSave({ ...formData, maxTokens: value });
             }}
           />
         </div>

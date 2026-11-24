@@ -395,6 +395,10 @@ export default function PublishPage() {
         })) ?? []
       ),
     },
+    {
+      label: 'MAXIMUM TOKENS',
+      value: model?.maxTokens ? model.maxTokens.toLocaleString() : '',
+    },
     { label: 'MODEL WEBSITE', value: metadataString(metadata, 'modelWebsite') },
     {
       label: 'USAGE LICENSE',
