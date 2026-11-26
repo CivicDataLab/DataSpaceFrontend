@@ -4,6 +4,8 @@ import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { InlineMessage } from 'opub-ui';
 
+import { sanitizeRichText } from '@/lib/sanitizeRichText';
+
 import 'react-quill-new/dist/quill.snow.css';
 
 interface RichTextEditorProps {
@@ -139,7 +141,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       {label && (
         <label
           htmlFor={fieldId}
-          className="text-sm text-gray-700 font-medium mb-2 block"
+          className="text-sm text-gray-700 mb-2 block font-medium"
         >
           {label}
         </label>
@@ -152,7 +154,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <button
               type="button"
               onClick={() => setIsPreview(false)}
-              className="rounded text-sm text-gray-700 hover:bg-gray-200 font-medium flex items-center gap-1 px-2 py-1"
+              className="rounded text-sm text-gray-700 hover:bg-gray-200 flex items-center gap-1 px-2 py-1 font-medium"
             >
               <svg
                 className="h-4 w-4"
@@ -174,8 +176,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             <div
               className="ql-editor preview-content"
               dangerouslySetInnerHTML={{
-                __html:
-                  value || '<p class="text-gray-400">No content to preview</p>',
+                __html: value
+                  ? sanitizeRichText(value)
+                  : '<p class="text-gray-400">No content to preview</p>',
               }}
             />
           </div>
@@ -208,9 +211,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </div>
       )}
 
-      {error ? (
-        <InlineMessage message={error} fieldID={fieldId} />
-      ) : null}
+      {error ? <InlineMessage message={error} fieldID={fieldId} /> : null}
       {helpText && <p className="text-sm text-gray-500 mt-1">{helpText}</p>}
       <style jsx global>{`
         .rich-text-editor .quill {

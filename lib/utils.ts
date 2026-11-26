@@ -51,7 +51,9 @@ export interface JsonLdSchema {
 }
 
 export function generateJsonLd(schema: JsonLdSchema): string {
-  return JSON.stringify(schema, null, 2);
+  // JSON.stringify leaves "<" intact. Inside a script tag that ends the tag
+  // early, so a description can break out of the JSON-LD block.
+  return JSON.stringify(schema, null, 2).replace(/</g, '\\u003c');
 }
 
 export function cn(...inputs: ClassNameValue[]) {
