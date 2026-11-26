@@ -26,7 +26,7 @@ type PublicationCoverProps = {
   resourceType: string | null;
   sectors: string[];
   geographies: string[];
-  authors: string[];
+  contributorNames: string[];
   publisherName: string | null;
   illustration: string;
   license: string | null;
@@ -43,7 +43,7 @@ export function PublicationCover({
   resourceType,
   sectors,
   geographies,
-  authors,
+  contributorNames,
   publisherName,
   illustration,
   license,
@@ -152,9 +152,9 @@ export function PublicationCover({
                 </ul>
               ) : null}
               <div className="flex items-center gap-3">
-                {authors.length > 0 ? (
+                {contributorNames.length > 0 ? (
                   <div className="flex shrink-0 -space-x-2" aria-hidden>
-                    {authors.slice(0, 3).map((name) => (
+                    {contributorNames.slice(0, 3).map((name) => (
                       <InitialsAvatar
                         key={name}
                         name={name}
@@ -164,15 +164,15 @@ export function PublicationCover({
                   </div>
                 ) : null}
                 <p className="min-w-0 text-100 leading-[21px]">
-                  {authors.length > 0 ? (
+                  {contributorNames.length > 0 ? (
                     <span className="block font-medium text-[#0a0a0a]">
-                      {authors.join(', ')}
+                      {contributorNames.join(', ')}
                     </span>
                   ) : null}
                   {publisherName ? (
                     <span
                       className={
-                        authors.length > 0
+                        contributorNames.length > 0
                           ? 'block text-[#6b6b6b]'
                           : 'block font-medium text-[#0a0a0a]'
                       }

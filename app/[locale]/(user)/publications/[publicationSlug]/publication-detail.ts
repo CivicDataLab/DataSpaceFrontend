@@ -149,7 +149,7 @@ export function publishedOn(publication: PublicationRecord): string | null {
 }
 
 /** Contributors' names, each once. */
-export function publicationAuthorNames(
+export function publicationContributorNames(
   publication: PublicationRecord
 ): string[] {
   return uniqueNames(publication.contributors.map((user) => user.fullName));
@@ -160,7 +160,7 @@ export function publicationCitation(
   publication: PublicationRecord,
   publisherName: string | null
 ): string {
-  const authors = publicationAuthorNames(publication).join(', ');
+  const authors = publicationContributorNames(publication).join(', ');
   const year = String(
     publication.publicationDate || publication.created || ''
   ).slice(0, 4);

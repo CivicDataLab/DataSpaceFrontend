@@ -16,8 +16,8 @@ import { PublicationCover } from './components/PublicationCover';
 import { PublicationFiles } from './components/PublicationFiles';
 import { PublicationInformation } from './components/PublicationInformation';
 import {
-  publicationAuthorNames,
   publicationCitation,
+  publicationContributorNames,
   publicationIllustration,
   publicationMedia,
   publicationPublisher,
@@ -125,7 +125,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
   const geographies = uniqueNames(
     publication.geographies.map((geography) => geography.name)
   );
-  const authors = publicationAuthorNames(publication);
+  const contributorNames = publicationContributorNames(publication);
   const publisher = publicationPublisher(publication);
   const media = publicationMedia(publication);
   const files = media.filter(
@@ -143,7 +143,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
     url: pageUrl,
     description: publication.description ?? undefined,
     genre: resourceType ?? undefined,
-    author: authors.map((name) => ({ '@type': 'Person', name })),
+    author: contributorNames.map((name) => ({ '@type': 'Person', name })),
     datePublished: publication.publicationDate ?? undefined,
     license: datasetLicenseTermsUrl(publication.license) ?? undefined,
     publisher: {
@@ -171,7 +171,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
           resourceType={resourceType}
           sectors={sectors}
           geographies={geographies}
-          authors={authors}
+          contributorNames={contributorNames}
           publisherName={publisher?.name ?? null}
           illustration={publicationIllustration(publication.resourceType)}
           license={license}
@@ -189,7 +189,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
             license={license}
             licenseTermsHref={datasetLicenseTermsUrl(publication.license)}
             publisher={publisher}
-            authors={authors}
+            contributorNames={contributorNames}
             sourceHref={sourceHref}
             citation={publicationCitation(publication, publisher?.name ?? null)}
           />
