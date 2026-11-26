@@ -187,7 +187,8 @@ interface QueryParams {
   types?: string; // New: comma-separated list of types to search
 }
 
-const ALL_LISTING_TYPES = 'dataset,usecase,aimodel,publisher';
+const ALL_LISTING_TYPES =
+  'dataset,usecase,aimodel,publication,event,publisher';
 
 type Action =
   | { type: 'SET_PAGE_SIZE'; payload: number }
@@ -574,6 +575,10 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
         return publicHref('usecases', item.url_slug, item.id);
       case 'aimodel':
         return publicHref('aimodels', item.url_slug, item.id);
+      case 'publication':
+        return publicHref('publications', item.url_slug, item.id);
+      case 'event':
+        return publicHref('events', item.url_slug, item.id);
       case 'collaborative':
         return getCollaborativeDetailUrl(item.slug);
       case 'publisher':
@@ -1051,7 +1056,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                       : 'secondary'
                   }
                   onClick={() => handleTypeFilter(ALL_LISTING_TYPES)}
-                  size="large"
+                  size="medium"
                   className={getTypeButtonClass(ALL_LISTING_TYPES)}
                 >
                   All
@@ -1064,6 +1069,8 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                         {(displayTypeCounts.dataset || 0) +
                           (displayTypeCounts.usecase || 0) +
                           (displayTypeCounts.aimodel || 0) +
+                          (displayTypeCounts.publication || 0) +
+                          (displayTypeCounts.event || 0) +
                           (displayTypeCounts.publisher || 0)}
                         )
                       </span>
@@ -1074,7 +1081,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     queryParams.types === 'dataset' ? 'primary' : 'secondary'
                   }
                   onClick={() => handleTypeFilter('dataset')}
-                  size="large"
+                  size="medium"
                   className={getTypeButtonClass('dataset')}
                 >
                   Datasets
@@ -1089,7 +1096,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     queryParams.types === 'usecase' ? 'primary' : 'secondary'
                   }
                   onClick={() => handleTypeFilter('usecase')}
-                  size="large"
+                  size="medium"
                   className={getTypeButtonClass('usecase')}
                 >
                   Use Cases
@@ -1104,7 +1111,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     queryParams.types === 'aimodel' ? 'primary' : 'secondary'
                   }
                   onClick={() => handleTypeFilter('aimodel')}
-                  size="large"
+                  size="medium"
                   className={getTypeButtonClass('aimodel')}
                 >
                   AI Models
@@ -1116,12 +1123,44 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                 </Button>
                 <Button
                   kind={
+                    queryParams.types === 'publication'
+                      ? 'primary'
+                      : 'secondary'
+                  }
+                  onClick={() => handleTypeFilter('publication')}
+                  size="medium"
+                  className={getTypeButtonClass('publication')}
+                >
+                  Publications
+                  {displayTypeCounts.publication !== undefined && (
+                    <span className="text-xs ml-1">
+                      ({displayTypeCounts.publication || 0})
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  kind={
+                    queryParams.types === 'event' ? 'primary' : 'secondary'
+                  }
+                  onClick={() => handleTypeFilter('event')}
+                  size="medium"
+                  className={getTypeButtonClass('event')}
+                >
+                  Events
+                  {displayTypeCounts.event !== undefined && (
+                    <span className="text-xs ml-1">
+                      ({displayTypeCounts.event || 0})
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  kind={
                     queryParams.types === 'collaborative'
                       ? 'primary'
                       : 'secondary'
                   }
                   onClick={() => handleTypeFilter('collaborative')}
-                  size="large"
+                  size="medium"
                   className={getTypeButtonClass('collaborative')}
                 >
                   Collaboratives
@@ -1136,7 +1175,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                     queryParams.types === 'publisher' ? 'primary' : 'secondary'
                   }
                   onClick={() => handleTypeFilter('publisher')}
-                  size="large"
+                  size="medium"
                   className={getTypeButtonClass('publisher')}
                 >
                   Publishers
@@ -1197,6 +1236,17 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                         title: 'Use Cases',
                         subtitle:
                           'The most popular use cases on CivicDataSpace',
+                      },
+                      {
+                        key: 'publication',
+                        title: 'Publications',
+                        subtitle:
+                          'The most popular publications on CivicDataSpace',
+                      },
+                      {
+                        key: 'event',
+                        title: 'Events',
+                        subtitle: 'The most popular events on CivicDataSpace',
                       },
                       {
                         key: 'publisher',
