@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { GetDatasetQuery } from '@/gql/generated/graphql';
 import { Button, Divider, Icon, Tag, Text, Tooltip } from 'opub-ui';
 
-import { GetDatasetQuery } from '@/gql/generated/graphql';
 import { datasetLicenseLabel } from '@/lib/datasetLicense';
-import { cn, formatDate, getWebsiteTitle, mediaUrl } from '@/lib/utils';
+import { websiteLabel } from '@/lib/public-entity';
+import { cn, formatDate, mediaUrl } from '@/lib/utils';
 import { Icons } from '@/components/icons';
-import { RichTextRenderer } from '@/components/RichTextRenderer';
 import MediaImage from '@/components/MediaImage';
+import { RichTextRenderer } from '@/components/RichTextRenderer';
 import Styles from '../../../dataset.module.scss';
 
 interface MetadataProps {
@@ -23,27 +24,6 @@ interface MetadataItem {
 }
 
 const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
-  const [sourceTitle, setSourceTitle] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchTitle = async () => {
-      try {
-        const urlItem = (data?.metadata || []).find(
-          (item) => item.metadataItem?.dataType === 'URL'
-        );
-
-        if (urlItem && urlItem.value) {
-          const title = await getWebsiteTitle(urlItem.value);
-          setSourceTitle(title);
-        }
-      } catch (error) {
-        console.error('Error fetching website title:', error);
-      }
-    };
-
-    fetchTitle();
-  }, [data?.metadata]);
-
   if (!data) {
     return null;
   }
@@ -197,7 +177,7 @@ const MetadataComponent: React.FC<MetadataProps> = ({ data, setOpen }) => {
             {item.type === 'URL' ? (
               <Link href={item.value} target="_blank">
                 <Text className="underline" color="highlight" variant="bodyLg">
-                  {sourceTitle?.trim() ? sourceTitle : 'Visit Website'}
+                  {websiteLabel(item.value) || item.value}
                 </Text>
               </Link>
             ) : item.type === 'DATE' ? (

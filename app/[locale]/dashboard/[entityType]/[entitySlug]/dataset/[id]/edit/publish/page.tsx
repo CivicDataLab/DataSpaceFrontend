@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { graphql } from '@/gql';
@@ -21,9 +21,10 @@ import {
   toast,
 } from 'opub-ui';
 
-import { datasetLicenseLabel } from '@/lib/datasetLicense';
 import { GraphQL } from '@/lib/api';
-import { formatDate, getWebsiteTitle } from '@/lib/utils';
+import { datasetLicenseLabel } from '@/lib/datasetLicense';
+import { websiteLabel } from '@/lib/public-entity';
+import { formatDate } from '@/lib/utils';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 
 const datasetSummaryQuery = graphql(`
@@ -237,27 +238,9 @@ const Page = () => {
     Boolean(dataset?.license);
   const isPublishDisabled = !dataset || !hasResources || !hasRequiredMetadata;
 
-  const [sourceTitle, setSourceTitle] = useState<string | null>(null);
   const sourceUrl = dataset?.metadata.find(
     (item) => item.metadataItem?.dataType === 'URL'
   )?.value;
-
-  useEffect(() => {
-    const fetchTitle = async () => {
-      if (!sourceUrl) {
-        setSourceTitle(null);
-        return;
-      }
-      try {
-        const title = await getWebsiteTitle(sourceUrl);
-        setSourceTitle(title);
-      } catch (error) {
-        console.error('Error fetching website title:', error);
-      }
-    };
-
-    void fetchTitle();
-  }, [sourceUrl]);
 
   const extraMetadata =
     dataset?.metadata.filter((item) => item.metadataItem?.dataType !== 'URL') ??
@@ -351,7 +334,7 @@ const Page = () => {
                     {sourceUrl ? (
                       <Link href={sourceUrl} target="_blank">
                         <Text className="underline" color="highlight">
-                          {sourceTitle?.trim() || sourceUrl}
+                          {websiteLabel(sourceUrl) || sourceUrl}
                         </Text>
                       </Link>
                     ) : (
