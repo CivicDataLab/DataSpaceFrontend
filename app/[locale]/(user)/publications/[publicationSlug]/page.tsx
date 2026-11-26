@@ -16,6 +16,7 @@ import { PublicationCover } from './components/PublicationCover';
 import { PublicationFiles } from './components/PublicationFiles';
 import { PublicationInformation } from './components/PublicationInformation';
 import {
+  publicationAuthorNames,
   publicationCitation,
   publicationIllustration,
   publicationMedia,
@@ -124,7 +125,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
   const geographies = uniqueNames(
     publication.geographies.map((geography) => geography.name)
   );
-  const authors = uniqueNames(publication.authors);
+  const authors = publicationAuthorNames(publication);
   const publisher = publicationPublisher(publication);
   const media = publicationMedia(publication);
   const files = media.filter(

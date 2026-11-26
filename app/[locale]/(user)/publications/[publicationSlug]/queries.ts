@@ -29,7 +29,10 @@ export const publicationDetailsQuery = graphql(`
       status
       title
       description
-      authors
+      contributors {
+        id
+        fullName
+      }
       publicationDate
       created
       license

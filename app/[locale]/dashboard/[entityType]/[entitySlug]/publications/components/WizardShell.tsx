@@ -95,7 +95,7 @@ export function PublicationWizard({
       : Boolean(
           publication?.title?.trim() &&
             publication.description?.trim() &&
-            (publication.authors?.length ?? 0) > 0 &&
+            (publication.contributors?.length ?? 0) > 0 &&
             publication.publicationDate &&
             publication.license &&
             publication.resourceType?.id &&

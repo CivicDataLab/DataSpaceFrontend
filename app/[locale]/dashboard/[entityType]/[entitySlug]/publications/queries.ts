@@ -22,11 +22,18 @@ export type EditorBlock = {
   created?: string | null;
 };
 
+export type EditorContributor = {
+  id: string;
+  fullName?: string | null;
+  username?: string | null;
+  profilePicture?: { url?: string | null } | null;
+};
+
 export type EditorPublication = {
   id: string;
   title?: string | null;
   description?: string | null;
-  authors?: Array<string> | null;
+  contributors?: Array<EditorContributor> | null;
   publicationDate?: string | null;
   license?: string | null;
   externalSourceLink?: string | null;
@@ -46,7 +53,14 @@ export const publicationEditorQuery = operation<
       id
       title
       description
-      authors
+      contributors {
+        id
+        fullName
+        username
+        profilePicture {
+          url
+        }
+      }
       publicationDate
       license
       externalSourceLink
