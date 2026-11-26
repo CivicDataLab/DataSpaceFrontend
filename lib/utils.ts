@@ -176,21 +176,6 @@ export function formatDateString(
       });
 }
 
-export async function getWebsiteTitle(url: string): Promise<string | null> {
-  try {
-    const response = await fetch(
-      `/api/website-title?url=${encodeURIComponent(url)}`
-    );
-    if (!response.ok) return null;
-
-    const data: unknown = await response.json();
-    if (!data || typeof data !== 'object' || !('title' in data)) return null;
-    return typeof data.title === 'string' ? data.title : null;
-  } catch {
-    return null;
-  }
-}
-
 // Feature Sitemaps
 export const getSiteMapConfig = () => ({
   itemsPerPage: parseInt(process.env.FEATURE_SITEMAP_ITEMS_PER_PAGE || '1000'),

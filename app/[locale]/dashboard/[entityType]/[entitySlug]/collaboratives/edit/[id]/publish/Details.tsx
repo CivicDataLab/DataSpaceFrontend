@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Tag, Text } from 'opub-ui';
 
-import { getWebsiteTitle, mediaUrl } from '@/lib/utils';
-import { RichTextRenderer } from '@/components/RichTextRenderer';
+import { websiteLabel } from '@/lib/public-entity';
+import { mediaUrl } from '@/lib/utils';
 import MediaImage from '@/components/MediaImage';
+import { RichTextRenderer } from '@/components/RichTextRenderer';
 
 interface NamedItem {
   id?: string | null;
@@ -32,42 +32,14 @@ interface CollaborativePublishDetails {
 }
 
 interface DetailsProps {
-  data?: { collaboratives?: Array<CollaborativePublishDetails | null> | null } | null;
+  data?: {
+    collaboratives?: Array<CollaborativePublishDetails | null> | null;
+  } | null;
 }
 
 const Details = ({ data }: DetailsProps) => {
   const collaborative = data?.collaboratives?.[0];
   const platformUrl = collaborative?.platformUrl;
-  const [platformTitle, setPlatformTitle] = useState<string | null>(
-    platformUrl === null ? 'N/A' : null
-  );
-  const [prevPlatformUrl, setPrevPlatformUrl] = useState(platformUrl);
-  if (platformUrl !== prevPlatformUrl) {
-    setPrevPlatformUrl(platformUrl);
-    if (platformUrl === null) {
-      setPlatformTitle('N/A');
-    }
-  }
-
-  useEffect(() => {
-    if (!collaborative || platformUrl === null) return;
-
-    const fetchTitle = async () => {
-      try {
-        const urlItem = collaborative?.platformUrl;
-
-        if (urlItem && typeof urlItem === 'object' && urlItem.value) {
-          const title = await getWebsiteTitle(urlItem.value);
-          setPlatformTitle(title);
-        }
-      } catch (error) {
-        console.error('Error fetching website title:', error);
-      }
-    };
-
-    fetchTitle();
-  }, [collaborative, platformUrl]);
-
   const platformHref =
     typeof platformUrl === 'string'
       ? platformUrl
@@ -168,7 +140,7 @@ const Details = ({ data }: DetailsProps) => {
                     color="highlight"
                     variant="bodyMd"
                   >
-                    {platformTitle?.trim() ? platformTitle : 'Open Link'}
+                    {websiteLabel(platformHref) || platformHref}
                   </Text>
                 </Link>
               </div>
