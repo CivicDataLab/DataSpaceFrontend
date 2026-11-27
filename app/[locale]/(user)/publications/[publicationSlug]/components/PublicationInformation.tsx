@@ -23,7 +23,7 @@ type PublicationInformationProps = {
   license: string | null;
   licenseTermsHref: string | null;
   publisher: PublicationPublisher | null;
-  authors: string[];
+  contributorNames: string[];
   sourceHref: string | null;
   citation: string;
 };
@@ -36,7 +36,7 @@ export function PublicationInformation({
   license,
   licenseTermsHref,
   publisher,
-  authors,
+  contributorNames,
   sourceHref,
   citation,
 }: PublicationInformationProps) {
@@ -119,10 +119,10 @@ export function PublicationInformation({
           ) : null}
         </dl>
 
-        {authors.length > 0 ? (
+        {contributorNames.length > 0 ? (
           <Subsection id="publication-contributors" title="Contributors">
             <ul className="m-0 grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
-              {authors.map((name) => (
+              {contributorNames.map((name) => (
                 <li key={name} className="flex min-w-0 items-center gap-3">
                   <InitialsAvatar name={name} />
                   <span className="min-w-0 break-words text-100 font-medium leading-[17.5px] text-[#0a0a0a]">

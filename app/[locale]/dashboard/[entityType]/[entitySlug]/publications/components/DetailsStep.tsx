@@ -112,9 +112,11 @@ export function DetailsStep({ publicationId }: { publicationId?: string }) {
           value: String(geography.id),
         })),
         externalSourceLink: publication.externalSourceLink ?? '',
-        contributors: (publication.authors ?? []).map((name, index) => ({
-          id: `author-${index}-${name}`,
-          name,
+        contributors: (publication.contributors ?? []).map((user) => ({
+          id: user.id,
+          name: user.fullName ?? '',
+          username: user.username ?? undefined,
+          imageUrl: mediaUrl(user.profilePicture?.url) || undefined,
         })),
       }
     : null;

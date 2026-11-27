@@ -144,8 +144,10 @@ export default function PublicationPreviewPage() {
         <Text variant="heading2xl" fontWeight="semibold">
           {publication.title || 'Untitled Publication'}
         </Text>
-        {publication.authors?.length ? (
-          <Text color="subdued">{publication.authors.join(', ')}</Text>
+        {publication.contributors?.length ? (
+          <Text color="subdued">
+            {publication.contributors.map((user) => user.fullName).join(', ')}
+          </Text>
         ) : null}
         <Text color="subdued">
           {[

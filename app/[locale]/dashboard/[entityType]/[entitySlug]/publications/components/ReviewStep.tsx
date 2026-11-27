@@ -121,7 +121,7 @@ export function ReviewStep({ publicationId }: { publicationId: string }) {
   const issues: string[] = [];
   if (!publication?.title?.trim()) issues.push('Enter a resource name.');
   if (!publication?.description?.trim()) issues.push('Enter a description.');
-  if ((publication?.authors?.length ?? 0) === 0) {
+  if ((publication?.contributors?.length ?? 0) === 0) {
     issues.push('Add at least one contributor.');
   }
   if (!publication?.publicationDate) issues.push('Enter a date.');
@@ -219,16 +219,16 @@ export function ReviewStep({ publicationId }: { publicationId: string }) {
             <Text>{publication?.description || '—'}</Text>
           </ReviewRow>
           <ReviewRow label="Contributors">
-            {(publication?.authors?.length ?? 0) > 0 ? (
+            {(publication?.contributors?.length ?? 0) > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {publication?.authors?.map((name) => (
+                {publication?.contributors?.map((user) => (
                   <Tag
-                    key={name}
+                    key={user.id}
                     fillColor="#F1F3F5"
                     textColor="#1A1A1A"
                     borderRadius="6px"
                   >
-                    {name}
+                    {user.fullName}
                   </Tag>
                 ))}
               </div>

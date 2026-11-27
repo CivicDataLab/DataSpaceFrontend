@@ -69,9 +69,7 @@ export function publicationWriteInput(details: DetailsDraft) {
   return {
     title: details.title.trim(),
     description: details.description.trim(),
-    authors: details.contributors
-      .map((contributor) => contributor.name.trim())
-      .filter(Boolean),
+    contributorIds: details.contributors.map((contributor) => contributor.id),
     publicationDate: details.publicationDate || null,
     license: details.license || null,
     resourceTypeId: details.resourceTypeId || null,

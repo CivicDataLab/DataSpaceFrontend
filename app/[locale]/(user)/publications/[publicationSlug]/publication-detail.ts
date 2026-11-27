@@ -15,6 +15,7 @@ import {
   formatShortDate,
   organizationPublisherHref,
   personPublisherHref,
+  uniqueNames,
 } from '@/lib/public-entity';
 
 export type PublicationRecord = NonNullable<
@@ -147,12 +148,19 @@ export function publishedOn(publication: PublicationRecord): string | null {
   );
 }
 
+/** Contributors' names, each once. */
+export function publicationContributorNames(
+  publication: PublicationRecord
+): string[] {
+  return uniqueNames(publication.contributors.map((user) => user.fullName));
+}
+
 /** One-line reference: authors (year). Title [Type]. Publisher. CivicDataSpace. */
 export function publicationCitation(
   publication: PublicationRecord,
   publisherName: string | null
 ): string {
-  const authors = publication.authors.filter(Boolean).join(', ');
+  const authors = publicationContributorNames(publication).join(', ');
   const year = String(
     publication.publicationDate || publication.created || ''
   ).slice(0, 4);
