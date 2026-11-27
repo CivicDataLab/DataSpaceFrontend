@@ -10,8 +10,8 @@ import {
   Text,
 } from 'opub-ui';
 
-import { toTitleCase } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import { filterGroupTitle, filterValueLabel } from './filter-labels';
 import GeographyFilter from './GeographyFilter';
 
 interface FilterProps {
@@ -90,7 +90,9 @@ const Filter: React.FC<FilterProps> = ({
                   className=" border-surfaceDefault"
                 >
                   <AccordionTrigger className="flex w-full flex-wrap items-center gap-2 rounded-1 bg-[#1F5F8D1A] px-3 py-[10px] hover:no-underline">
-                    <Text fontWeight="medium">{toTitleCase(category)}</Text>
+                    <Text fontWeight="medium">
+                      {filterGroupTitle(category)}
+                    </Text>
                   </AccordionTrigger>
                   <AccordionContent
                     className="flex w-full flex-col px-3 pb-0 pt-2"
@@ -103,6 +105,7 @@ const Filter: React.FC<FilterProps> = ({
                       name={category}
                       options={data.map((option) => ({
                         ...option,
+                        label: filterValueLabel(category, option.value),
                         disabled:
                           lockedFilters[category]?.includes(option.value) ||
                           false,

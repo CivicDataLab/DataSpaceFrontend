@@ -10,7 +10,6 @@ import type { PublicCollaborativeDetailsQuery } from '@/gql/generated/graphql';
 
 import {
   backendFileUrl,
-  formatShortDate,
   joinNames,
   organizationPublisherHref,
   personPublisherHref,
@@ -18,6 +17,8 @@ import {
   uniqueNames,
 } from '@/lib/public-entity';
 import { publicHref } from '@/lib/public-link';
+import { formatDate } from '@/lib/utils';
+import { toSdgGoal, type SdgGoal } from '@/components/sdg-goals/sdg-goal';
 
 export type CollaborativeRecord = NonNullable<
   PublicCollaborativeDetailsQuery['collaborativeBySlug']
@@ -38,8 +39,6 @@ export type ResourceRow = {
   dateLabel: string | null;
   geography: string | null;
   sector: string | null;
-  /** Publication type, e.g. "Policy brief". */
-  typeLabel: string | null;
   downloadCount: number;
   publisherName: string | null;
   publisherImage: string;
@@ -54,14 +53,6 @@ export type MemberRow = {
   href: string;
   imageSrc: string | null;
   caption: string | null;
-};
-
-export type SdgGoal = {
-  id: string;
-  number: string;
-  name: string;
-  description: string | null;
-  imageSrc: string | null;
 };
 
 /** Organisations, people, and connected resources the page can show. */
@@ -115,19 +106,7 @@ function peopleRows(collaborative: CollaborativeRecord): MemberRow[] {
 export function collaborativeSdgs(
   collaborative: CollaborativeRecord
 ): SdgGoal[] {
-  return (collaborative.sdgs ?? []).map((sdg) => {
-    const number =
-      sdg.number != null
-        ? String(sdg.number)
-        : sdg.code.replace(/\D/g, '').replace(/^0+/, '');
-    return {
-      id: sdg.id,
-      number,
-      name: sdg.name.trim(),
-      description: sdg.description?.trim() || null,
-      imageSrc: number ? `/SDG/SDG${number}.png` : null,
-    };
-  });
+  return (collaborative.sdgs ?? []).map(toSdgGoal);
 }
 
 /** Description as plain text, for metadata and search results. */
@@ -161,10 +140,9 @@ function useCaseRow(
     href: publicHref('usecases', useCase.urlSlug, useCase.id),
     imageSrc: backendFileUrl(useCase.logo?.url),
     sortDate: useCase.modified ?? null,
-    dateLabel: formatShortDate(useCase.modified),
+    dateLabel: formatDate(useCase.modified ?? null),
     geography,
     sector,
-    typeLabel: null,
     downloadCount: 0,
     ...publisherOf(individual, useCase.user, useCase.organization),
     searchText: searchable(title, description, geography, sector, ...tags),
@@ -188,10 +166,9 @@ function publicationRow(
     href: publicHref('publications', publication.urlSlug, publication.id),
     imageSrc: null,
     sortDate: date,
-    dateLabel: formatShortDate(date),
+    dateLabel: formatDate(date),
     geography,
     sector,
-    typeLabel,
     downloadCount: 0,
     ...publisherOf(
       publication.isIndividualPublication,
@@ -218,10 +195,9 @@ function datasetRow(
     href: publicHref('datasets', dataset.urlSlug, dataset.id),
     imageSrc: null,
     sortDate: dataset.modified ?? null,
-    dateLabel: formatShortDate(dataset.modified),
+    dateLabel: formatDate(dataset.modified ?? null),
     geography,
     sector,
-    typeLabel: null,
     downloadCount: dataset.downloadCount ?? 0,
     ...publisherOf(
       dataset.isIndividualDataset,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { type TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { QueryClient } from '@tanstack/react-query';
-import { request } from 'graphql-request';
+import { ClientError, request } from 'graphql-request';
 import { getServerSession, type Session } from 'next-auth';
 import { getSession } from 'next-auth/react';
 
@@ -100,6 +100,23 @@ export async function GraphQLPublic<TResult, TVariables>(
     entityHeaders
   );
   return data;
+}
+
+/**
+ * For `.catch()` on a detail-page lookup. The API answers an unknown or
+ * hidden record with a GraphQL error on a normal 200 response, so that
+ * becomes null ("not found"). Any other failure — network, timeout, server
+ * error — is passed on, so the visitor sees an error page, not a 404.
+ */
+export function nullIfMissing(error: unknown): null {
+  if (
+    error instanceof ClientError &&
+    error.response.status === 200 &&
+    error.response.errors?.length
+  ) {
+    return null;
+  }
+  throw error;
 }
 
 // wrapper function for react-query to be used by server components

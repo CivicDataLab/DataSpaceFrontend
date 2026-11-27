@@ -167,7 +167,7 @@ export function CollaborativeExplore({
               rows={matches['use-cases']}
               noun={NOUNS['use-cases']}
               recentLabel="Newest first"
-              initial={3}
+              initial={4}
               step={null}
               moreLabel="View all use cases"
               empty={noMatch('use-cases')}
@@ -186,8 +186,8 @@ export function CollaborativeExplore({
               rows={matches.publications}
               noun={NOUNS.publications}
               recentLabel="Newest first"
-              initial={6}
-              step={6}
+              initial={8}
+              step={8}
               moreLabel="Load more publications"
               empty={noMatch('publications')}
             />
@@ -205,8 +205,8 @@ export function CollaborativeExplore({
               rows={matches.datasets}
               noun={NOUNS.datasets}
               recentLabel="Recently updated"
-              initial={6}
-              step={6}
+              initial={8}
+              step={8}
               moreLabel="Load more datasets"
               empty={noMatch('datasets')}
             />
@@ -374,7 +374,7 @@ function ResourceGrid({
       </div>
       <ul
         id={listId}
-        className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3"
+        className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
       >
         {visible.map((row) => (
           <li key={row.id} className="min-w-0">
@@ -417,13 +417,13 @@ function ResourceGrid({
   );
 }
 
-const ICON_COLOR = {
-  'use-case': 'success',
-  publication: 'highlight',
-  dataset: 'warning',
-} as const;
-
+/** Same card props as the listing pages, so cards look identical there and here. */
 function cardProps(row: ResourceRow) {
+  // The use case listing shows no description, so neither do these cards.
+  let description = row.description;
+  if (row.kind === 'use-case') description = '';
+  if (row.kind === 'dataset') description = stripMarkdown(row.description);
+
   const metadata = [];
   if (row.dateLabel) {
     metadata.push({
@@ -431,15 +431,6 @@ function cardProps(row: ResourceRow) {
       label: 'Date',
       value: row.dateLabel,
       tooltip: 'Date',
-      stroke: 1.2,
-    });
-  }
-  if (row.typeLabel) {
-    metadata.push({
-      icon: Icons.publication,
-      label: 'Type',
-      value: row.typeLabel,
-      tooltip: 'Type',
       stroke: 1.2,
     });
   }
@@ -464,8 +455,7 @@ function cardProps(row: ResourceRow) {
 
   return {
     title: row.title,
-    description:
-      row.kind === 'dataset' ? stripMarkdown(row.description) : row.description,
+    description,
     metadataContent: firstThree(metadata),
     leftFooterChips: row.sector
       ? [
@@ -485,9 +475,10 @@ function cardProps(row: ResourceRow) {
     ],
     imageUrl: row.imageSrc ?? undefined,
     variation: 'collapsed' as const,
-    iconColor: ICON_COLOR[row.kind],
+    iconColor: 'warning' as const,
     href: row.href,
-    withViewButton: false,
+    // Listings show "View" on use case and publication cards, not on datasets.
+    withViewButton: row.kind !== 'dataset',
   };
 }
 

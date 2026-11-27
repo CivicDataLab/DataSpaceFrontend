@@ -12,13 +12,13 @@ import {
   IconShare,
   IconUsers,
 } from '@tabler/icons-react';
-import { Button, Popover, Tooltip } from 'opub-ui';
+import { Button, Popover } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
-import MediaImage from '@/components/MediaImage';
+import type { SdgGoal } from '@/components/sdg-goals/sdg-goal';
+import { SdgGoals } from '@/components/sdg-goals/SdgGoals';
 import { downloadCardImage } from '@/components/share-panel/download-card';
 import { SharePanel } from '@/components/share-panel/SharePanel';
-import type { SdgGoal } from '../collaborative-detail';
 
 type CollaborativeHeroProps = {
   backHref: string | null;
@@ -36,25 +36,6 @@ type CollaborativeHeroProps = {
     publications: number;
   };
 };
-
-/** Up to this many goals show as badges; past it the last slot reads "+N". */
-const SDG_SHOWN = 5;
-const SDG_SIZE = 58;
-/**
- * Gap between badges once they slide apart, by how many badges there are:
- * spread to fill the tile, never tucked more than 18px, never more than 2px apart.
- * Written out in full because Tailwind only builds class names it can read.
- */
-const SDG_SPREAD: Record<number, string> = {
-  1: '[--spread:clamp(-18px,calc((100cqw_-_58px)_/_1),2px)]',
-  2: '[--spread:clamp(-18px,calc((100cqw_-_116px)_/_1),2px)]',
-  3: '[--spread:clamp(-18px,calc((100cqw_-_174px)_/_2),2px)]',
-  4: '[--spread:clamp(-18px,calc((100cqw_-_232px)_/_3),2px)]',
-  5: '[--spread:clamp(-18px,calc((100cqw_-_290px)_/_4),2px)]',
-};
-
-/** Earlier badges sit on top of later ones. */
-const SDG_LAYER = ['z-[0]', 'z-[1]', 'z-[2]', 'z-[3]', 'z-[4]', 'z-[5]'];
 
 export function CollaborativeHero({
   backHref,
@@ -271,103 +252,17 @@ function StatTile({
   );
 }
 
-/**
- * Goal badges sit stacked; on hover or keyboard focus they slide apart to
- * fill the tile, each with a tooltip naming the goal.
- */
+/** The collaborative's goal badges, on a grey tile with a caption. */
 function SdgTile({ goals, linkBase }: { goals: SdgGoal[]; linkBase: string }) {
-  const overflow = goals.length > SDG_SHOWN;
-  const shown = overflow ? goals.slice(0, SDG_SHOWN - 1) : goals;
-  const rest = overflow ? goals.slice(SDG_SHOWN - 1) : [];
-  const tiles = shown.length + (overflow ? 1 : 0);
-  const slide = `shrink-0 transition-[margin] duration-200 ease-out motion-reduce:transition-none`;
-  const stacked = `-ml-[18px] group-focus-within:[margin-left:var(--spread)] group-hover:[margin-left:var(--spread)]`;
-  const goalLabel = (goal: SdgGoal) => `Goal ${goal.number}: ${goal.name}`;
-
   return (
     <div className="flex min-h-[9.7rem] min-w-0 flex-col justify-between gap-3 rounded-[16px] bg-[#f4f4f5] p-5 sm:p-6">
-      <div className="w-full [container-type:inline-size]">
-        <ul
-          className={`group m-0 flex list-none items-center p-0 ${SDG_SPREAD[tiles]}`}
-          aria-label="Goals"
-        >
-          {shown.map((goal, index) => (
-            <li
-              key={goal.id}
-              className={`${slide} ${SDG_LAYER[tiles - index]} ${index > 0 ? stacked : ''}`}
-            >
-              <Tooltip
-                side="top"
-                width="wide"
-                disableHoverableContent
-                content={
-                  <>
-                    <span className="block font-semi-bold text-primaryBlue">
-                      {goalLabel(goal)}
-                    </span>
-                    {goal.description ? (
-                      <span className="mt-[2px] block font-regular text-[#6b6b6b]">
-                        {goal.description}
-                      </span>
-                    ) : null}
-                  </>
-                }
-              >
-                <Link
-                  href={`${linkBase}/search?${new URLSearchParams({ sdgs: goal.name, types: 'collaborative' })}`}
-                  aria-label={`${goalLabel(goal)}. Show collaboratives for this goal`}
-                  className="block rounded-[6px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primaryBlue"
-                >
-                  {goal.imageSrc ? (
-                    <MediaImage
-                      src={goal.imageSrc}
-                      fallback="/SDG/SDG1.png"
-                      alt=""
-                      width={SDG_SIZE}
-                      height={SDG_SIZE}
-                      className="size-[58px] rounded-[6px] object-cover ring-2 ring-[#f4f4f5]"
-                    />
-                  ) : (
-                    <span className="flex size-[58px] items-center justify-center rounded-[6px] bg-white text-100 font-semi-bold text-primaryBlue ring-2 ring-[#f4f4f5]">
-                      {goal.number || 'SDG'}
-                    </span>
-                  )}
-                </Link>
-              </Tooltip>
-            </li>
-          ))}
-          {overflow ? (
-            <li className={`${slide} ${SDG_LAYER[0]} ${stacked}`}>
-              {/* Hoverable, so a long list can be scrolled inside the tooltip. */}
-              <Tooltip
-                side="top"
-                width="wide"
-                content={
-                  <>
-                    <span className="block font-semi-bold text-primaryBlue">
-                      {rest.length} more goals
-                    </span>
-                    <ul className="m-0 mt-[2px] list-none p-0 font-regular text-[#6b6b6b]">
-                      {rest.map((goal) => (
-                        <li key={goal.id}>{goalLabel(goal)}</li>
-                      ))}
-                    </ul>
-                  </>
-                }
-              >
-                <span
-                  tabIndex={0}
-                  role="img"
-                  aria-label={`and ${rest.length} more goals: ${rest.map(goalLabel).join(', ')}`}
-                  className="flex size-[58px] items-center justify-center rounded-[6px] bg-white text-100 font-semi-bold text-primaryBlue ring-2 ring-[#f4f4f5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primaryBlue"
-                >
-                  +{rest.length}
-                </span>
-              </Tooltip>
-            </li>
-          ) : null}
-        </ul>
-      </div>
+      <SdgGoals
+        goals={goals}
+        searchNoun="collaboratives"
+        searchHref={(goal) =>
+          `${linkBase}/search?${new URLSearchParams({ sdgs: goal.code, types: 'collaborative' })}`
+        }
+      />
       <p className="self-end text-right font-primary text-[16px] font-regular leading-[20px] tracking-[0] text-[#0a0a0a]">
         The <strong className="font-semi-bold">SDG goals</strong>
         <br />

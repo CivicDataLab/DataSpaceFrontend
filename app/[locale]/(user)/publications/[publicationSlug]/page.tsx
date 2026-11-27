@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { PublicationStatus } from '@/gql/generated/graphql';
 
-import { GraphQLPublic } from '@/lib/api';
+import { GraphQLPublic, nullIfMissing } from '@/lib/api';
 import {
   datasetLicenseLabel,
   datasetLicenseTermsUrl,
@@ -85,8 +85,8 @@ export async function generateMetadata({
 export default async function PublicationDetailPage({ params }: PageProps) {
   const { publicationSlug } = await params;
 
-  // The API returns null for a publication that doesn't exist, so a thrown
-  // error here is a real failure (API down) and shows the error page, not 404.
+  // Unknown publications come back as null and unpublished ones as a GraphQL
+  // error; both are 404. An API outage still shows the error page.
 
   // Old links used the record's UUID; send them to the readable address.
   if (isUuid(publicationSlug)) {
@@ -94,7 +94,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
       publicationLegacyMetaQuery,
       {},
       { publicationId: publicationSlug }
-    );
+    ).catch(nullIfMissing);
     const urlSlug = legacy?.getPublication?.urlSlug;
     if (!urlSlug) notFound();
     permanentRedirect(publicHref('publications', urlSlug, urlSlug));
@@ -104,7 +104,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
     publicationDetailsQuery,
     {},
     { publicId: publicationSlug }
-  );
+  ).catch(nullIfMissing);
   const publication = result?.getPublication;
   if (!publication || publication.status !== PublicationStatus.Published)
     notFound();
@@ -178,7 +178,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
           sourceHref={sourceHref}
           files={files}
         />
-        <div className="mx-auto box-border flex min-w-0 max-w-[1232px] flex-col gap-12 px-4 pb-12 pt-12 md:px-6 lg:px-8 xl:px-10">
+        <div className="mx-auto box-border flex min-w-0 max-w-[1480px] flex-col gap-12 px-4 pb-12 pt-12 md:px-6 lg:px-8 xl:px-10">
           <PublicationFiles items={media} />
           <PublicationInformation
             resourceType={resourceType}

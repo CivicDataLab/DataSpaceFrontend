@@ -1,5 +1,4 @@
 .tag,
-.sdg,
 .sector {
   display: inline-flex;
   align-items: center;
@@ -28,39 +27,12 @@
   color: #0b3865;
 }
 
-.sdg {
-  gap: 6px;
-  border-color: color-mix(in srgb, var(--sdg) 45%, transparent);
-  background: color-mix(in srgb, var(--sdg) 12%, #fff);
-  color: #0a0a0a;
-}
-
-.mark {
-  width: 10px;
-  height: 10px;
-  flex: none;
-  border-radius: 2px;
-  background: var(--sdg);
-}
-
-.sdg:hover,
-.sdg:focus-visible {
-  background: var(--sdg);
-  color: #fff;
-}
-
-.sdg:hover .mark,
-.sdg:focus-visible .mark {
-  background: #fff;
-}
-
 .sector:hover,
 .sector:focus-visible {
   background: var(--base-gray-slate-solid-3);
 }
 
 .tag:focus-visible,
-.sdg:focus-visible,
 .sector:focus-visible {
   outline: 2px solid var(--blue-primary-color);
   outline-offset: 2px;

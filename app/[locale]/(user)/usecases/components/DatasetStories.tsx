@@ -1,12 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import { Card } from 'opub-ui';
 
 import { publicHref } from '@/lib/public-link';
 import { backendFileUrl } from '@/lib/public-entity';
 import { formatDate } from '@/lib/utils';
 import { Icons } from '@/components/icons';
+import { LoadMoreButton } from '@/components/LoadMoreButton';
 import { stripMarkdown } from '../../search/components/UnifiedListingComponent';
+
+/** Datasets shown at first, and how many each "Load more" adds. */
+const PAGE_SIZE = 8;
 
 type StoryDataset = {
   id: string;
@@ -33,23 +38,39 @@ type DatasetStoriesProps = {
 };
 
 export function DatasetStories({ datasets }: DatasetStoriesProps) {
+  const [limit, setLimit] = useState(PAGE_SIZE);
   const rows = datasets.filter(
     (dataset) => dataset.title?.trim() && dataset.id
   );
   if (rows.length === 0) return null;
+
+  const remaining = rows.length - limit;
 
   return (
     <section className="mt-12">
       <h2 className="text-[24px] font-semi-bold leading-[30px] text-[#0a0a0a]">
         Datasets behind this story
       </h2>
-      <ul className="mt-4 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3">
-        {rows.map((dataset) => (
+      <ul
+        id="usecase-datasets"
+        className="mt-4 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
+        {rows.slice(0, limit).map((dataset) => (
           <li key={dataset.id}>
             <Card {...listingCardProps(dataset)} />
           </li>
         ))}
       </ul>
+      {remaining > 0 ? (
+        <div className="mt-4">
+          <LoadMoreButton
+            label="Load more datasets"
+            remaining={remaining}
+            controls="usecase-datasets"
+            onClick={() => setLimit((current) => current + PAGE_SIZE)}
+          />
+        </div>
+      ) : null}
     </section>
   );
 }

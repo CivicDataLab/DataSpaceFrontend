@@ -109,8 +109,8 @@ export default async function EventDetailPage({
         meta={meta}
       />
       <div className="bg-white">
-        <div className="mx-auto w-full max-w-[1760px] px-4 py-8 md:px-6 lg:px-8 lg:py-12 xl:px-10">
-          <div className="mx-auto w-full max-w-6xl">
+        <div className="mx-auto box-border w-full max-w-[1480px] px-4 py-8 md:px-6 lg:px-8 lg:py-12 xl:px-10">
+          <div className="w-full">
             {event.lumaEmbed?.src ? (
               <iframe
                 src={event.lumaEmbed.src}

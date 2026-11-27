@@ -63,6 +63,7 @@ export function cn(...inputs: ClassNameValue[]) {
 export function formatDate(input: string | number | null): string | null {
   if (input === null || input === undefined) return null;
   const date = new Date(input);
+  if (Number.isNaN(date.getTime())) return null;
   return date.toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',

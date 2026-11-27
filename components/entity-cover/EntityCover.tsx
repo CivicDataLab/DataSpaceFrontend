@@ -38,7 +38,7 @@ const META_ICON = {
 } as const;
 
 const PAGE_GUTTER =
-  'mx-auto w-full max-w-[1760px] px-4 md:px-6 lg:px-8 xl:px-10';
+  'mx-auto box-border w-full max-w-[1480px] px-4 md:px-6 lg:px-8 xl:px-10';
 
 export function EntityCover({
   backHref,
@@ -54,7 +54,7 @@ export function EntityCover({
     <>
       <section className="bg-white">
         <div className={`${PAGE_GUTTER} pb-8 pt-10 sm:pt-14`}>
-          <div className="mx-auto w-full max-w-6xl">
+          <div className="w-full">
             <Link
               href={backHref}
               className="inline-flex w-fit items-center gap-1.5 rounded-1 text-100 font-medium leading-[18px] text-[#0a0a0a]/75 transition-colors hover:text-[#0a0a0a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primaryBlue"
@@ -121,7 +121,7 @@ export function EntityCover({
       {imageSrc ? (
         <section className="bg-baseBlueSolid4">
           <div className={`${PAGE_GUTTER} py-8 sm:py-10`}>
-            <div className="relative mx-auto aspect-[2/1] w-full max-w-6xl overflow-hidden rounded-[18px] lg:aspect-[21/8]">
+            <div className="relative aspect-[2/1] w-full overflow-hidden rounded-[18px] lg:aspect-[21/8]">
               <Image
                 src={imageSrc}
                 alt={imageAlt}

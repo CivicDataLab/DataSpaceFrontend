@@ -23,6 +23,7 @@ import { Icons } from '@/components/icons';
 import { Loading } from '@/components/loading';
 import MediaImage from '@/components/MediaImage';
 import Filter from '../../datasets/components/FIlter/Filter';
+import { filterValueLabel } from '../../datasets/components/FIlter/filter-labels';
 import Styles from '../../datasets/dataset.module.scss';
 
 // Helper function to strip markdown and HTML tags for card preview
@@ -1201,7 +1202,7 @@ const UnifiedListingComponent: React.FC<UnifiedListingProps> = ({
                             key={`${category}-${val}`}
                             onRemove={() => handleRemoveFilter(category, val)}
                           >
-                            {val}
+                            {filterValueLabel(category, val)}
                           </Pill>
                         ))
                   )}

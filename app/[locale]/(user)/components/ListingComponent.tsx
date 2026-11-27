@@ -28,6 +28,7 @@ import {
   UseCaseListingSkeleton,
 } from '@/components/loading';
 import Filter from '../datasets/components/FIlter/Filter';
+import { filterValueLabel } from '../datasets/components/FIlter/filter-labels';
 import Styles from '../datasets/dataset.module.scss';
 import { stripMarkdown } from '../search/components/UnifiedListingComponent';
 
@@ -576,7 +577,7 @@ const ListingComponent: React.FC<ListingProps> = ({
                                   : () => handleRemoveFilter(category, value)
                               }
                             >
-                              {value}
+                              {filterValueLabel(category, value)}
                             </Pill>
                           );
                         })

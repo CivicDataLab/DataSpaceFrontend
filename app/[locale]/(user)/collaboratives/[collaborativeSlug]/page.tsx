@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { ClientError } from 'graphql-request';
 
 import locales from '@/config/locales';
-import { GraphQLPublic } from '@/lib/api';
+import { GraphQLPublic, nullIfMissing } from '@/lib/api';
 import { isCollaborativeSubdomainHost } from '@/lib/collaborativesRouting';
 import {
   backendFileUrl,
@@ -43,22 +42,6 @@ async function findCollaborative<TResult>(
   const bySlug = await load({ slug: segment }).catch(nullIfMissing);
   if (bySlug && pick(bySlug)) return bySlug;
   return load({ publicId: segment }).catch(nullIfMissing);
-}
-
-/**
- * The API answers an unknown collaborative with a GraphQL error
- * ("Collaborative … does not exist.") on a normal 200 response. Any other
- * failure — network, timeout, server error — is passed on.
- */
-function nullIfMissing(error: unknown): null {
-  if (
-    error instanceof ClientError &&
-    error.response.status === 200 &&
-    error.response.errors?.length
-  ) {
-    return null;
-  }
-  throw error;
 }
 
 function pageUrl(slug: string): string {
