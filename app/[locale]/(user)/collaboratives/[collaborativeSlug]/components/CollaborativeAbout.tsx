@@ -12,6 +12,7 @@ import {
   IconWorldMap,
 } from '@tabler/icons-react';
 
+import { websiteLabel } from '@/lib/public-entity';
 import { RichTextRenderer } from '@/components/RichTextRenderer';
 import { CollaborativeQr } from './CollaborativeQr';
 
@@ -121,7 +122,7 @@ export function CollaborativeAbout({
                 title={website}
                 className="relative block truncate rounded-1 text-primaryBlue underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaryBlue"
               >
-                {website}
+                {websiteLabel(website) || website}
                 <span className="sr-only"> (opens in a new tab)</span>
               </a>
             </Fact>

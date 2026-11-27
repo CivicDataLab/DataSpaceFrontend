@@ -2,6 +2,8 @@
 
 import React from 'react';
 
+import { sanitizeRichText } from '@/lib/sanitizeRichText';
+
 import 'react-quill-new/dist/quill.snow.css';
 
 interface RichTextRendererProps {
@@ -20,17 +22,18 @@ const RichTextRenderer: React.FC<RichTextRendererProps> = ({
   const hasOverflowRiskNbsp =
     /(?:&nbsp;|\u00A0){6,}/.test(rawContent) ||
     /(?:\w(?:&nbsp;|\u00A0)){12,}\w/i.test(rawContent) ||
-    (rawContent.match(/&nbsp;|\u00A0/g)?.length ?? 0) >= 10
+    (rawContent.match(/&nbsp;|\u00A0/g)?.length ?? 0) >= 10;
 
   const normalizedContent = hasOverflowRiskNbsp
     ? rawContent.replace(/&nbsp;/g, ' ').replace(/\u00A0/g, ' ')
     : rawContent;
+  const safeContent = sanitizeRichText(normalizedContent);
 
   return (
     <div className={`rich-text-content ${className}`}>
       <div
         className="ql-editor"
-        dangerouslySetInnerHTML={{ __html: normalizedContent }}
+        dangerouslySetInnerHTML={{ __html: safeContent }}
       />
       <style jsx global>{`
         .rich-text-content .ql-editor {

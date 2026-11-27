@@ -51,7 +51,9 @@ export interface JsonLdSchema {
 }
 
 export function generateJsonLd(schema: JsonLdSchema): string {
-  return JSON.stringify(schema, null, 2);
+  // JSON.stringify leaves "<" intact. Inside a script tag that ends the tag
+  // early, so a description can break out of the JSON-LD block.
+  return JSON.stringify(schema, null, 2).replace(/</g, '\\u003c');
 }
 
 export function cn(...inputs: ClassNameValue[]) {
@@ -172,21 +174,6 @@ export function formatDateString(
         month: 'long',
         year: 'numeric',
       });
-}
-
-export async function getWebsiteTitle(url: string): Promise<string | null> {
-  try {
-    const response = await fetch(
-      `/api/website-title?url=${encodeURIComponent(url)}`
-    );
-    if (!response.ok) return null;
-
-    const data: unknown = await response.json();
-    if (!data || typeof data !== 'object' || !('title' in data)) return null;
-    return typeof data.title === 'string' ? data.title : null;
-  } catch {
-    return null;
-  }
 }
 
 // Feature Sitemaps

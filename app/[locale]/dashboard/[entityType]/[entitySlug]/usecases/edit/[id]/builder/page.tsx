@@ -21,7 +21,6 @@ import {
 
 import { useSettleSaveStatus } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/provider-flow/edit-status';
 import { GraphQL } from '@/lib/api';
-import { getSafeEmbedUrl } from '@/lib/dashboardEmbed';
 import { mediaUrl } from '@/lib/utils';
 import MediaImage from '@/components/MediaImage';
 import { ContentEditor } from '../../components/ContentEditor';
@@ -117,6 +116,15 @@ const updateDashboardMutation = graphql(`
         name
         link
       }
+    }
+  }
+`);
+
+const checkDashboardLinkQuery = graphql(`
+  query checkUseCaseBuilderDashboardLink($link: String!) {
+    checkDashboardLink(link: $link) {
+      allowed
+      message
     }
   }
 `);
@@ -230,6 +238,21 @@ export default function BuilderPage() {
     setAppliedLink(savedLink);
     setEmbedCode(savedLink);
   }
+  const [linkToCheck, setLinkToCheck] = useState('');
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const link = extractEmbedUrl(embedCode);
+      const looksLikeUrl = link.includes('.') || /^https?:\/\//i.test(link);
+      setLinkToCheck(looksLikeUrl ? link : '');
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [embedCode]);
+  // The backend owns the list of allowed dashboard hosts.
+  const dashboardLinkCheck = useQuery(
+    [`check_UseCaseBuilderDashboardLink`, linkToCheck],
+    () => GraphQL(checkDashboardLinkQuery, ownerArgs, { link: linkToCheck }),
+    { enabled: Boolean(linkToCheck), staleTime: Infinity }
+  );
   const contentDocRef = useRef(contentDoc);
   const titleRef = useRef(title);
   useEffect(() => {
@@ -412,10 +435,6 @@ export default function BuilderPage() {
       toast('Paste a dashboard URL or iframe embed code first.');
       return;
     }
-    if (!getSafeEmbedUrl(link)) {
-      toast('This dashboard URL is not allowed.');
-      return;
-    }
     const name = title.trim() || 'Use Case Dashboard';
     if (savedDashboard?.id) {
       saveDashboard({ id: savedDashboard.id, name, link });
@@ -495,15 +514,10 @@ export default function BuilderPage() {
     stepShowErrors && !hasContentBlocks(contentDoc)
       ? 'Add at least one content block'
       : undefined;
-  const extractedDashboardLink = extractEmbedUrl(embedCode);
-  const dashboardLinkLooksLikeUrl = Boolean(
-    extractedDashboardLink &&
-    (extractedDashboardLink.includes('.') ||
-      /^https?:\/\//i.test(extractedDashboardLink))
-  );
   const dashboardUrlError =
-    dashboardLinkLooksLikeUrl && !getSafeEmbedUrl(extractedDashboardLink)
-      ? 'This dashboard URL is not allowed.'
+    dashboardLinkCheck.data?.checkDashboardLink.allowed === false
+      ? dashboardLinkCheck.data.checkDashboardLink.message ||
+        'This dashboard link is not allowed.'
       : undefined;
 
   return (

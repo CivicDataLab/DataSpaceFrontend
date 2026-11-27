@@ -107,7 +107,7 @@ const AddUser = ({
   }>();
 
   const Users = useQuery(
-    [`fetch_users_list`],
+    ['fetch_users_list', searchValue],
     () =>
       GraphQL(
         FetchUsers,
@@ -207,8 +207,7 @@ const AddUser = ({
       });
     }
     setSearchValue(value);
-    setIsDropdownOpen(true); // Keep dropdown open while typing
-    Users.refetch(); // Refetch when search term changes
+    setIsDropdownOpen(true);
   };
 
   const handleSelectOption = (option: SearchUserOption) => {
