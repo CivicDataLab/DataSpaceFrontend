@@ -36,7 +36,9 @@ const PublisherCard: React.FC<CardProps> = ({ data }) => {
                       ? mediaUrl(item.logo.url)
                       : '/org.png'
                 }
-                alt={'logo'}
+                // The name is right beside the logo in the same link, so a
+                // screen reader would hear it twice (accessibility.md).
+                alt=""
                 className=" rounded-2 border-2  border-solid border-greyExtralight object-contain p-2"
                 fallback={item.__typename === 'TypeUser' ? '/profile.png' : '/org.png'}
               />

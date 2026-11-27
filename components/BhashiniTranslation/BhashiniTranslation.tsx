@@ -40,9 +40,11 @@ export default function BhashiniTranslation() {
 
   return (
     <>
+      {/* Reserve the plugin's 32px icon button up front, so the nav does not
+          widen (and overflow at large text sizes) when the script loads. */}
       <div
         ref={containerRef}
-        className="bhashini-plugin-container flex items-center"
+        className="bhashini-plugin-container flex w-[48px] shrink-0 items-center justify-center"
       />
       <Script
         id={BHASHINI_SCRIPT_ID}

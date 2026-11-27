@@ -98,7 +98,7 @@ export const Content = () => {
               <Spinner />
             </div>
           ) : (
-            <div className="flex w-full flex-wrap items-center gap-4 md:flex-nowrap md:gap-5">
+            <div className="flex w-full flex-wrap items-center gap-4 md:gap-5 lg:flex-nowrap">
               {Metrics.map((item, index) => (
                 <Link
                   key={`${item.label}_${index}`}

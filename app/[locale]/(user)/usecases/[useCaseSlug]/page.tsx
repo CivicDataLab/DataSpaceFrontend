@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
 import { graphql } from '@/gql';
-import { permanentRedirect } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { cache } from 'react';
 
-import { GraphQLPublic } from '@/lib/api';
+import { GraphQLPublic, nullIfMissing } from '@/lib/api';
 import { isIntegerId, publicHref, publicPageUrl } from '@/lib/public-link';
 import { generatePageMetadata } from '@/lib/utils';
 import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
@@ -21,6 +22,11 @@ const useCaseMetaQuery = graphql(`
     }
   }
 `);
+
+// Metadata and the page both need this; `cache` sends one request per render.
+const getUseCaseMeta = cache((publicId: string) =>
+  GraphQLPublic(useCaseMetaQuery, {}, { publicId })
+);
 
 const useCaseLegacyMetaQuery = graphql(`
   query UseCaseLegacyInfo($pk: ID!) {
@@ -49,9 +55,7 @@ export async function generateMetadata({
         )
       )?.useCase
     : (
-        await GraphQLPublic(useCaseMetaQuery, {}, { publicId: useCaseSlug }).catch(
-          () => null
-        )
+        await getUseCaseMeta(useCaseSlug).catch(() => null)
       )?.useCaseBySlug;
   const segment = useCase?.urlSlug || useCaseSlug;
   const description =
@@ -97,6 +101,10 @@ export default async function Page({
       permanentRedirect(publicHref('usecases', urlSlug, urlSlug));
     }
   }
+
+  // Unknown use cases are 404; an API outage still shows the error page.
+  const data = await getUseCaseMeta(useCaseSlug).catch(nullIfMissing);
+  if (!data?.useCaseBySlug) notFound();
 
   return <UseCaseDetailClient />;
 }

@@ -46,7 +46,7 @@ export function CollaborativeSubdomainNav({
                 <div className="absolute inset-0">
                   <Image
                     src="/dataspacelogosep2025.png"
-                    alt="Logo"
+                    alt="CivicDataSpace collaboratives"
                     fill
                     className="object-contain"
                   />
@@ -56,7 +56,7 @@ export function CollaborativeSubdomainNav({
           </Link>
         </div>
 
-        <div className="mr-10 flex items-center gap-6">
+        <div className="mr-10 flex min-w-0 flex-wrap items-center justify-end gap-x-6 gap-y-2">
           <button
             type="button"
             onClick={() => scrollToId(useCasesTargetId)}

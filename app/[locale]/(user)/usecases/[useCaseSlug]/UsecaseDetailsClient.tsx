@@ -166,8 +166,8 @@ function PublishedUseCase({
         meta={cover.meta}
       />
       <div className="bg-white">
-        <div className="mx-auto w-full max-w-[1760px] px-4 py-8 md:px-6 lg:px-8 lg:py-12 xl:px-10">
-          <div className="mx-auto grid w-full max-w-6xl items-start gap-8 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-12">
+        <div className="mx-auto box-border w-full max-w-[1480px] px-4 py-8 md:px-6 lg:px-8 lg:py-12 xl:px-10">
+          <div className="grid w-full items-start gap-8 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-12">
             <StoryRail>
               <SharePanel
                 label="Share this use case"
@@ -183,7 +183,7 @@ function PublishedUseCase({
               <UseCaseStory summary={useCase.summary} headings={headings} />
             </div>
           </div>
-          <div className="mx-auto w-full max-w-6xl">
+          <div className="w-full">
             <Dashboards usecaseId={String(useCase.id)} />
             <DatasetStories datasets={useCase.datasets ?? []} />
             <TopicBar

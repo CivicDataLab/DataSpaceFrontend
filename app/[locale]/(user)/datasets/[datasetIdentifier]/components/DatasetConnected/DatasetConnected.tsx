@@ -1,17 +1,17 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { graphql } from '@/gql';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Spinner } from 'opub-ui';
 
 import { Icons } from '@/components/icons';
+import { LoadMoreButton } from '@/components/LoadMoreButton';
 import { GraphQLPublic } from '@/lib/api';
 import { publicHref } from '@/lib/public-link';
 import { backendFileUrl, joinNames } from '@/lib/public-entity';
 import { formatDate } from '@/lib/utils';
 import { stripMarkdown } from '@/app/[locale]/(user)/search/components/UnifiedListingComponent';
-import { getUseCaseSummaryExcerpt } from '@/app/[locale]/dashboard/[entityType]/[entitySlug]/usecases/edit/content-document';
 import type { DatasetCoverLink } from '../../dataset-cover';
 
 const connectedUseCaseQuery = graphql(`
@@ -20,7 +20,6 @@ const connectedUseCaseQuery = graphql(`
       id
       urlSlug
       title
-      summary
       slug
       modified
       isIndividualUsecase
@@ -92,7 +91,6 @@ export type ConnectedFilter = 'all' | 'usecases' | 'collaboratives';
 export type ConnectedUseCase = {
   id: string;
   title?: string | null;
-  summary?: string | null;
   urlSlug?: string | null;
   slug?: string | null;
   modified?: string | number | null;
@@ -140,6 +138,9 @@ const HELPER =
   'mt-1 font-primary text-100 font-regular leading-2 tracking-[0px] text-[#6b686b]';
 const SECTION_HEADING =
   'm-0 font-primary text-200 font-semi-bold leading-3 tracking-[0px] text-primaryBlue';
+
+/** Cards shown at first in each group, and how many each "Load more" adds. */
+const PAGE_SIZE = 8;
 
 const FILTERS: Array<{ value: ConnectedFilter; label: string }> = [
   { value: 'all', label: 'All' },
@@ -221,13 +222,14 @@ export function DatasetConnected({
             >
               {useCases.length > 0 ? (
                 <CardGrid
+                  id="dataset-connected-usecase-list"
+                  moreLabel="Load more use cases"
                   loading={useCaseCards.loading}
                   failed={useCaseCards.failed}
-                >
-                  {useCaseCards.items.map((item) => (
+                  cards={useCaseCards.items.map((item) => (
                     <UseCaseCard key={item.id} item={item} />
                   ))}
-                </CardGrid>
+                />
               ) : null}
             </ConnectionGroup>
           ) : null}
@@ -242,13 +244,14 @@ export function DatasetConnected({
             >
               {collaboratives.length > 0 ? (
                 <CardGrid
+                  id="dataset-connected-collaborative-list"
+                  moreLabel="Load more collaboratives"
                   loading={collaborativeCards.loading}
                   failed={collaborativeCards.failed}
-                >
-                  {collaborativeCards.items.map((item) => (
+                  cards={collaborativeCards.items.map((item) => (
                     <CollaborativeCard key={item.id} item={item} />
                   ))}
-                </CardGrid>
+                />
               ) : null}
             </ConnectionGroup>
           ) : null}
@@ -298,14 +301,20 @@ function useCardDetails<TData, TCard extends { id: string }>(
 }
 
 function CardGrid({
+  id,
+  moreLabel,
   loading,
   failed,
-  children,
+  cards,
 }: {
+  id: string;
+  moreLabel: string;
   loading: boolean;
   failed: boolean;
-  children: ReactNode;
+  cards: ReactNode[];
 }) {
+  const [limit, setLimit] = useState(PAGE_SIZE);
+
   if (loading) {
     return (
       <div className="flex justify-center py-10">
@@ -322,10 +331,27 @@ function CardGrid({
     );
   }
 
+  const remaining = cards.length - limit;
+
   return (
-    <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-      {children}
-    </div>
+    <>
+      <div
+        id={id}
+        className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
+        {cards.slice(0, limit)}
+      </div>
+      {remaining > 0 ? (
+        <div className="mt-4">
+          <LoadMoreButton
+            label={moreLabel}
+            remaining={remaining}
+            controls={id}
+            onClick={() => setLimit((current) => current + PAGE_SIZE)}
+          />
+        </div>
+      ) : null}
+    </>
   );
 }
 
@@ -392,10 +418,11 @@ function UseCaseCard({ item }: { item: ConnectedUseCase }) {
   return (
     <Card
       title={item.title || ''}
-      description={getUseCaseSummaryExcerpt(item.summary)}
+      // The use case listing shows no description, so neither does this card.
+      description=""
       metadataContent={metadataContent}
       variation="collapsed"
-      iconColor="success"
+      iconColor="warning"
       href={publicHref('usecases', item.urlSlug, item.id)}
       imageUrl={backendFileUrl(item.logo?.url) || ''}
       leftFooterChips={[

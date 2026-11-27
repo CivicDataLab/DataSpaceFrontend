@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { ClientError } from 'graphql-request';
 
 import locales from '@/config/locales';
-import { GraphQLPublic } from '@/lib/api';
+import { GraphQLPublic, nullIfMissing } from '@/lib/api';
 import { isCollaborativeSubdomainHost } from '@/lib/collaborativesRouting';
 import {
   backendFileUrl,
@@ -43,22 +42,6 @@ async function findCollaborative<TResult>(
   const bySlug = await load({ slug: segment }).catch(nullIfMissing);
   if (bySlug && pick(bySlug)) return bySlug;
   return load({ publicId: segment }).catch(nullIfMissing);
-}
-
-/**
- * The API answers an unknown collaborative with a GraphQL error
- * ("Collaborative … does not exist.") on a normal 200 response. Any other
- * failure — network, timeout, server error — is passed on.
- */
-function nullIfMissing(error: unknown): null {
-  if (
-    error instanceof ClientError &&
-    error.response.status === 200 &&
-    error.response.errors?.length
-  ) {
-    return null;
-  }
-  throw error;
 }
 
 function pageUrl(slug: string): string {
@@ -190,7 +173,7 @@ export default async function CollaborativeDetailPage({ params }: PageProps) {
             publications: explore.publications.length,
           }}
         />
-        <div className="mx-auto box-border min-w-0 max-w-[1400px] px-5 sm:px-6 lg:px-8 xl:px-0">
+        <div className="mx-auto box-border min-w-0 max-w-[1480px] px-4 md:px-6 lg:px-8 xl:px-10">
           <CollaborativeAbout
             title={title}
             summaryHtml={summaryText ? (collaborative.summary ?? null) : null}

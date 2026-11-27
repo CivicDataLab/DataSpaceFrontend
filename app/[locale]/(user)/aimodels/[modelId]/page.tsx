@@ -1,7 +1,8 @@
 import { graphql } from '@/gql';
-import { permanentRedirect } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { cache } from 'react';
 
-import { GraphQL } from '@/lib/api';
+import { GraphQL, nullIfMissing } from '@/lib/api';
 import {
   aiModelLookup,
   isIntegerId,
@@ -22,6 +23,11 @@ const aiModelMetaQuery = graphql(`
   }
 `);
 
+// Metadata and the page both need this; `cache` sends one request per render.
+const getAIModelMeta = cache((modelId: string) =>
+  GraphQL(aiModelMetaQuery, {}, aiModelLookup(modelId))
+);
+
 export async function generateMetadata({
   params,
 }: {
@@ -29,7 +35,7 @@ export async function generateMetadata({
 }) {
   const { modelId } = await params;
   try {
-    const res = await GraphQL(aiModelMetaQuery, {}, aiModelLookup(modelId));
+    const res = await getAIModelMeta(modelId);
     const model = res?.getAiModel;
     const title = model?.displayName || model?.name || 'AI Model Details';
     const description =
@@ -63,14 +69,15 @@ export default async function Page({
 }) {
   const { modelId } = await params;
 
-  if (isIntegerId(modelId)) {
-    const res = await GraphQL(aiModelMetaQuery, {}, {
-      modelId: Number.parseInt(modelId, 10),
-    }).catch(() => null);
-    const urlSlug = res?.getAiModel?.urlSlug;
-    if (urlSlug && urlSlug !== modelId) {
-      permanentRedirect(publicHref('aimodels', urlSlug, urlSlug));
-    }
+  // Unknown models are 404; an API outage still shows the error page.
+  const res = await getAIModelMeta(modelId).catch(nullIfMissing);
+  const model = res?.getAiModel;
+  if (!model) notFound();
+
+  // Old links used the numeric id; send them to the readable address.
+  const urlSlug = model.urlSlug;
+  if (isIntegerId(modelId) && urlSlug && urlSlug !== modelId) {
+    permanentRedirect(publicHref('aimodels', urlSlug, urlSlug));
   }
 
   return <AIModelDetailsPage modelId={modelId} />;

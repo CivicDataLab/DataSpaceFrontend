@@ -35,6 +35,8 @@ export const useCaseDetailsQuery = graphql(`
       id
       code
       name
+      number
+      description
     }
     tags {
       id

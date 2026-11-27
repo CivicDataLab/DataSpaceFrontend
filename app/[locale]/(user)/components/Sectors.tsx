@@ -73,7 +73,6 @@ const Sectors = () => {
                 datasetCount: sector.datasetCount,
               }}
               href={`/sectors/${sector.slug}?size=9&page=1&sort=recent&sectors=${buildSectorSlugParam(sector.slug ?? '')}`}
-              className="min-w-[280px] flex-1"
             />
           ))}
         </div>

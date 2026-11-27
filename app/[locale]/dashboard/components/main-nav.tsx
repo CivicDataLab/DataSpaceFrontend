@@ -179,7 +179,7 @@ export function MainNav({ hideSearch = false }: MainNavProps) {
                 <div className="absolute inset-0">
                   <Image
                     src="/dataspacelogosep2025.png"
-                    alt="Logo"
+                    alt="CivicDataSpace home"
                     layout="fill"
                     objectFit="contain"
                   />
@@ -202,7 +202,7 @@ export function MainNav({ hideSearch = false }: MainNavProps) {
           </Link>
         </div>
 
-        <div className="flex items-center gap-8">
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-x-8 gap-y-2">
           {!hideSearch && (
             <div className="relative hidden lg:block">
               <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -231,7 +231,7 @@ export function MainNav({ hideSearch = false }: MainNavProps) {
             </div>
           )}
 
-          <div className="flex items-center gap-5">
+          <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2">
             {/* Explore dropdown (desktop) */}
             <div className="hidden lg:block">
               <Popover open={isExploreOpen} onOpenChange={setIsExploreOpen}>

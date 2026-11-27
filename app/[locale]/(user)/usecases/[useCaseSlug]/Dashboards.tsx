@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 
 import { GraphQL } from '@/lib/api';
 import { toEmbedSrc } from '@/lib/dashboardEmbed';
-import { Loading } from '@/components/loading';
 import JusticeHubEmbed, { isJusticeHubEmbed } from './JusticeHubEmbed';
 
 const DashboardsList = graphql(`
@@ -21,7 +20,7 @@ const Dashboards = ({ usecaseId: usecaseIdValue }: { usecaseId: string }) => {
   const isValidId =
     Number.isInteger(usecaseId) && String(usecaseId) === usecaseIdValue;
 
-  const { data, isLoading } = useQuery(
+  const { data } = useQuery(
     ['fetch_dashboardData', usecaseId],
     () => GraphQL(DashboardsList, {}, { usecaseId }),
     {
@@ -40,7 +39,9 @@ const Dashboards = ({ usecaseId: usecaseIdValue }: { usecaseId: string }) => {
       Boolean(dashboard.embedUrl)
     );
 
-  if (!isValidId || (!isLoading && dashboards.length === 0)) {
+  // Render nothing until there is a dashboard to show, so use cases without
+  // one never flash this section (empty while loading or for a bad id).
+  if (dashboards.length === 0) {
     return null;
   }
 
@@ -52,33 +53,27 @@ const Dashboards = ({ usecaseId: usecaseIdValue }: { usecaseId: string }) => {
       <p className="mt-2 text-100 font-regular leading-[21px] text-[#6B6B6B]">
         Explore the data in greater depth through the embedded dashboard.
       </p>
-      {isLoading ? (
-        <div className="mt-4 flex min-h-[420px] items-center justify-center rounded-4 bg-baseGraySlateSolid3">
-          <Loading />
-        </div>
-      ) : (
-        <div className="mt-4 flex flex-col gap-6">
-          {dashboards.map((dashboard) =>
-            isJusticeHubEmbed(dashboard.embedUrl) ? (
-              <JusticeHubEmbed
-                key={dashboard.id}
-                src={dashboard.embedUrl}
-                title={dashboard.name || 'Dashboard'}
-              />
-            ) : (
-              <iframe
-                key={dashboard.id}
-                title={dashboard.name || 'Dashboard'}
-                src={dashboard.embedUrl}
-                className="border-0 min-h-[420px] w-full rounded-4 bg-baseGraySlateSolid3"
-                loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-              />
-            )
-          )}
-        </div>
-      )}
+      <div className="mt-4 flex flex-col gap-6">
+        {dashboards.map((dashboard) =>
+          isJusticeHubEmbed(dashboard.embedUrl) ? (
+            <JusticeHubEmbed
+              key={dashboard.id}
+              src={dashboard.embedUrl}
+              title={dashboard.name || 'Dashboard'}
+            />
+          ) : (
+            <iframe
+              key={dashboard.id}
+              title={dashboard.name || 'Dashboard'}
+              src={dashboard.embedUrl}
+              className="border-0 min-h-[420px] w-full rounded-4 bg-baseGraySlateSolid3"
+              loading="lazy"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+          )
+        )}
+      </div>
     </section>
   );
 };

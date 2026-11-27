@@ -120,7 +120,7 @@ export function CollaborativeAbout({
                 target="_blank"
                 rel="noreferrer"
                 title={website}
-                className="block truncate rounded-1 text-primaryBlue underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaryBlue"
+                className="relative block truncate rounded-1 text-primaryBlue underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaryBlue"
               >
                 {websiteLabel(website) || website}
                 <span className="sr-only"> (opens in a new tab)</span>

@@ -1,8 +1,9 @@
 import { graphql } from '@/gql';
 import { ClientError } from 'graphql-request';
-import { permanentRedirect } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { cache } from 'react';
 
-import { GraphQL } from '@/lib/api';
+import { GraphQL, nullIfMissing } from '@/lib/api';
 import { datasetLookup, isUuid, publicHref, publicPageUrl } from '@/lib/public-link';
 import { generatePageMetadata } from '@/lib/utils';
 import DatasetDetailsPage from './DatasetDetailsPage';
@@ -20,6 +21,11 @@ const datasetMetaQuery = graphql(`
     }
   }
 `);
+
+// Metadata and the page both need this; `cache` sends one request per render.
+const getDatasetMeta = cache((identifier: string) =>
+  GraphQL(datasetMetaQuery, {}, datasetLookup(identifier))
+);
 
 function isUnpublishedDatasetError(error: unknown): boolean {
   const message =
@@ -41,11 +47,7 @@ export async function generateMetadata({
 }) {
   const { datasetIdentifier } = await params;
   try {
-    const res = await GraphQL(
-      datasetMetaQuery,
-      {},
-      datasetLookup(datasetIdentifier)
-    );
+    const res = await getDatasetMeta(datasetIdentifier);
     const dataset = res?.getDataset;
     const segment = dataset?.urlSlug || datasetIdentifier;
     return generatePageMetadata({
@@ -77,14 +79,15 @@ export default async function Page({
 }) {
   const { datasetIdentifier } = await params;
 
-  if (isUuid(datasetIdentifier)) {
-    const res = await GraphQL(datasetMetaQuery, {}, { datasetId: datasetIdentifier }).catch(
-      () => null
-    );
-    const urlSlug = res?.getDataset?.urlSlug;
-    if (urlSlug && urlSlug !== datasetIdentifier) {
-      permanentRedirect(publicHref('datasets', urlSlug, urlSlug));
-    }
+  // Unknown datasets, and unpublished ones the visitor may not see, are 404.
+  const res = await getDatasetMeta(datasetIdentifier).catch(nullIfMissing);
+  const dataset = res?.getDataset;
+  if (!dataset) notFound();
+
+  // Old links used the record's UUID; send them to the readable address.
+  const urlSlug = dataset.urlSlug;
+  if (isUuid(datasetIdentifier) && urlSlug && urlSlug !== datasetIdentifier) {
+    permanentRedirect(publicHref('datasets', urlSlug, urlSlug));
   }
 
   return <DatasetDetailsPage datasetId={datasetIdentifier} />;

@@ -8,6 +8,7 @@ import {
   organizationPublisherHref,
   personPublisherHref,
 } from '@/lib/public-entity';
+import { toSdgGoal, type SdgGoal } from '@/components/sdg-goals/sdg-goal';
 
 export type RailContributor = {
   id: string;
@@ -63,19 +64,21 @@ export type TopicLabel = {
   label: string;
 };
 
-export type SdgTopic = TopicLabel & {
-  code: string;
-};
-
 type TopicSource = {
   tags?: Array<{ id: string; value: string }> | null;
-  sdgs?: Array<{ id: string; code: string; name: string }> | null;
+  sdgs?: Array<{
+    id: string;
+    code: string;
+    name: string;
+    number?: number | null;
+    description?: string | null;
+  }> | null;
   sectors?: Array<{ id: string; name: string }> | null;
 };
 
 export function buildUseCaseTopics(useCase: TopicSource): {
   tags: TopicLabel[];
-  sdgs: SdgTopic[];
+  sdgs: SdgGoal[];
   sectors: TopicLabel[];
 } {
   return {
@@ -85,13 +88,7 @@ export function buildUseCaseTopics(useCase: TopicSource): {
         id: tag.id,
         label: tag.value.trim(),
       })),
-    sdgs: (useCase.sdgs ?? [])
-      .filter((sdg) => sdg.name.trim())
-      .map((sdg) => ({
-        id: sdg.id,
-        code: sdg.code,
-        label: sdg.name.trim(),
-      })),
+    sdgs: (useCase.sdgs ?? []).filter((sdg) => sdg.name.trim()).map(toSdgGoal),
     sectors: (useCase.sectors ?? [])
       .filter((sector) => sector.name.trim())
       .map((sector) => ({

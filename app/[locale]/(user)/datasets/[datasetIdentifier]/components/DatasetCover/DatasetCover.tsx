@@ -47,7 +47,7 @@ export function DatasetCover({
 
   return (
     <section className="bg-white">
-      <div className="mx-auto box-border flex min-w-0 max-w-[1400px] flex-col gap-6 px-5 pb-2 pt-8 leading-3 text-[#0a0a0a] sm:px-6 lg:px-8 lg:pt-10 xl:px-0">
+      <div className="mx-auto box-border flex min-w-0 max-w-[1480px] flex-col gap-6 px-4 pb-2 pt-8 leading-3 text-[#0a0a0a] md:px-6 lg:px-8 lg:pt-10 xl:px-10">
         <div className="flex w-full min-w-0 flex-nowrap items-center justify-between gap-3">
           <Link
             href={backHref}
